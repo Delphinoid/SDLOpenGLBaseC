@@ -1,0 +1,34 @@
+name GuyMulti
+
+texture "Resources\Images\Guy\Guy0.png"
+texture "Resources\Images\Guy\Guy1.png"
+texture "Resources\Images\Guy\Guy2.png"
+texture "Resources\Images\Guy\Guy3.png"
+texture "Resources\Images\Guy\Guy4.png"
+texture "Resources\Images\Guy\Guy5.png"
+texture "Resources\Images\Guy\Guy6.png"
+texture "Resources\Images\Guy\Guy7.png"
+texture "Resources\Images\Guy\Guy8.png"
+texture "Resources\Images\Guy\Guy9.png"
+texture "Resources\Images\Guy\Guy10.png"
+texture "Resources\Images\Guy\Guy11.png"
+texture "Resources\Images\Guy\Guy12.png"
+texture "Resources\Images\Guy\Guy13.png"
+
+animation {
+	loop -1
+	frame 0/0/41.66
+	frame 1/0/41.66
+	frame 2/0/41.66
+	frame 3/0/41.66
+	frame 4/0/41.66
+	frame 5/0/41.66
+	frame 6/0/41.66
+	frame 7/0/41.66
+	frame 8/0/41.66
+	frame 9/0/41.66
+	frame 10/0/41.66
+	frame 11/0/41.66
+	frame 12/0/41.66
+	frame 13/0/41.66
+}

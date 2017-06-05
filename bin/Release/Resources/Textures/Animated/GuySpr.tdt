@@ -1,0 +1,36 @@
+name GuySpr
+
+texture "Resources\Images\Guy\Guy.png" {
+	subframe 0/0/200/170
+	subframe 200/0/200/170
+	subframe 400/0/200/170
+	subframe 600/0/200/170
+	subframe 800/0/200/170
+	subframe 1000/0/200/170
+	subframe 1200/0/200/170
+	subframe 1400/0/200/170
+	subframe 1600/0/200/170
+	subframe 1800/0/200/170
+	subframe 2000/0/200/170
+	subframe 2200/0/200/170
+	subframe 2400/0/200/170
+	subframe 2600/0/200/170
+}
+
+animation {
+	loop -1
+	frame 0/0/41.66
+	frame 0/1/41.66
+	frame 0/2/41.66
+	frame 0/3/41.66
+	frame 0/4/41.66
+	frame 0/5/41.66
+	frame 0/6/41.66
+	frame 0/7/41.66
+	frame 0/8/41.66
+	frame 0/9/41.66
+	frame 0/10/41.66
+	frame 0/11/41.66
+	frame 0/12/41.66
+	frame 0/13/41.66
+}

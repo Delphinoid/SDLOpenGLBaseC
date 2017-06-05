@@ -1,0 +1,10 @@
+tex Resources\Textures\Spy.tdt
+tex Resources\Textures\Luna.tdt
+
+spr Resources\Sprites\Spy.tds
+spr Resources\Sprites\Luna.tds
+
+mdl Resources\Models\CubeTest.tdm
+
+mus Resources\Audio\TF2RocketJumpWaltz.wav
+sfx Resources\Audio\secret.wav
