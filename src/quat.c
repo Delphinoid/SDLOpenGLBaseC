@@ -12,24 +12,23 @@ quat quatNewS(float s){
 }
 quat quatNewAxisAngle(float angle, float axisX, float axisY, float axisZ){
 	float t = sinf(angle/2.f);
-	quat r = {.w = cosf(angle/2.f),
+	quat r = {.w   = cosf(angle/2.f),
 	          .v.x = axisX * t,
 	          .v.y = axisY * t,
 	          .v.z = axisZ * t};
 	return r;
 }
-quat quatNewEuler(vec3 v){
-	float cb = cosf(v.x*0.5f);
-	float ch = cosf(v.y*0.5f);
-	float ca = cosf(v.z*0.5f);
-	float sb = sinf(v.x*0.5f);
-	float sh = sinf(v.y*0.5f);
-	float sa = sinf(v.z*0.5f);
-	quat r;
-	r.w   = cb*ch*ca+sb*sh*sa;
-	r.v.x = sb*ch*ca-cb*sh*sa;
-	r.v.y = cb*sh*ca+sb*ch*sa;
-	r.v.z = cb*ch*sa-sb*sh*ca;
+quat quatNewEuler(float x, float y, float z){
+	float cb = cosf(x*0.5f);
+	float ch = cosf(y*0.5f);
+	float ca = cosf(z*0.5f);
+	float sb = sinf(x*0.5f);
+	float sh = sinf(y*0.5f);
+	float sa = sinf(z*0.5f);
+	quat r = {.w   = cb*ch*ca+sb*sh*sa,
+	          .v.x = sb*ch*ca-cb*sh*sa,
+	          .v.y = cb*sh*ca+sb*ch*sa,
+	          .v.z = cb*ch*sa-sb*sh*ca};
 	return r;
 }
 void quatSet(quat *q, float w, float x, float y, float z){
@@ -37,6 +36,25 @@ void quatSet(quat *q, float w, float x, float y, float z){
 }
 void quatSetS(quat *q, float s){
 	q->w = s; q->v.x = s; q->v.y = s; q->v.z = s;
+}
+void quatSetAxisAngle(quat *q, float angle, float axisX, float axisY, float axisZ){
+	float t = sinf(angle/2.f);
+	q->w = cosf(angle/2.f);
+	q->v.x = axisX * t;
+	q->v.y = axisY * t;
+	q->v.z = axisZ * t;
+}
+void quatSetEuler(quat *q, float x, float y, float z){
+	float cb = cosf(x*0.5f);
+	float ch = cosf(y*0.5f);
+	float ca = cosf(z*0.5f);
+	float sb = sinf(x*0.5f);
+	float sh = sinf(y*0.5f);
+	float sa = sinf(z*0.5f);
+	q->w   = cb*ch*ca+sb*sh*sa;
+	q->v.x = sb*ch*ca-cb*sh*sa;
+	q->v.y = cb*sh*ca+sb*ch*sa;
+	q->v.z = cb*ch*sa-sb*sh*ca;
 }
 
 quat quatQAddQ(quat q1, quat q2){

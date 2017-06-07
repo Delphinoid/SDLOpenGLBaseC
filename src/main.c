@@ -1,15 +1,13 @@
-#include "gfxProgram.h"
+#include "renderable.h"
 #include <stdio.h>
-#include "camera.h"
-#include "model.h"
-#include "sprite.h"
 #include "fps.h"
 
 #define radianRatio 0.017453292  // = PI / 180, used for converting degrees to radians
 
-void renderScene(gfxProgram *gfxPrg, camera *cam, cVector *allModels, cVector *allSprites);
-void cleanup(gfxProgram *gfxPrg, cVector *allTextures, cVector *allTexWrappers, cVector *allModels, cVector *allSprites);
+void renderScene(cVector *allRenderables, gfxProgram *gfxPrg, camera *cam);
+void cleanup(cVector *allTextures, cVector *allTexWrappers, cVector *allModels, cVector *allRenderables, gfxProgram *gfxPrg);
 
+/** Remember to do regular searches for these important comments when possible **/
 int main(int argc, char *argv[]){
 
 	char *prgPath = (char*)argv[0];
@@ -37,9 +35,9 @@ int main(int argc, char *argv[]){
 	cVector allTextures; cvInit(&allTextures, 1);        // Holds textures
 	cVector allTexWrappers; cvInit(&allTexWrappers, 1);  // Holds textureWrappers
 	cVector allModels; cvInit(&allModels, 1);            // Holds models
-	cVector allSprites; cvInit(&allSprites, 1);          // Holds sprites
+	cVector allRenderables; cvInit(&allRenderables, 1);  // Holds renderables
 
-	texture tempTex = {.name = NULL};
+	texture tempTex;
 	tLoad(&tempTex, prgPath, "Resources\\Images\\Guy\\Guy.png");
 	cvPush(&allTextures, (void *)&tempTex, sizeof(tempTex));
 	tLoad(&tempTex, prgPath, "Resources\\Images\\Misc\\Kobold.png");
@@ -47,7 +45,7 @@ int main(int argc, char *argv[]){
 	tLoad(&tempTex, prgPath, "Resources\\Images\\Misc\\Avatar.png");
 	cvPush(&allTextures, (void *)&tempTex, sizeof(tempTex));
 
-	textureWrapper tempTexWrap = {.name = NULL};
+	textureWrapper tempTexWrap;
 	twLoad(&tempTexWrap, prgPath, "Resources\\Textures\\Static\\AvatarStatic.tdt", &allTextures);
 	cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));
 	twLoad(&tempTexWrap, prgPath, "Resources\\Textures\\Animated\\GuySpr.tdt", &allTextures);
@@ -58,51 +56,66 @@ int main(int argc, char *argv[]){
 	cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));
 
 	model tempMdl;
-	mdlLoad(&tempMdl, prgPath, "Resources\\Models\\CubeTest1.obj", &allTexWrappers);
+	mdlCreateSprite(&tempMdl, "sprite");
 	cvPush(&allModels, (void *)&tempMdl, sizeof(tempMdl));
-	mdlLoad(&tempMdl, prgPath, "Resources\\Models\\CubeTest2.obj", &allTexWrappers);
-	tempMdl.position.x = 0.25f;
-	tempMdl.position.y = 0.5f;
-	tempMdl.scale = vec3NewS(0.1f);
-	mdlRotateX(&tempMdl, 45.f);
-	mdlRotateY(&tempMdl, 45.f);
-	tempMdl.alpha = 0.5f;
-	mdlHudElement(&tempMdl, 1);
-	tempMdl.hudScaleMode = 1;
+	mdlLoadWavefrontObj(&tempMdl, prgPath, "Resources\\Models\\CubeTest.obj");
 	cvPush(&allModels, (void *)&tempMdl, sizeof(tempMdl));
 
-	sprite tempSpr;
-	sprLoad(&tempSpr, prgPath, ".", &allTexWrappers);
-	tempSpr.width = 2.f;
-	tempSpr.height = 2.f;
-	tempSpr.relPivot.x = tempSpr.width / 2;
-	tempSpr.relPivot.y = tempSpr.height / 2;
-	tempSpr.scale = vec3NewS(2.f);
-	cvPush(&allSprites, (void *)&tempSpr, sizeof(tempSpr));
-	tempSpr.width = 1.f;
-	tempSpr.height = 1.f;
-	tempSpr.relPivot.x = 0.f;
-	tempSpr.relPivot.y = 0.f;
-	tempSpr.scale = vec3NewS(0.25f);
-	sprHudElement(&tempSpr, 1);
-	tempSpr.hudScaleMode = 1;
-	cvPush(&allSprites, (void *)&tempSpr, sizeof(tempSpr));
-	tempSpr.position.x = 4.f;
-	tempSpr.position.y = 0.f;
-	tempSpr.position.z = -3.f;
-	tempSpr.width = 2.f;
-	tempSpr.height = 2.f;
-	tempSpr.relPivot.x = tempSpr.width / 2;
-	tempSpr.relPivot.y = tempSpr.height / 2;
-	tempSpr.billboardY = 1;
-	tempSpr.scale = vec3NewS(2.f);
-	sprHudElement(&tempSpr, 0);
-	cvPush(&allSprites, (void *)&tempSpr, sizeof(tempSpr));
-	tempSpr.texture = (textureWrapper *)cvGet(&allTexWrappers, 3);
-	tempSpr.position.x = -3.f;
-	tempSpr.position.y = -2.f;
-	tempSpr.billboardY = 0;
-	cvPush(&allSprites, (void *)&tempSpr, sizeof(tempSpr));
+	/* Models */
+	renderable tempRndr;
+	rndrInit(&tempRndr);
+	tempRndr.mdl = (model *)cvGet(&allModels, 1);
+	tempRndr.texture = (textureWrapper *)cvGet(&allTexWrappers, 1);
+	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
+	tempRndr.texture = (textureWrapper *)cvGet(&allTexWrappers, 2);
+	tempRndr.sTrans.position.x = 0.25f;
+	tempRndr.sTrans.position.y = 0.5f;
+	vec3SetS(&tempRndr.rTrans.scale, 0.1f);
+	rndrRotateX(&tempRndr, 45.f);
+	rndrRotateY(&tempRndr, 45.f);
+	tempRndr.rTrans.alpha = 0.5f;
+	rndrHudElement(&tempRndr, 1);
+	tempRndr.hudScaleMode = 1;
+	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
+
+	/* Sprites */
+	rndrInit(&tempRndr);
+	tempRndr.sprite = 1;
+	tempRndr.mdl = (model *)cvGet(&allModels, 0);
+	tempRndr.texture = (textureWrapper *)cvGet(&allTexWrappers, 0);
+	tempRndr.width = 2.f;
+	tempRndr.height = 2.f;
+	tempRndr.sTrans.relPivot.x = tempRndr.width / 2.f;
+	tempRndr.sTrans.relPivot.y = tempRndr.height / 2.f;
+	tempRndr.rTrans.scale.x = 2.f;
+	tempRndr.rTrans.scale.y = 2.f;
+	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
+	tempRndr.width = 1.f;
+	tempRndr.height = 1.f;
+	tempRndr.sTrans.relPivot.x = 0.f;
+	tempRndr.sTrans.relPivot.y = 0.f;
+	tempRndr.rTrans.scale.x = 0.25f;
+	tempRndr.rTrans.scale.y = 0.25f;
+	rndrHudElement(&tempRndr, 1);
+	tempRndr.hudScaleMode = 1;
+	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
+	tempRndr.sTrans.position.x = 4.f;
+	tempRndr.sTrans.position.y = 0.f;
+	tempRndr.sTrans.position.z = -3.f;
+	tempRndr.width = 2.f;
+	tempRndr.height = 2.f;
+	tempRndr.sTrans.relPivot.x = tempRndr.width / 2.f;
+	tempRndr.sTrans.relPivot.y = tempRndr.height / 2.f;
+	tempRndr.rTrans.scale.x = 2.f;
+	tempRndr.rTrans.scale.y = 2.f;
+	tempRndr.billboardY = 1;
+	rndrHudElement(&tempRndr, 0);
+	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
+	tempRndr.texture = (textureWrapper *)cvGet(&allTexWrappers, 3);
+	tempRndr.sTrans.position.x = -3.f;
+	tempRndr.sTrans.position.y = -2.f;
+	tempRndr.billboardY = 0;
+	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 
 
 	unsigned char prgRunning = 1;
@@ -189,28 +202,28 @@ int main(int argc, char *argv[]){
 
 		/* Handle inputs */
 		if(UP){
-			mdlRotateX((model *)cvGet(&allModels, 0), -2.f * fpsHandler.fpsMod);
+			rndrRotateX((renderable *)cvGet(&allRenderables, 0), -2.f * fpsHandler.fpsMod);
 			//sprRotateX((sprite *)cvGet(&allSprites, 0), -2.f * fpsHandler.fpsMod);
 			camMoveZ(&cam, -0.1f * fpsHandler.fpsMod);
-			((sprite *)cvGet(&allSprites, 2))->target = cam.position;
+			((renderable *)cvGet(&allRenderables, 4))->rTrans.target = cam.position;
 		}
 		if(DOWN){
-			mdlRotateX((model *)cvGet(&allModels, 0), 2.f * fpsHandler.fpsMod);
+			rndrRotateX((renderable *)cvGet(&allRenderables, 0), 2.f * fpsHandler.fpsMod);
 			//sprRotateX((sprite *)cvGet(&allSprites, 0), 2.f * fpsHandler.fpsMod);
 			camMoveZ(&cam, 0.1f * fpsHandler.fpsMod);
-			((sprite *)cvGet(&allSprites, 2))->target = cam.position;
+			((renderable *)cvGet(&allRenderables, 4))->rTrans.target = cam.position;
 		}
 		if(LEFT){
-			mdlRotateY((model *)cvGet(&allModels, 0), -2.f * fpsHandler.fpsMod);
-			sprRotateZ((sprite *)cvGet(&allSprites, 1), -2.f * fpsHandler.fpsMod);
+			rndrRotateY((renderable *)cvGet(&allRenderables, 0), -2.f * fpsHandler.fpsMod);
+			rndrRotateZ((renderable *)cvGet(&allRenderables, 3), -2.f * fpsHandler.fpsMod);
 			camMoveX(&cam, -0.1f * fpsHandler.fpsMod);
-			((sprite *)cvGet(&allSprites, 2))->target = cam.position;
+			((renderable *)cvGet(&allRenderables, 4))->rTrans.target = cam.position;
 		}
 		if(RIGHT){
-			mdlRotateY((model *)cvGet(&allModels, 0), 2.f * fpsHandler.fpsMod);
-			sprRotateZ((sprite *)cvGet(&allSprites, 1), 2.f * fpsHandler.fpsMod);
+			rndrRotateY((renderable *)cvGet(&allRenderables, 0), 2.f * fpsHandler.fpsMod);
+			rndrRotateZ((renderable *)cvGet(&allRenderables, 3), 2.f * fpsHandler.fpsMod);
 			camMoveX(&cam, 0.1f * fpsHandler.fpsMod);
-			((sprite *)cvGet(&allSprites, 2))->target = cam.position;
+			((renderable *)cvGet(&allRenderables, 4))->rTrans.target = cam.position;
 		}
 
 		// Get mouse position relative to its position in the last call
@@ -218,14 +231,10 @@ int main(int argc, char *argv[]){
 
 
 		/* Animate */
-		// Animate the models
+		// Animate the renderables
 		unsigned int d;
-		for(d = 0; d < allModels.size; d++){
-			mdlAnimateTex((model *)cvGet(&allModels, d));
-		}
-		// Animate the sprites
-		for(d = 0; d < allSprites.size; d++){
-			sprAnimateTex((sprite *)cvGet(&allSprites, d));
+		for(d = 0; d < allRenderables.size; d++){
+			rndrAnimateTex((renderable *)cvGet(&allRenderables, d));
 		}
 
 
@@ -234,7 +243,7 @@ int main(int argc, char *argv[]){
 		camCreateViewMatrix(&cam, &gfxPrg.viewMatrix);
 
 		// Render the scene
-		renderScene(&gfxPrg, &cam, &allModels, &allSprites);
+		renderScene(&allRenderables, &gfxPrg, &cam);
 
 		// Update the window
 		SDL_GL_SwapWindow(gfxPrg.window);
@@ -246,12 +255,12 @@ int main(int argc, char *argv[]){
 	}
 
 
-	cleanup(&gfxPrg, &allTextures, &allTexWrappers, &allModels, &allSprites);
+	cleanup(&allTextures, &allTexWrappers, &allModels, &allRenderables, &gfxPrg);
 	return 0;
 
 }
 
-void cleanup(gfxProgram *gfxPrg, cVector *allTextures, cVector *allTexWrappers, cVector *allModels, cVector *allSprites){
+void cleanup(cVector *allTextures, cVector *allTexWrappers, cVector *allModels, cVector *allRenderables, gfxProgram *gfxPrg){
 	gfxDestroyProgram(gfxPrg);
 	unsigned int d;
 	for(d = 0; d < allTextures->size; d++){
@@ -262,6 +271,9 @@ void cleanup(gfxProgram *gfxPrg, cVector *allTextures, cVector *allTexWrappers, 
 	}
 	for(d = 0; d < allModels->size; d++){
 		mdlDelete((model *)cvGet(allModels, d));
+	}
+	for(d = 0; d < allRenderables->size; d++){
+		rndrDelete((renderable *)cvGet(allRenderables, d));
 	}
 	/*for(d = 0; d < allSprites->size; d++){
 		sprDelete((sprite *)cvGet(allSprites, d));

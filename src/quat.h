@@ -13,9 +13,11 @@ typedef struct quat {
 quat quatNew(float w, float x, float y, float z);
 quat quatNewS(float s);
 quat quatNewAxisAngle(float angle, float axisX, float axisY, float axisZ);
-quat quatNewEuler(vec3 v);
+quat quatNewEuler(float x, float y, float z);
 void quatSet(quat *q, float w, float x, float y, float z);
 void quatSetS(quat *q, float s);
+void quatSetAxisAngle(quat *q, float angle, float axisX, float axisY, float axisZ);
+void quatSetEuler(quat *q, float x, float y, float z);
 
 quat quatQAddQ(quat q1, quat q2);
 quat quatQAddW(quat q, float w);

@@ -4,8 +4,6 @@
 #include "texture.h"
 #include "cVector.h"
 
-/** Don't directly store textures in here if possible, and create a macro for animation frames **/
-
 // Simple rectangle structure for the frame boundaries when using sprite sheets
 typedef struct twBounds {
 	float x, y, w, h;
@@ -28,12 +26,14 @@ typedef struct twAnim {
 
 // Combines the above structures
 typedef struct textureWrapper {
-	cVector frames;  // Holds twFrames
+	char *name;
+	cVector frames;      // Holds twFrames
 	cVector animations;  // Holds twAnims
-	char *name;  // Used when loading sprites and models
 } textureWrapper;
 
-/** texLoad and texAnimate need some tidying up **/
+/** twLoad() and twAnimate() may need some tidying up **/
+void twInit(textureWrapper *texWrap);
+/** I don't like allTextures being passed in here at all **/
 unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *filePath, cVector *allTextures);
 void twAnimate(textureWrapper *texWrap, float speedMod, unsigned int *currentAnim, unsigned int *currentFrame, float *frameProgress, int *timesLooped);
 void twChangeAnim(textureWrapper *texWrap, unsigned int newAnim, unsigned int *currentAnim, unsigned int *currentFrame, float *frameProgress, int *timesLooped);

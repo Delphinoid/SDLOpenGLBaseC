@@ -67,9 +67,7 @@ unsigned char camCreateViewMatrix(camera *cam, mat4 *viewMatrix){
 		mat4LookAt(viewMatrix, cam->position, cam->target, cam->up);
 
 		// Rotate the camera
-		vec3 rotationRadians = cam->rotation;
-		vec3MultVByS(&rotationRadians, radianRatio);
-		mat4Rotate(viewMatrix, quatNewEuler(rotationRadians));
+		mat4Rotate(viewMatrix, quatNewEuler(cam->rotation.x*radianRatio, cam->rotation.y*radianRatio, cam->rotation.z*radianRatio));
 
 		cam->changed = 0;
 		return 1;

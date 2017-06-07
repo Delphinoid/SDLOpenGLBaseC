@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "vertex3D.h"
+#include "vertex.h"
 
 unsigned char gfxInitProgram(gfxProgram *gfxPrg, char *prgPath){
 
@@ -91,51 +91,42 @@ unsigned char gfxInitOGL(gfxProgram *gfxPrg){
 
 unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath){
 
+	/* Vertex shader */
 	char *vertexShaderExtra = "Resources\\Shaders\\vertexShader.vsh";
 	char *vertexShaderPath = malloc(strlen(prgPath) + strlen(vertexShaderExtra) + 1);
+	if(vertexShaderPath == NULL){
+		printf("Error loading vertex shader:\nMemory allocation failure.\n");
+		return 0;
+	}
 	strcpy(vertexShaderPath, prgPath);
 	strcat(vertexShaderPath, vertexShaderExtra);
 	vertexShaderPath[strlen(prgPath) + strlen(vertexShaderExtra)] = '\0';
 
-	char *fragmentShaderExtra = "Resources\\Shaders\\fragmentShader.fsh";
-	char *fragmentShaderPath = malloc(strlen(prgPath) + strlen(fragmentShaderExtra) + 1);
-	strcpy(fragmentShaderPath, prgPath);
-	strcat(fragmentShaderPath, fragmentShaderExtra);
-	fragmentShaderPath[strlen(prgPath) + strlen(fragmentShaderExtra)] = '\0';
-
-
 	/* Load vertex shader */
 	FILE *vertexShaderFile = fopen(vertexShaderPath, "rb");
+	free(vertexShaderPath);
 	fseek(vertexShaderFile, 0, SEEK_END);
 	long size = ftell(vertexShaderFile);
 	rewind(vertexShaderFile);
 	char *vertexShaderCode = malloc((size+1)*sizeof(char));
+	if(vertexShaderCode == NULL){
+		printf("Error loading vertex shader:\nMemory allocation failure.\n");
+		return 0;
+	}
 	fread(vertexShaderCode, sizeof(char), size, vertexShaderFile);
 	vertexShaderCode[size] = '\0';
 	fclose(vertexShaderFile);
-
-	/* Load fragment shader */
-	FILE *fragmentShaderFile = fopen(fragmentShaderPath, "rb");
-	fseek(fragmentShaderFile, 0, SEEK_END);
-	size = ftell(fragmentShaderFile);
-	rewind(fragmentShaderFile);
-	char *fragmentShaderCode = malloc((size+1)*sizeof(char));
-	fread(fragmentShaderCode, sizeof(char), size, fragmentShaderFile);
-	fragmentShaderCode[size] = '\0';
-	fclose(fragmentShaderFile);
-
-
-	GLint compileStatus = GL_FALSE;
- 	int infoLogLength;
-
 
 	/* Compile vertex shader */
 	gfxPrg->vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
 	const char *vertexShaderCodePointer = vertexShaderCode;
 	glShaderSource(gfxPrg->vertexShaderID, 1, &vertexShaderCodePointer, NULL);
+	free(vertexShaderCode);
 	glCompileShader(gfxPrg->vertexShaderID);
 
 	/* Validate vertex shader */
+	GLint compileStatus = GL_FALSE;
+ 	int infoLogLength;
 	glGetShaderiv(gfxPrg->vertexShaderID, GL_COMPILE_STATUS, &compileStatus);
  	glGetShaderiv(gfxPrg->vertexShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
  	if(infoLogLength > 1){
@@ -146,10 +137,37 @@ unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath){
  	}
 
 
+	/* Fragment shader */
+	char *fragmentShaderExtra = "Resources\\Shaders\\fragmentShader.fsh";
+	char *fragmentShaderPath = malloc(strlen(prgPath) + strlen(fragmentShaderExtra) + 1);
+	if(fragmentShaderPath == NULL){
+		printf("Error loading vertex shader:\nMemory allocation failure.\n");
+		return 0;
+	}
+	strcpy(fragmentShaderPath, prgPath);
+	strcat(fragmentShaderPath, fragmentShaderExtra);
+	fragmentShaderPath[strlen(prgPath) + strlen(fragmentShaderExtra)] = '\0';
+
+	/* Load fragment shader */
+	FILE *fragmentShaderFile = fopen(fragmentShaderPath, "rb");
+	free(fragmentShaderPath);
+	fseek(fragmentShaderFile, 0, SEEK_END);
+	size = ftell(fragmentShaderFile);
+	rewind(fragmentShaderFile);
+	char *fragmentShaderCode = malloc((size+1)*sizeof(char));
+	if(fragmentShaderCode == NULL){
+		printf("Error loading vertex shader:\nMemory allocation failure.\n");
+		return 0;
+	}
+	fread(fragmentShaderCode, sizeof(char), size, fragmentShaderFile);
+	fragmentShaderCode[size] = '\0';
+	fclose(fragmentShaderFile);
+
 	/* Compile fragment shader */
 	gfxPrg->fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
 	const char *fragmentShaderCodePointer = fragmentShaderCode;
 	glShaderSource(gfxPrg->fragmentShaderID, 1, &fragmentShaderCodePointer, NULL);
+	free(fragmentShaderCode);
 	glCompileShader(gfxPrg->fragmentShaderID);
 
 	/* Validate fragment shader */
@@ -187,6 +205,8 @@ unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath){
 	GLenum glError = glGetError();
 	if(glError != GL_NO_ERROR){
 		printf("Error loading shaders:\n%u\n", glError);
+		free(vertexShaderPath);   free(vertexShaderCode);
+ 		free(fragmentShaderPath); free(fragmentShaderCode);
 		return 0;
 	}
 
@@ -203,22 +223,22 @@ unsigned char gfxCreateBuffers(gfxProgram *gfxPrg){
 
 	/* VAO and VBO for rendering sprites */
 	// Create and bind the sprite VAO
-	glGenVertexArrays(1, &gfxPrg->spriteVaoID);
+	/**glGenVertexArrays(1, &gfxPrg->spriteVaoID);
 	glBindVertexArray(gfxPrg->spriteVaoID);
 	// Create and bind the sprite VBO
 	glGenBuffers(1, &gfxPrg->spriteVboID);
 	glBindBuffer(GL_ARRAY_BUFFER, gfxPrg->spriteVboID);
 	// Position offset
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex3D), (GLvoid*)offsetof(vertex3D, pos));
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, pos));
 	glEnableVertexAttribArray(0);
 	// UV offset
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex3D), (GLvoid*)offsetof(vertex3D, u));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, u));
 	glEnableVertexAttribArray(1);
 	// Normals offset
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex3D), (GLvoid*)offsetof(vertex3D, nx));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, nx));
 	glEnableVertexAttribArray(2);
 	// We don't want anything else to modify the VAO
-	glBindVertexArray(0);
+	glBindVertexArray(0);**/
 
 	GLenum glError = glGetError();
 	if(glError != GL_NO_ERROR){

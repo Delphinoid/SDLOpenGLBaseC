@@ -1,23 +1,29 @@
+#define GLEW_STATIC
+#include <GL/glew.h>
 #include "texture.h"
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-unsigned char tLoad(texture *tex, const char *prgPath, const char *filePath){
+//void generateNameFromPath(char **name, const char *path);
+void copyString(char **destination, const char *source, const unsigned int length);
 
-	char *fullPath = (char *)malloc((strlen(prgPath) + strlen(filePath) + 1) * sizeof(char));
-	strcpy(fullPath, prgPath);
-	strcat(fullPath, filePath);
-	fullPath[strlen(prgPath)+strlen(filePath)] = '\0';
-
-
-	/* Initialize member variables */
+void tInit(texture *tex){
 	tex->name = NULL;
 	tex->id = 0;
 	tex->width = 0;
 	tex->height = 0;
 	tex->translucent = 0;
+}
 
+unsigned char tLoad(texture *tex, const char *prgPath, const char *filePath){
+
+	tInit(tex);
+
+	char *fullPath = (char *)malloc((strlen(prgPath) + strlen(filePath) + 1) * sizeof(char));
+	strcpy(fullPath, prgPath);
+	strcat(fullPath, filePath);
+	fullPath[strlen(prgPath)+strlen(filePath)] = '\0';
 
 	/* Load image with SDL_Image */
 	SDL_Surface *SDLimage = IMG_Load(fullPath);
@@ -70,17 +76,8 @@ unsigned char tLoad(texture *tex, const char *prgPath, const char *filePath){
 	SDL_FreeSurface(SDLimage);
 
 
-	/* Generate a name for the texture */
-	/*unsigned int nameLastSlash = strrchr(filePath, '\\') - filePath + 1;
-	unsigned int nameLastPeriod = strrchr(filePath, '.') - filePath;
-	tex->name = malloc((nameLastPeriod - nameLastSlash) * sizeof(char));
-	strncpy(tex->name, filePath+nameLastSlash, nameLastPeriod-nameLastSlash);
-	tex->name[nameLastPeriod - nameLastSlash - 1] = '\0';*/
-	tex->name = malloc((strlen(filePath)+1) * sizeof(char));
-	strcpy(tex->name, filePath);
-	tex->name[strlen(filePath)] = '\0';
-
-
+	//generateNameFromPath(tex->name, filePath);
+	copyString(&tex->name, filePath, strlen(filePath));
 	free(fullPath);
 	return 1;
 

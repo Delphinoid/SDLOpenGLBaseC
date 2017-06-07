@@ -4,12 +4,18 @@
 #include <string.h>
 #include <stdio.h>
 
-unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *filePath, cVector *allTextures){
+//void generateNameFromPath(char **name, const char *path);
+void copyString(char **destination, const char *source, const unsigned int length);
 
-	/* Initialize member variables */
+void twInit(textureWrapper *texWrap){
 	texWrap->name = NULL;
 	cvInit(&texWrap->frames, 1);
 	cvInit(&texWrap->animations, 1);
+}
+
+unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *filePath, cVector *allTextures){
+
+	twInit(texWrap);
 
 	char *fullPath = malloc((strlen(prgPath) + strlen(filePath) + 1) * sizeof(char));
 	strcpy(fullPath, prgPath);
@@ -49,11 +55,13 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 				}
 			}
 
-			// Texture name
+			// Name
 			if(lineLength >= 6 && strncpy(compare, line, 5) && (compare[5] = '\0') == 0 && strcmp(compare, "name ") == 0){
 				texWrap->name = malloc((lineLength-4) * sizeof(char));
-				strncpy(texWrap->name, line+5, lineLength-5);
-				texWrap->name[lineLength-5] = '\0';
+				if(texWrap->name != NULL){
+					strncpy(texWrap->name, line+5, lineLength-5);
+					texWrap->name[lineLength-5] = '\0';
+				}
 
 
 			// Close current multiline command
@@ -141,22 +149,25 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 				strncpy(texPath, line+pathBegin, pathLength);
 				texPath[pathLength] = '\0';
 
+				/** Should the allTextures vector be used? It's not as nice or as modular
+				but if the assetHandler system is decided on it'll probably be better **/
 				// Look for texture name in allTextures
 				unsigned int d;
 				for(d = 0; d < allTextures->size; d++){
 					texture *tempTex = (texture *)cvGet(allTextures, d);
 					if(strcmp(texPath, tempTex->name) == 0){
-						tempFrame.baseTexture = tempTex;
+						tempFrame.baseTexture = (texture *)cvGet(allTextures, d);
 						skipLoad = 1;
 						d = allTextures->size;
 					}
 				}
 				// If the texture path is surrounded by quotes, try and load it
 				if(!skipLoad){
-					texture tempTex = {.name = NULL};
+					texture tempTex;
 					if(tLoad(&tempTex, prgPath, texPath)){
 						cvPush(allTextures, (void *)&tempTex, sizeof(tempTex));  // Add it to allTextures
 						tempFrame.baseTexture = (texture *)cvGet(allTextures, allTextures->size-1);
+						//tempFrame.baseTexture = &tempTex;
 					}
 				}
 
@@ -427,15 +438,9 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 	}
 
 	// If no name was given, generate one based off the file name
-	if(strlen(texWrap->name) == 0){
-		/*unsigned int nameLastSlash = strrchr(filePath, '\\') - filePath + 1;
-		unsigned int nameLastPeriod = strrchr(filePath, '.') - filePath;
-		texWrap->name = malloc(nameLastPeriod - nameLastSlash) * sizeof(char));
-		strncpy(texWrap->name, filePath+nameLastSlash, nameLastPeriod-nameLastSlash);
-		texWrap->name[nameLastPeriod - nameLastSlash - 1] = '\0';*/
-		texWrap->name = malloc((strlen(filePath)+1) * sizeof(char));
-		strcpy(texWrap->name, filePath);
-		texWrap->name[strlen(filePath)] = '\0';
+	if(texWrap->name == NULL || strlen(texWrap->name) == 0){
+		//generateNameFromPath(texWrap->name, filePath);
+		copyString(&texWrap->name, filePath, strlen(filePath));
 	}
 	cvResize(&texWrap->frames, texWrap->frames.size);
 	cvResize(&texWrap->animations, texWrap->animations.size);

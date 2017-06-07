@@ -1,43 +1,44 @@
+#define GLEW_STATIC
+#include <GL/glew.h>
 #include "model.h"
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
-#include <SDL2/SDL_image.h>
-#include "math.h"
-#include "mat4.h"
-#include <stdlib.h>
-#include <string.h>
+#include "cVector.h"
 #include <stdio.h>
 
-#define radianRatio 0.017453292  // = PI / 180, used for converting degrees to radians
+#define vertexStartCapacity 1024
+#define indexStartCapacity 2048
 
-unsigned char mdlLoad(model *mdl, const char *prgPath, const char *filePath, cVector *allTexWrappers){
+//void generateNameFromPath(char **name, const char *path);
+void copyString(char **destination, const char *source, const unsigned int length);
 
-	/* Initialize member variables */
-	mdl->vertices = NULL;
+void mdlInit(model *mdl){
+	mdl->name = NULL;
 	mdl->vertexNum = 0;
-	mdl->indices = NULL;
 	mdl->indexNum = 0;
 	mdl->vaoID = 0;
 	mdl->vboID = 0;
 	mdl->iboID = 0;
-	vec3SetS(&mdl->position, 0.f);
-	vec3SetS(&mdl->relPivot, 0.f);
-	quatSet(&mdl->orientation, 1.0f, 0.f, 0.f, 0.f);
-	vec3SetS(&mdl->target, 0.f);
-	vec3SetS(&mdl->changeRot, 0.f);
-	vec3SetS(&mdl->scale, 1.f);
-	mdl->alpha = 1.f;
-	mdl->billboardX = 0;
-	mdl->billboardY = 0;
-	mdl->billboardZ = 0;
-	mdl->simpleBillboard = 0;
-	mdl->hudElement = 0;
-	mdl->hudScaleMode = 0;
-	mdl->texture = NULL;
-	mdl->currentAnim = 0;
-	mdl->currentFrame = 0;
-	mdl->timesLooped = 0;
-	mdl->frameProgress = 0;
+}
+
+unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *filePath){
+
+	mdlInit(mdl);
+
+	vertex *vertices = malloc(vertexStartCapacity*sizeof(vertex));
+	unsigned int *indices = malloc(indexStartCapacity*sizeof(unsigned int));
+
+	if(vertices == NULL){
+		printf("Error loading model:\nMemory allocation failure for vertex buffer.\n");
+		return 0;
+	}else if(indices == NULL){
+		printf("Error loading model:\nMemory allocation failure for index buffer.\n");
+		free(vertices);
+		return 0;
+	}
+
+	size_t vertexCapacity = vertexStartCapacity;
+	size_t vertexNum = 0;
+	size_t indexCapacity = indexStartCapacity;
+	size_t indexNum = 0;
 
 	char *fullPath = malloc((strlen(prgPath) + strlen(filePath) + 1) * sizeof(char));
 	strcpy(fullPath, prgPath);
@@ -52,12 +53,10 @@ unsigned char mdlLoad(model *mdl, const char *prgPath, const char *filePath, cVe
 	cVector tempPositions; cvInit(&tempPositions, 3);  // Holds floats; temporarily holds vertex position data before it is pushed into vertexBuffer
 	cVector tempTexCoords; cvInit(&tempTexCoords, 2);  // Holds floats; temporarily holds vertex UV data before it is pushed into vertexBuffer
 	cVector tempNorms;     cvInit(&tempNorms, 3);      // Holds floats; temporarily holds vertex normal data before it is pushed into vertexBuffer
-	vertex3D tempVert;  // Holds a vertex before pushing it into the triangle array
+	vertex tempVert;  // Holds a vertex before pushing it into the triangle array
 	unsigned int positionIndex[3];  // Holds all the positional information for a face
 	unsigned int uvIndex[3];        // Holds all the UV information for a face
 	unsigned int normalIndex[3];    // Holds all the normal information for a face
-	cVector allVertices; cvInit(&allVertices, 1);  // Temporarily holds all vertex data
-	cVector allIndices;  cvInit(&allIndices, 1);   // Temporarily holds all index data
 
 	if(mdlInfo != NULL){
 		while(!feof(mdlInfo)){
@@ -81,14 +80,12 @@ unsigned char mdlLoad(model *mdl, const char *prgPath, const char *filePath, cVe
 				}
 			}
 
-			// Texture to use
-			if(lineLength >= 8 && strncpy(compare, line, 7) && (compare[7] = '\0') == 0 && strcmp(compare, "usemtl ") == 0){
-				for(d = 0; d < allTexWrappers->size; d++){
-					textureWrapper *tempTexWrap = (textureWrapper *)cvGet(allTexWrappers, d);
-					if(strcmp(line+7, tempTexWrap->name) == 0){
-						mdl->texture = tempTexWrap;
-						d = allTexWrappers->size;
-					}
+			// Name
+			if(lineLength >= 6 && strncpy(compare, line, 5) && (compare[5] = '\0') == 0 && strcmp(compare, "name ") == 0){
+				mdl->name = malloc((lineLength-4) * sizeof(char));
+				if(mdl->name != NULL){
+					strncpy(mdl->name, line+5, lineLength-5);
+					mdl->name[lineLength-5] = '\0';
 				}
 
 			// Vertex data
@@ -196,22 +193,73 @@ unsigned char mdlLoad(model *mdl, const char *prgPath, const char *filePath, cVe
 					// Check if the vertex has already been loaded, and if so add an index
 					unsigned char foundVertex = 0;
 					unsigned int f;
-					for(f = 0; f < allVertices.size; f++){
-						vertex3D *checkVert = (vertex3D *)cvGet(&allVertices, f);
+					for(f = 0; f < vertexNum; f++){
+						vertex *checkVert = &vertices[f];
 						if(checkVert->pos.x == tempVert.pos.x && checkVert->pos.y == tempVert.pos.y && checkVert->pos.z == tempVert.pos.z &&
 						   checkVert->u     == tempVert.u     && checkVert->v     == tempVert.v     &&
 						   checkVert->nx    == tempVert.nx    && checkVert->ny    == tempVert.ny    && checkVert->nz    == tempVert.nz){
 
-							cvPush(&allIndices, (void *)&f, sizeof(f));
-							f = allVertices.size;
+							// Resize indices if there's not enough room
+							if(indexNum == indexCapacity){
+								indexCapacity *= 2;
+								unsigned int *tempBuffer = realloc(indices, indexCapacity*sizeof(unsigned int));
+								if(tempBuffer != NULL){
+									indices = tempBuffer;
+								}else{
+									printf("Error loading model:\nMemory allocation failure for index buffer.\n");
+									cvClear(&tempPositions);
+									cvClear(&tempTexCoords);
+									cvClear(&tempNorms);
+									free(fullPath);
+									free(indices);
+									free(vertices);
+									return 0;
+								}
+							}
+							indices[indexNum++] = f;
+							f = vertexNum;
 							foundVertex = 1;
 						}
 					}
 
 					// If the vertex has not yet been loaded, add it to both the vertex vector and the index vector
 					if(!foundVertex){
-						cvPush(&allIndices, (void *)&allVertices.size, sizeof(allVertices.size));
-						cvPush(&allVertices, (void *)&tempVert, sizeof(tempVert));
+						// Resize indices if there's not enough room
+						if(indexNum == indexCapacity){
+							indexCapacity *= 2;
+							unsigned int *tempBuffer = realloc(indices, indexCapacity*sizeof(unsigned int));
+							if(tempBuffer != NULL){
+								indices = tempBuffer;
+							}else{
+								printf("Error loading model:\nMemory allocation failure for index buffer.\n");
+								cvClear(&tempPositions);
+								cvClear(&tempTexCoords);
+								cvClear(&tempNorms);
+								free(fullPath);
+								free(indices);
+								free(vertices);
+								return 0;
+							}
+						}
+						// Resize vertices if there's not enough room
+						if(vertexNum == vertexCapacity){
+							vertexCapacity *= 2;
+							vertex *tempBuffer = realloc(vertices, vertexCapacity*sizeof(vertex));
+							if(tempBuffer != NULL){
+								vertices = tempBuffer;
+							}else{
+								printf("Error loading model:\nMemory allocation failure for vertex buffer.\n");
+								cvClear(&tempPositions);
+								cvClear(&tempTexCoords);
+								cvClear(&tempNorms);
+								free(fullPath);
+								free(indices);
+								free(vertices);
+								return 0;
+							}
+						}
+						indices[indexNum++] = vertexNum;
+						vertices[vertexNum++] = tempVert;
 					}
 
 				}
@@ -228,6 +276,8 @@ unsigned char mdlLoad(model *mdl, const char *prgPath, const char *filePath, cVe
 		cvClear(&tempTexCoords);
 		cvClear(&tempNorms);
 		free(fullPath);
+		free(indices);
+		free(vertices);
 		return 0;
 	}
 
@@ -236,30 +286,79 @@ unsigned char mdlLoad(model *mdl, const char *prgPath, const char *filePath, cVe
 	cvClear(&tempNorms);
 	free(fullPath);
 
-	mdl->vertexNum = allVertices.size;
-	mdl->vertices = malloc(allVertices.size * sizeof(vertex3D));
-	unsigned int d;
-	for(d = 0; d < allVertices.size; d++){
-		mdl->vertices[d] = *((vertex3D *)cvGet(&allVertices, d));
+	// If no name was given, generate one based off the file name
+	if(mdl->name == NULL || strlen(mdl->name) == 0){
+		//generateNameFromPath(mdl->name, filePath);
+		copyString(&mdl->name, filePath, strlen(filePath));
 	}
-	cvClear(&allVertices);
-
-	mdl->indexNum = allIndices.size;
-	mdl->indices = malloc(allIndices.size * sizeof(unsigned int));
-	for(d = 0; d < allIndices.size; d++){
-		mdl->indices[d] = *((unsigned int *)cvGet(&allIndices, d));
-	}
-	cvClear(&allIndices);
-
-	mdlCreateVAO(mdl);
+	/** Should mdlGenBufferObjects() be here? **/
+	mdlGenBufferObjects(mdl, vertices, vertexNum, indices, indexNum);
+	free(indices);
+	free(vertices);
 	return 1;
-
 
 }
 
-void mdlCreateVAO(model *mdl){
+/** Change this function later **/
+unsigned char mdlCreateSprite(model *mdl, char *name){
 
-	if(mdl->indexNum > 0 && (mdl->vaoID == 0 || mdl->vboID == 0 || mdl->iboID == 0)){
+	mdlInit(mdl);
+	GLenum glError;
+
+	// Create and bind the VAO
+	glGenVertexArrays(1, &mdl->vaoID);
+	glBindVertexArray(mdl->vaoID);
+
+	// Create and bind the VBO
+	glGenBuffers(1, &mdl->vboID);
+	glBindBuffer(GL_ARRAY_BUFFER, mdl->vboID);
+	glError = glGetError();
+	if(glError != GL_NO_ERROR){
+		printf("Error creating vertex buffer:\n%u\n", glError);
+		return 0;
+	}
+
+	/** Should sprites use IBOs? Probably, but they're not working at the moment **/
+	// Create and bind the IBO
+	/*glGenBuffers(1, &mdl->iboID);
+	glBindBuffer(GL_ARRAY_BUFFER, mdl->iboID);
+	glError = glGetError();
+	if(glError != GL_NO_ERROR){
+		printf("Error creating index buffer:\n%u\n", glError);
+		return 0;
+	}*/
+
+	// Position offset
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, pos));
+	glEnableVertexAttribArray(0);
+	// UV offset
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, u));
+	glEnableVertexAttribArray(1);
+	// Normals offset
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, nx));
+	glEnableVertexAttribArray(2);
+	// We don't want anything else to modify the VAO
+	glBindVertexArray(0);
+
+	// Check for errors
+	glError = glGetError();
+	if(glError != GL_NO_ERROR){
+		printf("Error creating vertex array buffer:\n%u\n", glError);
+	}
+
+	mdl->vertexNum = 4;
+	mdl->indexNum = 6;
+	copyString(&mdl->name, name, strlen(name));
+
+	return 1;
+
+}
+
+void mdlGenBufferObjects(model *mdl, vertex *vertices, size_t vertexNum, unsigned int *indices, size_t indexNum){
+
+	if(vertexNum > 0){
+
+		GLenum glError;
 
 		// Create and bind the VAO
 		glGenVertexArrays(1, &mdl->vaoID);
@@ -268,240 +367,48 @@ void mdlCreateVAO(model *mdl){
 		// Create and bind the VBO
 		glGenBuffers(1, &mdl->vboID);
 		glBindBuffer(GL_ARRAY_BUFFER, mdl->vboID);
-		glBufferData(GL_ARRAY_BUFFER, mdl->vertexNum * sizeof(vertex3D), &mdl->vertices[0], GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, vertexNum * sizeof(vertex), vertices, GL_STATIC_DRAW);
+		// Check for errors
+		glError = glGetError();
+		if(glError != GL_NO_ERROR){
+			printf("Error creating vertex buffer:\n%u\n", glError);
+		}else{
+			// If there are no errors, set mdl->vertexNum
+			mdl->vertexNum = vertexNum;
+		}
 
-		// Create and bind the IBO
-		glGenBuffers(1, &mdl->iboID);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mdl->iboID);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, mdl->indexNum * sizeof(unsigned int), &mdl->indices[0], GL_STATIC_DRAW);
+		if(indexNum > 0){
+			// Create and bind the IBO
+			glGenBuffers(1, &mdl->iboID);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mdl->iboID);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexNum * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+			// Check for errors
+			glError = glGetError();
+			if(glError != GL_NO_ERROR){
+				printf("Error creating index buffer:\n%u\n", glError);
+			}else{
+				// If there are no errors, set mdl->indexNum
+				mdl->indexNum = indexNum;
+			}
+		}
 
 		// Position offset
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex3D), (GLvoid*)offsetof(vertex3D, pos));
-		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, pos));
+		glEnableVertexAttribArray(0);
 		// UV offset
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex3D), (GLvoid*)offsetof(vertex3D, u));
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, u));
 		glEnableVertexAttribArray(1);
 		// Normals offset
-		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex3D), (GLvoid*)offsetof(vertex3D, nx));
-		glEnableVertexAttribArray(0);
-
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, nx));
+		glEnableVertexAttribArray(2);
 		// We don't want anything else to modify the VAO
 		glBindVertexArray(0);
 
-		GLenum glError = glGetError();
+		// Check for errors
+		glError = glGetError();
 		if(glError != GL_NO_ERROR){
-			printf("Error creating buffers:\n%u\n", glError);
+			printf("Error creating vertex array buffer:\n%u\n", glError);
 		}
-
-	}
-
-}
-
-unsigned int mdlRenderMethod(model *mdl){
-	if(mdl->alpha > 0.f && mdl->texture != NULL){
-		if(mdl->alpha < 1.f || twContainsTranslucency(mdl->texture, mdl->currentAnim, mdl->currentFrame)){
-			return 1;  // The model contains translucency
-		}else{
-			return 0;  // The model is fully opaque
-		}
-	}
-	return 2;  // The model is fully transparent
-}
-
-void mdlHudElement(model *mdl, unsigned char isHudElement){
-	if(isHudElement != mdl->hudElement){
-		// HUD elements render rotated 180 degrees on the X axis due to the way the orthographic matrix is set up
-		quatMultQByQ2(quatNewEuler(vec3New(M_PI, 0.f, 0.f)), &mdl->orientation);
-	}
-	mdl->hudElement = isHudElement;
-	if(!mdl->hudElement){
-		mdl->hudScaleMode = 0;
-	}
-}
-
-void mdlSetRotation(model *mdl, float newX, float newY, float newZ){
-	// HUD elements render rotated 180 degrees on the X axis due to the way the orthographic matrix is set up
-	float offsetX = mdl->hudElement ? M_PI : 0.f;
-	mdl->orientation = quatNewEuler(vec3New(newX * radianRatio + offsetX, newY * radianRatio, newZ * radianRatio));
-	mdl->changeRot = vec3NewS(0.f);
-}
-
-void mdlRotateX(model *mdl, float changeX){
-	mdl->changeRot.x += changeX;
-}
-
-void mdlRotateY(model *mdl, float changeY){
-	mdl->changeRot.y += changeY;
-}
-
-void mdlRotateZ(model *mdl, float changeZ){
-	mdl->changeRot.z += changeZ;
-}
-
-void mdlAnimate(model *mdl){
-
-	// Execute the next frame of the animation
-
-}
-
-void mdlAnimateTex(model *mdl){
-
-	if(mdl->texture != NULL){
-		if(mdl->frameProgress == 0){
-			mdl->frameProgress = SDL_GetTicks();
-		}
-		twAnimate(mdl->texture, 1.f, &mdl->currentAnim, &mdl->currentFrame, &mdl->frameProgress, &mdl->timesLooped);
-	}
-
-}
-
-void mdlRender(model *mdl, gfxProgram *gfxPrg, camera *cam){
-
-	if(mdl->texture != NULL && mdl->indexNum > 0 && mdl->vboID != 0 && mdl->alpha > 0.f){
-
-		/* Get texture information for rendering */
-		float texFrag[4];  // The x, y, width and height of the fragment of the texture being rendered
-		GLuint frameTexID;
-		twGetFrameInfo(mdl->texture, mdl->currentAnim, mdl->currentFrame, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &frameTexID);
-
-
-		/* Bind the texture (if needed) */
-		glActiveTexture(GL_TEXTURE0);
-		if(frameTexID != gfxPrg->lastTexID){
-			gfxPrg->lastTexID = frameTexID;
-			glBindTexture(GL_TEXTURE_2D, frameTexID);
-		}
-
-
-		/* Feed the texture coordinates to the shader */
-		glUniform4f(gfxPrg->textureFragmentID, texFrag[0], texFrag[1], texFrag[2], texFrag[3]);
-
-
-		/* Feed the translucency value to the shader */
-		glUniform1f(gfxPrg->alphaID, mdl->alpha);
-
-
-		/* Set temporary position and scale vectors based on the selected HUD scaling mode */
-		vec3 windowPos = mdl->position;
-		vec3 windowScale = mdl->scale;
-		if(mdl->hudElement){
-			if(mdl->hudScaleMode == 1 || mdl->hudScaleMode == 3){
-				windowPos = vec3New(mdl->position.x * (float)gfxPrg->windowWidth  / (float)gfxPrg->biggestDimension,
-				                    mdl->position.y * (float)gfxPrg->windowHeight / (float)gfxPrg->biggestDimension,
-				                    mdl->position.z);
-			}
-			if(mdl->hudScaleMode == 2 || mdl->hudScaleMode == 3){
-				windowScale = vec3New(mdl->scale.x * (float)gfxPrg->windowWidth  / (float)gfxPrg->biggestDimension,
-				                      mdl->scale.y * (float)gfxPrg->windowHeight / (float)gfxPrg->biggestDimension,
-				                      mdl->scale.z);
-			}
-		}
-
-
-		/*
-		** Translate the model. By translating it from the camera coordinates to begin
-		** with, we can save multiplying the model matrix by the view matrix later on.
-		** However, we must start with the identity matrix for HUD elements
-		*/
-		mat4 modelViewMatrix;
-		vec3 scaledPivot = vec3VMultV(mdl->relPivot, windowScale);
-		if(mdl->hudElement){
-			modelViewMatrix = gfxPrg->identityMatrix;  // Start with the identity matrix
-		}else{
-			modelViewMatrix = gfxPrg->viewMatrix;      // Start with the view matrix
-		}
-		mat4Translate(&modelViewMatrix, windowPos.x+scaledPivot.x, windowPos.y+scaledPivot.y, windowPos.z+scaledPivot.z);
-
-
-		/* Billboarding */
-		if(mdl->billboardX || mdl->billboardY || mdl->billboardZ){
-			vec3 axisX; vec3 axisY; vec3 axisZ;
-			if(mdl->simpleBillboard){
-				// Use the camera's X, Y and Z axes
-				axisX = vec3New(gfxPrg->viewMatrix.m[0][0], gfxPrg->viewMatrix.m[0][1], gfxPrg->viewMatrix.m[0][2]);
-				axisY = vec3New(gfxPrg->viewMatrix.m[1][0], gfxPrg->viewMatrix.m[1][1], gfxPrg->viewMatrix.m[1][2]);
-				axisZ = vec3New(gfxPrg->viewMatrix.m[2][0], gfxPrg->viewMatrix.m[2][1], gfxPrg->viewMatrix.m[2][2]);
-			}else{
-				// Generate a new view matrix for the billboard
-				mat4 billboardViewMatrix;
-				/** Merge model, sprite and cam **/
-				mat4LookAt(&billboardViewMatrix, mdl->target, mdl->position, cam->up);
-				axisX = vec3New(billboardViewMatrix.m[0][0], billboardViewMatrix.m[0][1], billboardViewMatrix.m[0][2]);
-				axisY = vec3New(billboardViewMatrix.m[1][0], billboardViewMatrix.m[1][1], billboardViewMatrix.m[1][2]);
-				axisZ = vec3New(billboardViewMatrix.m[2][0], billboardViewMatrix.m[2][1], billboardViewMatrix.m[2][2]);
-			}
-			// Lock certain axes if needed
-			if(!mdl->billboardX){
-				axisX.y = 0.f;
-				axisY.y = 1.f;
-				axisZ.y = 0.f;
-			}
-			if(!mdl->billboardY){
-				axisX.x = 1.f;
-				axisY.x = 0.f;
-				axisZ.x = 0.f;
-			}
-			if(!mdl->billboardZ){
-				axisX.z = 0.f;
-				axisY.z = 0.f;
-				axisZ.z = 1.f;
-			}
-			// Rotation matrix               X axis   Y axis   Z axis
-			mat4 billboardRotation = {.m = {{axisX.x, axisY.x, axisZ.x, 0.f},
-											{axisX.y, axisY.y, axisZ.y, 0.f},
-											{axisX.z, axisY.z, axisZ.z, 0.f},
-											{0.f,     0.f,     0.f,     1.f}}};
-			mat4MultMByM1(&modelViewMatrix, &billboardRotation);  // Apply billboard rotation
-		}
-
-
-		/* Rotate the model */
-		// Convert the change in rotation to radians
-		vec3 rotationRadians = vec3VMultS(mdl->changeRot, radianRatio);
-		quatMultQByQ2(quatNewEuler(rotationRadians), &mdl->orientation);  // Apply the change in rotation to the current orientation
-		vec3SetS(&mdl->changeRot, 0.f);  // Reset the change in rotation
-
-		// Convert orientation quaternion to its equivalent axis-angle representation
-		/*float rotAngle = 0.f;
-		vec3 rotAxis; vec3NewS(1.f);
-		quatAxisAngle(mdl->orientation, &rotAngle, &rotAxis.x, &rotAxis.y, &rotAxis.z);
-
-		mat4RotateV(&modelViewMatrix, rotAngle, rotAxis);*/
-		mat4Rotate(&modelViewMatrix, mdl->orientation);
-
-
-		/*
-		** Translate the model by -scaledPivot to counteract the scaledPivot in the
-		** last translation. The result is the appearance of the model "pivoting"
-		** around position + scaledPivot
-		*/
-		mat4Translate(&modelViewMatrix, -scaledPivot.x, -scaledPivot.y, -scaledPivot.z);
-
-
-		/* Scale the model */
-		mat4Scale(&modelViewMatrix, windowScale.x, windowScale.y, windowScale.z);
-
-
-		/* Create the MVP matrix */
-		//mat4 modelViewProjectionMatrix;
-		if(mdl->hudElement){
-			//modelViewProjectionMatrix = gfxPrg->projectionMatrixOrtho;    // Ortho for HUD elements
-			mat4MultMByM2(&gfxPrg->projectionMatrixOrtho, &modelViewMatrix);
-		}else{
-			//modelViewProjectionMatrix = gfxPrg->projectionMatrixFrustum;  // Frustum for regular models
-			mat4MultMByM2(&gfxPrg->projectionMatrixFrustum, &modelViewMatrix);
-		}
-		//mat4MultMByM1(&modelViewProjectionMatrix, &modelViewMatrix);
-
-
-		/* Feed the MVP matrix to the shader */
-		glUniformMatrix4fv(gfxPrg->mvpMatrixID, 1, GL_FALSE, &modelViewMatrix.m[0][0]);
-
-
-		/* Render the model */
-		glBindVertexArray(mdl->vaoID);
-		glDrawElements(GL_TRIANGLES, mdl->indexNum, GL_UNSIGNED_INT, (void *)0);
-		//glDrawArrays(GL_TRIANGLES, 0, mdl->vertexNum);
 
 	}
 
@@ -509,7 +416,7 @@ void mdlRender(model *mdl, gfxProgram *gfxPrg, camera *cam){
 
 void mdlDelete(model *mdl){
 	if(mdl->vaoID != 0){
-		glDeleteVertexArrays(1, &mdl->vaoID);
+		glDeleteBuffers(1, &mdl->vaoID);
 	}
 	if(mdl->vboID != 0){
 		glDeleteBuffers(1, &mdl->vboID);
@@ -517,6 +424,6 @@ void mdlDelete(model *mdl){
 	if(mdl->iboID != 0){
 		glDeleteBuffers(1, &mdl->iboID);
 	}
-	free(&mdl->vertices);
-	free(&mdl->indices);
+	//free(&mdl->vertices);
+	//free(&mdl->indices);
 }

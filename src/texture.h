@@ -13,6 +13,7 @@ typedef struct texture {
 
 } texture;
 
+void tInit(texture *tex);
 unsigned char tLoad(texture *tex, const char *prgPath, const char *filePath);
 void tDelete(texture *tex);
 
