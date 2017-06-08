@@ -36,32 +36,40 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 		while(!feof(texInfo)){
 
 			fgets(lineFeed, sizeof(lineFeed), texInfo);
-			lineFeed[strcspn(lineFeed, "\r\n")] = 0;
 			line = lineFeed;
 			currentLine++;
 			lineLength = strlen(line);
 
+			// Remove new line and carriage return
+			if(line[lineLength-1] == '\n'){
+				line[--lineLength] = '\0';
+			}
+			if(line[lineLength-1] == '\r'){
+				line[--lineLength] = '\0';
+			}
 			// Remove any comments from the line
 			char *commentPos = strstr(line, "//");
 			if(commentPos != NULL){
 				lineLength -= commentPos-line;
-				commentPos = '\0';
+				*commentPos = '\0';
 			}
 			// Remove any indentations from the line, as well as any trailing spaces and tabs
-			unsigned int d;
 			unsigned char doneFront = 0, doneEnd = 0;
+			unsigned int newOffset = 0;
+			unsigned int d;
 			for(d = 0; (d < lineLength && !doneFront && !doneEnd); d++){
 				if(!doneFront && line[d] != '\t' && line[d] != ' '){
-					line += d;
-					lineLength -= d;
+					newOffset = d;
 					doneFront = 1;
 				}
 				if(!doneEnd && d > 1 && d < lineLength && line[lineLength-d] != '\t' && line[lineLength-d] != ' '){
-					line[lineLength-d-1] = '\0';
-					lineLength -= d;
+					lineLength -= d-1;
+					line[lineLength] = '\0';
 					doneEnd = 1;
 				}
 			}
+			line += newOffset;
+			lineLength -= newOffset;
 
 			// Name
 			if(lineLength >= 6 && strncpy(compare, line, 5) && (compare[5] = '\0') == 0 && strcmp(compare, "name ") == 0){
