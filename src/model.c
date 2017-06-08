@@ -69,14 +69,22 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 			// Remove any comments from the line
 			char *commentPos = strstr(line, "//");
 			if(commentPos != NULL){
+				lineLength -= commentPos-line;
 				commentPos = '\0';
 			}
-			// Remove any indentations from the line
+			// Remove any indentations from the line, as well as any trailing spaces and tabs
 			unsigned int d;
-			for(d = 0; d < lineLength; d++){
-				if(line[d] != '\t' && line[d] != ' '){
+			unsigned char doneFront = 0, doneEnd = 0;
+			for(d = 0; (d < lineLength && !doneFront && !doneEnd); d++){
+				if(!doneFront && line[d] != '\t' && line[d] != ' '){
 					line += d;
-					d = lineLength;
+					lineLength -= d;
+					doneFront = 1;
+				}
+				if(!doneEnd && d > 1 && d < lineLength && line[lineLength-d] != '\t' && line[lineLength-d] != ' '){
+					line[lineLength-d-1] = '\0';
+					lineLength -= d;
+					doneEnd = 1;
 				}
 			}
 

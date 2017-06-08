@@ -16,7 +16,7 @@ typedef struct renderable {
 	textureWrapper *texture;  // Pointer to the texture wrapper being used. Could be pretty dangerous, might need to change it
 	spaceTransform sTrans;
 	renderTransform rTrans;
-	/** Sprite, width and height houldn't be necessary here **/
+	/** Sprite, width and height shouldn't be necessary here **/
 	unsigned char sprite;
 	float width, height;
 	unsigned char billboardX;       // Whether or not the object uses the camera's rotated X axis
