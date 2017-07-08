@@ -3,9 +3,7 @@
 
 #include "vec3.h"
 
-typedef struct mat4 mat4;
-
-typedef struct quat {
+typedef struct {
 	float w;
 	vec3 v;
 } quat;
@@ -36,6 +34,12 @@ void quatMultQByQ1(quat *q1, quat q2);
 void quatMultQByQ2(quat q1, quat *q2);
 void quatMultQByS(quat *q, float s);
 
+quat quatQDivQ(quat q1, quat q2);
+quat quatQDivS(quat q, float s);
+void quatDivQByQ1(quat *q1, quat q2);
+void quatDivQByQ2(quat q1, quat *q2);
+void quatDivQByS(quat *q, float s);
+
 float quatGetMagnitude(quat q);
 
 quat quatGetConjugate(quat q);
@@ -50,7 +54,11 @@ void quatInvert(quat *q);
 quat quatGetUnit(quat q);
 void quatNormalize(quat *q);
 
-void quatMat4(quat q, mat4 *m);
 void quatAxisAngle(quat q, float *angle, float *axisX, float *axisY, float *axisZ);
+
+float quatDot(quat q1, quat q2);
+
+quat quatLerp(quat q1, quat q2, float t);
+quat quatSlerp(quat q1, quat q2, float t);
 
 #endif

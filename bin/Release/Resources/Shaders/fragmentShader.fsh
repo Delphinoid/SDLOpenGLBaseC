@@ -1,8 +1,14 @@
 #version 330 core
 
+// Per-fragment data
 in vec2 UV;
-uniform sampler2D textureSampler0;
+
+// Per-instance data (same as per-call for now since we're not using instancing)
 uniform float alpha;
+
+// Per-call data
+uniform sampler2D textureSampler0;
+
 out vec4 colour;
 
 void main(){

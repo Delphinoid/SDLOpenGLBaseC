@@ -1,11 +1,10 @@
 #ifndef MAT4_H
 #define MAT4_H
 
-typedef struct vec3 vec3;
-typedef struct vec4 vec4;
-typedef struct quat quat;
+#include "vec4.h"
+#include "quat.h"
 
-typedef struct mat4 {
+typedef struct {
 	float m[4][4];
 } mat4;
 
@@ -35,5 +34,7 @@ void mat4Rotate(mat4 *m, quat q);
 mat4 mat4RotationMatrix(quat q);
 void mat4Scale(mat4 *m, float x, float y, float z);
 mat4 mat4ScaleMatrix(float x, float y, float z);
+
+void mat4Quat(mat4 *m, quat q);
 
 #endif

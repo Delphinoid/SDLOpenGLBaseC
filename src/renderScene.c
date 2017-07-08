@@ -1,6 +1,6 @@
 #include "renderable.h"
 #include "camera.h"
-#include "math.h"
+#include <math.h>
 
 /** THIS FILE IS TEMPORARY **/
 /** THIS FILE IS TEMPORARY **/
@@ -16,18 +16,33 @@ void renderModel(renderable *rndr, gfxProgram *gfxPrg, camera *cam){
 	/* Get texture information for rendering */
 	float texFrag[4];  // The x, y, width and height of the fragment of the texture being rendered
 	GLuint frameTexID;
-	twGetFrameInfo(rndr->texture, rndr->rTrans.currentAnim, rndr->rTrans.currentFrame,
-	               &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &frameTexID);
-
+	twiGetFrameInfo(&rndr->tex, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &frameTexID);
 	/* Bind the texture (if needed) */
 	glActiveTexture(GL_TEXTURE0);
 	if(frameTexID != gfxPrg->lastTexID){
 		gfxPrg->lastTexID = frameTexID;
 		glBindTexture(GL_TEXTURE_2D, frameTexID);
 	}
-
 	/* Feed the texture coordinates to the shader */
-	glUniform4f(gfxPrg->textureFragmentID, texFrag[0], texFrag[1], texFrag[2], texFrag[3]);
+	glUniform4fv(gfxPrg->textureFragmentID, 1, texFrag);
+
+	/* Generate a new skeleton state and feed it to the shader */
+	/*rndrGenerateSkeletonState(rndr);
+	size_t d;
+	for(d = 0; d < rndrBoneNum(rndr); d++){
+		// Feed position
+		glUniform3f(gfxPrg->bonePositionArrayID[d], rndr->sklState[d].position.x,
+		                                            rndr->sklState[d].position.y,
+		                                            rndr->sklState[d].position.z);
+		// Feed orientation
+		glUniform4f(gfxPrg->boneOrientationArrayID[d], rndr->sklState[d].orientation.w,
+		                                               rndr->sklState[d].orientation.v.x,
+		                                               rndr->sklState[d].orientation.v.y,
+		                                               rndr->sklState[d].orientation.v.z);
+	}*/
+
+	//sklGenerateState(&rndr->skl);
+	//sklFeedStateToShader();
 
 	/* Feed the translucency value to the shader */
 	glUniform1f(gfxPrg->alphaID, rndr->rTrans.alpha);
@@ -61,20 +76,19 @@ void batchRenderSprites(cVector *allSprites, gfxProgram *gfxPrg, camera *cam){
 	GLuint texHeight;
 	GLuint currentTexID;
 	vertex currentVertexBatch[allSprites->size * /**4**/6];
-	unsigned int currentVertexBatchSize = 0;
-	/**unsigned int currentIndexBatch[allSprites->size * 6];
-	unsigned int currentIndexBatchSize = 0;**/
+	size_t currentVertexBatchSize = 0;
+	/**size_t currentIndexBatch[allSprites->size * 6];
+	size_t currentIndexBatchSize = 0;**/
 
 	renderable *curSpr;
-	unsigned int d;
+	size_t d;
 	for(d = 0; d < allSprites->size; d++){
 
 		curSpr = *((renderable **)cvGet(allSprites, d));
 
 		if(curSpr != NULL){
 
-			twGetFrameInfo(curSpr->texture, curSpr->rTrans.currentAnim, curSpr->rTrans.currentFrame,
-			               &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &currentTexID);
+			twiGetFrameInfo(&curSpr->tex, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &currentTexID);
 
 			// If the current texture ID differs from the last, render and clear the VBO
 			if(gfxPrg->lastTexID != currentTexID && currentVertexBatchSize >= /**4**/6){
@@ -94,8 +108,8 @@ void batchRenderSprites(cVector *allSprites, gfxProgram *gfxPrg, camera *cam){
 			}
 
 			// Get the texture's width and height for calculating the texture's UV offsets outside of the shader
-			texWidth = twGetTexWidth(curSpr->texture, curSpr->rTrans.currentAnim, curSpr->rTrans.currentFrame);
-			texHeight = twGetTexHeight(curSpr->texture, curSpr->rTrans.currentAnim, curSpr->rTrans.currentFrame);
+			texWidth  = twiGetTexWidth(&curSpr->tex);
+			texHeight = twiGetTexHeight(&curSpr->tex);
 
 			// Add sprite to the current batch
 			gfxPrg->lastTexID = currentTexID;
@@ -140,7 +154,7 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, camera *cam){
 	cVector distances;  cvInit(&distances, 1);  // Holds floats
 
 	// Sort the different models into groups of those that are opaque and those that contain translucency
-	unsigned int d;
+	size_t d;
 	for(d = 0; d < allModels->size; d++){
 
 		renderable *curMdl = *((renderable **)cvGet(allModels, d));
@@ -162,7 +176,7 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, camera *cam){
 
 	// Simple bubblesort (for now) to sort models with translucency by depth
 	for(d = 0; d < translucentModels.size; d++){
-		unsigned int f;
+		size_t f;
 		for(f = 1; f < translucentModels.size - d; f++){
 
 			if(*((float *)cvGet(&distances, f-1)) < *((float *)cvGet(&distances, f))){
@@ -196,7 +210,7 @@ void sortElements(cVector *allRenderables,
                   cVector *spritesScene, cVector *spritesHUD){
 
 	// Sort models and sprites into their scene and HUD vectors
-	unsigned int d;
+	size_t d;
 	for(d = 0; d < allRenderables->size; d++){
 		renderable *curRndr = (renderable *)cvGet(allRenderables, d);
 		if(!curRndr->sprite){
@@ -229,7 +243,7 @@ void renderScene(cVector *allRenderables, gfxProgram *gfxPrg, camera *cam){
 	cVector renderList; cvInit(&renderList, 1);  // Holds model pointers; pointers to depth-sorted scene models that must be rendered
 	depthSortModels(&modelsScene, &renderList, cam);
 	// Render scene models
-	unsigned int d;
+	size_t d;
 	for(d = 0; d < renderList.size; d++){
 		renderModel(*((renderable **)cvGet(&renderList, d)), gfxPrg, cam);
 	}

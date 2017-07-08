@@ -1,5 +1,5 @@
 #include "vec3.h"
-#include "math.h"
+#include <math.h>
 
 vec3 vec3New(float x, float y, float z){
 	vec3 v = {.x = x, .y = y, .z = z};
@@ -122,7 +122,7 @@ void vec3MultVByS(vec3 *v, float s){
 }
 
 vec3 vec3VDivV(vec3 v1, vec3 v2){
-	if(v2.x != 0 && v2.y != 0 && v2.z != 0){
+	if(v2.x != 0.f && v2.y != 0.f && v2.z != 0.f){
 		vec3 r = {.x = v1.x / v2.x,
 		          .y = v1.y / v2.y,
 		          .z = v1.z / v2.z};
@@ -131,7 +131,7 @@ vec3 vec3VDivV(vec3 v1, vec3 v2){
 	return v1;
 }
 vec3 vec3VDivN(vec3 v, float x, float y, float z){
-	if(x != 0 && y != 0 && z != 0){
+	if(x != 0.f && y != 0.f && z != 0.f){
 		vec3 r = {.x = v.x / x,
 		          .y = v.y / y,
 		          .z = v.z / z};
@@ -140,7 +140,7 @@ vec3 vec3VDivN(vec3 v, float x, float y, float z){
 	return v;
 }
 vec3 vec3VDivS(vec3 v, float s){
-	if(s != 0){
+	if(s != 0.f){
 		vec3 r = {.x = v.x / s,
 		          .y = v.y / s,
 		          .z = v.z / s};
@@ -149,7 +149,7 @@ vec3 vec3VDivS(vec3 v, float s){
 	return v;
 }
 vec3 vec3NDivV(float x, float y, float z, vec3 v){
-	if(v.x != 0 && v.y != 0 && v.z != 0){
+	if(v.x != 0.f && v.y != 0.f && v.z != 0.f){
 		vec3 r = {.x = x / v.x,
 		          .y = y / v.y,
 		          .z = z / v.z};
@@ -158,7 +158,7 @@ vec3 vec3NDivV(float x, float y, float z, vec3 v){
 	return v;
 }
 vec3 vec3SDivV(float s, vec3 v){
-	if(v.x != 0 && v.y != 0 && v.z != 0){
+	if(v.x != 0.f && v.y != 0.f && v.z != 0.f){
 		vec3 r = {.x = s / v.x,
 		          .y = s / v.y,
 		          .z = s / v.z};
@@ -167,32 +167,32 @@ vec3 vec3SDivV(float s, vec3 v){
 	return v;
 }
 void vec3DivVByV1(vec3 *v1, vec3 v2){
-	if(v2.x != 0 && v2.y != 0 && v2.z != 0){
+	if(v2.x != 0.f && v2.y != 0.f && v2.z != 0.f){
 		v1->x /= v2.x; v1->y /= v2.y; v1->z /= v2.z;
 	}
 }
 void vec3DivVByV2(vec3 v1, vec3 *v2){
-	if(v1.x != 0 && v1.y != 0 && v1.z != 0){
+	if(v1.x != 0.f && v1.y != 0.f && v1.z != 0.f){
 		v2->x = v1.x / v2->x; v2->y = v1.y / v2->y; v2->z = v1.z / v2->z;
 	}
 }
 void vec3DivVByN(vec3 *v, float x, float y, float z){
-	if(x != 0 && y != 0 && z != 0){
+	if(x != 0.f && y != 0.f && z != 0.f){
 		v->x /= x; v->y /= y; v->z /= z;
 	}
 }
 void vec3DivVByS(vec3 *v, float s){
-	if(s != 0){
+	if(s != 0.f){
 		v->x /= s; v->y /= s; v->z /= s;
 	}
 }
 void vec3DivNByV(float x, float y, float z, vec3 *v){
-	if(v->x != 0 && v->y != 0 && v->z != 0){
+	if(v->x != 0.f && v->y != 0.f && v->z != 0.f){
 		v->x = x / v->x; v->y = y / v->y; v->z = z / v->z;
 	}
 }
 void vec3DivSByV(float s, vec3 *v){
-	if(v->x != 0 && v->y != 0 && v->z != 0){
+	if(v->x != 0.f && v->y != 0.f && v->z != 0.f){
 		v->x = s / v->x; v->y = s / v->y; v->z = s / v->z;
 	}
 }
@@ -203,14 +203,14 @@ float vec3GetMagnitude(vec3 v){
 
 vec3 vec3GetUnit(vec3 v){
 	float magnitude = vec3GetMagnitude(v);
-	if(magnitude != 0){
+	if(magnitude != 0.f){
 		return vec3VDivN(v, magnitude, magnitude, magnitude);
 	}
 	return v;
 }
 void vec3Normalize(vec3 *v){
 	float magnitude = vec3GetMagnitude(*v);
-	if(magnitude != 0){
+	if(magnitude != 0.f){
 		vec3DivVByN(v, magnitude, magnitude, magnitude);
 	}
 }

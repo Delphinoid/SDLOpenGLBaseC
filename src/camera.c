@@ -1,9 +1,8 @@
 #include "camera.h"
 #include "mat4.h"
-#include "quat.h"
-#include "math.h"
+#include <math.h>
 
-#define radianRatio 0.017453292  // = PI / 180, used for converting degrees to radians
+#define radianRatio 0.017453292  /* = PI / 180, used for converting degrees to radians */
 
 void camInit(camera *cam){
 	vec3Set(&cam->position, 0.f, 2.f, 7.f);
@@ -16,15 +15,17 @@ void camInit(camera *cam){
 
 void camCalculateUp(camera *cam){  /** Probably not entirely necessary **/
 
-	/* Finds the relative up direction based off where the camera is looking */
+	/*
+	** Finds the relative up direction based off where the camera is looking
+	*/
 
-	// Normalize the target vector
+	/* Normalize the target vector */
 	float magnitude = sqrt(cam->target.x * cam->target.x +
 	                       cam->target.y * cam->target.y +
 	                       cam->target.z * cam->target.z);
 
-	// If thetarget is (0, 0, 0), the magnitude will be 0 and
-	// we'll get a divide by zero error
+	/* If thetarget is (0, 0, 0), the magnitude will be 0 and */
+	/* we'll get a divide by zero error */
 	if(magnitude != 0){
 
 		vec3 targetUnit = cam->target;
@@ -32,15 +33,15 @@ void camCalculateUp(camera *cam){  /** Probably not entirely necessary **/
 		targetUnit.y /= magnitude;
 		targetUnit.z /= magnitude;
 
-		// Calculate the cross product of the normalized target vector and the
-		// vector (0, 1, 0). The result is a vector pointing to the right
+		/* Calculate the cross product of the normalized target vector and the */
+		/* vector (0, 1, 0). The result is a vector pointing to the right */
 		vec3 rightVector;
 		rightVector.x = targetUnit.z;
 		rightVector.y = 0.f;
 		rightVector.z = targetUnit.x;
 
-		// Calculate the cross product of the normalized target vector and the
-		// right vector. This is the vector we need.
+		/* Calculate the cross product of the normalized target vector and the */
+		/* right vector. This is the vector we need. */
 		cam->up.x = targetUnit.y * rightVector.z;
 		cam->up.y = targetUnit.z * rightVector.x - targetUnit.x * rightVector.z;
 		cam->up.z = -targetUnit.y * rightVector.x;
@@ -57,16 +58,16 @@ void camCalculateUp(camera *cam){  /** Probably not entirely necessary **/
 
 unsigned char camCreateViewMatrix(camera *cam, mat4 *viewMatrix){
 
-	// Only update the view matrix if the camera was changed during the frame
+	/* Only update the view matrix if the camera was changed during the frame */
 	if(cam->changed){
 
-		// Calculate the up vector
+		/* Calculate the up vector */
 		camCalculateUp(cam);
 
-		// Set the camera to look at something
+		/* Set the camera to look at something */
 		mat4LookAt(viewMatrix, cam->position, cam->target, cam->up);
 
-		// Rotate the camera
+		/* Rotate the camera */
 		mat4Rotate(viewMatrix, quatNewEuler(cam->rotation.x*radianRatio, cam->rotation.y*radianRatio, cam->rotation.z*radianRatio));
 
 		cam->changed = 0;

@@ -4,28 +4,27 @@
 #include <string.h>
 #include <stdio.h>
 
-//void generateNameFromPath(char **name, const char *path);
-void copyString(char **destination, const char *source, const unsigned int length);
-
-void twInit(textureWrapper *texWrap){
-	texWrap->name = NULL;
-	cvInit(&texWrap->frames, 1);
-	cvInit(&texWrap->animations, 1);
+void twInit(textureWrapper *tw){
+	tw->name = NULL;
+	cvInit(&tw->frames, 1);
+	cvInit(&tw->animations, 1);
 }
 
-unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *filePath, cVector *allTextures){
+unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath, cVector *allTextures){
 
-	twInit(texWrap);
+	twInit(tw);
 
-	char *fullPath = malloc((strlen(prgPath) + strlen(filePath) + 1) * sizeof(char));
-	strcpy(fullPath, prgPath);
-	strcat(fullPath, filePath);
-	fullPath[strlen(prgPath)+strlen(filePath)] = '\0';
+	size_t pathLen = strlen(prgPath);
+	size_t fileLen = strlen(filePath);
+	char *fullPath = malloc((pathLen+fileLen+1) * sizeof(char));
+	memcpy(fullPath, prgPath, pathLen);
+	memcpy(fullPath+pathLen, filePath, fileLen);
+	fullPath[pathLen+fileLen] = '\0';
 	FILE *texInfo = fopen(fullPath, "r");
 	char lineFeed[1024];
 	char *line;
 	char compare[1024];
-	unsigned int lineLength;
+	size_t lineLength;
 
 	twAnim tempAnim;               // Current texture animation being worked on
 	tempAnim.frameIDs.size = 0; tempAnim.subframeIDs.size = 0; tempAnim.frameDelays.size = 0;
@@ -55,8 +54,8 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 			}
 			// Remove any indentations from the line, as well as any trailing spaces and tabs
 			unsigned char doneFront = 0, doneEnd = 0;
-			unsigned int newOffset = 0;
-			unsigned int d;
+			size_t newOffset = 0;
+			size_t d;
 			for(d = 0; (d < lineLength && !doneFront && !doneEnd); d++){
 				if(!doneFront && line[d] != '\t' && line[d] != ' '){
 					newOffset = d;
@@ -73,10 +72,10 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 
 			// Name
 			if(lineLength >= 6 && strncpy(compare, line, 5) && (compare[5] = '\0') == 0 && strcmp(compare, "name ") == 0){
-				texWrap->name = malloc((lineLength-4) * sizeof(char));
-				if(texWrap->name != NULL){
-					strncpy(texWrap->name, line+5, lineLength-5);
-					texWrap->name[lineLength-5] = '\0';
+				tw->name = malloc((lineLength-4) * sizeof(char));
+				if(tw->name != NULL){
+					strncpy(tw->name, line+5, lineLength-5);
+					tw->name[lineLength-5] = '\0';
 				}
 
 
@@ -84,12 +83,12 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 			}else if(lineLength > 0 && line[0] == '}'){
 				if(currentCommand == 0){
 					// If a textureFrame was being worked on and has no subframes, add the default one
-					if(((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->subframes.size == 0){
-						twBounds baseSubframe = {.x = 0.f, .y = 0.f, .w = ((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->baseTexture->width,
-						                                             .h = ((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->baseTexture->height};
-						cvPush(&((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->subframes, (void *)&baseSubframe, sizeof(baseSubframe));
+					if(((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->subframes.size == 0){
+						twBounds baseSubframe = {.x = 0.f, .y = 0.f, .w = ((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->baseTexture->width,
+						                                             .h = ((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->baseTexture->height};
+						cvPush(&((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->subframes, (void *)&baseSubframe, sizeof(baseSubframe));
 					}
-					cvResize(&((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->subframes, ((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->subframes.size);
+					cvResize(&((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->subframes, ((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->subframes.size);
 
 				}else if(currentCommand == 1){
 					// If a valid animation was being worked on, save it and continue
@@ -100,7 +99,7 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 						cvResize(&tempAnim.frameIDs, tempAnim.frameIDs.size);
 						cvResize(&tempAnim.subframeIDs, tempAnim.subframeIDs.size);
 						cvResize(&tempAnim.frameDelays, tempAnim.frameDelays.size);
-						cvPush(&texWrap->animations, (void *)&tempAnim, sizeof(tempAnim));
+						cvPush(&tw->animations, (void *)&tempAnim, sizeof(tempAnim));
 					}
 				}
 
@@ -119,11 +118,11 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 					// If the multiline command is a texture...
 					if(currentCommand == 0){
 						// If a textureFrame was being worked on and has no subframes, add the default one
-						if(((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->subframes.size == 0){
-							twBounds baseSubframe = {.x = 0.f, .y = 0.f, .w = ((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->baseTexture->width,
-							                                             .h = ((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->baseTexture->height};
-							cvPush(&((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->subframes, (void *)&baseSubframe, sizeof(baseSubframe));
-							cvResize(&((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->subframes, ((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->subframes.size);
+						if(((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->subframes.size == 0){
+							twBounds baseSubframe = {.x = 0.f, .y = 0.f, .w = ((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->baseTexture->width,
+							                                             .h = ((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->baseTexture->height};
+							cvPush(&((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->subframes, (void *)&baseSubframe, sizeof(baseSubframe));
+							cvResize(&((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->subframes, ((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->subframes.size);
 						}
 
 					}else if(currentCommand == 1){
@@ -135,7 +134,7 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 							cvResize(&tempAnim.frameIDs, tempAnim.frameIDs.size);
 							cvResize(&tempAnim.subframeIDs, tempAnim.subframeIDs.size);
 							cvResize(&tempAnim.frameDelays, tempAnim.frameDelays.size);
-							cvPush(&texWrap->animations, (void *)&tempAnim, sizeof(tempAnim));
+							cvPush(&tw->animations, (void *)&tempAnim, sizeof(tempAnim));
 						}
 					}
 
@@ -150,8 +149,8 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 
 				char *firstQuote = strchr(line, '"');
 				char *lastQuote = strrchr(line, '"');
-				unsigned int pathBegin;
-				unsigned int pathLength;
+				size_t pathBegin;
+				size_t pathLength;
 				unsigned char skipLoad = 0;
 				// If the texture identifier wasn't surrounded by quotes, don't give up:
 				if(firstQuote != NULL && lastQuote > firstQuote){
@@ -168,7 +167,6 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 				/** Should the allTextures vector be used? It's not as nice or as modular
 				but if the assetHandler system is decided on it'll probably be better **/
 				// Look for texture name in allTextures
-				unsigned int d;
 				for(d = 0; d < allTextures->size; d++){
 					texture *tempTex = (texture *)cvGet(allTextures, d);
 					if(strcmp(texPath, tempTex->name) == 0){
@@ -197,7 +195,7 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 						cvPush(&tempFrame.subframes, (void *)&baseSubframe, sizeof(baseSubframe));
 						cvResize(&tempFrame.subframes, tempFrame.subframes.size);
 					}
-					cvPush(&texWrap->frames, (void *)&tempFrame, sizeof(tempFrame));
+					cvPush(&tw->frames, (void *)&tempFrame, sizeof(tempFrame));
 				}
 
 				free(texPath);
@@ -209,7 +207,7 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 				if(currentCommand == 0){
 
 					// Loads number of subframes to create, main dimension to loop in (x or y) and the subframe dimensions
-					unsigned int numberOfFrames = 0;
+					size_t numberOfFrames = 0;
 					char macroDirection = ' ';
 					float dimensions[4] = {0, 0, 0, 0};
 					char *token = strtok(line+7, "/");
@@ -224,14 +222,14 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 						token = strtok(NULL, "/");
 					}
 
-					unsigned int currentTexW = ((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->baseTexture->width;
-					unsigned int currentTexH = ((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->baseTexture->height;
+					unsigned int currentTexW = ((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->baseTexture->width;
+					unsigned int currentTexH = ((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->baseTexture->height;
 
 					// Automatically generate subframes for a sprite sheet
 					for(d = 1; d <= numberOfFrames; d++){
 						if(dimensions[0] + dimensions[2] <= currentTexW && dimensions[1] + dimensions[3] <= currentTexH){
 							twBounds baseSubframe = {.x = dimensions[0], .y = dimensions[1], .w = dimensions[2], .h = dimensions[3]};
-							cvPush(&((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->subframes, (void *)&baseSubframe, sizeof(baseSubframe));
+							cvPush(&((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->subframes, (void *)&baseSubframe, sizeof(baseSubframe));
 							if(macroDirection == 'x'){  // Adds frames from left to right before resetting and moving down
 								dimensions[0] = (unsigned int)(d * dimensions[2]) % currentTexW;
 								dimensions[1] = (unsigned int)(d * dimensions[2]) / currentTexW * dimensions[3];
@@ -270,7 +268,7 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 						}
 					}
 					twBounds baseSubframe = {.x = dimensions[0], .y = dimensions[1], .w = dimensions[2], .h = dimensions[3]};
-					cvPush(&((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->subframes, (void *)&baseSubframe, sizeof(baseSubframe));
+					cvPush(&((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->subframes, (void *)&baseSubframe, sizeof(baseSubframe));
 
 				}else{
 					printf("Error loading texture wrapper:\nTexture sub-command \"subframe\" invoked on line %u without specifying a multiline texture.\n", currentLine);
@@ -282,7 +280,7 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 				if(currentCommand == 0){
 					/*char *texPath = malloc((lineLength-6) * sizeof(char));
 					strcpy(texPath, line+7);
-					tLoad(((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->normalTexture, prgPath, texPath);
+					tLoad(((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->normalTexture, prgPath, texPath);
 					free(texPath);*/
 					printf("Error loading texture wrapper:\nTexture sub-command \"normal\" is awaiting implementation.\n");
 				}else{
@@ -293,7 +291,7 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 			// New texture animation
 			}else if(lineLength >= 9 && strncpy(compare, line, 9) && (compare[9] = '\0') == 0 && strcmp(compare, "animation") == 0){
 				// Reset tempAnim
-				tempAnim.loop = 0;
+				tempAnim.desiredLoops = 0;
 				cvInit(&tempAnim.frameIDs, 1);
 				cvInit(&tempAnim.subframeIDs, 1);
 				cvInit(&tempAnim.frameDelays, 1);
@@ -303,7 +301,7 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 			// Make the current animation loop
 			}else if(lineLength >= 6 && strncpy(compare, line, 5) && (compare[5] = '\0') == 0 && strcmp(compare, "loop ") == 0){
 				if(currentCommand == 1){
-					tempAnim.loop = strtol(line+5, NULL, 0);
+					tempAnim.desiredLoops = strtol(line+5, NULL, 0);
 				}else{
 					printf("Error loading texture wrapper:\nAnimation sub-command \"loop\" invoked on line %u without specifying an animation.\n", currentLine);
 				}
@@ -315,8 +313,8 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 				if(currentCommand == 1){
 
 					// Loads start and end textures, start and end subframes and the frame delays
-					unsigned int textures[2] = {0, 0};
-					unsigned int subframes[2] = {0, 0};
+					size_t textures[2] = {0, 0};
+					size_t subframes[2] = {0, 0};
 					float frameDelay = 0.f;
 					char *token = strtok(line+7, "/");
 					for(d = 0; d < 6; d++){
@@ -336,10 +334,10 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 
 					if(frameDelay > 0){
 						for(d = textures[0]; d <= textures[1]; d++){
-							if(d < texWrap->frames.size){
-								unsigned int f;
+							if(d < tw->frames.size){
+								size_t f;
 								for(f = subframes[0]; f <= subframes[1]; f++){
-									if(f < ((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->subframes.size){
+									if(f < ((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->subframes.size){
 										cvPush(&tempAnim.frameIDs, (void *)&d, sizeof(d));
 										cvPush(&tempAnim.subframeIDs, (void *)&f, sizeof(f));
 										cvPush(&tempAnim.frameDelays, (void *)&frameDelay, sizeof(frameDelay));
@@ -364,7 +362,7 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 				if(currentCommand == 1){
 
 					// Parse frame information
-					unsigned int frameID = 0, subframeID = 0;
+					size_t frameID = 0, subframeID = 0;
 					float frameDelay = 0.f;
 					char *token = strtok(line+6, "/");
 					for(d = 0; d < 6; d++){
@@ -383,8 +381,8 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 					}
 
 					// Validate the frame information
-					if(frameDelay > 0 && frameID < texWrap->frames.size &&
-					   subframeID < ((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->subframes.size){
+					if(frameDelay > 0 && frameID < tw->frames.size &&
+					   subframeID < ((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->subframes.size){
 						cvPush(&tempAnim.frameIDs, (void *)&frameID, sizeof(frameID));
 						cvPush(&tempAnim.subframeIDs, (void *)&subframeID, sizeof(subframeID));
 						cvPush(&tempAnim.frameDelays, (void *)&frameDelay, sizeof(frameDelay));
@@ -409,26 +407,26 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 
 
 	// Check if any textures were loaded
-	if(texWrap->frames.size == 0){
+	if(tw->frames.size == 0){
 
 		printf("Error loading texture wrapper:\nNo textures were loaded.\n");
 		return 0;
 
 	// If they were, check if the last texture added has any subframes. If it doesn't, add the default one
-	}else if(((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->subframes.size == 0){
+	}else if(((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->subframes.size == 0){
 
-		twBounds baseSubframe = {.x = 0.f, .y = 0.f, .w = ((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->baseTexture->width,
-		                                             .h = ((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->baseTexture->height};
-		cvPush(&((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->subframes, (void *)&baseSubframe, sizeof(baseSubframe));
-		cvResize(&((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->subframes, ((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->subframes.size);
+		twBounds baseSubframe = {.x = 0.f, .y = 0.f, .w = ((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->baseTexture->width,
+		                                             .h = ((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->baseTexture->height};
+		cvPush(&((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->subframes, (void *)&baseSubframe, sizeof(baseSubframe));
+		cvResize(&((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->subframes, ((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->subframes.size);
 
 	// If the last texture added has subframes, shrink the subframe vector to fit the amount of elements in it
 	}else{
-		cvResize(&((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->subframes, ((twFrame *)cvGet(&texWrap->frames, texWrap->frames.size-1))->subframes.size);
+		cvResize(&((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->subframes, ((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->subframes.size);
 	}
 
 	// Check if any animations were loaded
-	if(texWrap->animations.size == 0){
+	if(tw->animations.size == 0){
 		// If an animation was being worked on, add it
 		if(tempAnim.frameIDs.size > 0 && tempAnim.subframeIDs.size == tempAnim.frameIDs.size &&
 		   tempAnim.frameDelays.size == tempAnim.frameIDs.size){
@@ -436,143 +434,195 @@ unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *f
 			cvResize(&tempAnim.frameIDs, tempAnim.frameIDs.size);
 			cvResize(&tempAnim.subframeIDs, tempAnim.subframeIDs.size);
 			cvResize(&tempAnim.frameDelays, tempAnim.frameDelays.size);
-			cvPush(&texWrap->animations, (void *)&tempAnim, sizeof(tempAnim));
+			cvPush(&tw->animations, (void *)&tempAnim, sizeof(tempAnim));
 
 		}else{  // Otherwise add the default animation
 
-			twAnim defaultAnim = {.loop = 0};
+			twAnim defaultAnim = {.desiredLoops = 0};
 			cvInit(&defaultAnim.frameIDs, 1);
 			cvInit(&defaultAnim.subframeIDs, 1);
 			cvInit(&defaultAnim.frameDelays, 1);
-			unsigned int i = 0; float f = 0.f;
+			size_t i = 0; float f = 0.f;
 			cvPush(&defaultAnim.frameIDs, (void *)&i, sizeof(i));
 			cvPush(&defaultAnim.subframeIDs, (void *)&i, sizeof(i));
 			cvPush(&defaultAnim.frameDelays, (void *)&f, sizeof(f));
-			cvPush(&texWrap->animations, (void *)&defaultAnim, sizeof(defaultAnim));
+			cvPush(&tw->animations, (void *)&defaultAnim, sizeof(defaultAnim));
 
 		}
 	}
 
 	// If no name was given, generate one based off the file name
-	if(texWrap->name == NULL || strlen(texWrap->name) == 0){
-		//generateNameFromPath(texWrap->name, filePath);
-		copyString(&texWrap->name, filePath, strlen(filePath));
+	if(tw->name == NULL || tw->name[0] == '\0'){
+		tw->name = malloc((fileLen+1)*sizeof(char));
+		memcpy(tw->name, filePath, fileLen);
+		tw->name[fileLen] = '\0';
 	}
-	cvResize(&texWrap->frames, texWrap->frames.size);
-	cvResize(&texWrap->animations, texWrap->animations.size);
+	cvResize(&tw->frames, tw->frames.size);
+	cvResize(&tw->animations, tw->animations.size);
 	return 1;
 
 }
 
-void twAnimate(textureWrapper *texWrap, float speedMod, unsigned int *currentAnim, unsigned int *currentFrame, float *frameProgress, int *timesLooped){
+void twDelete(textureWrapper *tw){
+	size_t d;
+	for(d = 0; d < tw->frames.size; d++){
+		cvClear(&((twFrame *)cvGet(&tw->frames, d))->subframes);
+	}
+	cvClear(&tw->frames);
+	for(d = 0; d < tw->animations.size; d++){
+		cvClear(&((twAnim *)cvGet(&tw->animations, d))->frameIDs);
+		cvClear(&((twAnim *)cvGet(&tw->animations, d))->subframeIDs);
+		cvClear(&((twAnim *)cvGet(&tw->animations, d))->frameDelays);
+	}
+	cvClear(&tw->animations);
+	if(tw->name != NULL){
+		free(tw->name);
+	}
+}
 
-	// Only animate the texture if the current animation is valid,
-	// has more than one frame and can still be animated
-	twAnim *curAnimRef = (twAnim *)cvGet(&texWrap->animations, *currentAnim);
-	if(curAnimRef != NULL && curAnimRef->frameIDs.size > 1 &&
-	   ((*timesLooped <= curAnimRef->loop || curAnimRef->loop < 0) ||
-	     *currentFrame < curAnimRef->frameIDs.size - 1)){
+twAnim *twGetAnim(textureWrapper *tw, size_t anim){
+	return (twAnim *)cvGet(&tw->animations, anim);
+}
 
-		if(*currentFrame < curAnimRef->frameIDs.size){  // Make sure the current frame is valid
+twFrame *twGetAnimFrame(textureWrapper *tw, size_t anim, size_t frame){
+	/*size_t currentFrameID = *((size_t *)cvGet(&twGetAnim(tw, anim)->frameIDs, frame));*/
+	return (twFrame *)cvGet(&tw->frames,
+	                        *((size_t *)cvGet(&twGetAnim(tw, anim)->frameIDs, frame)));
+}
 
-			// Get the current tick
-			float currentTick = SDL_GetTicks() * speedMod;
+twBounds *twGetAnimSubframe(textureWrapper *tw, size_t anim, size_t frame){
+	/*size_t currentSubframeID = *((size_t *)cvGet(&twGetAnim(tw, anim)->subframeIDs, frame));*/
+	return (twBounds *)cvGet(&twGetAnimFrame(tw, anim, frame)->subframes,
+	                         *((size_t *)cvGet(&twGetAnim(tw, anim)->subframeIDs, frame)));
+}
 
-			/* While the difference between currentTick and the frameProgress is greater than the
-			desired delay period and the texture can still be animated, advance the animation */
-			while((currentTick - *frameProgress) >= *((float *)cvGet(&curAnimRef->frameDelays, *currentFrame)) &&
-			      (((*timesLooped <= curAnimRef->loop || curAnimRef->loop < 0) ||
-			         *currentFrame < curAnimRef->frameIDs.size - 1))){
+float *twGetAnimFrameDelay(textureWrapper *tw, size_t anim, size_t frame){
+	return (float *)cvGet(&twGetAnim(tw, anim)->frameDelays, frame);
+}
 
-				// Add the delay to frameProgress and advance the animation
-				*frameProgress += *((float *)cvGet(&curAnimRef->frameDelays, *currentFrame));
-				(*currentFrame)++;
+void twiInit(twInstance *twi, textureWrapper *tw){
+	twi->texWrap = tw;
+	animInit(&twi->animator);
+}
 
-				// Reset currentFrame if it gets too high
-				if(*currentFrame == curAnimRef->frameIDs.size){
-					(*timesLooped)++;
-					if(*timesLooped <= curAnimRef->loop || curAnimRef->loop < 0){
-						*currentFrame = 0;
-					}else{
-						*currentFrame = curAnimRef->frameIDs.size - 1;
-					}
+void twiChangeAnim(twInstance *twi, size_t newAnim){
+	if(newAnim < twi->texWrap->animations.size){
+		animChange(&twi->animator, newAnim);
+	}
+}
+
+/**unsigned char twiAnimFinished(twInstance *twi){
+	// Return true if the animation has finished looping, is on the last frame
+	// and the last frame has played for long enough
+	return twi->animator.currentLoops >= twGetAnim(twi->texWrap, twi->animator.currentAnim)->desiredLoops &&
+	       twi->animator.currentAnim == twGetAnim(twi->texWrap, twi->animator.currentAnim)->frameDelays.size-1 &&
+	       twi->animator.lastUpdate-SDL_GetTicks() >= *twGetAnimFrameDelay(twi->texWrap,
+	                                                                       twi->animator.currentAnim,
+	                                                                       twi->animator.currentFrame);
+}**/
+
+void twiAnimate(twInstance *twi, float globalDelayMod){
+
+	animAdvance(&twi->animator,
+	            &twGetAnim(twi->texWrap, twi->animator.currentAnim)->frameDelays,
+	            twGetAnim(twi->texWrap, twi->animator.currentAnim)->desiredLoops,
+	            SDL_GetTicks(), globalDelayMod);
+
+}
+
+/*void twiAnimate(twInstance *twi, float speedMod){
+
+	// Make sure the animation is within the correct bounds
+	if(twi->animation >= twi->texWrap->animations.size){
+		twi->animation = 0;
+		twi->frame = 0;
+		twi->t = SDL_GetTicks();
+	// Make sure the current frame is valid
+	}else if(twi->frame >= twGetAnim(twi->texWrap, twi->animation)->frameIDs.size){
+		twi->frame = 0;
+		twi->t = SDL_GetTicks();
+	// Make sure t has been set
+	}else if(twi->t == 0.f){
+		twi->t = SDL_GetTicks();
+	}
+
+	float totalSpeedMod = twi->speed * speedMod;
+
+	// Only animate the texture if the animation has more than one
+	// frame and can still be animated
+	if(totalSpeedMod != 0.f &&
+	   twGetAnim(twi->texWrap, twi->animation)->frameIDs.size > 1 &&
+	   (twGetAnim(twi->texWrap, twi->animation)->loopNum < 0 || !twiAnimFinished(twi))){
+
+		// Current tick
+		float currentTick = SDL_GetTicks() * totalSpeedMod;
+
+		* While deltaTime exceeds the time that the current frame should last and the
+		texture can still be animated, advance the animation *
+		while((currentTick-twi->t) >= *twGetAnimFrameDelay(twi->texWrap, twi->animation, twi->frame) &&
+		      (twGetAnim(twi->texWrap, twi->animation)->loopNum < 0 || !twiAnimFinished(twi))){
+
+			// Add the delay to frameProgress and advance the animation
+			twi->t += *twGetAnimFrameDelay(twi->texWrap, twi->animation, twi->frame);
+			twi->frame++;
+
+			// Reset the animation if frame exceeds the number of frames in the animation
+			if(twi->frame == twGetAnim(twi->texWrap, twi->animation)->frameIDs.size){
+				twi->loops++;
+				// If the animation can loop, set it to the first frame
+				if(twGetAnim(twi->texWrap, twi->animation)->loopNum >= twi->loops ||
+				   twGetAnim(twi->texWrap, twi->animation)->loopNum < 0){
+					twi->frame = 0;
+				// Otherwise set it to the final frame
+				}else{
+					twi->frame = twGetAnim(twi->texWrap, twi->animation)->frameIDs.size-1;
 				}
-
 			}
 
-		}else{  // If it is too high, set it back
-
-			// Only reset the animation if it can loop
-			if(!curAnimRef->loop){
-				*currentFrame = curAnimRef->frameIDs.size - 1;
-			}else{
-				*currentFrame = 0;
-			}
-			*frameProgress = SDL_GetTicks();
-
-		}
-
-	}else{
-
-		if(*currentAnim >= texWrap->animations.size){
-			*currentAnim = 0;
-		}
-		if(*currentFrame >= ((twAnim *)cvGet(&texWrap->animations, *currentAnim))->frameIDs.size){
-			if(!((twAnim *)cvGet(&texWrap->animations, *currentAnim))->loop){
-				*currentFrame = ((twAnim *)cvGet(&texWrap->animations, *currentAnim))->frameIDs.size - 1;
-			}else{
-				*currentFrame = 0;
-			}
-			*frameProgress = SDL_GetTicks();
 		}
 
 	}
 
-}
+}*/
 
-void twChangeAnim(textureWrapper *texWrap, unsigned int newAnim, unsigned int *currentAnim, unsigned int *currentFrame, float *frameProgress, int *timesLooped){
-	if(newAnim < texWrap->animations.size){
-		*currentAnim = newAnim;
-		*currentFrame = 0;
-		*frameProgress = 0.f;
-		*timesLooped = 0;
-	}
-}
-
-GLuint twGetTexWidth(textureWrapper *texWrap, unsigned int currentAnim, unsigned int currentFrame){
-	if(currentAnim < texWrap->animations.size && currentFrame < ((twAnim *)cvGet(&texWrap->animations, currentAnim))->frameIDs.size){
-		return ((twFrame *)cvGet(&texWrap->frames, *((unsigned int *)cvGet(&((twAnim *)cvGet(&texWrap->animations, currentAnim))->frameIDs, currentFrame))))->baseTexture->width;
+GLuint twiGetTexWidth(twInstance *twi){
+	// Make sure the current animation and frame are valid (within proper bounds)
+	if(twi->animator.currentAnim < twi->texWrap->animations.size &&
+	   twi->animator.currentFrame < twGetAnim(twi->texWrap, twi->animator.currentAnim)->frameIDs.size){
+		return twGetAnimFrame(twi->texWrap, twi->animator.currentAnim, twi->animator.currentFrame)->baseTexture->width;
 	}
 	return 0;
 }
 
-GLuint twGetTexHeight(textureWrapper *texWrap, unsigned int currentAnim, unsigned int currentFrame){
-	if(currentAnim < texWrap->animations.size && currentFrame < ((twAnim *)cvGet(&texWrap->animations, currentAnim))->frameIDs.size){
-		return ((twFrame *)cvGet(&texWrap->frames, *((unsigned int *)cvGet(&((twAnim *)cvGet(&texWrap->animations, currentAnim))->frameIDs, currentFrame))))->baseTexture->height;
+GLuint twiGetTexHeight(twInstance *twi){
+	// Make sure the current animation and frame are valid (within proper bounds)
+	if(twi->animator.currentAnim < twi->texWrap->animations.size &&
+	   twi->animator.currentFrame < twGetAnim(twi->texWrap, twi->animator.currentAnim)->frameIDs.size){
+		return twGetAnimFrame(twi->texWrap, twi->animator.currentAnim, twi->animator.currentFrame)->baseTexture->height;
 	}
 	return 0;
 }
 
-GLuint twGetTexID(textureWrapper *texWrap, unsigned int currentAnim, unsigned int currentFrame){
-	if(currentAnim < texWrap->animations.size && currentFrame < ((twAnim *)cvGet(&texWrap->animations, currentAnim))->frameIDs.size){
-		return ((twFrame *)cvGet(&texWrap->frames, *((unsigned int *)cvGet(&((twAnim *)cvGet(&texWrap->animations, currentAnim))->frameIDs, currentFrame))))->baseTexture->id;
+GLuint twiGetTexID(twInstance *twi){
+	// Make sure the current animation and frame are valid (within proper bounds)
+	if(twi->animator.currentAnim < twi->texWrap->animations.size &&
+	   twi->animator.currentFrame < twGetAnim(twi->texWrap, twi->animator.currentAnim)->frameIDs.size){
+		return twGetAnimFrame(twi->texWrap, twi->animator.currentAnim, twi->animator.currentFrame)->baseTexture->id;
 	}
 	return 0;
 }
 
-void twGetFrameInfo(textureWrapper *texWrap, unsigned int currentAnim, unsigned int currentFrame, float *x, float *y, float *w, float *h, GLuint *frameTexID){
+void twiGetFrameInfo(twInstance *twi, float *x, float *y, float *w, float *h, GLuint *frameTexID){
 
-	// Check if currentAnim and currentFrame are valid
-	if(currentAnim < texWrap->animations.size && currentFrame < ((twAnim *)cvGet(&texWrap->animations, currentAnim))->frameIDs.size){
+	// Make sure the current animation and frame are valid (within proper bounds)
+	if(twi->animator.currentAnim < twi->texWrap->animations.size &&
+	   twi->animator.currentFrame < twGetAnim(twi->texWrap, twi->animator.currentAnim)->frameIDs.size){
 
-		unsigned int currentFrameID = *((unsigned int *)cvGet(&((twAnim *)cvGet(&texWrap->animations, currentAnim))->frameIDs, currentFrame));
-		unsigned int currentSubframeID = *((unsigned int *)cvGet(&((twAnim *)cvGet(&texWrap->animations, currentAnim))->subframeIDs, currentFrame));
-
-		*x = ((twBounds *)cvGet(&((twFrame *)cvGet(&texWrap->frames, currentFrameID))->subframes, currentSubframeID))->x;
-		*y = ((twBounds *)cvGet(&((twFrame *)cvGet(&texWrap->frames, currentFrameID))->subframes, currentSubframeID))->y;
-		*w = ((twBounds *)cvGet(&((twFrame *)cvGet(&texWrap->frames, currentFrameID))->subframes, currentSubframeID))->w;
-		*h = ((twBounds *)cvGet(&((twFrame *)cvGet(&texWrap->frames, currentFrameID))->subframes, currentSubframeID))->h;
-		*frameTexID = ((twFrame *)cvGet(&texWrap->frames, currentFrameID))->baseTexture->id;
+		*x = twGetAnimSubframe(twi->texWrap, twi->animator.currentAnim, twi->animator.currentFrame)->x;
+		*y = twGetAnimSubframe(twi->texWrap, twi->animator.currentAnim, twi->animator.currentFrame)->y;
+		*w = twGetAnimSubframe(twi->texWrap, twi->animator.currentAnim, twi->animator.currentFrame)->w;
+		*h = twGetAnimSubframe(twi->texWrap, twi->animator.currentAnim, twi->animator.currentFrame)->h;
+		*frameTexID = twGetAnimFrame(twi->texWrap, twi->animator.currentAnim, twi->animator.currentFrame)->baseTexture->id;
 
 	}else{
 
@@ -586,27 +636,11 @@ void twGetFrameInfo(textureWrapper *texWrap, unsigned int currentAnim, unsigned 
 
 }
 
-unsigned char twContainsTranslucency(textureWrapper *texWrap, unsigned int currentAnim, unsigned int currentFrame){
-	if(currentAnim < texWrap->animations.size && currentFrame < ((twAnim *)cvGet(&texWrap->animations, currentAnim))->frameIDs.size){
-		unsigned int currentFrameID = *((unsigned int *)cvGet(&((twAnim *)cvGet(&texWrap->animations, currentAnim))->frameIDs, currentFrame));
-		return ((twFrame *)cvGet(&texWrap->frames, currentFrameID))->baseTexture->translucent;
+unsigned char twiContainsTranslucency(twInstance *twi){
+	// Make sure the current animation and frame are valid (within proper bounds)
+	if(twi->animator.currentAnim < twi->texWrap->animations.size &&
+	   twi->animator.currentFrame < twGetAnim(twi->texWrap, twi->animator.currentAnim)->frameIDs.size){
+		return twGetAnimFrame(twi->texWrap, twi->animator.currentAnim, twi->animator.currentFrame)->baseTexture->translucent;
 	}
 	return 0;
-}
-
-void twDelete(textureWrapper *texWrap){
-	unsigned int d;
-	for(d = 0; d < texWrap->frames.size; d++){
-		cvClear(&((twFrame *)cvGet(&texWrap->frames, d))->subframes);
-	}
-	cvClear(&texWrap->frames);
-	for(d = 0; d < texWrap->animations.size; d++){
-		cvClear(&((twAnim *)cvGet(&texWrap->animations, d))->frameIDs);
-		cvClear(&((twAnim *)cvGet(&texWrap->animations, d))->subframeIDs);
-		cvClear(&((twAnim *)cvGet(&texWrap->animations, d))->frameDelays);
-	}
-	cvClear(&texWrap->animations);
-	if(texWrap->name != NULL){
-		free(texWrap->name);
-	}
 }

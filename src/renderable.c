@@ -10,7 +10,8 @@
 void rndrInit(renderable *rndr){
 	rndr->name = NULL;
 	rndr->mdl = NULL;
-	rndr->texture = NULL;
+	skliInit(&rndr->skl, NULL);
+	twiInit(&rndr->tex, NULL);
 	stInit(&rndr->sTrans);
 	rtInit(&rndr->rTrans);
 	rndr->sprite = 0;
@@ -32,16 +33,26 @@ unsigned char rndrLoad(renderable *rndr, const char *prgPath, const char *filePa
 
 }
 
-unsigned int rndrRenderMethod(renderable *rndr){
-	/** Shouldn't need these safety checks **/
-	if(rndr->rTrans.alpha > 0.f && rndr->texture != NULL){
-		if(rndr->rTrans.alpha < 1.f || twContainsTranslucency(rndr->texture, rndr->rTrans.currentAnim, rndr->rTrans.currentFrame)){
+unsigned char rndrRenderMethod(renderable *rndr){
+	if(rndr->rTrans.alpha > 0.f){
+		if(rndr->rTrans.alpha < 1.f || twiContainsTranslucency(&rndr->tex)){
 			return 1;  // The model contains translucency
 		}else{
 			return 0;  // The model is fully opaque
 		}
 	}
 	return 2;  // The model is fully transparent
+}
+
+size_t rndrBoneNum(renderable *rndr){
+	/** **/
+	return rndr->skl.skl->boneNum;
+}
+
+unsigned char rndrGenerateSkeletonState(renderable *rndr){
+	// Check if state has changed
+	/** **/
+	return skliGenerateState(&rndr->skl);
 }
 
 void rndrHudElement(renderable *rndr, unsigned char isHudElement){
@@ -74,28 +85,20 @@ void rndrRotateZ(renderable *rndr, float changeZ){
 	rndr->sTrans.changeRot.z += changeZ;
 }
 
-void rndrAnimateTex(renderable *rndr){
-
-	/** Shouldn't need these safety checks **/
-	if(rndr->texture != NULL){
-		if(rndr->rTrans.frameProgress == 0){
-			rndr->rTrans.frameProgress = SDL_GetTicks();
-		}
-		twAnimate(rndr->texture, 1.f, &rndr->rTrans.currentAnim, &rndr->rTrans.currentFrame, &rndr->rTrans.frameProgress, &rndr->rTrans.timesLooped);
-	}
-
+void rndrAnimateTex(renderable *rndr, float globalDelayMod){
+	twiAnimate(&rndr->tex, globalDelayMod);
 }
 
 /** Shouldn't need to take in isSprite. Also, are gfxPrg and cam needed? **/
 void rndrGenerateTransform(renderable *rndr, mat4 *transformMatrix, gfxProgram *gfxPrg, camera *cam){
 
 	/** Shouldn't need these safety checks **/
-	//if(rndr->texture != NULL && rndr->mdl->vertexNum > 0 && rndr->mdl->vboID != 0 && rndr->rTrans.alpha > 0.f){
+	//if(rndr->tex != NULL && rndr->mdl->vertexNum > 0 && rndr->mdl->vboID != 0 && rndr->rTrans.alpha > 0.f){
 
 	/* Get texture information for rendering */
 	/**float texFrag[4];  // The x, y, width and height of the fragment of the texture being rendered
 	GLuint frameTexID;
-	twGetFrameInfo(rndr->texture, rndr->rTrans.currentAnim, rndr->rTrans.currentFrame,
+	twiGetFrameInfo(rndr->texture, rndr->rTrans.currentAnim, rndr->rTrans.currentFrame,
 				   &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &frameTexID);**/
 
 
@@ -324,7 +327,7 @@ void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatri
 
 	/* Apply transformations to each vertex */
 	vec4 vertexPos;
-	unsigned int d;
+	size_t d;
 	for(d = 0; d < 4; d++){
 		// We need to make the vertex positions a vec4 so we can multiply them by the 4x4 modelViewProjectionMatrix
 		vec4Set(&vertexPos, vertices[d].pos.x, vertices[d].pos.y, vertices[d].pos.z, 1.f);
@@ -337,7 +340,8 @@ void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatri
 void rndrOffsetSpriteTexture(vertex *vertices, float texFrag[4], float texWidth, float texHeight){
 	// We can't pass unique textureFragment values for each individual sprite when batching. Therefore,
 	// we have to do the offset calculations for each vertex UV here instead of in the shader
-	for(unsigned int d = 0; d < 4; d++){
+	size_t d;
+	for(d = 0; d < 4; d++){
 		vertices[d].u = ((vertices[d].u * texFrag[2]) + texFrag[0]) / texWidth;
 		vertices[d].v = ((vertices[d].v * texFrag[3]) + texFrag[1]) / texHeight;
 	}

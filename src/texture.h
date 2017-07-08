@@ -3,7 +3,7 @@
 
 #include <SDL2/SDL_opengl.h>
 
-typedef struct texture {
+typedef struct {
 
 	char *name;
 	GLuint id;

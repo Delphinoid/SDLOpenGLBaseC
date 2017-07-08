@@ -5,9 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-//void generateNameFromPath(char **name, const char *path);
-void copyString(char **destination, const char *source, const unsigned int length);
-
 void tInit(texture *tex){
 	tex->name = NULL;
 	tex->id = 0;
@@ -20,10 +17,12 @@ unsigned char tLoad(texture *tex, const char *prgPath, const char *filePath){
 
 	tInit(tex);
 
-	char *fullPath = (char *)malloc((strlen(prgPath) + strlen(filePath) + 1) * sizeof(char));
-	strcpy(fullPath, prgPath);
-	strcat(fullPath, filePath);
-	fullPath[strlen(prgPath)+strlen(filePath)] = '\0';
+	size_t pathLen = strlen(prgPath);
+	size_t fileLen = strlen(filePath);
+	char *fullPath = malloc((pathLen+fileLen+1)*sizeof(char));
+	memcpy(fullPath, prgPath, pathLen);
+	memcpy(fullPath+pathLen, filePath, fileLen);
+	fullPath[pathLen+fileLen] = '\0';
 
 	/* Load image with SDL_Image */
 	SDL_Surface *SDLimage = IMG_Load(fullPath);
@@ -65,7 +64,8 @@ unsigned char tLoad(texture *tex, const char *prgPath, const char *filePath){
 	/* Check if the texture contains translucent (not just transparent) pixels and then free the SDL surface */
 	if(pixelFormat == GL_RGBA){
 		uint8_t *pixelData = (uint8_t*)SDLimage->pixels;
-		for(uint32_t d = 0; d < tex->width * tex->height; d++){
+		uint32_t d;
+		for(d = 0; d < tex->width * tex->height; d++){
 			uint8_t alpha = pixelData[d*4+3];
 			if(alpha > 0 && alpha < 255){
 				tex->translucent = 1;
@@ -76,8 +76,9 @@ unsigned char tLoad(texture *tex, const char *prgPath, const char *filePath){
 	SDL_FreeSurface(SDLimage);
 
 
-	//generateNameFromPath(tex->name, filePath);
-	copyString(&tex->name, filePath, strlen(filePath));
+	tex->name = malloc((fileLen+1)*sizeof(char));
+	memcpy(tex->name, filePath, fileLen);
+	tex->name[fileLen] = '\0';
 	free(fullPath);
 	return 1;
 

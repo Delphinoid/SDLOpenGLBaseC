@@ -2,46 +2,59 @@
 #define TEXTUREWRAPPER_H
 
 #include "texture.h"
-#include "cVector.h"
+#include "animationHandler.h"
 
 // Simple rectangle structure for the frame boundaries when using sprite sheets
-typedef struct twBounds {
+typedef struct {
 	float x, y, w, h;
 } twBounds;
 
 // Contains details describing a single image
-typedef struct twFrame {
+typedef struct {
 	texture *baseTexture;    // The actual image
 	cVector subframes;       // Holds twBounds; represents frame bounds (always contains one element, or multiple for sprite sheets)
 	texture *normalTexture;  // Normal map for the image
 } twFrame;
 
 // Contains details describing an animation
-typedef struct twAnim {
-	int loop;             // How many times the animation will loop (with -1 being infinite times)
-	cVector frameIDs;     // Holds unsigned ints; represents the position of the frame in allFrames
-	cVector subframeIDs;  // Holds unsigned ints; represents the position of the subframes in textureFrame.subframes
+typedef struct {
+	int desiredLoops;     // How many times the animation will loop (with -1 being infinite times)
+	cVector frameIDs;     // Holds size_ts; represents the position of the frame in allFrames
+	cVector subframeIDs;  // Holds size_ts; represents the position of the subframes in textureFrame.subframes
 	cVector frameDelays;  // Holds floats; represents how long each frame should last
 } twAnim;
 
 // Combines the above structures
-typedef struct textureWrapper {
+typedef struct {
 	char *name;
 	cVector frames;      // Holds twFrames
 	cVector animations;  // Holds twAnims
 } textureWrapper;
 
-/** twLoad() and twAnimate() may need some tidying up **/
-void twInit(textureWrapper *texWrap);
+// Texture wrapper instance
+typedef struct {
+	textureWrapper *texWrap;
+	animationHandler animator;
+} twInstance;
+
+/** twLoad() and twiAnimate() may need some tidying up **/
+void twInit(textureWrapper *tw);
 /** I don't like allTextures being passed in here at all **/
-unsigned char twLoad(textureWrapper *texWrap, const char *prgPath, const char *filePath, cVector *allTextures);
-void twAnimate(textureWrapper *texWrap, float speedMod, unsigned int *currentAnim, unsigned int *currentFrame, float *frameProgress, int *timesLooped);
-void twChangeAnim(textureWrapper *texWrap, unsigned int newAnim, unsigned int *currentAnim, unsigned int *currentFrame, float *frameProgress, int *timesLooped);
-GLuint twGetTexWidth(textureWrapper *texWrap, unsigned int currentAnim, unsigned int currentFrame);
-GLuint twGetTexHeight(textureWrapper *texWrap, unsigned int currentAnim, unsigned int currentFrame);
-GLuint twGetTexID(textureWrapper *texWrap, unsigned int currentAnim, unsigned int currentFrame);
-void twGetFrameInfo(textureWrapper *texWrap, unsigned int currentAnim, unsigned int currentFrame, float *x, float *y, float *w, float *h, GLuint *frameTexID);
-unsigned char twContainsTranslucency(textureWrapper *texWrap, unsigned int currentAnim, unsigned int currentFrame);
-void twDelete(textureWrapper *texWrap);
+unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath, cVector *allTextures);
+void twDelete(textureWrapper *tw);
+twAnim *twGetAnim(textureWrapper *tw, size_t anim);
+twFrame *twGetAnimFrame(textureWrapper *tw, size_t anim, size_t frame);
+twBounds *twGetAnimSubframe(textureWrapper *tw, size_t anim, size_t frame);
+float *twGetAnimFrameDelay(textureWrapper *tw, size_t anim, size_t frame);
+
+void twiInit(twInstance *twi, textureWrapper *tw);
+void twiChangeAnim(twInstance *twi, size_t newAnim);
+/**unsigned char twiAnimFinished(twInstance *twi);**/
+void twiAnimate(twInstance *twi, float globalDelayMod);
+GLuint twiGetTexWidth(twInstance *twi);
+GLuint twiGetTexHeight(twInstance *twi);
+GLuint twiGetTexID(twInstance *twi);
+void twiGetFrameInfo(twInstance *twi, float *x, float *y, float *w, float *h, GLuint *frameTexID);
+unsigned char twiContainsTranslucency(twInstance *twi);
 
 #endif

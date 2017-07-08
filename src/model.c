@@ -7,8 +7,15 @@
 #define vertexStartCapacity 1024
 #define indexStartCapacity 2048
 
-//void generateNameFromPath(char **name, const char *path);
-void copyString(char **destination, const char *source, const unsigned int length);
+static void mdlGenBufferObjects(model *mdl, vertex *vertices, size_t vertexNum, size_t *indices, size_t indexNum);
+
+void vertInit(vertex *v){
+	vec3SetS(&v->pos, 0.f);
+	v->u  = 0.f; v->v  = 0.f;
+	v->nx = 0.f; v->ny = 0.f; v->nz = 0.f;
+	v->bIDs[0]     = -1;  v->bIDs[1]     = -1;  v->bIDs[2]     = -1;  v->bIDs[3] = -1;
+	v->bWeights[0] = 0.f; v->bWeights[1] = 0.f; v->bWeights[2] = 0.f; v->bWeights[3] = 0.f;
+}
 
 void mdlInit(model *mdl){
 	mdl->name = NULL;
@@ -24,7 +31,7 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 	mdlInit(mdl);
 
 	vertex *vertices = malloc(vertexStartCapacity*sizeof(vertex));
-	unsigned int *indices = malloc(indexStartCapacity*sizeof(unsigned int));
+	size_t *indices = malloc(indexStartCapacity*sizeof(size_t));
 
 	if(vertices == NULL){
 		printf("Error loading model:\nMemory allocation failure for vertex buffer.\n");
@@ -40,23 +47,25 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 	size_t indexCapacity = indexStartCapacity;
 	size_t indexNum = 0;
 
-	char *fullPath = malloc((strlen(prgPath) + strlen(filePath) + 1) * sizeof(char));
-	strcpy(fullPath, prgPath);
-	strcat(fullPath, filePath);
-	fullPath[strlen(prgPath)+strlen(filePath)] = '\0';
+	size_t pathLen = strlen(prgPath);
+	size_t fileLen = strlen(filePath);
+	char *fullPath = malloc((pathLen+fileLen+1)*sizeof(char));
+	memcpy(fullPath, prgPath, pathLen);
+	memcpy(fullPath+pathLen, filePath, fileLen);
+	fullPath[pathLen+fileLen] = '\0';
 	FILE *mdlInfo = fopen(fullPath, "r");
 	char lineFeed[1024];
 	char *line;
 	char compare[1024];
-	unsigned int lineLength;
+	size_t lineLength;
 
 	cVector tempPositions; cvInit(&tempPositions, 3);  // Holds floats; temporarily holds vertex position data before it is pushed into vertexBuffer
 	cVector tempTexCoords; cvInit(&tempTexCoords, 2);  // Holds floats; temporarily holds vertex UV data before it is pushed into vertexBuffer
 	cVector tempNorms;     cvInit(&tempNorms, 3);      // Holds floats; temporarily holds vertex normal data before it is pushed into vertexBuffer
 	vertex tempVert;  // Holds a vertex before pushing it into the triangle array
-	unsigned int positionIndex[3];  // Holds all the positional information for a face
-	unsigned int uvIndex[3];        // Holds all the UV information for a face
-	unsigned int normalIndex[3];    // Holds all the normal information for a face
+	size_t positionIndex[3];  // Holds all the positional information for a face
+	size_t uvIndex[3];        // Holds all the UV information for a face
+	size_t normalIndex[3];    // Holds all the normal information for a face
 
 	if(mdlInfo != NULL){
 		while(!feof(mdlInfo)){
@@ -80,8 +89,8 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 			}
 			// Remove any indentations from the line, as well as any trailing spaces and tabs
 			unsigned char doneFront = 0, doneEnd = 0;
-			unsigned int newOffset = 0;
-			unsigned int d;
+			size_t newOffset = 0;
+			size_t d;
 			for(d = 0; (d < lineLength && !doneFront && !doneEnd); d++){
 				if(!doneFront && line[d] != '\t' && line[d] != ' '){
 					newOffset = d;
@@ -153,6 +162,9 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 					normalIndex[d] = strtoul(token, NULL, 0);
 					token = strtok(NULL, " /");
 
+					// Reset tempVert member variables
+					vertInit(&tempVert);
+
 					// Create a vertex from the given data
 					// Vertex positional data
 					void *checkVal = cvGet(&tempPositions, (positionIndex[d]-1)*3);
@@ -208,7 +220,7 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 
 					// Check if the vertex has already been loaded, and if so add an index
 					unsigned char foundVertex = 0;
-					unsigned int f;
+					size_t f;
 					for(f = 0; f < vertexNum; f++){
 						vertex *checkVert = &vertices[f];
 						if(checkVert->pos.x == tempVert.pos.x && checkVert->pos.y == tempVert.pos.y && checkVert->pos.z == tempVert.pos.z &&
@@ -218,7 +230,7 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 							// Resize indices if there's not enough room
 							if(indexNum == indexCapacity){
 								indexCapacity *= 2;
-								unsigned int *tempBuffer = realloc(indices, indexCapacity*sizeof(unsigned int));
+								size_t *tempBuffer = realloc(indices, indexCapacity*sizeof(size_t));
 								if(tempBuffer != NULL){
 									indices = tempBuffer;
 								}else{
@@ -243,7 +255,7 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 						// Resize indices if there's not enough room
 						if(indexNum == indexCapacity){
 							indexCapacity *= 2;
-							unsigned int *tempBuffer = realloc(indices, indexCapacity*sizeof(unsigned int));
+							size_t *tempBuffer = realloc(indices, indexCapacity*sizeof(size_t));
 							if(tempBuffer != NULL){
 								indices = tempBuffer;
 							}else{
@@ -304,8 +316,9 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 
 	// If no name was given, generate one based off the file name
 	if(mdl->name == NULL || strlen(mdl->name) == 0){
-		//generateNameFromPath(mdl->name, filePath);
-		copyString(&mdl->name, filePath, strlen(filePath));
+		mdl->name = malloc((fileLen+1)*sizeof(char));
+		memcpy(mdl->name, filePath, fileLen);
+		mdl->name[fileLen] = '\0';
 	}
 	/** Should mdlGenBufferObjects() be here? **/
 	mdlGenBufferObjects(mdl, vertices, vertexNum, indices, indexNum);
@@ -313,6 +326,24 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 	free(vertices);
 	return 1;
 
+}
+
+static void mdlVertexAttributes(){
+	// Position offset
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, pos));
+	glEnableVertexAttribArray(0);
+	// UV offset
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, u));
+	glEnableVertexAttribArray(1);
+	// Normals offset
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, nx));
+	glEnableVertexAttribArray(2);
+	// Bone index offset
+	glVertexAttribPointer(3, 1, GL_INT,   GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, bIDs));
+	glEnableVertexAttribArray(3);
+	// Bone weight offset
+	glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, bWeights));
+	glEnableVertexAttribArray(4);
 }
 
 /** Change this function later **/
@@ -344,16 +375,7 @@ unsigned char mdlCreateSprite(model *mdl, char *name){
 		return 0;
 	}*/
 
-	// Position offset
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, pos));
-	glEnableVertexAttribArray(0);
-	// UV offset
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, u));
-	glEnableVertexAttribArray(1);
-	// Normals offset
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, nx));
-	glEnableVertexAttribArray(2);
-	// We don't want anything else to modify the VAO
+	mdlVertexAttributes();
 	glBindVertexArray(0);
 
 	// Check for errors
@@ -364,13 +386,16 @@ unsigned char mdlCreateSprite(model *mdl, char *name){
 
 	mdl->vertexNum = 4;
 	mdl->indexNum = 6;
-	copyString(&mdl->name, name, strlen(name));
+	size_t nameLen = strlen(name);
+	mdl->name = malloc((nameLen+1)*sizeof(char));
+	memcpy(mdl->name, name, nameLen);
+	mdl->name[nameLen] = '\0';
 
 	return 1;
 
 }
 
-void mdlGenBufferObjects(model *mdl, vertex *vertices, size_t vertexNum, unsigned int *indices, size_t indexNum){
+static void mdlGenBufferObjects(model *mdl, vertex *vertices, size_t vertexNum, size_t *indices, size_t indexNum){
 
 	if(vertexNum > 0){
 
@@ -397,7 +422,7 @@ void mdlGenBufferObjects(model *mdl, vertex *vertices, size_t vertexNum, unsigne
 			// Create and bind the IBO
 			glGenBuffers(1, &mdl->iboID);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mdl->iboID);
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexNum * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexNum * sizeof(size_t), indices, GL_STATIC_DRAW);
 			// Check for errors
 			glError = glGetError();
 			if(glError != GL_NO_ERROR){
@@ -408,16 +433,7 @@ void mdlGenBufferObjects(model *mdl, vertex *vertices, size_t vertexNum, unsigne
 			}
 		}
 
-		// Position offset
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, pos));
-		glEnableVertexAttribArray(0);
-		// UV offset
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, u));
-		glEnableVertexAttribArray(1);
-		// Normals offset
-		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, nx));
-		glEnableVertexAttribArray(2);
-		// We don't want anything else to modify the VAO
+		mdlVertexAttributes();
 		glBindVertexArray(0);
 
 		// Check for errors
@@ -440,6 +456,4 @@ void mdlDelete(model *mdl){
 	if(mdl->iboID != 0){
 		glDeleteBuffers(1, &mdl->iboID);
 	}
-	//free(&mdl->vertices);
-	//free(&mdl->indices);
 }

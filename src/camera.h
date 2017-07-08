@@ -4,7 +4,7 @@
 #include "vec3.h"
 #include "mat4.h"
 
-typedef struct camera {
+typedef struct {
 
 	vec3 position;
 	vec3 rotation;

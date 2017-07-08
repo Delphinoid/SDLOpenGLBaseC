@@ -3,7 +3,7 @@
 
 #define vec4Truncate(v) vec3New(v.x, v.y, v.z)
 
-typedef struct vec3 {
+typedef struct {
 	float x, y, z;
 } vec3;
 

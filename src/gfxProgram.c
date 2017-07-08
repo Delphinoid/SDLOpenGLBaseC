@@ -4,7 +4,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "vertex.h"
+
+size_t ltostr(long n, char **s);
+
+static unsigned char gfxInitSDL(gfxProgram *gfxPrg);
+static unsigned char gfxInitOGL(gfxProgram *gfxPrg);
+static unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath);
+static unsigned char gfxCreateBuffers(gfxProgram *gfxPrg);
 
 unsigned char gfxInitProgram(gfxProgram *gfxPrg, char *prgPath){
 
@@ -18,7 +24,7 @@ unsigned char gfxInitProgram(gfxProgram *gfxPrg, char *prgPath){
 
 }
 
-unsigned char gfxInitSDL(gfxProgram *gfxPrg){
+static unsigned char gfxInitSDL(gfxProgram *gfxPrg){
 
 	/* Initialize SDL */
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0){
@@ -57,7 +63,7 @@ unsigned char gfxInitSDL(gfxProgram *gfxPrg){
 
 }
 
-unsigned char gfxInitOGL(gfxProgram *gfxPrg){
+static unsigned char gfxInitOGL(gfxProgram *gfxPrg){
 
 	/* Initialize GLEW */
 	glewExperimental = GL_TRUE;
@@ -89,18 +95,20 @@ unsigned char gfxInitOGL(gfxProgram *gfxPrg){
 
 }
 
-unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath){
+static unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath){
 
 	/* Vertex shader */
 	char *vertexShaderExtra = "Resources\\Shaders\\vertexShader.vsh";
-	char *vertexShaderPath = malloc(strlen(prgPath) + strlen(vertexShaderExtra) + 1);
+	size_t pathLen = strlen(prgPath);
+	size_t vsExtraLen = strlen(vertexShaderExtra);
+	char *vertexShaderPath = malloc((pathLen+vsExtraLen+1)*sizeof(char));
 	if(vertexShaderPath == NULL){
 		printf("Error loading vertex shader:\nMemory allocation failure.\n");
 		return 0;
 	}
-	strcpy(vertexShaderPath, prgPath);
-	strcat(vertexShaderPath, vertexShaderExtra);
-	vertexShaderPath[strlen(prgPath) + strlen(vertexShaderExtra)] = '\0';
+	memcpy(vertexShaderPath, prgPath, pathLen);
+	memcpy(vertexShaderPath+pathLen, vertexShaderExtra, vsExtraLen);
+	vertexShaderPath[pathLen+vsExtraLen] = '\0';
 
 	/* Load vertex shader */
 	FILE *vertexShaderFile = fopen(vertexShaderPath, "rb");
@@ -130,7 +138,7 @@ unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath){
 	glGetShaderiv(gfxPrg->vertexShaderID, GL_COMPILE_STATUS, &compileStatus);
  	glGetShaderiv(gfxPrg->vertexShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
  	if(infoLogLength > 1){
-		char vertexShaderError[infoLogLength + 1];
+		char vertexShaderError[infoLogLength+1];
  		glGetShaderInfoLog(gfxPrg->vertexShaderID, infoLogLength, NULL, &vertexShaderError[0]);
  		printf("Error validating vertex shader: %s", &vertexShaderError[0]);
  		return 0;
@@ -139,14 +147,15 @@ unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath){
 
 	/* Fragment shader */
 	char *fragmentShaderExtra = "Resources\\Shaders\\fragmentShader.fsh";
-	char *fragmentShaderPath = malloc(strlen(prgPath) + strlen(fragmentShaderExtra) + 1);
+	size_t fsExtraLen = strlen(fragmentShaderExtra);
+	char *fragmentShaderPath = malloc((pathLen+fsExtraLen+1)*sizeof(char));
 	if(fragmentShaderPath == NULL){
 		printf("Error loading vertex shader:\nMemory allocation failure.\n");
 		return 0;
 	}
-	strcpy(fragmentShaderPath, prgPath);
-	strcat(fragmentShaderPath, fragmentShaderExtra);
-	fragmentShaderPath[strlen(prgPath) + strlen(fragmentShaderExtra)] = '\0';
+	memcpy(fragmentShaderPath, prgPath, pathLen);
+	memcpy(fragmentShaderPath+pathLen, fragmentShaderExtra, fsExtraLen);
+	fragmentShaderPath[pathLen+fsExtraLen] = '\0';
 
 	/* Load fragment shader */
 	FILE *fragmentShaderFile = fopen(fragmentShaderPath, "rb");
@@ -174,7 +183,7 @@ unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath){
 	glGetShaderiv(gfxPrg->fragmentShaderID, GL_COMPILE_STATUS, &compileStatus);
  	glGetShaderiv(gfxPrg->fragmentShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
  	if(infoLogLength > 1){
-		char fragmentShaderError[infoLogLength + 1];
+		char fragmentShaderError[infoLogLength+1];
  		glGetShaderInfoLog(gfxPrg->fragmentShaderID, infoLogLength, NULL, &fragmentShaderError[0]);
  		printf("Error validating fragment shader: %s", &fragmentShaderError[0]);
  		return 0;
@@ -195,12 +204,54 @@ unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath){
 	/* Use the program */
 	glUseProgram(gfxPrg->shaderProgramID);
 
+
 	/* Link the uniform variables */
-	gfxPrg->mvpMatrixID        = glGetUniformLocation(gfxPrg->shaderProgramID, "modelViewProjectionMatrix");
-	gfxPrg->textureFragmentID  = glGetUniformLocation(gfxPrg->shaderProgramID, "textureFragment");
-	gfxPrg->alphaID            = glGetUniformLocation(gfxPrg->shaderProgramID, "alpha");
-	/* Texture samplers */
-	gfxPrg->textureSampler0 = glGetUniformLocation(gfxPrg->shaderProgramID, "textureSampler0"); glUniform1i(gfxPrg->textureSampler0, 0);
+	gfxPrg->mvpMatrixID       = glGetUniformLocation(gfxPrg->shaderProgramID, "mvpMatrix");
+	gfxPrg->textureFragmentID = glGetUniformLocation(gfxPrg->shaderProgramID, "textureFragment");
+	gfxPrg->alphaID           = glGetUniformLocation(gfxPrg->shaderProgramID, "alpha");
+
+	/* Create references to each bone  */
+	size_t d;
+	for(d = 0; d < MAX_BONE_NUM; d++){
+
+		char *num;
+		size_t numLen = ltostr(d, &num);
+		char uniformString[21+numLen+2];
+
+		memcpy(&uniformString, "bonePositionArray[", 18);
+		memcpy(&uniformString[18], num, numLen);
+		uniformString[18+numLen] = ']';
+		uniformString[18+numLen+1] = '\0';
+		gfxPrg->bonePositionArrayID[d]    = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);
+
+		memcpy(&uniformString, "boneOrientationArray[", 21);
+		memcpy(&uniformString[21], num, numLen);
+		uniformString[21+numLen] = ']';
+		uniformString[21+numLen+1] = '\0';
+		gfxPrg->boneOrientationArrayID[d] = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);
+
+		free(num);
+
+	}
+
+	/* Create references to each texture sampler */
+	for(d = 0; d < MAX_TEX_SAMPLER_NUM; d++){
+
+		char *num;
+		size_t numLen = ltostr(d, &num);
+		char uniformString[15+numLen+2];
+
+		memcpy(&uniformString, "textureSampler[", 15);
+		memcpy(&uniformString+15, num, numLen);
+		uniformString[15+numLen] = ']';
+		uniformString[15+numLen+1] = '\0';
+		gfxPrg->textureSamplerArrayID[d] = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);
+		glUniform1i(gfxPrg->textureSamplerArrayID[d], 0);
+
+		free(num);
+
+	}
+
 
 	GLenum glError = glGetError();
 	if(glError != GL_NO_ERROR){
@@ -216,7 +267,7 @@ unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath){
 
 }
 
-unsigned char gfxCreateBuffers(gfxProgram *gfxPrg){
+static unsigned char gfxCreateBuffers(gfxProgram *gfxPrg){
 
 	/* Set lastTexID to 0 since we haven't rendered anything yet */
 	gfxPrg->lastTexID = 0;

@@ -65,9 +65,9 @@ int main(int argc, char *argv[]){
 	renderable tempRndr;
 	rndrInit(&tempRndr);
 	tempRndr.mdl = (model *)cvGet(&allModels, 1);
-	tempRndr.texture = (textureWrapper *)cvGet(&allTexWrappers, 1);
+	tempRndr.tex.texWrap = (textureWrapper *)cvGet(&allTexWrappers, 1);
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
-	tempRndr.texture = (textureWrapper *)cvGet(&allTexWrappers, 2);
+	tempRndr.tex.texWrap = (textureWrapper *)cvGet(&allTexWrappers, 2);
 	tempRndr.sTrans.position.x = 0.25f;
 	tempRndr.sTrans.position.y = 0.5f;
 	vec3SetS(&tempRndr.rTrans.scale, 0.1f);
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]){
 	rndrInit(&tempRndr);
 	tempRndr.sprite = 1;
 	tempRndr.mdl = (model *)cvGet(&allModels, 0);
-	tempRndr.texture = (textureWrapper *)cvGet(&allTexWrappers, 0);
+	tempRndr.tex.texWrap = (textureWrapper *)cvGet(&allTexWrappers, 0);
 	tempRndr.width = 2.f;
 	tempRndr.height = 2.f;
 	tempRndr.sTrans.relPivot.x = tempRndr.width / 2.f;
@@ -111,7 +111,7 @@ int main(int argc, char *argv[]){
 	tempRndr.billboardY = 1;
 	rndrHudElement(&tempRndr, 0);
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
-	tempRndr.texture = (textureWrapper *)cvGet(&allTexWrappers, 3);
+	tempRndr.tex.texWrap = (textureWrapper *)cvGet(&allTexWrappers, 3);
 	tempRndr.sTrans.position.x = -3.f;
 	tempRndr.sTrans.position.y = -2.f;
 	tempRndr.billboardY = 0;
@@ -234,7 +234,7 @@ int main(int argc, char *argv[]){
 		// Animate the renderables
 		unsigned int d;
 		for(d = 0; d < allRenderables.size; d++){
-			rndrAnimateTex((renderable *)cvGet(&allRenderables, d));
+			rndrAnimateTex((renderable *)cvGet(&allRenderables, d), 1.f);
 		}
 
 

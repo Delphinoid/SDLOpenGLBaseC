@@ -14,7 +14,10 @@
 #define DEFAULT_CHANNELS 2
 #define DEFAULT_CHUNKSIZE 2048
 
-typedef struct gfxProgram {
+#define MAX_BONE_NUM 128
+#define MAX_TEX_SAMPLER_NUM 1
+
+typedef struct {
 
 	// OpenGL / SDL window and context
 	SDL_Window *window;
@@ -23,17 +26,17 @@ typedef struct gfxProgram {
 	// Shaders
 	GLuint vertexShaderID;
 	GLuint fragmentShaderID;
-
-	// Main uniform variables for the shaders
 	GLuint shaderProgramID;
+
+	// Per-instance uniforms
 	GLuint mvpMatrixID;
 	GLuint textureFragmentID;
+	GLuint bonePositionArrayID[MAX_BONE_NUM];
+	GLuint boneOrientationArrayID[MAX_BONE_NUM];
+	GLuint alphaID;
 
 	// Texture samplers
-	GLuint textureSampler0;
-
-	// Extra uniform variables for advanced rendering
-	GLuint alphaID;
+	GLuint textureSamplerArrayID[MAX_TEX_SAMPLER_NUM];
 
 	// Various matrices for rendering
 	mat4 identityMatrix;
@@ -58,10 +61,6 @@ typedef struct gfxProgram {
 } gfxProgram;
 
 unsigned char gfxInitProgram(gfxProgram *gfxPrg, char *prgPath);
-unsigned char gfxInitSDL(gfxProgram *gfxPrg);
-unsigned char gfxInitOGL(gfxProgram *gfxPrg);
-unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath);
-unsigned char gfxCreateBuffers(gfxProgram *gfxPrg);
 void gfxDestroyProgram(gfxProgram *gfxPrg);
 
 #endif

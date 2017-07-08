@@ -1,11 +1,11 @@
 #ifndef VEC4_H
 #define VEC4_H
 
+#include "vec3.h"
+
 #define vec3Extend(v, w) vec4New(v.x, v.y, v.z, w)
 
-typedef struct vec3 vec3;
-
-typedef struct vec4 {
+typedef struct {
 	float x, y, z, w;
 } vec4;
 
@@ -56,5 +56,7 @@ float vec4GetMagnitude(vec4 v);
 
 vec4 vec4GetUnit(vec4 v);
 void vec4Normalize(vec4 *v);
+
+float vec4Dot(vec4 v1, vec4 v2);
 
 #endif

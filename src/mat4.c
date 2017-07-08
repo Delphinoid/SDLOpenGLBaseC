@@ -1,7 +1,6 @@
 #include "mat4.h"
-#include "vec4.h"
-#include "quat.h"
-#include "math.h"
+#include <stdlib.h>
+#include <math.h>
 
 void mat4Identity(mat4 *m){
 	m->m[0][0] = 1.f; m->m[0][1] = 0.f; m->m[0][2] = 0.f; m->m[0][3] = 0.f;
@@ -19,7 +18,7 @@ mat4 mat4GetIdentity(){
 
 mat4 mat4MMultM(mat4 *m1, mat4 *m2){
 	mat4 r;
-	unsigned int d, f;
+	size_t d, f;
 	for(d = 0; d < 4; d++){
 		for(f = 0; f < 4; f++){
 			r.m[d][f] = (m2->m[d][0] * m1->m[0][f]) +
@@ -32,7 +31,7 @@ mat4 mat4MMultM(mat4 *m1, mat4 *m2){
 }
 void mat4MultMByM1(mat4 *m1, mat4 *m2){
 	mat4 r;
-	unsigned int d, f;
+	size_t d, f;
 	for(d = 0; d < 4; d++){
 		for(f = 0; f < 4; f++){
 			r.m[d][f] = (m2->m[d][0] * m1->m[0][f]) +
@@ -45,7 +44,7 @@ void mat4MultMByM1(mat4 *m1, mat4 *m2){
 }
 void mat4MultMByM2(mat4 *m1, mat4 *m2){
 	mat4 r;
-	unsigned int d, f;
+	size_t d, f;
 	for(d = 0; d < 4; d++){
 		for(f = 0; f < 4; f++){
 			r.m[d][f] = (m2->m[d][0] * m1->m[0][f]) +
@@ -120,7 +119,7 @@ unsigned char mat4Ortho(mat4 *m, float left, float right, float bottom, float to
 	return 1;
 }
 unsigned char mat4Perspective(mat4 *m, float fovy, float aspectRatio, float zNear, float zFar){
-	if(fovy == 0 || aspectRatio == 0 || zNear == zFar){
+	if(fovy == 0.f || aspectRatio == 0.f || zNear == zFar){
 		return 0;
 	}
 	float scale = tanf(fovy * 0.5f);
@@ -159,11 +158,11 @@ mat4 mat4TranslationMatrix(float x, float y, float z){
 	return r;
 }
 void mat4Rotate(mat4 *m, quat q){
-	mat4 r; quatMat4(q, &r);
+	mat4 r; mat4Quat(&r, q);
 	mat4MultMByM1(m, &r);
 }
 mat4 mat4RotationMatrix(quat q){
-	mat4 r; quatMat4(q, &r);
+	mat4 r; mat4Quat(&r, q);
 	return r;
 }
 void mat4Scale(mat4 *m, float x, float y, float z){
@@ -177,4 +176,20 @@ mat4 mat4ScaleMatrix(float x, float y, float z){
 	                {0.f, 0.f,  z,  0.f},
 	                {0.f, 0.f, 0.f, 1.f}}};
 	return r;
+}
+
+void mat4Quat(mat4 *m, quat q){
+	float sqx = q.v.x*q.v.x;
+	float sqy = q.v.y*q.v.y;
+	float sqz = q.v.z*q.v.z;
+	float txy = q.v.x*q.v.y;
+	float txz = q.v.x*q.v.z;
+	float txw = q.v.x*q.w;
+	float tyz = q.v.y*q.v.z;
+	float tyw = q.v.y*q.w;
+	float tzw = q.v.z*q.w;
+	m->m[0][0] = 1.f-2.f*(sqy+sqz); m->m[0][1] = 2.f*(txy-tzw);     m->m[0][2] = 2.f*(txz+tyw);     m->m[0][3] = 0.f;
+	m->m[1][0] = 2.f*(txy+tzw);     m->m[1][1] = 1.f-2.f*(sqx+sqz); m->m[1][2] = 2.f*(tyz-txw);     m->m[1][3] = 0.f;
+	m->m[2][0] = 2.f*(txz-tyw);     m->m[2][1] = 2.f*(tyz+txw);     m->m[2][2] = 1.f-2.f*(sqx+sqy); m->m[2][3] = 0.f;
+	m->m[3][0] = 0.f;               m->m[3][1] = 0.f;               m->m[3][2] = 0.f;               m->m[3][3] = 1.f;
 }
