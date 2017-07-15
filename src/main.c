@@ -65,9 +65,9 @@ int main(int argc, char *argv[]){
 	renderable tempRndr;
 	rndrInit(&tempRndr);
 	tempRndr.mdl = (model *)cvGet(&allModels, 1);
-	tempRndr.tex.texWrap = (textureWrapper *)cvGet(&allTexWrappers, 1);
+	tempRndr.tex.tw = (textureWrapper *)cvGet(&allTexWrappers, 1);
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
-	tempRndr.tex.texWrap = (textureWrapper *)cvGet(&allTexWrappers, 2);
+	tempRndr.tex.tw = (textureWrapper *)cvGet(&allTexWrappers, 2);
 	tempRndr.sTrans.position.x = 0.25f;
 	tempRndr.sTrans.position.y = 0.5f;
 	vec3SetS(&tempRndr.rTrans.scale, 0.1f);
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]){
 	rndrInit(&tempRndr);
 	tempRndr.sprite = 1;
 	tempRndr.mdl = (model *)cvGet(&allModels, 0);
-	tempRndr.tex.texWrap = (textureWrapper *)cvGet(&allTexWrappers, 0);
+	tempRndr.tex.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
 	tempRndr.width = 2.f;
 	tempRndr.height = 2.f;
 	tempRndr.sTrans.relPivot.x = tempRndr.width / 2.f;
@@ -111,7 +111,7 @@ int main(int argc, char *argv[]){
 	tempRndr.billboardY = 1;
 	rndrHudElement(&tempRndr, 0);
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
-	tempRndr.tex.texWrap = (textureWrapper *)cvGet(&allTexWrappers, 3);
+	tempRndr.tex.tw = (textureWrapper *)cvGet(&allTexWrappers, 3);
 	tempRndr.sTrans.position.x = -3.f;
 	tempRndr.sTrans.position.y = -2.f;
 	tempRndr.billboardY = 0;
@@ -232,9 +232,9 @@ int main(int argc, char *argv[]){
 
 		/* Animate */
 		// Animate the renderables
-		unsigned int d;
-		for(d = 0; d < allRenderables.size; d++){
-			rndrAnimateTex((renderable *)cvGet(&allRenderables, d), 1.f);
+		size_t i;
+		for(i = 0; i < allRenderables.size; i++){
+			rndrAnimateTex((renderable *)cvGet(&allRenderables, i), SDL_GetTicks(), 1.f);
 		}
 
 
@@ -262,18 +262,18 @@ int main(int argc, char *argv[]){
 
 void cleanup(cVector *allTextures, cVector *allTexWrappers, cVector *allModels, cVector *allRenderables, gfxProgram *gfxPrg){
 	gfxDestroyProgram(gfxPrg);
-	unsigned int d;
-	for(d = 0; d < allTextures->size; d++){
-		tDelete((texture *)cvGet(allTextures, d));
+	size_t i;
+	for(i = 0; i < allTextures->size; i++){
+		tDelete((texture *)cvGet(allTextures, i));
 	}
-	for(d = 0; d < allTexWrappers->size; d++){
-		twDelete((textureWrapper *)cvGet(allTexWrappers, d));
+	for(i = 0; i < allTexWrappers->size; i++){
+		twDelete((textureWrapper *)cvGet(allTexWrappers, i));
 	}
-	for(d = 0; d < allModels->size; d++){
-		mdlDelete((model *)cvGet(allModels, d));
+	for(i = 0; i < allModels->size; i++){
+		mdlDelete((model *)cvGet(allModels, i));
 	}
-	for(d = 0; d < allRenderables->size; d++){
-		rndrDelete((renderable *)cvGet(allRenderables, d));
+	for(i = 0; i < allRenderables->size; i++){
+		rndrDelete((renderable *)cvGet(allRenderables, i));
 	}
 	/*for(d = 0; d < allSprites->size; d++){
 		sprDelete((sprite *)cvGet(allSprites, d));

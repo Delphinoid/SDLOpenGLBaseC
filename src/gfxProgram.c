@@ -211,42 +211,47 @@ static unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath){
 	gfxPrg->alphaID           = glGetUniformLocation(gfxPrg->shaderProgramID, "alpha");
 
 	/* Create references to each bone  */
-	size_t d;
-	for(d = 0; d < MAX_BONE_NUM; d++){
+	size_t i;
+	for(i = 0; i < MAX_BONE_NUM; i++){
 
 		char *num;
-		size_t numLen = ltostr(d, &num);
-		char uniformString[21+numLen+2];
+		size_t numLen = ltostr(i, &num);
+		char uniformString[10+numLen+2];
 
-		memcpy(&uniformString, "bonePositionArray[", 18);
-		memcpy(&uniformString[18], num, numLen);
-		uniformString[18+numLen] = ']';
-		uniformString[18+numLen+1] = '\0';
-		gfxPrg->bonePositionArrayID[d]    = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);
+		memcpy(&uniformString, "boneArray[", 10);
+		memcpy(&uniformString[10], num, numLen);
+		uniformString[10+numLen] = ']';
+		uniformString[10+numLen+1] = '\0';
+		gfxPrg->boneArrayID[i] = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);
 
-		memcpy(&uniformString, "boneOrientationArray[", 21);
-		memcpy(&uniformString[21], num, numLen);
-		uniformString[21+numLen] = ']';
-		uniformString[21+numLen+1] = '\0';
-		gfxPrg->boneOrientationArrayID[d] = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);
+		/*memcpy(&uniformString, "boneArray[", 10);
+		memcpy(&uniformString[10], num, numLen);
+		memcpy(&uniformString[10+numLen], "].scale\0", 8);
+		gfxPrg->boneScaleArrayID[i]       = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);
+
+		memcpy(&uniformString[10+numLen], "].position\0", 10);
+		gfxPrg->bonePositionArrayID[i]    = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);
+
+		memcpy(&uniformString[10+numLen], "].orientation\0", 13);
+		gfxPrg->boneOrientationArrayID[i] = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);*/
 
 		free(num);
 
 	}
 
 	/* Create references to each texture sampler */
-	for(d = 0; d < MAX_TEX_SAMPLER_NUM; d++){
+	for(i = 0; i < MAX_TEX_SAMPLER_NUM; i++){
 
 		char *num;
-		size_t numLen = ltostr(d, &num);
+		size_t numLen = ltostr(i, &num);
 		char uniformString[15+numLen+2];
 
 		memcpy(&uniformString, "textureSampler[", 15);
 		memcpy(&uniformString+15, num, numLen);
 		uniformString[15+numLen] = ']';
 		uniformString[15+numLen+1] = '\0';
-		gfxPrg->textureSamplerArrayID[d] = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);
-		glUniform1i(gfxPrg->textureSamplerArrayID[d], 0);
+		gfxPrg->textureSamplerArrayID[i] = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);
+		glUniform1i(gfxPrg->textureSamplerArrayID[i], 0);
 
 		free(num);
 

@@ -28,14 +28,14 @@ void renderModel(renderable *rndr, gfxProgram *gfxPrg, camera *cam){
 
 	/* Generate a new skeleton state and feed it to the shader */
 	/*rndrGenerateSkeletonState(rndr);
-	size_t d;
-	for(d = 0; d < rndrBoneNum(rndr); d++){
+	size_t i;
+	for(i = 0; i < rndrBoneNum(rndr); i++){
 		// Feed position
-		glUniform3f(gfxPrg->bonePositionArrayID[d], rndr->sklState[d].position.x,
+		glUniform3f(gfxPrg->bonePositionArrayID[i], rndr->sklState[d].position.x,
 		                                            rndr->sklState[d].position.y,
 		                                            rndr->sklState[d].position.z);
 		// Feed orientation
-		glUniform4f(gfxPrg->boneOrientationArrayID[d], rndr->sklState[d].orientation.w,
+		glUniform4f(gfxPrg->boneOrientationArrayID[i], rndr->sklState[d].orientation.w,
 		                                               rndr->sklState[d].orientation.v.x,
 		                                               rndr->sklState[d].orientation.v.y,
 		                                               rndr->sklState[d].orientation.v.z);
@@ -81,10 +81,10 @@ void batchRenderSprites(cVector *allSprites, gfxProgram *gfxPrg, camera *cam){
 	size_t currentIndexBatchSize = 0;**/
 
 	renderable *curSpr;
-	size_t d;
-	for(d = 0; d < allSprites->size; d++){
+	size_t i;
+	for(i = 0; i < allSprites->size; i++){
 
-		curSpr = *((renderable **)cvGet(allSprites, d));
+		curSpr = *((renderable **)cvGet(allSprites, i));
 
 		if(curSpr != NULL){
 
@@ -154,10 +154,10 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, camera *cam){
 	cVector distances;  cvInit(&distances, 1);  // Holds floats
 
 	// Sort the different models into groups of those that are opaque and those that contain translucency
-	size_t d;
-	for(d = 0; d < allModels->size; d++){
+	size_t i;
+	for(i = 0; i < allModels->size; i++){
 
-		renderable *curMdl = *((renderable **)cvGet(allModels, d));
+		renderable *curMdl = *((renderable **)cvGet(allModels, i));
 		unsigned int currentRenderMethod = rndrRenderMethod(curMdl);
 
 		if(currentRenderMethod == 0){  // If the model is fully opaque, add it straight to the render list
@@ -175,19 +175,19 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, camera *cam){
 
 
 	// Simple bubblesort (for now) to sort models with translucency by depth
-	for(d = 0; d < translucentModels.size; d++){
-		size_t f;
-		for(f = 1; f < translucentModels.size - d; f++){
+	size_t j;
+	for(i = 0; i < translucentModels.size; i++){
+		for(j = 1; j < translucentModels.size - i; j++){
 
-			if(*((float *)cvGet(&distances, f-1)) < *((float *)cvGet(&distances, f))){
+			if(*((float *)cvGet(&distances, j-1)) < *((float *)cvGet(&distances, j))){
 
-				float tempDistance = *((float *)cvGet(&distances, f-1));
-				cvSet(&distances, f-1, cvGet(&distances, f), sizeof(float));
-				cvSet(&distances, f, (void *)&tempDistance, sizeof(float));
+				float tempDistance = *((float *)cvGet(&distances, j-1));
+				cvSet(&distances, j-1, cvGet(&distances, j), sizeof(float));
+				cvSet(&distances, j, (void *)&tempDistance, sizeof(float));
 
-				renderable *tempModel = *((renderable **)cvGet(&translucentModels, f-1));
-				cvSet(&translucentModels, f-1, cvGet(&translucentModels, f), sizeof(renderable *));
-				cvSet(&translucentModels, f, (void *)&tempModel, sizeof(renderable *));
+				renderable *tempModel = *((renderable **)cvGet(&translucentModels, j-1));
+				cvSet(&translucentModels, j-1, cvGet(&translucentModels, j), sizeof(renderable *));
+				cvSet(&translucentModels, j, (void *)&tempModel, sizeof(renderable *));
 
 			}
 
@@ -197,8 +197,8 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, camera *cam){
 
 	// Combine the three vectors
 	cvResize(mdlRenderList, mdlRenderList->size + translucentModels.size);
-	for(d = 0; d < translucentModels.size; d++){
-		cvPush(mdlRenderList, cvGet(&translucentModels, d), sizeof(renderable *));
+	for(i = 0; i < translucentModels.size; i++){
+		cvPush(mdlRenderList, cvGet(&translucentModels, i), sizeof(renderable *));
 	}
 	cvClear(&translucentModels);
 	cvClear(&distances);
@@ -210,9 +210,9 @@ void sortElements(cVector *allRenderables,
                   cVector *spritesScene, cVector *spritesHUD){
 
 	// Sort models and sprites into their scene and HUD vectors
-	size_t d;
-	for(d = 0; d < allRenderables->size; d++){
-		renderable *curRndr = (renderable *)cvGet(allRenderables, d);
+	size_t i;
+	for(i = 0; i < allRenderables->size; i++){
+		renderable *curRndr = (renderable *)cvGet(allRenderables, i);
 		if(!curRndr->sprite){
 			if(curRndr->hudElement){
 				cvPush(modelsHUD, (void *)&curRndr, sizeof(renderable *));
@@ -243,9 +243,9 @@ void renderScene(cVector *allRenderables, gfxProgram *gfxPrg, camera *cam){
 	cVector renderList; cvInit(&renderList, 1);  // Holds model pointers; pointers to depth-sorted scene models that must be rendered
 	depthSortModels(&modelsScene, &renderList, cam);
 	// Render scene models
-	size_t d;
-	for(d = 0; d < renderList.size; d++){
-		renderModel(*((renderable **)cvGet(&renderList, d)), gfxPrg, cam);
+	size_t i;
+	for(i = 0; i < renderList.size; i++){
+		renderModel(*((renderable **)cvGet(&renderList, i)), gfxPrg, cam);
 	}
 	// Batch render scene sprites
 	// Change the MVP matrix to the frustum projection matrix, as other sprite vertex transformations are done on the CPU through sprCreate()
@@ -256,8 +256,8 @@ void renderScene(cVector *allRenderables, gfxProgram *gfxPrg, camera *cam){
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	// Render HUD models
-	for(d = 0; d < modelsHUD.size; d++){
-		renderModel(*((renderable **)cvGet(&modelsHUD, d)), gfxPrg, cam);
+	for(i = 0; i < modelsHUD.size; i++){
+		renderModel(*((renderable **)cvGet(&modelsHUD, i)), gfxPrg, cam);
 	}
 	// Batch render HUD sprites
 	// Change the MVP matrix to the orthographic projection matrix, as other sprite vertex transformations are done on the CPU through sprCreate()

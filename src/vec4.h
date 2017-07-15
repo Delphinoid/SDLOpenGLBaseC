@@ -3,8 +3,6 @@
 
 #include "vec3.h"
 
-#define vec3Extend(v, w) vec4New(v.x, v.y, v.z, w)
-
 typedef struct {
 	float x, y, z, w;
 } vec4;

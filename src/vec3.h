@@ -1,8 +1,6 @@
 #ifndef VEC3_H
 #define VEC3_H
 
-#define vec4Truncate(v) vec3New(v.x, v.y, v.z)
-
 typedef struct {
 	float x, y, z;
 } vec3;

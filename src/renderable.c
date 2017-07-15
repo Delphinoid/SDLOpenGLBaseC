@@ -10,7 +10,7 @@
 void rndrInit(renderable *rndr){
 	rndr->name = NULL;
 	rndr->mdl = NULL;
-	skliInit(&rndr->skl, NULL);
+	//skliInit(&rndr->skl, NULL);
 	twiInit(&rndr->tex, NULL);
 	stInit(&rndr->sTrans);
 	rtInit(&rndr->rTrans);
@@ -44,16 +44,16 @@ unsigned char rndrRenderMethod(renderable *rndr){
 	return 2;  // The model is fully transparent
 }
 
-size_t rndrBoneNum(renderable *rndr){
-	/** **/
+/*size_t rndrBoneNum(renderable *rndr){
+	/** **
 	return rndr->skl.skl->boneNum;
 }
 
 unsigned char rndrGenerateSkeletonState(renderable *rndr){
 	// Check if state has changed
-	/** **/
+	/** **
 	return skliGenerateState(&rndr->skl);
-}
+}*/
 
 void rndrHudElement(renderable *rndr, unsigned char isHudElement){
 	if(isHudElement != rndr->hudElement){
@@ -85,8 +85,12 @@ void rndrRotateZ(renderable *rndr, float changeZ){
 	rndr->sTrans.changeRot.z += changeZ;
 }
 
-void rndrAnimateTex(renderable *rndr, float globalDelayMod){
-	twiAnimate(&rndr->tex, globalDelayMod);
+void rndrAnimateTex(renderable *rndr, uint32_t currentTick, float globalDelayMod){
+	twiAnimate(&rndr->tex, currentTick, globalDelayMod);
+}
+
+void rndrAnimateSkel(renderable *rndr, uint32_t currentTick, float globalDelayMod){
+	skliAnimate(&rndr->skli, currentTick, globalDelayMod);
 }
 
 /** Shouldn't need to take in isSprite. Also, are gfxPrg and cam needed? **/
@@ -290,6 +294,14 @@ void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatri
 	tempVert.nx = 0.f;
 	tempVert.ny = 0.f;
 	tempVert.nz = 0.f;
+	tempVert.bIDs[0] = -1;
+	tempVert.bIDs[1] = -1;
+	tempVert.bIDs[2] = -1;
+	tempVert.bIDs[3] = -1;
+	tempVert.bWeights[0] = 0.f;
+	tempVert.bWeights[1] = 0.f;
+	tempVert.bWeights[2] = 0.f;
+	tempVert.bWeights[3] = 0.f;
 	vertices[0] = tempVert;
 
 	// Create the top right vertex
@@ -301,6 +313,14 @@ void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatri
 	tempVert.nx = 0.f;
 	tempVert.ny = 0.f;
 	tempVert.nz = 0.f;
+	tempVert.bIDs[0] = -1;
+	tempVert.bIDs[1] = -1;
+	tempVert.bIDs[2] = -1;
+	tempVert.bIDs[3] = -1;
+	tempVert.bWeights[0] = 0.f;
+	tempVert.bWeights[1] = 0.f;
+	tempVert.bWeights[2] = 0.f;
+	tempVert.bWeights[3] = 0.f;
 	vertices[1] = tempVert;
 
 	// Create the bottom left vertex
@@ -312,6 +332,14 @@ void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatri
 	tempVert.nx = 0.f;
 	tempVert.ny = 0.f;
 	tempVert.nz = 0.f;
+	tempVert.bIDs[0] = -1;
+	tempVert.bIDs[1] = -1;
+	tempVert.bIDs[2] = -1;
+	tempVert.bIDs[3] = -1;
+	tempVert.bWeights[0] = 0.f;
+	tempVert.bWeights[1] = 0.f;
+	tempVert.bWeights[2] = 0.f;
+	tempVert.bWeights[3] = 0.f;
 	vertices[2] = tempVert;
 
 	// Create the bottom right vertex
@@ -323,16 +351,24 @@ void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatri
 	tempVert.nx = 0.f;
 	tempVert.ny = 0.f;
 	tempVert.nz = 0.f;
+	tempVert.bIDs[0] = -1;
+	tempVert.bIDs[1] = -1;
+	tempVert.bIDs[2] = -1;
+	tempVert.bIDs[3] = -1;
+	tempVert.bWeights[0] = 0.f;
+	tempVert.bWeights[1] = 0.f;
+	tempVert.bWeights[2] = 0.f;
+	tempVert.bWeights[3] = 0.f;
 	vertices[3] = tempVert;
 
 	/* Apply transformations to each vertex */
 	vec4 vertexPos;
-	size_t d;
-	for(d = 0; d < 4; d++){
+	size_t i;
+	for(i = 0; i < 4; i++){
 		// We need to make the vertex positions a vec4 so we can multiply them by the 4x4 modelViewProjectionMatrix
-		vec4Set(&vertexPos, vertices[d].pos.x, vertices[d].pos.y, vertices[d].pos.z, 1.f);
+		vec4Set(&vertexPos, vertices[i].pos.x, vertices[i].pos.y, vertices[i].pos.z, 1.f);
 		mat4MultMByV(transformMatrix, &vertexPos);
-		vec3Set(&vertices[d].pos, vertexPos.x, vertexPos.y, vertexPos.z);
+		vec3Set(&vertices[i].pos, vertexPos.x, vertexPos.y, vertexPos.z);
 	}
 
 }
@@ -340,10 +376,10 @@ void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatri
 void rndrOffsetSpriteTexture(vertex *vertices, float texFrag[4], float texWidth, float texHeight){
 	// We can't pass unique textureFragment values for each individual sprite when batching. Therefore,
 	// we have to do the offset calculations for each vertex UV here instead of in the shader
-	size_t d;
-	for(d = 0; d < 4; d++){
-		vertices[d].u = ((vertices[d].u * texFrag[2]) + texFrag[0]) / texWidth;
-		vertices[d].v = ((vertices[d].v * texFrag[3]) + texFrag[1]) / texHeight;
+	size_t i;
+	for(i = 0; i < 4; i++){
+		vertices[i].u = ((vertices[i].u * texFrag[2]) + texFrag[0]) / texWidth;
+		vertices[i].v = ((vertices[i].v * texFrag[3]) + texFrag[1]) / texHeight;
 	}
 }
 

@@ -18,39 +18,39 @@ mat4 mat4GetIdentity(){
 
 mat4 mat4MMultM(mat4 *m1, mat4 *m2){
 	mat4 r;
-	size_t d, f;
-	for(d = 0; d < 4; d++){
-		for(f = 0; f < 4; f++){
-			r.m[d][f] = (m2->m[d][0] * m1->m[0][f]) +
-			            (m2->m[d][1] * m1->m[1][f]) +
-			            (m2->m[d][2] * m1->m[2][f]) +
-			            (m2->m[d][3] * m1->m[3][f]);
+	size_t i, j;
+	for(i = 0; i < 4; i++){
+		for(j = 0; j < 4; j++){
+			r.m[i][j] = (m2->m[i][0] * m1->m[0][j]) +
+			            (m2->m[i][1] * m1->m[1][j]) +
+			            (m2->m[i][2] * m1->m[2][j]) +
+			            (m2->m[i][3] * m1->m[3][j]);
 		}
 	}
 	return r;
 }
 void mat4MultMByM1(mat4 *m1, mat4 *m2){
 	mat4 r;
-	size_t d, f;
-	for(d = 0; d < 4; d++){
-		for(f = 0; f < 4; f++){
-			r.m[d][f] = (m2->m[d][0] * m1->m[0][f]) +
-			            (m2->m[d][1] * m1->m[1][f]) +
-			            (m2->m[d][2] * m1->m[2][f]) +
-			            (m2->m[d][3] * m1->m[3][f]);
+	size_t i, j;
+	for(i = 0; i < 4; i++){
+		for(j = 0; j < 4; j++){
+			r.m[i][j] = (m2->m[i][0] * m1->m[0][j]) +
+			            (m2->m[i][1] * m1->m[1][j]) +
+			            (m2->m[i][2] * m1->m[2][j]) +
+			            (m2->m[i][3] * m1->m[3][j]);
 		}
 	}
 	*m1 = r;
 }
 void mat4MultMByM2(mat4 *m1, mat4 *m2){
 	mat4 r;
-	size_t d, f;
-	for(d = 0; d < 4; d++){
-		for(f = 0; f < 4; f++){
-			r.m[d][f] = (m2->m[d][0] * m1->m[0][f]) +
-			            (m2->m[d][1] * m1->m[1][f]) +
-			            (m2->m[d][2] * m1->m[2][f]) +
-			            (m2->m[d][3] * m1->m[3][f]);
+	size_t i, j;
+	for(i = 0; i < 4; i++){
+		for(j = 0; j < 4; j++){
+			r.m[i][j] = (m2->m[i][0] * m1->m[0][j]) +
+			            (m2->m[i][1] * m1->m[1][j]) +
+			            (m2->m[i][2] * m1->m[2][j]) +
+			            (m2->m[i][3] * m1->m[3][j]);
 		}
 	}
 	*m2 = r;
@@ -154,7 +154,7 @@ mat4 mat4TranslationMatrix(float x, float y, float z){
 	mat4 r = {.m = {{1.f, 0.f, 0.f, 0.f},
 	                {0.f, 1.f, 0.f, 0.f},
 	                {0.f, 0.f, 1.f, 0.f},
-	                { x,   y,   z,  1.f}}};
+	                {  x,   y,   z, 1.f}}};
 	return r;
 }
 void mat4Rotate(mat4 *m, quat q){
@@ -171,9 +171,9 @@ void mat4Scale(mat4 *m, float x, float y, float z){
 	m->m[2][0] *= z; m->m[2][1] *= z; m->m[2][2] *= z; m->m[2][3] *= z;
 }
 mat4 mat4ScaleMatrix(float x, float y, float z){
-	mat4 r = {.m = {{ x,  0.f, 0.f, 0.f},
-	                {0.f,  y,  0.f, 0.f},
-	                {0.f, 0.f,  z,  0.f},
+	mat4 r = {.m = {{  x, 0.f, 0.f, 0.f},
+	                {0.f,   y, 0.f, 0.f},
+	                {0.f, 0.f,   z, 0.f},
 	                {0.f, 0.f, 0.f, 1.f}}};
 	return r;
 }

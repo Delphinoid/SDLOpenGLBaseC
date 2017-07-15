@@ -90,14 +90,14 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 			// Remove any indentations from the line, as well as any trailing spaces and tabs
 			unsigned char doneFront = 0, doneEnd = 0;
 			size_t newOffset = 0;
-			size_t d;
-			for(d = 0; (d < lineLength && !doneFront && !doneEnd); d++){
-				if(!doneFront && line[d] != '\t' && line[d] != ' '){
-					newOffset = d;
+			size_t i;
+			for(i = 0; (i < lineLength && !doneFront && !doneEnd); i++){
+				if(!doneFront && line[i] != '\t' && line[i] != ' '){
+					newOffset = i;
 					doneFront = 1;
 				}
-				if(!doneEnd && d > 1 && d < lineLength && line[lineLength-d] != '\t' && line[lineLength-d] != ' '){
-					lineLength -= d-1;
+				if(!doneEnd && i > 1 && i < lineLength && line[lineLength-i] != '\t' && line[lineLength-i] != ' '){
+					lineLength -= i-1;
 					line[lineLength] = '\0';
 					doneEnd = 1;
 				}
@@ -152,14 +152,14 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 			// Face data
 			}else if(lineLength >= 19 && strncpy(compare, line, 2) && (compare[2] = '\0') == 0 && strcmp(compare, "f ") == 0){
 				char *token = strtok(line+2, " /");
-				for(d = 0; d < 3; d++){
+				for(i = 0; i < 3; i++){
 
 					// Load face data
-					positionIndex[d] = strtoul(token, NULL, 0);
+					positionIndex[i] = strtoul(token, NULL, 0);
 					token = strtok(NULL, " /");
-					uvIndex[d] = strtoul(token, NULL, 0);
+					uvIndex[i] = strtoul(token, NULL, 0);
 					token = strtok(NULL, " /");
-					normalIndex[d] = strtoul(token, NULL, 0);
+					normalIndex[i] = strtoul(token, NULL, 0);
 					token = strtok(NULL, " /");
 
 					// Reset tempVert member variables
@@ -167,51 +167,51 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 
 					// Create a vertex from the given data
 					// Vertex positional data
-					void *checkVal = cvGet(&tempPositions, (positionIndex[d]-1)*3);
+					void *checkVal = cvGet(&tempPositions, (positionIndex[i]-1)*3);
 					if(checkVal != NULL){
 						tempVert.pos.x = *((float *)checkVal);
 					}else{
 						tempVert.pos.x = 0.f;
 					}
-					checkVal = cvGet(&tempPositions, (positionIndex[d]-1)*3+1);
+					checkVal = cvGet(&tempPositions, (positionIndex[i]-1)*3+1);
 					if(checkVal != NULL){
 						tempVert.pos.y = *((float *)checkVal);
 					}else{
 						tempVert.pos.y = 0.f;
 					}
-					checkVal = cvGet(&tempPositions, (positionIndex[d]-1)*3+2);
+					checkVal = cvGet(&tempPositions, (positionIndex[i]-1)*3+2);
 					if(checkVal != NULL){
 						tempVert.pos.z = *((float *)checkVal);
 					}else{
 						tempVert.pos.z = 0.f;
 					}
 					// Vertex UV data
-					checkVal = cvGet(&tempTexCoords, (uvIndex[d]-1)*2);
+					checkVal = cvGet(&tempTexCoords, (uvIndex[i]-1)*2);
 					if(checkVal != NULL){
 						tempVert.u = *((float *)checkVal);
 					}else{
 						tempVert.u = 0.f;
 					}
-					checkVal = cvGet(&tempTexCoords, (uvIndex[d]-1)*2+1);
+					checkVal = cvGet(&tempTexCoords, (uvIndex[i]-1)*2+1);
 					if(checkVal != NULL){
 						tempVert.v = -*((float *)checkVal);
 					}else{
 						tempVert.v = 0.f;
 					}
 					// Vertex normal data
-					checkVal = cvGet(&tempNorms, (normalIndex[d]-1)*3);
+					checkVal = cvGet(&tempNorms, (normalIndex[i]-1)*3);
 					if(checkVal != NULL){
 						tempVert.nx = *((float *)checkVal);
 					}else{
 						tempVert.nx = 0.f;
 					}
-					checkVal = cvGet(&tempNorms, (normalIndex[d]-1)*3+1);
+					checkVal = cvGet(&tempNorms, (normalIndex[i]-1)*3+1);
 					if(checkVal != NULL){
 						tempVert.ny = *((float *)checkVal);
 					}else{
 						tempVert.ny = 0.f;
 					}
-					checkVal = cvGet(&tempNorms, (normalIndex[d]-1)*3+2);
+					checkVal = cvGet(&tempNorms, (normalIndex[i]-1)*3+2);
 					if(checkVal != NULL){
 						tempVert.nz = *((float *)checkVal);
 					}else{
@@ -220,9 +220,9 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 
 					// Check if the vertex has already been loaded, and if so add an index
 					unsigned char foundVertex = 0;
-					size_t f;
-					for(f = 0; f < vertexNum; f++){
-						vertex *checkVert = &vertices[f];
+					size_t j;
+					for(j = 0; j < vertexNum; j++){
+						vertex *checkVert = &vertices[j];
 						if(checkVert->pos.x == tempVert.pos.x && checkVert->pos.y == tempVert.pos.y && checkVert->pos.z == tempVert.pos.z &&
 						   checkVert->u     == tempVert.u     && checkVert->v     == tempVert.v     &&
 						   checkVert->nx    == tempVert.nx    && checkVert->ny    == tempVert.ny    && checkVert->nz    == tempVert.nz){
@@ -244,8 +244,8 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 									return 0;
 								}
 							}
-							indices[indexNum++] = f;
-							f = vertexNum;
+							indices[indexNum++] = j;
+							j = vertexNum;
 							foundVertex = 1;
 						}
 					}
@@ -339,10 +339,10 @@ static void mdlVertexAttributes(){
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, nx));
 	glEnableVertexAttribArray(2);
 	// Bone index offset
-	glVertexAttribPointer(3, 1, GL_INT,   GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, bIDs));
+	glVertexAttribPointer(3, 4, GL_INT,   GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, bIDs));
 	glEnableVertexAttribArray(3);
 	// Bone weight offset
-	glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, bWeights));
+	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, bWeights));
 	glEnableVertexAttribArray(4);
 }
 

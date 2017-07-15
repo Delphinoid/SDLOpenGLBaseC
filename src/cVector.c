@@ -1,42 +1,53 @@
 #include "cVector.h"
 #include <string.h>
 
-void cvInit(cVector *vec, const size_t capacity){
+unsigned char cvInit(cVector *vec, const size_t capacity){
 	vec->size = 0;
-	vec->capacity = capacity;
 	void **tempBuffer = malloc(sizeof(void *) * capacity);
-	if(tempBuffer != NULL){
-		vec->buffer = tempBuffer;
+	if(tempBuffer == NULL){
+		return 0;
 	}
+	vec->buffer = tempBuffer;
+	vec->capacity = capacity;
+	return 1;
 }
 
-void cvResize(cVector *vec, const size_t capacity){
+unsigned char cvResize(cVector *vec, const size_t capacity){
 	if(vec->capacity != capacity){
 		void **tempBuffer = realloc(vec->buffer, sizeof(void *) * capacity);
-		if(tempBuffer != NULL){
-			void **newData = tempBuffer;
-			vec->buffer = newData;
-			vec->capacity = capacity;
+		if(tempBuffer == NULL){
+			return 0;
 		}
+		vec->buffer = tempBuffer;
+		vec->capacity = capacity;
 	}
+	return 1;
 }
 
-void cvPush(cVector *vec, const void *data, const size_t bytes){
+unsigned char cvPush(cVector *vec, const void *data, const size_t bytes){
 	void *tempPointer = malloc(bytes);
-	if(tempPointer != NULL){
-		if(vec->size == vec->capacity){
-			cvResize(vec, vec->capacity * 2);
-		}
-		vec->buffer[vec->size] = tempPointer;
-		memcpy(vec->buffer[vec->size++], data, bytes);
+	if(tempPointer == NULL){
+		return 0;
 	}
+	if(vec->size == vec->capacity){
+		if(!cvResize(vec, vec->capacity * 2)){
+			return 0;
+		}
+	}
+	vec->buffer[vec->size] = tempPointer;
+	memcpy(vec->buffer[vec->size++], data, bytes);
+	return 1;
 }
 
-void cvPop(cVector *vec){
-	free(vec->buffer[--vec->size]);
+unsigned char cvPop(cVector *vec){
+	if(vec->size > 0){
+		free(vec->buffer[--vec->size]);
+		return 1;
+	}
+	return 0;
 }
 
-void cvInsert(cVector *vec, const size_t pos, const void *data, const size_t bytes){
+unsigned char cvInsert(cVector *vec, const size_t pos, const void *data, const size_t bytes){
 	if(pos < vec->size){
 		void *tempPointer = malloc(bytes);
 		if(tempPointer != NULL){
@@ -51,46 +62,49 @@ void cvInsert(cVector *vec, const size_t pos, const void *data, const size_t byt
 			vec->buffer[pos] = tempPointer;
 			memcpy(vec->buffer[pos], data, bytes);
 			vec->size++;
+			return 1;
 		}
 	}else{
-		cvPush(vec, data, bytes);
+		return cvPush(vec, data, bytes);
 	}
+	return 0;
 }
 
-void cvErase(cVector *vec, const size_t pos){
+unsigned char cvErase(cVector *vec, const size_t pos){
 	if(pos < vec->size){
 		free(vec->buffer[pos]);
+		vec->size--;
 		size_t i;
-		for(i = pos; i < vec->size - 1; i++){
+		for(i = pos; i < vec->size; i++){
 			vec->buffer[i] = vec->buffer[i + 1];
 		}
-		free(vec->buffer[--vec->size]);
-		if(vec->size > 0 && vec->size == vec->capacity / 4){
-			cvResize(vec, vec->capacity / 2);
-		}
+		return 1;
 	}
+	return 0;
 }
 
 void *cvGet(cVector *vec, const size_t pos){
 	if(pos < vec->size){
-		return(vec->buffer[pos]);
+		return vec->buffer[pos];
 	}
-	return(NULL);
+	return NULL;
 }
 
-void cvSet(cVector *vec, const size_t pos, const void *data, const size_t bytes){
+unsigned char cvSet(cVector *vec, const size_t pos, const void *data, const size_t bytes){
 	if(pos < vec->size){
 		void *tempPointer = malloc(bytes);
 		if(tempPointer != NULL){
 			free(vec->buffer[pos]);
 			vec->buffer[pos] = malloc(bytes);
 			memcpy(vec->buffer[pos], data, bytes);
+			return 1;
 		}
 	}
+	return 0;
 }
 
 size_t cvSize(cVector *vec){
-	return(vec->size);
+	return vec->size;
 }
 
 void cvClear(cVector *vec){

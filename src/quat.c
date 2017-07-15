@@ -216,6 +216,14 @@ void quatNormalize(quat *q){
 	}
 }
 
+quat quatIdentity(){
+	quat r = {.w = 1.f, .v.x = 0.f, .v.y = 0.f, .v.z = 0.f};
+	return r;
+}
+void quatSetIdentity(quat *q){
+	q->w = 1.f; q->v.x = 0.f; q->v.y = 0.f; q->v.z = 0.f;
+}
+
 void quatAxisAngle(quat q, float *angle, float *axisX, float *axisY, float *axisZ){
 	float scale = sqrtf(1.f-q.w*q.w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1
 	if(scale != 0.f){  // We don't want to risk a potential divide-by-zero error

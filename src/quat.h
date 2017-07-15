@@ -54,6 +54,9 @@ void quatInvert(quat *q);
 quat quatGetUnit(quat q);
 void quatNormalize(quat *q);
 
+quat quatIdentity();
+void quatSetIdentity(quat *q);
+
 void quatAxisAngle(quat q, float *angle, float *axisX, float *axisY, float *axisZ);
 
 float quatDot(quat q1, quat q2);

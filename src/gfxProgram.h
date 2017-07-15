@@ -31,8 +31,10 @@ typedef struct {
 	// Per-instance uniforms
 	GLuint mvpMatrixID;
 	GLuint textureFragmentID;
-	GLuint bonePositionArrayID[MAX_BONE_NUM];
+	GLuint boneArrayID[MAX_BONE_NUM];
+	/*GLuint bonePositionArrayID[MAX_BONE_NUM];
 	GLuint boneOrientationArrayID[MAX_BONE_NUM];
+	GLuint boneScaleArrayID[MAX_BONE_NUM];*/
 	GLuint alphaID;
 
 	// Texture samplers

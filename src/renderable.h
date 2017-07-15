@@ -14,7 +14,7 @@ typedef struct {
 	char *name;
 	model *mdl;  // Pointer to the model being used. Could be pretty dangerous, might need to change it
 	/** Need to rename skl and tex **/
-	sklInstance skl;
+	sklInstance skli;
 	twInstance tex;
 	spaceTransform sTrans;
 	renderTransform rTrans;
@@ -22,6 +22,7 @@ typedef struct {
 	/** Sprite, width and height shouldn't be necessary here **/
 	unsigned char sprite;
 	float width, height;
+	/** Combine the three variables below into one variable as flags using bitwise OR **/
 	unsigned char billboardX;       // Whether or not the object uses the camera's rotated X axis
 	unsigned char billboardY;       // Whether or not the object uses the camera's rotated Y axis
 	unsigned char billboardZ;       // Whether or not the object uses the camera's rotated Z axis
@@ -40,13 +41,14 @@ void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatri
 void rndrOffsetSpriteTexture(vertex *vertices, float texFrag[4], float texWidth, float texHeight);
 void rndrDelete(renderable *rndr);
 /** Sort out the functions below, some should be associated with entities **/
-size_t rndrBoneNum(renderable *rndr);
-unsigned char rndrGenerateSkeletonState(renderable *rndr);
+//size_t rndrBoneNum(renderable *rndr);
+//unsigned char rndrGenerateSkeletonState(renderable *rndr);
 void rndrHudElement(renderable *rndr, unsigned char isHudElement);
 void rndrSetRotation(renderable *rndr, float newX, float newY, float newZ);
 void rndrRotateX(renderable *rndr, float changeX);
 void rndrRotateY(renderable *rndr, float changeY);
 void rndrRotateZ(renderable *rndr, float changeZ);
-void rndrAnimateTex(renderable *rndr, float globalDelayMod);
+void rndrAnimateTex(renderable *rndr, uint32_t currentTick, float globalDelayMod);
+void rndrAnimateSkel(renderable *rndr, uint32_t currentTick, float globalDelayMod);
 
 #endif
