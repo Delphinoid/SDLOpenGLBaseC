@@ -17,10 +17,7 @@ void rndrInit(renderable *rndr){
 	rndr->sprite = 0;
 	rndr->width = 0;
 	rndr->height = 0;
-	rndr->billboardX = 0;
-	rndr->billboardY = 0;
-	rndr->billboardZ = 0;
-	rndr->targetBillboard = 1;
+	rndr->billboardFlags = RNDR_BILLBOARD_TARGET;
 	rndr->hudElement = 0;
 	rndr->hudScaleMode = 0;
 }
@@ -161,9 +158,10 @@ void rndrGenerateTransform(renderable *rndr, mat4 *transformMatrix, gfxProgram *
 
 
 	/* Billboarding */
-	if(rndr->billboardX || rndr->billboardY || rndr->billboardZ){
+	// If any of the flags apart from RNDR_BILLBOARD_TARGET are set, continue
+	if((rndr->billboardFlags & ~RNDR_BILLBOARD_TARGET) > 0){
 		vec3 axisX; vec3 axisY; vec3 axisZ;
-		if(rndr->targetBillboard){
+		if((rndr->billboardFlags & RNDR_BILLBOARD_TARGET) > 0){
 			// Generate a new view matrix for the billboard
 			mat4 billboardViewMatrix;
 			/** Merge cam? **/
@@ -178,17 +176,17 @@ void rndrGenerateTransform(renderable *rndr, mat4 *transformMatrix, gfxProgram *
 			vec3Set(&axisZ, gfxPrg->viewMatrix.m[2][0], gfxPrg->viewMatrix.m[2][1], gfxPrg->viewMatrix.m[2][2]);
 		}
 		// Lock certain axes if needed
-		if(!rndr->billboardX){
+		if((rndr->billboardFlags & RNDR_BILLBOARD_X) == 0){
 			axisX.y = 0.f;
 			axisY.y = 1.f;
 			axisZ.y = 0.f;
 		}
-		if(!rndr->billboardY){
+		if((rndr->billboardFlags & RNDR_BILLBOARD_Y) == 0){
 			axisX.x = 1.f;
 			axisY.x = 0.f;
 			axisZ.x = 0.f;
 		}
-		if(!rndr->billboardZ){
+		if((rndr->billboardFlags & RNDR_BILLBOARD_Z) == 0){
 			axisX.z = 0.f;
 			axisY.z = 0.f;
 			axisZ.z = 1.f;

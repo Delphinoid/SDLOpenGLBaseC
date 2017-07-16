@@ -9,6 +9,11 @@
 #include "renderTransform.h"
 #include "camera.h"
 
+#define RNDR_BILLBOARD_X      0x0001  // Whether or not the object uses the camera's rotated X axis
+#define RNDR_BILLBOARD_Y      0x0002  // Whether or not the object uses the camera's rotated Y axis
+#define RNDR_BILLBOARD_Z      0x0004  // Whether or not the object uses the camera's rotated Z axis
+#define RNDR_BILLBOARD_TARGET 0x0008  // Whether or not to use a slower billboard method that looks at a target
+
 typedef struct {
 
 	char *name;
@@ -23,10 +28,7 @@ typedef struct {
 	unsigned char sprite;
 	float width, height;
 	/** Combine the three variables below into one variable as flags using bitwise OR **/
-	unsigned char billboardX;       // Whether or not the object uses the camera's rotated X axis
-	unsigned char billboardY;       // Whether or not the object uses the camera's rotated Y axis
-	unsigned char billboardZ;       // Whether or not the object uses the camera's rotated Z axis
-	unsigned char targetBillboard;  // Whether or not to use a slower billboard method that looks at a target
+	unsigned char billboardFlags;
 	/** Store the elements below in entity **/
 	unsigned char hudElement;       // Whether or not the object is part of the HUD. Should be private
 	unsigned char hudScaleMode;     // 0 = nothing special, 1 = position scaled off window size, 2 = width and height scaled off window size, 3 = both
