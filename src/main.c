@@ -232,9 +232,9 @@ int main(int argc, char *argv[]){
 
 		/* Animate */
 		// Animate the renderables
-		unsigned int d;
-		for(d = 0; d < allRenderables.size; d++){
-			rndrAnimateTex((renderable *)cvGet(&allRenderables, d), SDL_GetTicks(), 1.f);
+		size_t i;
+		for(i = 0; i < allRenderables.size; i++){
+			rndrAnimateTex((renderable *)cvGet(&allRenderables, i), SDL_GetTicks(), 1.f);
 		}
 
 
@@ -262,20 +262,20 @@ int main(int argc, char *argv[]){
 
 void cleanup(cVector *allTextures, cVector *allTexWrappers, cVector *allModels, cVector *allRenderables, gfxProgram *gfxPrg){
 	gfxDestroyProgram(gfxPrg);
-	unsigned int d;
-	for(d = 0; d < allTextures->size; d++){
-		tDelete((texture *)cvGet(allTextures, d));
+	size_t i;
+	for(i = 0; i < allTextures->size; i++){
+		tDelete((texture *)cvGet(allTextures, i));
 	}
-	for(d = 0; d < allTexWrappers->size; d++){
-		twDelete((textureWrapper *)cvGet(allTexWrappers, d));
+	for(i = 0; i < allTexWrappers->size; i++){
+		twDelete((textureWrapper *)cvGet(allTexWrappers, i));
 	}
-	for(d = 0; d < allModels->size; d++){
-		mdlDelete((model *)cvGet(allModels, d));
+	for(i = 0; i < allModels->size; i++){
+		mdlDelete((model *)cvGet(allModels, i));
 	}
-	for(d = 0; d < allRenderables->size; d++){
-		rndrDelete((renderable *)cvGet(allRenderables, d));
+	for(i = 0; i < allRenderables->size; i++){
+		rndrDelete((renderable *)cvGet(allRenderables, i));
 	}
-	/*for(d = 0; d < allSprites->size; d++){
-		sprDelete((sprite *)cvGet(allSprites, d));
+	/*for(i = 0; i < allSprites->size; i++){
+		sprDelete((sprite *)cvGet(allSprites, i));
 	}*/
 }
