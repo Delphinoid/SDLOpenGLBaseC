@@ -7,7 +7,7 @@
 #define vertexStartCapacity 1024
 #define indexStartCapacity 2048
 
-static void mdlGenBufferObjects(model *mdl, vertex *vertices, size_t vertexNum, size_t *indices, size_t indexNum);
+static void mdlGenBufferObjects(model *mdl, vertex *vertices, size_t *indices);
 
 void vertInit(vertex *v){
 	vec3SetS(&v->pos, 0.f);
@@ -30,22 +30,29 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 
 	mdlInit(mdl);
 
-	vertex *vertices = malloc(vertexStartCapacity*sizeof(vertex));
-	size_t *indices = malloc(indexStartCapacity*sizeof(size_t));
-
+	size_t vertexCapacity = vertexStartCapacity;
+	vertex *vertices = malloc(vertexCapacity*sizeof(vertex));
 	if(vertices == NULL){
-		printf("Error loading model:\nMemory allocation failure for vertex buffer.\n");
+		printf("Error loading model:\nMemory allocation failure.\n");
 		return 0;
-	}else if(indices == NULL){
-		printf("Error loading model:\nMemory allocation failure for index buffer.\n");
+	}
+
+	size_t indexCapacity = indexStartCapacity;
+	size_t *indices = malloc(indexCapacity*sizeof(size_t));
+	if(indices == NULL){
+		printf("Error loading model:\nMemory allocation failure.\n");
 		free(vertices);
 		return 0;
 	}
 
-	size_t vertexCapacity = vertexStartCapacity;
-	size_t vertexNum = 0;
-	size_t indexCapacity = indexStartCapacity;
-	size_t indexNum = 0;
+	cVector tempPositions; cvInit(&tempPositions, 3);  // Holds floats; temporarily holds vertex position data before it is pushed into vertexBuffer
+	cVector tempTexCoords; cvInit(&tempTexCoords, 2);  // Holds floats; temporarily holds vertex UV data before it is pushed into vertexBuffer
+	cVector tempNorms;     cvInit(&tempNorms, 3);      // Holds floats; temporarily holds vertex normal data before it is pushed into vertexBuffer
+	vertex tempVert;  // Holds a vertex before pushing it into the triangle array
+	size_t positionIndex[3];  // Holds all the positional information for a face
+	size_t uvIndex[3];        // Holds all the UV information for a face
+	size_t normalIndex[3];    // Holds all the normal information for a face
+
 
 	size_t pathLen = strlen(prgPath);
 	size_t fileLen = strlen(filePath);
@@ -58,14 +65,6 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 	char *line;
 	char compare[1024];
 	size_t lineLength;
-
-	cVector tempPositions; cvInit(&tempPositions, 3);  // Holds floats; temporarily holds vertex position data before it is pushed into vertexBuffer
-	cVector tempTexCoords; cvInit(&tempTexCoords, 2);  // Holds floats; temporarily holds vertex UV data before it is pushed into vertexBuffer
-	cVector tempNorms;     cvInit(&tempNorms, 3);      // Holds floats; temporarily holds vertex normal data before it is pushed into vertexBuffer
-	vertex tempVert;  // Holds a vertex before pushing it into the triangle array
-	size_t positionIndex[3];  // Holds all the positional information for a face
-	size_t uvIndex[3];        // Holds all the UV information for a face
-	size_t normalIndex[3];    // Holds all the normal information for a face
 
 	if(mdlInfo != NULL){
 		while(!feof(mdlInfo)){
@@ -221,20 +220,20 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 					// Check if the vertex has already been loaded, and if so add an index
 					unsigned char foundVertex = 0;
 					size_t j;
-					for(j = 0; j < vertexNum; j++){
+					for(j = 0; j < mdl->vertexNum; j++){
 						vertex *checkVert = &vertices[j];
 						if(checkVert->pos.x == tempVert.pos.x && checkVert->pos.y == tempVert.pos.y && checkVert->pos.z == tempVert.pos.z &&
 						   checkVert->u     == tempVert.u     && checkVert->v     == tempVert.v     &&
 						   checkVert->nx    == tempVert.nx    && checkVert->ny    == tempVert.ny    && checkVert->nz    == tempVert.nz){
 
 							// Resize indices if there's not enough room
-							if(indexNum == indexCapacity){
+							if(mdl->indexNum == indexCapacity){
 								indexCapacity *= 2;
 								size_t *tempBuffer = realloc(indices, indexCapacity*sizeof(size_t));
 								if(tempBuffer != NULL){
 									indices = tempBuffer;
 								}else{
-									printf("Error loading model:\nMemory allocation failure for index buffer.\n");
+									printf("Error loading model:\nMemory allocation failure.\n");
 									cvClear(&tempPositions);
 									cvClear(&tempTexCoords);
 									cvClear(&tempNorms);
@@ -244,8 +243,8 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 									return 0;
 								}
 							}
-							indices[indexNum++] = j;
-							j = vertexNum;
+							indices[mdl->indexNum++] = j;
+							j = mdl->vertexNum;
 							foundVertex = 1;
 						}
 					}
@@ -253,13 +252,13 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 					// If the vertex has not yet been loaded, add it to both the vertex vector and the index vector
 					if(!foundVertex){
 						// Resize indices if there's not enough room
-						if(indexNum == indexCapacity){
+						if(mdl->indexNum == indexCapacity){
 							indexCapacity *= 2;
 							size_t *tempBuffer = realloc(indices, indexCapacity*sizeof(size_t));
 							if(tempBuffer != NULL){
 								indices = tempBuffer;
 							}else{
-								printf("Error loading model:\nMemory allocation failure for index buffer.\n");
+								printf("Error loading model:\nMemory allocation failure.\n");
 								cvClear(&tempPositions);
 								cvClear(&tempTexCoords);
 								cvClear(&tempNorms);
@@ -270,13 +269,13 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 							}
 						}
 						// Resize vertices if there's not enough room
-						if(vertexNum == vertexCapacity){
+						if(mdl->vertexNum == vertexCapacity){
 							vertexCapacity *= 2;
 							vertex *tempBuffer = realloc(vertices, vertexCapacity*sizeof(vertex));
 							if(tempBuffer != NULL){
 								vertices = tempBuffer;
 							}else{
-								printf("Error loading model:\nMemory allocation failure for vertex buffer.\n");
+								printf("Error loading model:\nMemory allocation failure.\n");
 								cvClear(&tempPositions);
 								cvClear(&tempTexCoords);
 								cvClear(&tempNorms);
@@ -286,8 +285,8 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 								return 0;
 							}
 						}
-						indices[indexNum++] = vertexNum;
-						vertices[vertexNum++] = tempVert;
+						indices[mdl->indexNum++] = mdl->vertexNum;
+						vertices[mdl->vertexNum++] = tempVert;
 					}
 
 				}
@@ -321,7 +320,7 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 		mdl->name[fileLen] = '\0';
 	}
 	/** Should mdlGenBufferObjects() be here? **/
-	mdlGenBufferObjects(mdl, vertices, vertexNum, indices, indexNum);
+	mdlGenBufferObjects(mdl, vertices, indices);
 	free(indices);
 	free(vertices);
 	return 1;
@@ -395,9 +394,9 @@ unsigned char mdlCreateSprite(model *mdl, char *name){
 
 }
 
-static void mdlGenBufferObjects(model *mdl, vertex *vertices, size_t vertexNum, size_t *indices, size_t indexNum){
+static void mdlGenBufferObjects(model *mdl, vertex *vertices, size_t *indices){
 
-	if(vertexNum > 0){
+	if(mdl->vertexNum > 0){
 
 		GLenum glError;
 
@@ -408,28 +407,24 @@ static void mdlGenBufferObjects(model *mdl, vertex *vertices, size_t vertexNum, 
 		// Create and bind the VBO
 		glGenBuffers(1, &mdl->vboID);
 		glBindBuffer(GL_ARRAY_BUFFER, mdl->vboID);
-		glBufferData(GL_ARRAY_BUFFER, vertexNum * sizeof(vertex), vertices, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, mdl->vertexNum * sizeof(vertex), vertices, GL_STATIC_DRAW);
 		// Check for errors
 		glError = glGetError();
 		if(glError != GL_NO_ERROR){
 			printf("Error creating vertex buffer:\n%u\n", glError);
-		}else{
-			// If there are no errors, set mdl->vertexNum
-			mdl->vertexNum = vertexNum;
+			mdl->vertexNum = 0;
 		}
 
-		if(indexNum > 0){
+		if(mdl->indexNum > 0){
 			// Create and bind the IBO
 			glGenBuffers(1, &mdl->iboID);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mdl->iboID);
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexNum * sizeof(size_t), indices, GL_STATIC_DRAW);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, mdl->indexNum * sizeof(size_t), indices, GL_STATIC_DRAW);
 			// Check for errors
 			glError = glGetError();
 			if(glError != GL_NO_ERROR){
 				printf("Error creating index buffer:\n%u\n", glError);
-			}else{
-				// If there are no errors, set mdl->indexNum
-				mdl->indexNum = indexNum;
+				mdl->indexNum = 0;
 			}
 		}
 

@@ -11,25 +11,28 @@ typedef struct {
 
 // Contains details describing a single image
 typedef struct {
-	texture *baseTexture;    // The actual image
-	cVector subframes;       // Holds twBounds; represents frame bounds (always contains one element, or multiple for sprite sheets)
-	texture *normalTexture;  // Normal map for the image
+	texture *baseTexture;     // The actual image
+	texture *normalTexture;   // Normal map for the image
+	size_t subframeNum;
+	twBounds *subframes;      // Holds twBounds; represents frame bounds (always contains one element, or multiple for sprite sheets)
 } twFrame;
 
 // Contains details describing an animation
 typedef struct {
-	char *name;
 	int desiredLoops;     // How many times the animation will loop (with -1 being infinite times)
-	cVector frameIDs;     // Holds size_ts; represents the position of the frame in allFrames
-	cVector subframeIDs;  // Holds size_ts; represents the position of the subframes in textureFrame.subframes
-	cVector frameDelays;  // Holds floats; represents how long each frame should last
+	size_t frameNum;
+	size_t *frameIDs;     // Represents the positions of the frames in textureWrapper.frames
+	size_t *subframeIDs;  // Represents the positions of the subframes in twFrame.subframes
+	float *frameDelays;   // Represents how long each frame should last
 } twAnim;
 
 // Combines the above structures
 typedef struct {
 	char *name;
-	cVector frames;      // Holds twFrames
-	cVector animations;  // Holds twAnims
+	size_t frameNum;
+	size_t animationNum;
+	twFrame *frames;     // Holds twFrames
+	twAnim *animations;  // Holds twAnims
 } textureWrapper;
 
 // Texture wrapper instance

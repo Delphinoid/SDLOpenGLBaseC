@@ -114,7 +114,7 @@ int main(int argc, char *argv[]){
 	tempRndr.tex.tw = (textureWrapper *)cvGet(&allTexWrappers, 3);
 	tempRndr.sTrans.position.x = -3.f;
 	tempRndr.sTrans.position.y = -2.f;
-	tempRndr.billboardFlags |= RNDR_BILLBOARD_Y;
+	tempRndr.billboardFlags &= ~RNDR_BILLBOARD_Y;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 
 
