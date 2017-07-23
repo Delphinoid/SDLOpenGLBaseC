@@ -4,7 +4,7 @@
 unsigned char cvInit(cVector *vec, const size_t capacity){
 	vec->size = 0;
 	void **tempBuffer = malloc(sizeof(void *) * capacity);
-	if(tempBuffer == NULL){
+	if(capacity > 0 && tempBuffer == NULL){
 		return 0;
 	}
 	vec->buffer = tempBuffer;

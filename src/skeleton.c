@@ -157,21 +157,22 @@ static void sklaiDeltaTransform(sklAnimInstance *sklai, size_t bone){
 		sklai->animState[bone].scale = sklai->animInterpEnd[bone].scale;
 
 	}else{
+
 		// Get the difference between the start position and end position
-		sklai->animState[bone].position = vec3VSubV(sklai->animInterpEnd[bone].position,
-		                                             sklai->animInterpStart[bone].position);
-		// Divide it by animInterpT
-		vec3DivVByS(&sklai->animState[bone].position, sklai->animInterpT);
+		vec3 difference = vec3VSubV(sklai->animInterpEnd[bone].position, sklai->animInterpStart[bone].position);
+		vec3MultVByS(&difference, sklai->animInterpT);  // Divide it by animInterpT
+		sklai->animState[bone].position = vec3VAddV(sklai->animInterpStart[bone].position, difference);
 
 		// Repeat for scale
-		sklai->animState[bone].scale = vec3VSubV(sklai->animInterpEnd[bone].scale,
-		                                         sklai->animInterpStart[bone].scale);
-		vec3DivVByS(&sklai->animState[bone].scale, sklai->animInterpT);
+		difference = vec3VSubV(sklai->animInterpEnd[bone].scale, sklai->animInterpStart[bone].scale);
+		vec3MultVByS(&difference, sklai->animInterpT);  // Divide it by animInterpT
+		sklai->animState[bone].scale = vec3VAddV(sklai->animInterpStart[bone].scale, difference);
 
 		// SLERP between the start orientation and end orientation
 		sklai->animState[bone].orientation = quatSlerp(sklai->animInterpStart[bone].orientation,
-		                                                sklai->animInterpEnd[bone].orientation,
-		                                                sklai->animInterpT);
+		                                               sklai->animInterpEnd[bone].orientation,
+		                                               sklai->animInterpT);
+
 	}
 
 }
@@ -214,7 +215,6 @@ static void sklaiAnimate(sklAnimInstance *sklai, /**skeleton *skl,**/ uint32_t c
 			// Add the delay to lastUpdate and advance the animation
 			deltaTime -= currentFrameDelay;
 			sklai->lastUpdate += currentFrameDelay;
-
 			// Increase currentFrame and check if it exceeds the number of frames
 			if(++sklai->currentFrame == sklai->anim->frameDelays.size){
 				// currentFrame has exceeded the number of frames, increase the loop counter
@@ -245,7 +245,7 @@ static void sklaiAnimate(sklAnimInstance *sklai, /**skeleton *skl,**/ uint32_t c
 			// With the current way animations work, boneState must be updated every time
 			// the current frame changes so certain bone transformations aren't "lost" if
 			// skipped over
-			if(deltaTime < currentFrameDelay){
+			if(deltaTime >= currentFrameDelay){
 				// If statement exists so we can use animInterpT on the final call
 				// (it is temporarily set to 0 for these calls)
 				/**sklaiGenerateState(sklai, skl->root, 0);**/
@@ -264,17 +264,116 @@ static void sklaiAnimate(sklAnimInstance *sklai, /**skeleton *skl,**/ uint32_t c
 
 }
 
+void skliaChangeAnim(sklAnimInstance *sklia, sklAnim *anim){
+	/** **/
+}
+
 void skliInit(sklInstance *skli, skeleton *skl){
 	skli->skl = skl;
 	if(skl != NULL){
 		cvInit(&skli->animations, skl->boneNum);
 		skli->customState = malloc(skl->boneNum*sizeof(sklBone));
 		skli->skeletonState = malloc(skl->boneNum*sizeof(mat4));
+		/** Temp? **/
+		sklBone tempBone; boneInit(&tempBone);
+		mat4 identityMatrix; mat4Identity(&identityMatrix);
+		size_t i;
+		for(i = 0; i < skl->boneNum; i++){
+			skli->customState[i] = tempBone;
+			skli->skeletonState[i] = identityMatrix;
+		}
 	}
 }
 
 unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *filePath){
-	//
+
+	skeleton *skel = malloc(sizeof(skeleton));
+	skel->root = malloc(sizeof(sklNode));
+	skel->root->bone.name = malloc(5*sizeof(char));
+	skel->root->bone.name = "root\0";
+	skel->root->bone.position = vec3New(0.5f, -1.f, 0.5f);
+	skel->root->bone.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
+	skel->root->bone.scale = vec3New(1.f, 1.f, 1.f);
+	skel->root->parent = NULL;
+	skel->root->childNum = 1;
+	skel->root->children = malloc(sizeof(sklNode));
+	skel->root->children[0].parent = skel->root;
+	skel->root->children[0].childNum = 0;
+	skel->root->children[0].bone.name = malloc(4*sizeof(char));
+	skel->root->children[0].bone.name = "top\0";
+	skel->root->children[0].bone.position = vec3New(0.f, 2.f, 0.f);
+	skel->root->children[0].bone.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
+	skel->root->children[0].bone.scale = vec3New(1.f, 1.f, 1.f);
+	skel->boneNum = 2;
+
+	skliInit(skli, skel);
+
+	sklAnim *anim = malloc(sizeof(sklAnim));
+	anim->desiredLoops = -1;
+	anim->boneNum = 2;
+	cvInit(&anim->keyframes, 4);
+	sklKeyframe tempKeyframe;
+	sklBone tempBoneRoot, tempBoneTop;
+
+	cvInit(&tempKeyframe.bones, 2);
+	boneInit(&tempBoneRoot); boneInit(&tempBoneTop);
+	cvPush(&tempKeyframe.bones, &tempBoneRoot, sizeof(tempBoneRoot));
+	cvPush(&tempKeyframe.bones, &tempBoneTop, sizeof(tempBoneTop));
+	cvPush(&anim->keyframes, &tempKeyframe, sizeof(tempKeyframe));
+
+	cvInit(&tempKeyframe.bones, 2);
+	tempBoneRoot.name = malloc(5*sizeof(char));
+	tempBoneRoot.name = "root\0";
+	tempBoneTop.name = malloc(4*sizeof(char));
+	tempBoneTop.name = "top\0";
+	tempBoneTop.position.y = 0.5f;
+	cvPush(&tempKeyframe.bones, &tempBoneRoot, sizeof(tempBoneRoot));
+	cvPush(&tempKeyframe.bones, &tempBoneTop, sizeof(tempBoneTop));
+	cvPush(&anim->keyframes, &tempKeyframe, sizeof(tempKeyframe));
+
+	cvInit(&tempKeyframe.bones, 2);
+	tempBoneRoot.position.y = 0.5f;
+	tempBoneTop.position.y = 0.f;
+	cvPush(&tempKeyframe.bones, &tempBoneRoot, sizeof(tempBoneRoot));
+	cvPush(&tempKeyframe.bones, &tempBoneTop, sizeof(tempBoneTop));
+	cvPush(&anim->keyframes, &tempKeyframe, sizeof(tempKeyframe));
+
+	cvInit(&tempKeyframe.bones, 2);
+	tempBoneRoot.position.y = 0.f;
+	tempBoneTop.position.y = 0.f;
+	cvPush(&tempKeyframe.bones, &tempBoneRoot, sizeof(tempBoneRoot));
+	cvPush(&tempKeyframe.bones, &tempBoneTop, sizeof(tempBoneTop));
+	cvPush(&anim->keyframes, &tempKeyframe, sizeof(tempKeyframe));
+
+	cvInit(&anim->frameDelays, 4);
+	float delay = 1000.f;
+	cvPush(&anim->frameDelays, &delay, sizeof(delay));
+	cvPush(&anim->frameDelays, &delay, sizeof(delay));
+	cvPush(&anim->frameDelays, &delay, sizeof(delay));
+	delay = 0.f;
+	cvPush(&anim->frameDelays, &delay, sizeof(delay));
+
+	sklAnimInstance animInst;
+	animInst.anim = anim;
+	animInst.delayMod = 1.f;
+	animInst.currentFrame = 0;
+	animInst.nextFrame = 1;
+	animInst.currentLoops = 0;
+	animInst.lastUpdate = 0;
+	animInst.animInterpT = 0.f;
+	animInst.animInterpStart = malloc(2*sizeof(sklBone));
+	animInst.animInterpStart[0] = tempBoneRoot;
+	animInst.animInterpStart[1] = tempBoneTop;
+	animInst.animInterpEnd = malloc(2*sizeof(sklBone));
+	animInst.animInterpEnd[0] = tempBoneRoot;
+	animInst.animInterpEnd[1] = tempBoneTop;
+	animInst.animState = malloc(2*sizeof(sklBone));
+	animInst.animState[0] = tempBoneRoot;
+	animInst.animState[1] = tempBoneTop;
+
+	cvPush(&skli->animations, &animInst, sizeof(animInst));
+
+	return 1;
 }
 
 static void skliBoneState(sklInstance *skli, sklNode *node, size_t parent, size_t bone){
@@ -288,14 +387,6 @@ static void skliBoneState(sklInstance *skli, sklNode *node, size_t parent, size_
 	}else{
 		mat4Identity(&skli->skeletonState[bone]);
 	}
-	// Apply base transforms
-	mat4Translate(&skli->skeletonState[bone], node->bone.position.x,
-	                                          node->bone.position.y,
-	                                          node->bone.position.z);
-	mat4Rotate(&skli->skeletonState[bone], node->bone.orientation);
-	mat4Scale(&skli->skeletonState[bone], node->bone.scale.x,
-	                                      node->bone.scale.y,
-	                                      node->bone.scale.z);
 	/** Find the bone's position in each sklAnimInstance by strcmping the names **/
 	/** Later, set up a "lookup table" of sorts when animations are added to make this faster **/
 	size_t i, j;
@@ -304,7 +395,7 @@ static void skliBoneState(sklInstance *skli, sklNode *node, size_t parent, size_
 		for(j = 0; j < ((sklAnimInstance *)cvGet(&skli->animations, i))->anim->boneNum; j++){
 			sklBone *currentAnimState = ((sklAnimInstance *)cvGet(&skli->animations, i))->animState;
 			/** Use a lookup here instead of strcmp() **/
-			if(strcmp(node->bone.name, currentAnimState[j].name)){
+			if(strcmp(node->bone.name, currentAnimState[j].name) == 0){
 				mat4Translate(&skli->skeletonState[bone], currentAnimState[j].position.x,
 				                                          currentAnimState[j].position.y,
 				                                          currentAnimState[j].position.z);
@@ -329,8 +420,8 @@ static size_t skliGenerateState(sklInstance *skli, sklNode *node, size_t parent,
 		// Update the delta transform for the bone
 		skliBoneState(skli, node, parent, bone);
 		// Loop through each child
-		size_t i = node->childNum;
-		while(i > 0){
+		size_t i;
+		for(i = 0; i < node->childNum; i++){
 			nextBone = skliGenerateState(skli, &node->children[i], bone, nextBone+1);
 		}
 	}

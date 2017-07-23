@@ -26,20 +26,13 @@ void renderModel(renderable *rndr, gfxProgram *gfxPrg, camera *cam){
 	/* Feed the texture coordinates to the shader */
 	glUniform4fv(gfxPrg->textureFragmentID, 1, texFrag);
 
-	/* Generate a new skeleton state and feed it to the shader */
-	/*rndrGenerateSkeletonState(rndr);
-	size_t i;
-	for(i = 0; i < rndrBoneNum(rndr); i++){
-		// Feed position
-		glUniform3f(gfxPrg->bonePositionArrayID[i], rndr->sklState[d].position.x,
-		                                            rndr->sklState[d].position.y,
-		                                            rndr->sklState[d].position.z);
-		// Feed orientation
-		glUniform4f(gfxPrg->boneOrientationArrayID[i], rndr->sklState[d].orientation.w,
-		                                               rndr->sklState[d].orientation.v.x,
-		                                               rndr->sklState[d].orientation.v.y,
-		                                               rndr->sklState[d].orientation.v.z);
-	}*/
+	/* Feed the skeleton state to the shader */
+	if(rndr->skli.skl != NULL){
+		size_t i;
+		for(i = 0; i < rndr->skli.skl->boneNum; i++){
+			glUniformMatrix4fv(gfxPrg->boneArrayID[i], 1, GL_FALSE, &rndr->skli.skeletonState[i].m[0][0]);
+		}
+	}
 
 	//sklGenerateState(&rndr->skl);
 	//sklFeedStateToShader();

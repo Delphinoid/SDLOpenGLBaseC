@@ -45,9 +45,11 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 		return 0;
 	}
 
-	cVector tempPositions; cvInit(&tempPositions, 3);  // Holds floats; temporarily holds vertex position data before it is pushed into vertexBuffer
-	cVector tempTexCoords; cvInit(&tempTexCoords, 2);  // Holds floats; temporarily holds vertex UV data before it is pushed into vertexBuffer
-	cVector tempNorms;     cvInit(&tempNorms, 3);      // Holds floats; temporarily holds vertex normal data before it is pushed into vertexBuffer
+	cVector tempPositions;   cvInit(&tempPositions, 5);  // Holds floats; temporarily holds vertex position data before it is pushed into vertexBuffer
+	cVector tempBoneIDs;     cvInit(&tempBoneIDs, 4);
+	cVector tempBoneWeights; cvInit(&tempBoneWeights, 4);
+	cVector tempTexCoords;   cvInit(&tempTexCoords, 2);  // Holds floats; temporarily holds vertex UV data before it is pushed into vertexBuffer
+	cVector tempNorms;       cvInit(&tempNorms, 3);      // Holds floats; temporarily holds vertex normal data before it is pushed into vertexBuffer
 	vertex tempVert;  // Holds a vertex before pushing it into the triangle array
 	size_t positionIndex[3];  // Holds all the positional information for a face
 	size_t uvIndex[3];        // Holds all the UV information for a face
@@ -114,39 +116,65 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 
 			// Vertex data
 			}else if(lineLength >= 7 && strncpy(compare, line, 2) && (compare[2] = '\0') == 0 && strcmp(compare, "v ") == 0){
-				char *token = strtok(line+2, " /");
+				char *token = strtok(line+2, " ");
 				float curVal = strtof(token, NULL);
 				cvPush(&tempPositions, (void *)&curVal, sizeof(curVal));
-				token = strtok(NULL, " /");
+				token = strtok(NULL, " ");
 				curVal = strtof(token, NULL);
 				cvPush(&tempPositions, (void *)&curVal, sizeof(curVal));
-				token = strtok(NULL, " /");
+				token = strtok(NULL, " ");
 				curVal = strtof(token, NULL);
 				cvPush(&tempPositions, (void *)&curVal, sizeof(curVal));
-				token = strtok(NULL, " /");
+				/****/
+				token = strtok(NULL, " ");
+				if(token != NULL){
+					int curBoneID = strtoul(token, NULL, 0);
+					cvPush(&tempBoneIDs, (void *)&curBoneID, sizeof(curBoneID));
+					token = strtok(NULL, " ");
+					curBoneID = strtoul(token, NULL, 0);
+					cvPush(&tempBoneIDs, (void *)&curBoneID, sizeof(curBoneID));
+					token = strtok(NULL, " ");
+					curBoneID = strtoul(token, NULL, 0);
+					cvPush(&tempBoneIDs, (void *)&curBoneID, sizeof(curBoneID));
+					token = strtok(NULL, " ");
+					curBoneID = strtoul(token, NULL, 0);
+					cvPush(&tempBoneIDs, (void *)&curBoneID, sizeof(curBoneID));
+					token = strtok(NULL, " ");
+					if(token != NULL){
+						curVal = strtof(token, NULL);
+						cvPush(&tempBoneWeights, (void *)&curVal, sizeof(curVal));
+						token = strtok(NULL, " ");
+						curVal = strtof(token, NULL);
+						cvPush(&tempBoneWeights, (void *)&curVal, sizeof(curVal));
+						token = strtok(NULL, " ");
+						curVal = strtof(token, NULL);
+						cvPush(&tempBoneWeights, (void *)&curVal, sizeof(curVal));
+						token = strtok(NULL, " ");
+						curVal = strtof(token, NULL);
+						cvPush(&tempBoneWeights, (void *)&curVal, sizeof(curVal));
+					}
+				}
 
 			// UV data
 			}else if(lineLength >= 6 && strncpy(compare, line, 3) && (compare[3] = '\0') == 0 && strcmp(compare, "vt ") == 0){
-				char *token = strtok(line+3, " /");
+				char *token = strtok(line+3, " ");
 				float curVal = strtof(token, NULL);
 				cvPush(&tempTexCoords, (void *)&curVal, sizeof(curVal));
-				token = strtok(NULL, " /");
+				token = strtok(NULL, " ");
 				curVal = strtof(token, NULL);
 				cvPush(&tempTexCoords, (void *)&curVal, sizeof(curVal));
-				token = strtok(NULL, " /");
 
 			// Normal data
 			}else if(lineLength >= 8 && strncpy(compare, line, 3) && (compare[3] = '\0') == 0 && strcmp(compare, "vn ") == 0){
-				char *token = strtok(line+3, " /");
+				char *token = strtok(line+3, " ");
 				float curVal = strtof(token, NULL);
 				cvPush(&tempNorms, (void *)&curVal, sizeof(curVal));
-				token = strtok(NULL, " /");
+				token = strtok(NULL, " ");
 				curVal = strtof(token, NULL);
 				cvPush(&tempNorms, (void *)&curVal, sizeof(curVal));
-				token = strtok(NULL, " /");
+				token = strtok(NULL, " ");
 				curVal = strtof(token, NULL);
 				cvPush(&tempNorms, (void *)&curVal, sizeof(curVal));
-				token = strtok(NULL, " /");
 
 			// Face data
 			}else if(lineLength >= 19 && strncpy(compare, line, 2) && (compare[2] = '\0') == 0 && strcmp(compare, "f ") == 0){
@@ -216,12 +244,63 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 					}else{
 						tempVert.nz = 0.f;
 					}
+					/****/
+					checkVal = cvGet(&tempBoneIDs, (positionIndex[i]-1)*4);
+					if(checkVal != NULL){
+						tempVert.bIDs[0] = *((int *)checkVal);
+					}else{
+						tempVert.bIDs[0] = -1;
+					}
+					checkVal = cvGet(&tempBoneIDs, (positionIndex[i]-1)*4+1);
+					if(checkVal != NULL){
+						tempVert.bIDs[1] = *((int *)checkVal);
+					}else{
+						tempVert.bIDs[1] = -1;
+					}
+					checkVal = cvGet(&tempBoneIDs, (positionIndex[i]-1)*4+2);
+					if(checkVal != NULL){
+						tempVert.bIDs[2] = *((int *)checkVal);
+					}else{
+						tempVert.bIDs[2] = -1;
+					}
+					checkVal = cvGet(&tempBoneIDs, (positionIndex[i]-1)*4+2);
+					if(checkVal != NULL){
+						tempVert.bIDs[3] = *((int *)checkVal);
+					}else{
+						tempVert.bIDs[3] = -1;
+					}
+					/****/
+					checkVal = cvGet(&tempBoneWeights, (positionIndex[i]-1)*4);
+					if(checkVal != NULL){
+						tempVert.bWeights[0] = *((float *)checkVal);
+					}else{
+						tempVert.bWeights[0] = 0.f;
+					}
+					checkVal = cvGet(&tempBoneWeights, (positionIndex[i]-1)*4+1);
+					if(checkVal != NULL){
+						tempVert.bWeights[1] = *((float *)checkVal);
+					}else{
+						tempVert.bWeights[1] = 0.f;
+					}
+					checkVal = cvGet(&tempBoneWeights, (positionIndex[i]-1)*4+2);
+					if(checkVal != NULL){
+						tempVert.bWeights[2] = *((float *)checkVal);
+					}else{
+						tempVert.bWeights[2] = 0.f;
+					}
+					checkVal = cvGet(&tempBoneWeights, (positionIndex[i]-1)*4+2);
+					if(checkVal != NULL){
+						tempVert.bWeights[3] = *((float *)checkVal);
+					}else{
+						tempVert.bWeights[3] = 0.f;
+					}
 
 					// Check if the vertex has already been loaded, and if so add an index
 					unsigned char foundVertex = 0;
 					size_t j;
 					for(j = 0; j < mdl->vertexNum; j++){
 						vertex *checkVert = &vertices[j];
+						/** CHECK BONE DATA HERE **/
 						if(checkVert->pos.x == tempVert.pos.x && checkVert->pos.y == tempVert.pos.y && checkVert->pos.z == tempVert.pos.z &&
 						   checkVert->u     == tempVert.u     && checkVert->v     == tempVert.v     &&
 						   checkVert->nx    == tempVert.nx    && checkVert->ny    == tempVert.ny    && checkVert->nz    == tempVert.nz){
@@ -309,6 +388,8 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 	}
 
 	cvClear(&tempPositions);
+	cvClear(&tempBoneIDs);
+	cvClear(&tempBoneWeights);
 	cvClear(&tempTexCoords);
 	cvClear(&tempNorms);
 	free(fullPath);
@@ -338,7 +419,7 @@ static void mdlVertexAttributes(){
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, nx));
 	glEnableVertexAttribArray(2);
 	// Bone index offset
-	glVertexAttribPointer(3, 4, GL_INT,   GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, bIDs));
+	glVertexAttribIPointer(3, 4, GL_INT, sizeof(vertex), (GLvoid*)offsetof(vertex, bIDs));
 	glEnableVertexAttribArray(3);
 	// Bone weight offset
 	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, bWeights));

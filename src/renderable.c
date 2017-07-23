@@ -10,7 +10,7 @@
 void rndrInit(renderable *rndr){
 	rndr->name = NULL;
 	rndr->mdl = NULL;
-	//skliInit(&rndr->skl, NULL);
+	skliInit(&rndr->skli, NULL);
 	twiInit(&rndr->tex, NULL);
 	stInit(&rndr->sTrans);
 	rtInit(&rndr->rTrans);

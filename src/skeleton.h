@@ -32,6 +32,7 @@ typedef struct {
 
 // A full animation, containing a vector of keyframes
 typedef struct {
+	/** Redo this with a proper system that finds next bone transforms **/
 	int desiredLoops;     // How many times the animation will loop (with -1 being infinite times)
 	cVector keyframes;    // Holds sklKeyframes
 	cVector frameDelays;  // Holds floats; represents how long each frame should last

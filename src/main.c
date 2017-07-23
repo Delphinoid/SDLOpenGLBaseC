@@ -117,6 +117,9 @@ int main(int argc, char *argv[]){
 	tempRndr.billboardFlags &= ~RNDR_BILLBOARD_Y;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 
+	skliLoad(&((renderable *)cvGet(&allRenderables, 0))->skli, NULL, NULL);
+	skliLoad(&((renderable *)cvGet(&allRenderables, 1))->skli, NULL, NULL);
+
 
 	unsigned char prgRunning = 1;
 	camera cam; camInit(&cam);
@@ -236,6 +239,7 @@ int main(int argc, char *argv[]){
 		for(i = 0; i < allRenderables.size; i++){
 			rndrAnimateTex((renderable *)cvGet(&allRenderables, i), SDL_GetTicks(), 1.f);
 		}
+		skliAnimate(&((renderable *)cvGet(&allRenderables, 0))->skli, SDL_GetTicks(), 1.f);
 
 
 		/* Render the scene */
