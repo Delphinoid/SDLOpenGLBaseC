@@ -20,7 +20,7 @@ unsigned char gfxInitProgram(gfxProgram *gfxPrg, char *prgPath){
 	gfxPrg->aspectRatioY = DEFAULT_ASPECT_RATIO_Y;
 	gfxPrg->lastWindowWidth = 0;
 	gfxPrg->lastWindowHeight = 0;
-	gfxPrg->stretchToFit = 0;
+	gfxPrg->stretchToFit = 1;
 	return (gfxInitSDL(gfxPrg) && gfxInitOGL(gfxPrg) && gfxLoadShaders(gfxPrg, prgPath) && gfxCreateBuffers(gfxPrg));
 
 }
@@ -309,10 +309,12 @@ static unsigned char gfxCreateBuffers(gfxProgram *gfxPrg){
 void gfxUpdateWindow(gfxProgram *gfxPrg){
 	SDL_GetWindowSize(gfxPrg->window, &gfxPrg->windowWidth, &gfxPrg->windowHeight);
 	if(gfxPrg->windowWidth != gfxPrg->lastWindowWidth || gfxPrg->windowHeight != gfxPrg->lastWindowHeight){
+		/** Projection matrices (both frustum and ortho) should be a member of the camera **/
+		mat4Perspective(&gfxPrg->projectionMatrixFrustum, 45.f * 0.017453292, (float)gfxPrg->aspectRatioX / (float)gfxPrg->aspectRatioY, 1.f, 1000.f);
 		mat4Ortho(&gfxPrg->projectionMatrixOrtho, 0.f, 1.f, 1.f, 0.f, 1.f, -1.f);
 		mat4Scale(&gfxPrg->projectionMatrixOrtho,
-		          (gfxPrg->aspectRatioX < gfxPrg->aspectRatioY ? gfxPrg->aspectRatioX : gfxPrg->aspectRatioY) / (float)gfxPrg->aspectRatioX,
-		          (gfxPrg->aspectRatioX < gfxPrg->aspectRatioY ? gfxPrg->aspectRatioX : gfxPrg->aspectRatioY) / (float)gfxPrg->aspectRatioY,
+		          (float)(gfxPrg->aspectRatioX < gfxPrg->aspectRatioY ? gfxPrg->aspectRatioX : gfxPrg->aspectRatioY) / (float)gfxPrg->aspectRatioX,
+		          (float)(gfxPrg->aspectRatioX < gfxPrg->aspectRatioY ? gfxPrg->aspectRatioX : gfxPrg->aspectRatioY) / (float)gfxPrg->aspectRatioY,
 		          1.f);
 		GLint screenX, screenY, screenWidth, screenHeight;
 		if(gfxPrg->stretchToFit){
