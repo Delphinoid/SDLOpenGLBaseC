@@ -20,7 +20,7 @@ unsigned char gfxInitProgram(gfxProgram *gfxPrg, char *prgPath){
 	gfxPrg->aspectRatioY = DEFAULT_ASPECT_RATIO_Y;
 	gfxPrg->lastWindowWidth = 0;
 	gfxPrg->lastWindowHeight = 0;
-	gfxPrg->stretchToFit = 1;
+	gfxPrg->stretchToFit = 0;
 	return (gfxInitSDL(gfxPrg) && gfxInitOGL(gfxPrg) && gfxLoadShaders(gfxPrg, prgPath) && gfxCreateBuffers(gfxPrg));
 
 }
