@@ -1,6 +1,8 @@
 #include "skeleton.h"
 #include <string.h>
 
+#define radianRatio 0.017453292  // = PI / 180, used for converting degrees to radians
+
 void boneInit(sklBone *bone){
 	bone->name = NULL;
 	vec3SetS(&bone->position, 0.f);
@@ -334,6 +336,7 @@ unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *fileP
 	cvInit(&tempKeyframe.bones, 2);
 	tempBoneRoot.position.y = 0.5f;
 	tempBoneTop.position.y = 0.f;
+	tempBoneTop.orientation = quatNewEuler(0.f, 90.f*radianRatio, 0.f);
 	cvPush(&tempKeyframe.bones, &tempBoneRoot, sizeof(tempBoneRoot));
 	cvPush(&tempKeyframe.bones, &tempBoneTop, sizeof(tempBoneTop));
 	cvPush(&anim->keyframes, &tempKeyframe, sizeof(tempKeyframe));
@@ -341,6 +344,7 @@ unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *fileP
 	cvInit(&tempKeyframe.bones, 2);
 	tempBoneRoot.position.y = 0.f;
 	tempBoneTop.position.y = 0.f;
+	tempBoneTop.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
 	cvPush(&tempKeyframe.bones, &tempBoneRoot, sizeof(tempBoneRoot));
 	cvPush(&tempKeyframe.bones, &tempBoneTop, sizeof(tempBoneTop));
 	cvPush(&anim->keyframes, &tempKeyframe, sizeof(tempKeyframe));
@@ -387,6 +391,9 @@ static void skliBoneState(sklInstance *skli, sklNode *node, size_t parent, size_
 	}else{
 		mat4Identity(&skli->skeletonState[bone]);
 	}
+	mat4Translate(&skli->skeletonState[bone], node->bone.position.x,
+	                                          node->bone.position.y,
+	                                          node->bone.position.z);
 	/** Find the bone's position in each sklAnimInstance by strcmping the names **/
 	/** Later, set up a "lookup table" of sorts when animations are added to make this faster **/
 	size_t i, j;
@@ -408,6 +415,9 @@ static void skliBoneState(sklInstance *skli, sklNode *node, size_t parent, size_
 		}
 
 	}
+	mat4Translate(&skli->skeletonState[bone], -node->bone.position.x,
+	                                          -node->bone.position.y,
+	                                          -node->bone.position.z);
 }
 
 static size_t skliGenerateState(sklInstance *skli, sklNode *node, size_t parent, size_t bone){

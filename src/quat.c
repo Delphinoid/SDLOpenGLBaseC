@@ -18,12 +18,15 @@ quat quatNewAxisAngle(float angle, float axisX, float axisY, float axisZ){
 	return r;
 }
 quat quatNewEuler(float x, float y, float z){
-	float cb = cosf(x*0.5f);
-	float ch = cosf(y*0.5f);
-	float ca = cosf(z*0.5f);
-	float sb = sinf(x*0.5f);
-	float sh = sinf(y*0.5f);
-	float sa = sinf(z*0.5f);
+	float hx = x*0.5f;
+	float hy = y*0.5f;
+	float hz = z*0.5f;
+	float cb = cosf(hx);
+	float ch = cosf(hy);
+	float ca = cosf(hz);
+	float sb = sinf(hx);
+	float sh = sinf(hy);
+	float sa = sinf(hz);
 	quat r = {.w   = cb*ch*ca+sb*sh*sa,
 	          .v.x = sb*ch*ca-cb*sh*sa,
 	          .v.y = cb*sh*ca+sb*ch*sa,
@@ -44,12 +47,15 @@ void quatSetAxisAngle(quat *q, float angle, float axisX, float axisY, float axis
 	q->v.z = axisZ * t;
 }
 void quatSetEuler(quat *q, float x, float y, float z){
-	float cb = cosf(x*0.5f);
-	float ch = cosf(y*0.5f);
-	float ca = cosf(z*0.5f);
-	float sb = sinf(x*0.5f);
-	float sh = sinf(y*0.5f);
-	float sa = sinf(z*0.5f);
+	float hx = x*0.5f;
+	float hy = y*0.5f;
+	float hz = z*0.5f;
+	float cb = cosf(hx);
+	float ch = cosf(hy);
+	float ca = cosf(hz);
+	float sb = sinf(hx);
+	float sh = sinf(hy);
+	float sa = sinf(hz);
 	q->w   = cb*ch*ca+sb*sh*sa;
 	q->v.x = sb*ch*ca-cb*sh*sa;
 	q->v.y = cb*sh*ca+sb*ch*sa;
