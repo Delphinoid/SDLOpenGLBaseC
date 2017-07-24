@@ -107,7 +107,7 @@ void batchRenderSprites(cVector *allSprites, gfxProgram *gfxPrg, camera *cam){
 			// Add sprite to the current batch
 			gfxPrg->lastTexID = currentTexID;
 			rndrGenerateTransform(curSpr, &mvMatrix, gfxPrg, cam);
-			rndrGenerateSprite(curSpr, (vertex *)(&currentVertexBatch[0]+currentVertexBatchSize), &mvMatrix, gfxPrg);
+			rndrGenerateSprite(curSpr, (vertex *)(&currentVertexBatch[0]+currentVertexBatchSize), &mvMatrix);
 			rndrOffsetSpriteTexture((vertex *)(&currentVertexBatch[0]+currentVertexBatchSize), texFrag, texWidth, texHeight);
 			currentVertexBatch[currentVertexBatchSize+5] = currentVertexBatch[currentVertexBatchSize];
 			currentVertexBatch[currentVertexBatchSize+4] = currentVertexBatch[currentVertexBatchSize+2];
@@ -249,13 +249,15 @@ void renderScene(cVector *allRenderables, gfxProgram *gfxPrg, camera *cam){
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	// Render HUD models
+	/** HUD camera? Streamline this to make handling different cameras easily **/
+	camera hudCam; camInit(&hudCam);
 	for(i = 0; i < modelsHUD.size; i++){
-		renderModel(*((renderable **)cvGet(&modelsHUD, i)), gfxPrg, cam);
+		renderModel(*((renderable **)cvGet(&modelsHUD, i)), gfxPrg, &hudCam);
 	}
 	// Batch render HUD sprites
 	// Change the MVP matrix to the orthographic projection matrix, as other sprite vertex transformations are done on the CPU through sprCreate()
 	glUniformMatrix4fv(gfxPrg->mvpMatrixID, 1, GL_FALSE, &gfxPrg->projectionMatrixOrtho.m[0][0]);
-	batchRenderSprites(&spritesHUD, gfxPrg, cam);
+	batchRenderSprites(&spritesHUD, gfxPrg, &hudCam);
 
 	cvClear(&renderList);
 	cvClear(&modelsScene);

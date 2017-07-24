@@ -10,6 +10,7 @@ typedef struct {
 	vec3 rotation;
 	vec3 target;
 	vec3 up;
+	mat4 viewMatrix;
 	float time;
 	unsigned char changed;
 
@@ -18,7 +19,7 @@ typedef struct {
 void camInit(camera *cam);
 
 void camCalculateUp(camera *cam);
-unsigned char camCreateViewMatrix(camera *cam, mat4 *viewMatrix);
+unsigned char camCreateViewMatrix(camera *cam);
 
 void camMoveX(camera *cam, float x);
 void camMoveY(camera *cam, float y);

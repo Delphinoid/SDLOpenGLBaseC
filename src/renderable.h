@@ -31,7 +31,6 @@ typedef struct {
 	unsigned char billboardFlags;
 	/** Store the elements below in entity **/
 	unsigned char hudElement;       // Whether or not the object is part of the HUD. Should be private
-	unsigned char hudScaleMode;     // 0 = nothing special, 1 = position scaled off window size, 2 = width and height scaled off window size, 3 = both
 
 } renderable;
 
@@ -39,7 +38,7 @@ void rndrInit(renderable *rndr);
 unsigned char rndrLoad(renderable *rndr, const char *prgPath, const char *filePath, cVector *allModels, cVector *allTexWrappers);
 unsigned char rndrRenderMethod(renderable *rndr);  // Returns 0 if the model is fully opaque, 1 if the model contains translucency and 2 if the model is fully transparent
 void rndrGenerateTransform(renderable *rndr, mat4 *transformMatrix, gfxProgram *gfxPrg, camera *cam);
-void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatrix, gfxProgram *gfxPrg);
+void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatrix);
 void rndrOffsetSpriteTexture(vertex *vertices, float texFrag[4], float texWidth, float texHeight);
 void rndrDelete(renderable *rndr);
 /** Sort out the functions below, some should be associated with entities **/

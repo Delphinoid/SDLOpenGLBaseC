@@ -44,92 +44,6 @@ static sklBone *sklaiGetAnimBone(sklAnimInstance *sklai, size_t frame, size_t bo
 	return (sklBone *)cvGet(&sklaiGetAnimFrame(sklai, frame)->bones, bone);
 }
 
-/** Merge with skliBoneState? **/
-/**static void sklaiDeltaTransform(sklAnimInstance *sklai, size_t bone){
-
-	/*
-	** Loops through each bone in the current and next animation keyframes, looking for the ones
-	** that represent the current bone being worked on. If found in the current keyframe, the
-	** start transform for interpolation is set. If found in the next keyframe, the end transform
-	** for interpolation is set.
-	*
-	size_t i;
-	for(i = 0; i < sklai->anim->boneNum; i++){
-
-		// Try and find the bone transformation for the current frame
-		sklBone *transform = sklaiGetAnimBone(sklai, sklai->currentFrame, i);
-		if(transform->name != NULL && strcmp(transform->name, sklai->animInterpStart[bone].name)){
-			// A successful match was found, set the bone's start frame for interpolation
-			// to the animation's current frame's delta transform
-			sklai->animInterpStart[bone] = *transform;
-		}
-
-		// Try and find the bone transformation for the next frame
-		transform = sklaiGetAnimBone(sklai, sklai->nextFrame, i);
-		if(transform->name != NULL && strcmp(transform->name, sklai->animInterpEnd[bone].name)){
-			// A successful match was found, set the bone's end frame for interpolation
-			// to the animation's next frame's delta transform
-			sklai->animInterpEnd[bone] = *transform;
-		}
-
-	}
-
-
-	/*
-	** Finally, calculate the interpolated transform for the bone
-	*
-	if(sklai->animInterpT <= 0.f){
-
-		// Only use the start frame if animInterpT exceeds the lower bounds
-		sklai->animState[bone].position = sklai->animInterpStart[bone].position;
-		sklai->animState[bone].orientation = sklai->animInterpStart[bone].orientation;
-		sklai->animState[bone].scale = sklai->animInterpStart[bone].scale;
-
-	}else if(sklai->animInterpT >= 1.f){
-
-		// Only use the end frame if animInterpT exceeds the upper bounds
-		sklai->animState[bone].position = sklai->animInterpEnd[bone].position;
-		sklai->animState[bone].orientation = sklai->animInterpEnd[bone].orientation;
-		sklai->animState[bone].scale = sklai->animInterpEnd[bone].scale;
-
-	}else{
-		// Get the difference between the start position and end position
-		sklai->animState[bone].position = vec3VSubV(sklai->animInterpEnd[bone].position,
-		                                             sklai->animInterpStart[bone].position);
-		// Divide it by animInterpT
-		vec3DivVByS(&sklai->animState[bone].position, sklai->animInterpT);
-
-		// Repeat for scale
-		sklai->animState[bone].scale = vec3VSubV(sklai->animInterpEnd[bone].scale,
-		                                         sklai->animInterpStart[bone].scale);
-		vec3DivVByS(&sklai->animState[bone].scale, sklai->animInterpT);
-
-		// SLERP between the start orientation and end orientation
-		sklai->animState[bone].orientation = quatSlerp(sklai->animInterpStart[bone].orientation,
-		                                                sklai->animInterpEnd[bone].orientation,
-		                                                sklai->animInterpT);
-	}
-
-}**/
-
-/**static size_t sklaiGenerateState(sklAnimInstance *sklai, sklNode *node, size_t bone){
-	/*
-	** Depth-first traversal through each bone, running sklaiDeltaTransform on each.
-	** Returns the position in sklai->animState of the next bone (aka the number of
-	** bones modified so-far).
-	*
-	if(node != NULL){
-		// Update the delta transform for the bone
-		sklaiDeltaTransform(sklai, bone);
-		// Loop through each child
-		size_t i = node->childNum;
-		while(i > 0){
-			bone = sklaiGenerateState(sklai, &node->children[i], bone+1);
-		}
-	}
-	return bone;
-}**/
-
 static void sklaiDeltaTransform(sklAnimInstance *sklai, size_t bone){
 
 	// If the current frame's bone has a valid state change, use it to start interpolation
@@ -186,7 +100,7 @@ static void sklaiGenerateState(sklAnimInstance *sklai){
 	}
 }
 
-static void sklaiAnimate(sklAnimInstance *sklai, /**skeleton *skl,**/ uint32_t currentTick, float globalDelayMod){
+static void sklaiAnimate(sklAnimInstance *sklai, uint32_t currentTick, float globalDelayMod){
 
 	// Make sure lastUpdate has been set
 	if(sklai->lastUpdate == 0.f){
@@ -250,7 +164,6 @@ static void sklaiAnimate(sklAnimInstance *sklai, /**skeleton *skl,**/ uint32_t c
 			if(deltaTime >= currentFrameDelay){
 				// If statement exists so we can use animInterpT on the final call
 				// (it is temporarily set to 0 for these calls)
-				/**sklaiGenerateState(sklai, skl->root, 0);**/
 				sklaiGenerateState(sklai);
 			}
 
@@ -259,7 +172,6 @@ static void sklaiAnimate(sklAnimInstance *sklai, /**skeleton *skl,**/ uint32_t c
 		// Set animInterpT to a number between 0 and 1, where 0 is the current frame and 1 is the next frame
 		sklai->animInterpT = deltaTime / *((float *)cvGet(&sklai->anim->frameDelays, sklai->currentFrame));
 		// Final state update
-		/**sklaiGenerateState(sklai, skl->root, 0);**/
 		sklaiGenerateState(sklai);
 
 	}
@@ -267,7 +179,7 @@ static void sklaiAnimate(sklAnimInstance *sklai, /**skeleton *skl,**/ uint32_t c
 }
 
 void skliaChangeAnim(sklAnimInstance *sklia, sklAnim *anim){
-	/** **/
+	/** Needs a special function for changing animations in order to handle blending correctly **/
 }
 
 void skliInit(sklInstance *skli, skeleton *skl){

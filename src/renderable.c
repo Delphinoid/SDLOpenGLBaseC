@@ -19,7 +19,6 @@ void rndrInit(renderable *rndr){
 	rndr->height = 0;
 	rndr->billboardFlags = RNDR_BILLBOARD_TARGET;
 	rndr->hudElement = 0;
-	rndr->hudScaleMode = 0;
 }
 
 /** Finish this **/
@@ -41,26 +40,12 @@ unsigned char rndrRenderMethod(renderable *rndr){
 	return 2;  // The model is fully transparent
 }
 
-/*size_t rndrBoneNum(renderable *rndr){
-	/** **
-	return rndr->skl.skl->boneNum;
-}
-
-unsigned char rndrGenerateSkeletonState(renderable *rndr){
-	// Check if state has changed
-	/** **
-	return skliGenerateState(&rndr->skl);
-}*/
-
 void rndrHudElement(renderable *rndr, unsigned char isHudElement){
 	if(isHudElement != rndr->hudElement){
 		// HUD elements render rotated 180 degrees on the X axis due to the way the orthographic matrix is set up
 		quatMultQByQ2(quatNewEuler(M_PI, 0.f, 0.f), &rndr->sTrans.orientation);
 	}
 	rndr->hudElement = isHudElement;
-	if(!rndr->hudElement){
-		rndr->hudScaleMode = 0;
-	}
 }
 
 void rndrSetRotation(renderable *rndr, float newX, float newY, float newZ){
@@ -90,62 +75,19 @@ void rndrAnimateSkel(renderable *rndr, uint32_t currentTick, float globalDelayMo
 	skliAnimate(&rndr->skli, currentTick, globalDelayMod);
 }
 
-/** Shouldn't need to take in isSprite. Also, are gfxPrg and cam needed? **/
+/** Is gfxPrg needed? **/
 void rndrGenerateTransform(renderable *rndr, mat4 *transformMatrix, gfxProgram *gfxPrg, camera *cam){
-
-	/** Shouldn't need these safety checks **/
-	//if(rndr->tex != NULL && rndr->mdl->vertexNum > 0 && rndr->mdl->vboID != 0 && rndr->rTrans.alpha > 0.f){
-
-	/* Get texture information for rendering */
-	/**float texFrag[4];  // The x, y, width and height of the fragment of the texture being rendered
-	GLuint frameTexID;
-	twiGetFrameInfo(rndr->texture, rndr->rTrans.currentAnim, rndr->rTrans.currentFrame,
-				   &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &frameTexID);**/
-
-
-	/* Bind the texture (if needed) */
-	/**glActiveTexture(GL_TEXTURE0);
-	if(frameTexID != gfxPrg->lastTexID){
-		gfxPrg->lastTexID = frameTexID;
-		glBindTexture(GL_TEXTURE_2D, frameTexID);
-	}**/
-
-
-	/* Feed the texture coordinates to the shader */
-	/**glUniform4f(gfxPrg->textureFragmentID, texFrag[0], texFrag[1], texFrag[2], texFrag[3]);**/
-
-
-	/* Feed the translucency value to the shader */
-	/**glUniform1f(gfxPrg->alphaID, rndr->rTrans.alpha);**/
-
 
 	/* Set temporary position and scale vectors based on the selected HUD scaling mode */
 	vec3 windowPos = rndr->sTrans.position;
 	vec3 windowScale = rndr->rTrans.scale;
-	if(rndr->hudElement){
-		if(rndr->hudScaleMode == 1 || rndr->hudScaleMode == 3){
-			vec3Set(&windowPos, rndr->sTrans.position.x * (float)gfxPrg->windowWidth  / (float)gfxPrg->biggestDimension,
-			                    rndr->sTrans.position.y * (float)gfxPrg->windowHeight / (float)gfxPrg->biggestDimension,
-			                    rndr->sTrans.position.z);
-		}
-		if(rndr->hudScaleMode == 2 || rndr->hudScaleMode == 3){
-			vec3Set(&windowScale, rndr->rTrans.scale.x * (float)gfxPrg->windowWidth  / (float)gfxPrg->biggestDimension,
-			                      rndr->rTrans.scale.y * (float)gfxPrg->windowHeight / (float)gfxPrg->biggestDimension,
-			                      rndr->rTrans.scale.z);
-		}
-	}
-
 
 	/*
 	** Translate the model. By translating it from the camera coordinates to begin
 	** with, we can save multiplying the model matrix by the view matrix later on.
 	** However, we must start with the identity matrix for HUD elements
 	*/
-	if(rndr->hudElement){
-		mat4Identity(transformMatrix);          // Start with the identity matrix
-	}else{
-		*transformMatrix = gfxPrg->viewMatrix;  // Start with the view matrix
-	}
+	*transformMatrix = cam->viewMatrix;  // Start with the view matrix
 	vec3 scaledPivot;
 	if(rndr->sprite){
 		/** Why height-relPivot.y? **/
@@ -155,7 +97,6 @@ void rndrGenerateTransform(renderable *rndr, mat4 *transformMatrix, gfxProgram *
 		vec3Set(&scaledPivot, rndr->sTrans.relPivot.x*windowScale.x, rndr->sTrans.relPivot.y*windowScale.y, rndr->sTrans.relPivot.z*windowScale.z);
 		mat4Translate(transformMatrix, windowPos.x+scaledPivot.x, windowPos.y+scaledPivot.y, windowPos.z+scaledPivot.z);
 	}
-
 
 	/* Billboarding */
 	// If any of the flags apart from RNDR_BILLBOARD_TARGET are set, continue
@@ -171,9 +112,9 @@ void rndrGenerateTransform(renderable *rndr, mat4 *transformMatrix, gfxProgram *
 			vec3Set(&axisZ, billboardViewMatrix.m[2][0], billboardViewMatrix.m[2][1], billboardViewMatrix.m[2][2]);
 		}else{
 			// Use the camera's X, Y and Z axes
-			vec3Set(&axisX, gfxPrg->viewMatrix.m[0][0], gfxPrg->viewMatrix.m[0][1], gfxPrg->viewMatrix.m[0][2]);
-			vec3Set(&axisY, gfxPrg->viewMatrix.m[1][0], gfxPrg->viewMatrix.m[1][1], gfxPrg->viewMatrix.m[1][2]);
-			vec3Set(&axisZ, gfxPrg->viewMatrix.m[2][0], gfxPrg->viewMatrix.m[2][1], gfxPrg->viewMatrix.m[2][2]);
+			vec3Set(&axisX, cam->viewMatrix.m[0][0], cam->viewMatrix.m[0][1], cam->viewMatrix.m[0][2]);
+			vec3Set(&axisY, cam->viewMatrix.m[1][0], cam->viewMatrix.m[1][1], cam->viewMatrix.m[1][2]);
+			vec3Set(&axisZ, cam->viewMatrix.m[2][0], cam->viewMatrix.m[2][1], cam->viewMatrix.m[2][2]);
 		}
 		// Lock certain axes if needed
 		if((rndr->billboardFlags & RNDR_BILLBOARD_X) == 0){
@@ -199,7 +140,6 @@ void rndrGenerateTransform(renderable *rndr, mat4 *transformMatrix, gfxProgram *
 		mat4MultMByM1(transformMatrix, &billboardRotation);  // Apply billboard rotation
 	}
 
-
 	/* Rotate the model */
 	// Apply the change in rotation to the current orientation
 	quatMultQByQ2(quatNewEuler(rndr->sTrans.changeRot.x*radianRatio,
@@ -207,15 +147,7 @@ void rndrGenerateTransform(renderable *rndr, mat4 *transformMatrix, gfxProgram *
 	                           rndr->sTrans.changeRot.z*radianRatio),
 	              &rndr->sTrans.orientation);
 	vec3SetS(&rndr->sTrans.changeRot, 0.f);  // Reset the change in rotation
-
-	// Convert orientation quaternion to its equivalent axis-angle representation
-	/*float rotAngle = 0.f;
-	vec3 rotAxis; vec3NewS(1.f);
-	quatAxisAngle(rndr->sTrans.orientation, &rotAngle, &rotAxis.x, &rotAxis.y, &rotAxis.z);
-
-	mat4RotateV(transformMatrix, rotAngle, rotAxis);*/
 	mat4Rotate(transformMatrix, rndr->sTrans.orientation);
-
 
 	/*
 	** Translate the model by -scaledPivot to counteract the scaledPivot in the
@@ -224,59 +156,28 @@ void rndrGenerateTransform(renderable *rndr, mat4 *transformMatrix, gfxProgram *
 	*/
 	mat4Translate(transformMatrix, -scaledPivot.x, -scaledPivot.y, -scaledPivot.z);
 
-
 	/*
 	** We don't need to scale sprites, and since the vertices are multiplied by the
 	** model view matrix on the CPU and the projection matrix is passed to the GPU,
 	** we only need to generate a model view matrix here.
 	*/
 	if(!rndr->sprite){
-
 		/* Scale the model */
 		mat4Scale(transformMatrix, windowScale.x, windowScale.y, windowScale.z);
-
 		/* Create the MVP matrix by multiplying the model view matrix by the projection matrix */
-		//mat4 modelViewProjectionMatrix;
+		/** What if a HUD element wants to use Frustum? **/
 		if(rndr->hudElement){
-			//modelViewProjectionMatrix = gfxPrg->projectionMatrixOrtho;    // Ortho for HUD elements
-			mat4MultMByM2(&gfxPrg->projectionMatrixOrtho, transformMatrix);
+			mat4MultMByM2(&gfxPrg->projectionMatrixOrtho, transformMatrix);    // Ortho for HUD elements
 		}else{
-			//modelViewProjectionMatrix = gfxPrg->projectionMatrixFrustum;  // Frustum for regular models
-			mat4MultMByM2(&gfxPrg->projectionMatrixFrustum, transformMatrix);
+			mat4MultMByM2(&gfxPrg->projectionMatrixFrustum, transformMatrix);  // Frustum for regular models
 		}
-		//mat4MultMByM1(&modelViewProjectionMatrix, mvpMatrix);
-
 	}
-
-
-	/* Feed the MVP matrix to the shader */
-	/**glUniformMatrix4fv(gfxPrg->mvpMatrixID, 1, GL_FALSE, &mvpMatrix->m[0][0]);**/
-
-
-	/* Render the model */
-	//glBindVertexArray(mdl->vaoID);
-	/**if(rndr->mdl->indexNum > 0){
-		glDrawElements(GL_TRIANGLES, rndr->mdl->indexNum, GL_UNSIGNED_INT, (void *)0);
-	}else{
-		glDrawArrays(GL_TRIANGLES, 0, rndr->mdl->vertexNum);
-	}**/
-
-	//}
 
 }
 
-/** gfxPrg should definitely not be needed. Review this part **/
-void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatrix, gfxProgram *gfxPrg){
+void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatrix){
 
-	vec3 windowScale;
-	if(rndr->hudElement && (rndr->hudScaleMode == 2 || rndr->hudScaleMode == 3)){
-		vec3Set(&windowScale, rndr->rTrans.scale.x * (float)gfxPrg->windowWidth  / (float)gfxPrg->biggestDimension,
-		                      rndr->rTrans.scale.y * (float)gfxPrg->windowHeight / (float)gfxPrg->biggestDimension,
-		                      rndr->rTrans.scale.z);
-	}else{
-		windowScale = rndr->rTrans.scale;
-	}
-
+	vec3 windowScale = rndr->rTrans.scale;
 	float scaledWidth  = rndr->width  * windowScale.x;
 	float scaledHeight = rndr->height * windowScale.y;
 

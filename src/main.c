@@ -68,14 +68,13 @@ int main(int argc, char *argv[]){
 	tempRndr.tex.tw = (textureWrapper *)cvGet(&allTexWrappers, 1);
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 	tempRndr.tex.tw = (textureWrapper *)cvGet(&allTexWrappers, 2);
-	tempRndr.sTrans.position.x = 0.25f;
+	tempRndr.sTrans.position.x = 0.4f;
 	tempRndr.sTrans.position.y = 0.5f;
-	vec3SetS(&tempRndr.rTrans.scale, 0.1f);
+	vec3SetS(&tempRndr.rTrans.scale, 0.15f);
 	rndrRotateX(&tempRndr, 45.f);
 	rndrRotateY(&tempRndr, 45.f);
 	tempRndr.rTrans.alpha = 0.5f;
 	rndrHudElement(&tempRndr, 1);
-	tempRndr.hudScaleMode = 1;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 
 	/* Sprites */
@@ -94,10 +93,9 @@ int main(int argc, char *argv[]){
 	tempRndr.height = 1.f;
 	tempRndr.sTrans.relPivot.x = 0.f;
 	tempRndr.sTrans.relPivot.y = 0.f;
-	tempRndr.rTrans.scale.x = 0.25f;
-	tempRndr.rTrans.scale.y = 0.25f;
+	tempRndr.rTrans.scale.x = 0.4f;
+	tempRndr.rTrans.scale.y = 0.4f;
 	rndrHudElement(&tempRndr, 1);
-	tempRndr.hudScaleMode = 1;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 	tempRndr.sTrans.position.x = 4.f;
 	tempRndr.sTrans.position.y = 0.f;
@@ -123,6 +121,7 @@ int main(int argc, char *argv[]){
 
 	unsigned char prgRunning = 1;
 	camera cam; camInit(&cam);
+	vec3Set(&cam.position, 0.f, 2.f, 7.f);
 	SDL_Event prgEventHandler;
 	fps fpsHandler; fpsStart(&fpsHandler, 61, 121);
 
@@ -142,17 +141,7 @@ int main(int argc, char *argv[]){
 
 
 		/* If the window size has changed, resize the OpenGL viewport */
-		SDL_GetWindowSize(gfxPrg.window, &gfxPrg.windowWidth, &gfxPrg.windowHeight);
-		if(gfxPrg.windowWidth != gfxPrg.lastWindowWidth || gfxPrg.windowHeight != gfxPrg.lastWindowHeight){
-			gfxPrg.biggestDimension = gfxPrg.windowWidth > gfxPrg.windowHeight ? gfxPrg.windowWidth : gfxPrg.windowHeight;
-			mat4Ortho(&gfxPrg.projectionMatrixOrtho, 0.f, 1.f, 1.f, 0.f, 1.f, -1.f);
-			mat4Scale(&gfxPrg.projectionMatrixOrtho, 1.f / ((float)gfxPrg.windowWidth  / (float)gfxPrg.biggestDimension),
-			                                         1.f / ((float)gfxPrg.windowHeight / (float)gfxPrg.biggestDimension),
-			                                         1.f);
-			glViewport(0, 0, gfxPrg.windowWidth, gfxPrg.windowHeight);
-			gfxPrg.lastWindowWidth = gfxPrg.windowWidth;
-			gfxPrg.lastWindowHeight = gfxPrg.windowHeight;
-		}
+		gfxUpdateWindow(&gfxPrg);
 
 
 		/* Detect input */
@@ -244,7 +233,7 @@ int main(int argc, char *argv[]){
 
 		/* Render the scene */
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		camCreateViewMatrix(&cam, &gfxPrg.viewMatrix);
+		camCreateViewMatrix(&cam);
 
 		// Render the scene
 		renderScene(&allRenderables, &gfxPrg, &cam);

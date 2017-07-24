@@ -5,10 +5,11 @@
 #define radianRatio 0.017453292  /* = PI / 180, used for converting degrees to radians */
 
 void camInit(camera *cam){
-	vec3Set(&cam->position, 0.f, 2.f, 7.f);
+	vec3Set(&cam->position, 0.f, 0.f, 0.f);
 	vec3Set(&cam->rotation, 0.f, 0.f, 0.f);
 	vec3Set(&cam->target, 0.f, 0.f, -1.f);
 	vec3Set(&cam->up, 0.f, 1.f, 0.f);
+	mat4Identity(&cam->viewMatrix);
 	cam->time = 0.f;
 	cam->changed = 1;
 }
@@ -56,7 +57,7 @@ void camCalculateUp(camera *cam){  /** Probably not entirely necessary **/
 
 }
 
-unsigned char camCreateViewMatrix(camera *cam, mat4 *viewMatrix){
+unsigned char camCreateViewMatrix(camera *cam){
 
 	/* Only update the view matrix if the camera was changed during the frame */
 	if(cam->changed){
@@ -65,10 +66,10 @@ unsigned char camCreateViewMatrix(camera *cam, mat4 *viewMatrix){
 		camCalculateUp(cam);
 
 		/* Set the camera to look at something */
-		mat4LookAt(viewMatrix, cam->position, cam->target, cam->up);
+		mat4LookAt(&cam->viewMatrix, cam->position, cam->target, cam->up);
 
 		/* Rotate the camera */
-		mat4Rotate(viewMatrix, quatNewEuler(cam->rotation.x*radianRatio, cam->rotation.y*radianRatio, cam->rotation.z*radianRatio));
+		mat4Rotate(&cam->viewMatrix, quatNewEuler(cam->rotation.x*radianRatio, cam->rotation.y*radianRatio, cam->rotation.z*radianRatio));
 
 		cam->changed = 0;
 		return 1;

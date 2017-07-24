@@ -10,6 +10,8 @@
 #define DEFAULT_GL_VERSION_MINOR 3
 #define DEFAULT_WIDTH 800
 #define DEFAULT_HEIGHT 450
+#define DEFAULT_ASPECT_RATIO_X 16
+#define DEFAULT_ASPECT_RATIO_Y 9
 #define DEFAULT_FREQUENCY 22050
 #define DEFAULT_CHANNELS 2
 #define DEFAULT_CHUNKSIZE 2048
@@ -44,7 +46,6 @@ typedef struct {
 	mat4 identityMatrix;
 	mat4 projectionMatrixFrustum;
 	mat4 projectionMatrixOrtho;
-	mat4 viewMatrix;
 
 	// Previously bound texture ID for more efficient binding
 	GLuint lastTexID;
@@ -56,13 +57,16 @@ typedef struct {
 	// Window sizes (should be stored elsewhere)
 	int windowWidth;
 	int windowHeight;
-	int biggestDimension;
+	unsigned char aspectRatioX;
+	unsigned char aspectRatioY;
 	int lastWindowWidth;
 	int lastWindowHeight;
+	unsigned char stretchToFit;
 
 } gfxProgram;
 
 unsigned char gfxInitProgram(gfxProgram *gfxPrg, char *prgPath);
+void gfxUpdateWindow(gfxProgram *gfxPrg);
 void gfxDestroyProgram(gfxProgram *gfxPrg);
 
 #endif

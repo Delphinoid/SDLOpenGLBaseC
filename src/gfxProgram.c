@@ -16,10 +16,11 @@ unsigned char gfxInitProgram(gfxProgram *gfxPrg, char *prgPath){
 
 	gfxPrg->windowWidth = DEFAULT_WIDTH;
 	gfxPrg->windowHeight = DEFAULT_HEIGHT;
-	gfxPrg->biggestDimension = gfxPrg->windowWidth > gfxPrg->windowHeight ? gfxPrg->windowWidth : gfxPrg->windowHeight;
+	gfxPrg->aspectRatioX = DEFAULT_ASPECT_RATIO_X;
+	gfxPrg->aspectRatioY = DEFAULT_ASPECT_RATIO_Y;
 	gfxPrg->lastWindowWidth = 0;
 	gfxPrg->lastWindowHeight = 0;
-
+	gfxPrg->stretchToFit = 0;
 	return (gfxInitSDL(gfxPrg) && gfxInitOGL(gfxPrg) && gfxLoadShaders(gfxPrg, prgPath) && gfxCreateBuffers(gfxPrg));
 
 }
@@ -303,6 +304,35 @@ static unsigned char gfxCreateBuffers(gfxProgram *gfxPrg){
 	}
 	return 1;
 
+}
+
+void gfxUpdateWindow(gfxProgram *gfxPrg){
+	SDL_GetWindowSize(gfxPrg->window, &gfxPrg->windowWidth, &gfxPrg->windowHeight);
+	if(gfxPrg->windowWidth != gfxPrg->lastWindowWidth || gfxPrg->windowHeight != gfxPrg->lastWindowHeight){
+		mat4Ortho(&gfxPrg->projectionMatrixOrtho, 0.f, 1.f, 1.f, 0.f, 1.f, -1.f);
+		mat4Scale(&gfxPrg->projectionMatrixOrtho,
+		          (gfxPrg->aspectRatioX < gfxPrg->aspectRatioY ? gfxPrg->aspectRatioX : gfxPrg->aspectRatioY) / (float)gfxPrg->aspectRatioX,
+		          (gfxPrg->aspectRatioX < gfxPrg->aspectRatioY ? gfxPrg->aspectRatioX : gfxPrg->aspectRatioY) / (float)gfxPrg->aspectRatioY,
+		          1.f);
+		GLint screenX, screenY, screenWidth, screenHeight;
+		if(gfxPrg->stretchToFit){
+			screenX = 0;
+			screenY = 0;
+			screenWidth = gfxPrg->windowWidth;
+			screenHeight = gfxPrg->windowHeight;
+		}else{
+			GLint tempWidth  = gfxPrg->windowWidth  / gfxPrg->aspectRatioX;
+			GLint tempHeight = gfxPrg->windowHeight / gfxPrg->aspectRatioY;
+			GLint smallestDimension = tempWidth < tempHeight ? tempWidth : tempHeight;
+			screenWidth  = smallestDimension * gfxPrg->aspectRatioX;
+			screenHeight = smallestDimension * gfxPrg->aspectRatioY;
+			screenX = (gfxPrg->windowWidth  - screenWidth) * 0.5f;
+			screenY = (gfxPrg->windowHeight - screenHeight) * 0.5f;
+		}
+		glViewport(screenX, screenY, screenWidth, screenHeight);
+		gfxPrg->lastWindowWidth = gfxPrg->windowWidth;
+		gfxPrg->lastWindowHeight = gfxPrg->windowHeight;
+	}
 }
 
 void gfxDestroyProgram(gfxProgram *gfxPrg){
