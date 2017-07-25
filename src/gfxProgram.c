@@ -323,11 +323,18 @@ void gfxUpdateWindow(gfxProgram *gfxPrg){
 			screenWidth = gfxPrg->windowWidth;
 			screenHeight = gfxPrg->windowHeight;
 		}else{
-			GLint tempWidth  = gfxPrg->windowWidth  / gfxPrg->aspectRatioX;
-			GLint tempHeight = gfxPrg->windowHeight / gfxPrg->aspectRatioY;
-			GLint smallestDimension = tempWidth < tempHeight ? tempWidth : tempHeight;
-			screenWidth  = smallestDimension * gfxPrg->aspectRatioX;
-			screenHeight = smallestDimension * gfxPrg->aspectRatioY;
+			float tempWidth  = gfxPrg->windowWidth  / gfxPrg->aspectRatioX;
+			float tempHeight = gfxPrg->windowHeight / gfxPrg->aspectRatioY;
+			if(tempWidth > tempHeight){
+				screenWidth  = tempHeight * gfxPrg->aspectRatioX;
+				screenHeight = gfxPrg->windowHeight;
+			}else if(tempWidth < tempHeight){
+				screenWidth  = gfxPrg->windowWidth;
+				screenHeight = tempWidth * gfxPrg->aspectRatioY;
+			}else{
+				screenWidth  = gfxPrg->windowWidth;
+				screenHeight = gfxPrg->windowHeight;
+			}
 			screenX = (gfxPrg->windowWidth  - screenWidth) * 0.5f;
 			screenY = (gfxPrg->windowHeight - screenHeight) * 0.5f;
 		}
