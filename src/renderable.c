@@ -15,8 +15,6 @@ void rndrInit(renderable *rndr){
 	stInit(&rndr->sTrans);
 	rtInit(&rndr->rTrans);
 	rndr->sprite = 0;
-	rndr->width = 0;
-	rndr->height = 0;
 	rndr->billboardFlags = RNDR_BILLBOARD_TARGET;
 	rndr->hudElement = 0;
 }
@@ -38,14 +36,6 @@ unsigned char rndrRenderMethod(renderable *rndr){
 		}
 	}
 	return 2;  // The model is fully transparent
-}
-
-void rndrHudElement(renderable *rndr, unsigned char isHudElement){
-	if(isHudElement != rndr->hudElement){
-		// HUD elements render rotated 180 degrees on the X axis due to the way the orthographic matrix is set up
-		quatMultQByQ2(quatNewEuler(M_PI, 0.f, 0.f), &rndr->sTrans.orientation);
-	}
-	rndr->hudElement = isHudElement;
 }
 
 void rndrSetRotation(renderable *rndr, float newX, float newY, float newZ){
@@ -78,24 +68,20 @@ void rndrAnimateSkel(renderable *rndr, uint32_t currentTick, float globalDelayMo
 /** Is gfxPrg needed? **/
 void rndrGenerateTransform(renderable *rndr, mat4 *transformMatrix, gfxProgram *gfxPrg, camera *cam){
 
-	/* Set temporary position and scale vectors based on the selected HUD scaling mode */
-	vec3 windowPos = rndr->sTrans.position;
-	vec3 windowScale = rndr->rTrans.scale;
-
 	/*
 	** Translate the model. By translating it from the camera coordinates to begin
 	** with, we can save multiplying the model matrix by the view matrix later on.
 	** However, we must start with the identity matrix for HUD elements
 	*/
 	*transformMatrix = cam->viewMatrix;  // Start with the view matrix
-	vec3 scaledPivot;
-	if(rndr->sprite){
-		/** Why height-relPivot.y? **/
-		vec3Set(&scaledPivot, rndr->sTrans.relPivot.x*windowScale.x, (rndr->height-rndr->sTrans.relPivot.y)*windowScale.y, rndr->sTrans.relPivot.z*windowScale.z);
-		mat4Translate(transformMatrix, windowPos.x, windowPos.y, windowPos.z);
-	}else{
-		vec3Set(&scaledPivot, rndr->sTrans.relPivot.x*windowScale.x, rndr->sTrans.relPivot.y*windowScale.y, rndr->sTrans.relPivot.z*windowScale.z);
-		mat4Translate(transformMatrix, windowPos.x+scaledPivot.x, windowPos.y+scaledPivot.y, windowPos.z+scaledPivot.z);
+	mat4Translate(transformMatrix, rndr->sTrans.position.x, rndr->sTrans.position.y, rndr->sTrans.position.z);
+
+	/** This is definitely not good, but I don't think there's any other option **/
+	if(rndr->hudElement){
+		mat4Scale(transformMatrix,
+		          (float)(gfxPrg->aspectRatioX < gfxPrg->aspectRatioY ? gfxPrg->aspectRatioX : gfxPrg->aspectRatioY) / (float)gfxPrg->aspectRatioX,
+		          (float)(gfxPrg->aspectRatioX < gfxPrg->aspectRatioY ? gfxPrg->aspectRatioX : gfxPrg->aspectRatioY) / (float)gfxPrg->aspectRatioY,
+		          1.f);
 	}
 
 	/* Billboarding */
@@ -149,21 +135,22 @@ void rndrGenerateTransform(renderable *rndr, mat4 *transformMatrix, gfxProgram *
 	vec3SetS(&rndr->sTrans.changeRot, 0.f);  // Reset the change in rotation
 	mat4Rotate(transformMatrix, rndr->sTrans.orientation);
 
+	/* Scale the model */
+	mat4Scale(transformMatrix, rndr->rTrans.scale.x, rndr->rTrans.scale.y, rndr->rTrans.scale.z);
+
 	/*
-	** Translate the model by -scaledPivot to counteract the scaledPivot in the
-	** last translation. The result is the appearance of the model "pivoting"
-	** around position + scaledPivot
+	** Translate the model by -scaledPivot. The result is the appearance of the model
+	** "pivoting" around position + scaledPivot
 	*/
-	mat4Translate(transformMatrix, -scaledPivot.x, -scaledPivot.y, -scaledPivot.z);
+	mat4Translate(transformMatrix, -rndr->sTrans.relPivot.x, -rndr->sTrans.relPivot.y, -rndr->sTrans.relPivot.z);
 
 	/*
 	** We don't need to scale sprites, and since the vertices are multiplied by the
 	** model view matrix on the CPU and the projection matrix is passed to the GPU,
 	** we only need to generate a model view matrix here.
 	*/
+	/** This part should be removed, along with sprites **/
 	if(!rndr->sprite){
-		/* Scale the model */
-		mat4Scale(transformMatrix, windowScale.x, windowScale.y, windowScale.z);
 		/* Create the MVP matrix by multiplying the model view matrix by the projection matrix */
 		/** What if a HUD element wants to use Frustum? **/
 		if(rndr->hudElement){
@@ -176,10 +163,6 @@ void rndrGenerateTransform(renderable *rndr, mat4 *transformMatrix, gfxProgram *
 }
 
 void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatrix){
-
-	vec3 windowScale = rndr->rTrans.scale;
-	float scaledWidth  = rndr->width  * windowScale.x;
-	float scaledHeight = rndr->height * windowScale.y;
 
 	/* Generate the base sprite quad */
 	vertex tempVert;
@@ -204,7 +187,7 @@ void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatri
 	vertices[0] = tempVert;
 
 	// Create the top right vertex
-	tempVert.pos.x = scaledWidth;
+	tempVert.pos.x = 1.f;
 	tempVert.pos.y = 0.f;
 	tempVert.pos.z = 0.f;
 	tempVert.u = 1.f;
@@ -224,7 +207,7 @@ void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatri
 
 	// Create the bottom left vertex
 	tempVert.pos.x = 0.f;
-	tempVert.pos.y = scaledHeight;
+	tempVert.pos.y = 1.f;
 	tempVert.pos.z = 0.f;
 	tempVert.u = 0.f;
 	tempVert.v = -1.f;  // Flip the y dimension so the image isn't upside down
@@ -242,8 +225,8 @@ void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatri
 	vertices[2] = tempVert;
 
 	// Create the bottom right vertex
-	tempVert.pos.x = scaledWidth;
-	tempVert.pos.y = scaledHeight;
+	tempVert.pos.x = 1.f;
+	tempVert.pos.y = 1.f;
 	tempVert.pos.z = 0.f;
 	tempVert.u = 1.f;
 	tempVert.v = -1.f;  // Flip the y dimension so the image isn't upside down

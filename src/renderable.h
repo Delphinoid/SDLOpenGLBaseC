@@ -24,12 +24,11 @@ typedef struct {
 	spaceTransform sTrans;
 	renderTransform rTrans;
 	mat4 modelViewProjectionMatrix;  /** Store MVP matrix here, update only when changed **/
-	/** Sprite, width and height shouldn't be necessary here **/
+	/** Sprite should not be necessary anymore **/
 	unsigned char sprite;
-	float width, height;
 	/** Combine the three variables below into one variable as flags using bitwise OR **/
 	unsigned char billboardFlags;
-	/** Store the elements below in entity **/
+	/** Remove this along with the changes to the camera **/
 	unsigned char hudElement;       // Whether or not the object is part of the HUD. Should be private
 
 } renderable;
@@ -44,7 +43,6 @@ void rndrDelete(renderable *rndr);
 /** Sort out the functions below, some should be associated with entities **/
 //size_t rndrBoneNum(renderable *rndr);
 //unsigned char rndrGenerateSkeletonState(renderable *rndr);
-void rndrHudElement(renderable *rndr, unsigned char isHudElement);
 void rndrSetRotation(renderable *rndr, float newX, float newY, float newZ);
 void rndrRotateX(renderable *rndr, float changeX);
 void rndrRotateY(renderable *rndr, float changeY);

@@ -311,11 +311,8 @@ void gfxUpdateWindow(gfxProgram *gfxPrg){
 	if(gfxPrg->windowWidth != gfxPrg->lastWindowWidth || gfxPrg->windowHeight != gfxPrg->lastWindowHeight){
 		/** Projection matrices (both frustum and ortho) should be a member of the camera **/
 		mat4Perspective(&gfxPrg->projectionMatrixFrustum, 45.f * 0.017453292, (float)gfxPrg->aspectRatioX / (float)gfxPrg->aspectRatioY, 1.f, 1000.f);
-		mat4Ortho(&gfxPrg->projectionMatrixOrtho, 0.f, 1.f, 1.f, 0.f, 1.f, -1.f);
-		mat4Scale(&gfxPrg->projectionMatrixOrtho,
-		          (float)(gfxPrg->aspectRatioX < gfxPrg->aspectRatioY ? gfxPrg->aspectRatioX : gfxPrg->aspectRatioY) / (float)gfxPrg->aspectRatioX,
-		          (float)(gfxPrg->aspectRatioX < gfxPrg->aspectRatioY ? gfxPrg->aspectRatioX : gfxPrg->aspectRatioY) / (float)gfxPrg->aspectRatioY,
-		          1.f);
+		mat4Ortho(&gfxPrg->projectionMatrixOrtho, 0.f, 1.f, 0.f, 1.f, -10.f, 10.f);
+		/** Scaling moved to rndrGenerateTransform(), has very good results but I don't like this solution **/
 		GLint screenX, screenY, screenWidth, screenHeight;
 		if(gfxPrg->stretchToFit){
 			screenX = 0;
