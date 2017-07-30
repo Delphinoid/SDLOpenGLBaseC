@@ -9,8 +9,9 @@ void camInit(camera *cam){
 	vec3Set(&cam->rotation, 0.f, 0.f, 0.f);
 	vec3Set(&cam->target, 0.f, 0.f, -1.f);
 	vec3Set(&cam->up, 0.f, 1.f, 0.f);
+	cam->fovy = 90.f;
 	mat4Identity(&cam->viewMatrix);
-	cam->time = 0.f;
+	mat4Identity(&cam->projectionMatrix);
 	cam->changed = 1;
 }
 

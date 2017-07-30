@@ -10,8 +10,9 @@ typedef struct {
 	vec3 rotation;
 	vec3 target;
 	vec3 up;
+	float fovy;
 	mat4 viewMatrix;
-	float time;
+	mat4 projectionMatrix;
 	unsigned char changed;
 
 } camera;

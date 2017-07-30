@@ -225,17 +225,6 @@ static unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath){
 		uniformString[10+numLen+1] = '\0';
 		gfxPrg->boneArrayID[i] = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);
 
-		/*memcpy(&uniformString, "boneArray[", 10);
-		memcpy(&uniformString[10], num, numLen);
-		memcpy(&uniformString[10+numLen], "].scale\0", 8);
-		gfxPrg->boneScaleArrayID[i]       = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);
-
-		memcpy(&uniformString[10+numLen], "].position\0", 10);
-		gfxPrg->bonePositionArrayID[i]    = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);
-
-		memcpy(&uniformString[10+numLen], "].orientation\0", 13);
-		gfxPrg->boneOrientationArrayID[i] = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);*/
-
 		free(num);
 
 	}
@@ -306,12 +295,15 @@ static unsigned char gfxCreateBuffers(gfxProgram *gfxPrg){
 
 }
 
-void gfxUpdateWindow(gfxProgram *gfxPrg){
+unsigned char gfxUpdateWindow(gfxProgram *gfxPrg){
 	SDL_GetWindowSize(gfxPrg->window, &gfxPrg->windowWidth, &gfxPrg->windowHeight);
 	if(gfxPrg->windowWidth != gfxPrg->lastWindowWidth || gfxPrg->windowHeight != gfxPrg->lastWindowHeight){
 		/** Projection matrices (both frustum and ortho) should be a member of the camera **/
-		mat4Perspective(&gfxPrg->projectionMatrixFrustum, 45.f * 0.017453292, (float)gfxPrg->aspectRatioX / (float)gfxPrg->aspectRatioY, 1.f, 1000.f);
-		mat4Ortho(&gfxPrg->projectionMatrixOrtho, 0.f, 1.f, 0.f, 1.f, -10.f, 10.f);
+		mat4Perspective(&gfxPrg->projectionMatrixFrustum, 90.f * 0.017453292, (float)gfxPrg->aspectRatioX / (float)gfxPrg->aspectRatioY, 0.001f, 1000.f);
+		mat4Ortho(&gfxPrg->projectionMatrixOrtho,
+		          0.f, (float)gfxPrg->aspectRatioX / (float)(gfxPrg->aspectRatioX < gfxPrg->aspectRatioY ? gfxPrg->aspectRatioX : gfxPrg->aspectRatioY),
+		          0.f, (float)gfxPrg->aspectRatioY / (float)(gfxPrg->aspectRatioX < gfxPrg->aspectRatioY ? gfxPrg->aspectRatioX : gfxPrg->aspectRatioY),
+		          -1000.f, 1000.f);
 		/** Scaling moved to rndrGenerateTransform(), has very good results but I don't like this solution **/
 		GLint screenX, screenY, screenWidth, screenHeight;
 		if(gfxPrg->stretchToFit){
@@ -338,7 +330,9 @@ void gfxUpdateWindow(gfxProgram *gfxPrg){
 		glViewport(screenX, screenY, screenWidth, screenHeight);
 		gfxPrg->lastWindowWidth = gfxPrg->windowWidth;
 		gfxPrg->lastWindowHeight = gfxPrg->windowHeight;
+		return 1;
 	}
+	return 0;
 }
 
 void gfxDestroyProgram(gfxProgram *gfxPrg){

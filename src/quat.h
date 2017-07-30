@@ -61,6 +61,12 @@ void quatAxisAngle(quat q, float *angle, float *axisX, float *axisY, float *axis
 
 float quatDot(quat q1, quat q2);
 
+vec3 quatGetRotatedVec3(quat q, vec3 v);
+void quatRotateVec3(quat q, vec3 *v);
+
+quat quatLookingAt(vec3 eye, vec3 target, vec3 up);
+void quatLookAt(quat *q, vec3 eye, vec3 target, vec3 up);
+
 quat quatLerp(quat q1, quat q2, float t);
 quat quatSlerp(quat q1, quat q2, float t);
 

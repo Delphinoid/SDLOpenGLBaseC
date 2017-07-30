@@ -16,7 +16,7 @@ void renderModel(renderable *rndr, gfxProgram *gfxPrg, camera *cam){
 	/* Get texture information for rendering */
 	float texFrag[4];  // The x, y, width and height of the fragment of the texture being rendered
 	GLuint frameTexID;
-	twiGetFrameInfo(&rndr->tex, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &frameTexID);
+	twiGetFrameInfo(&rndr->twi, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &frameTexID);
 	/* Bind the texture (if needed) */
 	glActiveTexture(GL_TEXTURE0);
 	if(frameTexID != gfxPrg->lastTexID){
@@ -81,7 +81,7 @@ void batchRenderSprites(cVector *allSprites, gfxProgram *gfxPrg, camera *cam){
 
 		if(curSpr != NULL){
 
-			twiGetFrameInfo(&curSpr->tex, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &currentTexID);
+			twiGetFrameInfo(&curSpr->twi, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &currentTexID);
 
 			// If the current texture ID differs from the last, render and clear the VBO
 			if(gfxPrg->lastTexID != currentTexID && currentVertexBatchSize >= /**4**/6){
@@ -101,14 +101,14 @@ void batchRenderSprites(cVector *allSprites, gfxProgram *gfxPrg, camera *cam){
 			}
 
 			// Get the texture's width and height for calculating the texture's UV offsets outside of the shader
-			texWidth  = twiGetTexWidth(&curSpr->tex);
-			texHeight = twiGetTexHeight(&curSpr->tex);
+			texWidth  = twiGetTexWidth(&curSpr->twi);
+			texHeight = twiGetTexHeight(&curSpr->twi);
 
 			// Add sprite to the current batch
 			gfxPrg->lastTexID = currentTexID;
 			rndrGenerateTransform(curSpr, &mvMatrix, gfxPrg, cam);
-			rndrGenerateSprite(curSpr, (vertex *)(&currentVertexBatch[0]+currentVertexBatchSize), &mvMatrix);
-			rndrOffsetSpriteTexture((vertex *)(&currentVertexBatch[0]+currentVertexBatchSize), texFrag, texWidth, texHeight);
+			rndrGenerateSprite(curSpr, (vertex *)(&currentVertexBatch[currentVertexBatchSize]), &mvMatrix);
+			rndrOffsetSpriteTexture((vertex *)(&currentVertexBatch[currentVertexBatchSize]), texFrag, texWidth, texHeight);
 			currentVertexBatch[currentVertexBatchSize+5] = currentVertexBatch[currentVertexBatchSize];
 			currentVertexBatch[currentVertexBatchSize+4] = currentVertexBatch[currentVertexBatchSize+2];
 			currentVertexBatch[currentVertexBatchSize+2] = currentVertexBatch[currentVertexBatchSize+3];

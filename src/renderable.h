@@ -9,10 +9,10 @@
 #include "renderTransform.h"
 #include "camera.h"
 
-#define RNDR_BILLBOARD_X      0x0001  // Whether or not the object uses the camera's rotated X axis
-#define RNDR_BILLBOARD_Y      0x0002  // Whether or not the object uses the camera's rotated Y axis
-#define RNDR_BILLBOARD_Z      0x0004  // Whether or not the object uses the camera's rotated Z axis
-#define RNDR_BILLBOARD_TARGET 0x0008  // Whether or not to use a slower billboard method that looks at a target
+#define RNDR_BILLBOARD_X      0x01  // Whether or not the object uses the camera's rotated X axis
+#define RNDR_BILLBOARD_Y      0x02  // Whether or not the object uses the camera's rotated Y axis
+#define RNDR_BILLBOARD_Z      0x04  // Whether or not the object uses the camera's rotated Z axis
+#define RNDR_BILLBOARD_TARGET 0x08  // Whether or not to use a slower billboard method that looks at a target
 
 typedef struct {
 
@@ -20,7 +20,7 @@ typedef struct {
 	model *mdl;  // Pointer to the model being used. Could be pretty dangerous, might need to change it
 	/** Need to rename skl and tex **/
 	sklInstance skli;
-	twInstance tex;
+	twInstance twi;
 	spaceTransform sTrans;
 	renderTransform rTrans;
 	mat4 modelViewProjectionMatrix;  /** Store MVP matrix here, update only when changed **/

@@ -57,6 +57,8 @@ void twiAnimate(twInstance *twi, uint32_t currentTick, float globalDelayMod);
 GLuint twiGetTexWidth(twInstance *twi);
 GLuint twiGetTexHeight(twInstance *twi);
 GLuint twiGetTexID(twInstance *twi);
+float twiGetFrameWidth(twInstance *twi);
+float twiGetFrameHeight(twInstance *twi);
 void twiGetFrameInfo(twInstance *twi, float *x, float *y, float *w, float *h, GLuint *frameTexID);
 unsigned char twiContainsTranslucency(twInstance *twi);
 

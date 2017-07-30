@@ -906,6 +906,14 @@ GLuint twiGetTexID(twInstance *twi){
 	return 0;
 }
 
+float twiGetFrameWidth(twInstance *twi){
+	return twGetAnimSubframe(twi->tw, twi->currentAnim, twi->currentFrame)->w;
+}
+
+float twiGetFrameHeight(twInstance *twi){
+	return twGetAnimSubframe(twi->tw, twi->currentAnim, twi->currentFrame)->h;
+}
+
 void twiGetFrameInfo(twInstance *twi, float *x, float *y, float *w, float *h, GLuint *frameTexID){
 
 	// Make sure the current animation and frame are valid (within proper bounds)

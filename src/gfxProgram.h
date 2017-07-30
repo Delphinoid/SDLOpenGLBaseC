@@ -34,9 +34,6 @@ typedef struct {
 	GLuint mvpMatrixID;
 	GLuint textureFragmentID;
 	GLuint boneArrayID[MAX_BONE_NUM];
-	/*GLuint bonePositionArrayID[MAX_BONE_NUM];
-	GLuint boneOrientationArrayID[MAX_BONE_NUM];
-	GLuint boneScaleArrayID[MAX_BONE_NUM];*/
 	GLuint alphaID;
 
 	// Texture samplers
@@ -66,7 +63,7 @@ typedef struct {
 } gfxProgram;
 
 unsigned char gfxInitProgram(gfxProgram *gfxPrg, char *prgPath);
-void gfxUpdateWindow(gfxProgram *gfxPrg);
+unsigned char gfxUpdateWindow(gfxProgram *gfxPrg);
 void gfxDestroyProgram(gfxProgram *gfxPrg);
 
 #endif

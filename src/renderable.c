@@ -11,7 +11,7 @@ void rndrInit(renderable *rndr){
 	rndr->name = NULL;
 	rndr->mdl = NULL;
 	skliInit(&rndr->skli, NULL);
-	twiInit(&rndr->tex, NULL);
+	twiInit(&rndr->twi, NULL);
 	stInit(&rndr->sTrans);
 	rtInit(&rndr->rTrans);
 	rndr->sprite = 0;
@@ -29,7 +29,7 @@ unsigned char rndrLoad(renderable *rndr, const char *prgPath, const char *filePa
 
 unsigned char rndrRenderMethod(renderable *rndr){
 	if(rndr->rTrans.alpha > 0.f){
-		if(rndr->rTrans.alpha < 1.f || twiContainsTranslucency(&rndr->tex)){
+		if(rndr->rTrans.alpha < 1.f || twiContainsTranslucency(&rndr->twi)){
 			return 1;  // The model contains translucency
 		}else{
 			return 0;  // The model is fully opaque
@@ -58,7 +58,7 @@ void rndrRotateZ(renderable *rndr, float changeZ){
 }
 
 void rndrAnimateTex(renderable *rndr, uint32_t currentTick, float globalDelayMod){
-	twiAnimate(&rndr->tex, currentTick, globalDelayMod);
+	twiAnimate(&rndr->twi, currentTick, globalDelayMod);
 }
 
 void rndrAnimateSkel(renderable *rndr, uint32_t currentTick, float globalDelayMod){
@@ -70,19 +70,23 @@ void rndrGenerateTransform(renderable *rndr, mat4 *transformMatrix, gfxProgram *
 
 	/*
 	** Translate the model. By translating it from the camera coordinates to begin
-	** with, we can save multiplying the model matrix by the view matrix later on.
-	** However, we must start with the identity matrix for HUD elements
+	** with, we can save multiplying the model matrix by the view matrix later on
 	*/
 	*transformMatrix = cam->viewMatrix;  // Start with the view matrix
 	mat4Translate(transformMatrix, rndr->sTrans.position.x, rndr->sTrans.position.y, rndr->sTrans.position.z);
 
 	/** This is definitely not good, but I don't think there's any other option **/
-	if(rndr->hudElement){
+	/*}else{
+		*transformMatrix = mat4TranslationMatrix(rndr->sTrans.position.x * (float)gfxPrg->aspectRatioX / (float)(gfxPrg->aspectRatioX < gfxPrg->aspectRatioY ? gfxPrg->aspectRatioX : gfxPrg->aspectRatioY),
+		                                         rndr->sTrans.position.y * (float)gfxPrg->aspectRatioY / (float)(gfxPrg->aspectRatioX < gfxPrg->aspectRatioY ? gfxPrg->aspectRatioX : gfxPrg->aspectRatioY),
+		                                         rndr->sTrans.position.z);
+	}*/
+	/*if(rndr->hudElement){
 		mat4Scale(transformMatrix,
 		          (float)(gfxPrg->aspectRatioX < gfxPrg->aspectRatioY ? gfxPrg->aspectRatioX : gfxPrg->aspectRatioY) / (float)gfxPrg->aspectRatioX,
 		          (float)(gfxPrg->aspectRatioX < gfxPrg->aspectRatioY ? gfxPrg->aspectRatioX : gfxPrg->aspectRatioY) / (float)gfxPrg->aspectRatioY,
 		          1.f);
-	}
+	}*/
 
 	/* Billboarding */
 	// If any of the flags apart from RNDR_BILLBOARD_TARGET are set, continue
@@ -167,10 +171,19 @@ void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatri
 	/* Generate the base sprite quad */
 	vertex tempVert;
 
+	/* Undo the initial translations in rndrGenerateTransform() and use our own */
+	/** Only way to remove this is to duplicate rndrGenerateTransform(). Is it worth it? **/
+	/** Might copy rndrGenerateTransform() but without matrices **/
+	float left   = -rndr->sTrans.relPivot.x * (twiGetFrameWidth(&rndr->twi) - 1.f);
+	float top    = -rndr->sTrans.relPivot.y * (twiGetFrameHeight(&rndr->twi) - 1.f);
+	float right  = left + twiGetFrameWidth(&rndr->twi);
+	float bottom = top  + twiGetFrameHeight(&rndr->twi);
+	float z      = -rndr->sTrans.relPivot.z;
+
 	// Create the top left vertex
-	tempVert.pos.x = 0.f;
-	tempVert.pos.y = 0.f;
-	tempVert.pos.z = 0.f;
+	tempVert.pos.x = left;
+	tempVert.pos.y = top;
+	tempVert.pos.z = z;
 	tempVert.u = 0.f;
 	tempVert.v = 0.f;
 	tempVert.nx = 0.f;
@@ -187,9 +200,9 @@ void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatri
 	vertices[0] = tempVert;
 
 	// Create the top right vertex
-	tempVert.pos.x = 1.f;
-	tempVert.pos.y = 0.f;
-	tempVert.pos.z = 0.f;
+	tempVert.pos.x = right;
+	tempVert.pos.y = top;
+	tempVert.pos.z = z;
 	tempVert.u = 1.f;
 	tempVert.v = 0.f;
 	tempVert.nx = 0.f;
@@ -206,9 +219,9 @@ void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatri
 	vertices[1] = tempVert;
 
 	// Create the bottom left vertex
-	tempVert.pos.x = 0.f;
-	tempVert.pos.y = 1.f;
-	tempVert.pos.z = 0.f;
+	tempVert.pos.x = left;
+	tempVert.pos.y = bottom;
+	tempVert.pos.z = z;
 	tempVert.u = 0.f;
 	tempVert.v = -1.f;  // Flip the y dimension so the image isn't upside down
 	tempVert.nx = 0.f;
@@ -225,9 +238,9 @@ void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatri
 	vertices[2] = tempVert;
 
 	// Create the bottom right vertex
-	tempVert.pos.x = 1.f;
-	tempVert.pos.y = 1.f;
-	tempVert.pos.z = 0.f;
+	tempVert.pos.x = right;
+	tempVert.pos.y = bottom;
+	tempVert.pos.z = z;
 	tempVert.u = 1.f;
 	tempVert.v = -1.f;  // Flip the y dimension so the image isn't upside down
 	tempVert.nx = 0.f;

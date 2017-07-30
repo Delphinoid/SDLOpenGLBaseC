@@ -1,5 +1,6 @@
 #include "quat.h"
 #include <math.h>
+#include <float.h>
 
 quat quatNew(float w, float x, float y, float z){
 	quat r = {.w = w, .v.x = x, .v.y = y, .v.z = z};
@@ -247,6 +248,113 @@ float quatDot(quat q1, quat q2){
 	       q1.v.z * q2.v.z;
 }
 
+vec3 quatGetRotatedVec3(quat q, vec3 v){
+
+	vec3 r;
+
+	float dot = vec3Dot(q.v, v);
+	vec3 cross = vec3Cross(q.v, v);
+
+	float m = q.w*q.w-dot;
+	r.x = m*v.x;
+	r.y = m*v.y;
+	r.z = m*v.z;
+
+	m = 2.f*dot;
+	r.x += m*q.v.x;
+	r.y += m*q.v.y;
+	r.z += m*q.v.z;
+
+	m = 2.f*q.w;
+	r.x += m*cross.x;
+	r.y += m*cross.y;
+	r.z += m*cross.z;
+
+	return r;
+
+}
+void quatRotateVec3(quat q, vec3 *v){
+
+	float dot = vec3Dot(q.v, *v);
+	vec3 cross = vec3Cross(q.v, *v);
+
+	float m = q.w*q.w-dot;
+	v->x *= m;
+	v->y *= m;
+	v->z *= m;
+
+	m = 2.f*dot;
+	v->x += m*q.v.x;
+	v->y += m*q.v.y;
+	v->z += m*q.v.z;
+
+	m = 2.f*q.w;
+	v->x += m*cross.x;
+	v->y += m*cross.y;
+	v->z += m*cross.z;
+
+}
+
+quat quatLookingAt(vec3 eye, vec3 target, vec3 up){
+
+	quat r;
+
+	float dot = vec3Dot(eye, target);
+
+	if(fabsf(dot + 1.f) < FLT_EPSILON){
+
+		// Eye and target point in opposite directions,
+		// 180 degree rotation around up vector
+		r.w = M_PI;
+		r.v = up;
+
+	}else if(fabsf(dot - 1.f) < FLT_EPSILON){
+
+		// Eye and target are pointing in the same direction
+		quatSetIdentity(&r);
+
+	}else{
+
+		float angle = acosf(dot);
+		vec3 axis = vec3Cross(eye, target);
+		vec3Normalize(&axis);
+		r.w = angle;
+		r.v = axis;
+
+	}
+
+	return r;
+
+}
+
+void quatLookAt(quat *q, vec3 eye, vec3 target, vec3 up){
+
+	float dot = vec3Dot(eye, target);
+
+	if(fabsf(dot + 1.f) < FLT_EPSILON){
+
+		// Eye and target point in opposite directions,
+		// 180 degree rotation around up vector
+		q->w = M_PI;
+		q->v = up;
+
+	}else if(fabsf(dot - 1.f) < FLT_EPSILON){
+
+		// Eye and target are pointing in the same direction
+		quatSetIdentity(q);
+
+	}else{
+
+		float angle = acosf(dot);
+		vec3 axis = vec3Cross(eye, target);
+		vec3Normalize(&axis);
+		q->w = angle;
+		q->v = axis;
+
+	}
+
+}
+
 quat quatLerp(quat q1, quat q2, float t){
 	quatMultQByS(&q1, 1.f-t);
 	quatMultQByS(&q2, t);
@@ -263,7 +371,7 @@ quat quatSlerp(quat q1, quat q2, float t){
 		quatNegate(&q2);
 	}
 
-	if(cosTheta < 0.9995){
+	if(cosTheta < 1.f - FLT_EPSILON){
 		float angle = acosf(cosTheta);
 		quatMultQByS(&q1, sinf(angle*(1.f-t)));
 		quatMultQByS(&q2, sinf(angle*t));

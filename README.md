@@ -12,5 +12,6 @@ My current "to-do list" (from what I can remember, at least) is as follows:
 * Create an asset handler.
 * Renderable / scene files and file parsing.
 * Clean up a large number of functions.
+* Phase out SDL.
 
 Download the bin folder if you want to give it a go.
