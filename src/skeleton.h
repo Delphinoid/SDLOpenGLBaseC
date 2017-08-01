@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include "mat4.h"
 
+/** Replace cVectors with malloc() **/
+
 // Skeleton bone data
 typedef struct {
 	char *name;
@@ -73,8 +75,13 @@ void sklInit(skeleton *skl);
 unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath);
 void sklDelete(skeleton *skl);
 
+void sklaInit(sklAnim *skla);
+unsigned char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath);
+void sklaDelete(sklAnim *skla);
+
 void sklaiInit(sklAnimInstance *sklai);
 unsigned char sklaiLoad(sklAnimInstance *sklai, const char *prgPath, const char *filePath);
+void sklaiChangeAnim(sklAnimInstance *sklai, sklAnim *anim);
 void sklaiDelete(sklAnimInstance *sklai);
 
 void skliInit(sklInstance *skli, skeleton *skl);

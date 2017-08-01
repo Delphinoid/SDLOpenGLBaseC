@@ -1,6 +1,8 @@
 #ifndef FPS_H
 #define FPS_H
 
+/** Buggy but only temporary, a proper system will be implemented later **/
+
 typedef struct {
 
 	float desiredFps;  // Fps to simulate (so the program can be running at 120 fps but still act the same as it would running at 60 fps)

@@ -2,10 +2,11 @@
 #include <stdio.h>
 #include "fps.h"
 
-#define radianRatio 0.017453292  // = PI / 180, used for converting degrees to radians
+#define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians
 
-void renderScene(cVector *allRenderables, gfxProgram *gfxPrg, camera *cam);
-void cleanup(cVector *allTextures, cVector *allTexWrappers, cVector *allModels, cVector *allRenderables, gfxProgram *gfxPrg);
+void renderScene(cVector *allRenderables, cVector *allCameras, gfxProgram *gfxPrg);
+void cleanup(cVector *allTextures,  cVector *allTexWrappers,   cVector *allModels,      cVector *allCameras,
+             cVector *allSkeletons, cVector *allSklAnimations, cVector *allRenderables, gfxProgram *gfxPrg);
 
 /** Remember to do regular searches for these important comments when possible **/
 int main(int argc, char *argv[]){
@@ -20,23 +21,18 @@ int main(int argc, char *argv[]){
 	}
 
 	/** Configs should be loaded here **/
+	//
 
+	/** Most of the code below this comment will be removed eventually **/
+	cVector allTextures; cvInit(&allTextures, 1);            // Holds textures
+	cVector allTexWrappers; cvInit(&allTexWrappers, 1);      // Holds textureWrappers
+	cVector allModels; cvInit(&allModels, 1);                // Holds models
+	cVector allCameras; cvInit(&allCameras, 1);              // Holds cameras
+	cVector allSkeletons; cvInit(&allSkeletons, 1);          // Holds skeletons
+	cVector allSklAnimations; cvInit(&allSklAnimations, 1);  // Holds sklAnims
+	cVector allRenderables; cvInit(&allRenderables, 1);      // Holds renderables
 
-	/** Temp **/
-	mat4Identity(&gfxPrg.identityMatrix);
-	mat4Perspective(&gfxPrg.projectionMatrixFrustum, 45.f * radianRatio, (float)DEFAULT_WIDTH / (float)DEFAULT_HEIGHT, 1.f, 1000.f);
-	/*mat4Ortho(&gfxPrg.projectionMatrixOrtho, 0.f, 1.f, 1.f, 0.f, 1.f, -1.f);
-	mat4Scale(&gfxPrg.projectionMatrixOrtho, 1.f / ((float)gfxPrg.windowWidth  / (float)gfxPrg.biggestDimension),
-	                                         1.f / ((float)gfxPrg.windowHeight / (float)gfxPrg.biggestDimension),
-	                                         1.f);*/
-
-
-	/** Most of the code below this line will be removed eventually **/
-	cVector allTextures; cvInit(&allTextures, 1);        // Holds textures
-	cVector allTexWrappers; cvInit(&allTexWrappers, 1);  // Holds textureWrappers
-	cVector allModels; cvInit(&allModels, 1);            // Holds models
-	cVector allRenderables; cvInit(&allRenderables, 1);  // Holds renderables
-
+	/* Textures */
 	texture tempTex;
 	tLoad(&tempTex, prgPath, "Resources\\Images\\Guy\\Guy.png");
 	cvPush(&allTextures, (void *)&tempTex, sizeof(tempTex));
@@ -45,6 +41,7 @@ int main(int argc, char *argv[]){
 	tLoad(&tempTex, prgPath, "Resources\\Images\\Misc\\Avatar.png");
 	cvPush(&allTextures, (void *)&tempTex, sizeof(tempTex));
 
+	/* Texture Wrappers */
 	textureWrapper tempTexWrap;
 	twLoad(&tempTexWrap, prgPath, "Resources\\Textures\\Static\\AvatarStatic.tdt", &allTextures);
 	cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));
@@ -55,13 +52,22 @@ int main(int argc, char *argv[]){
 	twLoad(&tempTexWrap, prgPath, "Resources\\Textures\\Static\\KoboldStatic.tdt", &allTextures);
 	cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));
 
+	/* Models */
 	model tempMdl;
 	mdlCreateSprite(&tempMdl, "sprite");
 	cvPush(&allModels, (void *)&tempMdl, sizeof(tempMdl));
 	mdlLoadWavefrontObj(&tempMdl, prgPath, "Resources\\Models\\CubeTest.obj");
 	cvPush(&allModels, (void *)&tempMdl, sizeof(tempMdl));
 
-	/* Models */
+	/* Cameras */
+	camera tempCam; camInit(&tempCam);
+	vec3Set(&tempCam.position, 0.f, 2.f, 7.f);
+	cvPush(&allCameras, (void *)&tempCam, sizeof(tempCam));
+	vec3Set(&tempCam.position, 0.f, 0.f, 0.f);
+	tempCam.flags |= CAM_PROJECTION_ORTHO;
+	cvPush(&allCameras, (void *)&tempCam, sizeof(tempCam));
+
+	/* Renderables */
 	renderable tempRndr;
 	rndrInit(&tempRndr);
 	tempRndr.mdl = (model *)cvGet(&allModels, 1);
@@ -77,7 +83,7 @@ int main(int argc, char *argv[]){
 	tempRndr.hudElement = 1;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 
-	/* Sprites */
+	/* Sprite Renderables */
 	rndrInit(&tempRndr);
 	tempRndr.sprite = 1;
 	tempRndr.mdl = (model *)cvGet(&allModels, 0);
@@ -101,7 +107,7 @@ int main(int argc, char *argv[]){
 	tempRndr.sTrans.relPivot.y = 0.5f;
 	tempRndr.rTrans.scale.x = 0.026f;
 	tempRndr.rTrans.scale.y = 0.026f;
-	tempRndr.billboardFlags |= RNDR_BILLBOARD_Y;
+	tempRndr.flags |= RNDR_BILLBOARD_TARGET | RNDR_BILLBOARD_Y;
 	tempRndr.hudElement = 0;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 	tempRndr.twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 3);
@@ -109,16 +115,15 @@ int main(int argc, char *argv[]){
 	tempRndr.sTrans.position.y = -2.f;
 	tempRndr.rTrans.scale.x = 0.0085f;
 	tempRndr.rTrans.scale.y = 0.0065f;
-	tempRndr.billboardFlags &= ~RNDR_BILLBOARD_Y;
+	tempRndr.flags = 0;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 
+	/** Remove the special deletion code below the main loop as well **/
 	skliLoad(&((renderable *)cvGet(&allRenderables, 0))->skli, NULL, NULL);
 	skliLoad(&((renderable *)cvGet(&allRenderables, 1))->skli, NULL, NULL);
 
 
 	unsigned char prgRunning = 1;
-	camera cam; camInit(&cam);
-	vec3Set(&cam.position, 0.f, 2.f, 7.f);
 	SDL_Event prgEventHandler;
 	fps fpsHandler; fpsStart(&fpsHandler, 61, 121);
 
@@ -131,6 +136,8 @@ int main(int argc, char *argv[]){
 	int mouseRelX;
 	int mouseRelY;
 
+	size_t i;
+
 	while(prgRunning){
 
 		/* Update FPS */
@@ -138,7 +145,12 @@ int main(int argc, char *argv[]){
 
 
 		/* If the window size has changed, resize the OpenGL viewport */
-		gfxUpdateWindow(&gfxPrg);
+		if(gfxUpdateWindow(&gfxPrg)){
+			// Cameras will also have to be adjusted
+			for(i = 0; i < allCameras.size; i++){
+				((camera *)cvGet(&allCameras, i))->flags |= CAM_UPDATE_PROJECTION;
+			}
+		}
 
 
 		/* Detect input */
@@ -193,26 +205,26 @@ int main(int argc, char *argv[]){
 		if(UP){
 			rndrRotateX((renderable *)cvGet(&allRenderables, 0), -2.f * fpsHandler.fpsMod);
 			//sprRotateX((sprite *)cvGet(&allSprites, 0), -2.f * fpsHandler.fpsMod);
-			camMoveZ(&cam, -0.1f * fpsHandler.fpsMod);
-			((renderable *)cvGet(&allRenderables, 4))->rTrans.target = cam.position;
+			camMoveZ((camera *)cvGet(&allCameras, 0), -0.1f * fpsHandler.fpsMod);
+			((renderable *)cvGet(&allRenderables, 4))->rTrans.target = ((camera *)cvGet(&allCameras, 0))->position;
 		}
 		if(DOWN){
 			rndrRotateX((renderable *)cvGet(&allRenderables, 0), 2.f * fpsHandler.fpsMod);
 			//sprRotateX((sprite *)cvGet(&allSprites, 0), 2.f * fpsHandler.fpsMod);
-			camMoveZ(&cam, 0.1f * fpsHandler.fpsMod);
-			((renderable *)cvGet(&allRenderables, 4))->rTrans.target = cam.position;
+			camMoveZ((camera *)cvGet(&allCameras, 0), 0.1f * fpsHandler.fpsMod);
+			((renderable *)cvGet(&allRenderables, 4))->rTrans.target = ((camera *)cvGet(&allCameras, 0))->position;
 		}
 		if(LEFT){
 			rndrRotateY((renderable *)cvGet(&allRenderables, 0), -2.f * fpsHandler.fpsMod);
 			rndrRotateZ((renderable *)cvGet(&allRenderables, 3), -2.f * fpsHandler.fpsMod);
-			camMoveX(&cam, -0.1f * fpsHandler.fpsMod);
-			((renderable *)cvGet(&allRenderables, 4))->rTrans.target = cam.position;
+			camMoveX((camera *)cvGet(&allCameras, 0), -0.1f * fpsHandler.fpsMod);
+			((renderable *)cvGet(&allRenderables, 4))->rTrans.target = ((camera *)cvGet(&allCameras, 0))->position;
 		}
 		if(RIGHT){
 			rndrRotateY((renderable *)cvGet(&allRenderables, 0), 2.f * fpsHandler.fpsMod);
 			rndrRotateZ((renderable *)cvGet(&allRenderables, 3), 2.f * fpsHandler.fpsMod);
-			camMoveX(&cam, 0.1f * fpsHandler.fpsMod);
-			((renderable *)cvGet(&allRenderables, 4))->rTrans.target = cam.position;
+			camMoveX((camera *)cvGet(&allCameras, 0), 0.1f * fpsHandler.fpsMod);
+			((renderable *)cvGet(&allRenderables, 4))->rTrans.target = ((camera *)cvGet(&allCameras, 0))->position;
 		}
 
 		// Get mouse position relative to its position in the last call
@@ -221,19 +233,23 @@ int main(int argc, char *argv[]){
 
 		/* Animate */
 		// Animate the renderables
-		size_t i;
 		for(i = 0; i < allRenderables.size; i++){
-			rndrAnimateTex((renderable *)cvGet(&allRenderables, i), SDL_GetTicks(), 1.f);
+			rndrAnimateTexture((renderable *)cvGet(&allRenderables, i), SDL_GetTicks(), 1.f);
+			rndrAnimateSkeleton((renderable *)cvGet(&allRenderables, i), SDL_GetTicks(), 1.f);
 		}
-		skliAnimate(&((renderable *)cvGet(&allRenderables, 0))->skli, SDL_GetTicks(), 1.f);
 
 
 		/* Render the scene */
+		// Update cameras
+		for(i = 0; i < allCameras.size; i++){
+			camUpdateViewMatrix((camera *)cvGet(&allCameras, i));
+			camUpdateProjectionMatrix((camera *)cvGet(&allCameras, i), gfxPrg.aspectRatioX, gfxPrg.aspectRatioY);
+		}
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		camCreateViewMatrix(&cam);
 
 		// Render the scene
-		renderScene(&allRenderables, &gfxPrg, &cam);
+		renderScene(&allRenderables, &allCameras, &gfxPrg);
 
 		// Update the window
 		SDL_GL_SwapWindow(gfxPrg.window);
@@ -244,28 +260,57 @@ int main(int argc, char *argv[]){
 
 	}
 
+	/** Special deletion code **/
+	sklDelete(((renderable *)cvGet(&allRenderables, 0))->skli.skl);
+	sklDelete(((renderable *)cvGet(&allRenderables, 1))->skli.skl);
+	sklaDelete(((sklAnimInstance *)cvGet(&((renderable *)cvGet(&allRenderables, 0))->skli.animations, 0))->anim);
+	sklaDelete(((sklAnimInstance *)cvGet(&((renderable *)cvGet(&allRenderables, 1))->skli.animations, 0))->anim);
+	sklaiDelete((sklAnimInstance *)cvGet(&((renderable *)cvGet(&allRenderables, 0))->skli.animations, 0));
+	sklaiDelete((sklAnimInstance *)cvGet(&((renderable *)cvGet(&allRenderables, 1))->skli.animations, 0));
+	skliDelete(&((renderable *)cvGet(&allRenderables, 0))->skli);
+	skliDelete(&((renderable *)cvGet(&allRenderables, 1))->skli);
+	cleanup(&allTextures, &allTexWrappers, &allModels, &allCameras, &allSkeletons, &allSklAnimations, &allRenderables, &gfxPrg);
 
-	cleanup(&allTextures, &allTexWrappers, &allModels, &allRenderables, &gfxPrg);
 	return 0;
 
 }
 
-void cleanup(cVector *allTextures, cVector *allTexWrappers, cVector *allModels, cVector *allRenderables, gfxProgram *gfxPrg){
+void cleanup(cVector *allTextures,  cVector *allTexWrappers,   cVector *allModels,      cVector *allCameras,
+             cVector *allSkeletons, cVector *allSklAnimations, cVector *allRenderables, gfxProgram *gfxPrg){
+
 	gfxDestroyProgram(gfxPrg);
+
 	size_t i;
 	for(i = 0; i < allTextures->size; i++){
 		tDelete((texture *)cvGet(allTextures, i));
 	}
+	cvClear(allTextures);
+
 	for(i = 0; i < allTexWrappers->size; i++){
 		twDelete((textureWrapper *)cvGet(allTexWrappers, i));
 	}
+	cvClear(allTexWrappers);
+
 	for(i = 0; i < allModels->size; i++){
 		mdlDelete((model *)cvGet(allModels, i));
 	}
+	cvClear(allModels);
+
+	cvClear(allCameras);
+
+	for(i = 0; i < allSkeletons->size; i++){
+		sklDelete((skeleton *)cvGet(allSkeletons, i));
+	}
+	cvClear(allSkeletons);
+
+	for(i = 0; i < allSklAnimations->size; i++){
+		sklaDelete((sklAnim *)cvGet(allSklAnimations, i));
+	}
+	cvClear(allSklAnimations);
+
 	for(i = 0; i < allRenderables->size; i++){
 		rndrDelete((renderable *)cvGet(allRenderables, i));
 	}
-	/*for(i = 0; i < allSprites->size; i++){
-		sprDelete((sprite *)cvGet(allSprites, i));
-	}*/
+	cvClear(allRenderables);
+
 }

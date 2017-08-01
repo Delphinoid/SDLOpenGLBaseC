@@ -27,7 +27,7 @@ typedef struct {
 	/** Sprite should not be necessary anymore **/
 	unsigned char sprite;
 	/** Combine the three variables below into one variable as flags using bitwise OR **/
-	unsigned char billboardFlags;
+	unsigned char flags;
 	/** Remove this along with the changes to the camera **/
 	unsigned char hudElement;       // Whether or not the object is part of the HUD. Should be private
 
@@ -36,7 +36,7 @@ typedef struct {
 void rndrInit(renderable *rndr);
 unsigned char rndrLoad(renderable *rndr, const char *prgPath, const char *filePath, cVector *allModels, cVector *allTexWrappers);
 unsigned char rndrRenderMethod(renderable *rndr);  // Returns 0 if the model is fully opaque, 1 if the model contains translucency and 2 if the model is fully transparent
-void rndrGenerateTransform(renderable *rndr, mat4 *transformMatrix, gfxProgram *gfxPrg, camera *cam);
+void rndrGenerateTransform(renderable *rndr, camera *cam, mat4 *transformMatrix);
 void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatrix);
 void rndrOffsetSpriteTexture(vertex *vertices, float texFrag[4], float texWidth, float texHeight);
 void rndrDelete(renderable *rndr);
@@ -47,7 +47,7 @@ void rndrSetRotation(renderable *rndr, float newX, float newY, float newZ);
 void rndrRotateX(renderable *rndr, float changeX);
 void rndrRotateY(renderable *rndr, float changeY);
 void rndrRotateZ(renderable *rndr, float changeZ);
-void rndrAnimateTex(renderable *rndr, uint32_t currentTick, float globalDelayMod);
-void rndrAnimateSkel(renderable *rndr, uint32_t currentTick, float globalDelayMod);
+void rndrAnimateTexture(renderable *rndr, uint32_t currentTick, float globalDelayMod);
+void rndrAnimateSkeleton(renderable *rndr, uint32_t currentTick, float globalDelayMod);
 
 #endif

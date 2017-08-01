@@ -4,8 +4,8 @@
 #include "cVector.h"
 #include <stdio.h>
 
-#define vertexStartCapacity 1024
-#define indexStartCapacity 2048
+#define VERTEX_START_CAPACITY 1024
+#define INDEX_START_CAPACITY 2048
 
 static void mdlGenBufferObjects(model *mdl, vertex *vertices, size_t *indices);
 
@@ -30,14 +30,14 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 
 	mdlInit(mdl);
 
-	size_t vertexCapacity = vertexStartCapacity;
+	size_t vertexCapacity = VERTEX_START_CAPACITY;
 	vertex *vertices = malloc(vertexCapacity*sizeof(vertex));
 	if(vertices == NULL){
 		printf("Error loading model:\nMemory allocation failure.\n");
 		return 0;
 	}
 
-	size_t indexCapacity = indexStartCapacity;
+	size_t indexCapacity = INDEX_START_CAPACITY;
 	size_t *indices = malloc(indexCapacity*sizeof(size_t));
 	if(indices == NULL){
 		printf("Error loading model:\nMemory allocation failure.\n");

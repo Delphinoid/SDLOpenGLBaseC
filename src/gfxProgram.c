@@ -298,13 +298,6 @@ static unsigned char gfxCreateBuffers(gfxProgram *gfxPrg){
 unsigned char gfxUpdateWindow(gfxProgram *gfxPrg){
 	SDL_GetWindowSize(gfxPrg->window, &gfxPrg->windowWidth, &gfxPrg->windowHeight);
 	if(gfxPrg->windowWidth != gfxPrg->lastWindowWidth || gfxPrg->windowHeight != gfxPrg->lastWindowHeight){
-		/** Projection matrices (both frustum and ortho) should be a member of the camera **/
-		mat4Perspective(&gfxPrg->projectionMatrixFrustum, 90.f * 0.017453292, (float)gfxPrg->aspectRatioX / (float)gfxPrg->aspectRatioY, 0.001f, 1000.f);
-		mat4Ortho(&gfxPrg->projectionMatrixOrtho,
-		          0.f, (float)gfxPrg->aspectRatioX / (float)(gfxPrg->aspectRatioX < gfxPrg->aspectRatioY ? gfxPrg->aspectRatioX : gfxPrg->aspectRatioY),
-		          0.f, (float)gfxPrg->aspectRatioY / (float)(gfxPrg->aspectRatioX < gfxPrg->aspectRatioY ? gfxPrg->aspectRatioX : gfxPrg->aspectRatioY),
-		          -1000.f, 1000.f);
-		/** Scaling moved to rndrGenerateTransform(), has very good results but I don't like this solution **/
 		GLint screenX, screenY, screenWidth, screenHeight;
 		if(gfxPrg->stretchToFit){
 			screenX = 0;
@@ -324,8 +317,8 @@ unsigned char gfxUpdateWindow(gfxProgram *gfxPrg){
 				screenWidth  = gfxPrg->windowWidth;
 				screenHeight = gfxPrg->windowHeight;
 			}
-			screenX = (gfxPrg->windowWidth  - screenWidth) * 0.5f;
-			screenY = (gfxPrg->windowHeight - screenHeight) * 0.5f;
+			screenX = (gfxPrg->windowWidth  - screenWidth)  >> 1;
+			screenY = (gfxPrg->windowHeight - screenHeight) >> 1;
 		}
 		glViewport(screenX, screenY, screenWidth, screenHeight);
 		gfxPrg->lastWindowWidth = gfxPrg->windowWidth;

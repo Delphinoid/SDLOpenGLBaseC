@@ -4,10 +4,10 @@
 #include <string.h>
 #include <stdio.h>
 
-#define frameStartCapacity 128
-#define animStartCapacity 128
-#define subframeStartCapacity 128
-#define animframeStartCapacity 128
+#define FRAME_START_CAPACITY 128
+#define ANIM_START_CAPACITY 128
+#define SUBFRAME_START_CAPACITY 128
+#define ANIMFRAME_START_CAPACITY 128
 
 static unsigned char twfInit(twFrame *twf, size_t subframeCapacity){
 	twf->subframes = malloc(subframeCapacity*sizeof(twBounds));
@@ -212,14 +212,14 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 
 	twInit(tw);
 
-	size_t frameCapacity = frameStartCapacity;
+	size_t frameCapacity = FRAME_START_CAPACITY;
 	tw->frames = malloc(frameCapacity*sizeof(twFrame));
 	if(tw->frames == NULL){
 		printf("Error loading texture wrapper:\nMemory allocation failure.\n");
 		return 0;
 	}
 
-	size_t animCapacity = animStartCapacity;
+	size_t animCapacity = ANIM_START_CAPACITY;
 	tw->animations = malloc(animCapacity*sizeof(twAnim));
 	if(tw->animations == NULL){
 		printf("Error loading texture wrapper:\nMemory allocation failure.\n");
@@ -427,7 +427,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 				if(tempFrame.baseTexture != NULL){
 					// Check if the command spans multiple lines (it contains an opening brace at the end)
 					if(strrchr(line, '{') > line+pathBegin+1+pathLength){
-						subframeCapacity = subframeStartCapacity;
+						subframeCapacity = SUBFRAME_START_CAPACITY;
 						twfInit(&tempFrame, subframeCapacity);
 						currentCommand = 0;
 
@@ -554,7 +554,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 			// New texture animation
 			}else if(lineLength >= 9 && strncpy(compare, line, 9) && (compare[9] = '\0') == 0 && strcmp(compare, "animation") == 0){
 				// Reset tempAnim
-				animframeCapacity = animframeStartCapacity;
+				animframeCapacity = ANIMFRAME_START_CAPACITY;
 				if(!twaInit(&tempAnim, animframeCapacity)){
 					twDelete(tw);
 					return 0;

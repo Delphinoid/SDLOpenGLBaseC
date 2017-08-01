@@ -5,7 +5,7 @@
 #include "vec4.h"
 #include "mat4.h"
 
-#define radianRatio 0.017453292  // = PI / 180, used for converting degrees to radians
+#define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians
 
 void rndrInit(renderable *rndr){
 	rndr->name = NULL;
@@ -15,7 +15,7 @@ void rndrInit(renderable *rndr){
 	stInit(&rndr->sTrans);
 	rtInit(&rndr->rTrans);
 	rndr->sprite = 0;
-	rndr->billboardFlags = RNDR_BILLBOARD_TARGET;
+	rndr->flags = 0;
 	rndr->hudElement = 0;
 }
 
@@ -30,18 +30,19 @@ unsigned char rndrLoad(renderable *rndr, const char *prgPath, const char *filePa
 unsigned char rndrRenderMethod(renderable *rndr){
 	if(rndr->rTrans.alpha > 0.f){
 		if(rndr->rTrans.alpha < 1.f || twiContainsTranslucency(&rndr->twi)){
-			return 1;  // The model contains translucency
+			// The model contains translucency
+			return 1;
 		}else{
-			return 0;  // The model is fully opaque
+			// The model is fully opaque
+			return 0;
 		}
 	}
-	return 2;  // The model is fully transparent
+	// The model is fully transparent
+	return 2;
 }
 
 void rndrSetRotation(renderable *rndr, float newX, float newY, float newZ){
-	// HUD elements render rotated 180 degrees on the X axis due to the way the orthographic matrix is set up
-	float offsetX = rndr->hudElement ? M_PI : 0.f;
-	quatSetEuler(&rndr->sTrans.orientation, newX*radianRatio+offsetX, newY*radianRatio, newZ*radianRatio);
+	quatSetEuler(&rndr->sTrans.orientation, newX*RADIAN_RATIO, newY*RADIAN_RATIO, newZ*RADIAN_RATIO);
 	vec3SetS(&rndr->sTrans.changeRot, 0.f);
 }
 
@@ -57,16 +58,15 @@ void rndrRotateZ(renderable *rndr, float changeZ){
 	rndr->sTrans.changeRot.z += changeZ;
 }
 
-void rndrAnimateTex(renderable *rndr, uint32_t currentTick, float globalDelayMod){
+void rndrAnimateTexture(renderable *rndr, uint32_t currentTick, float globalDelayMod){
 	twiAnimate(&rndr->twi, currentTick, globalDelayMod);
 }
 
-void rndrAnimateSkel(renderable *rndr, uint32_t currentTick, float globalDelayMod){
+void rndrAnimateSkeleton(renderable *rndr, uint32_t currentTick, float globalDelayMod){
 	skliAnimate(&rndr->skli, currentTick, globalDelayMod);
 }
 
-/** Is gfxPrg needed? **/
-void rndrGenerateTransform(renderable *rndr, mat4 *transformMatrix, gfxProgram *gfxPrg, camera *cam){
+void rndrGenerateTransform(renderable *rndr, camera *cam, mat4 *transformMatrix){
 
 	/*
 	** Translate the model. By translating it from the camera coordinates to begin
@@ -75,27 +75,13 @@ void rndrGenerateTransform(renderable *rndr, mat4 *transformMatrix, gfxProgram *
 	*transformMatrix = cam->viewMatrix;  // Start with the view matrix
 	mat4Translate(transformMatrix, rndr->sTrans.position.x, rndr->sTrans.position.y, rndr->sTrans.position.z);
 
-	/** This is definitely not good, but I don't think there's any other option **/
-	/*}else{
-		*transformMatrix = mat4TranslationMatrix(rndr->sTrans.position.x * (float)gfxPrg->aspectRatioX / (float)(gfxPrg->aspectRatioX < gfxPrg->aspectRatioY ? gfxPrg->aspectRatioX : gfxPrg->aspectRatioY),
-		                                         rndr->sTrans.position.y * (float)gfxPrg->aspectRatioY / (float)(gfxPrg->aspectRatioX < gfxPrg->aspectRatioY ? gfxPrg->aspectRatioX : gfxPrg->aspectRatioY),
-		                                         rndr->sTrans.position.z);
-	}*/
-	/*if(rndr->hudElement){
-		mat4Scale(transformMatrix,
-		          (float)(gfxPrg->aspectRatioX < gfxPrg->aspectRatioY ? gfxPrg->aspectRatioX : gfxPrg->aspectRatioY) / (float)gfxPrg->aspectRatioX,
-		          (float)(gfxPrg->aspectRatioX < gfxPrg->aspectRatioY ? gfxPrg->aspectRatioX : gfxPrg->aspectRatioY) / (float)gfxPrg->aspectRatioY,
-		          1.f);
-	}*/
-
 	/* Billboarding */
 	// If any of the flags apart from RNDR_BILLBOARD_TARGET are set, continue
-	if((rndr->billboardFlags & ~RNDR_BILLBOARD_TARGET) > 0){
+	if((rndr->flags & ~RNDR_BILLBOARD_TARGET) > 0){
 		vec3 axisX; vec3 axisY; vec3 axisZ;
-		if((rndr->billboardFlags & RNDR_BILLBOARD_TARGET) > 0){
+		if((rndr->flags & RNDR_BILLBOARD_TARGET) > 0){
 			// Generate a new view matrix for the billboard
 			mat4 billboardViewMatrix;
-			/** Merge cam? **/
 			mat4LookAt(&billboardViewMatrix, rndr->rTrans.target, rndr->sTrans.position, cam->up);
 			vec3Set(&axisX, billboardViewMatrix.m[0][0], billboardViewMatrix.m[0][1], billboardViewMatrix.m[0][2]);
 			vec3Set(&axisY, billboardViewMatrix.m[1][0], billboardViewMatrix.m[1][1], billboardViewMatrix.m[1][2]);
@@ -107,17 +93,17 @@ void rndrGenerateTransform(renderable *rndr, mat4 *transformMatrix, gfxProgram *
 			vec3Set(&axisZ, cam->viewMatrix.m[2][0], cam->viewMatrix.m[2][1], cam->viewMatrix.m[2][2]);
 		}
 		// Lock certain axes if needed
-		if((rndr->billboardFlags & RNDR_BILLBOARD_X) == 0){
+		if((rndr->flags & RNDR_BILLBOARD_X) == 0){
 			axisX.y = 0.f;
 			axisY.y = 1.f;
 			axisZ.y = 0.f;
 		}
-		if((rndr->billboardFlags & RNDR_BILLBOARD_Y) == 0){
+		if((rndr->flags & RNDR_BILLBOARD_Y) == 0){
 			axisX.x = 1.f;
 			axisY.x = 0.f;
 			axisZ.x = 0.f;
 		}
-		if((rndr->billboardFlags & RNDR_BILLBOARD_Z) == 0){
+		if((rndr->flags & RNDR_BILLBOARD_Z) == 0){
 			axisX.z = 0.f;
 			axisY.z = 0.f;
 			axisZ.z = 1.f;
@@ -132,9 +118,9 @@ void rndrGenerateTransform(renderable *rndr, mat4 *transformMatrix, gfxProgram *
 
 	/* Rotate the model */
 	// Apply the change in rotation to the current orientation
-	quatMultQByQ2(quatNewEuler(rndr->sTrans.changeRot.x*radianRatio,
-	                           rndr->sTrans.changeRot.y*radianRatio,
-	                           rndr->sTrans.changeRot.z*radianRatio),
+	quatMultQByQ2(quatNewEuler(rndr->sTrans.changeRot.x*RADIAN_RATIO,
+	                           rndr->sTrans.changeRot.y*RADIAN_RATIO,
+	                           rndr->sTrans.changeRot.z*RADIAN_RATIO),
 	              &rndr->sTrans.orientation);
 	vec3SetS(&rndr->sTrans.changeRot, 0.f);  // Reset the change in rotation
 	mat4Rotate(transformMatrix, rndr->sTrans.orientation);
@@ -147,22 +133,6 @@ void rndrGenerateTransform(renderable *rndr, mat4 *transformMatrix, gfxProgram *
 	** "pivoting" around position + scaledPivot
 	*/
 	mat4Translate(transformMatrix, -rndr->sTrans.relPivot.x, -rndr->sTrans.relPivot.y, -rndr->sTrans.relPivot.z);
-
-	/*
-	** We don't need to scale sprites, and since the vertices are multiplied by the
-	** model view matrix on the CPU and the projection matrix is passed to the GPU,
-	** we only need to generate a model view matrix here.
-	*/
-	/** This part should be removed, along with sprites **/
-	if(!rndr->sprite){
-		/* Create the MVP matrix by multiplying the model view matrix by the projection matrix */
-		/** What if a HUD element wants to use Frustum? **/
-		if(rndr->hudElement){
-			mat4MultMByM2(&gfxPrg->projectionMatrixOrtho, transformMatrix);    // Ortho for HUD elements
-		}else{
-			mat4MultMByM2(&gfxPrg->projectionMatrixFrustum, transformMatrix);  // Frustum for regular models
-		}
-	}
 
 }
 
@@ -282,4 +252,5 @@ void rndrDelete(renderable *rndr){
 	if(rndr->name != NULL){
 		free(rndr->name);
 	}
+	skliDelete(&rndr->skli);
 }

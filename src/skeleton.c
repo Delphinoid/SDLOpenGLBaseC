@@ -1,7 +1,7 @@
 #include "skeleton.h"
 #include <string.h>
 
-#define radianRatio 0.017453292  // = PI / 180, used for converting degrees to radians
+#define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians
 
 void boneInit(sklBone *bone){
 	bone->name = NULL;
@@ -15,14 +15,12 @@ void sklInit(skeleton *skl){
 	skl->root = NULL;
 	skl->boneNum = 0;
 }
-
 unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 
 	sklInit(skl);
 	return 1;
 
 }
-
 static void sklDeleteRecursive(sklNode *node){
 	if(node != NULL){
 		while(node->childNum > 0){
@@ -31,19 +29,34 @@ static void sklDeleteRecursive(sklNode *node){
 		free(node);
 	}
 }
-
 void sklDelete(skeleton *skl){
 	sklDeleteRecursive(skl->root);
+}
+
+void sklaInit(sklAnim *skla){
+	//
+}
+unsigned char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
+
+	sklaInit(skla);
+	return 1;
+
+}
+void sklaDelete(sklAnim *skla){
+	size_t i;
+	for(i = 0; i < skla->keyframes.size; i++){
+		cvClear(&((sklKeyframe *)cvGet(&skla->keyframes, i))->bones);
+	}
+	cvClear(&skla->keyframes);
+	cvClear(&skla->frameDelays);
 }
 
 static sklKeyframe *sklaiGetAnimFrame(sklAnimInstance *sklai, size_t frame){
 	return (sklKeyframe *)cvGet(&sklai->anim->keyframes, frame);
 }
-
 static sklBone *sklaiGetAnimBone(sklAnimInstance *sklai, size_t frame, size_t bone){
 	return (sklBone *)cvGet(&sklaiGetAnimFrame(sklai, frame)->bones, bone);
 }
-
 static void sklaiDeltaTransform(sklAnimInstance *sklai, size_t bone){
 
 	// If the current frame's bone has a valid state change, use it to start interpolation
@@ -92,14 +105,12 @@ static void sklaiDeltaTransform(sklAnimInstance *sklai, size_t bone){
 	}
 
 }
-
 static void sklaiGenerateState(sklAnimInstance *sklai){
 	size_t i;
 	for(i = 0; i < sklai->anim->boneNum; i++){
 		sklaiDeltaTransform(sklai, i);
 	}
 }
-
 static void sklaiAnimate(sklAnimInstance *sklai, uint32_t currentTick, float globalDelayMod){
 
 	// Make sure lastUpdate has been set
@@ -177,15 +188,25 @@ static void sklaiAnimate(sklAnimInstance *sklai, uint32_t currentTick, float glo
 	}
 
 }
-
-void skliaChangeAnim(sklAnimInstance *sklia, sklAnim *anim){
+void sklaiChangeAnim(sklAnimInstance *sklai, sklAnim *anim){
 	/** Needs a special function for changing animations in order to handle blending correctly **/
+}
+void sklaiDelete(sklAnimInstance *sklai){
+	if(sklai->animInterpStart != NULL){
+		free(sklai->animInterpStart);
+	}
+	if(sklai->animInterpEnd != NULL){
+		free(sklai->animInterpEnd);
+	}
+	if(sklai->animState != NULL){
+		free(sklai->animState);
+	}
 }
 
 void skliInit(sklInstance *skli, skeleton *skl){
 	skli->skl = skl;
+	cvInit(&skli->animations, 1);
 	if(skl != NULL){
-		cvInit(&skli->animations, skl->boneNum);
 		skli->customState = malloc(skl->boneNum*sizeof(sklBone));
 		skli->skeletonState = malloc(skl->boneNum*sizeof(mat4));
 		/** Temp? **/
@@ -198,7 +219,6 @@ void skliInit(sklInstance *skli, skeleton *skl){
 		}
 	}
 }
-
 unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *filePath){
 
 	skeleton *skel = malloc(sizeof(skeleton));
@@ -248,7 +268,7 @@ unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *fileP
 	cvInit(&tempKeyframe.bones, 2);
 	tempBoneRoot.position.y = 0.5f;
 	tempBoneTop.position.y = 0.f;
-	tempBoneTop.orientation = quatNewEuler(0.f, 90.f*radianRatio, 0.f);
+	tempBoneTop.orientation = quatNewEuler(0.f, 90.f*RADIAN_RATIO, 0.f);
 	cvPush(&tempKeyframe.bones, &tempBoneRoot, sizeof(tempBoneRoot));
 	cvPush(&tempKeyframe.bones, &tempBoneTop, sizeof(tempBoneTop));
 	cvPush(&anim->keyframes, &tempKeyframe, sizeof(tempKeyframe));
@@ -291,7 +311,6 @@ unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *fileP
 
 	return 1;
 }
-
 static void skliBoneState(sklInstance *skli, sklNode *node, size_t parent, size_t bone){
 	/*
 	** Update skeletonState for the specified bone. Uses the delta transforms
@@ -331,7 +350,6 @@ static void skliBoneState(sklInstance *skli, sklNode *node, size_t parent, size_
 	                                          -node->bone.position.y,
 	                                          -node->bone.position.z);
 }
-
 static size_t skliGenerateState(sklInstance *skli, sklNode *node, size_t parent, size_t bone){
 	/*
 	** Depth-first traversal through each bone, running skliInterpolateBone on each.
@@ -349,16 +367,20 @@ static size_t skliGenerateState(sklInstance *skli, sklNode *node, size_t parent,
 	}
 	return nextBone;
 }
-
 void skliAnimate(sklInstance *skli, uint32_t currentTick, float globalDelayMod){
 	size_t i;
 	for(i = 0; i < skli->animations.size; i++){
 		sklaiAnimate((sklAnimInstance *)cvGet(&skli->animations, i), currentTick, globalDelayMod);
 	}
-	skliGenerateState(skli, skli->skl->root, 0, 0);
+	if(skli->skl != NULL){
+		skliGenerateState(skli, skli->skl->root, 0, 0);
+	}
 }
-
 void skliDelete(sklInstance *skli){
+	size_t i;
+	for(i = 0; i < skli->animations.size; i++){
+		sklaiDelete((sklAnimInstance *)cvGet(&skli->animations, i));
+	}
 	cvClear(&skli->animations);
 	if(skli->customState != NULL){
 		free(skli->customState);

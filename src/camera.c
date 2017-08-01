@@ -2,7 +2,7 @@
 #include "mat4.h"
 #include <math.h>
 
-#define radianRatio 0.017453292  /* = PI / 180, used for converting degrees to radians */
+#define RADIAN_RATIO 0.017453292  /* = PI / 180, used for converting degrees to radians */
 
 void camInit(camera *cam){
 	vec3Set(&cam->position, 0.f, 0.f, 0.f);
@@ -12,7 +12,7 @@ void camInit(camera *cam){
 	cam->fovy = 90.f;
 	mat4Identity(&cam->viewMatrix);
 	mat4Identity(&cam->projectionMatrix);
-	cam->changed = 1;
+	cam->flags = CAM_UPDATE_VIEW | CAM_UPDATE_PROJECTION;
 }
 
 void camCalculateUp(camera *cam){  /** Probably not entirely necessary **/
@@ -57,11 +57,9 @@ void camCalculateUp(camera *cam){  /** Probably not entirely necessary **/
 	}
 
 }
+void camUpdateViewMatrix(camera *cam){
 
-unsigned char camCreateViewMatrix(camera *cam){
-
-	/* Only update the view matrix if the camera was changed during the frame */
-	if(cam->changed){
+	if((cam->flags & CAM_UPDATE_VIEW) > 0){
 
 		/* Calculate the up vector */
 		camCalculateUp(cam);
@@ -70,145 +68,160 @@ unsigned char camCreateViewMatrix(camera *cam){
 		mat4LookAt(&cam->viewMatrix, cam->position, cam->target, cam->up);
 
 		/* Rotate the camera */
-		mat4Rotate(&cam->viewMatrix, quatNewEuler(cam->rotation.x*radianRatio, cam->rotation.y*radianRatio, cam->rotation.z*radianRatio));
+		mat4Rotate(&cam->viewMatrix, quatNewEuler(cam->rotation.x*RADIAN_RATIO, cam->rotation.y*RADIAN_RATIO, cam->rotation.z*RADIAN_RATIO));
 
-		cam->changed = 0;
-		return 1;
+		cam->flags &= ~CAM_UPDATE_VIEW;
 
 	}
 
-	return 0;
+}
+void camUpdateProjectionMatrix(camera *cam, unsigned char aspectRatioX, unsigned char aspectRatioY){
+
+	if((cam->flags & CAM_UPDATE_PROJECTION) > 0){
+
+		if((cam->flags & CAM_PROJECTION_ORTHO) == 0){
+
+			// CAM_PROJECTION_TYPE is not set, the camera is using a frustum projection matrix
+			mat4Perspective(&cam->projectionMatrix, cam->fovy*RADIAN_RATIO, (float)aspectRatioX / (float)aspectRatioY, 0.001f, 1000.f);
+
+		}else{
+
+			// CAM_PROJECTION_TYPE is set, the camera is using an orthographic projection matrix
+			mat4Ortho(&cam->projectionMatrix,
+			          0.f, (float)aspectRatioX / (float)(aspectRatioX < aspectRatioY ? aspectRatioX : aspectRatioY),
+			          0.f, (float)aspectRatioY / (float)(aspectRatioX < aspectRatioY ? aspectRatioX : aspectRatioY),
+			          -1000.f, 1000.f);
+
+		}
+
+		cam->flags &= ~CAM_UPDATE_PROJECTION;
+
+	}
 
 }
 
 void camMoveX(camera *cam, float x){
 	cam->position.x += x;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
 }
-
 void camMoveY(camera *cam, float y){
 	cam->position.y += y;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
 }
-
 void camMoveZ(camera *cam, float z){
 	cam->position.z += z;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
 }
-
 void camMove(camera *cam, float x, float y, float z){
 	cam->position.x += x;
 	cam->position.y += y;
 	cam->position.z += z;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
 }
 
 void camSetX(camera *cam, float x){
 	cam->position.x = x;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
 }
-
 void camSetY(camera *cam, float y){
 	cam->position.y = y;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
 }
-
 void camSetZ(camera *cam, float z){
 	cam->position.z = z;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
 }
-
 void camSet(camera *cam, float x, float y, float z){
 	cam->position.x = x;
 	cam->position.y = y;
 	cam->position.z = z;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
 }
 
 void camRotateX(camera *cam, float x){
 	cam->rotation.x += x;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
 }
-
 void camRotateY(camera *cam, float y){
 	cam->rotation.y += y;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
 }
-
 void camRotateZ(camera *cam, float z){
 	cam->rotation.z += z;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
 }
-
 void camRotate(camera *cam, float x, float y, float z){
 	cam->rotation.x += x;
 	cam->rotation.y += y;
 	cam->rotation.z += z;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
 }
 
 void camSetRotationX(camera *cam, float x){
 	cam->rotation.x = x;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
 }
-
 void camSetRotationY(camera *cam, float y){
 	cam->rotation.y = y;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
 }
-
 void camSetRotationZ(camera *cam, float z){
 	cam->rotation.z = z;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
 }
-
 void camSetRotation(camera *cam, float x, float y, float z){
 	cam->rotation.x = x;
 	cam->rotation.y = y;
 	cam->rotation.z = z;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
 }
 
 void camMoveTargetX(camera *cam, float x){
 	cam->target.x += x;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
 }
-
 void camMoveTargetY(camera *cam, float y){
 	cam->target.y += y;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
 }
-
 void camMoveTargetZ(camera *cam, float z){
 	cam->target.z += z;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
 }
-
 void camMoveTarget(camera *cam, float x, float y, float z){
 	cam->target.x += x;
 	cam->target.y += y;
 	cam->target.z += z;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
 }
 
 void camSetTargetX(camera *cam, float x){
 	cam->target.x = x;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
 }
-
 void camSetTargetY(camera *cam, float y){
 	cam->target.y = y;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
 }
-
 void camSetTargetZ(camera *cam, float z){
 	cam->target.z = z;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
 }
-
 void camSetTarget(camera *cam, float x, float y, float z){
 	cam->target.x = x;
 	cam->target.y = y;
 	cam->target.z = z;
-	cam->changed = 1;
+	cam->flags |= CAM_UPDATE_VIEW;
+}
+
+void camSetUp(camera *cam, float x, float y, float z){
+	cam->up.x = x;
+	cam->up.y = y;
+	cam->up.z = z;
+	cam->flags |= CAM_UPDATE_VIEW;
+}
+
+void camSetFOV(camera *cam, float fov){
+	cam->fovy = fov;
+	cam->flags |= CAM_UPDATE_PROJECTION;
 }

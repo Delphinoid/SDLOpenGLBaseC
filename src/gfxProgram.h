@@ -39,11 +39,6 @@ typedef struct {
 	// Texture samplers
 	GLuint textureSamplerArrayID[MAX_TEX_SAMPLER_NUM];
 
-	// Various matrices for rendering
-	mat4 identityMatrix;
-	mat4 projectionMatrixFrustum;
-	mat4 projectionMatrixOrtho;
-
 	// Previously bound texture ID for more efficient binding
 	GLuint lastTexID;
 
