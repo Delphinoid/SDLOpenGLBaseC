@@ -251,9 +251,8 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 	size_t lineLength;
 
 	if(texInfo != NULL){
-		while(!feof(texInfo)){
+		while(fgets(lineFeed, sizeof(lineFeed), texInfo)){
 
-			fgets(lineFeed, sizeof(lineFeed), texInfo);
 			line = lineFeed;
 			currentLine++;
 			lineLength = strlen(line);

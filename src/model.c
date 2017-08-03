@@ -69,9 +69,8 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 	size_t lineLength;
 
 	if(mdlInfo != NULL){
-		while(!feof(mdlInfo)){
+		while(fgets(lineFeed, sizeof(lineFeed), mdlInfo)){
 
-			fgets(lineFeed, sizeof(lineFeed), mdlInfo);
 			line = lineFeed;
 			lineLength = strlen(line);
 
