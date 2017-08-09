@@ -21,7 +21,7 @@ void camCalculateUp(camera *cam){  /** Probably not entirely necessary **/
 	** Finds the relative up direction based off where the camera is looking
 	*/
 
-	/* Normalize the target vector */
+	/* Normalize the target vector. */
 	float magnitude = sqrt(cam->target.x * cam->target.x +
 	                       cam->target.y * cam->target.y +
 	                       cam->target.z * cam->target.z);
@@ -43,7 +43,7 @@ void camCalculateUp(camera *cam){  /** Probably not entirely necessary **/
 		rightVector.z = targetUnit.x;
 
 		/* Calculate the cross product of the normalized target vector and the */
-		/* right vector. This is the vector we need. */
+		/* right vector. This is the vector we need */
 		cam->up.x = targetUnit.y * rightVector.z;
 		cam->up.y = targetUnit.z * rightVector.x - targetUnit.x * rightVector.z;
 		cam->up.z = -targetUnit.y * rightVector.x;

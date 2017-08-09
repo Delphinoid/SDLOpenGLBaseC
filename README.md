@@ -11,11 +11,11 @@ List of features to be implemented:
 * Create a proper framerate handler / state interpolator.
 
 List of queued tweaks:
-* Organize source files into folders. Eventually.
+* Phase out cVector (only skeletons use them now).
+* A large number of functions need to be cleaned up. Look for comments starting with /**.
 * Generate a transformation matrix for sprites in rndrGenerateSprite(). Don't use matrices, they should be unnecessary.
-* A number of functions need to be cleaned up. Look for comments starting with /**.
 * I still don't like passing allTextures into twLoad().
-* Phase out cVector.
+* Organize source files into folders. Eventually.
 * Phase out SDL?
 
 Download the bin folder if you want to give it a go.

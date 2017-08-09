@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/** Maybe remove printf()s? **/
+
 void tInit(texture *tex){
 	tex->name = NULL;
 	tex->id = 0;
@@ -27,7 +29,7 @@ unsigned char tLoad(texture *tex, const char *prgPath, const char *filePath){
 	/* Load image with SDL_Image */
 	SDL_Surface *SDLimage = IMG_Load(fullPath);
 	if(SDLimage == NULL){
-		printf("Error generating SDL_Surface for texture at %s:\n%s\n", fullPath, SDL_GetError());
+		printf("Error generating SDL_Surface for texture at %s: %s\n", fullPath, SDL_GetError());
 		free(fullPath);
 		return 0;
 	}
@@ -55,7 +57,7 @@ unsigned char tLoad(texture *tex, const char *prgPath, const char *filePath){
 
 	GLenum glError = glGetError();
 	if(glError != GL_NO_ERROR){
-		printf("Error generating OpenGL texture at %s:\n%u\n", fullPath, glError);
+		printf("Error generating OpenGL texture at %s: %u\n", fullPath, glError);
 		free(fullPath);
 		return 0;
 	}

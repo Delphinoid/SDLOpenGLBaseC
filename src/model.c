@@ -4,9 +4,38 @@
 #include "cVector.h"
 #include <stdio.h>
 
-#define VERTEX_START_CAPACITY 1024
-#define INDEX_START_CAPACITY 2048
+#define VERTEX_START_CAPACITY 1
+#define INDEX_START_CAPACITY 1
 
+/** Remove printf()s **/
+
+#define freeHelpers() \
+	if(vertices != NULL){ \
+		free(vertices); \
+	} \
+	if(indices != NULL){ \
+		free(indices); \
+	} \
+	if(tempPositions != NULL){ \
+		free(tempPositions); \
+	} \
+	if(tempTexCoords != NULL){ \
+		free(tempTexCoords); \
+	} \
+	if(tempNormals != NULL){ \
+		free(tempNormals); \
+	} \
+	if(tempBoneIDs != NULL){ \
+		free(tempBoneIDs); \
+	} \
+	if(tempBoneWeights != NULL){ \
+		free(tempBoneWeights); \
+	} \
+	if(fullPath != NULL){ \
+		free(fullPath); \
+	}
+
+unsigned char pushDynamicArray(void **vector, const void *element, const size_t bytes, size_t *size, size_t *capacity);
 static void mdlGenBufferObjects(model *mdl, vertex *vertices, size_t *indices);
 
 void vertInit(vertex *v){
@@ -33,24 +62,80 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 	size_t vertexCapacity = VERTEX_START_CAPACITY;
 	vertex *vertices = malloc(vertexCapacity*sizeof(vertex));
 	if(vertices == NULL){
-		printf("Error loading model:\nMemory allocation failure.\n");
+		printf("Error loading model: Memory allocation failure.\n");
 		return 0;
 	}
 
 	size_t indexCapacity = INDEX_START_CAPACITY;
 	size_t *indices = malloc(indexCapacity*sizeof(size_t));
 	if(indices == NULL){
-		printf("Error loading model:\nMemory allocation failure.\n");
+		printf("Error loading model: Memory allocation failure.\n");
 		free(vertices);
 		return 0;
 	}
 
-	cVector tempPositions;   cvInit(&tempPositions, 5);  // Holds floats; temporarily holds vertex position data before it is pushed into vertexBuffer
-	cVector tempBoneIDs;     cvInit(&tempBoneIDs, 4);
-	cVector tempBoneWeights; cvInit(&tempBoneWeights, 4);
-	cVector tempTexCoords;   cvInit(&tempTexCoords, 2);  // Holds floats; temporarily holds vertex UV data before it is pushed into vertexBuffer
-	cVector tempNorms;       cvInit(&tempNorms, 3);      // Holds floats; temporarily holds vertex normal data before it is pushed into vertexBuffer
-	vertex tempVert;  // Holds a vertex before pushing it into the triangle array
+	// Temporarily holds vertex positions before they are pushed into vertices
+	size_t tempPositionsSize = 0;
+	size_t tempPositionsCapacity = 1*VERTEX_START_CAPACITY;
+	float *tempPositions = malloc(tempPositionsCapacity*sizeof(float));
+	if(tempPositions == NULL){
+		printf("Error loading model: Memory allocation failure.\n");
+		free(vertices);
+		free(indices);
+		return 0;
+	}
+	// Temporarily holds vertex UVs they are pushed into vertices
+	size_t tempTexCoordsSize = 0;
+	size_t tempTexCoordsCapacity = 1*VERTEX_START_CAPACITY;
+	float *tempTexCoords = malloc(tempTexCoordsCapacity*sizeof(float));
+	if(tempTexCoords == NULL){
+		printf("Error loading model: Memory allocation failure.\n");
+		free(vertices);
+		free(indices);
+		free(tempPositions);
+		return 0;
+	}
+	// Temporarily holds vertex normals before they are pushed into vertices
+	size_t tempNormalsSize = 0;
+	size_t tempNormalsCapacity = 1*VERTEX_START_CAPACITY;
+	float *tempNormals = malloc(tempNormalsCapacity*sizeof(float));
+	if(tempNormals == NULL){
+		printf("Error loading model: Memory allocation failure.\n");
+		free(vertices);
+		free(indices);
+		free(tempPositions);
+		free(tempTexCoords);
+		return 0;
+	}
+	// Temporarily holds bone IDs before they are pushed into vertices
+	size_t tempBoneIDsSize = 0;
+	size_t tempBoneIDsCapacity = 1*VERTEX_START_CAPACITY;
+	int   *tempBoneIDs = malloc(tempBoneIDsCapacity*sizeof(int));
+	if(tempBoneIDs == NULL){
+		printf("Error loading model: Memory allocation failure.\n");
+		free(vertices);
+		free(indices);
+		free(tempPositions);
+		free(tempTexCoords);
+		free(tempNormals);
+		return 0;
+	}
+	// Temporarily holds bone weights before they are pushed into vertices
+	size_t tempBoneWeightsSize = 0;
+	size_t tempBoneWeightsCapacity = 1*VERTEX_START_CAPACITY;
+	float *tempBoneWeights = malloc(tempBoneWeightsCapacity*sizeof(float));
+	if(tempBoneWeights == NULL){
+		printf("Error loading model: Memory allocation failure.\n");
+		free(vertices);
+		free(indices);
+		free(tempPositions);
+		free(tempTexCoords);
+		free(tempNormals);
+		free(tempBoneIDs);
+		return 0;
+	}
+
+	vertex tempVert;          // Holds a vertex before pushing it into the triangle array
 	size_t positionIndex[3];  // Holds all the positional information for a face
 	size_t uvIndex[3];        // Holds all the UV information for a face
 	size_t normalIndex[3];    // Holds all the normal information for a face
@@ -117,40 +202,40 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 			}else if(lineLength >= 7 && strncpy(compare, line, 2) && (compare[2] = '\0') == 0 && strcmp(compare, "v ") == 0){
 				char *token = strtok(line+2, " ");
 				float curVal = strtof(token, NULL);
-				cvPush(&tempPositions, (void *)&curVal, sizeof(curVal));
+				pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity);
 				token = strtok(NULL, " ");
 				curVal = strtof(token, NULL);
-				cvPush(&tempPositions, (void *)&curVal, sizeof(curVal));
+				pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity);
 				token = strtok(NULL, " ");
 				curVal = strtof(token, NULL);
-				cvPush(&tempPositions, (void *)&curVal, sizeof(curVal));
+				pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity);
 				/****/
 				token = strtok(NULL, " ");
 				if(token != NULL){
 					int curBoneID = strtoul(token, NULL, 0);
-					cvPush(&tempBoneIDs, (void *)&curBoneID, sizeof(curBoneID));
+					pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity);
 					token = strtok(NULL, " ");
 					curBoneID = strtoul(token, NULL, 0);
-					cvPush(&tempBoneIDs, (void *)&curBoneID, sizeof(curBoneID));
+					pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity);
 					token = strtok(NULL, " ");
 					curBoneID = strtoul(token, NULL, 0);
-					cvPush(&tempBoneIDs, (void *)&curBoneID, sizeof(curBoneID));
+					pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity);
 					token = strtok(NULL, " ");
 					curBoneID = strtoul(token, NULL, 0);
-					cvPush(&tempBoneIDs, (void *)&curBoneID, sizeof(curBoneID));
+					pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity);
 					token = strtok(NULL, " ");
 					if(token != NULL){
 						curVal = strtof(token, NULL);
-						cvPush(&tempBoneWeights, (void *)&curVal, sizeof(curVal));
+						pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity);
 						token = strtok(NULL, " ");
 						curVal = strtof(token, NULL);
-						cvPush(&tempBoneWeights, (void *)&curVal, sizeof(curVal));
+						pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity);
 						token = strtok(NULL, " ");
 						curVal = strtof(token, NULL);
-						cvPush(&tempBoneWeights, (void *)&curVal, sizeof(curVal));
+						pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity);
 						token = strtok(NULL, " ");
 						curVal = strtof(token, NULL);
-						cvPush(&tempBoneWeights, (void *)&curVal, sizeof(curVal));
+						pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity);
 					}
 				}
 
@@ -158,22 +243,22 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 			}else if(lineLength >= 6 && strncpy(compare, line, 3) && (compare[3] = '\0') == 0 && strcmp(compare, "vt ") == 0){
 				char *token = strtok(line+3, " ");
 				float curVal = strtof(token, NULL);
-				cvPush(&tempTexCoords, (void *)&curVal, sizeof(curVal));
+				pushDynamicArray((void **)&tempTexCoords, &curVal, sizeof(curVal), &tempTexCoordsSize, &tempTexCoordsCapacity);
 				token = strtok(NULL, " ");
 				curVal = strtof(token, NULL);
-				cvPush(&tempTexCoords, (void *)&curVal, sizeof(curVal));
+				pushDynamicArray((void **)&tempTexCoords, &curVal, sizeof(curVal), &tempTexCoordsSize, &tempTexCoordsCapacity);
 
 			// Normal data
 			}else if(lineLength >= 8 && strncpy(compare, line, 3) && (compare[3] = '\0') == 0 && strcmp(compare, "vn ") == 0){
 				char *token = strtok(line+3, " ");
 				float curVal = strtof(token, NULL);
-				cvPush(&tempNorms, (void *)&curVal, sizeof(curVal));
+				pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity);
 				token = strtok(NULL, " ");
 				curVal = strtof(token, NULL);
-				cvPush(&tempNorms, (void *)&curVal, sizeof(curVal));
+				pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity);
 				token = strtok(NULL, " ");
 				curVal = strtof(token, NULL);
-				cvPush(&tempNorms, (void *)&curVal, sizeof(curVal));
+				pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity);
 
 			// Face data
 			}else if(lineLength >= 19 && strncpy(compare, line, 2) && (compare[2] = '\0') == 0 && strcmp(compare, "f ") == 0){
@@ -193,104 +278,60 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 
 					// Create a vertex from the given data
 					// Vertex positional data
-					void *checkVal = cvGet(&tempPositions, (positionIndex[i]-1)*3);
-					if(checkVal != NULL){
-						tempVert.pos.x = *((float *)checkVal);
+					size_t pos = (positionIndex[i]-1)*3;
+					if(pos+2 < tempPositionsSize){
+						tempVert.pos.x = tempPositions[pos];
+						tempVert.pos.y = tempPositions[pos+1];
+						tempVert.pos.z = tempPositions[pos+2];
 					}else{
 						tempVert.pos.x = 0.f;
-					}
-					checkVal = cvGet(&tempPositions, (positionIndex[i]-1)*3+1);
-					if(checkVal != NULL){
-						tempVert.pos.y = *((float *)checkVal);
-					}else{
 						tempVert.pos.y = 0.f;
-					}
-					checkVal = cvGet(&tempPositions, (positionIndex[i]-1)*3+2);
-					if(checkVal != NULL){
-						tempVert.pos.z = *((float *)checkVal);
-					}else{
 						tempVert.pos.z = 0.f;
 					}
 					// Vertex UV data
-					checkVal = cvGet(&tempTexCoords, (uvIndex[i]-1)*2);
-					if(checkVal != NULL){
-						tempVert.u = *((float *)checkVal);
+					pos = (uvIndex[i]-1)*2;
+					if(pos+1 < tempTexCoordsSize){
+						tempVert.u = tempTexCoords[pos];
+						tempVert.v = -tempTexCoords[pos+1];
 					}else{
 						tempVert.u = 0.f;
-					}
-					checkVal = cvGet(&tempTexCoords, (uvIndex[i]-1)*2+1);
-					if(checkVal != NULL){
-						tempVert.v = -*((float *)checkVal);
-					}else{
 						tempVert.v = 0.f;
 					}
 					// Vertex normal data
-					checkVal = cvGet(&tempNorms, (normalIndex[i]-1)*3);
-					if(checkVal != NULL){
-						tempVert.nx = *((float *)checkVal);
+					pos = (normalIndex[i]-1)*3;
+					if(pos+2 < tempNormalsSize){
+						tempVert.nx = tempNormals[pos];
+						tempVert.ny = tempNormals[pos+1];
+						tempVert.nz = tempNormals[pos+2];
 					}else{
 						tempVert.nx = 0.f;
-					}
-					checkVal = cvGet(&tempNorms, (normalIndex[i]-1)*3+1);
-					if(checkVal != NULL){
-						tempVert.ny = *((float *)checkVal);
-					}else{
 						tempVert.ny = 0.f;
-					}
-					checkVal = cvGet(&tempNorms, (normalIndex[i]-1)*3+2);
-					if(checkVal != NULL){
-						tempVert.nz = *((float *)checkVal);
-					}else{
 						tempVert.nz = 0.f;
 					}
 					/****/
-					checkVal = cvGet(&tempBoneIDs, (positionIndex[i]-1)*4);
-					if(checkVal != NULL){
-						tempVert.bIDs[0] = *((int *)checkVal);
+					pos = (positionIndex[i]-1)*4;
+					if(pos+3 < tempBoneIDsSize){
+						tempVert.bIDs[0] = tempBoneIDs[pos];
+						tempVert.bIDs[1] = tempBoneIDs[pos+1];
+						tempVert.bIDs[2] = tempBoneIDs[pos+2];
+						tempVert.bIDs[3] = tempBoneIDs[pos+3];
 					}else{
 						tempVert.bIDs[0] = -1;
-					}
-					checkVal = cvGet(&tempBoneIDs, (positionIndex[i]-1)*4+1);
-					if(checkVal != NULL){
-						tempVert.bIDs[1] = *((int *)checkVal);
-					}else{
 						tempVert.bIDs[1] = -1;
-					}
-					checkVal = cvGet(&tempBoneIDs, (positionIndex[i]-1)*4+2);
-					if(checkVal != NULL){
-						tempVert.bIDs[2] = *((int *)checkVal);
-					}else{
 						tempVert.bIDs[2] = -1;
-					}
-					checkVal = cvGet(&tempBoneIDs, (positionIndex[i]-1)*4+2);
-					if(checkVal != NULL){
-						tempVert.bIDs[3] = *((int *)checkVal);
-					}else{
 						tempVert.bIDs[3] = -1;
 					}
 					/****/
-					checkVal = cvGet(&tempBoneWeights, (positionIndex[i]-1)*4);
-					if(checkVal != NULL){
-						tempVert.bWeights[0] = *((float *)checkVal);
+					pos = (positionIndex[i]-1)*4;
+					if(pos+3 < tempBoneWeightsSize){
+						tempVert.bWeights[0] = tempBoneWeights[pos];
+						tempVert.bWeights[1] = tempBoneWeights[pos+1];
+						tempVert.bWeights[2] = tempBoneWeights[pos+2];
+						tempVert.bWeights[3] = tempBoneWeights[pos+3];
 					}else{
 						tempVert.bWeights[0] = 0.f;
-					}
-					checkVal = cvGet(&tempBoneWeights, (positionIndex[i]-1)*4+1);
-					if(checkVal != NULL){
-						tempVert.bWeights[1] = *((float *)checkVal);
-					}else{
 						tempVert.bWeights[1] = 0.f;
-					}
-					checkVal = cvGet(&tempBoneWeights, (positionIndex[i]-1)*4+2);
-					if(checkVal != NULL){
-						tempVert.bWeights[2] = *((float *)checkVal);
-					}else{
 						tempVert.bWeights[2] = 0.f;
-					}
-					checkVal = cvGet(&tempBoneWeights, (positionIndex[i]-1)*4+2);
-					if(checkVal != NULL){
-						tempVert.bWeights[3] = *((float *)checkVal);
-					}else{
 						tempVert.bWeights[3] = 0.f;
 					}
 
@@ -302,69 +343,24 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 						/** CHECK BONE DATA HERE **/
 						if(checkVert->pos.x == tempVert.pos.x && checkVert->pos.y == tempVert.pos.y && checkVert->pos.z == tempVert.pos.z &&
 						   checkVert->u     == tempVert.u     && checkVert->v     == tempVert.v     &&
-						   checkVert->nx    == tempVert.nx    && checkVert->ny    == tempVert.ny    && checkVert->nz    == tempVert.nz){
+						   checkVert->nx    == tempVert.nx    && checkVert->ny    == tempVert.ny    && checkVert->nz    == tempVert.nz    &&
+						   checkVert->bIDs[0]     == tempVert.bIDs[0]     && checkVert->bIDs[1]     == tempVert.bIDs[1]     &&
+						   checkVert->bIDs[2]     == tempVert.bIDs[2]     && checkVert->bIDs[3]     == tempVert.bIDs[3]     &&
+						   checkVert->bWeights[0] == tempVert.bWeights[0] && checkVert->bWeights[1] == tempVert.bWeights[1] &&
+						   checkVert->bWeights[2] == tempVert.bWeights[2] && checkVert->bWeights[3] == tempVert.bWeights[3]){
 
 							// Resize indices if there's not enough room
-							if(mdl->indexNum == indexCapacity){
-								indexCapacity *= 2;
-								size_t *tempBuffer = realloc(indices, indexCapacity*sizeof(size_t));
-								if(tempBuffer != NULL){
-									indices = tempBuffer;
-								}else{
-									printf("Error loading model:\nMemory allocation failure.\n");
-									cvClear(&tempPositions);
-									cvClear(&tempTexCoords);
-									cvClear(&tempNorms);
-									free(fullPath);
-									free(indices);
-									free(vertices);
-									return 0;
-								}
-							}
-							indices[mdl->indexNum++] = j;
-							j = mdl->vertexNum;
+							pushDynamicArray((void **)&indices, &j, sizeof(j), &mdl->indexNum, &indexCapacity);
 							foundVertex = 1;
+							break;
 						}
 					}
 
 					// If the vertex has not yet been loaded, add it to both the vertex vector and the index vector
 					if(!foundVertex){
 						// Resize indices if there's not enough room
-						if(mdl->indexNum == indexCapacity){
-							indexCapacity *= 2;
-							size_t *tempBuffer = realloc(indices, indexCapacity*sizeof(size_t));
-							if(tempBuffer != NULL){
-								indices = tempBuffer;
-							}else{
-								printf("Error loading model:\nMemory allocation failure.\n");
-								cvClear(&tempPositions);
-								cvClear(&tempTexCoords);
-								cvClear(&tempNorms);
-								free(fullPath);
-								free(indices);
-								free(vertices);
-								return 0;
-							}
-						}
-						// Resize vertices if there's not enough room
-						if(mdl->vertexNum == vertexCapacity){
-							vertexCapacity *= 2;
-							vertex *tempBuffer = realloc(vertices, vertexCapacity*sizeof(vertex));
-							if(tempBuffer != NULL){
-								vertices = tempBuffer;
-							}else{
-								printf("Error loading model:\nMemory allocation failure.\n");
-								cvClear(&tempPositions);
-								cvClear(&tempTexCoords);
-								cvClear(&tempNorms);
-								free(fullPath);
-								free(indices);
-								free(vertices);
-								return 0;
-							}
-						}
-						indices[mdl->indexNum++] = mdl->vertexNum;
-						vertices[mdl->vertexNum++] = tempVert;
+						pushDynamicArray((void **)&indices, &mdl->vertexNum, sizeof(mdl->vertexNum), &mdl->indexNum, &indexCapacity);
+						pushDynamicArray((void **)&vertices, &tempVert, sizeof(tempVert), &mdl->vertexNum, &vertexCapacity);
 					}
 
 				}
@@ -376,22 +372,10 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 		fclose(mdlInfo);
 
 	}else{
-		printf("Error loading model:\nCouldn't open %s\n", fullPath);
-		cvClear(&tempPositions);
-		cvClear(&tempTexCoords);
-		cvClear(&tempNorms);
-		free(fullPath);
-		free(indices);
-		free(vertices);
+		printf("Error loading model: Couldn't open %s\n", fullPath);
+		freeHelpers();
 		return 0;
 	}
-
-	cvClear(&tempPositions);
-	cvClear(&tempBoneIDs);
-	cvClear(&tempBoneWeights);
-	cvClear(&tempTexCoords);
-	cvClear(&tempNorms);
-	free(fullPath);
 
 	// If no name was given, generate one based off the file name
 	if(mdl->name == NULL || strlen(mdl->name) == 0){
@@ -401,8 +385,7 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 	}
 	/** Should mdlGenBufferObjects() be here? **/
 	mdlGenBufferObjects(mdl, vertices, indices);
-	free(indices);
-	free(vertices);
+	freeHelpers();
 	return 1;
 
 }
@@ -440,7 +423,7 @@ unsigned char mdlCreateSprite(model *mdl, char *name){
 	glBindBuffer(GL_ARRAY_BUFFER, mdl->vboID);
 	glError = glGetError();
 	if(glError != GL_NO_ERROR){
-		printf("Error creating vertex buffer:\n%u\n", glError);
+		printf("Error creating vertex buffer: %u\n", glError);
 		return 0;
 	}
 
@@ -450,7 +433,7 @@ unsigned char mdlCreateSprite(model *mdl, char *name){
 	glBindBuffer(GL_ARRAY_BUFFER, mdl->iboID);
 	glError = glGetError();
 	if(glError != GL_NO_ERROR){
-		printf("Error creating index buffer:\n%u\n", glError);
+		printf("Error creating index buffer: %u\n", glError);
 		return 0;
 	}*/
 
@@ -460,7 +443,7 @@ unsigned char mdlCreateSprite(model *mdl, char *name){
 	// Check for errors
 	glError = glGetError();
 	if(glError != GL_NO_ERROR){
-		printf("Error creating vertex array buffer:\n%u\n", glError);
+		printf("Error creating vertex array buffer: %u\n", glError);
 	}
 
 	mdl->vertexNum = 4;
@@ -491,7 +474,7 @@ static void mdlGenBufferObjects(model *mdl, vertex *vertices, size_t *indices){
 		// Check for errors
 		glError = glGetError();
 		if(glError != GL_NO_ERROR){
-			printf("Error creating vertex buffer:\n%u\n", glError);
+			printf("Error creating vertex buffer: %u\n", glError);
 			mdl->vertexNum = 0;
 		}
 
@@ -503,7 +486,7 @@ static void mdlGenBufferObjects(model *mdl, vertex *vertices, size_t *indices){
 			// Check for errors
 			glError = glGetError();
 			if(glError != GL_NO_ERROR){
-				printf("Error creating index buffer:\n%u\n", glError);
+				printf("Error creating index buffer: %u\n", glError);
 				mdl->indexNum = 0;
 			}
 		}
@@ -514,7 +497,7 @@ static void mdlGenBufferObjects(model *mdl, vertex *vertices, size_t *indices){
 		// Check for errors
 		glError = glGetError();
 		if(glError != GL_NO_ERROR){
-			printf("Error creating vertex array buffer:\n%u\n", glError);
+			printf("Error creating vertex array buffer: %u\n", glError);
 		}
 
 	}

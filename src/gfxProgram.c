@@ -104,7 +104,7 @@ static unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath){
 	size_t vsExtraLen = strlen(vertexShaderExtra);
 	char *vertexShaderPath = malloc((pathLen+vsExtraLen+1)*sizeof(char));
 	if(vertexShaderPath == NULL){
-		printf("Error loading vertex shader:\nMemory allocation failure.\n");
+		printf("Error loading vertex shader: Memory allocation failure.\n");
 		return 0;
 	}
 	memcpy(vertexShaderPath, prgPath, pathLen);
@@ -119,7 +119,7 @@ static unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath){
 	rewind(vertexShaderFile);
 	char *vertexShaderCode = malloc((size+1)*sizeof(char));
 	if(vertexShaderCode == NULL){
-		printf("Error loading vertex shader:\nMemory allocation failure.\n");
+		printf("Error loading vertex shader: Memory allocation failure.\n");
 		return 0;
 	}
 	fread(vertexShaderCode, sizeof(char), size, vertexShaderFile);
@@ -151,7 +151,7 @@ static unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath){
 	size_t fsExtraLen = strlen(fragmentShaderExtra);
 	char *fragmentShaderPath = malloc((pathLen+fsExtraLen+1)*sizeof(char));
 	if(fragmentShaderPath == NULL){
-		printf("Error loading vertex shader:\nMemory allocation failure.\n");
+		printf("Error loading vertex shader: Memory allocation failure.\n");
 		return 0;
 	}
 	memcpy(fragmentShaderPath, prgPath, pathLen);
@@ -166,7 +166,7 @@ static unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath){
 	rewind(fragmentShaderFile);
 	char *fragmentShaderCode = malloc((size+1)*sizeof(char));
 	if(fragmentShaderCode == NULL){
-		printf("Error loading vertex shader:\nMemory allocation failure.\n");
+		printf("Error loading vertex shader: Memory allocation failure.\n");
 		return 0;
 	}
 	fread(fragmentShaderCode, sizeof(char), size, fragmentShaderFile);
@@ -250,7 +250,7 @@ static unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath){
 
 	GLenum glError = glGetError();
 	if(glError != GL_NO_ERROR){
-		printf("Error loading shaders:\n%u\n", glError);
+		printf("Error loading shaders: %u\n", glError);
 		free(vertexShaderPath);   free(vertexShaderCode);
  		free(fragmentShaderPath); free(fragmentShaderCode);
 		return 0;
@@ -288,7 +288,7 @@ static unsigned char gfxCreateBuffers(gfxProgram *gfxPrg){
 
 	GLenum glError = glGetError();
 	if(glError != GL_NO_ERROR){
-		printf("Error creating buffers:\n%u\n", glError);
+		printf("Error creating buffers: %u\n", glError);
 		return 0;
 	}
 	return 1;
