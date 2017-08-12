@@ -473,7 +473,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 						}else if(i == 1){
 							macroDirection = token[0];
 						}else{
-							dimensions[i-2] = strtof(token, NULL);
+							dimensions[i-2] = strtod(token, NULL);
 						}
 						token = strtok(NULL, "/");
 					}
@@ -521,7 +521,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 					char *token = strtok(line+9, "/");
 					for(i = 0; i < 4; i++){
 						if(token != NULL){
-							dimensions[i] = strtof(token, NULL);
+							dimensions[i] = strtod(token, NULL);
 							token = strtok(NULL, "/");
 						}else{
 							i = 4;
@@ -589,7 +589,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 							}else if(i < 4){
 								subframes[i-2] = strtoul(token, NULL, 0);
 							}else{
-								frameDelay = strtof(token, NULL);
+								frameDelay = strtod(token, NULL);
 							}
 							token = strtok(NULL, "/");
 						}else{
@@ -638,7 +638,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 							}else if(i == 1){
 								subframeID = strtoul(token, NULL, 0);
 							}else{
-								frameDelay = strtof(token, NULL);
+								frameDelay = strtod(token, NULL);
 							}
 							token = strtok(NULL, "/");
 						}else{

@@ -201,13 +201,13 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 			// Vertex data
 			}else if(lineLength >= 7 && strncpy(compare, line, 2) && (compare[2] = '\0') == 0 && strcmp(compare, "v ") == 0){
 				char *token = strtok(line+2, " ");
-				float curVal = strtof(token, NULL);
+				float curVal = strtod(token, NULL);
 				pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity);
 				token = strtok(NULL, " ");
-				curVal = strtof(token, NULL);
+				curVal = strtod(token, NULL);
 				pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity);
 				token = strtok(NULL, " ");
-				curVal = strtof(token, NULL);
+				curVal = strtod(token, NULL);
 				pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity);
 				/****/
 				token = strtok(NULL, " ");
@@ -225,16 +225,16 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 					pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity);
 					token = strtok(NULL, " ");
 					if(token != NULL){
-						curVal = strtof(token, NULL);
+						curVal = strtod(token, NULL);
 						pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity);
 						token = strtok(NULL, " ");
-						curVal = strtof(token, NULL);
+						curVal = strtod(token, NULL);
 						pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity);
 						token = strtok(NULL, " ");
-						curVal = strtof(token, NULL);
+						curVal = strtod(token, NULL);
 						pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity);
 						token = strtok(NULL, " ");
-						curVal = strtof(token, NULL);
+						curVal = strtod(token, NULL);
 						pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity);
 					}
 				}
@@ -242,22 +242,22 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 			// UV data
 			}else if(lineLength >= 6 && strncpy(compare, line, 3) && (compare[3] = '\0') == 0 && strcmp(compare, "vt ") == 0){
 				char *token = strtok(line+3, " ");
-				float curVal = strtof(token, NULL);
+				float curVal = strtod(token, NULL);
 				pushDynamicArray((void **)&tempTexCoords, &curVal, sizeof(curVal), &tempTexCoordsSize, &tempTexCoordsCapacity);
 				token = strtok(NULL, " ");
-				curVal = strtof(token, NULL);
+				curVal = strtod(token, NULL);
 				pushDynamicArray((void **)&tempTexCoords, &curVal, sizeof(curVal), &tempTexCoordsSize, &tempTexCoordsCapacity);
 
 			// Normal data
 			}else if(lineLength >= 8 && strncpy(compare, line, 3) && (compare[3] = '\0') == 0 && strcmp(compare, "vn ") == 0){
 				char *token = strtok(line+3, " ");
-				float curVal = strtof(token, NULL);
+				float curVal = strtod(token, NULL);
 				pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity);
 				token = strtok(NULL, " ");
-				curVal = strtof(token, NULL);
+				curVal = strtod(token, NULL);
 				pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity);
 				token = strtok(NULL, " ");
-				curVal = strtof(token, NULL);
+				curVal = strtod(token, NULL);
 				pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity);
 
 			// Face data
