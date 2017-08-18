@@ -21,6 +21,18 @@ unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 	return 1;
 
 }
+static sklNode *sklFindBone(sklNode *node, const char *name){
+	sklNode *r = NULL;
+	if(node != NULL && strcmp(node->bone.name, name) != 0){
+		size_t i;
+		for(i = 0; r == NULL && i < node->childNum; i++){
+			r = sklFindBone(&node->children[i], name);
+		}
+	}else{
+		r = node;
+	}
+	return r;
+}
 static void sklDeleteRecursive(sklNode *node){
 	if(node != NULL){
 		while(node->childNum > 0){
@@ -208,14 +220,14 @@ void skliInit(sklInstance *skli, skeleton *skl){
 	cvInit(&skli->animations, 1);
 	if(skl != NULL){
 		skli->customState = malloc(skl->boneNum*sizeof(sklBone));
-		skli->skeletonState = malloc(skl->boneNum*sizeof(mat4));
+		/**skli->skeletonState = malloc(skl->boneNum*sizeof(mat4));**/
 		/** Temp? **/
 		sklBone tempBone; boneInit(&tempBone);
 		mat4 identityMatrix; mat4Identity(&identityMatrix);
 		size_t i;
 		for(i = 0; i < skl->boneNum; i++){
 			skli->customState[i] = tempBone;
-			skli->skeletonState[i] = identityMatrix;
+			/**skli->skeletonState[i] = identityMatrix;**/
 		}
 	}
 }
@@ -224,7 +236,7 @@ unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *fileP
 	skeleton *skel = malloc(sizeof(skeleton));
 	skel->root = malloc(sizeof(sklNode));
 	skel->root->bone.name = malloc(5*sizeof(char));
-	skel->root->bone.name = "root\0";
+	memcpy(skel->root->bone.name, "root\0", 5);
 	skel->root->bone.position = vec3New(0.5f, -1.f, 0.5f);
 	skel->root->bone.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
 	skel->root->bone.scale = vec3New(1.f, 1.f, 1.f);
@@ -234,7 +246,7 @@ unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *fileP
 	skel->root->children[0].parent = skel->root;
 	skel->root->children[0].childNum = 0;
 	skel->root->children[0].bone.name = malloc(4*sizeof(char));
-	skel->root->children[0].bone.name = "top\0";
+	memcpy(skel->root->children[0].bone.name, "top\0", 4);
 	skel->root->children[0].bone.position = vec3New(0.f, 2.f, 0.f);
 	skel->root->children[0].bone.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
 	skel->root->children[0].bone.scale = vec3New(1.f, 1.f, 1.f);
@@ -257,9 +269,9 @@ unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *fileP
 
 	cvInit(&tempKeyframe.bones, 2);
 	tempBoneRoot.name = malloc(5*sizeof(char));
-	tempBoneRoot.name = "root\0";
+	memcpy(tempBoneRoot.name, "root\0", 5);
 	tempBoneTop.name = malloc(4*sizeof(char));
-	tempBoneTop.name = "top\0";
+	memcpy(tempBoneTop.name, "top\0", 4);
 	tempBoneTop.position.y = 0.5f;
 	cvPush(&tempKeyframe.bones, &tempBoneRoot, sizeof(tempBoneRoot));
 	cvPush(&tempKeyframe.bones, &tempBoneTop, sizeof(tempBoneTop));
@@ -311,20 +323,31 @@ unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *fileP
 
 	return 1;
 }
-static void skliBoneState(sklInstance *skli, sklNode *node, size_t parent, size_t bone){
+static void skliBoneState(sklInstance *skli, mat4 *state, sklNode *space, sklNode *node, size_t parent, size_t bone){
 	/*
-	** Update skeletonState for the specified bone. Uses the delta transforms
+	** Update the transform state of the specified bone. Uses the delta transforms
 	** in animState from each sklAnimInstance.
 	*/
 	// Apply parent transforms first if possible
 	if(bone != parent){
-		skli->skeletonState[bone] = skli->skeletonState[parent];
+		state[bone] = state[parent];
 	}else{
-		mat4Identity(&skli->skeletonState[bone]);
+		mat4Identity(&state[bone]);
 	}
-	mat4Translate(&skli->skeletonState[bone], node->bone.position.x,
-	                                          node->bone.position.y,
-	                                          node->bone.position.z);
+	/*
+	** If the bone exists in the animated skeleton,
+	** translate the vertices into its space.
+	*/
+	if(space != NULL){
+		mat4Translate(&state[bone], space->bone.position.x,
+		                            space->bone.position.y,
+		                            space->bone.position.z);
+	}else{
+		// If it doesn't exist, use the model's bone position
+		mat4Translate(&state[bone], node->bone.position.x,
+		                            node->bone.position.y,
+		                            node->bone.position.z);
+	}
 	/** Find the bone's position in each sklAnimInstance by strcmping the names **/
 	/** Later, set up a "lookup table" of sorts when animations are added to make this faster **/
 	size_t i, j;
@@ -334,47 +357,55 @@ static void skliBoneState(sklInstance *skli, sklNode *node, size_t parent, size_
 			sklBone *currentAnimState = ((sklAnimInstance *)cvGet(&skli->animations, i))->animState;
 			/** Use a lookup here instead of strcmp() **/
 			if(strcmp(node->bone.name, currentAnimState[j].name) == 0){
-				mat4Translate(&skli->skeletonState[bone], currentAnimState[j].position.x,
-				                                          currentAnimState[j].position.y,
-				                                          currentAnimState[j].position.z);
-				mat4Rotate(&skli->skeletonState[bone], currentAnimState[j].orientation);
-				mat4Scale(&skli->skeletonState[bone], currentAnimState[j].scale.x,
-				                                      currentAnimState[j].scale.y,
-				                                      currentAnimState[j].scale.z);
+				mat4Translate(&state[bone], currentAnimState[j].position.x,
+				                            currentAnimState[j].position.y,
+				                            currentAnimState[j].position.z);
+				mat4Rotate(&state[bone], currentAnimState[j].orientation);
+				mat4Scale(&state[bone], currentAnimState[j].scale.x,
+				                        currentAnimState[j].scale.y,
+				                        currentAnimState[j].scale.z);
 				break;
 			}
 		}
 
 	}
-	mat4Translate(&skli->skeletonState[bone], -node->bone.position.x,
-	                                          -node->bone.position.y,
-	                                          -node->bone.position.z);
-}
-static size_t skliGenerateState(sklInstance *skli, sklNode *node, size_t parent, size_t bone){
-	/*
-	** Depth-first traversal through each bone, running skliInterpolateBone on each.
-	** Returns the position in skli->sklState of the next bone (the number of bones modified so-far).
-	*/
-	size_t nextBone = bone;
-	if(node != NULL){
-		// Update the delta transform for the bone
-		skliBoneState(skli, node, parent, bone);
-		// Loop through each child
-		size_t i;
-		for(i = 0; i < node->childNum; i++){
-			nextBone = skliGenerateState(skli, &node->children[i], bone, nextBone+1);
-		}
-	}
-	return nextBone;
+	// Translate them back by the model's bone position
+	// This and the previous translation make more sense when diagrammed
+	mat4Translate(&state[bone], -node->bone.position.x,
+	                            -node->bone.position.y,
+	                            -node->bone.position.z);
 }
 void skliAnimate(sklInstance *skli, uint32_t currentTick, float globalDelayMod){
 	size_t i;
 	for(i = 0; i < skli->animations.size; i++){
 		sklaiAnimate((sklAnimInstance *)cvGet(&skli->animations, i), currentTick, globalDelayMod);
 	}
-	if(skli->skl != NULL){
-		skliGenerateState(skli, skli->skl->root, 0, 0);
+}
+static size_t skliGenerateStateRecursive(sklInstance *skli, mat4 *state, sklNode *space, sklNode *node, size_t parent, size_t bone){
+	/*
+	** Depth-first traversal through each bone, running skliInterpolateBone on each.
+	** Returns the position in skli->sklState of the next bone (the number of bones modified so-far).
+	**
+	** Passing in a root node of a skeleton other than skli->skl will transform it to fit skli->skl.
+	** This can be used for "attaching" models to other skeletons.
+	*/
+	size_t nextBone = bone;
+	if(node != NULL){
+		// Find a bone in skli->skl with the same name as node's bone
+		/** Could be better maybe? **/
+		space = sklFindBone(space, node->bone.name);
+		// Update the delta transform for the bone
+		skliBoneState(skli, state, space, node, parent, bone);
+		// Loop through each child
+		size_t i;
+		for(i = 0; i < node->childNum; i++){
+			nextBone = skliGenerateStateRecursive(skli, state, space, &node->children[i], bone, nextBone+1);
+		}
 	}
+	return nextBone;
+}
+void skliGenerateState(sklInstance *skli, mat4 *state, skeleton *skl){
+	skliGenerateStateRecursive(skli, state, skli->skl->root, skl->root, 0, 0);
 }
 void skliDelete(sklInstance *skli){
 	size_t i;
@@ -385,7 +416,7 @@ void skliDelete(sklInstance *skli){
 	if(skli->customState != NULL){
 		free(skli->customState);
 	}
-	if(skli->skeletonState != NULL){
+	/**if(skli->skeletonState != NULL){
 		free(skli->skeletonState);
-	}
+	}**/
 }

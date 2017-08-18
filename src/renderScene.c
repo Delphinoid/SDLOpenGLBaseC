@@ -26,13 +26,54 @@ void renderModel(renderable *rndr, camera *cam, gfxProgram *gfxPrg){
 	// Feed the texture coordinates to the shader
 	glUniform4fv(gfxPrg->textureFragmentID, 1, texFrag);
 
+	/** **/
+	skeleton *skel = malloc(sizeof(skeleton));
+	skel->root = malloc(sizeof(sklNode));
+	skel->root->bone.name = malloc(5*sizeof(char));
+	memcpy(skel->root->bone.name, "root\0", 5);
+	skel->root->bone.position = vec3New(0.5f, -1.f, 0.5f);
+	skel->root->bone.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
+	skel->root->bone.scale = vec3New(1.f, 1.f, 1.f);
+	skel->root->parent = NULL;
+	skel->root->childNum = 1;
+	skel->root->children = malloc(sizeof(sklNode));
+	skel->root->children[0].parent = skel->root;
+	skel->root->children[0].childNum = 0;
+	skel->root->children[0].bone.name = malloc(4*sizeof(char));
+	memcpy(skel->root->children[0].bone.name, "top\0", 4);
+	skel->root->children[0].bone.position = vec3New(0.f, 2.f, 0.f);
+	skel->root->children[0].bone.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
+	skel->root->children[0].bone.scale = vec3New(1.f, 1.f, 1.f);
+	skel->boneNum = 2;
+	mat4 *skeletonState = malloc(sizeof(mat4)*2);
+
 	/* Feed the skeleton state to the shader */
 	if(rndr->skli.skl != NULL){
+		// Generate a state for the model skeleton, transformed into the animated skeleton's space
+		skliGenerateState(&rndr->skli, skeletonState, skel);
 		size_t i;
 		for(i = 0; i < rndr->skli.skl->boneNum; i++){
-			glUniformMatrix4fv(gfxPrg->boneArrayID[i], 1, GL_FALSE, &rndr->skli.skeletonState[i].m[0][0]);
+			/*mat4 boneMatrixTemp;
+			memcpy(&boneMatrixTemp.m[0][0], &rndr->skli.skeletonState[i].m[0][0], sizeof(boneMatrixTemp));
+			/** Translates each skeleton bone by the inverse model's default bone positions **
+			if(i==0){
+				mat4Translate(&boneMatrixTemp, -mdlBonesTemp[0].x, -mdlBonesTemp[0].y, -mdlBonesTemp[0].z);
+			}else if(i==1){
+				mat4 boneTranslationTemp = mat4TranslationMatrix(-mdlBonesTemp[0].x, -mdlBonesTemp[0].y, -mdlBonesTemp[0].z);
+				mat4MultMByM2(&boneTranslationTemp, &boneMatrixTemp);
+				mat4Translate(&boneMatrixTemp, -mdlBonesTemp[1].x, -mdlBonesTemp[1].y, -mdlBonesTemp[1].z);
+			}*/
+			glUniformMatrix4fv(gfxPrg->boneArrayID[i], 1, GL_FALSE, &skeletonState[i].m[0][0]);
 		}
 	}
+
+	/** **/
+	free(skeletonState);
+	free(skel->root->children[0].bone.name);
+	free(skel->root->children);
+	free(skel->root->bone.name);
+	free(skel->root);
+	free(skel);
 
 	/* Feed the translucency multiplier to the shader */
 	glUniform1f(gfxPrg->alphaID, rndr->rTrans.alpha);

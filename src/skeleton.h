@@ -64,11 +64,11 @@ typedef struct {
 } sklAnimInstance;
 
 // Skeleton instance
+/** Restructure for proper element attachments **/
 typedef struct {
 	skeleton *skl;  // Should never change
 	cVector animations;    // Holds sklAnimInstances
 	sklBone *customState;  // Custom bone transformations
-	mat4 *skeletonState;
 } sklInstance;
 
 void sklInit(skeleton *skl);
@@ -87,6 +87,7 @@ void sklaiDelete(sklAnimInstance *sklai);
 void skliInit(sklInstance *skli, skeleton *skl);
 unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *filePath);
 void skliAnimate(sklInstance *skli, uint32_t currentTick, float globalDelayMod);
+void skliGenerateState(sklInstance *skli, mat4 *state, skeleton *skl);
 void skliDelete(sklInstance *skli);
 
 #endif

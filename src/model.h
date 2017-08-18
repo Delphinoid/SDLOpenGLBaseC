@@ -4,6 +4,7 @@
 #include <SDL2/SDL_opengl.h>
 #include "vec3.h"
 
+/** Models need to store a skeleton structure of their own **/
 typedef struct {
 	vec3  pos;
 	float u, v;
