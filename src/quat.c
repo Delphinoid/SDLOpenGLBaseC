@@ -208,7 +208,7 @@ void quatInvert(quat *q){
 quat quatGetUnit(quat q){
 	float magnitude = quatGetMagnitude(q);
 	if(magnitude != 0.f){
-		quat r = {.w = q.w / magnitude,
+		quat r = {.w   = q.w   / magnitude,
 		          .v.x = q.v.x / magnitude,
 		          .v.y = q.v.y / magnitude,
 		          .v.z = q.v.z / magnitude};

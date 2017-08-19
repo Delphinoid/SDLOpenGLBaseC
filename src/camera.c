@@ -82,7 +82,7 @@ void camUpdateProjectionMatrix(camera *cam, unsigned char aspectRatioX, unsigned
 		if((cam->flags & CAM_PROJECTION_ORTHO) == 0){
 
 			// CAM_PROJECTION_TYPE is not set, the camera is using a frustum projection matrix
-			mat4Perspective(&cam->projectionMatrix, cam->fovy*RADIAN_RATIO, (float)aspectRatioX / (float)aspectRatioY, 0.001f, 1000.f);
+			mat4Perspective(&cam->projectionMatrix, cam->fovy*RADIAN_RATIO, (float)aspectRatioX / (float)aspectRatioY, 0.1f/cam->fovy, 1000.f);
 
 		}else{
 

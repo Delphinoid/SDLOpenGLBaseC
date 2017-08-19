@@ -113,7 +113,7 @@ void rndrGenerateTransform(renderable *rndr, camera *cam, mat4 *transformMatrix)
 		                                {axisX.y, axisY.y, axisZ.y, 0.f},
 		                                {axisX.z, axisY.z, axisZ.z, 0.f},
 		                                {0.f,     0.f,     0.f,     1.f}}};
-		mat4MultMByM1(transformMatrix, &billboardRotation);  // Apply billboard rotation
+		mat4MultMByM2(&billboardRotation, transformMatrix);  // Apply billboard rotation
 	}
 
 	/* Rotate the model */

@@ -12,6 +12,7 @@ void mat4Identity(mat4 *m);
 mat4 mat4GetIdentity();
 
 mat4 mat4MMultM(mat4 *m1, mat4 *m2);
+void mat4MMultByM(mat4 *m1, mat4 *m2, mat4 *r);
 void mat4MultMByM1(mat4 *m1, mat4 *m2);
 void mat4MultMByM2(mat4 *m1, mat4 *m2);
 vec4 mat4VMultM(vec4 v, mat4 *m);

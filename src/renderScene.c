@@ -54,13 +54,13 @@ void renderModel(renderable *rndr, camera *cam, gfxProgram *gfxPrg){
 		size_t i;
 		for(i = 0; i < rndr->skli.skl->boneNum; i++){
 			/*mat4 boneMatrixTemp;
-			memcpy(&boneMatrixTemp.m[0][0], &rndr->skli.skeletonState[i].m[0][0], sizeof(boneMatrixTemp));
-			/** Translates each skeleton bone by the inverse model's default bone positions **
-			if(i==0){
+			memcpy(&boneMatrixTemp.m[0][0], &rndr->skli.skeletonState[i].m[0][0], sizeof(boneMatrixTemp));*/
+			/** Translates each skeleton bone by the inverse model's default bone positions **/
+			/*if(i==0){
 				mat4Translate(&boneMatrixTemp, -mdlBonesTemp[0].x, -mdlBonesTemp[0].y, -mdlBonesTemp[0].z);
 			}else if(i==1){
 				mat4 boneTranslationTemp = mat4TranslationMatrix(-mdlBonesTemp[0].x, -mdlBonesTemp[0].y, -mdlBonesTemp[0].z);
-				mat4MultMByM2(&boneTranslationTemp, &boneMatrixTemp);
+				mat4MultMByM1(&boneMatrixTemp, &boneTranslationTemp);
 				mat4Translate(&boneMatrixTemp, -mdlBonesTemp[1].x, -mdlBonesTemp[1].y, -mdlBonesTemp[1].z);
 			}*/
 			glUniformMatrix4fv(gfxPrg->boneArrayID[i], 1, GL_FALSE, &skeletonState[i].m[0][0]);
@@ -81,7 +81,7 @@ void renderModel(renderable *rndr, camera *cam, gfxProgram *gfxPrg){
 	/* Generate the MVP matrix and feed it to the shader */
 	mat4 mvpMatrix;
 	rndrGenerateTransform(rndr, cam, &mvpMatrix);
-	mat4MultMByM2(&cam->projectionMatrix, &mvpMatrix);
+	mat4MultMByM1(&mvpMatrix, &cam->projectionMatrix);
 	glUniformMatrix4fv(gfxPrg->mvpMatrixID, 1, GL_FALSE, &mvpMatrix.m[0][0]);
 
 	/* Render the model */
