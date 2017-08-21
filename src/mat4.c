@@ -16,7 +16,7 @@ mat4 mat4GetIdentity(){
 	return r;
 }
 
-mat4 mat4MMultM(mat4 *m1, mat4 *m2){
+mat4 mat4MMultM(const mat4 *m1, const mat4 *m2){
 
 	mat4 r;
 
@@ -53,7 +53,7 @@ mat4 mat4MMultM(mat4 *m1, mat4 *m2){
 	return r;
 
 }
-void mat4MMultByM(mat4 *m1, mat4 *m2, mat4 *r){
+void mat4MMultByM(const mat4 *m1, const mat4 *m2, mat4 *r){
 
 	r->m[0][0] = m1->m[0][0]*m2->m[0][0] + m1->m[0][1]*m2->m[1][0] + m1->m[0][2]*m2->m[2][0] + m1->m[0][3]*m2->m[3][0];
 	r->m[0][1] = m1->m[0][0]*m2->m[0][1] + m1->m[0][1]*m2->m[1][1] + m1->m[0][2]*m2->m[2][1] + m1->m[0][3]*m2->m[3][1];
@@ -76,7 +76,7 @@ void mat4MMultByM(mat4 *m1, mat4 *m2, mat4 *r){
 	r->m[3][3] = m1->m[3][0]*m2->m[0][3] + m1->m[3][1]*m2->m[1][3] + m1->m[3][2]*m2->m[2][3] + m1->m[3][3]*m2->m[3][3];
 
 }
-void mat4MultMByM1(mat4 *m1, mat4 *m2){
+void mat4MultMByM1(mat4 *m1, const mat4 *m2){
 
 	mat4 r;
 
@@ -103,7 +103,7 @@ void mat4MultMByM1(mat4 *m1, mat4 *m2){
 	*m1 = r;
 
 }
-void mat4MultMByM2(mat4 *m1, mat4 *m2){
+void mat4MultMByM2(const mat4 *m1, mat4 *m2){
 
 	mat4 r;
 
@@ -130,7 +130,7 @@ void mat4MultMByM2(mat4 *m1, mat4 *m2){
 	*m2 = r;
 
 }
-vec4 mat4VMultM(vec4 v, mat4 *m){
+vec4 mat4VMultM(vec4 v, const mat4 *m){
 	vec4 r;
 	r.x = v.x * m->m[0][0] + v.y * m->m[0][1] + v.z * m->m[0][2] + v.w * m->m[0][3];
 	r.y = v.x * m->m[1][0] + v.y * m->m[1][1] + v.z * m->m[1][2] + v.w * m->m[1][3];
@@ -138,7 +138,7 @@ vec4 mat4VMultM(vec4 v, mat4 *m){
 	r.w = v.x * m->m[3][0] + v.y * m->m[3][1] + v.z * m->m[3][2] + v.w * m->m[3][3];
 	return r;
 }
-void mat4MultVByM(vec4 *v, mat4 *m){
+void mat4MultVByM(vec4 *v, const mat4 *m){
 	vec4 r;
 	r.x = v->x * m->m[0][0] + v->y * m->m[0][1] + v->z * m->m[0][2] + v->w * m->m[0][3];
 	r.y = v->x * m->m[1][0] + v->y * m->m[1][1] + v->z * m->m[1][2] + v->w * m->m[1][3];
@@ -146,7 +146,7 @@ void mat4MultVByM(vec4 *v, mat4 *m){
 	r.w = v->x * m->m[3][0] + v->y * m->m[3][1] + v->z * m->m[3][2] + v->w * m->m[3][3];
 	v->x = r.x; v->y = r.y; v->z = r.z; v->w = r.w;
 }
-vec4 mat4MMultV(mat4 *m, vec4 v){
+vec4 mat4MMultV(const mat4 *m, vec4 v){
 	vec4 r;
 	r.x = v.x * m->m[0][0] + v.y * m->m[1][0] + v.z * m->m[2][0] + v.w * m->m[3][0];
 	r.y = v.x * m->m[0][1] + v.y * m->m[1][1] + v.z * m->m[2][1] + v.w * m->m[3][1];
@@ -154,7 +154,7 @@ vec4 mat4MMultV(mat4 *m, vec4 v){
 	r.w = v.x * m->m[0][3] + v.y * m->m[1][3] + v.z * m->m[2][3] + v.w * m->m[3][3];
 	return r;
 }
-void mat4MultMByV(mat4 *m, vec4 *v){
+void mat4MultMByV(const mat4 *m, vec4 *v){
 	vec4 r;
 	r.x = v->x * m->m[0][0] + v->y * m->m[1][0] + v->z * m->m[2][0] + v->w * m->m[3][0];
 	r.y = v->x * m->m[0][1] + v->y * m->m[1][1] + v->z * m->m[2][1] + v->w * m->m[3][1];
@@ -163,7 +163,7 @@ void mat4MultMByV(mat4 *m, vec4 *v){
 	v->x = r.x; v->y = r.y; v->z = r.z; v->w = r.w;
 }
 
-mat4 mat4GetTranspose(mat4 *m){
+mat4 mat4GetTranspose(const mat4 *m){
 	mat4 r = {.m = {{m->m[0][0], m->m[1][0], m->m[2][0], m->m[3][0]},
 	                {m->m[0][1], m->m[1][1], m->m[2][1], m->m[3][1]},
 	                {m->m[0][2], m->m[1][2], m->m[2][2], m->m[3][2]},
@@ -173,7 +173,7 @@ mat4 mat4GetTranspose(mat4 *m){
 void mat4Transpose(mat4 *m){
 	*m = mat4GetTranspose(m);
 }
-unsigned char mat4Frustum(mat4 *m, float left, float right, float bottom, float top, float zNear, float zFar){
+unsigned char mat4Frustum(mat4 *m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar){
 	if(left == right || bottom == top || zNear == zFar){
 		return 0;
 	}
@@ -183,7 +183,7 @@ unsigned char mat4Frustum(mat4 *m, float left, float right, float bottom, float 
 	m->m[3][0] = 0.f;                       m->m[3][1] = 0.f;                       m->m[3][2] = 2.f*zFar*zNear/(zFar-zNear); m->m[3][3] = 0.f;
 	return 1;
 }
-unsigned char mat4Ortho(mat4 *m, float left, float right, float bottom, float top, float zNear, float zFar){
+unsigned char mat4Ortho(mat4 *m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar){
 	if(left == right || bottom == top || zNear == zFar){
 		return 0;
 	}
@@ -193,11 +193,11 @@ unsigned char mat4Ortho(mat4 *m, float left, float right, float bottom, float to
 	m->m[3][0] = -((right+left)/(right-left)); m->m[3][1] = -((top+bottom)/(top-bottom)); m->m[3][2] = -((zFar+zNear)/(zFar-zNear)); m->m[3][3] = 1.f;
 	return 1;
 }
-unsigned char mat4Perspective(mat4 *m, float fovy, float aspectRatio, float zNear, float zFar){
+unsigned char mat4Perspective(mat4 *m, const float fovy, const float aspectRatio, const float zNear, const float zFar){
 	if(fovy == 0.f || aspectRatio == 0.f || zNear == zFar){
 		return 0;
 	}
-	float scale = tanf(fovy * 0.5f);
+	const float scale = tanf(fovy * 0.5f);
 	// Currently right-handed for OpenGL. For left-handed, use the additive inverses of the values in the third column
 	m->m[0][0] = 1.f/(scale*aspectRatio); m->m[0][1] = 0.f;       m->m[0][2] = 0.f;                          m->m[0][3] = 0.f;
 	m->m[1][0] = 0.f;                     m->m[1][1] = 1.f/scale; m->m[1][2] = 0.f;                          m->m[1][3] = 0.f;
@@ -219,13 +219,13 @@ void mat4LookAt(mat4 *m, vec3 eye, vec3 target, vec3 up){
 	m->m[3][0] = -vec3Dot(xAxis, eye); m->m[3][1] = -vec3Dot(yAxis, eye); m->m[3][2] = vec3Dot(zAxis, eye); m->m[3][3] = 1.f;
 }
 
-void mat4Translate(mat4 *m, float x, float y, float z){
+void mat4Translate(mat4 *m, const float x, const float y, const float z){
 	m->m[3][0] = m->m[0][0] * x + m->m[1][0] * y + m->m[2][0] * z + m->m[3][0];
 	m->m[3][1] = m->m[0][1] * x + m->m[1][1] * y + m->m[2][1] * z + m->m[3][1];
 	m->m[3][2] = m->m[0][2] * x + m->m[1][2] * y + m->m[2][2] * z + m->m[3][2];
 	m->m[3][3] = m->m[0][3] * x + m->m[1][3] * y + m->m[2][3] * z + m->m[3][3];
 }
-mat4 mat4TranslationMatrix(float x, float y, float z){
+mat4 mat4TranslationMatrix(const float x, const float y, const float z){
 	mat4 r = {.m = {{1.f, 0.f, 0.f, 0.f},
 	                {0.f, 1.f, 0.f, 0.f},
 	                {0.f, 0.f, 1.f, 0.f},
@@ -240,12 +240,12 @@ mat4 mat4RotationMatrix(quat q){
 	mat4 r; mat4Quat(&r, q);
 	return r;
 }
-void mat4Scale(mat4 *m, float x, float y, float z){
+void mat4Scale(mat4 *m, const float x, const float y, const float z){
 	m->m[0][0] *= x; m->m[0][1] *= x; m->m[0][2] *= x; m->m[0][3] *= x;
 	m->m[1][0] *= y; m->m[1][1] *= y; m->m[1][2] *= y; m->m[1][3] *= y;
 	m->m[2][0] *= z; m->m[2][1] *= z; m->m[2][2] *= z; m->m[2][3] *= z;
 }
-mat4 mat4ScaleMatrix(float x, float y, float z){
+mat4 mat4ScaleMatrix(const float x, const float y, const float z){
 	mat4 r = {.m = {{  x, 0.f, 0.f, 0.f},
 	                {0.f,   y, 0.f, 0.f},
 	                {0.f, 0.f,   z, 0.f},
@@ -254,15 +254,15 @@ mat4 mat4ScaleMatrix(float x, float y, float z){
 }
 
 void mat4Quat(mat4 *m, quat q){
-	float sqx = q.v.x*q.v.x;
-	float sqy = q.v.y*q.v.y;
-	float sqz = q.v.z*q.v.z;
-	float txy = q.v.x*q.v.y;
-	float txz = q.v.x*q.v.z;
-	float txw = q.v.x*q.w;
-	float tyz = q.v.y*q.v.z;
-	float tyw = q.v.y*q.w;
-	float tzw = q.v.z*q.w;
+	const float sqx = q.v.x*q.v.x;
+	const float sqy = q.v.y*q.v.y;
+	const float sqz = q.v.z*q.v.z;
+	const float txy = q.v.x*q.v.y;
+	const float txz = q.v.x*q.v.z;
+	const float txw = q.v.x*q.w;
+	const float tyz = q.v.y*q.v.z;
+	const float tyw = q.v.y*q.w;
+	const float tzw = q.v.z*q.w;
 	m->m[0][0] = 1.f-2.f*(sqy+sqz); m->m[0][1] = 2.f*(txy-tzw);     m->m[0][2] = 2.f*(txz+tyw);     m->m[0][3] = 0.f;
 	m->m[1][0] = 2.f*(txy+tzw);     m->m[1][1] = 1.f-2.f*(sqx+sqz); m->m[1][2] = 2.f*(tyz-txw);     m->m[1][3] = 0.f;
 	m->m[2][0] = 2.f*(txz-tyw);     m->m[2][1] = 2.f*(tyz+txw);     m->m[2][2] = 1.f-2.f*(sqx+sqy); m->m[2][3] = 0.f;

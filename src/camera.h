@@ -25,40 +25,40 @@ void camInit(camera *cam);
 
 void camCalculateUp(camera *cam);
 void camUpdateViewMatrix(camera *cam);
-void camUpdateProjectionMatrix(camera *cam, unsigned char aspectRatioX, unsigned char aspectRatioY);
+void camUpdateProjectionMatrix(camera *cam, const unsigned char aspectRatioX, const unsigned char aspectRatioY);
 
-void camMoveX(camera *cam, float x);
-void camMoveY(camera *cam, float y);
-void camMoveZ(camera *cam, float z);
-void camMove(camera *cam, float x, float y, float z);
+void camMoveX(camera *cam, const float x);
+void camMoveY(camera *cam, const float y);
+void camMoveZ(camera *cam, const float z);
+void camMove(camera *cam, const float x, const float y, const float z);
 
-void camSetX(camera *cam, float x);
-void camSetY(camera *cam, float y);
-void camSetZ(camera *cam, float z);
-void camSet(camera *cam, float x, float y, float z);
+void camSetX(camera *cam, const float x);
+void camSetY(camera *cam, const float y);
+void camSetZ(camera *cam, const float z);
+void camSet(camera *cam, const float x, const float y, const float z);
 
-void camRotateX(camera *cam, float x);
-void camRotateY(camera *cam, float y);
-void camRotateZ(camera *cam, float z);
-void camRotate(camera *cam, float x, float y, float z);
+void camRotateX(camera *cam, const float x);
+void camRotateY(camera *cam, const float y);
+void camRotateZ(camera *cam, const float z);
+void camRotate(camera *cam, const float x, const float y, const float z);
 
-void camSetRotationX(camera *cam, float x);
-void camSetRotationY(camera *cam, float y);
-void camSetRotationZ(camera *cam, float z);
-void camSetRotation(camera *cam, float x, float y, float z);
+void camSetRotationX(camera *cam, const float x);
+void camSetRotationY(camera *cam, const float y);
+void camSetRotationZ(camera *cam, const float z);
+void camSetRotation(camera *cam, const float x, const float y, const float z);
 
-void camMoveTargetX(camera *cam, float x);
-void camMoveTargetY(camera *cam, float y);
-void camMoveTargetZ(camera *cam, float z);
-void camMoveTarget(camera *cam, float x, float y, float z);
+void camMoveTargetX(camera *cam, const float x);
+void camMoveTargetY(camera *cam, const float y);
+void camMoveTargetZ(camera *cam, const float z);
+void camMoveTarget(camera *cam, const float x, const float y, const float z);
 
-void camSetTargetX(camera *cam, float x);
-void camSetTargetY(camera *cam, float y);
-void camSetTargetZ(camera *cam, float z);
-void camSetTarget(camera *cam, float x, float y, float z);
+void camSetTargetX(camera *cam, const float x);
+void camSetTargetY(camera *cam, const float y);
+void camSetTargetZ(camera *cam, const float z);
+void camSetTarget(camera *cam, const float x, const float y, const float z);
 
-void camSetUp(camera *cam, float x, float y, float z);
+void camSetUp(camera *cam, const float x, const float y, const float z);
 
-void camSetFOV(camera *cam, float fov);
+void camSetFOV(camera *cam, const float fov);
 
 #endif

@@ -1,7 +1,7 @@
 #include "fps.h"
 #include <SDL2/SDL.h>
 
-void fpsStart(fps *f, float dFps, float cFps){
+void fpsStart(fps *f, const float dFps, const float cFps){
 	f->desiredFps = dFps;
 	f->capFps = cFps;
 	f->startTick = SDL_GetTicks();

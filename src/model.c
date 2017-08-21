@@ -36,7 +36,7 @@
 	}
 
 unsigned char pushDynamicArray(void **vector, const void *element, const size_t bytes, size_t *size, size_t *capacity);
-static void mdlGenBufferObjects(model *mdl, vertex *vertices, size_t *indices);
+static void mdlGenBufferObjects(model *mdl, const vertex *vertices, const size_t *indices);
 
 void vertInit(vertex *v){
 	vec3SetS(&v->pos, 0.f);
@@ -409,7 +409,7 @@ static void mdlVertexAttributes(){
 }
 
 /** Change this function later **/
-unsigned char mdlCreateSprite(model *mdl, char *name){
+unsigned char mdlCreateSprite(model *mdl, const char *name){
 
 	mdlInit(mdl);
 	GLenum glError;
@@ -448,7 +448,7 @@ unsigned char mdlCreateSprite(model *mdl, char *name){
 
 	mdl->vertexNum = 4;
 	mdl->indexNum = 6;
-	size_t nameLen = strlen(name);
+	const size_t nameLen = strlen(name);
 	mdl->name = malloc((nameLen+1)*sizeof(char));
 	memcpy(mdl->name, name, nameLen);
 	mdl->name[nameLen] = '\0';
@@ -457,7 +457,7 @@ unsigned char mdlCreateSprite(model *mdl, char *name){
 
 }
 
-static void mdlGenBufferObjects(model *mdl, vertex *vertices, size_t *indices){
+static void mdlGenBufferObjects(model *mdl, const vertex *vertices, const size_t *indices){
 
 	if(mdl->vertexNum > 0){
 

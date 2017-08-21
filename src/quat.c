@@ -2,15 +2,15 @@
 #include <math.h>
 #include <float.h>
 
-quat quatNew(float w, float x, float y, float z){
+quat quatNew(const float w, const float x, const float y, const float z){
 	quat r = {.w = w, .v.x = x, .v.y = y, .v.z = z};
 	return r;
 }
-quat quatNewS(float s){
+quat quatNewS(const float s){
 	quat r = {.w = s, .v.x = s, .v.y = s, .v.z = s};
 	return r;
 }
-quat quatNewAxisAngle(float angle, float axisX, float axisY, float axisZ){
+quat quatNewAxisAngle(const float angle, const float axisX, const float axisY, const float axisZ){
 	float t = sinf(angle/2.f);
 	quat r = {.w   = cosf(angle/2.f),
 	          .v.x = axisX * t,
@@ -18,144 +18,144 @@ quat quatNewAxisAngle(float angle, float axisX, float axisY, float axisZ){
 	          .v.z = axisZ * t};
 	return r;
 }
-quat quatNewEuler(float x, float y, float z){
-	float hx = x*0.5f;
-	float hy = y*0.5f;
-	float hz = z*0.5f;
-	float cb = cosf(hx);
-	float ch = cosf(hy);
-	float ca = cosf(hz);
-	float sb = sinf(hx);
-	float sh = sinf(hy);
-	float sa = sinf(hz);
+quat quatNewEuler(const float x, const float y, const float z){
+	const float hx = x*0.5f;
+	const float hy = y*0.5f;
+	const float hz = z*0.5f;
+	const float cb = cosf(hx);
+	const float ch = cosf(hy);
+	const float ca = cosf(hz);
+	const float sb = sinf(hx);
+	const float sh = sinf(hy);
+	const float sa = sinf(hz);
 	quat r = {.w   = cb*ch*ca+sb*sh*sa,
 	          .v.x = sb*ch*ca-cb*sh*sa,
 	          .v.y = cb*sh*ca+sb*ch*sa,
 	          .v.z = cb*ch*sa-sb*sh*ca};
 	return r;
 }
-void quatSet(quat *q, float w, float x, float y, float z){
+void quatSet(quat *q, const float w, const float x, const float y, const float z){
 	q->w = w; q->v.x = x; q->v.y = y; q->v.z = z;
 }
-void quatSetS(quat *q, float s){
+void quatSetS(quat *q, const float s){
 	q->w = s; q->v.x = s; q->v.y = s; q->v.z = s;
 }
-void quatSetAxisAngle(quat *q, float angle, float axisX, float axisY, float axisZ){
-	float t = sinf(angle/2.f);
+void quatSetAxisAngle(quat *q, const float angle, const float axisX, const float axisY, const float axisZ){
+	const float t = sinf(angle/2.f);
 	q->w = cosf(angle/2.f);
 	q->v.x = axisX * t;
 	q->v.y = axisY * t;
 	q->v.z = axisZ * t;
 }
-void quatSetEuler(quat *q, float x, float y, float z){
-	float hx = x*0.5f;
-	float hy = y*0.5f;
-	float hz = z*0.5f;
-	float cb = cosf(hx);
-	float ch = cosf(hy);
-	float ca = cosf(hz);
-	float sb = sinf(hx);
-	float sh = sinf(hy);
-	float sa = sinf(hz);
+void quatSetEuler(quat *q, const float x, const float y, const float z){
+	const float hx = x*0.5f;
+	const float hy = y*0.5f;
+	const float hz = z*0.5f;
+	const float cb = cosf(hx);
+	const float ch = cosf(hy);
+	const float ca = cosf(hz);
+	const float sb = sinf(hx);
+	const float sh = sinf(hy);
+	const float sa = sinf(hz);
 	q->w   = cb*ch*ca+sb*sh*sa;
 	q->v.x = sb*ch*ca-cb*sh*sa;
 	q->v.y = cb*sh*ca+sb*ch*sa;
 	q->v.z = cb*ch*sa-sb*sh*ca;
 }
 
-quat quatQAddQ(quat q1, quat q2){
+quat quatQAddQ(const quat q1, const quat q2){
 	quat r = {.w   = q1.w   + q2.w,
 	          .v.x = q1.v.x + q2.v.x,
 	          .v.y = q1.v.y + q2.v.y,
 	          .v.z = q1.v.z + q2.v.z};
 	return r;
 }
-quat quatQAddW(quat q, float w){
+quat quatQAddW(const quat q, const float w){
 	quat r = {.w   = q.w + w,
 	          .v.x = q.v.x,
 	          .v.y = q.v.y,
 	          .v.z = q.v.z};
 	return r;
 }
-void quatAddQToQ(quat *q1, quat q2){
+void quatAddQToQ(quat *q1, const quat q2){
 	q1->w += q2.w; q1->v.x += q2.v.x; q1->v.y += q2.v.y; q1->v.z += q2.v.z;
 }
-void quatAddWToQ(quat *q, float w){
+void quatAddWToQ(quat *q, const float w){
 	q->w += w;
 }
 
-quat quatQSubQ(quat q1, quat q2){
+quat quatQSubQ(const quat q1, const quat q2){
 	quat r = {.w   = q1.w   - q2.w,
 	          .v.x = q1.v.x - q2.v.x,
 	          .v.y = q1.v.y - q2.v.y,
 	          .v.z = q1.v.z - q2.v.z};
 	return r;
 }
-quat quatQSubW(quat q, float w){
+quat quatQSubW(const quat q, const float w){
 	quat r = {.w   = q.w - w,
 	          .v.x = q.v.x,
 	          .v.y = q.v.y,
 	          .v.z = q.v.z};
 	return r;
 }
-void quatSubQFromQ1(quat *q1, quat q2){
+void quatSubQFromQ1(quat *q1, const quat q2){
 	q1->w -= q2.w; q1->v.x -= q2.v.x; q1->v.y -= q2.v.y; q1->v.z -= q2.v.z;
 }
-void quatSubQFromQ2(quat q1, quat *q2){
+void quatSubQFromQ2(const quat q1, quat *q2){
 	q2->w = q1.w - q2->w; q2->v.x = q1.v.x - q2->v.x; q2->v.y = q1.v.y - q2->v.y; q2->v.z = q1.v.z - q2->v.z;
 }
-void quatSubWFromQ(quat *q, float w){
+void quatSubWFromQ(quat *q, const float w){
 	q->w -= w;
 }
 
-quat quatQMultQ(quat q1, quat q2){
+quat quatQMultQ(const quat q1, const quat q2){
 	float prodW = q1.w * q2.w - vec3Dot(q1.v, q2.v);
 	vec3 prodV = vec3VMultS(q2.v, q1.w);
 	vec3AddVToV(&prodV, vec3VMultS(q1.v, q2.w));
 	vec3AddVToV(&prodV, vec3Cross(q1.v, q2.v));
 	return quatNew(prodW, prodV.x, prodV.y, prodV.z);
 }
-quat quatQMultS(quat q, float s){
+quat quatQMultS(const quat q, const float s){
 	quat r = {.w   = q.w   * s,
 	          .v.x = q.v.x * s,
 	          .v.y = q.v.y * s,
 	          .v.z = q.v.z * s};
 	return r;
 }
-void quatMultQByQ1(quat *q1, quat q2){
+void quatMultQByQ1(quat *q1, const quat q2){
 	float prodW = q1->w * q2.w - vec3Dot(q1->v, q2.v);
 	vec3 prodV = vec3VMultS(q2.v, q1->w);
 	vec3AddVToV(&prodV, vec3VMultS(q1->v, q2.w));
 	vec3AddVToV(&prodV, vec3Cross(q1->v, q2.v));
 	q1->w = prodW; q1->v = prodV;
 }
-void quatMultQByQ2(quat q1, quat *q2){
+void quatMultQByQ2(const quat q1, quat *q2){
 	float prodW = q1.w * q2->w - vec3Dot(q1.v, q2->v);
 	vec3 prodV = vec3VMultS(q2->v, q1.w);
 	vec3AddVToV(&prodV, vec3VMultS(q1.v, q2->w));
 	vec3AddVToV(&prodV, vec3Cross(q1.v, q2->v));
 	q2->w = prodW; q2->v = prodV;
 }
-void quatMultQByS(quat *q, float s){
+void quatMultQByS(quat *q, const float s){
 	q->w *= s;
 	vec3MultVByS(&q->v, s);
 }
 
-quat quatQDivQ(quat q1, quat q2){
+quat quatQDivQ(const quat q1, const quat q2){
 	quat r = {.w   = q1.w   / q2.w,
 	          .v.x = q1.v.x / q2.v.x,
 	          .v.y = q1.v.y / q2.v.y,
 	          .v.z = q1.v.z / q2.v.z};
 	return r;
 }
-quat quatQDivS(quat q, float s){
+quat quatQDivS(const quat q, const float s){
 	quat r = {.w   = q.w   / s,
 	          .v.x = q.v.x / s,
 	          .v.y = q.v.y / s,
 	          .v.z = q.v.z / s};
 	return r;
 }
-void quatDivQByQ1(quat *q1, quat q2){
+void quatDivQByQ1(quat *q1, const quat q2){
 	if(q2.w != 0.f && q2.v.x != 0.f && q2.v.y != 0.f && q2.v.z != 0.f){
 		q1->w   /= q2.w;
 		q1->v.x /= q2.v.x;
@@ -163,7 +163,7 @@ void quatDivQByQ1(quat *q1, quat q2){
 		q1->v.z /= q2.v.z;
 	}
 }
-void quatDivQByQ2(quat q1, quat *q2){
+void quatDivQByQ2(const quat q1, quat *q2){
 	if(q1.w != 0.f && q1.v.x != 0.f && q1.v.y != 0.f && q1.v.z != 0.f){
 		q2->w   = q1.w   / q2->w;
 		q2->v.x = q1.v.x / q2->v.x;
@@ -171,7 +171,7 @@ void quatDivQByQ2(quat q1, quat *q2){
 		q2->v.z = q1.v.z / q2->v.z;
 	}
 }
-void quatDivQByS(quat *q, float s){
+void quatDivQByS(quat *q, const float s){
 	if(s != 0.f){
 		q->w   /= s;
 		q->v.x /= s;
@@ -180,32 +180,32 @@ void quatDivQByS(quat *q, float s){
 	}
 }
 
-float quatGetMagnitude(quat q){
+float quatGetMagnitude(const quat q){
 	return sqrtf(q.w*q.w + q.v.x*q.v.x + q.v.y*q.v.y + q.v.z*q.v.z);
 }
 
-quat quatGetConjugate(quat q){
+quat quatGetConjugate(const quat q){
 	return quatNew(q.w, -q.v.x, -q.v.y, -q.v.z);
 }
 void quatConjugate(quat *q){
 	quatSet(q, q->w, -q->v.x, -q->v.y, -q->v.z);
 }
 
-quat quatGetNegative(quat q){
+quat quatGetNegative(const quat q){
 	return quatNew(-q.w, -q.v.x, -q.v.y, -q.v.z);
 }
 void quatNegate(quat *q){
 	quatSet(q, -q->w, -q->v.x, -q->v.y, -q->v.z);
 }
 
-quat quatGetInverse(quat q){
+quat quatGetInverse(const quat q){
 	return quatQMultQ(q, quatGetConjugate(q));
 }
 void quatInvert(quat *q){
 	quatMultQByQ1(q, quatGetConjugate(*q));
 }
 
-quat quatGetUnit(quat q){
+quat quatGetUnit(const quat q){
 	float magnitude = quatGetMagnitude(q);
 	if(magnitude != 0.f){
 		quat r = {.w   = q.w   / magnitude,
@@ -231,7 +231,7 @@ void quatSetIdentity(quat *q){
 	q->w = 1.f; q->v.x = 0.f; q->v.y = 0.f; q->v.z = 0.f;
 }
 
-void quatAxisAngle(quat q, float *angle, float *axisX, float *axisY, float *axisZ){
+void quatAxisAngle(const quat q, float *angle, float *axisX, float *axisY, float *axisZ){
 	float scale = sqrtf(1.f-q.w*q.w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1
 	if(scale != 0.f){  // We don't want to risk a potential divide-by-zero error
 		*angle = 2.f*acosf(q.w);
@@ -241,19 +241,19 @@ void quatAxisAngle(quat q, float *angle, float *axisX, float *axisY, float *axis
 	}
 }
 
-float quatDot(quat q1, quat q2){
+float quatDot(const quat q1, const quat q2){
 	return q1.w   * q2.w +
 	       q1.v.x * q2.v.x +
 	       q1.v.y * q2.v.y +
 	       q1.v.z * q2.v.z;
 }
 
-vec3 quatGetRotatedVec3(quat q, vec3 v){
+vec3 quatGetRotatedVec3(const quat q, const vec3 v){
 
 	vec3 r;
 
-	float dot = vec3Dot(q.v, v);
-	vec3 cross = vec3Cross(q.v, v);
+	const float dot = vec3Dot(q.v, v);
+	const vec3 cross = vec3Cross(q.v, v);
 
 	float m = q.w*q.w-dot;
 	r.x = m*v.x;
@@ -273,10 +273,10 @@ vec3 quatGetRotatedVec3(quat q, vec3 v){
 	return r;
 
 }
-void quatRotateVec3(quat q, vec3 *v){
+void quatRotateVec3(const quat q, vec3 *v){
 
-	float dot = vec3Dot(q.v, *v);
-	vec3 cross = vec3Cross(q.v, *v);
+	const float dot = vec3Dot(q.v, *v);
+	const vec3 cross = vec3Cross(q.v, *v);
 
 	float m = q.w*q.w-dot;
 	v->x *= m;
@@ -299,7 +299,7 @@ quat quatLookingAt(vec3 eye, vec3 target, vec3 up){
 
 	quat r;
 
-	float dot = vec3Dot(eye, target);
+	const float dot = vec3Dot(eye, target);
 
 	if(fabsf(dot + 1.f) < FLT_EPSILON){
 
@@ -329,7 +329,7 @@ quat quatLookingAt(vec3 eye, vec3 target, vec3 up){
 
 void quatLookAt(quat *q, vec3 eye, vec3 target, vec3 up){
 
-	float dot = vec3Dot(eye, target);
+	const float dot = vec3Dot(eye, target);
 
 	if(fabsf(dot + 1.f) < FLT_EPSILON){
 
@@ -345,7 +345,7 @@ void quatLookAt(quat *q, vec3 eye, vec3 target, vec3 up){
 
 	}else{
 
-		float angle = acosf(dot);
+		const float angle = acosf(dot);
 		vec3 axis = vec3Cross(eye, target);
 		vec3Normalize(&axis);
 		q->w = angle;
@@ -355,12 +355,12 @@ void quatLookAt(quat *q, vec3 eye, vec3 target, vec3 up){
 
 }
 
-quat quatLerp(quat q1, quat q2, float t){
+quat quatLerp(quat q1, quat q2, const float t){
 	quatMultQByS(&q1, 1.f-t);
 	quatMultQByS(&q2, t);
 	return quatGetUnit(quatQAddQ(q1, q2));
 }
-quat quatSlerp(quat q1, quat q2, float t){
+quat quatSlerp(quat q1, quat q2, const float t){
 
 	float cosTheta = quatDot(q1, q2);
 
@@ -372,7 +372,7 @@ quat quatSlerp(quat q1, quat q2, float t){
 	}
 
 	if(cosTheta < 1.f - FLT_EPSILON){
-		float angle = acosf(cosTheta);
+		const float angle = acosf(cosTheta);
 		quatMultQByS(&q1, sinf(angle*(1.f-t)));
 		quatMultQByS(&q2, sinf(angle*t));
 		return quatQDivS(quatQAddQ(q1, q2), sinf(angle));

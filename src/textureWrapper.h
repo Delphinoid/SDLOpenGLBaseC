@@ -53,13 +53,13 @@ void twDelete(textureWrapper *tw);
 
 void twiInit(twInstance *twi, textureWrapper *tw);
 /** Use time passed instead of currentTick **/
-void twiAnimate(twInstance *twi, uint32_t currentTick, float globalDelayMod);
-GLuint twiGetTexWidth(twInstance *twi);
-GLuint twiGetTexHeight(twInstance *twi);
-GLuint twiGetTexID(twInstance *twi);
-float twiGetFrameWidth(twInstance *twi);
-float twiGetFrameHeight(twInstance *twi);
-void twiGetFrameInfo(twInstance *twi, float *x, float *y, float *w, float *h, GLuint *frameTexID);
-unsigned char twiContainsTranslucency(twInstance *twi);
+void twiAnimate(twInstance *twi, const uint32_t currentTick, const float globalDelayMod);
+GLuint twiGetTexWidth(const twInstance *twi);
+GLuint twiGetTexHeight(const twInstance *twi);
+GLuint twiGetTexID(const twInstance *twi);
+float twiGetFrameWidth(const twInstance *twi);
+float twiGetFrameHeight(const twInstance *twi);
+void twiGetFrameInfo(const twInstance *twi, float *x, float *y, float *w, float *h, GLuint *frameTexID);
+unsigned char twiContainsTranslucency(const twInstance *twi);
 
 #endif

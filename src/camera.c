@@ -75,7 +75,7 @@ void camUpdateViewMatrix(camera *cam){
 	}
 
 }
-void camUpdateProjectionMatrix(camera *cam, unsigned char aspectRatioX, unsigned char aspectRatioY){
+void camUpdateProjectionMatrix(camera *cam, const unsigned char aspectRatioX, const unsigned char aspectRatioY){
 
 	if((cam->flags & CAM_UPDATE_PROJECTION) > 0){
 
@@ -100,128 +100,128 @@ void camUpdateProjectionMatrix(camera *cam, unsigned char aspectRatioX, unsigned
 
 }
 
-void camMoveX(camera *cam, float x){
+void camMoveX(camera *cam, const float x){
 	cam->position.x += x;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
-void camMoveY(camera *cam, float y){
+void camMoveY(camera *cam, const float y){
 	cam->position.y += y;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
-void camMoveZ(camera *cam, float z){
+void camMoveZ(camera *cam, const float z){
 	cam->position.z += z;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
-void camMove(camera *cam, float x, float y, float z){
+void camMove(camera *cam, const float x, const float y, const float z){
 	cam->position.x += x;
 	cam->position.y += y;
 	cam->position.z += z;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
 
-void camSetX(camera *cam, float x){
+void camSetX(camera *cam, const float x){
 	cam->position.x = x;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
-void camSetY(camera *cam, float y){
+void camSetY(camera *cam, const float y){
 	cam->position.y = y;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
-void camSetZ(camera *cam, float z){
+void camSetZ(camera *cam, const float z){
 	cam->position.z = z;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
-void camSet(camera *cam, float x, float y, float z){
+void camSet(camera *cam, const float x, const float y, const float z){
 	cam->position.x = x;
 	cam->position.y = y;
 	cam->position.z = z;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
 
-void camRotateX(camera *cam, float x){
+void camRotateX(camera *cam, const float x){
 	cam->rotation.x += x;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
-void camRotateY(camera *cam, float y){
+void camRotateY(camera *cam, const float y){
 	cam->rotation.y += y;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
-void camRotateZ(camera *cam, float z){
+void camRotateZ(camera *cam, const float z){
 	cam->rotation.z += z;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
-void camRotate(camera *cam, float x, float y, float z){
+void camRotate(camera *cam, const float x, const float y, const float z){
 	cam->rotation.x += x;
 	cam->rotation.y += y;
 	cam->rotation.z += z;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
 
-void camSetRotationX(camera *cam, float x){
+void camSetRotationX(camera *cam, const float x){
 	cam->rotation.x = x;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
-void camSetRotationY(camera *cam, float y){
+void camSetRotationY(camera *cam, const float y){
 	cam->rotation.y = y;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
-void camSetRotationZ(camera *cam, float z){
+void camSetRotationZ(camera *cam, const float z){
 	cam->rotation.z = z;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
-void camSetRotation(camera *cam, float x, float y, float z){
+void camSetRotation(camera *cam, const float x, const float y, const float z){
 	cam->rotation.x = x;
 	cam->rotation.y = y;
 	cam->rotation.z = z;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
 
-void camMoveTargetX(camera *cam, float x){
+void camMoveTargetX(camera *cam, const float x){
 	cam->target.x += x;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
-void camMoveTargetY(camera *cam, float y){
+void camMoveTargetY(camera *cam, const float y){
 	cam->target.y += y;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
-void camMoveTargetZ(camera *cam, float z){
+void camMoveTargetZ(camera *cam, const float z){
 	cam->target.z += z;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
-void camMoveTarget(camera *cam, float x, float y, float z){
+void camMoveTarget(camera *cam, const float x, const float y, const float z){
 	cam->target.x += x;
 	cam->target.y += y;
 	cam->target.z += z;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
 
-void camSetTargetX(camera *cam, float x){
+void camSetTargetX(camera *cam, const float x){
 	cam->target.x = x;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
-void camSetTargetY(camera *cam, float y){
+void camSetTargetY(camera *cam, const float y){
 	cam->target.y = y;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
-void camSetTargetZ(camera *cam, float z){
+void camSetTargetZ(camera *cam, const float z){
 	cam->target.z = z;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
-void camSetTarget(camera *cam, float x, float y, float z){
+void camSetTarget(camera *cam, const float x, const float y, const float z){
 	cam->target.x = x;
 	cam->target.y = y;
 	cam->target.z = z;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
 
-void camSetUp(camera *cam, float x, float y, float z){
+void camSetUp(camera *cam, const float x, const float y, const float z){
 	cam->up.x = x;
 	cam->up.y = y;
 	cam->up.z = z;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
 
-void camSetFOV(camera *cam, float fov){
+void camSetFOV(camera *cam, const float fov){
 	cam->fovy = fov;
 	cam->flags |= CAM_UPDATE_PROJECTION;
 }

@@ -81,13 +81,13 @@ void sklaDelete(sklAnim *skla);
 
 void sklaiInit(sklAnimInstance *sklai);
 unsigned char sklaiLoad(sklAnimInstance *sklai, const char *prgPath, const char *filePath);
-void sklaiChangeAnim(sklAnimInstance *sklai, sklAnim *anim);
+void sklaiChangeAnim(sklAnimInstance *sklai, const sklAnim *anim);
 void sklaiDelete(sklAnimInstance *sklai);
 
 void skliInit(sklInstance *skli, skeleton *skl);
 unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *filePath);
-void skliAnimate(sklInstance *skli, uint32_t currentTick, float globalDelayMod);
-void skliGenerateState(sklInstance *skli, mat4 *state, skeleton *skl);
+void skliAnimate(sklInstance *skli, const uint32_t currentTick, const float globalDelayMod);
+void skliGenerateState(sklInstance *skli, mat4 *state, const skeleton *skl);
 void skliDelete(sklInstance *skli);
 
 #endif

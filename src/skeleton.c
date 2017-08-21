@@ -63,13 +63,13 @@ void sklaDelete(sklAnim *skla){
 	cvClear(&skla->frameDelays);
 }
 
-static sklKeyframe *sklaiGetAnimFrame(sklAnimInstance *sklai, size_t frame){
+static sklKeyframe *sklaiGetAnimFrame(const sklAnimInstance *sklai, const size_t frame){
 	return (sklKeyframe *)cvGet(&sklai->anim->keyframes, frame);
 }
-static sklBone *sklaiGetAnimBone(sklAnimInstance *sklai, size_t frame, size_t bone){
+static sklBone *sklaiGetAnimBone(const sklAnimInstance *sklai, const size_t frame, const size_t bone){
 	return (sklBone *)cvGet(&sklaiGetAnimFrame(sklai, frame)->bones, bone);
 }
-static void sklaiDeltaTransform(sklAnimInstance *sklai, size_t bone){
+static void sklaiDeltaTransform(sklAnimInstance *sklai, const size_t bone){
 
 	// If the current frame's bone has a valid state change, use it to start interpolation
 	sklBone *transform = sklaiGetAnimBone(sklai, sklai->currentFrame, bone);
@@ -123,14 +123,14 @@ static void sklaiGenerateState(sklAnimInstance *sklai){
 		sklaiDeltaTransform(sklai, i);
 	}
 }
-static void sklaiAnimate(sklAnimInstance *sklai, uint32_t currentTick, float globalDelayMod){
+static void sklaiAnimate(sklAnimInstance *sklai, const uint32_t currentTick, const float globalDelayMod){
 
 	// Make sure lastUpdate has been set
 	if(sklai->lastUpdate == 0.f){
 		sklai->lastUpdate = currentTick;
 	}
 
-	float totalDelayMod = sklai->delayMod * globalDelayMod;
+	const float totalDelayMod = sklai->delayMod * globalDelayMod;
 
 	// Only animate if the animation has more than one
 	// frame and can still be animated
@@ -200,7 +200,7 @@ static void sklaiAnimate(sklAnimInstance *sklai, uint32_t currentTick, float glo
 	}
 
 }
-void sklaiChangeAnim(sklAnimInstance *sklai, sklAnim *anim){
+void sklaiChangeAnim(sklAnimInstance *sklai, const sklAnim *anim){
 	/** Needs a special function for changing animations in order to handle blending correctly **/
 }
 void sklaiDelete(sklAnimInstance *sklai){
@@ -323,7 +323,7 @@ unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *fileP
 
 	return 1;
 }
-static void skliBoneState(sklInstance *skli, mat4 *state, sklNode *space, sklNode *node, size_t parent, size_t bone){
+static void skliBoneState(sklInstance *skli, mat4 *state, const sklNode *space, const sklNode *node, const size_t parent, const size_t bone){
 	/*
 	** Update the transform state of the specified bone. Uses the delta transforms
 	** in animState from each sklAnimInstance.
@@ -375,13 +375,13 @@ static void skliBoneState(sklInstance *skli, mat4 *state, sklNode *space, sklNod
 	                            -node->bone.position.y,
 	                            -node->bone.position.z);
 }
-void skliAnimate(sklInstance *skli, uint32_t currentTick, float globalDelayMod){
+void skliAnimate(sklInstance *skli, const uint32_t currentTick, const float globalDelayMod){
 	size_t i;
 	for(i = 0; i < skli->animations.size; i++){
 		sklaiAnimate((sklAnimInstance *)cvGet(&skli->animations, i), currentTick, globalDelayMod);
 	}
 }
-static size_t skliGenerateStateRecursive(sklInstance *skli, mat4 *state, sklNode *space, sklNode *node, size_t parent, size_t bone){
+static size_t skliGenerateStateRecursive(sklInstance *skli, mat4 *state, sklNode *space, const sklNode *node, const size_t parent, const size_t bone){
 	/*
 	** Depth-first traversal through each bone, running skliInterpolateBone on each.
 	** Returns the position in skli->sklState of the next bone (the number of bones modified so-far).
@@ -404,7 +404,7 @@ static size_t skliGenerateStateRecursive(sklInstance *skli, mat4 *state, sklNode
 	}
 	return nextBone;
 }
-void skliGenerateState(sklInstance *skli, mat4 *state, skeleton *skl){
+void skliGenerateState(sklInstance *skli, mat4 *state, const skeleton *skl){
 	skliGenerateStateRecursive(skli, state, skli->skl->root, skl->root, 0, 0);
 }
 void skliDelete(sklInstance *skli){

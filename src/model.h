@@ -25,7 +25,7 @@ typedef struct {
 void vertInit(vertex *v);
 void mdlInit(model *mdl);
 unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *filePath);
-unsigned char mdlCreateSprite(model *mdl, char *name);
+unsigned char mdlCreateSprite(model *mdl, const char *name);
 void mdlDelete(model *mdl);
 
 #endif

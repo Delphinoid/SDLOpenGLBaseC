@@ -19,8 +19,8 @@ unsigned char tLoad(texture *tex, const char *prgPath, const char *filePath){
 
 	tInit(tex);
 
-	size_t pathLen = strlen(prgPath);
-	size_t fileLen = strlen(filePath);
+	const size_t pathLen = strlen(prgPath);
+	const size_t fileLen = strlen(filePath);
 	char *fullPath = malloc((pathLen+fileLen+1)*sizeof(char));
 	memcpy(fullPath, prgPath, pathLen);
 	memcpy(fullPath+pathLen, filePath, fileLen);
@@ -65,13 +65,14 @@ unsigned char tLoad(texture *tex, const char *prgPath, const char *filePath){
 
 	/* Check if the texture contains translucent (not just transparent) pixels and then free the SDL surface */
 	if(pixelFormat == GL_RGBA){
-		uint8_t *pixelData = (uint8_t*)SDLimage->pixels;
-		uint32_t d;
-		for(d = 0; d < tex->width * tex->height; d++){
-			uint8_t alpha = pixelData[d*4+3];
+		const unsigned char *pixelData = (unsigned char *)SDLimage->pixels;
+		const size_t textureSize = tex->width * tex->height;
+		size_t i;
+		for(i = 0; i < textureSize; i++){
+			unsigned char alpha = pixelData[i*4+3];
 			if(alpha > 0 && alpha < 255){
 				tex->translucent = 1;
-				d = tex->width * tex->height;
+				i = tex->width * tex->height;
 			}
 		}
 	}

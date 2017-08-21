@@ -36,18 +36,18 @@ typedef struct {
 void rndrInit(renderable *rndr);
 unsigned char rndrLoad(renderable *rndr, const char *prgPath, const char *filePath, cVector *allModels, cVector *allTexWrappers);
 unsigned char rndrRenderMethod(renderable *rndr);  // Returns 0 if the model is fully opaque, 1 if the model contains translucency and 2 if the model is fully transparent
-void rndrGenerateTransform(renderable *rndr, camera *cam, mat4 *transformMatrix);
-void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatrix);
-void rndrOffsetSpriteTexture(vertex *vertices, float texFrag[4], float texWidth, float texHeight);
+void rndrGenerateTransform(renderable *rndr, const camera *cam, mat4 *transformMatrix);
+void rndrGenerateSprite(const renderable *rndr, vertex *vertices, const mat4 *transformMatrix);
+void rndrOffsetSpriteTexture(vertex *vertices, const float texFrag[4], const float texWidth, const float texHeight);
 void rndrDelete(renderable *rndr);
 /** Sort out the functions below, some should be associated with entities **/
 //size_t rndrBoneNum(renderable *rndr);
 //unsigned char rndrGenerateSkeletonState(renderable *rndr);
-void rndrSetRotation(renderable *rndr, float newX, float newY, float newZ);
-void rndrRotateX(renderable *rndr, float changeX);
-void rndrRotateY(renderable *rndr, float changeY);
-void rndrRotateZ(renderable *rndr, float changeZ);
-void rndrAnimateTexture(renderable *rndr, uint32_t currentTick, float globalDelayMod);
-void rndrAnimateSkeleton(renderable *rndr, uint32_t currentTick, float globalDelayMod);
+void rndrSetRotation(renderable *rndr, const float newX, const float newY, const float newZ);
+void rndrRotateX(renderable *rndr, const float changeX);
+void rndrRotateY(renderable *rndr, const float changeY);
+void rndrRotateZ(renderable *rndr, const float changeZ);
+void rndrAnimateTexture(renderable *rndr, const uint32_t currentTick, const float globalDelayMod);
+void rndrAnimateSkeleton(renderable *rndr, const uint32_t currentTick, const float globalDelayMod);
 
 #endif

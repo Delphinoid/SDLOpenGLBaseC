@@ -9,10 +9,10 @@ size_t ltostr(long n, char **s);
 
 static unsigned char gfxInitSDL(gfxProgram *gfxPrg);
 static unsigned char gfxInitOGL(gfxProgram *gfxPrg);
-static unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath);
+static unsigned char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath);
 static unsigned char gfxCreateBuffers(gfxProgram *gfxPrg);
 
-unsigned char gfxInitProgram(gfxProgram *gfxPrg, char *prgPath){
+unsigned char gfxInitProgram(gfxProgram *gfxPrg, const char *prgPath){
 
 	gfxPrg->windowWidth = DEFAULT_WIDTH;
 	gfxPrg->windowHeight = DEFAULT_HEIGHT;
@@ -96,12 +96,12 @@ static unsigned char gfxInitOGL(gfxProgram *gfxPrg){
 
 }
 
-static unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath){
+static unsigned char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 
 	/* Vertex shader */
-	char *vertexShaderExtra = "Resources\\Shaders\\vertexShader.vsh";
-	size_t pathLen = strlen(prgPath);
-	size_t vsExtraLen = strlen(vertexShaderExtra);
+	const char *vertexShaderExtra = "Resources\\Shaders\\vertexShader.vsh";
+	const size_t pathLen = strlen(prgPath);
+	const size_t vsExtraLen = strlen(vertexShaderExtra);
 	char *vertexShaderPath = malloc((pathLen+vsExtraLen+1)*sizeof(char));
 	if(vertexShaderPath == NULL){
 		printf("Error loading vertex shader: Memory allocation failure.\n");
@@ -147,8 +147,8 @@ static unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath){
 
 
 	/* Fragment shader */
-	char *fragmentShaderExtra = "Resources\\Shaders\\fragmentShader.fsh";
-	size_t fsExtraLen = strlen(fragmentShaderExtra);
+	const char *fragmentShaderExtra = "Resources\\Shaders\\fragmentShader.fsh";
+	const size_t fsExtraLen = strlen(fragmentShaderExtra);
 	char *fragmentShaderPath = malloc((pathLen+fsExtraLen+1)*sizeof(char));
 	if(fragmentShaderPath == NULL){
 		printf("Error loading vertex shader: Memory allocation failure.\n");
@@ -216,7 +216,7 @@ static unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath){
 	for(i = 0; i < MAX_BONE_NUM; i++){
 
 		char *num;
-		size_t numLen = ltostr(i, &num);
+		const size_t numLen = ltostr(i, &num);
 		char uniformString[10+numLen+2];
 
 		memcpy(&uniformString, "boneArray[", 10);
@@ -233,7 +233,7 @@ static unsigned char gfxLoadShaders(gfxProgram *gfxPrg, char *prgPath){
 	for(i = 0; i < MAX_TEX_SAMPLER_NUM; i++){
 
 		char *num;
-		size_t numLen = ltostr(i, &num);
+		const size_t numLen = ltostr(i, &num);
 		char uniformString[15+numLen+2];
 
 		memcpy(&uniformString, "textureSampler[", 15);

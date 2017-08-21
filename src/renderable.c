@@ -41,32 +41,32 @@ unsigned char rndrRenderMethod(renderable *rndr){
 	return 2;
 }
 
-void rndrSetRotation(renderable *rndr, float newX, float newY, float newZ){
+void rndrSetRotation(renderable *rndr, const float newX, const float newY, const float newZ){
 	quatSetEuler(&rndr->sTrans.orientation, newX*RADIAN_RATIO, newY*RADIAN_RATIO, newZ*RADIAN_RATIO);
 	vec3SetS(&rndr->sTrans.changeRot, 0.f);
 }
 
-void rndrRotateX(renderable *rndr, float changeX){
+void rndrRotateX(renderable *rndr, const float changeX){
 	rndr->sTrans.changeRot.x += changeX;
 }
 
-void rndrRotateY(renderable *rndr, float changeY){
+void rndrRotateY(renderable *rndr, const float changeY){
 	rndr->sTrans.changeRot.y += changeY;
 }
 
-void rndrRotateZ(renderable *rndr, float changeZ){
+void rndrRotateZ(renderable *rndr, const float changeZ){
 	rndr->sTrans.changeRot.z += changeZ;
 }
 
-void rndrAnimateTexture(renderable *rndr, uint32_t currentTick, float globalDelayMod){
+void rndrAnimateTexture(renderable *rndr, const uint32_t currentTick, const float globalDelayMod){
 	twiAnimate(&rndr->twi, currentTick, globalDelayMod);
 }
 
-void rndrAnimateSkeleton(renderable *rndr, uint32_t currentTick, float globalDelayMod){
+void rndrAnimateSkeleton(renderable *rndr, const uint32_t currentTick, const float globalDelayMod){
 	skliAnimate(&rndr->skli, currentTick, globalDelayMod);
 }
 
-void rndrGenerateTransform(renderable *rndr, camera *cam, mat4 *transformMatrix){
+void rndrGenerateTransform(renderable *rndr, const camera *cam, mat4 *transformMatrix){
 
 	/*
 	** Translate the model. By translating it from the camera coordinates to begin
@@ -136,7 +136,7 @@ void rndrGenerateTransform(renderable *rndr, camera *cam, mat4 *transformMatrix)
 
 }
 
-void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatrix){
+void rndrGenerateSprite(const renderable *rndr, vertex *vertices, const mat4 *transformMatrix){
 
 	/* Generate the base sprite quad */
 	vertex tempVert;
@@ -144,11 +144,11 @@ void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatri
 	/* Undo the initial translations in rndrGenerateTransform() and use our own */
 	/** Only way to remove this is to duplicate rndrGenerateTransform(). Is it worth it? **/
 	/** Might copy rndrGenerateTransform() but without matrices **/
-	float left   = -rndr->sTrans.relPivot.x * (twiGetFrameWidth(&rndr->twi) - 1.f);
-	float top    = -rndr->sTrans.relPivot.y * (twiGetFrameHeight(&rndr->twi) - 1.f);
-	float right  = left + twiGetFrameWidth(&rndr->twi);
-	float bottom = top  + twiGetFrameHeight(&rndr->twi);
-	float z      = -rndr->sTrans.relPivot.z;
+	const float left   = -rndr->sTrans.relPivot.x * (twiGetFrameWidth(&rndr->twi) - 1.f);
+	const float top    = -rndr->sTrans.relPivot.y * (twiGetFrameHeight(&rndr->twi) - 1.f);
+	const float right  = left + twiGetFrameWidth(&rndr->twi);
+	const float bottom = top  + twiGetFrameHeight(&rndr->twi);
+	const float z      = -rndr->sTrans.relPivot.z;
 
 	// Create the top left vertex
 	tempVert.pos.x = left;
@@ -238,7 +238,7 @@ void rndrGenerateSprite(renderable *rndr, vertex *vertices, mat4 *transformMatri
 
 }
 
-void rndrOffsetSpriteTexture(vertex *vertices, float texFrag[4], float texWidth, float texHeight){
+void rndrOffsetSpriteTexture(vertex *vertices, const float texFrag[4], const float texWidth, const float texHeight){
 	// We can't pass unique textureFragment values for each individual sprite when batching. Therefore,
 	// we have to do the offset calculations for each vertex UV here instead of in the shader
 	size_t i;

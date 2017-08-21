@@ -11,7 +11,7 @@
 /** THIS FILE IS TEMPORARY **/
 
 /** This should not be necessary! **/
-void renderModel(renderable *rndr, camera *cam, gfxProgram *gfxPrg){
+void renderModel(renderable *rndr, const camera *cam, gfxProgram *gfxPrg){
 
 	// Get texture information for rendering
 	float texFrag[4];  // The x, y, width and height of the fragment of the texture being rendered
@@ -95,7 +95,7 @@ void renderModel(renderable *rndr, camera *cam, gfxProgram *gfxPrg){
 }
 
 /** Clean this up! **/
-void batchRenderSprites(cVector *allSprites, camera *cam, gfxProgram *gfxPrg){
+void batchRenderSprites(cVector *allSprites, const camera *cam, gfxProgram *gfxPrg){
 
 	// Reset the translucency value
 	glUniform1f(gfxPrg->alphaID, 1);
@@ -180,7 +180,7 @@ void batchRenderSprites(cVector *allSprites, camera *cam, gfxProgram *gfxPrg){
 
 }
 
-void depthSortModels(cVector *allModels, cVector *mdlRenderList, camera *cam){
+void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *cam){
 
 	cVector translucentModels; cvInit(&translucentModels, 1);  // Holds renderable pointers
 	cVector distances;  cvInit(&distances, 1);  // Holds floats

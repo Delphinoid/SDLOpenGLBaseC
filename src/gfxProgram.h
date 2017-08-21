@@ -57,7 +57,7 @@ typedef struct {
 
 } gfxProgram;
 
-unsigned char gfxInitProgram(gfxProgram *gfxPrg, char *prgPath);
+unsigned char gfxInitProgram(gfxProgram *gfxPrg, const char *prgPath);
 unsigned char gfxUpdateWindow(gfxProgram *gfxPrg);
 void gfxDestroyProgram(gfxProgram *gfxPrg);
 
