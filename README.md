@@ -13,6 +13,7 @@ List of queued tweaks:
 * Phase out cVector (only skeletons use them now).
 * Clean up renderable struct and remove any unnecessary member variables. Currently the only real member variables I am not happy with are sprite and hudElement.
 * Fix up render and space transform structures and unify all animation / interpolation code.
+* Not happy with the current billboard system, not sure why.
 * A large number of functions need to be cleaned up. Look for comments starting with /**.
 * Generate a transformation matrix for sprites in rndrGenerateSprite(). Don't use matrices, they should be unnecessary.
 * I still don't like passing allTextures into twLoad().

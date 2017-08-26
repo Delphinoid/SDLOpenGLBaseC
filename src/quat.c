@@ -109,11 +109,17 @@ void quatSubWFromQ(quat *q, const float w){
 }
 
 quat quatQMultQ(const quat q1, const quat q2){
-	float prodW = q1.w * q2.w - vec3Dot(q1.v, q2.v);
+	/*float prodW = q1.w * q2.w - vec3Dot(q1.v, q2.v);
 	vec3 prodV = vec3VMultS(q2.v, q1.w);
 	vec3AddVToV(&prodV, vec3VMultS(q1.v, q2.w));
 	vec3AddVToV(&prodV, vec3Cross(q1.v, q2.v));
-	return quatNew(prodW, prodV.x, prodV.y, prodV.z);
+	return quatNew(prodW, prodV.x, prodV.y, prodV.z);*/
+	quat r;
+	r.w   = q1.w * q2.w   - q1.v.x * q2.v.x - q1.v.y * q2.v.y - q1.v.z * q2.v.z;
+	r.v.x = q1.w * q2.v.x + q1.v.x * q2.w   + q1.v.y * q2.v.z - q1.v.z * q2.v.y;
+	r.v.y = q1.w * q2.v.y + q1.v.y * q2.w   + q1.v.z * q2.v.x - q1.v.x * q2.v.z;
+	r.v.z = q1.w * q2.v.z + q1.v.z * q2.w   + q1.v.x * q2.v.y - q1.v.y * q2.v.x;
+	return r;
 }
 quat quatQMultS(const quat q, const float s){
 	quat r = {.w   = q.w   * s,
@@ -123,18 +129,30 @@ quat quatQMultS(const quat q, const float s){
 	return r;
 }
 void quatMultQByQ1(quat *q1, const quat q2){
-	float prodW = q1->w * q2.w - vec3Dot(q1->v, q2.v);
+	/*float prodW = q1->w * q2.w - vec3Dot(q1->v, q2.v);
 	vec3 prodV = vec3VMultS(q2.v, q1->w);
 	vec3AddVToV(&prodV, vec3VMultS(q1->v, q2.w));
 	vec3AddVToV(&prodV, vec3Cross(q1->v, q2.v));
-	q1->w = prodW; q1->v = prodV;
+	q1->w = prodW; q1->v = prodV;*/
+	quat r;
+	r.w   = q1->w * q2.w   - q1->v.x * q2.v.x - q1->v.y * q2.v.y - q1->v.z * q2.v.z;
+	r.v.x = q1->w * q2.v.x + q1->v.x * q2.w   + q1->v.y * q2.v.z - q1->v.z * q2.v.y;
+	r.v.y = q1->w * q2.v.y + q1->v.y * q2.w   + q1->v.z * q2.v.x - q1->v.x * q2.v.z;
+	r.v.z = q1->w * q2.v.z + q1->v.z * q2.w   + q1->v.x * q2.v.y - q1->v.y * q2.v.x;
+	*q1 = r;
 }
 void quatMultQByQ2(const quat q1, quat *q2){
-	float prodW = q1.w * q2->w - vec3Dot(q1.v, q2->v);
+	/*float prodW = q1.w * q2->w - vec3Dot(q1.v, q2->v);
 	vec3 prodV = vec3VMultS(q2->v, q1.w);
 	vec3AddVToV(&prodV, vec3VMultS(q1.v, q2->w));
 	vec3AddVToV(&prodV, vec3Cross(q1.v, q2->v));
-	q2->w = prodW; q2->v = prodV;
+	q2->w = prodW; q2->v = prodV;*/
+	quat r;
+	r.w   = q1.w * q2->w   - q1.v.x * q2->v.x - q1.v.y * q2->v.y - q1.v.z * q2->v.z;
+	r.v.x = q1.w * q2->v.x + q1.v.x * q2->w   + q1.v.y * q2->v.z - q1.v.z * q2->v.y;
+	r.v.y = q1.w * q2->v.y + q1.v.y * q2->w   + q1.v.z * q2->v.x - q1.v.x * q2->v.z;
+	r.v.z = q1.w * q2->v.z + q1.v.z * q2->w   + q1.v.x * q2->v.y - q1.v.y * q2->v.x;
+	*q2 = r;
 }
 void quatMultQByS(quat *q, const float s){
 	q->w *= s;
@@ -253,7 +271,7 @@ vec3 quatGetRotatedVec3(const quat q, const vec3 v){
 	vec3 r;
 
 	const float dot = vec3Dot(q.v, v);
-	const vec3 cross = vec3Cross(q.v, v);
+	const vec3 cross = vec3GetCross(q.v, v);
 
 	float m = q.w*q.w-dot;
 	r.x = m*v.x;
@@ -276,7 +294,7 @@ vec3 quatGetRotatedVec3(const quat q, const vec3 v){
 void quatRotateVec3(const quat q, vec3 *v){
 
 	const float dot = vec3Dot(q.v, *v);
-	const vec3 cross = vec3Cross(q.v, *v);
+	const vec3 cross = vec3GetCross(q.v, *v);
 
 	float m = q.w*q.w-dot;
 	v->x *= m;
@@ -316,7 +334,8 @@ quat quatLookingAt(vec3 eye, vec3 target, vec3 up){
 	}else{
 
 		float angle = acosf(dot);
-		vec3 axis = vec3Cross(eye, target);
+		vec3 axis;
+		vec3Cross(eye, target, &axis);
 		vec3Normalize(&axis);
 		r.w = angle;
 		r.v = axis;
@@ -346,7 +365,8 @@ void quatLookAt(quat *q, vec3 eye, vec3 target, vec3 up){
 	}else{
 
 		const float angle = acosf(dot);
-		vec3 axis = vec3Cross(eye, target);
+		vec3 axis;
+		vec3Cross(eye, target, &axis);
 		vec3Normalize(&axis);
 		q->w = angle;
 		q->v = axis;

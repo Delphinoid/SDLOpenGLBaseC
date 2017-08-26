@@ -77,42 +77,63 @@ void rndrGenerateTransform(renderable *rndr, const camera *cam, mat4 *transformM
 
 	/* Billboarding */
 	// If any of the flags apart from RNDR_BILLBOARD_TARGET are set, continue
-	if((rndr->flags & ~RNDR_BILLBOARD_TARGET) > 0){
-		vec3 axisX; vec3 axisY; vec3 axisZ;
-		if((rndr->flags & RNDR_BILLBOARD_TARGET) > 0){
-			// Generate a new view matrix for the billboard
-			mat4 billboardViewMatrix;
-			mat4LookAt(&billboardViewMatrix, rndr->rTrans.target, rndr->sTrans.position, cam->up);
-			vec3Set(&axisX, billboardViewMatrix.m[0][0], billboardViewMatrix.m[0][1], billboardViewMatrix.m[0][2]);
-			vec3Set(&axisY, billboardViewMatrix.m[1][0], billboardViewMatrix.m[1][1], billboardViewMatrix.m[1][2]);
-			vec3Set(&axisZ, billboardViewMatrix.m[2][0], billboardViewMatrix.m[2][1], billboardViewMatrix.m[2][2]);
+	if((rndr->flags & (RNDR_BILLBOARD_X | RNDR_BILLBOARD_Y | RNDR_BILLBOARD_Z)) > 0){
+		mat4 billboardRotation;
+		if((rndr->flags & RNDR_BILLBOARD_SPRITE) > 0){
+			/* Sprites use a special, faster method for billboarding. */
+			vec3 right, up, forward;
+			// Use the camera's X, Y and Z axes for cheap sprite billboarding
+			vec3Set(&right,   cam->viewMatrix.m[0][0], cam->viewMatrix.m[0][1], cam->viewMatrix.m[0][2]);
+			vec3Set(&up,      cam->viewMatrix.m[1][0], cam->viewMatrix.m[1][1], cam->viewMatrix.m[1][2]);
+			vec3Set(&forward, cam->viewMatrix.m[2][0], cam->viewMatrix.m[2][1], cam->viewMatrix.m[2][2]);
+			// Lock certain axes if needed
+			if((rndr->flags & RNDR_BILLBOARD_X) == 0){
+				right.y   = 0.f;
+				up.y      = 1.f;
+				forward.y = 0.f;
+			}
+			if((rndr->flags & RNDR_BILLBOARD_Y) == 0){
+				right.x   = 1.f;
+				up.x      = 0.f;
+				forward.x = 0.f;
+			}
+			if((rndr->flags & RNDR_BILLBOARD_Z) == 0){
+				right.z   = 0.f;
+				up.z      = 0.f;
+				forward.z = 1.f;
+			}
+			billboardRotation.m[0][0] = right.x; billboardRotation.m[0][1] = up.x; billboardRotation.m[0][2] = forward.x; billboardRotation.m[0][3] = 0.f;
+			billboardRotation.m[1][0] = right.y; billboardRotation.m[1][1] = up.y; billboardRotation.m[1][2] = forward.y; billboardRotation.m[1][3] = 0.f;
+			billboardRotation.m[2][0] = right.z; billboardRotation.m[2][1] = up.z; billboardRotation.m[2][2] = forward.z; billboardRotation.m[2][3] = 0.f;
+			billboardRotation.m[3][0] = 0.f;     billboardRotation.m[3][1] = 0.f;  billboardRotation.m[3][2] = 0.f;       billboardRotation.m[3][3] = 1.f;
 		}else{
-			// Use the camera's X, Y and Z axes
-			vec3Set(&axisX, cam->viewMatrix.m[0][0], cam->viewMatrix.m[0][1], cam->viewMatrix.m[0][2]);
-			vec3Set(&axisY, cam->viewMatrix.m[1][0], cam->viewMatrix.m[1][1], cam->viewMatrix.m[1][2]);
-			vec3Set(&axisZ, cam->viewMatrix.m[2][0], cam->viewMatrix.m[2][1], cam->viewMatrix.m[2][2]);
+			vec3 eye, target, up;
+			if((rndr->flags & RNDR_BILLBOARD_TARGET) > 0){
+				eye = rndr->rTrans.targetPosition;
+				target = rndr->sTrans.position;
+				vec3Set(&up, 0.f, 1.f, 0.f);
+				quatRotateVec3(rndr->rTrans.targetOrientation, &up);
+			}else if((rndr->flags & RNDR_BILLBOARD_TARGET_CAMERA) > 0){
+				eye = cam->position;
+				target = rndr->sTrans.position;
+				up = cam->up;
+			}else{
+				eye = cam->position;
+				target = cam->target;
+				up = cam->up;
+			}
+			// Lock certain axes if needed
+			if((rndr->flags & RNDR_BILLBOARD_X) == 0){
+				target.y = eye.y;
+			}
+			if((rndr->flags & RNDR_BILLBOARD_Y) == 0){
+				target.x = eye.x;
+			}
+			if((rndr->flags & RNDR_BILLBOARD_Z) == 0){
+				vec3Set(&up, 0.f, 1.f, 0.f);
+			}
+			mat4RotateToFace(&billboardRotation, eye, target, up);
 		}
-		// Lock certain axes if needed
-		if((rndr->flags & RNDR_BILLBOARD_X) == 0){
-			axisX.y = 0.f;
-			axisY.y = 1.f;
-			axisZ.y = 0.f;
-		}
-		if((rndr->flags & RNDR_BILLBOARD_Y) == 0){
-			axisX.x = 1.f;
-			axisY.x = 0.f;
-			axisZ.x = 0.f;
-		}
-		if((rndr->flags & RNDR_BILLBOARD_Z) == 0){
-			axisX.z = 0.f;
-			axisY.z = 0.f;
-			axisZ.z = 1.f;
-		}
-		// Rotation matrix               X axis   Y axis   Z axis
-		mat4 billboardRotation = {.m = {{axisX.x, axisY.x, axisZ.x, 0.f},
-		                                {axisX.y, axisY.y, axisZ.y, 0.f},
-		                                {axisX.z, axisY.z, axisZ.z, 0.f},
-		                                {0.f,     0.f,     0.f,     1.f}}};
 		mat4MultMByM2(&billboardRotation, transformMatrix);  // Apply billboard rotation
 	}
 

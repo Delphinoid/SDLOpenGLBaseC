@@ -9,10 +9,12 @@
 #include "renderTransform.h"
 #include "camera.h"
 
-#define RNDR_BILLBOARD_X      0x01  // Whether or not the object uses the camera's rotated X axis
-#define RNDR_BILLBOARD_Y      0x02  // Whether or not the object uses the camera's rotated Y axis
-#define RNDR_BILLBOARD_Z      0x04  // Whether or not the object uses the camera's rotated Z axis
-#define RNDR_BILLBOARD_TARGET 0x08  // Whether or not to use a slower billboard method that looks at a target
+#define RNDR_BILLBOARD_X             0x01  // Whether or not the object uses the camera's rotated X axis
+#define RNDR_BILLBOARD_Y             0x02  // Whether or not the object uses the camera's rotated Y axis
+#define RNDR_BILLBOARD_Z             0x04  // Whether or not the object uses the camera's rotated Z axis
+#define RNDR_BILLBOARD_SPRITE        0x08  // A cheap billboard method for sprites
+#define RNDR_BILLBOARD_TARGET        0x10  // Billboard towards a specified target
+#define RNDR_BILLBOARD_TARGET_CAMERA 0x20  // Billboard towards the camera's position
 
 typedef struct {
 

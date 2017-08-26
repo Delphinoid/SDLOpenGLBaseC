@@ -205,12 +205,29 @@ unsigned char mat4Perspective(mat4 *m, const float fovy, const float aspectRatio
 	m->m[3][0] = 0.f;                     m->m[3][1] = 0.f;       m->m[3][2] = -2.f*zFar*zNear/(zFar-zNear); m->m[3][3] = 0.f;
 	return 1;
 }
+void mat4RotateToFace(mat4 *m, vec3 eye, vec3 target, vec3 up){
+	vec3 zAxis = vec3VSubV(target, eye);
+	vec3Normalize(&zAxis);
+	vec3 xAxis;
+	vec3Cross(zAxis, up, &xAxis);
+	vec3Normalize(&xAxis);
+	vec3 yAxis;
+	vec3Cross(xAxis, zAxis, &yAxis);
+	vec3Normalize(&yAxis);
+	// Currently right-handed for OpenGL. For left-handed, use the additive inverses of the values in the third row
+	m->m[0][0] =  xAxis.x; m->m[0][1] =  xAxis.y; m->m[0][2] =  xAxis.z; m->m[0][3] = 0.f;
+	m->m[1][0] =  yAxis.x; m->m[1][1] =  yAxis.y; m->m[1][2] =  yAxis.z; m->m[1][3] = 0.f;
+	m->m[2][0] = -zAxis.x; m->m[2][1] = -zAxis.y; m->m[2][2] = -zAxis.z; m->m[2][3] = 0.f;
+	m->m[3][0] = 0.f;      m->m[3][1] = 0.f;      m->m[3][2] = 0.f;      m->m[3][3] = 1.f;
+}
 void mat4LookAt(mat4 *m, vec3 eye, vec3 target, vec3 up){
 	vec3 zAxis = vec3VSubV(target, eye);
 	vec3Normalize(&zAxis);
-	vec3 xAxis = vec3Cross(zAxis, up);
+	vec3 xAxis;
+	vec3Cross(zAxis, up, &xAxis);
 	vec3Normalize(&xAxis);
-	vec3 yAxis = vec3Cross(xAxis, zAxis);
+	vec3 yAxis;
+	vec3Cross(xAxis, zAxis, &yAxis);
 	vec3Normalize(&yAxis);
 	// Currently right-handed for OpenGL. For left-handed, use the additive inverses of the values in the third column
 	m->m[0][0] = xAxis.x;              m->m[0][1] = yAxis.x;              m->m[0][2] = -zAxis.x;            m->m[0][3] = 0.f;

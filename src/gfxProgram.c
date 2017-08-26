@@ -81,7 +81,7 @@ static unsigned char gfxInitOGL(gfxProgram *gfxPrg){
 	glClearColor(0.f, 0.f, 0.f, 1.f);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 

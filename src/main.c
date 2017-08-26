@@ -206,25 +206,25 @@ int main(int argc, char *argv[]){
 			rndrRotateX((renderable *)cvGet(&allRenderables, 0), -2.f * fpsHandler.fpsMod);
 			//sprRotateX((sprite *)cvGet(&allSprites, 0), -2.f * fpsHandler.fpsMod);
 			camMoveZ((camera *)cvGet(&allCameras, 0), -0.1f * fpsHandler.fpsMod);
-			((renderable *)cvGet(&allRenderables, 4))->rTrans.target = ((camera *)cvGet(&allCameras, 0))->position;
+			((renderable *)cvGet(&allRenderables, 4))->rTrans.targetPosition = ((camera *)cvGet(&allCameras, 0))->position;
 		}
 		if(DOWN){
 			rndrRotateX((renderable *)cvGet(&allRenderables, 0), 2.f * fpsHandler.fpsMod);
 			//sprRotateX((sprite *)cvGet(&allSprites, 0), 2.f * fpsHandler.fpsMod);
 			camMoveZ((camera *)cvGet(&allCameras, 0), 0.1f * fpsHandler.fpsMod);
-			((renderable *)cvGet(&allRenderables, 4))->rTrans.target = ((camera *)cvGet(&allCameras, 0))->position;
+			((renderable *)cvGet(&allRenderables, 4))->rTrans.targetPosition = ((camera *)cvGet(&allCameras, 0))->position;
 		}
 		if(LEFT){
 			rndrRotateY((renderable *)cvGet(&allRenderables, 0), -2.f * fpsHandler.fpsMod);
 			rndrRotateZ((renderable *)cvGet(&allRenderables, 3), -2.f * fpsHandler.fpsMod);
 			camMoveX((camera *)cvGet(&allCameras, 0), -0.1f * fpsHandler.fpsMod);
-			((renderable *)cvGet(&allRenderables, 4))->rTrans.target = ((camera *)cvGet(&allCameras, 0))->position;
+			((renderable *)cvGet(&allRenderables, 4))->rTrans.targetPosition = ((camera *)cvGet(&allCameras, 0))->position;
 		}
 		if(RIGHT){
 			rndrRotateY((renderable *)cvGet(&allRenderables, 0), 2.f * fpsHandler.fpsMod);
 			rndrRotateZ((renderable *)cvGet(&allRenderables, 3), 2.f * fpsHandler.fpsMod);
 			camMoveX((camera *)cvGet(&allCameras, 0), 0.1f * fpsHandler.fpsMod);
-			((renderable *)cvGet(&allRenderables, 4))->rTrans.target = ((camera *)cvGet(&allCameras, 0))->position;
+			((renderable *)cvGet(&allRenderables, 4))->rTrans.targetPosition = ((camera *)cvGet(&allCameras, 0))->position;
 		}
 
 		// Get mouse position relative to its position in the last call
