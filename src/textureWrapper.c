@@ -45,7 +45,7 @@ static unsigned char twfAddDefaultSubframe(twFrame *twf, const size_t subframeCa
 	twf->subframes[twf->subframeNum].y = 0.f;
 	twf->subframes[twf->subframeNum].w = twf->baseTexture->width;
 	twf->subframes[twf->subframeNum].h = twf->baseTexture->height;
-	twf->subframeNum++;
+	++twf->subframeNum;
 	return 1;
 }
 
@@ -115,7 +115,7 @@ static unsigned char twaAddFrame(twAnim *twa, const size_t f, const size_t sf, c
 	twa->frameIDs[twa->frameNum] = f;
 	twa->subframeIDs[twa->frameNum] = sf;
 	twa->frameDelays[twa->frameNum] = d;
-	twa->frameNum++;
+	++twa->frameNum;
 	return 1;
 }
 
@@ -256,7 +256,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 		while(fgets(lineFeed, sizeof(lineFeed), texInfo)){
 
 			line = lineFeed;
-			currentLine++;
+			++currentLine;
 			lineLength = strlen(line);
 
 			// Remove new line and carriage return
@@ -276,7 +276,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 			unsigned char doneFront = 0, doneEnd = 0;
 			size_t newOffset = 0;
 			size_t i;
-			for(i = 0; (i < lineLength && !doneFront && !doneEnd); i++){
+			for(i = 0; (i < lineLength && !doneFront && !doneEnd); ++i){
 				if(!doneFront && line[i] != '\t' && line[i] != ' '){
 					newOffset = i;
 					doneFront = 1;
@@ -406,7 +406,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 				/** Should the allTextures vector be used? It's not as nice or as modular
 				but if the assetHandler system is decided on it'll probably be better **/
 				// Look for texture name in allTextures
-				for(i = 0; i < allTextures->size; i++){
+				for(i = 0; i < allTextures->size; ++i){
 					texture *tempTex = (texture *)cvGet(allTextures, i);
 					if(strcmp(texPath, tempTex->name) == 0){
 						tempFrame.baseTexture = (texture *)cvGet(allTextures, i);
@@ -467,7 +467,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 					char macroDirection = ' ';
 					float dimensions[4] = {0, 0, 0, 0};
 					char *token = strtok(line+7, "/");
-					for(i = 0; i < 6; i++){
+					for(i = 0; i < 6; ++i){
 						if(i == 0){
 							numberOfFrames = strtoul(token, NULL, 0);
 						}else if(i == 1){
@@ -482,7 +482,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 					const unsigned int currentTexH = tw->frames[tw->frameNum-1].baseTexture->height;
 
 					// Automatically generate subframes for a sprite sheet
-					for(i = 1; i <= numberOfFrames; i++){
+					for(i = 1; i <= numberOfFrames; ++i){
 						if(dimensions[0] + dimensions[2] <= currentTexW && dimensions[1] + dimensions[3] <= currentTexH){
 							twBounds baseSubframe = {.x = dimensions[0], .y = dimensions[1], .w = dimensions[2], .h = dimensions[3]};
 							if(!twfAddSubframe(&tw->frames[tw->frameNum-1], &baseSubframe, &subframeCapacity)){
@@ -519,7 +519,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 					// Create a new subframe and add it to the current texture frame
 					float dimensions[4] = {0, 0, 0, 0};
 					char *token = strtok(line+9, "/");
-					for(i = 0; i < 4; i++){
+					for(i = 0; i < 4; ++i){
 						if(token != NULL){
 							dimensions[i] = strtod(token, NULL);
 							token = strtok(NULL, "/");
@@ -582,7 +582,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 					size_t subframes[2] = {0, 0};
 					float frameDelay = 0.f;
 					char *token = strtok(line+7, "/");
-					for(i = 0; i < 6; i++){
+					for(i = 0; i < 6; ++i){
 						if(token != NULL){
 							if(i < 2){
 								textures[i] = strtoul(token, NULL, 0);
@@ -599,9 +599,9 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 
 					if(frameDelay > 0){
 						size_t j;
-						for(i = textures[0]; i <= textures[1]; i++){
+						for(i = textures[0]; i <= textures[1]; ++i){
 							if(i < tw->frameNum){
-								for(j = subframes[0]; j <= subframes[1]; j++){
+								for(j = subframes[0]; j <= subframes[1]; ++j){
 									if(j < tw->frames[tw->frameNum-1].subframeNum){
 										if(!twaAddFrame(&tempAnim, i, j, frameDelay, &animframeCapacity)){
 											twDelete(tw);
@@ -631,7 +631,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 					size_t frameID = 0, subframeID = 0;
 					float frameDelay = 0.f;
 					char *token = strtok(line+6, "/");
-					for(i = 0; i < 6; i++){
+					for(i = 0; i < 6; ++i){
 						if(token != NULL){
 							if(i == 0){
 								frameID = strtoul(token, NULL, 0);
@@ -733,11 +733,11 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 
 void twDelete(textureWrapper *tw){
 	size_t i;
-	for(i = 0; i < tw->frameNum; i++){
+	for(i = 0; i < tw->frameNum; ++i){
 		twfDelete(&tw->frames[i]);
 	}
 	free(tw->frames);
-	for(i = 0; i < tw->animationNum; i++){
+	for(i = 0; i < tw->animationNum; ++i){
 		twaDelete(&tw->animations[i]);
 	}
 	free(tw->animations);
@@ -807,7 +807,7 @@ void twiAnimate(twInstance *twi, const uint32_t currentTick, const float globalD
 			// Increase currentFrame and check if it exceeds the number of frames
 			if(++twi->currentFrame == twGetAnim(twi->tw, twi->currentAnim)->frameNum){
 				// currentFrame has exceeded the number of frames, increase the loop counter
-				twi->currentLoops++;
+				++twi->currentLoops;
 				if(twi->currentLoops < twGetAnim(twi->tw, twi->currentAnim)->desiredLoops ||
 				   twGetAnim(twi->tw, twi->currentAnim)->desiredLoops < 0){
 					// If the animation can continue to loop, reset it to the first frame
@@ -863,10 +863,10 @@ void twiAnimate(twInstance *twi, const uint32_t currentTick, const float globalD
 		      (twGetAnim(twi->texWrap, twi->animation)->loopNum < 0 || !twiAnimFinished(twi))){
 			// Add the delay to frameProgress and advance the animation
 			twi->t += *twGetAnimFrameDelay(twi->texWrap, twi->animation, twi->frame);
-			twi->frame++;
+			++twi->frame;
 			// Reset the animation if frame exceeds the number of frames in the animation
 			if(twi->frame == twGetAnim(twi->texWrap, twi->animation)->frameIDs.size){
-				twi->loops++;
+				++twi->loops;
 				// If the animation can loop, set it to the first frame
 				if(twGetAnim(twi->texWrap, twi->animation)->loopNum >= twi->loops ||
 				   twGetAnim(twi->texWrap, twi->animation)->loopNum < 0){

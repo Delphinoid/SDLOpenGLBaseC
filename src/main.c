@@ -147,7 +147,7 @@ int main(int argc, char *argv[]){
 		/* If the window size has changed, resize the OpenGL viewport */
 		if(gfxUpdateWindow(&gfxPrg)){
 			// Cameras will also have to be adjusted
-			for(i = 0; i < allCameras.size; i++){
+			for(i = 0; i < allCameras.size; ++i){
 				((camera *)cvGet(&allCameras, i))->flags |= CAM_UPDATE_PROJECTION;
 			}
 		}
@@ -233,7 +233,7 @@ int main(int argc, char *argv[]){
 
 		/* Animate */
 		// Animate the renderables
-		for(i = 0; i < allRenderables.size; i++){
+		for(i = 0; i < allRenderables.size; ++i){
 			rndrAnimateTexture((renderable *)cvGet(&allRenderables, i), SDL_GetTicks(), 1.f);
 			rndrAnimateSkeleton((renderable *)cvGet(&allRenderables, i), SDL_GetTicks(), 1.f);
 		}
@@ -241,7 +241,7 @@ int main(int argc, char *argv[]){
 
 		/* Render the scene */
 		// Update cameras
-		for(i = 0; i < allCameras.size; i++){
+		for(i = 0; i < allCameras.size; ++i){
 			camUpdateViewMatrix((camera *)cvGet(&allCameras, i));
 			camUpdateProjectionMatrix((camera *)cvGet(&allCameras, i), gfxPrg.aspectRatioX, gfxPrg.aspectRatioY);
 		}
@@ -281,34 +281,34 @@ void cleanup(cVector *allTextures,  cVector *allTexWrappers,   cVector *allModel
 	gfxDestroyProgram(gfxPrg);
 
 	size_t i;
-	for(i = 0; i < allTextures->size; i++){
+	for(i = 0; i < allTextures->size; ++i){
 		tDelete((texture *)cvGet(allTextures, i));
 	}
 	cvClear(allTextures);
 
-	for(i = 0; i < allTexWrappers->size; i++){
+	for(i = 0; i < allTexWrappers->size; ++i){
 		twDelete((textureWrapper *)cvGet(allTexWrappers, i));
 	}
 	cvClear(allTexWrappers);
 
-	for(i = 0; i < allModels->size; i++){
+	for(i = 0; i < allModels->size; ++i){
 		mdlDelete((model *)cvGet(allModels, i));
 	}
 	cvClear(allModels);
 
 	cvClear(allCameras);
 
-	for(i = 0; i < allSkeletons->size; i++){
+	for(i = 0; i < allSkeletons->size; ++i){
 		sklDelete((skeleton *)cvGet(allSkeletons, i));
 	}
 	cvClear(allSkeletons);
 
-	for(i = 0; i < allSklAnimations->size; i++){
+	for(i = 0; i < allSklAnimations->size; ++i){
 		sklaDelete((sklAnim *)cvGet(allSklAnimations, i));
 	}
 	cvClear(allSklAnimations);
 
-	for(i = 0; i < allRenderables->size; i++){
+	for(i = 0; i < allRenderables->size; ++i){
 		rndrDelete((renderable *)cvGet(allRenderables, i));
 	}
 	cvClear(allRenderables);

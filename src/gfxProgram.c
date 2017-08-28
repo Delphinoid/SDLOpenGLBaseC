@@ -213,7 +213,7 @@ static unsigned char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 
 	/* Create references to each bone  */
 	size_t i;
-	for(i = 0; i < MAX_BONE_NUM; i++){
+	for(i = 0; i < MAX_BONE_NUM; ++i){
 
 		char *num;
 		const size_t numLen = ltostr(i, &num);
@@ -230,7 +230,7 @@ static unsigned char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 	}
 
 	/* Create references to each texture sampler */
-	for(i = 0; i < MAX_TEX_SAMPLER_NUM; i++){
+	for(i = 0; i < MAX_TEX_SAMPLER_NUM; ++i){
 
 		char *num;
 		const size_t numLen = ltostr(i, &num);

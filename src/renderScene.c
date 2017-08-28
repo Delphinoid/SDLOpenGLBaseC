@@ -52,7 +52,7 @@ void renderModel(renderable *rndr, const camera *cam, gfxProgram *gfxPrg){
 		// Generate a state for the model skeleton, transformed into the animated skeleton's space
 		skliGenerateState(&rndr->skli, skeletonState, skel);
 		size_t i;
-		for(i = 0; i < rndr->skli.skl->boneNum; i++){
+		for(i = 0; i < rndr->skli.skl->boneNum; ++i){
 			/*mat4 boneMatrixTemp;
 			memcpy(&boneMatrixTemp.m[0][0], &rndr->skli.skeletonState[i].m[0][0], sizeof(boneMatrixTemp));*/
 			/** Translates each skeleton bone by the inverse model's default bone positions **/
@@ -114,7 +114,7 @@ void batchRenderSprites(cVector *allSprites, const camera *cam, gfxProgram *gfxP
 
 	renderable *curSpr;
 	size_t i;
-	for(i = 0; i < allSprites->size; i++){
+	for(i = 0; i < allSprites->size; ++i){
 
 		curSpr = *((renderable **)cvGet(allSprites, i));
 
@@ -187,7 +187,7 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *c
 
 	// Sort the different models into groups of those that are opaque and those that contain translucency
 	size_t i;
-	for(i = 0; i < allModels->size; i++){
+	for(i = 0; i < allModels->size; ++i){
 
 		renderable *curMdl = *((renderable **)cvGet(allModels, i));
 		unsigned int currentRenderMethod = rndrRenderMethod(curMdl);
@@ -208,8 +208,8 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *c
 
 	// Simple bubblesort (for now) to sort models with translucency by depth
 	size_t j;
-	for(i = 0; i < translucentModels.size; i++){
-		for(j = 1; j < translucentModels.size - i; j++){
+	for(i = 0; i < translucentModels.size; ++i){
+		for(j = 1; j < translucentModels.size - i; ++j){
 
 			if(*((float *)cvGet(&distances, j-1)) < *((float *)cvGet(&distances, j))){
 
@@ -229,7 +229,7 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *c
 
 	// Combine the three vectors
 	cvResize(mdlRenderList, mdlRenderList->size + translucentModels.size);
-	for(i = 0; i < translucentModels.size; i++){
+	for(i = 0; i < translucentModels.size; ++i){
 		cvPush(mdlRenderList, cvGet(&translucentModels, i), sizeof(renderable *));
 	}
 	cvClear(&translucentModels);
@@ -243,7 +243,7 @@ void sortElements(cVector *allRenderables,
 
 	// Sort models and sprites into their scene and HUD vectors
 	size_t i;
-	for(i = 0; i < allRenderables->size; i++){
+	for(i = 0; i < allRenderables->size; ++i){
 		renderable *curRndr = (renderable *)cvGet(allRenderables, i);
 		if(!curRndr->sprite){
 			if(curRndr->hudElement){
@@ -276,7 +276,7 @@ void renderScene(cVector *allRenderables, cVector *allCameras, gfxProgram *gfxPr
 	depthSortModels(&modelsScene, &renderList, (camera *)cvGet(allCameras, 0));
 	// Render scene models
 	size_t i;
-	for(i = 0; i < renderList.size; i++){
+	for(i = 0; i < renderList.size; ++i){
 		renderModel(*((renderable **)cvGet(&renderList, i)), (camera *)cvGet(allCameras, 0), gfxPrg);
 	}
 	// Batch render scene sprites
@@ -289,7 +289,7 @@ void renderScene(cVector *allRenderables, cVector *allCameras, gfxProgram *gfxPr
 
 	// Render HUD models
 	/** HUD camera? Streamline this to make handling different cameras easily **/
-	for(i = 0; i < modelsHUD.size; i++){
+	for(i = 0; i < modelsHUD.size; ++i){
 		renderModel(*((renderable **)cvGet(&modelsHUD, i)), (camera *)cvGet(allCameras, 1), gfxPrg);
 	}
 	// Batch render HUD sprites

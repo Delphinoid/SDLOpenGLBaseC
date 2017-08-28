@@ -250,7 +250,7 @@ void rndrGenerateSprite(const renderable *rndr, vertex *vertices, const mat4 *tr
 	/* Apply transformations to each vertex */
 	vec4 vertexPos;
 	size_t i;
-	for(i = 0; i < 4; i++){
+	for(i = 0; i < 4; ++i){
 		// We need to make the vertex positions a vec4 so we can multiply them by the 4x4 modelViewProjectionMatrix
 		vec4Set(&vertexPos, vertices[i].pos.x, vertices[i].pos.y, vertices[i].pos.z, 1.f);
 		mat4MultMByV(transformMatrix, &vertexPos);
@@ -263,7 +263,7 @@ void rndrOffsetSpriteTexture(vertex *vertices, const float texFrag[4], const flo
 	// We can't pass unique textureFragment values for each individual sprite when batching. Therefore,
 	// we have to do the offset calculations for each vertex UV here instead of in the shader
 	size_t i;
-	for(i = 0; i < 4; i++){
+	for(i = 0; i < 4; ++i){
 		vertices[i].u = ((vertices[i].u * texFrag[2]) + texFrag[0]) / texWidth;
 		vertices[i].v = ((vertices[i].v * texFrag[3]) + texFrag[1]) / texHeight;
 	}

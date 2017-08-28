@@ -13,7 +13,7 @@ unsigned char pushDynamicArray(void **vector, const void *element, const size_t 
 		}
 	}
 	memcpy((*vector)+(*size)*bytes, element, bytes);
-	(*size)++;
+	++(*size);
 	return 1;
 }
 

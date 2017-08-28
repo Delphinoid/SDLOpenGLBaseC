@@ -25,7 +25,7 @@ static sklNode *sklFindBone(sklNode *node, const char *name){
 	sklNode *r = NULL;
 	if(node != NULL && strcmp(node->bone.name, name) != 0){
 		size_t i;
-		for(i = 0; r == NULL && i < node->childNum; i++){
+		for(i = 0; r == NULL && i < node->childNum; ++i){
 			r = sklFindBone(&node->children[i], name);
 		}
 	}else{
@@ -56,7 +56,7 @@ unsigned char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath)
 }
 void sklaDelete(sklAnim *skla){
 	size_t i;
-	for(i = 0; i < skla->keyframes.size; i++){
+	for(i = 0; i < skla->keyframes.size; ++i){
 		cvClear(&((sklKeyframe *)cvGet(&skla->keyframes, i))->bones);
 	}
 	cvClear(&skla->keyframes);
@@ -119,7 +119,7 @@ static void sklaiDeltaTransform(sklAnimInstance *sklai, const size_t bone){
 }
 static void sklaiGenerateState(sklAnimInstance *sklai){
 	size_t i;
-	for(i = 0; i < sklai->anim->boneNum; i++){
+	for(i = 0; i < sklai->anim->boneNum; ++i){
 		sklaiDeltaTransform(sklai, i);
 	}
 }
@@ -157,7 +157,7 @@ static void sklaiAnimate(sklAnimInstance *sklai, const uint32_t currentTick, con
 			// Increase currentFrame and check if it exceeds the number of frames
 			if(++sklai->currentFrame == sklai->anim->frameDelays.size){
 				// currentFrame has exceeded the number of frames, increase the loop counter
-				sklai->currentLoops++;
+				++sklai->currentLoops;
 				if(sklai->currentLoops < sklai->anim->desiredLoops ||
 				   sklai->anim->desiredLoops < 0){
 					// If the animation can continue to loop, reset it to the first frame
@@ -225,7 +225,7 @@ void skliInit(sklInstance *skli, skeleton *skl){
 		sklBone tempBone; boneInit(&tempBone);
 		mat4 identityMatrix; mat4Identity(&identityMatrix);
 		size_t i;
-		for(i = 0; i < skl->boneNum; i++){
+		for(i = 0; i < skl->boneNum; ++i){
 			skli->customState[i] = tempBone;
 			/**skli->skeletonState[i] = identityMatrix;**/
 		}
@@ -351,9 +351,9 @@ static void skliBoneState(sklInstance *skli, mat4 *state, const sklNode *space, 
 	/** Find the bone's position in each sklAnimInstance by strcmping the names **/
 	/** Later, set up a "lookup table" of sorts when animations are added to make this faster **/
 	size_t i, j;
-	for(i = 0; i < skli->animations.size; i++){
+	for(i = 0; i < skli->animations.size; ++i){
 		// Loop through each bone modified by the animation
-		for(j = 0; j < ((sklAnimInstance *)cvGet(&skli->animations, i))->anim->boneNum; j++){
+		for(j = 0; j < ((sklAnimInstance *)cvGet(&skli->animations, i))->anim->boneNum; ++j){
 			sklBone *currentAnimState = ((sklAnimInstance *)cvGet(&skli->animations, i))->animState;
 			/** Use a lookup here instead of strcmp() **/
 			if(strcmp(node->bone.name, currentAnimState[j].name) == 0){
@@ -377,7 +377,7 @@ static void skliBoneState(sklInstance *skli, mat4 *state, const sklNode *space, 
 }
 void skliAnimate(sklInstance *skli, const uint32_t currentTick, const float globalDelayMod){
 	size_t i;
-	for(i = 0; i < skli->animations.size; i++){
+	for(i = 0; i < skli->animations.size; ++i){
 		sklaiAnimate((sklAnimInstance *)cvGet(&skli->animations, i), currentTick, globalDelayMod);
 	}
 }
@@ -398,7 +398,7 @@ static size_t skliGenerateStateRecursive(sklInstance *skli, mat4 *state, sklNode
 		skliBoneState(skli, state, space, node, parent, bone);
 		// Loop through each child
 		size_t i;
-		for(i = 0; i < node->childNum; i++){
+		for(i = 0; i < node->childNum; ++i){
 			nextBone = skliGenerateStateRecursive(skli, state, space, &node->children[i], bone, nextBone+1);
 		}
 	}
@@ -409,7 +409,7 @@ void skliGenerateState(sklInstance *skli, mat4 *state, const skeleton *skl){
 }
 void skliDelete(sklInstance *skli){
 	size_t i;
-	for(i = 0; i < skli->animations.size; i++){
+	for(i = 0; i < skli->animations.size; ++i){
 		sklaiDelete((sklAnimInstance *)cvGet(&skli->animations, i));
 	}
 	cvClear(&skli->animations);

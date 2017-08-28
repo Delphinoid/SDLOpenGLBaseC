@@ -9,7 +9,7 @@ void fpsStart(fps *f, const float dFps, const float cFps){
 }
 
 void fpsUpdate(fps *f){
-	f->totalFrames++;
+	++f->totalFrames;
 	f->frameTick = SDL_GetTicks();
 	f->actualFps = (f->totalFrames / (double)(f->frameTick - f->startTick)) * 1000;  // Actual fps = frames per millisecond multiplied by 1,000
 	f->fpsMod = f->desiredFps / f->actualFps;

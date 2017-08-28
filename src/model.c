@@ -176,7 +176,7 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 			unsigned char doneFront = 0, doneEnd = 0;
 			size_t newOffset = 0;
 			size_t i;
-			for(i = 0; (i < lineLength && !doneFront && !doneEnd); i++){
+			for(i = 0; (i < lineLength && !doneFront && !doneEnd); ++i){
 				if(!doneFront && line[i] != '\t' && line[i] != ' '){
 					newOffset = i;
 					doneFront = 1;
@@ -263,7 +263,7 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 			// Face data
 			}else if(lineLength >= 19 && strncpy(compare, line, 2) && (compare[2] = '\0') == 0 && strcmp(compare, "f ") == 0){
 				char *token = strtok(line+2, " /");
-				for(i = 0; i < 3; i++){
+				for(i = 0; i < 3; ++i){
 
 					// Load face data
 					positionIndex[i] = strtoul(token, NULL, 0);
@@ -338,7 +338,7 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 					// Check if the vertex has already been loaded, and if so add an index
 					unsigned char foundVertex = 0;
 					size_t j;
-					for(j = 0; j < mdl->vertexNum; j++){
+					for(j = 0; j < mdl->vertexNum; ++j){
 						vertex *checkVert = &vertices[j];
 						/** CHECK BONE DATA HERE **/
 						if(checkVert->pos.x == tempVert.pos.x && checkVert->pos.y == tempVert.pos.y && checkVert->pos.z == tempVert.pos.z &&

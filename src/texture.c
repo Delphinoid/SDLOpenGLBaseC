@@ -68,7 +68,7 @@ unsigned char tLoad(texture *tex, const char *prgPath, const char *filePath){
 		const unsigned char *pixelData = (unsigned char *)SDLimage->pixels;
 		const size_t textureSize = tex->width * tex->height;
 		size_t i;
-		for(i = 0; i < textureSize; i++){
+		for(i = 0; i < textureSize; ++i){
 			unsigned char alpha = pixelData[i*4+3];
 			if(alpha > 0 && alpha < 255){
 				tex->translucent = 1;

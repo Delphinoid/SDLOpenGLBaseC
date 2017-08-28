@@ -55,13 +55,13 @@ unsigned char cvInsert(cVector *vec, const size_t pos, const void *data, const s
 				cvResize(vec, vec->capacity * 2);
 			}
 			size_t i;
-			for(i = pos + 1; i < vec->size; i++){
+			for(i = pos + 1; i < vec->size; ++i){
 				vec->buffer[i] = vec->buffer[i - 1];
 			}
 			free(vec->buffer[pos]);
 			vec->buffer[pos] = tempPointer;
 			memcpy(vec->buffer[pos], data, bytes);
-			vec->size++;
+			++vec->size;
 			return 1;
 		}
 	}else{
@@ -73,9 +73,9 @@ unsigned char cvInsert(cVector *vec, const size_t pos, const void *data, const s
 unsigned char cvErase(cVector *vec, const size_t pos){
 	if(pos < vec->size){
 		free(vec->buffer[pos]);
-		vec->size--;
+		--vec->size;
 		size_t i;
-		for(i = pos; i < vec->size; i++){
+		for(i = pos; i < vec->size; ++i){
 			vec->buffer[i] = vec->buffer[i + 1];
 		}
 		return 1;
@@ -110,7 +110,7 @@ size_t cvSize(cVector *vec){
 void cvClear(cVector *vec){
 	if(vec->buffer != NULL){
 		size_t i;
-		for(i = 0; i < vec->size; i++){
+		for(i = 0; i < vec->size; ++i){
 			free(vec->buffer[i]);
 		}
 		free(vec->buffer);

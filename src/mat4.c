@@ -21,8 +21,8 @@ mat4 mat4MMultM(const mat4 *m1, const mat4 *m2){
 	mat4 r;
 
 	/*size_t i, j;
-	for(i = 0; i < 4; i++){
-		for(j = 0; j < 4; j++){
+	for(i = 0; i < 4; ++i){
+		for(j = 0; j < 4; ++j){
 			r.m[i][j] = (m2->m[i][0] * m1->m[0][j]) +
 			            (m2->m[i][1] * m1->m[1][j]) +
 			            (m2->m[i][2] * m1->m[2][j]) +
