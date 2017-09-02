@@ -289,7 +289,7 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 						tempVert.pos.z = 0.f;
 					}
 					// Vertex UV data
-					pos = (uvIndex[i]-1)*2;
+					pos = (uvIndex[i]-1)<<1;
 					if(pos+1 < tempTexCoordsSize){
 						tempVert.u = tempTexCoords[pos];
 						tempVert.v = -tempTexCoords[pos+1];

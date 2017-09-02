@@ -45,7 +45,7 @@ void renderModel(renderable *rndr, const camera *cam, gfxProgram *gfxPrg){
 	skel->root->children[0].bone.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
 	skel->root->children[0].bone.scale = vec3New(1.f, 1.f, 1.f);
 	skel->boneNum = 2;
-	mat4 *skeletonState = malloc(sizeof(mat4)*2);
+	mat4 *skeletonState = malloc(sizeof(mat4)<<1);
 
 	/* Feed the skeleton state to the shader */
 	if(rndr->skli.skl != NULL){

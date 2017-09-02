@@ -30,7 +30,7 @@ unsigned char cvPush(cVector *vec, const void *data, const size_t bytes){
 		return 0;
 	}
 	if(vec->size == vec->capacity){
-		if(!cvResize(vec, vec->capacity * 2)){
+		if(!cvResize(vec, vec->capacity << 1)){
 			return 0;
 		}
 	}
@@ -52,7 +52,7 @@ unsigned char cvInsert(cVector *vec, const size_t pos, const void *data, const s
 		void *tempPointer = malloc(bytes);
 		if(tempPointer != NULL){
 			if(vec->size == vec->capacity){
-				cvResize(vec, vec->capacity * 2);
+				cvResize(vec, vec->capacity << 1);
 			}
 			size_t i;
 			for(i = pos + 1; i < vec->size; ++i){
