@@ -10,7 +10,6 @@ List of features to be implemented:
 
 List of queued tweaks:
 * Models need to store their own skeletal data.
-* Phase out cVector (only skeletons use them now).
 * Clean up renderable struct and remove any unnecessary member variables. Currently the only real member variables I am not happy with are sprite and hudElement.
 * Fix up render and space transform structures and unify all animation / interpolation code.
 * Not happy with the current billboard system, not sure why.

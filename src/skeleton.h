@@ -1,11 +1,9 @@
 #ifndef SKELETON_H
 #define SKELETON_H
 
-#include "cVector.h"
+#include <stdlib.h>
 #include <stdint.h>
 #include "mat4.h"
-
-/** Replace cVectors with malloc() **/
 
 // Skeleton bone data
 typedef struct {
@@ -28,17 +26,19 @@ typedef struct sklNode {
 typedef struct {
 	// NOTE: each sklKeyframe in an sklAnim will have the same number of frameBones and frameIDs.
 	// Non-changing elements are marked by a NULL name.
-	cVector bones;  // Holds sklBones; represents the delta transforms for each modified bone
-	//cVector frameIDs;    // Holds size_ts; represents the sklBone each element in frameBones refers to
+	size_t boneNum;
+	sklBone *bones;  // Represents the delta transforms for each *modified* bone
 } sklKeyframe;
 
 // A full animation, containing a vector of keyframes
 typedef struct {
 	/** Redo this with a proper system that finds next bone transforms **/
-	int desiredLoops;     // How many times the animation will loop (with -1 being infinite times)
-	cVector keyframes;    // Holds sklKeyframes
-	cVector frameDelays;  // Holds floats; represents how long each frame should last
-	size_t boneNum;
+	char *name;
+	int desiredLoops;  // How many times the animation will loop (with -1 being infinite times)
+	size_t frameNum;
+	size_t boneNum;  // The total number of unique bones in the animation
+	sklKeyframe *keyframes;  // Each individual keyframe for the animation
+	size_t *frameDelays;     // Represents how long each frame should last
 } sklAnim;
 
 // Combines the above structures
@@ -51,7 +51,6 @@ typedef struct {
 // Skeletal animation instance
 typedef struct {
 	sklAnim *anim;
-	unsigned char animMode;
 	float delayMod;
 	size_t currentFrame;
 	size_t nextFrame;
@@ -64,10 +63,12 @@ typedef struct {
 } sklAnimInstance;
 
 // Skeleton instance
-/** Restructure for proper element attachments **/
+/** Restructure for proper element attachments (?? No idea what I was talking about here) **/
 typedef struct {
 	skeleton *skl;  // Should never change
-	cVector animations;    // Holds sklAnimInstances
+	size_t animationNum;
+	size_t animationCapacity;
+	sklAnimInstance *animations;
 	sklBone *customState;  // Custom bone transformations
 } sklInstance;
 

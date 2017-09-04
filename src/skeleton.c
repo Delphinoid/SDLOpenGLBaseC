@@ -3,6 +3,8 @@
 
 #define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians
 
+#define ANIM_START_CAPACITY 1
+
 void boneInit(sklBone *bone){
 	bone->name = NULL;
 	vec3SetS(&bone->position, 0.f);
@@ -55,19 +57,28 @@ unsigned char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath)
 
 }
 void sklaDelete(sklAnim *skla){
-	size_t i;
-	for(i = 0; i < skla->keyframes.size; ++i){
-		cvClear(&((sklKeyframe *)cvGet(&skla->keyframes, i))->bones);
+	if(skla->name != NULL){
+		free(skla->name);
 	}
-	cvClear(&skla->keyframes);
-	cvClear(&skla->frameDelays);
+	if(skla->keyframes != NULL){
+		size_t i;
+		for(i = 0; i < skla->frameNum; ++i){
+			free(skla->keyframes[i].bones);
+		}
+		free(skla->keyframes);
+	}
+	if(skla->frameDelays != NULL){
+		free(skla->frameDelays);
+	}
 }
 
-static sklKeyframe *sklaiGetAnimFrame(const sklAnimInstance *sklai, const size_t frame){
-	return (sklKeyframe *)cvGet(&sklai->anim->keyframes, frame);
+static inline sklKeyframe *sklaiGetAnimFrame(const sklAnimInstance *sklai, const size_t frame){
+	//return (sklKeyframe *)cvGet(&sklai->anim->keyframes, frame);
+	return &sklai->anim->keyframes[frame];
 }
-static sklBone *sklaiGetAnimBone(const sklAnimInstance *sklai, const size_t frame, const size_t bone){
-	return (sklBone *)cvGet(&sklaiGetAnimFrame(sklai, frame)->bones, bone);
+static inline sklBone *sklaiGetAnimBone(const sklAnimInstance *sklai, const size_t frame, const size_t bone){
+	//return (sklBone *)cvGet(&sklaiGetAnimFrame(sklai, frame)->bones, bone);
+	return &sklaiGetAnimFrame(sklai, frame)->bones[bone];
 }
 static void sklaiDeltaTransform(sklAnimInstance *sklai, const size_t bone){
 
@@ -134,14 +145,14 @@ static void sklaiAnimate(sklAnimInstance *sklai, const uint32_t currentTick, con
 
 	// Only animate if the animation has more than one
 	// frame and can still be animated
-	if(totalDelayMod != 0.f && sklai->anim->frameDelays.size > 1 &&
+	if(totalDelayMod != 0.f && sklai->anim->frameNum > 1 &&
 	   (sklai->currentLoops < sklai->anim->desiredLoops ||
 	    sklai->anim->desiredLoops < 0)){
 
 		// Time passed since last update
 		float deltaTime = currentTick - sklai->lastUpdate;
 		// Multiplier applied to the current frame's delay in order to slow down / speed up the animation
-		float currentFrameDelay = *((float *)cvGet(&sklai->anim->frameDelays, sklai->currentFrame))*totalDelayMod;
+		float currentFrameDelay = sklai->anim->frameDelays[sklai->currentFrame]*totalDelayMod;
 		// animInterpT is temporarily set to 0 for sklaiDeltaTransform()
 		sklai->animInterpT = 0.f;
 
@@ -155,7 +166,7 @@ static void sklaiAnimate(sklAnimInstance *sklai, const uint32_t currentTick, con
 			deltaTime -= currentFrameDelay;
 			sklai->lastUpdate += currentFrameDelay;
 			// Increase currentFrame and check if it exceeds the number of frames
-			if(++sklai->currentFrame == sklai->anim->frameDelays.size){
+			if(++sklai->currentFrame == sklai->anim->frameNum){
 				// currentFrame has exceeded the number of frames, increase the loop counter
 				++sklai->currentLoops;
 				if(sklai->currentLoops < sklai->anim->desiredLoops ||
@@ -164,13 +175,13 @@ static void sklaiAnimate(sklAnimInstance *sklai, const uint32_t currentTick, con
 					sklai->currentFrame = 0;
 				}else{
 					// Otherwise set it to the final frame
-					sklai->currentFrame = sklai->anim->frameDelays.size-1;
+					sklai->currentFrame = sklai->anim->frameNum-1;
 					sklai->lastUpdate = currentTick;
 				}
 			}
 
 			// Calculate nextFrame
-			if(sklai->currentFrame < sklai->anim->frameDelays.size-1){
+			if(sklai->currentFrame < sklai->anim->frameNum-1){
 				sklai->nextFrame = sklai->currentFrame+1;
 			}else if(sklai->currentLoops < sklai->anim->desiredLoops ||
 			         sklai->anim->desiredLoops < 0){
@@ -178,7 +189,7 @@ static void sklaiAnimate(sklAnimInstance *sklai, const uint32_t currentTick, con
 			}
 
 			// Update currentFrameDelay based on the new value of currentFrame
-			currentFrameDelay = *((float *)cvGet(&sklai->anim->frameDelays, sklai->currentFrame))*totalDelayMod;
+			currentFrameDelay = sklai->anim->frameDelays[sklai->currentFrame]*totalDelayMod;
 
 			// Generate boneState for the new frame
 			// With the current way animations work, boneState must be updated every time
@@ -193,7 +204,7 @@ static void sklaiAnimate(sklAnimInstance *sklai, const uint32_t currentTick, con
 		}
 
 		// Set animInterpT to a number between 0 and 1, where 0 is the current frame and 1 is the next frame
-		sklai->animInterpT = deltaTime / *((float *)cvGet(&sklai->anim->frameDelays, sklai->currentFrame));
+		sklai->animInterpT = deltaTime / sklai->anim->frameDelays[sklai->currentFrame];
 		// Final state update
 		sklaiGenerateState(sklai);
 
@@ -217,7 +228,9 @@ void sklaiDelete(sklAnimInstance *sklai){
 
 void skliInit(sklInstance *skli, skeleton *skl){
 	skli->skl = skl;
-	cvInit(&skli->animations, 1);
+	skli->animationNum = 0;
+	skli->animationCapacity = ANIM_START_CAPACITY;
+	skli->animations = malloc(skli->animationCapacity*sizeof(sklAnim));
 	if(skl != NULL){
 		skli->customState = malloc(skl->boneNum*sizeof(sklBone));
 		/**skli->skeletonState = malloc(skl->boneNum*sizeof(mat4));**/
@@ -255,51 +268,55 @@ unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *fileP
 	skliInit(skli, skel);
 
 	sklAnim *anim = malloc(sizeof(sklAnim));
+	anim->name = malloc(5*sizeof(char));
+	memcpy(anim->name, "test\0", 5);
 	anim->desiredLoops = -1;
+	anim->frameNum = 0;
 	anim->boneNum = 2;
-	cvInit(&anim->keyframes, 4);
+	anim->keyframes = malloc(4*sizeof(sklKeyframe));
+	anim->frameDelays = malloc(4*sizeof(float));
+
 	sklKeyframe tempKeyframe;
 	sklBone tempBoneRoot, tempBoneTop;
-
-	cvInit(&tempKeyframe.bones, 2);
+	tempKeyframe.bones = malloc(2*sizeof(sklBone));
 	boneInit(&tempBoneRoot); boneInit(&tempBoneTop);
-	cvPush(&tempKeyframe.bones, &tempBoneRoot, sizeof(tempBoneRoot));
-	cvPush(&tempKeyframe.bones, &tempBoneTop, sizeof(tempBoneTop));
-	cvPush(&anim->keyframes, &tempKeyframe, sizeof(tempKeyframe));
+	tempKeyframe.bones[0] = tempBoneRoot;
+	tempKeyframe.bones[1] = tempBoneTop;
+	anim->keyframes[anim->frameNum] = tempKeyframe;
+	anim->frameDelays[anim->frameNum] = 1000.f;
+	++anim->frameNum;
 
-	cvInit(&tempKeyframe.bones, 2);
+	tempKeyframe.bones = malloc(2*sizeof(sklBone));
 	tempBoneRoot.name = malloc(5*sizeof(char));
 	memcpy(tempBoneRoot.name, "root\0", 5);
 	tempBoneTop.name = malloc(4*sizeof(char));
 	memcpy(tempBoneTop.name, "top\0", 4);
 	tempBoneTop.position.y = 0.5f;
-	cvPush(&tempKeyframe.bones, &tempBoneRoot, sizeof(tempBoneRoot));
-	cvPush(&tempKeyframe.bones, &tempBoneTop, sizeof(tempBoneTop));
-	cvPush(&anim->keyframes, &tempKeyframe, sizeof(tempKeyframe));
+	tempKeyframe.bones[0] = tempBoneRoot;
+	tempKeyframe.bones[1] = tempBoneTop;
+	anim->keyframes[anim->frameNum] = tempKeyframe;
+	anim->frameDelays[anim->frameNum] = 1000.f;
+	++anim->frameNum;
 
-	cvInit(&tempKeyframe.bones, 2);
+	tempKeyframe.bones = malloc(2*sizeof(sklBone));
 	tempBoneRoot.position.y = 0.5f;
 	tempBoneTop.position.y = 0.f;
 	tempBoneTop.orientation = quatNewEuler(0.f, 90.f*RADIAN_RATIO, 0.f);
-	cvPush(&tempKeyframe.bones, &tempBoneRoot, sizeof(tempBoneRoot));
-	cvPush(&tempKeyframe.bones, &tempBoneTop, sizeof(tempBoneTop));
-	cvPush(&anim->keyframes, &tempKeyframe, sizeof(tempKeyframe));
+	tempKeyframe.bones[0] = tempBoneRoot;
+	tempKeyframe.bones[1] = tempBoneTop;
+	anim->keyframes[anim->frameNum] = tempKeyframe;
+	anim->frameDelays[anim->frameNum] = 1000.f;
+	++anim->frameNum;
 
-	cvInit(&tempKeyframe.bones, 2);
+	tempKeyframe.bones = malloc(2*sizeof(sklBone));
 	tempBoneRoot.position.y = 0.f;
 	tempBoneTop.position.y = 0.f;
 	tempBoneTop.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
-	cvPush(&tempKeyframe.bones, &tempBoneRoot, sizeof(tempBoneRoot));
-	cvPush(&tempKeyframe.bones, &tempBoneTop, sizeof(tempBoneTop));
-	cvPush(&anim->keyframes, &tempKeyframe, sizeof(tempKeyframe));
-
-	cvInit(&anim->frameDelays, 4);
-	float delay = 1000.f;
-	cvPush(&anim->frameDelays, &delay, sizeof(delay));
-	cvPush(&anim->frameDelays, &delay, sizeof(delay));
-	cvPush(&anim->frameDelays, &delay, sizeof(delay));
-	delay = 0.f;
-	cvPush(&anim->frameDelays, &delay, sizeof(delay));
+	tempKeyframe.bones[0] = tempBoneRoot;
+	tempKeyframe.bones[1] = tempBoneTop;
+	anim->keyframes[anim->frameNum] = tempKeyframe;
+	anim->frameDelays[anim->frameNum] = 0.f;
+	++anim->frameNum;
 
 	sklAnimInstance animInst;
 	animInst.anim = anim;
@@ -319,9 +336,13 @@ unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *fileP
 	animInst.animState[0] = tempBoneRoot;
 	animInst.animState[1] = tempBoneTop;
 
-	cvPush(&skli->animations, &animInst, sizeof(animInst));
+	skli->animations[skli->animationNum] = animInst;
+	++skli->animationNum;
 
 	return 1;
+}
+void skliAddAnimation(sklInstance *skli, sklAnimInstance *sklai){
+	// Should be similar to a vector push function
 }
 static void skliBoneState(sklInstance *skli, mat4 *state, const sklNode *space, const sklNode *node, const size_t parent, const size_t bone){
 	/*
@@ -351,10 +372,10 @@ static void skliBoneState(sklInstance *skli, mat4 *state, const sklNode *space, 
 	/** Find the bone's position in each sklAnimInstance by strcmping the names **/
 	/** Later, set up a "lookup table" of sorts when animations are added to make this faster **/
 	size_t i, j;
-	for(i = 0; i < skli->animations.size; ++i){
+	for(i = 0; i < skli->animationNum; ++i){
+		sklBone *currentAnimState = skli->animations[i].animState;
 		// Loop through each bone modified by the animation
-		for(j = 0; j < ((sklAnimInstance *)cvGet(&skli->animations, i))->anim->boneNum; ++j){
-			sklBone *currentAnimState = ((sklAnimInstance *)cvGet(&skli->animations, i))->animState;
+		for(j = 0; j < skli->animations[i].anim->boneNum; ++j){
 			/** Use a lookup here instead of strcmp() **/
 			if(strcmp(node->bone.name, currentAnimState[j].name) == 0){
 				mat4Translate(&state[bone], currentAnimState[j].position.x,
@@ -377,8 +398,8 @@ static void skliBoneState(sklInstance *skli, mat4 *state, const sklNode *space, 
 }
 void skliAnimate(sklInstance *skli, const uint32_t currentTick, const float globalDelayMod){
 	size_t i;
-	for(i = 0; i < skli->animations.size; ++i){
-		sklaiAnimate((sklAnimInstance *)cvGet(&skli->animations, i), currentTick, globalDelayMod);
+	for(i = 0; i < skli->animationNum; ++i){
+		sklaiAnimate(&skli->animations[i], currentTick, globalDelayMod);
 	}
 }
 static size_t skliGenerateStateRecursive(sklInstance *skli, mat4 *state, sklNode *space, const sklNode *node, const size_t parent, const size_t bone){
@@ -408,11 +429,13 @@ void skliGenerateState(sklInstance *skli, mat4 *state, const skeleton *skl){
 	skliGenerateStateRecursive(skli, state, skli->skl->root, skl->root, 0, 0);
 }
 void skliDelete(sklInstance *skli){
-	size_t i;
-	for(i = 0; i < skli->animations.size; ++i){
-		sklaiDelete((sklAnimInstance *)cvGet(&skli->animations, i));
+	if(skli->animations != NULL){
+		size_t i;
+		for(i = 0; i < skli->animationNum; ++i){
+			sklaiDelete(&skli->animations[i]);
+		}
+		free(skli->animations);
 	}
-	cvClear(&skli->animations);
 	if(skli->customState != NULL){
 		free(skli->customState);
 	}

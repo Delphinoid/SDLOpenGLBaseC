@@ -747,21 +747,21 @@ void twDelete(textureWrapper *tw){
 }
 
 
-static twAnim *twGetAnim(const textureWrapper *tw, const size_t anim){
+static inline twAnim *twGetAnim(const textureWrapper *tw, const size_t anim){
 	return &tw->animations[anim];
 }
 
-static twFrame *twGetAnimFrame(const textureWrapper *tw, const size_t anim, const size_t frame){
+static inline twFrame *twGetAnimFrame(const textureWrapper *tw, const size_t anim, const size_t frame){
 	/*size_t currentFrameID = *((size_t *)cvGet(&twGetAnim(tw, anim)->frameIDs, frame));*/
 	return &tw->frames[tw->animations[anim].frameIDs[frame]];
 }
 
-static twBounds *twGetAnimSubframe(const textureWrapper *tw, const size_t anim, const size_t frame){
+static inline twBounds *twGetAnimSubframe(const textureWrapper *tw, const size_t anim, const size_t frame){
 	/*size_t currentSubframeID = *((size_t *)cvGet(&twGetAnim(tw, anim)->subframeIDs, frame));*/
 	return &tw->frames[tw->animations[anim].frameIDs[frame]].subframes[tw->animations[anim].subframeIDs[frame]];
 }
 
-static float *twGetAnimFrameDelay(const textureWrapper *tw, const size_t anim, const size_t frame){
+static inline float *twGetAnimFrameDelay(const textureWrapper *tw, const size_t anim, const size_t frame){
 	return &tw->animations[anim].frameDelays[frame];
 }
 
