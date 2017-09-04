@@ -285,7 +285,7 @@ void renderScene(cVector *allRenderables, cVector *allCameras, gfxProgram *gfxPr
 	batchRenderSprites(&spritesScene, (camera *)cvGet(allCameras, 0), gfxPrg);
 
 
-	glClear(GL_DEPTH_BUFFER_BIT);
+	//glClear(GL_DEPTH_BUFFER_BIT);
 
 	// Render HUD models
 	/** HUD camera? Streamline this to make handling different cameras easily **/

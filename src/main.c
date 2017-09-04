@@ -246,6 +246,7 @@ int main(int argc, char *argv[]){
 			camUpdateProjectionMatrix((camera *)cvGet(&allCameras, i), gfxPrg.aspectRatioX, gfxPrg.aspectRatioY);
 		}
 
+		/** Remove later **/
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Render the scene
@@ -269,7 +270,7 @@ int main(int argc, char *argv[]){
 	sklaiDelete(&((renderable *)cvGet(&allRenderables, 1))->skli.animations[0]);
 	skliDelete(&((renderable *)cvGet(&allRenderables, 0))->skli);
 	skliDelete(&((renderable *)cvGet(&allRenderables, 1))->skli);
-cleanup(&allTextures, &allTexWrappers, &allModels, &allCameras, &allSkeletons, &allSklAnimations, &allRenderables, &gfxPrg);
+	cleanup(&allTextures, &allTexWrappers, &allModels, &allCameras, &allSkeletons, &allSklAnimations, &allRenderables, &gfxPrg);
 
 	return 0;
 
