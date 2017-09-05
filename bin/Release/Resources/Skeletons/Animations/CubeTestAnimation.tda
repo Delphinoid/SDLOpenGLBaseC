@@ -1,0 +1,43 @@
+name Test
+
+bone root
+bone top
+
+frame {
+	length 1000
+}
+
+frame {
+	length 1000
+	transform 0 0 0 0 0 0 0
+	transform 1 0 0.5 0 0 0 0
+}
+
+frame {
+	length 1000
+	transform 0 0 0.5 0 0 0 0
+	transform 1 0 0 0 0 0.7071 0
+}
+
+frame {
+	length 1000
+	transform 0 0 0 0 0 0 0
+	transform 1 0 0 0 0 0 0
+}
+
+
+//globalFrame 1000
+//globalFrame 1000
+//globalFrame 1000
+//
+//bone root {
+//	localFrame 1 0 0 0 0 0 0
+//	localFrame 2 0 0.5 0 0 0 0
+//	localFrame 3 0 0 0 0 0 0
+//}
+//
+//bone top {
+//	localFrame 1 0 0 0 0 0 0
+//	localFrame 2 0 0.5 0 0 0 0
+//	localFrame 3 0 0 0 0 0 0
+//}

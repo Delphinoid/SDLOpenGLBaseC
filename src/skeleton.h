@@ -7,7 +7,6 @@
 
 // Skeleton bone data
 typedef struct {
-	char *name;
 	vec3 position;
 	quat orientation;
 	vec3 scale;
@@ -16,29 +15,28 @@ typedef struct {
 // Skeleton node, containing a bone and links to the parent and its children
 typedef struct sklNode sklNode;
 typedef struct sklNode {
-	sklBone bone;
+	char *name;
+	sklBone defaultState;
 	struct sklNode *parent;
 	size_t childNum;
 	struct sklNode *children;
 } sklNode;
 
-// Keyframe used for animations
-typedef struct {
-	// NOTE: each sklKeyframe in an sklAnim will have the same number of frameBones and frameIDs.
-	// Non-changing elements are marked by a NULL name.
-	size_t boneNum;
-	sklBone *bones;  // Represents the delta transforms for each *modified* bone
-} sklKeyframe;
-
 // A full animation, containing a vector of keyframes
 typedef struct {
-	/** Redo this with a proper system that finds next bone transforms **/
+	/**
+	*** Redo this with a proper system that finds next bone transforms and
+	*** works on independent bone sequences.
+	**/
 	char *name;
 	int desiredLoops;  // How many times the animation will loop (with -1 being infinite times)
-	size_t frameNum;
 	size_t boneNum;  // The total number of unique bones in the animation
-	sklKeyframe *keyframes;  // Each individual keyframe for the animation
-	size_t *frameDelays;     // Represents how long each frame should last
+	char **bones;    // Array of names for each bone
+	size_t frameNum;    // The total number of keyframes in the animation
+	sklBone ***frames;  // An array of keyframes, where each keyframe is an array of
+	                    // pointers to bone delta transforms (offsets from their
+	                    // default states). NULL entries represent unchanged bones.
+	size_t *frameDelays;  // Represents how long each frame should last
 } sklAnim;
 
 // Combines the above structures
@@ -56,9 +54,9 @@ typedef struct {
 	size_t nextFrame;
 	int currentLoops;
 	float lastUpdate;
+	float animInterpT;
 	sklBone *animInterpStart;
 	sklBone *animInterpEnd;
-	float animInterpT;
 	sklBone *animState;  // Delta transformations for each bone
 } sklAnimInstance;
 

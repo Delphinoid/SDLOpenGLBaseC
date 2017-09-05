@@ -29,23 +29,23 @@ void renderModel(renderable *rndr, const camera *cam, gfxProgram *gfxPrg){
 	/** **/
 	skeleton *skel = malloc(sizeof(skeleton));
 	skel->root = malloc(sizeof(sklNode));
-	skel->root->bone.name = malloc(5*sizeof(char));
-	memcpy(skel->root->bone.name, "root\0", 5);
-	skel->root->bone.position = vec3New(0.5f, -1.f, 0.5f);
-	skel->root->bone.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
-	skel->root->bone.scale = vec3New(1.f, 1.f, 1.f);
+	skel->root->name = malloc(5*sizeof(char));
+	memcpy(skel->root->name, "root\0", 5);
+	skel->root->defaultState.position = vec3New(0.5f, -1.f, 0.5f);
+	skel->root->defaultState.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
+	skel->root->defaultState.scale = vec3New(1.f, 1.f, 1.f);
 	skel->root->parent = NULL;
 	skel->root->childNum = 1;
 	skel->root->children = malloc(sizeof(sklNode));
 	skel->root->children[0].parent = skel->root;
 	skel->root->children[0].childNum = 0;
-	skel->root->children[0].bone.name = malloc(4*sizeof(char));
-	memcpy(skel->root->children[0].bone.name, "top\0", 4);
-	skel->root->children[0].bone.position = vec3New(0.f, 2.f, 0.f);
-	skel->root->children[0].bone.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
-	skel->root->children[0].bone.scale = vec3New(1.f, 1.f, 1.f);
+	skel->root->children[0].name = malloc(4*sizeof(char));
+	memcpy(skel->root->children[0].name, "top\0", 4);
+	skel->root->children[0].defaultState.position = vec3New(0.f, 2.f, 0.f);
+	skel->root->children[0].defaultState.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
+	skel->root->children[0].defaultState.scale = vec3New(1.f, 1.f, 1.f);
 	skel->boneNum = 2;
-	mat4 *skeletonState = malloc(sizeof(mat4)<<1);
+	mat4 *skeletonState = malloc(2*sizeof(mat4));
 
 	/* Feed the skeleton state to the shader */
 	if(rndr->skli.skl != NULL){
@@ -69,9 +69,9 @@ void renderModel(renderable *rndr, const camera *cam, gfxProgram *gfxPrg){
 
 	/** **/
 	free(skeletonState);
-	free(skel->root->children[0].bone.name);
+	free(skel->root->children[0].name);
 	free(skel->root->children);
-	free(skel->root->bone.name);
+	free(skel->root->name);
 	free(skel->root);
 	free(skel);
 

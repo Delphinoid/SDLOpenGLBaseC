@@ -266,10 +266,6 @@ int main(int argc, char *argv[]){
 	sklDelete(((renderable *)cvGet(&allRenderables, 1))->skli.skl);
 	sklaDelete(((renderable *)cvGet(&allRenderables, 0))->skli.animations[0].anim);
 	sklaDelete(((renderable *)cvGet(&allRenderables, 1))->skli.animations[0].anim);
-	sklaiDelete(&((renderable *)cvGet(&allRenderables, 0))->skli.animations[0]);
-	sklaiDelete(&((renderable *)cvGet(&allRenderables, 1))->skli.animations[0]);
-	skliDelete(&((renderable *)cvGet(&allRenderables, 0))->skli);
-	skliDelete(&((renderable *)cvGet(&allRenderables, 1))->skli);
 	cleanup(&allTextures, &allTexWrappers, &allModels, &allCameras, &allSkeletons, &allSklAnimations, &allRenderables, &gfxPrg);
 
 	return 0;
