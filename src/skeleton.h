@@ -1,8 +1,7 @@
 #ifndef SKELETON_H
 #define SKELETON_H
 
-#include <stdlib.h>
-#include <stdint.h>
+#include "animation.h"
 #include "mat4.h"
 
 // Skeleton bone data
@@ -22,23 +21,6 @@ typedef struct sklNode {
 	struct sklNode *children;
 } sklNode;
 
-// A full animation, containing a vector of keyframes
-typedef struct {
-	/**
-	*** Redo this with a proper system that finds next bone transforms and
-	*** works on independent bone sequences.
-	**/
-	char *name;
-	int desiredLoops;  // How many times the animation will loop (with -1 being infinite times)
-	size_t boneNum;  // The total number of unique bones in the animation
-	char **bones;    // Array of names for each bone
-	size_t frameNum;    // The total number of keyframes in the animation
-	sklBone ***frames;  // An array of keyframes, where each keyframe is an array of
-	                    // pointers to bone delta transforms (offsets from their
-	                    // default states). NULL entries represent unchanged bones.
-	size_t *frameDelays;  // Represents how long each frame should last
-} sklAnim;
-
 // Combines the above structures
 typedef struct {
 	char *name;
@@ -46,14 +28,26 @@ typedef struct {
 	size_t boneNum;
 } skeleton;
 
+// A full animation, containing a vector of keyframes
+typedef struct {
+	/**
+	*** Redo this with a proper system that finds next bone transforms and
+	*** works on independent bone sequences. Should be easy with the
+	*** new animation system.
+	**/
+	char *name;
+	animationData animData;
+	size_t boneNum;  // The total number of unique bones in the animation
+	char **bones;    // Array of names for each bone
+	sklBone ***frames;  // An array of keyframes, where each keyframe is an array of
+	                    // pointers to bone delta transforms (offsets from their
+	                    // default states). NULL entries represent unchanged bones.
+} sklAnim;
+
 // Skeletal animation instance
 typedef struct {
 	sklAnim *anim;
-	float delayMod;
-	size_t currentFrame;
-	size_t nextFrame;
-	int currentLoops;
-	float lastUpdate;
+	animationInstance animInst;
 	float animInterpT;
 	sklBone *animInterpStart;
 	sklBone *animInterpEnd;
@@ -64,6 +58,7 @@ typedef struct {
 /** Restructure for proper element attachments (?? No idea what I was talking about here) **/
 typedef struct {
 	skeleton *skl;  // Should never change
+	float timeMod;
 	size_t animationNum;
 	size_t animationCapacity;
 	sklAnimInstance *animations;
@@ -85,7 +80,7 @@ void sklaiDelete(sklAnimInstance *sklai);
 
 void skliInit(sklInstance *skli, skeleton *skl);
 unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *filePath);
-void skliAnimate(sklInstance *skli, const uint32_t currentTick, const float globalDelayMod);
+void skliAnimate(sklInstance *skli, const float timeElapsed);
 void skliGenerateState(sklInstance *skli, mat4 *state, const skeleton *skl);
 void skliDelete(sklInstance *skli);
 

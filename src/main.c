@@ -127,6 +127,10 @@ int main(int argc, char *argv[]){
 	SDL_Event prgEventHandler;
 	fps fpsHandler; fpsStart(&fpsHandler, 61, 121);
 
+	float globalTimeMod = 1.f;
+	uint32_t startTick;
+	uint32_t ticksElapsed = 0;
+
 	unsigned char UP    = 0;
 	unsigned char DOWN  = 0;
 	unsigned char LEFT  = 0;
@@ -139,6 +143,9 @@ int main(int argc, char *argv[]){
 	size_t i;
 
 	while(prgRunning){
+
+		/* Set tick that the frame is starting on */
+		startTick = SDL_GetTicks();
 
 		/* Update FPS */
 		fpsUpdate(&fpsHandler);
@@ -234,8 +241,8 @@ int main(int argc, char *argv[]){
 		/* Animate */
 		// Animate the renderables
 		for(i = 0; i < allRenderables.size; ++i){
-			rndrAnimateTexture((renderable *)cvGet(&allRenderables, i), SDL_GetTicks(), 1.f);
-			rndrAnimateSkeleton((renderable *)cvGet(&allRenderables, i), SDL_GetTicks(), 1.f);
+			rndrAnimateTexture((renderable *)cvGet(&allRenderables, i), (float)ticksElapsed * globalTimeMod);
+			rndrAnimateSkeleton((renderable *)cvGet(&allRenderables, i), (float)ticksElapsed * globalTimeMod);
 		}
 
 
@@ -258,6 +265,9 @@ int main(int argc, char *argv[]){
 
 		/* Pause the program to maintain a constant FPS */
 		fpsDelay(&fpsHandler);
+
+		/* Update time elapsed in the last frame */
+		ticksElapsed = SDL_GetTicks() - startTick;
 
 	}
 

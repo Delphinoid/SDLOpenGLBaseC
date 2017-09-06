@@ -2,6 +2,7 @@
 #define TEXTUREWRAPPER_H
 
 #include "texture.h"
+#include "animation.h"
 #include "cVector.h"
 
 // Simple rectangle structure for the frame boundaries when using sprite sheets
@@ -19,11 +20,9 @@ typedef struct {
 
 // Contains details describing an animation
 typedef struct {
-	int desiredLoops;     // How many times the animation will loop (with -1 being infinite times)
-	size_t frameNum;
+	animationData animData;
 	size_t *frameIDs;     // Represents the positions of the frames in textureWrapper.frames
 	size_t *subframeIDs;  // Represents the positions of the subframes in twFrame.subframes
-	float *frameDelays;   // Represents how long each frame should last
 } twAnim;
 
 // Combines the above structures
@@ -38,11 +37,9 @@ typedef struct {
 // Texture wrapper instance
 typedef struct {
 	textureWrapper *tw;
-	float delayMod;
+	float timeMod;
 	size_t currentAnim;
-	size_t currentFrame;
-	int currentLoops;
-	float lastUpdate;
+	animationInstance animInst;
 } twInstance;
 
 /** twLoad() and twiAnimate() may need some tidying up **/
@@ -52,8 +49,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 void twDelete(textureWrapper *tw);
 
 void twiInit(twInstance *twi, textureWrapper *tw);
-/** Use time passed instead of currentTick **/
-void twiAnimate(twInstance *twi, const uint32_t currentTick, const float globalDelayMod);
+void twiAnimate(twInstance *twi, const float timeElapsed);
 GLuint twiGetTexWidth(const twInstance *twi);
 GLuint twiGetTexHeight(const twInstance *twi);
 GLuint twiGetTexID(const twInstance *twi);

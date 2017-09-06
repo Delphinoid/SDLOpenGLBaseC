@@ -58,12 +58,12 @@ void rndrRotateZ(renderable *rndr, const float changeZ){
 	rndr->sTrans.changeRot.z += changeZ;
 }
 
-void rndrAnimateTexture(renderable *rndr, const uint32_t currentTick, const float globalDelayMod){
-	twiAnimate(&rndr->twi, currentTick, globalDelayMod);
+void rndrAnimateTexture(renderable *rndr, const float timeElapsed){
+	twiAnimate(&rndr->twi, timeElapsed);
 }
 
-void rndrAnimateSkeleton(renderable *rndr, const uint32_t currentTick, const float globalDelayMod){
-	skliAnimate(&rndr->skli, currentTick, globalDelayMod);
+void rndrAnimateSkeleton(renderable *rndr, const float timeElapsed){
+	skliAnimate(&rndr->skli, timeElapsed);
 }
 
 void rndrGenerateTransform(renderable *rndr, const camera *cam, mat4 *transformMatrix){

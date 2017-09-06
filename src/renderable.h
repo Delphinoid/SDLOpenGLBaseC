@@ -49,7 +49,7 @@ void rndrSetRotation(renderable *rndr, const float newX, const float newY, const
 void rndrRotateX(renderable *rndr, const float changeX);
 void rndrRotateY(renderable *rndr, const float changeY);
 void rndrRotateZ(renderable *rndr, const float changeZ);
-void rndrAnimateTexture(renderable *rndr, const uint32_t currentTick, const float globalDelayMod);
-void rndrAnimateSkeleton(renderable *rndr, const uint32_t currentTick, const float globalDelayMod);
+void rndrAnimateTexture(renderable *rndr, const float timeElapsed);
+void rndrAnimateSkeleton(renderable *rndr, const float timeElapsed);
 
 #endif

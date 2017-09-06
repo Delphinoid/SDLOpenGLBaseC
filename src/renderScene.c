@@ -26,7 +26,7 @@ void renderModel(renderable *rndr, const camera *cam, gfxProgram *gfxPrg){
 	// Feed the texture coordinates to the shader
 	glUniform4fv(gfxPrg->textureFragmentID, 1, texFrag);
 
-	/** **/
+	/** Move this into a model / renderable? **/
 	skeleton *skel = malloc(sizeof(skeleton));
 	skel->root = malloc(sizeof(sklNode));
 	skel->root->name = malloc(5*sizeof(char));

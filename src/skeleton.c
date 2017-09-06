@@ -73,7 +73,7 @@ void sklaDelete(sklAnim *skla){
 	}
 	if(skla->frames != NULL){
 		size_t i, j;
-		for(i = 0; i < skla->frameNum; ++i){
+		for(i = 0; i < skla->animData.frameNum; ++i){
 			if(skla->frames[i] != NULL){
 				for(j = 0; j < skla->boneNum; ++j){
 					if(skla->frames[i][j] != NULL){
@@ -85,8 +85,8 @@ void sklaDelete(sklAnim *skla){
 		}
 		free(skla->frames);
 	}
-	if(skla->frameDelays != NULL){
-		free(skla->frameDelays);
+	if(skla->animData.frameDelays != NULL){
+		free(skla->animData.frameDelays);
 	}
 }
 
@@ -101,12 +101,12 @@ static inline sklBone *sklaiGetAnimBone(const sklAnimInstance *sklai, const size
 static void sklaiDeltaTransform(sklAnimInstance *sklai, const size_t bone){
 
 	// If the current frame's bone has a valid state change, use it to start interpolation
-	sklBone *transform = sklaiGetAnimBone(sklai, sklai->currentFrame, bone);
+	sklBone *transform = sklaiGetAnimBone(sklai, sklai->animInst.currentFrame, bone);
 	if(transform != NULL){
 		sklai->animInterpStart[bone] = *transform;
 	}
 	// If the next frame's bone has a valid state change, use it to end interpolation
-	transform = sklaiGetAnimBone(sklai, sklai->nextFrame, bone);
+	transform = sklaiGetAnimBone(sklai, sklai->animInst.nextFrame, bone);
 	if(transform != NULL){
 		sklai->animInterpEnd[bone] = *transform;
 	}
@@ -152,7 +152,18 @@ static void sklaiGenerateState(sklAnimInstance *sklai){
 		sklaiDeltaTransform(sklai, i);
 	}
 }
-static void sklaiAnimate(sklAnimInstance *sklai, const uint32_t currentTick, const float globalDelayMod){
+static void sklaiAnimate(sklAnimInstance *sklai, const float timeElapsed){
+	/*if(sklai->animInst.currentFrame >= sklai->anim->animData.frameNum){
+		sklai->animInst.currentFrame = 0;
+	}
+	if(sklai->animInst.nextFrame >= sklai->anim->animData.frameNum){
+		sklai->animInst.nextFrame = 0;
+	}*/
+	animAdvance(&sklai->animInst, &sklai->anim->animData, timeElapsed);
+	sklai->animInterpT = sklai->animInst.currentFrameProgress / sklai->animInst.currentFrameLength;
+	sklaiGenerateState(sklai);
+}
+/**static void sklaiAnimate(sklAnimInstance *sklai, const uint32_t currentTick, const float globalDelayMod){
 
 	// Make sure lastUpdate has been set
 	if(sklai->lastUpdate == 0.f){
@@ -174,8 +185,8 @@ static void sklaiAnimate(sklAnimInstance *sklai, const uint32_t currentTick, con
 		// animInterpT is temporarily set to 0 for sklaiDeltaTransform()
 		sklai->animInterpT = 0.f;
 
-		/* While deltaTime exceeds the time that the current frame should last and the
-		texture can still be animated, advance the animation */
+		* While deltaTime exceeds the time that the current frame should last and the
+		texture can still be animated, advance the animation *
 		while(deltaTime >= currentFrameDelay &&
 		      (sklai->currentLoops < sklai->anim->desiredLoops ||
 		       sklai->anim->desiredLoops < 0)){
@@ -228,7 +239,7 @@ static void sklaiAnimate(sklAnimInstance *sklai, const uint32_t currentTick, con
 
 	}
 
-}
+}**/
 void sklaiChangeAnim(sklAnimInstance *sklai, const sklAnim *anim){
 	/** Needs a special function for changing animations in order to handle blending correctly **/
 }
@@ -246,6 +257,7 @@ void sklaiDelete(sklAnimInstance *sklai){
 
 void skliInit(sklInstance *skli, skeleton *skl){
 	skli->skl = skl;
+	skli->timeMod = 1.f;
 	skli->animationNum = 0;
 	skli->animationCapacity = ANIM_START_CAPACITY;
 	skli->animations = malloc(skli->animationCapacity*sizeof(sklAnim));
@@ -264,96 +276,96 @@ void skliInit(sklInstance *skli, skeleton *skl){
 }
 unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *filePath){
 
-	skeleton *skel = malloc(sizeof(skeleton));
-	skel->root = malloc(sizeof(sklNode));
-	skel->root->name = malloc(5*sizeof(char));
-	memcpy(skel->root->name, "root\0", 5);
-	skel->root->defaultState.position = vec3New(0.5f, -1.f, 0.5f);
-	skel->root->defaultState.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
-	skel->root->defaultState.scale = vec3New(1.f, 1.f, 1.f);
-	skel->root->parent = NULL;
-	skel->root->childNum = 1;
-	skel->root->children = malloc(sizeof(sklNode));
-	skel->root->children[0].parent = skel->root;
-	skel->root->children[0].childNum = 0;
-	skel->root->children[0].name = malloc(4*sizeof(char));
-	memcpy(skel->root->children[0].name, "top\0", 4);
-	skel->root->children[0].defaultState.position = vec3New(0.f, 2.f, 0.f);
-	skel->root->children[0].defaultState.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
-	skel->root->children[0].defaultState.scale = vec3New(1.f, 1.f, 1.f);
-	skel->boneNum = 2;
+	skeleton *skl = malloc(sizeof(skeleton));
+	skl->root = malloc(sizeof(sklNode));
+	skl->root->name = malloc(5*sizeof(char));
+	memcpy(skl->root->name, "root\0", 5);
+	skl->root->defaultState.position = vec3New(0.5f, -1.f, 0.5f);
+	skl->root->defaultState.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
+	skl->root->defaultState.scale = vec3New(1.f, 1.f, 1.f);
+	skl->root->parent = NULL;
+	skl->root->childNum = 1;
+	skl->root->children = malloc(sizeof(sklNode));
+	skl->root->children[0].parent = skl->root;
+	skl->root->children[0].childNum = 0;
+	skl->root->children[0].name = malloc(4*sizeof(char));
+	memcpy(skl->root->children[0].name, "top\0", 4);
+	skl->root->children[0].defaultState.position = vec3New(0.f, 2.f, 0.f);
+	skl->root->children[0].defaultState.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
+	skl->root->children[0].defaultState.scale = vec3New(1.f, 1.f, 1.f);
+	skl->boneNum = 2;
 
-	skliInit(skli, skel);
+	skliInit(skli, skl);
 
-	sklAnim *anim = malloc(sizeof(sklAnim));
-	anim->name = malloc(5*sizeof(char));
-	memcpy(anim->name, "test\0", 5);
-	anim->desiredLoops = -1;
-	anim->boneNum = 2;
-	anim->bones = malloc(anim->boneNum*sizeof(char*));
-	anim->bones[0] = malloc(5*sizeof(char));
-	memcpy(anim->bones[0], "root\0", 5);
-	anim->bones[1] = malloc(4*sizeof(char));
-	memcpy(anim->bones[1], "top\0", 4);
-	anim->frameNum = 4;
-	anim->frames = malloc(anim->frameNum*sizeof(sklBone**));
-	anim->frameDelays = malloc(4*sizeof(float));
+	sklAnim *skla = malloc(sizeof(sklAnim));
+	skla->name = malloc(5*sizeof(char));
+	memcpy(skla->name, "test\0", 5);
+	skla->animData.desiredLoops = -1;
+	skla->boneNum = 2;
+	skla->bones = malloc(skla->boneNum*sizeof(char*));
+	skla->bones[0] = malloc(5*sizeof(char));
+	memcpy(skla->bones[0], "root\0", 5);
+	skla->bones[1] = malloc(4*sizeof(char));
+	memcpy(skla->bones[1], "top\0", 4);
+	skla->animData.frameNum = 4;
+	skla->frames = malloc(skla->animData.frameNum*sizeof(sklBone**));
+	skla->animData.frameDelays = malloc(skla->animData.frameNum*sizeof(float));
 
 	sklBone tempBoneRoot, tempBoneTop;
 	boneInit(&tempBoneRoot); boneInit(&tempBoneTop);
 
-	anim->frames[0] = malloc(2*sizeof(sklBone*));
-	anim->frames[0][0] = NULL;
-	anim->frames[0][1] = NULL;
-	anim->frameDelays[0] = 1000.f;
+	skla->frames[0] = malloc(skla->boneNum*sizeof(sklBone*));
+	skla->frames[0][0] = NULL;
+	skla->frames[0][1] = NULL;
+	skla->animData.frameDelays[0] = 1000.f;
 
-	anim->frames[1] = malloc(2*sizeof(sklBone*));
-	anim->frames[1][0] = malloc(sizeof(sklBone));
-	*anim->frames[1][0] = tempBoneRoot;
-	anim->frames[1][1] = malloc(sizeof(sklBone));
+	skla->frames[1] = malloc(skla->boneNum*sizeof(sklBone*));
+	skla->frames[1][0] = malloc(sizeof(sklBone));
+	*skla->frames[1][0] = tempBoneRoot;
+	skla->frames[1][1] = malloc(sizeof(sklBone));
 	tempBoneTop.position.y = 0.5f;
-	*anim->frames[1][1] = tempBoneTop;
-	anim->frameDelays[1] = 1000.f;
+	*skla->frames[1][1] = tempBoneTop;
+	skla->animData.frameDelays[1] = 1000.f;
 
-	anim->frames[2] = malloc(2*sizeof(sklBone*));
-	anim->frames[2][0] = malloc(sizeof(sklBone));
+	skla->frames[2] = malloc(skla->boneNum*sizeof(sklBone*));
+	skla->frames[2][0] = malloc(sizeof(sklBone));
 	tempBoneRoot.position.y = 0.5f;
-	*anim->frames[2][0] = tempBoneRoot;
-	anim->frames[2][1] = malloc(sizeof(sklBone));
+	*skla->frames[2][0] = tempBoneRoot;
+	skla->frames[2][1] = malloc(sizeof(sklBone));
 	tempBoneTop.position.y = 0.f;
 	tempBoneTop.orientation = quatNewEuler(0.f, 90.f*RADIAN_RATIO, 0.f);
-	*anim->frames[2][1] = tempBoneTop;
-	anim->frameDelays[2] = 1000.f;
+	*skla->frames[2][1] = tempBoneTop;
+	skla->animData.frameDelays[2] = 1000.f;
 
-	anim->frames[3] = malloc(2*sizeof(sklBone*));
-	anim->frames[3][0] = malloc(sizeof(sklBone));
+	skla->frames[3] = malloc(skla->boneNum*sizeof(sklBone*));
+	skla->frames[3][0] = malloc(sizeof(sklBone));
 	tempBoneRoot.position.y = 0.f;
-	*anim->frames[3][0] = tempBoneRoot;
-	anim->frames[3][1] = malloc(sizeof(sklBone));
+	*skla->frames[3][0] = tempBoneRoot;
+	skla->frames[3][1] = malloc(sizeof(sklBone));
 	tempBoneTop.position.y = 0.f;
 	tempBoneTop.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
-	*anim->frames[3][1] = tempBoneTop;
-	anim->frameDelays[3] = 1000.f;
+	*skla->frames[3][1] = tempBoneTop;
+	skla->animData.frameDelays[3] = 1000.f;
 
-	sklAnimInstance animInst;
-	animInst.anim = anim;
-	animInst.delayMod = 1.f;
-	animInst.currentFrame = 0;
-	animInst.nextFrame = 1;
-	animInst.currentLoops = 0;
-	animInst.lastUpdate = 0;
-	animInst.animInterpT = 0.f;
-	animInst.animInterpStart = malloc(2*sizeof(sklBone));
-	animInst.animInterpStart[0] = tempBoneRoot;
-	animInst.animInterpStart[1] = tempBoneTop;
-	animInst.animInterpEnd = malloc(2*sizeof(sklBone));
-	animInst.animInterpEnd[0] = tempBoneRoot;
-	animInst.animInterpEnd[1] = tempBoneTop;
-	animInst.animState = malloc(2*sizeof(sklBone));
-	animInst.animState[0] = tempBoneRoot;
-	animInst.animState[1] = tempBoneTop;
+	sklAnimInstance sklai;
+	sklai.anim = skla;
+	sklai.animInst.currentLoops = 0;
+	sklai.animInst.currentFrame = 0;
+	sklai.animInst.currentFrameProgress = 0.f;
+	sklai.animInst.currentFrameLength = 0.f;
+	sklai.animInst.nextFrame = 1;
+	sklai.animInterpT = 0.f;
+	sklai.animInterpStart = malloc(skla->boneNum*sizeof(sklBone));
+	sklai.animInterpStart[0] = tempBoneRoot;
+	sklai.animInterpStart[1] = tempBoneTop;
+	sklai.animInterpEnd = malloc(skla->boneNum*sizeof(sklBone));
+	sklai.animInterpEnd[0] = tempBoneRoot;
+	sklai.animInterpEnd[1] = tempBoneTop;
+	sklai.animState = malloc(skla->boneNum*sizeof(sklBone));
+	sklai.animState[0] = tempBoneRoot;
+	sklai.animState[1] = tempBoneTop;
 
-	skli->animations[skli->animationNum] = animInst;
+	skli->animations[skli->animationNum] = sklai;
 	++skli->animationNum;
 
 	return 1;
@@ -413,10 +425,10 @@ static void skliBoneState(sklInstance *skli, mat4 *state, const sklNode *space, 
 	                            -node->defaultState.position.y,
 	                            -node->defaultState.position.z);
 }
-void skliAnimate(sklInstance *skli, const uint32_t currentTick, const float globalDelayMod){
+void skliAnimate(sklInstance *skli, const float timeElapsed){
 	size_t i;
 	for(i = 0; i < skli->animationNum; ++i){
-		sklaiAnimate(&skli->animations[i], currentTick, globalDelayMod);
+		sklaiAnimate(&skli->animations[i], timeElapsed*skli->timeMod);
 	}
 }
 static size_t skliGenerateStateRecursive(sklInstance *skli, mat4 *state, sklNode *space, const sklNode *node, const size_t parent, const size_t bone){
