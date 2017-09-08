@@ -19,6 +19,76 @@ void sklInit(skeleton *skl){
 unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 
 	sklInit(skl);
+
+	/*size_t pathLen = strlen(prgPath);
+	size_t fileLen = strlen(filePath);
+	char *fullPath = malloc((pathLen+fileLen+1)*sizeof(char));
+	memcpy(fullPath, prgPath, pathLen);
+	memcpy(fullPath+pathLen, filePath, fileLen);
+	fullPath[pathLen+fileLen] = '\0';
+	FILE *sklInfo = fopen(fullPath, "r");
+	char lineFeed[1024];
+	char *line;
+	char compare[1024];
+	size_t lineLength;
+
+	if(sklInfo != NULL){
+		while(fgets(lineFeed, sizeof(lineFeed), sklInfo)){
+
+			line = lineFeed;
+			lineLength = strlen(line);
+
+			// Remove new line and carriage return
+			if(line[lineLength-1] == '\n'){
+				line[--lineLength] = '\0';
+			}
+			if(line[lineLength-1] == '\r'){
+				line[--lineLength] = '\0';
+			}
+			// Remove any comments from the line
+			char *commentPos = strstr(line, "//");
+			if(commentPos != NULL){
+				lineLength -= commentPos-line;
+				*commentPos = '\0';
+			}
+			// Remove any indentations from the line, as well as any trailing spaces and tabs
+			unsigned char doneFront = 0, doneEnd = 0;
+			size_t newOffset = 0;
+			size_t i;
+			for(i = 0; (i < lineLength && !doneFront && !doneEnd); ++i){
+				if(!doneFront && line[i] != '\t' && line[i] != ' '){
+					newOffset = i;
+					doneFront = 1;
+				}
+				if(!doneEnd && i > 1 && i < lineLength && line[lineLength-i] != '\t' && line[lineLength-i] != ' '){
+					lineLength -= i-1;
+					line[lineLength] = '\0';
+					doneEnd = 1;
+				}
+			}
+			line += newOffset;
+			lineLength -= newOffset;
+
+			// Name
+			if(lineLength >= 6 && strncmp(line, "name ", 5) == 0){
+				skl->name = malloc((lineLength-4) * sizeof(char));
+				if(skl->name != NULL){
+					strncpy(skl->name, line+5, lineLength-5);
+					skl->name[lineLength-5] = '\0';
+				}
+
+			// New bone
+			}else if(lineLength >= 18 && strncmp(line, "bone ", 5) == 0){
+				//
+
+			}
+
+		}
+
+		fclose(sklInfo);
+
+	}*/
+
 	return 1;
 
 }
@@ -72,14 +142,9 @@ void sklaDelete(sklAnim *skla){
 		free(skla->bones);
 	}
 	if(skla->frames != NULL){
-		size_t i, j;
+		size_t i;
 		for(i = 0; i < skla->animData.frameNum; ++i){
 			if(skla->frames[i] != NULL){
-				for(j = 0; j < skla->boneNum; ++j){
-					if(skla->frames[i][j] != NULL){
-						free(skla->frames[i][j]);
-					}
-				}
 				free(skla->frames[i]);
 			}
 		}
@@ -90,13 +155,16 @@ void sklaDelete(sklAnim *skla){
 	}
 }
 
+void sklaiInit(sklAnimInstance *sklai, const sklAnim *skla){
+
+}
 static inline sklBone **sklaiGetAnimFrame(const sklAnimInstance *sklai, const size_t frame){
 	//return (sklKeyframe *)cvGet(&sklai->anim->keyframes, frame);
-	return sklai->anim->frames[frame];
+	return &sklai->anim->frames[frame];
 }
 static inline sklBone *sklaiGetAnimBone(const sklAnimInstance *sklai, const size_t frame, const size_t bone){
 	//return (sklBone *)cvGet(&sklaiGetAnimFrame(sklai, frame)->bones, bone);
-	return sklai->anim->frames[frame][bone];
+	return &sklai->anim->frames[frame][bone];
 }
 static void sklaiDeltaTransform(sklAnimInstance *sklai, const size_t bone){
 
@@ -240,7 +308,7 @@ static void sklaiAnimate(sklAnimInstance *sklai, const float timeElapsed){
 	}
 
 }**/
-void sklaiChangeAnim(sklAnimInstance *sklai, const sklAnim *anim){
+void sklaiChangeAnim(sklAnimInstance *sklai, const sklAnim *anim, const size_t frame, const float blendTime){
 	/** Needs a special function for changing animations in order to handle blending correctly **/
 }
 void sklaiDelete(sklAnimInstance *sklai){
@@ -307,71 +375,52 @@ unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *fileP
 	memcpy(skla->bones[0], "root\0", 5);
 	skla->bones[1] = malloc(4*sizeof(char));
 	memcpy(skla->bones[1], "top\0", 4);
-	skla->animData.frameNum = 4;
-	skla->frames = malloc(skla->animData.frameNum*sizeof(sklBone**));
+	skla->animData.frameNum = 3;
+	skla->frames = malloc(skla->animData.frameNum*sizeof(sklBone*));
 	skla->animData.frameDelays = malloc(skla->animData.frameNum*sizeof(float));
 
 	sklBone tempBoneRoot, tempBoneTop;
 	boneInit(&tempBoneRoot); boneInit(&tempBoneTop);
 
-	skla->frames[0] = malloc(skla->boneNum*sizeof(sklBone*));
-	skla->frames[0][0] = NULL;
-	skla->frames[0][1] = NULL;
+	skla->frames[0] = malloc(skla->boneNum*sizeof(sklBone));
+	skla->frames[0][0] = tempBoneRoot;
+	skla->frames[0][1] = tempBoneTop;
 	skla->animData.frameDelays[0] = 1000.f;
 
-	skla->frames[1] = malloc(skla->boneNum*sizeof(sklBone*));
-	skla->frames[1][0] = malloc(sizeof(sklBone));
-	*skla->frames[1][0] = tempBoneRoot;
-	skla->frames[1][1] = malloc(sizeof(sklBone));
+	skla->frames[1] = malloc(skla->boneNum*sizeof(sklBone));
+	skla->frames[1][0] = tempBoneRoot;
 	tempBoneTop.position.y = 0.5f;
-	*skla->frames[1][1] = tempBoneTop;
+	skla->frames[1][1] = tempBoneTop;
 	skla->animData.frameDelays[1] = 1000.f;
 
-	skla->frames[2] = malloc(skla->boneNum*sizeof(sklBone*));
-	skla->frames[2][0] = malloc(sizeof(sklBone));
+	skla->frames[2] = malloc(skla->boneNum*sizeof(sklBone));
 	tempBoneRoot.position.y = 0.5f;
-	*skla->frames[2][0] = tempBoneRoot;
-	skla->frames[2][1] = malloc(sizeof(sklBone));
+	skla->frames[2][0] = tempBoneRoot;
 	tempBoneTop.position.y = 0.f;
 	tempBoneTop.orientation = quatNewEuler(0.f, 90.f*RADIAN_RATIO, 0.f);
-	*skla->frames[2][1] = tempBoneTop;
+	skla->frames[2][1] = tempBoneTop;
 	skla->animData.frameDelays[2] = 1000.f;
-
-	skla->frames[3] = malloc(skla->boneNum*sizeof(sklBone*));
-	skla->frames[3][0] = malloc(sizeof(sklBone));
-	tempBoneRoot.position.y = 0.f;
-	*skla->frames[3][0] = tempBoneRoot;
-	skla->frames[3][1] = malloc(sizeof(sklBone));
-	tempBoneTop.position.y = 0.f;
-	tempBoneTop.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
-	*skla->frames[3][1] = tempBoneTop;
-	skla->animData.frameDelays[3] = 1000.f;
 
 	sklAnimInstance sklai;
 	sklai.anim = skla;
 	sklai.animInst.currentLoops = 0;
 	sklai.animInst.currentFrame = 0;
 	sklai.animInst.currentFrameProgress = 0.f;
-	sklai.animInst.currentFrameLength = 0.f;
+	sklai.animInst.currentFrameLength = 1.f;
 	sklai.animInst.nextFrame = 1;
 	sklai.animInterpT = 0.f;
 	sklai.animInterpStart = malloc(skla->boneNum*sizeof(sklBone));
-	sklai.animInterpStart[0] = tempBoneRoot;
-	sklai.animInterpStart[1] = tempBoneTop;
 	sklai.animInterpEnd = malloc(skla->boneNum*sizeof(sklBone));
-	sklai.animInterpEnd[0] = tempBoneRoot;
-	sklai.animInterpEnd[1] = tempBoneTop;
 	sklai.animState = malloc(skla->boneNum*sizeof(sklBone));
-	sklai.animState[0] = tempBoneRoot;
-	sklai.animState[1] = tempBoneTop;
 
 	skli->animations[skli->animationNum] = sklai;
 	++skli->animationNum;
 
 	return 1;
+
 }
-void skliAddAnimation(sklInstance *skli, sklAnimInstance *sklai){
-	// Should be similar to a vector push function
+void skliAddAnimation(sklInstance *skli, const sklAnim *skla, const size_t frame){
+	//
 }
 static void skliBoneState(sklInstance *skli, mat4 *state, const sklNode *space, const sklNode *node, const size_t parent, const size_t bone){
 	/*

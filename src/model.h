@@ -2,7 +2,7 @@
 #define MODEL_H
 
 #include <SDL2/SDL_opengl.h>
-#include "vec3.h"
+#include "skeleton.h"
 
 /** Models need to store a skeleton structure of their own **/
 typedef struct {
@@ -15,6 +15,7 @@ typedef struct {
 
 typedef struct {
 	char *name;
+	skeleton skl;
 	size_t vertexNum;
 	size_t indexNum;
 	GLuint vaoID;  // Vertex array object ID
@@ -24,6 +25,7 @@ typedef struct {
 
 void vertInit(vertex *v);
 void mdlInit(model *mdl);
+unsigned char mdlLoad(model *mdl, const char *prgPath, const char *filePath);
 unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *filePath);
 unsigned char mdlCreateSprite(model *mdl, const char *name);
 void mdlDelete(model *mdl);

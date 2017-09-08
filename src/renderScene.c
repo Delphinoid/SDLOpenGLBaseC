@@ -45,10 +45,10 @@ void renderModel(renderable *rndr, const camera *cam, gfxProgram *gfxPrg){
 	skel->root->children[0].defaultState.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
 	skel->root->children[0].defaultState.scale = vec3New(1.f, 1.f, 1.f);
 	skel->boneNum = 2;
-	mat4 *skeletonState = malloc(2*sizeof(mat4));
+	mat4 *skeletonState = malloc(skel->boneNum*sizeof(mat4));
 
 	/* Feed the skeleton state to the shader */
-	if(rndr->skli.skl != NULL){
+	if(/**rndr->mdl->skl.root != NULL &&**/ rndr->skli.skl != NULL){
 		// Generate a state for the model skeleton, transformed into the animated skeleton's space
 		skliGenerateState(&rndr->skli, skeletonState, skel);
 		size_t i;

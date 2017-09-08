@@ -249,7 +249,6 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 	FILE *texInfo = fopen(fullPath, "r");
 	char lineFeed[1024];
 	char *line;
-	char compare[1024];
 	size_t lineLength;
 
 	if(texInfo != NULL){
@@ -291,7 +290,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 			lineLength -= newOffset;
 
 			// Name
-			if(lineLength >= 6 && strncpy(compare, line, 5) && (compare[5] = '\0') == 0 && strcmp(compare, "name ") == 0){
+			if(lineLength >= 6 && strncmp(line, "name ", 5) == 0){
 				tw->name = malloc((lineLength-4) * sizeof(char));
 				if(tw->name != NULL){
 					strncpy(tw->name, line+5, lineLength-5);
@@ -336,7 +335,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 
 
 			// New texture frame
-			}else if(lineLength >= 9 && strncpy(compare, line, 8) && (compare[8] = '\0') == 0 && strcmp(compare, "texture ") == 0){
+			}else if(lineLength >= 9 && strncmp(line, "texture ", 8) == 0){
 
 				// A multiline command is already in progress; try to close it and continue
 				if(currentCommand != -1){
@@ -458,7 +457,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 
 
 			// Subframe macro
-			}else if(lineLength >= 14 && strncpy(compare, line, 7) && (compare[7] = '\0') == 0 && strcmp(compare, "sMacro ") == 0){
+			}else if(lineLength >= 14 && strncmp(line, "sMacro ", 7) == 0){
 
 				if(currentCommand == 0){
 
@@ -512,7 +511,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 
 
 			// New subframe
-			}else if(lineLength >= 16 && strncpy(compare, line, 9) && (compare[9] = '\0') == 0 && strcmp(compare, "subframe ") == 0){
+			}else if(lineLength >= 16 && strncmp(line, "subframe ", 9) == 0){
 
 				if(currentCommand == 0){
 
@@ -540,7 +539,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 
 
 			// Load normal map
-			}else if(lineLength >= 8 && strncpy(compare, line, 7) && (compare[7] = '\0') == 0 && strcmp(compare, "normal ") == 0){
+			}else if(lineLength >= 8 && strncmp(line, "normal ", 7) == 0){
 				if(currentCommand == 0){
 					/*char *texPath = malloc((lineLength-6) * sizeof(char));
 					strcpy(texPath, line+7);
@@ -553,7 +552,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 
 
 			// New texture animation
-			}else if(lineLength >= 9 && strncpy(compare, line, 9) && (compare[9] = '\0') == 0 && strcmp(compare, "animation") == 0){
+			}else if(lineLength >= 9 && strncmp(line, "animation", 9) == 0){
 				// Reset tempAnim
 				animframeCapacity = ANIMFRAME_START_CAPACITY;
 				if(!twaInit(&tempAnim, animframeCapacity)){
@@ -564,7 +563,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 
 
 			// Make the current animation loop
-			}else if(lineLength >= 6 && strncpy(compare, line, 5) && (compare[5] = '\0') == 0 && strcmp(compare, "loop ") == 0){
+			}else if(lineLength >= 6 && strncmp(line, "loop ", 5) == 0){
 				if(currentCommand == 1){
 					tempAnim.animData.desiredLoops = strtol(line+5, NULL, 0);
 				}else{
@@ -573,7 +572,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 
 
 			// Frame macro
-			}else if(lineLength >= 16 && strncpy(compare, line, 7) && (compare[7] = '\0') == 0 && strcmp(compare, "fMacro ") == 0){
+			}else if(lineLength >= 16 && strncmp(line, "fMacro ", 7) == 0){
 
 				if(currentCommand == 1){
 
@@ -623,7 +622,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 
 
 			// New animation frame
-			}else if(lineLength >= 11 && strncpy(compare, line, 6) && (compare[6] = '\0') == 0 && strcmp(compare, "frame ") == 0){
+			}else if(lineLength >= 11 && strncmp(line, "frame ", 6) == 0){
 
 				if(currentCommand == 1){
 
@@ -772,7 +771,7 @@ void twiInit(twInstance *twi, textureWrapper *tw){
 	twi->animInst.currentLoops = 0;
 	twi->animInst.currentFrame = 0;
 	twi->animInst.currentFrameProgress = 0.f;
-	twi->animInst.currentFrameLength = 0.f;
+	twi->animInst.currentFrameLength = 1.f;
 	twi->animInst.nextFrame = 0;
 }
 

@@ -4,11 +4,11 @@
 #include <stdlib.h>
 
 /*
-** NOTE: These structures are just dumb data holders that
-** make animation easier and more consistent across other
-** larger data types (like texture wrappers and skeletons).
-** You must initialize (and, in the case of animationData,
-** free) each member manually.
+** NOTE: These structures are just dumb groups of data that make
+** animation easier and more consistent across other larger data
+** structures (like texture wrappers and skeletons). You must
+** initialize (and, in the case of animationData, free) each
+** member manually.
 */
 
 typedef struct {

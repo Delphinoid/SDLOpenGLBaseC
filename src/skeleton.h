@@ -39,9 +39,8 @@ typedef struct {
 	animationData animData;
 	size_t boneNum;  // The total number of unique bones in the animation
 	char **bones;    // Array of names for each bone
-	sklBone ***frames;  // An array of keyframes, where each keyframe is an array of
-	                    // pointers to bone delta transforms (offsets from their
-	                    // default states). NULL entries represent unchanged bones.
+	sklBone **frames;  // An array of keyframes, where each keyframe is an array of
+	                   // bone delta transforms (offsets from their default states).
 } sklAnim;
 
 // Skeletal animation instance
@@ -73,9 +72,8 @@ void sklaInit(sklAnim *skla);
 unsigned char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath);
 void sklaDelete(sklAnim *skla);
 
-void sklaiInit(sklAnimInstance *sklai);
-unsigned char sklaiLoad(sklAnimInstance *sklai, const char *prgPath, const char *filePath);
-void sklaiChangeAnim(sklAnimInstance *sklai, const sklAnim *anim);
+void sklaiInit(sklAnimInstance *sklai, const sklAnim *skla);
+void sklaiChangeAnim(sklAnimInstance *sklai, const sklAnim *anim, const size_t frame, const float blendTime);
 void sklaiDelete(sklAnimInstance *sklai);
 
 void skliInit(sklInstance *skli, skeleton *skl);

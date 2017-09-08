@@ -48,11 +48,16 @@ void vertInit(vertex *v){
 
 void mdlInit(model *mdl){
 	mdl->name = NULL;
+	sklInit(&mdl->skl);
 	mdl->vertexNum = 0;
 	mdl->indexNum = 0;
 	mdl->vaoID = 0;
 	mdl->vboID = 0;
 	mdl->iboID = 0;
+}
+
+unsigned char mdlLoad(model *mdl, const char *prgPath, const char *filePath){
+	return mdlLoadWavefrontObj(mdl, prgPath, filePath);
 }
 
 unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *filePath){
@@ -150,7 +155,6 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 	FILE *mdlInfo = fopen(fullPath, "r");
 	char lineFeed[1024];
 	char *line;
-	char compare[1024];
 	size_t lineLength;
 
 	if(mdlInfo != NULL){
@@ -191,7 +195,7 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 			lineLength -= newOffset;
 
 			// Name
-			if(lineLength >= 6 && strncpy(compare, line, 5) && (compare[5] = '\0') == 0 && strcmp(compare, "name ") == 0){
+			if(lineLength >= 6 && strncmp(line, "name ", 5) == 0){
 				mdl->name = malloc((lineLength-4) * sizeof(char));
 				if(mdl->name != NULL){
 					strncpy(mdl->name, line+5, lineLength-5);
@@ -199,7 +203,7 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 				}
 
 			// Vertex data
-			}else if(lineLength >= 7 && strncpy(compare, line, 2) && (compare[2] = '\0') == 0 && strcmp(compare, "v ") == 0){
+			}else if(lineLength >= 7 && strncmp(line, "v ", 2) == 0){
 				char *token = strtok(line+2, " ");
 				float curVal = strtod(token, NULL);
 				pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity);
@@ -240,7 +244,7 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 				}
 
 			// UV data
-			}else if(lineLength >= 6 && strncpy(compare, line, 3) && (compare[3] = '\0') == 0 && strcmp(compare, "vt ") == 0){
+			}else if(lineLength >= 6 && strncmp(line, "vt ", 3) == 0){
 				char *token = strtok(line+3, " ");
 				float curVal = strtod(token, NULL);
 				pushDynamicArray((void **)&tempTexCoords, &curVal, sizeof(curVal), &tempTexCoordsSize, &tempTexCoordsCapacity);
@@ -249,7 +253,7 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 				pushDynamicArray((void **)&tempTexCoords, &curVal, sizeof(curVal), &tempTexCoordsSize, &tempTexCoordsCapacity);
 
 			// Normal data
-			}else if(lineLength >= 8 && strncpy(compare, line, 3) && (compare[3] = '\0') == 0 && strcmp(compare, "vn ") == 0){
+			}else if(lineLength >= 8 && strncmp(line, "vn ", 3) == 0){
 				char *token = strtok(line+3, " ");
 				float curVal = strtod(token, NULL);
 				pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity);
@@ -261,7 +265,7 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 				pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity);
 
 			// Face data
-			}else if(lineLength >= 19 && strncpy(compare, line, 2) && (compare[2] = '\0') == 0 && strcmp(compare, "f ") == 0){
+			}else if(lineLength >= 19 && strncmp(line, "f ", 2) == 0){
 				char *token = strtok(line+2, " /");
 				for(i = 0; i < 3; ++i){
 
