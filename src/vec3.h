@@ -51,7 +51,9 @@ void vec3DivSByV(const float s, vec3 *v);
 float vec3GetMagnitude(const vec3 v);
 
 vec3 vec3GetUnit(const vec3 v);
+vec3 vec3GetUnitFast(const vec3 v);
 void vec3Normalize(vec3 *v);
+void vec3NormalizeFast(vec3 *v);
 
 float vec3Dot(const vec3 v1, const vec3 v2);
 vec3 vec3GetCross(const vec3 v1, const vec3 v2);

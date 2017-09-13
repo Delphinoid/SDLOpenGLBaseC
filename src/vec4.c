@@ -1,6 +1,8 @@
 #include "vec4.h"
 #include <math.h>
 
+float fastInvSqrt(float x);
+
 vec4 vec4New(const float x, const float y, const float z, const float w){
 	vec4 v = {.x = x, .y = y, .z = z, .w = w};
 	return v;
@@ -220,15 +222,25 @@ float vec4GetMagnitude(const vec4 v){
 vec4 vec4GetUnit(const vec4 v){
 	const float magnitude = vec4GetMagnitude(v);
 	if(magnitude != 0.f){
-		return vec4VDivN(v, magnitude, magnitude, magnitude, magnitude);
+		return vec4VDivS(v, magnitude);
 	}
 	return v;
+}
+vec4 vec4GetUnitFast(const vec4 v){
+	const float magnitudeSquared = v.x*v.x + v.y*v.y + v.z*v.z + v.w*v.w;
+	const float invSqrt = fastInvSqrt(magnitudeSquared);
+	return vec4VMultS(v, invSqrt);
 }
 void vec4Normalize(vec4 *v){
 	const float magnitude = vec4GetMagnitude(*v);
 	if(magnitude != 0.f){
-		vec4DivVByN(v, magnitude, magnitude, magnitude, magnitude);
+		vec4DivVByS(v, magnitude);
 	}
+}
+void vec4NormalizeFast(vec4 *v){
+	const float magnitudeSquared = v->x*v->x + v->y*v->y + v->z*v->z + v->w*v->w;
+	const float invSqrt = fastInvSqrt(magnitudeSquared);
+	vec4MultVByS(v, invSqrt);
 }
 
 float vec4Dot(const vec4 v1, const vec4 v2){

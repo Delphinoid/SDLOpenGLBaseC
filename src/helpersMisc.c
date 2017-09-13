@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Replacement for strtok because it's a horrible function
+/* Replacement for strtok() because it's a horrible function. */
 /*unsigned char nextToken(const char *str, const char *delims, size_t *tokenOffset, size_t *tokenLength){
 	char *tokenStart = NULL;
 	const char *currentChar = str+(*tokenOffset);

@@ -31,7 +31,9 @@ unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 	sklInit(skl);
 
 	sklNode **currentNode = NULL;
-	unsigned int currentLine = 0;
+
+	int currentCommand = -1;       // The current multiline command type (-1 = none, >-1 = bone)
+	unsigned int currentLine = 0;  // Current file line being read
 
 	size_t pathLen = strlen(prgPath);
 	size_t fileLen = strlen(filePath);
@@ -84,21 +86,32 @@ unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 
 			// Name
 			if(lineLength >= 6 && strncmp(line, "name ", 5) == 0){
-				skl->name = malloc((lineLength-4) * sizeof(char));
-				if(skl->name == NULL){
-					sklDelete(skl);
-					printf("Error loading skeleton: Memory allocation failure.\n");
-					return 0;
+				if(currentCommand == -1){
+					skl->name = malloc((lineLength-4) * sizeof(char));
+					if(skl->name == NULL){
+						printf("Error loading skeleton: Memory allocation failure.\n");
+						sklDelete(skl);
+						free(fullPath);
+						fclose(sklInfo);
+						return 0;
+					}
+					strncpy(skl->name, line+5, lineLength-5);
+					skl->name[lineLength-5] = '\0';
+				}else{
+					printf("Error loading skeleton: Name command at line %u does not belong inside a multiline command.\n", currentLine);
 				}
-				strncpy(skl->name, line+5, lineLength-5);
-				skl->name[lineLength-5] = '\0';
 
 			// Close current multiline command
 			}else if(lineLength > 0 && line[0] == '}'){
-				currentNode = &(*currentNode)->parent;
-				if(*currentNode == NULL){
-					// Last bone was reached (equal number of opening and closing braces)
-					break;
+				if(currentCommand > -1){
+					currentNode = &(*currentNode)->parent;
+					if(*currentNode == NULL){
+						// Last bone was reached (equal number of opening and closing braces)
+						break;
+					}
+					--currentCommand;
+				}else{
+					printf("Error loading skeleton: Invalid closing brace at line %u.\n", currentLine);
 				}
 
 			// New bone
@@ -114,8 +127,10 @@ unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 						++(*currentNode)->childNum;
 						(*currentNode)->children = realloc((*currentNode)->children, (*currentNode)->childNum*sizeof(sklNode *));
 						if((*currentNode)->children == NULL){
-							sklDelete(skl);
 							printf("Error loading skeleton: Memory allocation failure.\n");
+							sklDelete(skl);
+							free(fullPath);
+							fclose(sklInfo);
 							return 0;
 						}
 						currentNode = &(*currentNode)->children[(*currentNode)->childNum-1];
@@ -123,8 +138,10 @@ unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 
 					*currentNode = malloc(sizeof(sklNode));
 					if(*currentNode == NULL){
-						sklDelete(skl);
 						printf("Error loading skeleton: Memory allocation failure.\n");
+						sklDelete(skl);
+						free(fullPath);
+						fclose(sklInfo);
 						return 0;
 					}
 					nodeInit(*currentNode);
@@ -132,8 +149,10 @@ unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 					size_t nameLen = strlen(token);
 					(*currentNode)->name = malloc((nameLen+1)*sizeof(char));
 					if((*currentNode)->name == NULL){
-						sklDelete(skl);
 						printf("Error loading skeleton: Memory allocation failure.\n");
+						sklDelete(skl);
+						free(fullPath);
+						fclose(sklInfo);
 						return 0;
 					}
 					memcpy((*currentNode)->name, token, nameLen);
@@ -154,7 +173,9 @@ unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 
 					++skl->boneNum;
 
-					if(!strrchr(token, '{')){
+					if(strrchr(token, '{')){
+						++currentCommand;
+					}else{
 						currentNode = &(*currentNode)->parent;
 					}
 					if(*currentNode == NULL){
@@ -171,7 +192,24 @@ unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 		}
 
 		fclose(sklInfo);
+		free(fullPath);
 
+	}else{
+		printf("Error loading texture wrapper: Couldn't open %s\n", fullPath);
+		free(fullPath);
+		return 0;
+	}
+
+	// If no name was given, generate one based off the file name
+	if(skl->name == NULL || skl->name[0] == '\0'){
+		skl->name = malloc((fileLen+1)*sizeof(char));
+		if(skl->name == NULL){
+			printf("Error loading skeleton: Memory allocation failure.\n");
+			sklDelete(skl);
+			return 0;
+		}
+		memcpy(skl->name, filePath, fileLen);
+		skl->name[fileLen] = '\0';
 	}
 
 	return 1;
@@ -216,6 +254,9 @@ void sklaInit(sklAnim *skla){
 unsigned char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 
 	sklaInit(skla);
+
+	//
+
 	return 1;
 
 }
@@ -487,6 +528,9 @@ unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *fileP
 	sklai.animInterpStart = malloc(skla->boneNum*sizeof(sklBone));
 	sklai.animInterpEnd = malloc(skla->boneNum*sizeof(sklBone));
 	sklai.animState = malloc(skla->boneNum*sizeof(sklBone));
+	sklai.animBoneLookup = malloc(2*sizeof(sklBone *));
+	sklai.animBoneLookup[0] = &sklai.animState[0];
+	sklai.animBoneLookup[1] = &sklai.animState[1];
 
 	skli->animations[skli->animationNum] = sklai;
 	++skli->animationNum;
@@ -496,6 +540,9 @@ unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *fileP
 }
 void skliAddAnimation(sklInstance *skli, const sklAnim *skla, const size_t frame){
 	//
+}
+void skliChangeSkeleton(sklInstance *skli, skeleton *skl){
+	/** Re-calculate bone lookups for all animation instances. **/
 }
 static void skliBoneState(sklInstance *skli, mat4 *state, const sklNode *space, const sklNode *node, const size_t parent, const size_t bone){
 	/*
@@ -524,24 +571,15 @@ static void skliBoneState(sklInstance *skli, mat4 *state, const sklNode *space, 
 	}
 	/** Find the bone's position in each sklAnimInstance by strcmping the names **/
 	/** Later, set up a "lookup table" of sorts when animations are added to make this faster **/
-	size_t i, j;
+	size_t i;
 	for(i = 0; i < skli->animationNum; ++i){
-		sklBone *currentAnimState = skli->animations[i].animState;
-		// Loop through each bone modified by the animation
-		for(j = 0; j < skli->animations[i].anim->boneNum; ++j){
-			/** Use a lookup here instead of strcmp() **/
-			if(strcmp(node->name, skli->animations[i].anim->bones[j]) == 0){
-				mat4Translate(&state[bone], currentAnimState[j].position.x,
-				                            currentAnimState[j].position.y,
-				                            currentAnimState[j].position.z);
-				mat4Rotate(&state[bone], currentAnimState[j].orientation);
-				mat4Scale(&state[bone], currentAnimState[j].scale.x,
-				                        currentAnimState[j].scale.y,
-				                        currentAnimState[j].scale.z);
-				break;
-			}
-		}
-
+		mat4Translate(&state[bone], skli->animations[i].animBoneLookup[bone]->position.x,
+		                            skli->animations[i].animBoneLookup[bone]->position.y,
+		                            skli->animations[i].animBoneLookup[bone]->position.z);
+		mat4Rotate(&state[bone], skli->animations[i].animBoneLookup[bone]->orientation);
+		mat4Scale(&state[bone], skli->animations[i].animBoneLookup[bone]->scale.x,
+			                    skli->animations[i].animBoneLookup[bone]->scale.y,
+			                    skli->animations[i].animBoneLookup[bone]->scale.z);
 	}
 	// Translate them back by the model's bone position
 	// This and the previous translation make more sense when diagrammed

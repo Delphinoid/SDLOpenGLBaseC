@@ -53,7 +53,9 @@ void vec4DivSByV(const float s, vec4 *v);
 float vec4GetMagnitude(const vec4 v);
 
 vec4 vec4GetUnit(const vec4 v);
+vec4 vec4GetUnitFast(const vec4 v);
 void vec4Normalize(vec4 *v);
+void vec4NormalizeFast(vec4 *v);
 
 float vec4Dot(const vec4 v1, const vec4 v2);
 

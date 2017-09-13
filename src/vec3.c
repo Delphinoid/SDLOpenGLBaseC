@@ -1,6 +1,8 @@
 #include "vec3.h"
 #include <math.h>
 
+float fastInvSqrt(float x);
+
 vec3 vec3New(const float x, const float y, const float z){
 	const vec3 v = {.x = x, .y = y, .z = z};
 	return v;
@@ -202,17 +204,27 @@ float vec3GetMagnitude(const vec3 v){
 }
 
 vec3 vec3GetUnit(const vec3 v){
-	float magnitude = vec3GetMagnitude(v);
+	const float magnitude = vec3GetMagnitude(v);
 	if(magnitude != 0.f){
-		return vec3VDivN(v, magnitude, magnitude, magnitude);
+		return vec3VDivS(v, magnitude);
 	}
 	return v;
 }
+vec3 vec3GetUnitFast(const vec3 v){
+	const float magnitudeSquared = v.x*v.x + v.y*v.y + v.z*v.z;
+	const float invSqrt = fastInvSqrt(magnitudeSquared);
+	return vec3VMultS(v, invSqrt);
+}
 void vec3Normalize(vec3 *v){
-	float magnitude = vec3GetMagnitude(*v);
+	const float magnitude = vec3GetMagnitude(*v);
 	if(magnitude != 0.f){
-		vec3DivVByN(v, magnitude, magnitude, magnitude);
+		vec3DivVByS(v, magnitude);
 	}
+}
+void vec3NormalizeFast(vec3 *v){
+	const float magnitudeSquared = v->x*v->x + v->y*v->y + v->z*v->z;
+	const float invSqrt = fastInvSqrt(magnitudeSquared);
+	vec3MultVByS(v, invSqrt);
 }
 
 float vec3Dot(const vec3 v1, const vec3 v2){

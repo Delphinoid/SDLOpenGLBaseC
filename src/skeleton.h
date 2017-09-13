@@ -51,13 +51,19 @@ typedef struct {
 	sklBone *animInterpStart;
 	sklBone *animInterpEnd;
 	sklBone *animState;  // Delta transformations for each bone
+	sklBone **animBoneLookup;  // Which bone in animState each bone in skli->skl corresponds to.
+	                           // If the root (first) bone in skli->skl is named "blah" and the
+	                           // second bone in animState is named "blah", the array will start
+	                           // with animBoneLookup[0] == &animState[1]. If the bone does not
+	                           // exist, its entry points to NULL.
 } sklAnimInstance;
 
 // Skeleton instance
 /** Restructure for proper element attachments (?? No idea what I was talking about here) **/
 typedef struct {
-	skeleton *skl;  // Should never change
+	skeleton *skl;  // Should never be changed manually
 	float timeMod;
+	/** Can we use pushDynamicArray()? **/
 	size_t animationNum;
 	size_t animationCapacity;
 	sklAnimInstance *animations;

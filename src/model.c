@@ -203,6 +203,7 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 				if(mdl->name == NULL){
 					printf("Error loading model: Memory allocation failure.\n");
 					freeHelpers();
+					fclose(mdlInfo);
 					return 0;
 				}
 				strncpy(mdl->name, line+5, lineLength-5);
@@ -231,40 +232,95 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 			}else if(lineLength >= 7 && strncmp(line, "v ", 2) == 0){
 				char *token = strtok(line+2, " ");
 				float curVal = strtod(token, NULL);
-				pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity);
+				if(!pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity)){
+					printf("Error loading model: Memory allocation failure.\n");
+					freeHelpers();
+					fclose(mdlInfo);
+					return 0;
+				}
 				token = strtok(NULL, " ");
 				curVal = strtod(token, NULL);
-				pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity);
+				if(!pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity)){
+					printf("Error loading model: Memory allocation failure.\n");
+					freeHelpers();
+					fclose(mdlInfo);
+					return 0;
+				}
 				token = strtok(NULL, " ");
 				curVal = strtod(token, NULL);
-				pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity);
+				if(!pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity)){
+					printf("Error loading model: Memory allocation failure.\n");
+					freeHelpers();
+					fclose(mdlInfo);
+					return 0;
+				}
 				/****/
 				token = strtok(NULL, " ");
 				if(token != NULL){
 					int curBoneID = strtoul(token, NULL, 0);
-					pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity);
+					if(!pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity)){
+						printf("Error loading model: Memory allocation failure.\n");
+						freeHelpers();
+						fclose(mdlInfo);
+						return 0;
+					}
 					token = strtok(NULL, " ");
 					curBoneID = strtoul(token, NULL, 0);
-					pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity);
+					if(!pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity)){
+						printf("Error loading model: Memory allocation failure.\n");
+						freeHelpers();
+						fclose(mdlInfo);
+						return 0;
+					}
 					token = strtok(NULL, " ");
 					curBoneID = strtoul(token, NULL, 0);
-					pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity);
+					if(!pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity)){
+						printf("Error loading model: Memory allocation failure.\n");
+						freeHelpers();
+						fclose(mdlInfo);
+						return 0;
+					}
 					token = strtok(NULL, " ");
 					curBoneID = strtoul(token, NULL, 0);
-					pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity);
+					if(!pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity)){
+						printf("Error loading model: Memory allocation failure.\n");
+						freeHelpers();
+						fclose(mdlInfo);
+						return 0;
+					}
 					token = strtok(NULL, " ");
 					if(token != NULL){
 						curVal = strtod(token, NULL);
-						pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity);
+						if(!pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity)){
+							printf("Error loading model: Memory allocation failure.\n");
+							freeHelpers();
+							fclose(mdlInfo);
+							return 0;
+						}
 						token = strtok(NULL, " ");
 						curVal = strtod(token, NULL);
-						pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity);
+						if(!pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity)){
+							printf("Error loading model: Memory allocation failure.\n");
+							freeHelpers();
+							fclose(mdlInfo);
+							return 0;
+						}
 						token = strtok(NULL, " ");
 						curVal = strtod(token, NULL);
-						pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity);
+						if(!pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity)){
+							printf("Error loading model: Memory allocation failure.\n");
+							freeHelpers();
+							fclose(mdlInfo);
+							return 0;
+						}
 						token = strtok(NULL, " ");
 						curVal = strtod(token, NULL);
-						pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity);
+						if(!pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity)){
+							printf("Error loading model: Memory allocation failure.\n");
+							freeHelpers();
+							fclose(mdlInfo);
+							return 0;
+						}
 					}
 				}
 
@@ -272,22 +328,47 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 			}else if(lineLength >= 6 && strncmp(line, "vt ", 3) == 0){
 				char *token = strtok(line+3, " ");
 				float curVal = strtod(token, NULL);
-				pushDynamicArray((void **)&tempTexCoords, &curVal, sizeof(curVal), &tempTexCoordsSize, &tempTexCoordsCapacity);
+				if(!pushDynamicArray((void **)&tempTexCoords, &curVal, sizeof(curVal), &tempTexCoordsSize, &tempTexCoordsCapacity)){
+					printf("Error loading model: Memory allocation failure.\n");
+					freeHelpers();
+					fclose(mdlInfo);
+					return 0;
+				}
 				token = strtok(NULL, " ");
 				curVal = strtod(token, NULL);
-				pushDynamicArray((void **)&tempTexCoords, &curVal, sizeof(curVal), &tempTexCoordsSize, &tempTexCoordsCapacity);
+				if(!pushDynamicArray((void **)&tempTexCoords, &curVal, sizeof(curVal), &tempTexCoordsSize, &tempTexCoordsCapacity)){
+					printf("Error loading model: Memory allocation failure.\n");
+					freeHelpers();
+					fclose(mdlInfo);
+					return 0;
+				}
 
 			// Normal data
 			}else if(lineLength >= 8 && strncmp(line, "vn ", 3) == 0){
 				char *token = strtok(line+3, " ");
 				float curVal = strtod(token, NULL);
-				pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity);
+				if(!pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity)){
+					printf("Error loading model: Memory allocation failure.\n");
+					freeHelpers();
+					fclose(mdlInfo);
+					return 0;
+				}
 				token = strtok(NULL, " ");
 				curVal = strtod(token, NULL);
-				pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity);
+				if(!pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity)){
+					printf("Error loading model: Memory allocation failure.\n");
+					freeHelpers();
+					fclose(mdlInfo);
+					return 0;
+				}
 				token = strtok(NULL, " ");
 				curVal = strtod(token, NULL);
-				pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity);
+				if(!pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity)){
+					printf("Error loading model: Memory allocation failure.\n");
+					freeHelpers();
+					fclose(mdlInfo);
+					return 0;
+				}
 
 			// Face data
 			}else if(lineLength >= 19 && strncmp(line, "f ", 2) == 0){
@@ -379,7 +460,12 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 						   checkVert->bWeights[2] == tempVert.bWeights[2] && checkVert->bWeights[3] == tempVert.bWeights[3]){
 
 							// Resize indices if there's not enough room
-							pushDynamicArray((void **)&indices, &j, sizeof(j), &mdl->indexNum, &indexCapacity);
+							if(!pushDynamicArray((void **)&indices, &j, sizeof(j), &mdl->indexNum, &indexCapacity)){
+								printf("Error loading model: Memory allocation failure.\n");
+								freeHelpers();
+								fclose(mdlInfo);
+								return 0;
+							}
 							foundVertex = 1;
 							break;
 						}
@@ -388,8 +474,13 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 					// If the vertex has not yet been loaded, add it to both the vertex vector and the index vector
 					if(!foundVertex){
 						// Resize indices if there's not enough room
-						pushDynamicArray((void **)&indices, &mdl->vertexNum, sizeof(mdl->vertexNum), &mdl->indexNum, &indexCapacity);
-						pushDynamicArray((void **)&vertices, &tempVert, sizeof(tempVert), &mdl->vertexNum, &vertexCapacity);
+						if(!pushDynamicArray((void **)&indices, &mdl->vertexNum, sizeof(mdl->vertexNum), &mdl->indexNum, &indexCapacity) ||
+						   !pushDynamicArray((void **)&vertices, &tempVert, sizeof(tempVert), &mdl->vertexNum, &vertexCapacity)){
+							printf("Error loading model: Memory allocation failure.\n");
+							freeHelpers();
+							fclose(mdlInfo);
+							return 0;
+						}
 					}
 
 				}
@@ -406,15 +497,22 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 		return 0;
 	}
 
-	// If no name was given, generate one based off the file name
-	if(mdl->name == NULL || strlen(mdl->name) == 0){
-		mdl->name = malloc((fileLen+1)*sizeof(char));
-		memcpy(mdl->name, filePath, fileLen);
-		mdl->name[fileLen] = '\0';
-	}
 	/** Should mdlGenBufferObjects() be here? **/
 	mdlGenBufferObjects(mdl, vertices, indices);
 	freeHelpers();
+
+	// If no name was given, generate one based off the file name
+	if(mdl->name == NULL || mdl->name[0] == '\0'){
+		mdl->name = malloc((fileLen+1)*sizeof(char));
+		if(mdl->name == NULL){
+			printf("Error loading model: Memory allocation failure.\n");
+			mdlDelete(mdl);
+			return 0;
+		}
+		memcpy(mdl->name, filePath, fileLen);
+		mdl->name[fileLen] = '\0';
+	}
+
 	return 1;
 
 }

@@ -79,10 +79,18 @@ unsigned char tLoad(texture *tex, const char *prgPath, const char *filePath){
 	SDL_FreeSurface(SDLimage);
 
 
+	free(fullPath);
+
+
 	tex->name = malloc((fileLen+1)*sizeof(char));
+	if(tex->name == NULL){
+		printf("Error loading texture: Memory allocation failure.\n");
+		tDelete(tex);
+		return 0;
+	}
 	memcpy(tex->name, filePath, fileLen);
 	tex->name[fileLen] = '\0';
-	free(fullPath);
+
 	return 1;
 
 }

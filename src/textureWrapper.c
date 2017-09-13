@@ -291,16 +291,21 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 
 			// Name
 			if(lineLength >= 6 && strncmp(line, "name ", 5) == 0){
-				tw->name = malloc((lineLength-4) * sizeof(char));
-				if(tw->name == NULL){
-					printf("Error loading texture wrapper: Memory allocation failure.\n");
-					twaDelete(&tempAnim);
-					twDelete(tw);
-					free(fullPath);
-					return 0;
+				if(currentCommand == -1){
+					tw->name = malloc((lineLength-4) * sizeof(char));
+					if(tw->name == NULL){
+						printf("Error loading texture wrapper: Memory allocation failure.\n");
+						twaDelete(&tempAnim);
+						twDelete(tw);
+						free(fullPath);
+						fclose(texInfo);
+						return 0;
+					}
+					strncpy(tw->name, line+5, lineLength-5);
+					tw->name[lineLength-5] = '\0';
+				}else{
+					printf("Error loading texture wrapper: Name command at line %u does not belong inside a multiline command.\n", currentLine);
 				}
-				strncpy(tw->name, line+5, lineLength-5);
-				tw->name[lineLength-5] = '\0';
 
 
 			// Close current multiline command
@@ -312,6 +317,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 							twaDelete(&tempAnim);
 							twDelete(tw);
 							free(fullPath);
+							fclose(texInfo);
 							return 0;
 						}
 					}else{
@@ -320,6 +326,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 							twaDelete(&tempAnim);
 							twDelete(tw);
 							free(fullPath);
+							fclose(texInfo);
 							return 0;
 						}
 					}
@@ -330,11 +337,13 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 						if(!twaResizeToFit(&tempAnim, animframeCapacity)){
 							twDelete(tw);
 							free(fullPath);
+							fclose(texInfo);
 							return 0;
 						}
 						if(!twAddAnim(tw, &tempAnim, &animCapacity)){
 							twaDelete(&tempAnim);
 							free(fullPath);
+							fclose(texInfo);
 							return 0;
 						}
 					}
@@ -360,6 +369,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 								twaDelete(&tempAnim);
 								twDelete(tw);
 								free(fullPath);
+								fclose(texInfo);
 								return 0;
 							}
 						}else{
@@ -368,6 +378,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 								twaDelete(&tempAnim);
 								twDelete(tw);
 								free(fullPath);
+								fclose(texInfo);
 								return 0;
 							}
 						}
@@ -378,11 +389,13 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 							if(!twaResizeToFit(&tempAnim, animframeCapacity)){
 								twDelete(tw);
 								free(fullPath);
+								fclose(texInfo);
 								return 0;
 							}
 							if(!twAddAnim(tw, &tempAnim, &animCapacity)){
 								twaDelete(&tempAnim);
 								free(fullPath);
+								fclose(texInfo);
 								return 0;
 							}
 						}
@@ -453,6 +466,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 							twaDelete(&tempAnim);
 							twDelete(tw);
 							free(fullPath);
+							fclose(texInfo);
 							return 0;
 						}
 
@@ -463,6 +477,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 						twfDelete(&tempFrame);
 						twaDelete(&tempAnim);
 						free(fullPath);
+						fclose(texInfo);
 						return 0;
 					}
 				}
@@ -505,6 +520,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 								twaDelete(&tempAnim);
 								twDelete(tw);
 								free(fullPath);
+								fclose(texInfo);
 								return 0;
 							}
 							if(macroDirection == 'x'){  // Adds frames from left to right before resetting and moving down
@@ -545,6 +561,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 						twaDelete(&tempAnim);
 						twDelete(tw);
 						free(fullPath);
+						fclose(texInfo);
 						return 0;
 					}
 
@@ -574,6 +591,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 					if(!twaInit(&tempAnim, animframeCapacity)){
 						twDelete(tw);
 						free(fullPath);
+						fclose(texInfo);
 						return 0;
 					}
 					currentCommand = 1;
@@ -622,6 +640,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 										if(!twaAddFrame(&tempAnim, i, j, frameDelay, &animframeCapacity)){
 											twDelete(tw);
 											free(fullPath);
+											fclose(texInfo);
 											return 0;
 										}
 									}else{
@@ -667,6 +686,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 						if(!twaAddFrame(&tempAnim, frameID, subframeID, frameDelay, &animframeCapacity)){
 							twDelete(tw);
 							free(fullPath);
+							fclose(texInfo);
 							return 0;
 						}
 					}
@@ -684,10 +704,10 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 
 	}else{
 		printf("Error loading texture wrapper: Couldn't open %s\n", fullPath);
-		free(fullPath);
 		twaDelete(&tempAnim);
 		free(tw->frames);
 		free(tw->animations);
+		free(fullPath);
 		return 0;
 	}
 
@@ -740,6 +760,11 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 	// If no name was given, generate one based off the file name
 	if(tw->name == NULL || tw->name[0] == '\0'){
 		tw->name = malloc((fileLen+1)*sizeof(char));
+		if(tw->name == NULL){
+			printf("Error loading texture wrapper: Memory allocation failure.\n");
+			twDelete(tw);
+			return 0;
+		}
 		memcpy(tw->name, filePath, fileLen);
 		tw->name[fileLen] = '\0';
 	}

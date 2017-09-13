@@ -2,6 +2,8 @@
 #include <math.h>
 #include <float.h>
 
+float fastInvSqrt(float x);
+
 quat quatNew(const float w, const float x, const float y, const float z){
 	quat r = {.w = w, .v.x = x, .v.y = y, .v.z = z};
 	return r;
@@ -224,21 +226,27 @@ void quatInvert(quat *q){
 }
 
 quat quatGetUnit(const quat q){
-	float magnitude = quatGetMagnitude(q);
+	const float magnitude = quatGetMagnitude(q);
 	if(magnitude != 0.f){
-		quat r = {.w   = q.w   / magnitude,
-		          .v.x = q.v.x / magnitude,
-		          .v.y = q.v.y / magnitude,
-		          .v.z = q.v.z / magnitude};
-		return r;
+		return quatQDivS(q, magnitude);
 	}
 	return q;
 }
+quat quatGetUnitFast(const quat q){
+	const float magnitudeSquared = q.w*q.w + q.v.x*q.v.x + q.v.y*q.v.y + q.v.z*q.v.z;
+	const float invSqrt = fastInvSqrt(magnitudeSquared);
+	return quatQMultS(q, invSqrt);
+}
 void quatNormalize(quat *q){
-	float magnitude = quatGetMagnitude(*q);
+	const float magnitude = quatGetMagnitude(*q);
 	if(magnitude != 0.f){
-		q->w /= magnitude; q->v.x /= magnitude; q->v.y /= magnitude; q->v.z /= magnitude;
+		quatDivQByS(q, magnitude);
 	}
+}
+void quatNormalizeFast(quat *q){
+	const float magnitudeSquared = q->w*q->w + q->v.x*q->v.x + q->v.y*q->v.y + q->v.z*q->v.z;
+	const float invSqrt = fastInvSqrt(magnitudeSquared);
+	quatMultQByS(q, invSqrt);
 }
 
 quat quatIdentity(){
@@ -336,7 +344,7 @@ quat quatLookingAt(vec3 eye, vec3 target, vec3 up){
 		float angle = acosf(dot);
 		vec3 axis;
 		vec3Cross(eye, target, &axis);
-		vec3Normalize(&axis);
+		vec3NormalizeFast(&axis);
 		r.w = angle;
 		r.v = axis;
 
@@ -367,7 +375,7 @@ void quatLookAt(quat *q, vec3 eye, vec3 target, vec3 up){
 		const float angle = acosf(dot);
 		vec3 axis;
 		vec3Cross(eye, target, &axis);
-		vec3Normalize(&axis);
+		vec3NormalizeFast(&axis);
 		q->w = angle;
 		q->v = axis;
 
@@ -378,7 +386,7 @@ void quatLookAt(quat *q, vec3 eye, vec3 target, vec3 up){
 quat quatLerp(quat q1, quat q2, const float t){
 	quatMultQByS(&q1, 1.f-t);
 	quatMultQByS(&q2, t);
-	return quatGetUnit(quatQAddQ(q1, q2));
+	return quatGetUnitFast(quatQAddQ(q1, q2));
 }
 quat quatSlerp(quat q1, quat q2, const float t){
 

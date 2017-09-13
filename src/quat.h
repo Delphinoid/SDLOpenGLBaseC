@@ -52,7 +52,9 @@ quat quatGetInverse(const quat q);
 void quatInvert(quat *q);
 
 quat quatGetUnit(const quat q);
+quat quatGetUnitFast(const quat q);
 void quatNormalize(quat *q);
+void quatNormalizeFast(quat *q);
 
 quat quatIdentity();
 void quatSetIdentity(quat *q);
