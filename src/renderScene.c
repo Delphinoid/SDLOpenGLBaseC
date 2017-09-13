@@ -27,7 +27,7 @@ void renderModel(renderable *rndr, const camera *cam, gfxProgram *gfxPrg){
 	glUniform4fv(gfxPrg->textureFragmentID, 1, texFrag);
 
 	/** Move this into a model / renderable? **/
-	skeleton *skel = malloc(sizeof(skeleton));
+	/*skeleton *skel = malloc(sizeof(skeleton));
 	skel->root = malloc(sizeof(sklNode));
 	skel->root->name = malloc(5*sizeof(char));
 	memcpy(skel->root->name, "root\0", 5);
@@ -36,44 +36,51 @@ void renderModel(renderable *rndr, const camera *cam, gfxProgram *gfxPrg){
 	skel->root->defaultState.scale = vec3New(1.f, 1.f, 1.f);
 	skel->root->parent = NULL;
 	skel->root->childNum = 1;
-	skel->root->children = malloc(sizeof(sklNode));
-	skel->root->children[0].parent = skel->root;
-	skel->root->children[0].childNum = 0;
-	skel->root->children[0].name = malloc(4*sizeof(char));
-	memcpy(skel->root->children[0].name, "top\0", 4);
-	skel->root->children[0].defaultState.position = vec3New(0.f, 2.f, 0.f);
-	skel->root->children[0].defaultState.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
-	skel->root->children[0].defaultState.scale = vec3New(1.f, 1.f, 1.f);
-	skel->boneNum = 2;
-	mat4 *skeletonState = malloc(skel->boneNum*sizeof(mat4));
+	skel->root->children = malloc(sizeof(sklNode *));
+	skel->root->children[0] = malloc(sizeof(sklNode));
+	skel->root->children[0]->parent = skel->root;
+	skel->root->children[0]->childNum = 0;
+	skel->root->children[0]->name = malloc(4*sizeof(char));
+	memcpy(skel->root->children[0]->name, "top\0", 4);
+	skel->root->children[0]->defaultState.position = vec3New(0.f, 2.f, 0.f);
+	skel->root->children[0]->defaultState.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
+	skel->root->children[0]->defaultState.scale = vec3New(1.f, 1.f, 1.f);
+	skel->boneNum = 2;*/
 
 	/* Feed the skeleton state to the shader */
-	if(/**rndr->mdl->skl.root != NULL &&**/ rndr->skli.skl != NULL){
+	if(rndr->mdl->skl.root != NULL && rndr->skli.skl != NULL){
 		// Generate a state for the model skeleton, transformed into the animated skeleton's space
-		skliGenerateState(&rndr->skli, skeletonState, skel);
-		size_t i;
-		for(i = 0; i < rndr->skli.skl->boneNum; ++i){
-			/*mat4 boneMatrixTemp;
-			memcpy(&boneMatrixTemp.m[0][0], &rndr->skli.skeletonState[i].m[0][0], sizeof(boneMatrixTemp));*/
-			/** Translates each skeleton bone by the inverse model's default bone positions **/
-			/*if(i==0){
-				mat4Translate(&boneMatrixTemp, -mdlBonesTemp[0].x, -mdlBonesTemp[0].y, -mdlBonesTemp[0].z);
-			}else if(i==1){
-				mat4 boneTranslationTemp = mat4TranslationMatrix(-mdlBonesTemp[0].x, -mdlBonesTemp[0].y, -mdlBonesTemp[0].z);
-				mat4MultMByM1(&boneMatrixTemp, &boneTranslationTemp);
-				mat4Translate(&boneMatrixTemp, -mdlBonesTemp[1].x, -mdlBonesTemp[1].y, -mdlBonesTemp[1].z);
-			}*/
-			glUniformMatrix4fv(gfxPrg->boneArrayID[i], 1, GL_FALSE, &skeletonState[i].m[0][0]);
-		}
+		mat4 *skeletonState = malloc(rndr->mdl->skl.boneNum*sizeof(mat4));
+		if(skeletonState != NULL){
+			skliGenerateState(&rndr->skli, skeletonState, &rndr->mdl->skl);
+			size_t i;
+			for(i = 0; i < rndr->skli.skl->boneNum; ++i){
+				/*mat4 boneMatrixTemp;
+				memcpy(&boneMatrixTemp.m[0][0], &rndr->skli.skeletonState[i].m[0][0], sizeof(boneMatrixTemp));*/
+				/** Translates each skeleton bone by the inverse model's default bone positions **/
+				/*if(i==0){
+					mat4Translate(&boneMatrixTemp, -mdlBonesTemp[0].x, -mdlBonesTemp[0].y, -mdlBonesTemp[0].z);
+				}else if(i==1){
+					mat4 boneTranslationTemp = mat4TranslationMatrix(-mdlBonesTemp[0].x, -mdlBonesTemp[0].y, -mdlBonesTemp[0].z);
+					mat4MultMByM1(&boneMatrixTemp, &boneTranslationTemp);
+					mat4Translate(&boneMatrixTemp, -mdlBonesTemp[1].x, -mdlBonesTemp[1].y, -mdlBonesTemp[1].z);
+				}*/
+				glUniformMatrix4fv(gfxPrg->boneArrayID[i], 1, GL_FALSE, &skeletonState[i].m[0][0]);
+			}
+			free(skeletonState);
+		}/*else{
+			printf("Error generating skeleton state: Memory allocation failure.\n");
+		}*/
 	}
 
 	/** **/
-	free(skeletonState);
-	free(skel->root->children[0].name);
+	/*free(skeletonState);
+	free(skel->root->children[0]->name);
+	free(skel->root->children[0]);
 	free(skel->root->children);
 	free(skel->root->name);
 	free(skel->root);
-	free(skel);
+	free(skel);*/
 
 	/* Feed the translucency multiplier to the shader */
 	glUniform1f(gfxPrg->alphaID, rndr->rTrans.alpha);

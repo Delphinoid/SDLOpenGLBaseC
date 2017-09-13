@@ -11,7 +11,8 @@ List of features to be implemented:
 
 List of queued tweaks:
 * Models need to store their own skeletal data.
-* Unify file loading functionality.
+* Replace strtok() with a better function.
+* Tidy up and unify file loading functionality.
 * Clean up renderable struct and remove any unnecessary member variables. Currently the only real member variables I am not happy with are sprite and hudElement.
 * Fix up render and space transform structures and unify all animation / interpolation code (the latter is partly done).
 * Not happy with the current billboard system, not sure why.

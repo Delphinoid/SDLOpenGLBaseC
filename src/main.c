@@ -119,8 +119,8 @@ int main(int argc, char *argv[]){
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 
 	/** Remove the special deletion code below the main loop as well **/
-	skliLoad(&((renderable *)cvGet(&allRenderables, 0))->skli, NULL, NULL);
-	skliLoad(&((renderable *)cvGet(&allRenderables, 1))->skli, NULL, NULL);
+	skliLoad(&((renderable *)cvGet(&allRenderables, 0))->skli, prgPath, "Resources\\Skeletons\\CubeTestSkeleton.tds");
+	skliLoad(&((renderable *)cvGet(&allRenderables, 1))->skli, prgPath, "Resources\\Skeletons\\CubeTestSkeleton.tds");
 
 
 	unsigned char prgRunning = 1;

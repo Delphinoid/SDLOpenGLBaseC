@@ -292,10 +292,15 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 			// Name
 			if(lineLength >= 6 && strncmp(line, "name ", 5) == 0){
 				tw->name = malloc((lineLength-4) * sizeof(char));
-				if(tw->name != NULL){
-					strncpy(tw->name, line+5, lineLength-5);
-					tw->name[lineLength-5] = '\0';
+				if(tw->name == NULL){
+					printf("Error loading texture wrapper: Memory allocation failure.\n");
+					twaDelete(&tempAnim);
+					twDelete(tw);
+					free(fullPath);
+					return 0;
 				}
+				strncpy(tw->name, line+5, lineLength-5);
+				tw->name[lineLength-5] = '\0';
 
 
 			// Close current multiline command
@@ -306,6 +311,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 						if(!twfAddDefaultSubframe(&tw->frames[tw->frameNum-1], subframeCapacity)){
 							twaDelete(&tempAnim);
 							twDelete(tw);
+							free(fullPath);
 							return 0;
 						}
 					}else{
@@ -313,6 +319,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 						if(!twfResizeToFit(&tw->frames[tw->frameNum-1], subframeCapacity)){
 							twaDelete(&tempAnim);
 							twDelete(tw);
+							free(fullPath);
 							return 0;
 						}
 					}
@@ -322,10 +329,12 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 					if(tempAnim.animData.frameNum > 0){
 						if(!twaResizeToFit(&tempAnim, animframeCapacity)){
 							twDelete(tw);
+							free(fullPath);
 							return 0;
 						}
 						if(!twAddAnim(tw, &tempAnim, &animCapacity)){
 							twaDelete(&tempAnim);
+							free(fullPath);
 							return 0;
 						}
 					}
@@ -350,6 +359,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 							if(!twfAddDefaultSubframe(&tw->frames[tw->frameNum-1], subframeCapacity)){
 								twaDelete(&tempAnim);
 								twDelete(tw);
+								free(fullPath);
 								return 0;
 							}
 						}else{
@@ -357,6 +367,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 							if(!twfResizeToFit(&tw->frames[tw->frameNum-1], subframeCapacity)){
 								twaDelete(&tempAnim);
 								twDelete(tw);
+								free(fullPath);
 								return 0;
 							}
 						}
@@ -366,10 +377,12 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 						if(tempAnim.animData.frameNum > 0){
 							if(!twaResizeToFit(&tempAnim, animframeCapacity)){
 								twDelete(tw);
+								free(fullPath);
 								return 0;
 							}
 							if(!twAddAnim(tw, &tempAnim, &animCapacity)){
 								twaDelete(&tempAnim);
+								free(fullPath);
 								return 0;
 							}
 						}
@@ -390,11 +403,10 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 				size_t pathBegin;
 				size_t pathLength;
 				unsigned char skipLoad = 0;
-				// If the texture identifier wasn't surrounded by quotes, don't give up:
 				if(firstQuote != NULL && lastQuote > firstQuote){
 					pathBegin = firstQuote-line+1;
 					pathLength = lastQuote-line-pathBegin;
-				}else{
+				}else{  // If the texture identifier wasn't surrounded by quotes, don't give up:
 					pathBegin = 8;
 					pathLength = lineLength-8;
 				}
@@ -440,6 +452,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 							twfDelete(&tempFrame);
 							twaDelete(&tempAnim);
 							twDelete(tw);
+							free(fullPath);
 							return 0;
 						}
 
@@ -449,6 +462,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 						free(texPath);
 						twfDelete(&tempFrame);
 						twaDelete(&tempAnim);
+						free(fullPath);
 						return 0;
 					}
 				}
@@ -464,15 +478,18 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 					// Loads number of subframes to create, main dimension to loop in (x or y) and the subframe dimensions
 					size_t numberOfFrames = 0;
 					char macroDirection = ' ';
-					float dimensions[4] = {0, 0, 0, 0};
+					float dimensions[4];
 					char *token = strtok(line+7, "/");
 					for(i = 0; i < 6; ++i){
-						if(i == 0){
-							numberOfFrames = strtoul(token, NULL, 0);
-						}else if(i == 1){
-							macroDirection = token[0];
-						}else{
-							dimensions[i-2] = strtod(token, NULL);
+						switch(i){
+							case 0:
+								numberOfFrames = strtoul(token, NULL, 0);
+							break;
+							case 1:
+								macroDirection = token[0];
+							break;
+							default:
+								dimensions[i-2] = strtod(token, NULL);
 						}
 						token = strtok(NULL, "/");
 					}
@@ -487,6 +504,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 							if(!twfAddSubframe(&tw->frames[tw->frameNum-1], &baseSubframe, &subframeCapacity)){
 								twaDelete(&tempAnim);
 								twDelete(tw);
+								free(fullPath);
 								return 0;
 							}
 							if(macroDirection == 'x'){  // Adds frames from left to right before resetting and moving down
@@ -516,20 +534,17 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 				if(currentCommand == 0){
 
 					// Create a new subframe and add it to the current texture frame
-					float dimensions[4] = {0, 0, 0, 0};
+					float dimensions[4];
 					char *token = strtok(line+9, "/");
 					for(i = 0; i < 4; ++i){
-						if(token != NULL){
-							dimensions[i] = strtod(token, NULL);
-							token = strtok(NULL, "/");
-						}else{
-							i = 4;
-						}
+						dimensions[i] = strtod(token, NULL);
+						token = strtok(NULL, "/");
 					}
 					twBounds baseSubframe = {.x = dimensions[0], .y = dimensions[1], .w = dimensions[2], .h = dimensions[3]};
 					if(!twfAddSubframe(&tw->frames[tw->frameNum-1], &baseSubframe, &subframeCapacity)){
 						twaDelete(&tempAnim);
 						twDelete(tw);
+						free(fullPath);
 						return 0;
 					}
 
@@ -554,12 +569,18 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 			// New texture animation
 			}else if(lineLength >= 9 && strncmp(line, "animation", 9) == 0){
 				// Reset tempAnim
-				animframeCapacity = ANIMFRAME_START_CAPACITY;
-				if(!twaInit(&tempAnim, animframeCapacity)){
-					twDelete(tw);
-					return 0;
+				if(strrchr(line+9, '{')){
+					animframeCapacity = ANIMFRAME_START_CAPACITY;
+					if(!twaInit(&tempAnim, animframeCapacity)){
+						twDelete(tw);
+						free(fullPath);
+						return 0;
+					}
+					currentCommand = 1;
+				}else{
+					// Worth it?
+					printf("Error loading texture wrapper: Animation command at line %u does not contain a brace.\n", currentLine);
 				}
-				currentCommand = 1;
 
 
 			// Make the current animation loop
@@ -577,23 +598,19 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 				if(currentCommand == 1){
 
 					// Loads start and end textures, start and end subframes and the frame delays
-					size_t textures[2] = {0, 0};
-					size_t subframes[2] = {0, 0};
+					size_t textures[2];
+					size_t subframes[2];
 					float frameDelay = 0.f;
 					char *token = strtok(line+7, "/");
-					for(i = 0; i < 6; ++i){
-						if(token != NULL){
-							if(i < 2){
-								textures[i] = strtoul(token, NULL, 0);
-							}else if(i < 4){
-								subframes[i-2] = strtoul(token, NULL, 0);
-							}else{
-								frameDelay = strtod(token, NULL);
-							}
-							token = strtok(NULL, "/");
+					for(i = 0; i < 5; ++i){
+						if(i < 2){
+							textures[i] = strtoul(token, NULL, 0);
+						}else if(i < 4){
+							subframes[i-2] = strtoul(token, NULL, 0);
 						}else{
-							i = 6;
+							frameDelay = strtod(token, NULL);
 						}
+						token = strtok(NULL, "/");
 					}
 
 					if(frameDelay > 0){
@@ -604,6 +621,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 									if(j < tw->frames[tw->frameNum-1].subframeNum){
 										if(!twaAddFrame(&tempAnim, i, j, frameDelay, &animframeCapacity)){
 											twDelete(tw);
+											free(fullPath);
 											return 0;
 										}
 									}else{
@@ -630,25 +648,25 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 					size_t frameID = 0, subframeID = 0;
 					float frameDelay = 0.f;
 					char *token = strtok(line+6, "/");
-					for(i = 0; i < 6; ++i){
-						if(token != NULL){
-							if(i == 0){
+					for(i = 0; i < 3; ++i){
+						switch(i){
+							case 0:
 								frameID = strtoul(token, NULL, 0);
-							}else if(i == 1){
+							break;
+							case 1:
 								subframeID = strtoul(token, NULL, 0);
-							}else{
+							break;
+							default:
 								frameDelay = strtod(token, NULL);
-							}
-							token = strtok(NULL, "/");
-						}else{
-							i = 6;
 						}
+						token = strtok(NULL, "/");
 					}
 
 					// Validate the frame information
 					if(frameDelay > 0 && frameID < tw->frameNum && subframeID < tw->frames[tw->frameNum-1].subframeNum){
 						if(!twaAddFrame(&tempAnim, frameID, subframeID, frameDelay, &animframeCapacity)){
 							twDelete(tw);
+							free(fullPath);
 							return 0;
 						}
 					}

@@ -18,7 +18,7 @@ typedef struct sklNode {
 	sklBone defaultState;
 	struct sklNode *parent;
 	size_t childNum;
-	struct sklNode *children;
+	struct sklNode **children;
 } sklNode;
 
 // Combines the above structures
@@ -63,6 +63,9 @@ typedef struct {
 	sklAnimInstance *animations;
 	sklBone *customState;  // Custom bone transformations
 } sklInstance;
+
+void boneInit(sklBone *bone);
+void nodeInit(sklNode *node);
 
 void sklInit(skeleton *skl);
 unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath);

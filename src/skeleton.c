@@ -1,14 +1,24 @@
 #include "skeleton.h"
 #include <string.h>
+#include <stdio.h>
 
 #define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians
 
+#define CHILDREN_START_CAPACITY 1
 #define ANIM_START_CAPACITY 1
 
 void boneInit(sklBone *bone){
 	vec3SetS(&bone->position, 0.f);
 	quatSetIdentity(&bone->orientation);
 	vec3SetS(&bone->scale, 1.f);
+}
+
+void nodeInit(sklNode *node){
+	node->name = NULL;
+	boneInit(&node->defaultState);
+	node->parent = NULL;
+	node->childNum = 0;
+	node->children = NULL;
 }
 
 void sklInit(skeleton *skl){
@@ -20,7 +30,10 @@ unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 
 	sklInit(skl);
 
-	/*size_t pathLen = strlen(prgPath);
+	sklNode **currentNode = NULL;
+	unsigned int currentLine = 0;
+
+	size_t pathLen = strlen(prgPath);
 	size_t fileLen = strlen(filePath);
 	char *fullPath = malloc((pathLen+fileLen+1)*sizeof(char));
 	memcpy(fullPath, prgPath, pathLen);
@@ -29,13 +42,13 @@ unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 	FILE *sklInfo = fopen(fullPath, "r");
 	char lineFeed[1024];
 	char *line;
-	char compare[1024];
 	size_t lineLength;
 
 	if(sklInfo != NULL){
 		while(fgets(lineFeed, sizeof(lineFeed), sklInfo)){
 
 			line = lineFeed;
+			++currentLine;
 			lineLength = strlen(line);
 
 			// Remove new line and carriage return
@@ -72,14 +85,86 @@ unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 			// Name
 			if(lineLength >= 6 && strncmp(line, "name ", 5) == 0){
 				skl->name = malloc((lineLength-4) * sizeof(char));
-				if(skl->name != NULL){
-					strncpy(skl->name, line+5, lineLength-5);
-					skl->name[lineLength-5] = '\0';
+				if(skl->name == NULL){
+					sklDelete(skl);
+					printf("Error loading skeleton: Memory allocation failure.\n");
+					return 0;
+				}
+				strncpy(skl->name, line+5, lineLength-5);
+				skl->name[lineLength-5] = '\0';
+
+			// Close current multiline command
+			}else if(lineLength > 0 && line[0] == '}'){
+				currentNode = &(*currentNode)->parent;
+				if(*currentNode == NULL){
+					// Last bone was reached (equal number of opening and closing braces)
+					break;
 				}
 
 			// New bone
 			}else if(lineLength >= 18 && strncmp(line, "bone ", 5) == 0){
-				//
+
+				char *token = strtok(line+5, " ");
+
+				if(token != NULL){
+
+					if(currentNode == NULL){
+						currentNode = &skl->root;
+					}else{
+						++(*currentNode)->childNum;
+						(*currentNode)->children = realloc((*currentNode)->children, (*currentNode)->childNum*sizeof(sklNode *));
+						if((*currentNode)->children == NULL){
+							sklDelete(skl);
+							printf("Error loading skeleton: Memory allocation failure.\n");
+							return 0;
+						}
+						currentNode = &(*currentNode)->children[(*currentNode)->childNum-1];
+					}
+
+					*currentNode = malloc(sizeof(sklNode));
+					if(*currentNode == NULL){
+						sklDelete(skl);
+						printf("Error loading skeleton: Memory allocation failure.\n");
+						return 0;
+					}
+					nodeInit(*currentNode);
+
+					size_t nameLen = strlen(token);
+					(*currentNode)->name = malloc((nameLen+1)*sizeof(char));
+					if((*currentNode)->name == NULL){
+						sklDelete(skl);
+						printf("Error loading skeleton: Memory allocation failure.\n");
+						return 0;
+					}
+					memcpy((*currentNode)->name, token, nameLen);
+					(*currentNode)->name[nameLen] = '\0';
+
+					float data[3][3];  // Position, orientation (in Eulers) and scale
+					size_t i, j;
+					for(i = 0; i < 3; ++i){
+						for(j = 0; j < 3; ++j){
+							token = strtok(NULL, "/");
+							data[i][j] = strtod(token, NULL);
+						}
+					}
+
+					vec3Set(&(*currentNode)->defaultState.position, data[0][0], data[0][1], data[0][2]);
+					quatSetEuler(&(*currentNode)->defaultState.orientation, data[1][0], data[1][1], data[1][2]);
+					vec3Set(&(*currentNode)->defaultState.scale, data[2][0], data[2][1], data[2][2]);
+
+					++skl->boneNum;
+
+					if(!strrchr(token, '{')){
+						currentNode = &(*currentNode)->parent;
+					}
+					if(*currentNode == NULL){
+						// Last bone was reached (equal number of opening and closing braces)
+						break;
+					}
+
+				}else{
+					printf("Error loading skeleton: Bone command at line %u does not specify a name for the bone.\n", currentLine);
+				}
 
 			}
 
@@ -87,7 +172,7 @@ unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 
 		fclose(sklInfo);
 
-	}*/
+	}
 
 	return 1;
 
@@ -97,7 +182,7 @@ static sklNode *sklFindBone(sklNode *node, const char *name){
 	if(node != NULL && strcmp(node->name, name) != 0){
 		size_t i;
 		for(i = 0; r == NULL && i < node->childNum; ++i){
-			r = sklFindBone(&node->children[i], name);
+			r = sklFindBone(&(*node->children[i]), name);
 		}
 	}else{
 		r = node;
@@ -109,13 +194,19 @@ static void sklDeleteRecursive(sklNode *node){
 		if(node->name != NULL){
 			free(node->name);
 		}
-		while(node->childNum > 0){
-			sklDeleteRecursive(&node->children[--node->childNum]);
+		if(node->children != NULL){
+			while(node->childNum > 0){
+				sklDeleteRecursive(&(*node->children[--node->childNum]));
+			}
+			free(node->children);
 		}
 		free(node);
 	}
 }
 void sklDelete(skeleton *skl){
+	if(skl->name != NULL){
+		free(skl->name);
+	}
 	sklDeleteRecursive(skl->root);
 }
 
@@ -345,23 +436,7 @@ void skliInit(sklInstance *skli, skeleton *skl){
 unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *filePath){
 
 	skeleton *skl = malloc(sizeof(skeleton));
-	skl->root = malloc(sizeof(sklNode));
-	skl->root->name = malloc(5*sizeof(char));
-	memcpy(skl->root->name, "root\0", 5);
-	skl->root->defaultState.position = vec3New(0.5f, -1.f, 0.5f);
-	skl->root->defaultState.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
-	skl->root->defaultState.scale = vec3New(1.f, 1.f, 1.f);
-	skl->root->parent = NULL;
-	skl->root->childNum = 1;
-	skl->root->children = malloc(sizeof(sklNode));
-	skl->root->children[0].parent = skl->root;
-	skl->root->children[0].childNum = 0;
-	skl->root->children[0].name = malloc(4*sizeof(char));
-	memcpy(skl->root->children[0].name, "top\0", 4);
-	skl->root->children[0].defaultState.position = vec3New(0.f, 2.f, 0.f);
-	skl->root->children[0].defaultState.orientation = quatNew(1.f, 0.f, 0.f, 0.f);
-	skl->root->children[0].defaultState.scale = vec3New(1.f, 1.f, 1.f);
-	skl->boneNum = 2;
+	sklLoad(skl, prgPath, filePath);
 
 	skliInit(skli, skl);
 
@@ -498,7 +573,7 @@ static size_t skliGenerateStateRecursive(sklInstance *skli, mat4 *state, sklNode
 		// Loop through each child
 		size_t i;
 		for(i = 0; i < node->childNum; ++i){
-			nextBone = skliGenerateStateRecursive(skli, state, space, &node->children[i], bone, nextBone+1);
+			nextBone = skliGenerateStateRecursive(skli, state, space, &(*node->children[i]), bone, nextBone+1);
 		}
 	}
 	return nextBone;

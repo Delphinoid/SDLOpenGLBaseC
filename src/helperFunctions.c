@@ -1,6 +1,35 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Replacement for strtok because it's a horrible function
+/*unsigned char nextToken(const char *str, const char *delims, size_t *tokenOffset, size_t *tokenLength){
+	char *tokenStart = NULL;
+	const char *currentChar = str+(*tokenOffset);
+	while(*currentChar != '\0'){
+		const char *currentDelim = delims;
+		while(*currentDelim != '\0'){
+			if(*currentChar == *currentDelim){
+				if(tokenStart == NULL){
+					tokenStart = (char *)(currentChar-str-(*tokenOffset));
+				}else{
+					*tokenLength = currentChar-str-(*tokenOffset)-(size_t)tokenStart;
+					*tokenOffset = (size_t)tokenStart;
+					return 1;
+				}
+			}
+			++currentDelim;
+		}
+		++currentChar;
+	}
+	if(tokenStart != NULL){
+		*tokenLength = currentChar-str-(*tokenOffset)-(size_t)tokenStart;
+		*tokenOffset = (size_t)tokenStart;
+		return 1;
+	}
+	return 0;
+}*/
+
+
 /* Push an element into a dynamic array. */
 unsigned char pushDynamicArray(void **vector, const void *element, const size_t bytes, size_t *size, size_t *capacity){
 	if(*size == *capacity){

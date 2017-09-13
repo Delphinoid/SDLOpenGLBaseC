@@ -10,6 +10,9 @@
 /** Remove printf()s **/
 
 #define freeHelpers() \
+	if(mdl->name != NULL){ \
+		free(mdl->name); \
+	} \
 	if(vertices != NULL){ \
 		free(vertices); \
 	} \
@@ -197,10 +200,32 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 			// Name
 			if(lineLength >= 6 && strncmp(line, "name ", 5) == 0){
 				mdl->name = malloc((lineLength-4) * sizeof(char));
-				if(mdl->name != NULL){
-					strncpy(mdl->name, line+5, lineLength-5);
-					mdl->name[lineLength-5] = '\0';
+				if(mdl->name == NULL){
+					printf("Error loading model: Memory allocation failure.\n");
+					freeHelpers();
+					return 0;
 				}
+				strncpy(mdl->name, line+5, lineLength-5);
+				mdl->name[lineLength-5] = '\0';
+
+			// Skeleton
+			}else if(lineLength > 9 && strncmp(line, "skeleton ", 9) == 0){
+				const char *firstQuote = strchr(line, '"');
+				const char *lastQuote = strrchr(line, '"');
+				size_t pathBegin;
+				size_t pathLength;
+				if(firstQuote != NULL && lastQuote > firstQuote){
+					pathBegin = firstQuote-line+1;
+					pathLength = lastQuote-line-pathBegin;
+				}else{  // If the skeleton path wasn't surrounded by quotes, don't give up:
+					pathBegin = 8;
+					pathLength = lineLength-8;
+				}
+				char *sklPath = malloc((pathLength+1) * sizeof(char));
+				strncpy(sklPath, line+pathBegin, pathLength);
+				sklPath[pathLength] = '\0';
+				sklLoad(&mdl->skl, prgPath, sklPath);
+				free(sklPath);
 
 			// Vertex data
 			}else if(lineLength >= 7 && strncmp(line, "v ", 2) == 0){
@@ -518,4 +543,5 @@ void mdlDelete(model *mdl){
 	if(mdl->iboID != 0){
 		glDeleteBuffers(1, &mdl->iboID);
 	}
+	sklDelete(&mdl->skl);
 }
