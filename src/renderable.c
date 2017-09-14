@@ -172,14 +172,14 @@ void rndrGenerateSprite(const renderable *rndr, vertex *vertices, const mat4 *tr
 	const float z      = -rndr->sTrans.relPivot.z;
 
 	// Create the top left vertex
-	tempVert.pos.x = left;
-	tempVert.pos.y = top;
-	tempVert.pos.z = z;
+	tempVert.position.x = left;
+	tempVert.position.y = top;
+	tempVert.position.z = z;
 	tempVert.u = 0.f;
 	tempVert.v = 0.f;
-	tempVert.nx = 0.f;
-	tempVert.ny = 0.f;
-	tempVert.nz = 0.f;
+	tempVert.normal.x = 0.f;
+	tempVert.normal.y = 0.f;
+	tempVert.normal.z = 0.f;
 	tempVert.bIDs[0] = -1;
 	tempVert.bIDs[1] = -1;
 	tempVert.bIDs[2] = -1;
@@ -191,14 +191,14 @@ void rndrGenerateSprite(const renderable *rndr, vertex *vertices, const mat4 *tr
 	vertices[0] = tempVert;
 
 	// Create the top right vertex
-	tempVert.pos.x = right;
-	tempVert.pos.y = top;
-	tempVert.pos.z = z;
+	tempVert.position.x = right;
+	tempVert.position.y = top;
+	tempVert.position.z = z;
 	tempVert.u = 1.f;
 	tempVert.v = 0.f;
-	tempVert.nx = 0.f;
-	tempVert.ny = 0.f;
-	tempVert.nz = 0.f;
+	tempVert.normal.x = 0.f;
+	tempVert.normal.y = 0.f;
+	tempVert.normal.z = 0.f;
 	tempVert.bIDs[0] = -1;
 	tempVert.bIDs[1] = -1;
 	tempVert.bIDs[2] = -1;
@@ -210,14 +210,14 @@ void rndrGenerateSprite(const renderable *rndr, vertex *vertices, const mat4 *tr
 	vertices[1] = tempVert;
 
 	// Create the bottom left vertex
-	tempVert.pos.x = left;
-	tempVert.pos.y = bottom;
-	tempVert.pos.z = z;
+	tempVert.position.x = left;
+	tempVert.position.y = bottom;
+	tempVert.position.z = z;
 	tempVert.u = 0.f;
 	tempVert.v = -1.f;  // Flip the y dimension so the image isn't upside down
-	tempVert.nx = 0.f;
-	tempVert.ny = 0.f;
-	tempVert.nz = 0.f;
+	tempVert.normal.x = 0.f;
+	tempVert.normal.y = 0.f;
+	tempVert.normal.z = 0.f;
 	tempVert.bIDs[0] = -1;
 	tempVert.bIDs[1] = -1;
 	tempVert.bIDs[2] = -1;
@@ -229,14 +229,14 @@ void rndrGenerateSprite(const renderable *rndr, vertex *vertices, const mat4 *tr
 	vertices[2] = tempVert;
 
 	// Create the bottom right vertex
-	tempVert.pos.x = right;
-	tempVert.pos.y = bottom;
-	tempVert.pos.z = z;
+	tempVert.position.x = right;
+	tempVert.position.y = bottom;
+	tempVert.position.z = z;
 	tempVert.u = 1.f;
 	tempVert.v = -1.f;  // Flip the y dimension so the image isn't upside down
-	tempVert.nx = 0.f;
-	tempVert.ny = 0.f;
-	tempVert.nz = 0.f;
+	tempVert.normal.x = 0.f;
+	tempVert.normal.y = 0.f;
+	tempVert.normal.z = 0.f;
 	tempVert.bIDs[0] = -1;
 	tempVert.bIDs[1] = -1;
 	tempVert.bIDs[2] = -1;
@@ -252,9 +252,9 @@ void rndrGenerateSprite(const renderable *rndr, vertex *vertices, const mat4 *tr
 	size_t i;
 	for(i = 0; i < 4; ++i){
 		// We need to make the vertex positions a vec4 so we can multiply them by the 4x4 modelViewProjectionMatrix
-		vec4Set(&vertexPos, vertices[i].pos.x, vertices[i].pos.y, vertices[i].pos.z, 1.f);
+		vec4Set(&vertexPos, vertices[i].position.x, vertices[i].position.y, vertices[i].position.z, 1.f);
 		mat4MultMByV(transformMatrix, &vertexPos);
-		vec3Set(&vertices[i].pos, vertexPos.x, vertexPos.y, vertexPos.z);
+		vec3Set(&vertices[i].position, vertexPos.x, vertexPos.y, vertexPos.z);
 	}
 
 }

@@ -6,9 +6,9 @@
 
 /** Models need to store a skeleton structure of their own **/
 typedef struct {
-	vec3  pos;
+	vec3  position;
 	float u, v;
-	float nx, ny, nz;
+	vec3 normal;
 	int   bIDs[4];
 	float bWeights[4];
 } vertex;

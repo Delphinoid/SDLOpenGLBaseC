@@ -12,20 +12,34 @@ typedef struct {
 } sklBone;
 
 // Skeleton node, containing a bone and links to the parent and its children
-typedef struct sklNode sklNode;
+/*typedef struct sklNode sklNode;
 typedef struct sklNode {
 	char *name;
 	sklBone defaultState;
 	struct sklNode *parent;
 	size_t childNum;
 	struct sklNode **children;
+} sklNode;*/
+
+// Combines the above structures
+/*typedef struct {
+	char *name;
+	sklNode *root;
+	size_t boneNum;
+} skeleton;*/
+
+// Skeleton node, containing a bone and the index of its parent
+typedef struct {
+	char *name;
+	sklBone defaultState;
+	size_t parent;
 } sklNode;
 
 // Combines the above structures
 typedef struct {
 	char *name;
-	sklNode *root;
 	size_t boneNum;
+	sklNode *bones;  // Depth-first vector of each bone
 } skeleton;
 
 // A full animation, containing a vector of keyframes
@@ -71,7 +85,6 @@ typedef struct {
 } sklInstance;
 
 void boneInit(sklBone *bone);
-void nodeInit(sklNode *node);
 
 void sklInit(skeleton *skl);
 unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath);
@@ -88,7 +101,7 @@ void sklaiDelete(sklAnimInstance *sklai);
 void skliInit(sklInstance *skli, skeleton *skl);
 unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *filePath);
 void skliAnimate(sklInstance *skli, const float timeElapsed);
-void skliGenerateState(sklInstance *skli, mat4 *state, const skeleton *skl);
+void skliGenerateState(const sklInstance *skli, const skeleton *skl, mat4 *state);
 void skliDelete(sklInstance *skli);
 
 #endif

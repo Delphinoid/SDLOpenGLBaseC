@@ -4,7 +4,7 @@
 
 #define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians
 
-#define CHILDREN_START_CAPACITY 1
+#define BONE_START_CAPACITY 1
 #define ANIM_START_CAPACITY 1
 
 void boneInit(sklBone *bone){
@@ -13,25 +13,34 @@ void boneInit(sklBone *bone){
 	vec3SetS(&bone->scale, 1.f);
 }
 
-void nodeInit(sklNode *node){
-	node->name = NULL;
-	boneInit(&node->defaultState);
-	node->parent = NULL;
-	node->childNum = 0;
-	node->children = NULL;
+static unsigned char sklResizeToFit(skeleton *skl, const size_t boneCapacity){
+	if(skl->boneNum != boneCapacity){
+		skl->bones = realloc(skl->bones, skl->boneNum*sizeof(sklNode));
+		if(skl->bones == NULL){
+			printf("Error loading skeleton: Memory allocation failure.\n");
+			return 0;
+		}
+	}
+	return 1;
 }
-
 void sklInit(skeleton *skl){
 	skl->name = NULL;
-	skl->root = NULL;
 	skl->boneNum = 0;
+	skl->bones = NULL;
 }
 unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 
 	sklInit(skl);
 
-	sklNode **currentNode = NULL;
+	size_t boneCapacity = BONE_START_CAPACITY;
 
+	skl->bones = malloc(boneCapacity*sizeof(sklNode));
+	if(skl->bones == NULL){
+		printf("Error loading skeleton: Memory allocation failure.\n");
+		return 0;
+	}
+
+	size_t parent = 0;
 	int currentCommand = -1;       // The current multiline command type (-1 = none, >-1 = bone)
 	unsigned int currentLine = 0;  // Current file line being read
 
@@ -104,8 +113,8 @@ unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 			// Close current multiline command
 			}else if(lineLength > 0 && line[0] == '}'){
 				if(currentCommand > -1){
-					currentNode = &(*currentNode)->parent;
-					if(*currentNode == NULL){
+					parent = skl->bones[parent].parent;
+					if(skl->boneNum == parent){
 						// Last bone was reached (equal number of opening and closing braces)
 						break;
 					}
@@ -121,42 +130,30 @@ unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 
 				if(token != NULL){
 
-					if(currentNode == NULL){
-						currentNode = &skl->root;
-					}else{
-						++(*currentNode)->childNum;
-						(*currentNode)->children = realloc((*currentNode)->children, (*currentNode)->childNum*sizeof(sklNode *));
-						if((*currentNode)->children == NULL){
+					if(skl->boneNum >= boneCapacity){
+						boneCapacity *= 2;
+						sklNode *tempBuffer = realloc(skl->bones, boneCapacity*sizeof(sklNode));
+						if(tempBuffer == NULL){
 							printf("Error loading skeleton: Memory allocation failure.\n");
 							sklDelete(skl);
 							free(fullPath);
 							fclose(sklInfo);
 							return 0;
 						}
-						currentNode = &(*currentNode)->children[(*currentNode)->childNum-1];
+						skl->bones = tempBuffer;
 					}
-
-					*currentNode = malloc(sizeof(sklNode));
-					if(*currentNode == NULL){
-						printf("Error loading skeleton: Memory allocation failure.\n");
-						sklDelete(skl);
-						free(fullPath);
-						fclose(sklInfo);
-						return 0;
-					}
-					nodeInit(*currentNode);
 
 					size_t nameLen = strlen(token);
-					(*currentNode)->name = malloc((nameLen+1)*sizeof(char));
-					if((*currentNode)->name == NULL){
+					skl->bones[skl->boneNum].name = malloc((nameLen+1)*sizeof(char));
+					if(skl->bones[skl->boneNum].name == NULL){
 						printf("Error loading skeleton: Memory allocation failure.\n");
 						sklDelete(skl);
 						free(fullPath);
 						fclose(sklInfo);
 						return 0;
 					}
-					memcpy((*currentNode)->name, token, nameLen);
-					(*currentNode)->name[nameLen] = '\0';
+					memcpy(skl->bones[skl->boneNum].name, token, nameLen);
+					skl->bones[skl->boneNum].name[nameLen] = '\0';
 
 					float data[3][3];  // Position, orientation (in Eulers) and scale
 					size_t i, j;
@@ -167,21 +164,22 @@ unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 						}
 					}
 
-					vec3Set(&(*currentNode)->defaultState.position, data[0][0], data[0][1], data[0][2]);
-					quatSetEuler(&(*currentNode)->defaultState.orientation, data[1][0], data[1][1], data[1][2]);
-					vec3Set(&(*currentNode)->defaultState.scale, data[2][0], data[2][1], data[2][2]);
+					vec3Set(&skl->bones[skl->boneNum].defaultState.position, data[0][0], data[0][1], data[0][2]);
+					quatSetEuler(&skl->bones[skl->boneNum].defaultState.orientation, data[1][0], data[1][1], data[1][2]);
+					vec3Set(&skl->bones[skl->boneNum].defaultState.scale, data[2][0], data[2][1], data[2][2]);
 
-					++skl->boneNum;
+					skl->bones[skl->boneNum].parent = parent;
 
 					if(strrchr(token, '{')){
+						parent = skl->boneNum;
 						++currentCommand;
-					}else{
-						currentNode = &(*currentNode)->parent;
-					}
-					if(*currentNode == NULL){
+					}else if(skl->boneNum == parent){
 						// Last bone was reached (equal number of opening and closing braces)
+						++skl->boneNum;
 						break;
 					}
+
+					++skl->boneNum;
 
 				}else{
 					printf("Error loading skeleton: Bone command at line %u does not specify a name for the bone.\n", currentLine);
@@ -212,40 +210,31 @@ unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 		skl->name[fileLen] = '\0';
 	}
 
-	return 1;
+	return sklResizeToFit(skl, boneCapacity);
 
 }
-static sklNode *sklFindBone(sklNode *node, const char *name){
-	sklNode *r = NULL;
-	if(node != NULL && strcmp(node->name, name) != 0){
-		size_t i;
-		for(i = 0; r == NULL && i < node->childNum; ++i){
-			r = sklFindBone(&(*node->children[i]), name);
+static size_t sklFindBone(skeleton *skl, const char *name){
+	size_t i;
+	for(i = 0; i < skl->boneNum; ++i){
+		if(skl->bones[i].name != NULL && strcmp(skl->bones[i].name, name) == 0){
+			return i;
 		}
-	}else{
-		r = node;
 	}
-	return r;
-}
-static void sklDeleteRecursive(sklNode *node){
-	if(node != NULL){
-		if(node->name != NULL){
-			free(node->name);
-		}
-		if(node->children != NULL){
-			while(node->childNum > 0){
-				sklDeleteRecursive(&(*node->children[--node->childNum]));
-			}
-			free(node->children);
-		}
-		free(node);
-	}
+	return (size_t)-1;
 }
 void sklDelete(skeleton *skl){
 	if(skl->name != NULL){
 		free(skl->name);
 	}
-	sklDeleteRecursive(skl->root);
+	if(skl->bones != NULL){
+		size_t i;
+		for(i = 0; i < skl->boneNum; ++i){
+			if(skl->bones[i].name != NULL){
+				free(skl->bones[i].name);
+			}
+		}
+		free(skl->bones);
+	}
 }
 
 void sklaInit(sklAnim *skla){
@@ -544,21 +533,27 @@ void skliAddAnimation(sklInstance *skli, const sklAnim *skla, const size_t frame
 void skliChangeSkeleton(sklInstance *skli, skeleton *skl){
 	/** Re-calculate bone lookups for all animation instances. **/
 }
-static void skliBoneState(sklInstance *skli, mat4 *state, const sklNode *space, const sklNode *node, const size_t parent, const size_t bone){
-	/*
+void skliAnimate(sklInstance *skli, const float timeElapsed){
+	size_t i;
+	for(i = 0; i < skli->animationNum; ++i){
+		sklaiAnimate(&skli->animations[i], timeElapsed*skli->timeMod);
+	}
+}
+/*static void skliBoneState(const sklInstance *skli, mat4 *state, const sklNode *space, const sklNode *node, const size_t parent, const size_t bone){
+	*
 	** Update the transform state of the specified bone. Uses the delta transforms
 	** in animState from each sklAnimInstance.
-	*/
+	*//*
 	// Apply parent transforms first if possible
 	if(bone != parent){
 		state[bone] = state[parent];
 	}else{
 		mat4Identity(&state[bone]);
 	}
-	/*
+	*
 	** If the bone exists in the animated skeleton,
 	** translate the vertices into its space.
-	*/
+	*//*
 	if(space != NULL){
 		mat4Translate(&state[bone], space->defaultState.position.x,
 		                            space->defaultState.position.y,
@@ -569,8 +564,8 @@ static void skliBoneState(sklInstance *skli, mat4 *state, const sklNode *space, 
 		                            node->defaultState.position.y,
 		                            node->defaultState.position.z);
 	}
-	/** Find the bone's position in each sklAnimInstance by strcmping the names **/
-	/** Later, set up a "lookup table" of sorts when animations are added to make this faster **/
+	** Find the bone's position in each sklAnimInstance by strcmping the names **//*
+	** Later, set up a "lookup table" of sorts when animations are added to make this faster **//*
 	size_t i;
 	for(i = 0; i < skli->animationNum; ++i){
 		mat4Translate(&state[bone], skli->animations[i].animBoneLookup[bone]->position.x,
@@ -587,24 +582,18 @@ static void skliBoneState(sklInstance *skli, mat4 *state, const sklNode *space, 
 	                            -node->defaultState.position.y,
 	                            -node->defaultState.position.z);
 }
-void skliAnimate(sklInstance *skli, const float timeElapsed){
-	size_t i;
-	for(i = 0; i < skli->animationNum; ++i){
-		sklaiAnimate(&skli->animations[i], timeElapsed*skli->timeMod);
-	}
-}
 static size_t skliGenerateStateRecursive(sklInstance *skli, mat4 *state, sklNode *space, const sklNode *node, const size_t parent, const size_t bone){
-	/*
+	*
 	** Depth-first traversal through each bone, running skliInterpolateBone on each.
 	** Returns the position in skli->sklState of the next bone (the number of bones modified so-far).
 	**
 	** Passing in a root node of a skeleton other than skli->skl will transform it to fit skli->skl.
 	** This can be used for "attaching" models to other skeletons.
-	*/
+	*//*
 	size_t nextBone = bone;
 	if(node != NULL){
 		// Find a bone in skli->skl with the same name as node's bone
-		/** Could be better maybe? **/
+		** Could be better maybe? **//*
 		space = sklFindBone(space, node->name);
 		// Update the delta transform for the bone
 		skliBoneState(skli, state, space, node, parent, bone);
@@ -615,9 +604,68 @@ static size_t skliGenerateStateRecursive(sklInstance *skli, mat4 *state, sklNode
 		}
 	}
 	return nextBone;
+}*/
+static void skliGenerateBoneState(const sklInstance *skli, const skeleton *skl, mat4 *state, const size_t bone){
+	/*
+	** Update the transform state of the specified bone. Uses the delta transforms
+	** in animState from each sklAnimInstance if possible.
+	*/
+	// Apply parent transforms first if possible.
+	if(bone != skl->bones[bone].parent){
+		state[bone] = state[skl->bones[bone].parent];
+	}else{
+		mat4Identity(&state[bone]);
+	}
+	/*
+	** If the bone exists in the animated skeleton,
+	** translate the vertices into its space and
+	** apply each animation transform.
+	*/
+	/** Could definitely be better, using sklFindBone() is horrible. **/
+	size_t animBone = sklFindBone(skli->skl, skl->bones[bone].name);
+	if(animBone < skli->skl->boneNum){
+		mat4Translate(&state[bone], skli->skl->bones[animBone].defaultState.position.x,
+		                            skli->skl->bones[animBone].defaultState.position.y,
+		                            skli->skl->bones[animBone].defaultState.position.z);
+		size_t i;
+		for(i = 0; i < skli->animationNum; ++i){
+			if(skli->animations[i].animBoneLookup[animBone] != NULL){
+				mat4Translate(&state[bone], skli->animations[i].animBoneLookup[animBone]->position.x,
+				                            skli->animations[i].animBoneLookup[animBone]->position.y,
+				                            skli->animations[i].animBoneLookup[animBone]->position.z);
+				mat4Rotate(&state[bone], skli->animations[i].animBoneLookup[animBone]->orientation);
+				mat4Scale(&state[bone], skli->animations[i].animBoneLookup[animBone]->scale.x,
+				                        skli->animations[i].animBoneLookup[animBone]->scale.y,
+				                        skli->animations[i].animBoneLookup[animBone]->scale.z);
+			}
+		}
+	}else{
+		// If it doesn't exist, use the model's bone position.
+		mat4Translate(&state[bone], skl->bones[bone].defaultState.position.x,
+		                            skl->bones[bone].defaultState.position.y,
+		                            skl->bones[bone].defaultState.position.z);
+	}
+	// Translate them back by the model's bone position.
+	// This and the previous translation make more sense when diagrammed.
+	mat4Translate(&state[bone], -skl->bones[bone].defaultState.position.x,
+	                            -skl->bones[bone].defaultState.position.y,
+	                            -skl->bones[bone].defaultState.position.z);
 }
-void skliGenerateState(sklInstance *skli, mat4 *state, const skeleton *skl){
-	skliGenerateStateRecursive(skli, state, skli->skl->root, skl->root, 0, 0);
+void skliGenerateState(const sklInstance *skli, const skeleton *skl, mat4 *state){
+	/*
+	** Depth-first traversal through skl, running skliGenerateBoneState() on each bone.
+	**
+	** Passing in a skeleton (skl) that is different to skli->skl will result in it
+	** being transformed to fit skli->skl. This can be used for "attaching" models to
+	** other models: for example, if you have a hat model, you can pass its skeleton
+	** in as skl and the skeleton of the entity wearing it in as skli->skl and it will
+	** move the hat onto that entity's head.
+	*/
+	size_t i;
+	for(i = 0; i < skl->boneNum; ++i){
+		// Update the skl bone's state.
+		skliGenerateBoneState(skli, skl, state, i);
+	}
 }
 void skliDelete(sklInstance *skli){
 	if(skli->animations != NULL){

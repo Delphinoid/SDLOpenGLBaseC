@@ -42,9 +42,9 @@ unsigned char pushDynamicArray(void **vector, const void *element, const size_t 
 static void mdlGenBufferObjects(model *mdl, const vertex *vertices, const size_t *indices);
 
 void vertInit(vertex *v){
-	vec3SetS(&v->pos, 0.f);
+	vec3SetS(&v->position, 0.f);
 	v->u  = 0.f; v->v  = 0.f;
-	v->nx = 0.f; v->ny = 0.f; v->nz = 0.f;
+	vec3SetS(&v->normal, 0.f);
 	v->bIDs[0]     = -1;  v->bIDs[1]     = -1;  v->bIDs[2]     = -1;  v->bIDs[3] = -1;
 	v->bWeights[0] = 0.f; v->bWeights[1] = 0.f; v->bWeights[2] = 0.f; v->bWeights[3] = 0.f;
 }
@@ -390,13 +390,13 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 					// Vertex positional data
 					size_t pos = (positionIndex[i]-1)*3;
 					if(pos+2 < tempPositionsSize){
-						tempVert.pos.x = tempPositions[pos];
-						tempVert.pos.y = tempPositions[pos+1];
-						tempVert.pos.z = tempPositions[pos+2];
+						tempVert.position.x = tempPositions[pos];
+						tempVert.position.y = tempPositions[pos+1];
+						tempVert.position.z = tempPositions[pos+2];
 					}else{
-						tempVert.pos.x = 0.f;
-						tempVert.pos.y = 0.f;
-						tempVert.pos.z = 0.f;
+						tempVert.position.x = 0.f;
+						tempVert.position.y = 0.f;
+						tempVert.position.z = 0.f;
 					}
 					// Vertex UV data
 					pos = (uvIndex[i]-1)<<1;
@@ -410,13 +410,13 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 					// Vertex normal data
 					pos = (normalIndex[i]-1)*3;
 					if(pos+2 < tempNormalsSize){
-						tempVert.nx = tempNormals[pos];
-						tempVert.ny = tempNormals[pos+1];
-						tempVert.nz = tempNormals[pos+2];
+						tempVert.normal.x = tempNormals[pos];
+						tempVert.normal.y = tempNormals[pos+1];
+						tempVert.normal.z = tempNormals[pos+2];
 					}else{
-						tempVert.nx = 0.f;
-						tempVert.ny = 0.f;
-						tempVert.nz = 0.f;
+						tempVert.normal.x = 0.f;
+						tempVert.normal.y = 0.f;
+						tempVert.normal.z = 0.f;
 					}
 					/****/
 					pos = (positionIndex[i]-1)*4;
@@ -451,9 +451,9 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 					for(j = 0; j < mdl->vertexNum; ++j){
 						vertex *checkVert = &vertices[j];
 						/** CHECK BONE DATA HERE **/
-						if(checkVert->pos.x == tempVert.pos.x && checkVert->pos.y == tempVert.pos.y && checkVert->pos.z == tempVert.pos.z &&
-						   checkVert->u     == tempVert.u     && checkVert->v     == tempVert.v     &&
-						   checkVert->nx    == tempVert.nx    && checkVert->ny    == tempVert.ny    && checkVert->nz    == tempVert.nz    &&
+						if(checkVert->position.x  == tempVert.position.x  && checkVert->position.y  == tempVert.position.y  && checkVert->position.z == tempVert.position.z &&
+						   checkVert->u           == tempVert.u           && checkVert->v           == tempVert.v           &&
+						   checkVert->normal.x    == tempVert.normal.x    && checkVert->normal.y    == tempVert.normal.y    && checkVert->normal.z   == tempVert.normal.z   &&
 						   checkVert->bIDs[0]     == tempVert.bIDs[0]     && checkVert->bIDs[1]     == tempVert.bIDs[1]     &&
 						   checkVert->bIDs[2]     == tempVert.bIDs[2]     && checkVert->bIDs[3]     == tempVert.bIDs[3]     &&
 						   checkVert->bWeights[0] == tempVert.bWeights[0] && checkVert->bWeights[1] == tempVert.bWeights[1] &&
@@ -519,13 +519,13 @@ unsigned char mdlLoadWavefrontObj(model *mdl, const char *prgPath, const char *f
 
 static void mdlVertexAttributes(){
 	// Position offset
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, pos));
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, position));
 	glEnableVertexAttribArray(0);
 	// UV offset
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, u));
 	glEnableVertexAttribArray(1);
 	// Normals offset
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, nx));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, normal));
 	glEnableVertexAttribArray(2);
 	// Bone index offset
 	glVertexAttribIPointer(3, 4, GL_INT, sizeof(vertex), (GLvoid*)offsetof(vertex, bIDs));
