@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Replacement for strtok() because it's a horrible function. */
 /*unsigned char nextToken(const char *str, const char *delims, size_t *tokenOffset, size_t *tokenLength){
+	* Replacement for strtok() because it's a horrible function. *
 	char *tokenStart = NULL;
 	const char *currentChar = str+(*tokenOffset);
 	while(*currentChar != '\0'){
@@ -29,9 +29,8 @@
 	return 0;
 }*/
 
-
-/* Push an element into a dynamic array. */
 unsigned char pushDynamicArray(void **vector, const void *element, const size_t bytes, size_t *size, size_t *capacity){
+	/* Push an element into a dynamic array. */
 	if(*size == *capacity){
 		*capacity *= 2;
 		void *tempBuffer = realloc(*vector, (*capacity)*bytes);
@@ -46,8 +45,8 @@ unsigned char pushDynamicArray(void **vector, const void *element, const size_t 
 	return 1;
 }
 
-/* Converts a long to a C-string. */
 size_t ltostr(long n, char **s){
+	/* Converts a long to a C-string. */
 	size_t l;  // Length of the ouput (discluding null terminator).
 	if(n == 0){
 		*s = malloc(2*sizeof(char));

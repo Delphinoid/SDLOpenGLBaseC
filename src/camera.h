@@ -3,6 +3,7 @@
 
 #include "vec3.h"
 #include "mat4.h"
+#include "scene.h"
 
 #define CAM_PROJECTION_ORTHO    0x01
 #define CAM_UPDATE_VIEW         0x02
@@ -17,6 +18,7 @@ typedef struct {
 	float fovy;
 	mat4 viewMatrix;
 	mat4 projectionMatrix;
+	scene *targetScene;
 	unsigned char flags;
 
 } camera;

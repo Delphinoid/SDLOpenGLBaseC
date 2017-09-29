@@ -49,7 +49,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 void twDelete(textureWrapper *tw);
 
 void twiInit(twInstance *twi, textureWrapper *tw);
-void twiAnimate(twInstance *twi, const float timeElapsed);
+void twiAnimate(twInstance *twi, const float elapsedTime);
 GLuint twiGetTexWidth(const twInstance *twi);
 GLuint twiGetTexHeight(const twInstance *twi);
 GLuint twiGetTexID(const twInstance *twi);

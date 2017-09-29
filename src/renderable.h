@@ -7,7 +7,7 @@
 #include "textureWrapper.h"
 #include "spaceTransform.h"
 #include "renderTransform.h"
-#include "camera.h"
+//#include "camera.h"
 
 #define RNDR_BILLBOARD_X             0x01  // Whether or not the object uses the camera's rotated X axis
 #define RNDR_BILLBOARD_Y             0x02  // Whether or not the object uses the camera's rotated Y axis
@@ -25,20 +25,17 @@ typedef struct {
 	twInstance twi;
 	spaceTransform sTrans;
 	renderTransform rTrans;
-	mat4 modelViewProjectionMatrix;  /** Store MVP matrix here, update only when changed **/
+	/** Store model matrix here, update only when changed? **/
 	/** Sprite should not be necessary anymore **/
 	unsigned char sprite;
-	/** Combine the three variables below into one variable as flags using bitwise OR **/
 	unsigned char flags;
-	/** Remove this along with the changes to the camera **/
-	unsigned char hudElement;       // Whether or not the object is part of the HUD. Should be private
 
 } renderable;
 
 void rndrInit(renderable *rndr);
 unsigned char rndrLoad(renderable *rndr, const char *prgPath, const char *filePath, cVector *allModels, cVector *allTexWrappers);
 unsigned char rndrRenderMethod(renderable *rndr);  // Returns 0 if the model is fully opaque, 1 if the model contains translucency and 2 if the model is fully transparent
-void rndrGenerateTransform(renderable *rndr, const camera *cam, mat4 *transformMatrix);
+//void rndrGenerateTransform(renderable *rndr, const camera *cam, mat4 *transformMatrix);
 void rndrGenerateSprite(const renderable *rndr, vertex *vertices, const mat4 *transformMatrix);
 void rndrOffsetSpriteTexture(vertex *vertices, const float texFrag[4], const float texWidth, const float texHeight);
 void rndrDelete(renderable *rndr);
@@ -49,7 +46,7 @@ void rndrSetRotation(renderable *rndr, const float newX, const float newY, const
 void rndrRotateX(renderable *rndr, const float changeX);
 void rndrRotateY(renderable *rndr, const float changeY);
 void rndrRotateZ(renderable *rndr, const float changeZ);
-void rndrAnimateTexture(renderable *rndr, const float timeElapsed);
-void rndrAnimateSkeleton(renderable *rndr, const float timeElapsed);
+void rndrAnimateTexture(renderable *rndr, const float elapsedTime);
+void rndrAnimateSkeleton(renderable *rndr, const float elapsedTime);
 
 #endif

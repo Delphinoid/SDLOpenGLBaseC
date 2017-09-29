@@ -26,16 +26,16 @@ void mat4Transpose(mat4 *m);
 unsigned char mat4Frustum(mat4 *m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar);
 unsigned char mat4Ortho(mat4 *m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar);
 unsigned char mat4Perspective(mat4 *m, const float fovy, const float aspectRatio, const float zNear, const float zFar);
-void mat4RotateToFace(mat4 *m, vec3 eye, vec3 target, vec3 up);
-void mat4LookAt(mat4 *m, const vec3 eye, const vec3 target, const vec3 up);
+void mat4RotateToFace(mat4 *m, const vec3 *eye, const vec3 *target, const vec3 *up);
+void mat4LookAt(mat4 *m, const vec3 *eye, const vec3 *target, const vec3 *up);
 
 void mat4Translate(mat4 *m, const float x, const float y, const float z);
 mat4 mat4TranslationMatrix(const float x, const float y, const float z);
-void mat4Rotate(mat4 *m, quat q);
-mat4 mat4RotationMatrix(quat q);
+void mat4Rotate(mat4 *m, const quat *q);
+mat4 mat4RotationMatrix(const quat *q);
 void mat4Scale(mat4 *m, const float x, const float y, const float z);
 mat4 mat4ScaleMatrix(const float x, const float y, const float z);
 
-void mat4Quat(mat4 *m, quat q);
+void mat4Quat(mat4 *m, const quat *q);
 
 #endif

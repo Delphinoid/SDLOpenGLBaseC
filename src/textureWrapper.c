@@ -818,7 +818,7 @@ void twiInit(twInstance *twi, textureWrapper *tw){
 	twi->animInst.nextFrame = 0;
 }
 
-void twiAnimate(twInstance *twi, const float timeElapsed){
+void twiAnimate(twInstance *twi, const float elapsedTime){
 	/*if(twi->currentAnim >= twi->tw->animationNum){
 		twi->currentAnim = 0;
 	}
@@ -828,7 +828,7 @@ void twiAnimate(twInstance *twi, const float timeElapsed){
 	if(twi->animInst.nextFrame >= twi->tw->animations[twi->currentAnim].animData.frameNum){
 		twi->animInst.nextFrame = 0;
 	}*/
-	animAdvance(&twi->animInst, &twi->tw->animations[twi->currentAnim].animData, timeElapsed*twi->timeMod);
+	animAdvance(&twi->animInst, &twi->tw->animations[twi->currentAnim].animData, elapsedTime*twi->timeMod);
 }
 
 /**void twiAnimate(twInstance *twi, const uint32_t currentTick, const float globalDelayMod){

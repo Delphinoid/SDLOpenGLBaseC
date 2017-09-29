@@ -10,6 +10,8 @@
 /** THIS FILE IS TEMPORARY **/
 /** THIS FILE IS TEMPORARY **/
 
+void rndrGenerateTransform(renderable *rndr, const camera *cam, mat4 *transformMatrix);
+
 /** This should not be necessary! **/
 void renderModel(renderable *rndr, const camera *cam, gfxProgram *gfxPrg){
 
@@ -202,39 +204,41 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *c
 
 }
 
-void sortElements(cVector *allRenderables,
+void sortElements(cVector *allCameras,
                   cVector *modelsScene,  cVector *modelsHUD,
                   cVector *spritesScene, cVector *spritesHUD){
 
 	// Sort models and sprites into their scene and HUD vectors
-	size_t i;
-	for(i = 0; i < allRenderables->size; ++i){
-		renderable *curRndr = (renderable *)cvGet(allRenderables, i);
-		if(!curRndr->sprite){
-			if(curRndr->hudElement){
-				cvPush(modelsHUD, (void *)&curRndr, sizeof(renderable *));
+	size_t i, j;
+	for(i = 0; i < allCameras->size; ++i){
+		for(j = 0; j < ((camera *)cvGet(allCameras, i))->targetScene->renderableNum; ++j){
+			renderable *curRndr = ((camera *)cvGet(allCameras, i))->targetScene->renderables[j];
+			if(!curRndr->sprite){
+				if(i == 0){
+					cvPush(modelsScene, (void *)&curRndr, sizeof(renderable *));
+				}else{
+					cvPush(modelsHUD, (void *)&curRndr, sizeof(renderable *));
+				}
 			}else{
-				cvPush(modelsScene, (void *)&curRndr, sizeof(renderable *));
-			}
-		}else{
-			if(curRndr->hudElement){
-				cvPush(spritesHUD, (void *)&curRndr, sizeof(renderable *));
-			}else{
-				cvPush(spritesScene, (void *)&curRndr, sizeof(renderable *));
+				if(i == 0){
+					cvPush(spritesScene, (void *)&curRndr, sizeof(renderable *));
+				}else{
+					cvPush(spritesHUD, (void *)&curRndr, sizeof(renderable *));
+				}
 			}
 		}
 	}
 
 }
 
-void renderScene(cVector *allRenderables, cVector *allCameras, gfxProgram *gfxPrg){
+void renderScene(cVector *allCameras, gfxProgram *gfxPrg){
 
 	// Vector initialization
 	cVector modelsScene;  cvInit(&modelsScene, 1);   // Holds renderable pointers; pointers to scene models
 	cVector modelsHUD;    cvInit(&modelsHUD, 1);     // Holds renderable pointers; pointers to HUD models
 	cVector spritesScene; cvInit(&spritesScene, 1);  // Holds renderable pointers; pointers to scene sprites
 	cVector spritesHUD;   cvInit(&spritesHUD, 1);    // Holds renderable pointers; pointers to HUD sprites
-	sortElements(allRenderables, &modelsScene, &modelsHUD, &spritesScene, &spritesHUD);
+	sortElements(allCameras, &modelsScene, &modelsHUD, &spritesScene, &spritesHUD);
 
 	// Depth sort scene models
 	cVector renderList; cvInit(&renderList, 1);  // Holds model pointers; pointers to depth-sorted scene models that must be rendered

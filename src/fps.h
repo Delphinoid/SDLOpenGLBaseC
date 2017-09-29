@@ -12,11 +12,11 @@ typedef struct {
 	unsigned int totalFrames;  // How many frames there have been since the FPS handler was initialized
 
 	double actualFps;  // Fps the program is actually running at
-	double fpsMod;     // A special number used in certain calculations to keep the program "synced" with the desired fps instead of the actual fps
+	double fpsMod;     // A special number used in certain calculations to keep the program "synced" with the desired fps instead of the actual fpszz
 
 } fps;
 
-void fpsStart(fps *f, float dFps, float cFps);
+void fpsStart(fps *f, const float dFps, const float cFps);
 void fpsUpdate(fps *f);
 void fpsDelay(fps *f);
 

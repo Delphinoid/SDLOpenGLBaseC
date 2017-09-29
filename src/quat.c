@@ -65,95 +65,115 @@ void quatSetEuler(quat *q, const float x, const float y, const float z){
 	q->v.z = cb*ch*sa-sb*sh*ca;
 }
 
-quat quatQAddQ(const quat q1, const quat q2){
-	quat r = {.w   = q1.w   + q2.w,
-	          .v.x = q1.v.x + q2.v.x,
-	          .v.y = q1.v.y + q2.v.y,
-	          .v.z = q1.v.z + q2.v.z};
+quat quatQAddQ(const quat *q1, const quat *q2){
+	quat r = {.w   = q1->w   + q2->w,
+	          .v.x = q1->v.x + q2->v.x,
+	          .v.y = q1->v.y + q2->v.y,
+	          .v.z = q1->v.z + q2->v.z};
 	return r;
 }
-quat quatQAddW(const quat q, const float w){
-	quat r = {.w   = q.w + w,
-	          .v.x = q.v.x,
-	          .v.y = q.v.y,
-	          .v.z = q.v.z};
+quat quatQAddS(const quat *q, const float s){
+	quat r = {.w   = q->w   + s,
+	          .v.x = q->v.x + s,
+	          .v.y = q->v.y + s,
+	          .v.z = q->v.z + s};
 	return r;
 }
-void quatAddQToQ(quat *q1, const quat q2){
-	q1->w += q2.w; q1->v.x += q2.v.x; q1->v.y += q2.v.y; q1->v.z += q2.v.z;
+quat quatQAddW(const quat *q, const float w){
+	quat r = {.w   = q->w + w,
+	          .v.x = q->v.x,
+	          .v.y = q->v.y,
+	          .v.z = q->v.z};
+	return r;
+}
+void quatAddQToQ(quat *q1, const quat *q2){
+	q1->w += q2->w; q1->v.x += q2->v.x; q1->v.y += q2->v.y; q1->v.z += q2->v.z;
+}
+void quatAddSToQ(quat *q, const float s){
+	q->w += s; q->v.x += s; q->v.y += s; q->v.z += s;
 }
 void quatAddWToQ(quat *q, const float w){
 	q->w += w;
 }
 
-quat quatQSubQ(const quat q1, const quat q2){
-	quat r = {.w   = q1.w   - q2.w,
-	          .v.x = q1.v.x - q2.v.x,
-	          .v.y = q1.v.y - q2.v.y,
-	          .v.z = q1.v.z - q2.v.z};
+quat quatQSubQ(const quat *q1, const quat *q2){
+	quat r = {.w   = q1->w   - q2->w,
+	          .v.x = q1->v.x - q2->v.x,
+	          .v.y = q1->v.y - q2->v.y,
+	          .v.z = q1->v.z - q2->v.z};
 	return r;
 }
-quat quatQSubW(const quat q, const float w){
-	quat r = {.w   = q.w - w,
-	          .v.x = q.v.x,
-	          .v.y = q.v.y,
-	          .v.z = q.v.z};
+quat quatQSubS(const quat *q, const float s){
+	quat r = {.w   = q->w   - s,
+	          .v.x = q->v.x - s,
+	          .v.y = q->v.y - s,
+	          .v.z = q->v.z - s};
 	return r;
 }
-void quatSubQFromQ1(quat *q1, const quat q2){
-	q1->w -= q2.w; q1->v.x -= q2.v.x; q1->v.y -= q2.v.y; q1->v.z -= q2.v.z;
+quat quatQSubW(const quat *q, const float w){
+	quat r = {.w   = q->w - w,
+	          .v.x = q->v.x,
+	          .v.y = q->v.y,
+	          .v.z = q->v.z};
+	return r;
 }
-void quatSubQFromQ2(const quat q1, quat *q2){
-	q2->w = q1.w - q2->w; q2->v.x = q1.v.x - q2->v.x; q2->v.y = q1.v.y - q2->v.y; q2->v.z = q1.v.z - q2->v.z;
+void quatSubQFromQ1(quat *q1, const quat *q2){
+	q1->w -= q2->w; q1->v.x -= q2->v.x; q1->v.y -= q2->v.y; q1->v.z -= q2->v.z;
+}
+void quatSubQFromQ2(const quat *q1, quat *q2){
+	q2->w = q1->w - q2->w; q2->v.x = q1->v.x - q2->v.x; q2->v.y = q1->v.y - q2->v.y; q2->v.z = q1->v.z - q2->v.z;
+}
+void quatSubSFromQ(quat *q, const float s){
+	q->w -= s; q->v.x -= s; q->v.y -= s; q->v.z -= s;
 }
 void quatSubWFromQ(quat *q, const float w){
 	q->w -= w;
 }
 
-quat quatQMultQ(const quat q1, const quat q2){
+quat quatQMultQ(const quat *q1, const quat *q2){
 	/*float prodW = q1.w * q2.w - vec3Dot(q1.v, q2.v);
 	vec3 prodV = vec3VMultS(q2.v, q1.w);
 	vec3AddVToV(&prodV, vec3VMultS(q1.v, q2.w));
 	vec3AddVToV(&prodV, vec3Cross(q1.v, q2.v));
 	return quatNew(prodW, prodV.x, prodV.y, prodV.z);*/
 	quat r;
-	r.w   = q1.w * q2.w   - q1.v.x * q2.v.x - q1.v.y * q2.v.y - q1.v.z * q2.v.z;
-	r.v.x = q1.w * q2.v.x + q1.v.x * q2.w   + q1.v.y * q2.v.z - q1.v.z * q2.v.y;
-	r.v.y = q1.w * q2.v.y + q1.v.y * q2.w   + q1.v.z * q2.v.x - q1.v.x * q2.v.z;
-	r.v.z = q1.w * q2.v.z + q1.v.z * q2.w   + q1.v.x * q2.v.y - q1.v.y * q2.v.x;
+	r.w   = q1->w * q2->w   - q1->v.x * q2->v.x - q1->v.y * q2->v.y - q1->v.z * q2->v.z;
+	r.v.x = q1->w * q2->v.x + q1->v.x * q2->w   + q1->v.y * q2->v.z - q1->v.z * q2->v.y;
+	r.v.y = q1->w * q2->v.y + q1->v.y * q2->w   + q1->v.z * q2->v.x - q1->v.x * q2->v.z;
+	r.v.z = q1->w * q2->v.z + q1->v.z * q2->w   + q1->v.x * q2->v.y - q1->v.y * q2->v.x;
 	return r;
 }
-quat quatQMultS(const quat q, const float s){
-	quat r = {.w   = q.w   * s,
-	          .v.x = q.v.x * s,
-	          .v.y = q.v.y * s,
-	          .v.z = q.v.z * s};
+quat quatQMultS(const quat *q, const float s){
+	quat r = {.w   = q->w   * s,
+	          .v.x = q->v.x * s,
+	          .v.y = q->v.y * s,
+	          .v.z = q->v.z * s};
 	return r;
 }
-void quatMultQByQ1(quat *q1, const quat q2){
+void quatMultQByQ1(quat *q1, const quat *q2){
 	/*float prodW = q1->w * q2.w - vec3Dot(q1->v, q2.v);
 	vec3 prodV = vec3VMultS(q2.v, q1->w);
 	vec3AddVToV(&prodV, vec3VMultS(q1->v, q2.w));
 	vec3AddVToV(&prodV, vec3Cross(q1->v, q2.v));
 	q1->w = prodW; q1->v = prodV;*/
 	quat r;
-	r.w   = q1->w * q2.w   - q1->v.x * q2.v.x - q1->v.y * q2.v.y - q1->v.z * q2.v.z;
-	r.v.x = q1->w * q2.v.x + q1->v.x * q2.w   + q1->v.y * q2.v.z - q1->v.z * q2.v.y;
-	r.v.y = q1->w * q2.v.y + q1->v.y * q2.w   + q1->v.z * q2.v.x - q1->v.x * q2.v.z;
-	r.v.z = q1->w * q2.v.z + q1->v.z * q2.w   + q1->v.x * q2.v.y - q1->v.y * q2.v.x;
+	r.w   = q1->w * q2->w   - q1->v.x * q2->v.x - q1->v.y * q2->v.y - q1->v.z * q2->v.z;
+	r.v.x = q1->w * q2->v.x + q1->v.x * q2->w   + q1->v.y * q2->v.z - q1->v.z * q2->v.y;
+	r.v.y = q1->w * q2->v.y + q1->v.y * q2->w   + q1->v.z * q2->v.x - q1->v.x * q2->v.z;
+	r.v.z = q1->w * q2->v.z + q1->v.z * q2->w   + q1->v.x * q2->v.y - q1->v.y * q2->v.x;
 	*q1 = r;
 }
-void quatMultQByQ2(const quat q1, quat *q2){
+void quatMultQByQ2(const quat *q1, quat *q2){
 	/*float prodW = q1.w * q2->w - vec3Dot(q1.v, q2->v);
 	vec3 prodV = vec3VMultS(q2->v, q1.w);
 	vec3AddVToV(&prodV, vec3VMultS(q1.v, q2->w));
 	vec3AddVToV(&prodV, vec3Cross(q1.v, q2->v));
 	q2->w = prodW; q2->v = prodV;*/
 	quat r;
-	r.w   = q1.w * q2->w   - q1.v.x * q2->v.x - q1.v.y * q2->v.y - q1.v.z * q2->v.z;
-	r.v.x = q1.w * q2->v.x + q1.v.x * q2->w   + q1.v.y * q2->v.z - q1.v.z * q2->v.y;
-	r.v.y = q1.w * q2->v.y + q1.v.y * q2->w   + q1.v.z * q2->v.x - q1.v.x * q2->v.z;
-	r.v.z = q1.w * q2->v.z + q1.v.z * q2->w   + q1.v.x * q2->v.y - q1.v.y * q2->v.x;
+	r.w   = q1->w * q2->w   - q1->v.x * q2->v.x - q1->v.y * q2->v.y - q1->v.z * q2->v.z;
+	r.v.x = q1->w * q2->v.x + q1->v.x * q2->w   + q1->v.y * q2->v.z - q1->v.z * q2->v.y;
+	r.v.y = q1->w * q2->v.y + q1->v.y * q2->w   + q1->v.z * q2->v.x - q1->v.x * q2->v.z;
+	r.v.z = q1->w * q2->v.z + q1->v.z * q2->w   + q1->v.x * q2->v.y - q1->v.y * q2->v.x;
 	*q2 = r;
 }
 void quatMultQByS(quat *q, const float s){
@@ -161,34 +181,34 @@ void quatMultQByS(quat *q, const float s){
 	vec3MultVByS(&q->v, s);
 }
 
-quat quatQDivQ(const quat q1, const quat q2){
-	quat r = {.w   = q1.w   / q2.w,
-	          .v.x = q1.v.x / q2.v.x,
-	          .v.y = q1.v.y / q2.v.y,
-	          .v.z = q1.v.z / q2.v.z};
+quat quatQDivQ(const quat *q1, const quat *q2){
+	quat r = {.w   = q1->w   / q2->w,
+	          .v.x = q1->v.x / q2->v.x,
+	          .v.y = q1->v.y / q2->v.y,
+	          .v.z = q1->v.z / q2->v.z};
 	return r;
 }
-quat quatQDivS(const quat q, const float s){
-	quat r = {.w   = q.w   / s,
-	          .v.x = q.v.x / s,
-	          .v.y = q.v.y / s,
-	          .v.z = q.v.z / s};
+quat quatQDivS(const quat *q, const float s){
+	quat r = {.w   = q->w   / s,
+	          .v.x = q->v.x / s,
+	          .v.y = q->v.y / s,
+	          .v.z = q->v.z / s};
 	return r;
 }
-void quatDivQByQ1(quat *q1, const quat q2){
-	if(q2.w != 0.f && q2.v.x != 0.f && q2.v.y != 0.f && q2.v.z != 0.f){
-		q1->w   /= q2.w;
-		q1->v.x /= q2.v.x;
-		q1->v.y /= q2.v.y;
-		q1->v.z /= q2.v.z;
+void quatDivQByQ1(quat *q1, const quat *q2){
+	if(q2->w != 0.f && q2->v.x != 0.f && q2->v.y != 0.f && q2->v.z != 0.f){
+		q1->w   /= q2->w;
+		q1->v.x /= q2->v.x;
+		q1->v.y /= q2->v.y;
+		q1->v.z /= q2->v.z;
 	}
 }
-void quatDivQByQ2(const quat q1, quat *q2){
-	if(q1.w != 0.f && q1.v.x != 0.f && q1.v.y != 0.f && q1.v.z != 0.f){
-		q2->w   = q1.w   / q2->w;
-		q2->v.x = q1.v.x / q2->v.x;
-		q2->v.y = q1.v.y / q2->v.y;
-		q2->v.z = q1.v.z / q2->v.z;
+void quatDivQByQ2(const quat *q1, quat *q2){
+	if(q1->w != 0.f && q1->v.x != 0.f && q1->v.y != 0.f && q1->v.z != 0.f){
+		q2->w   = q1->w   / q2->w;
+		q2->v.x = q1->v.x / q2->v.x;
+		q2->v.y = q1->v.y / q2->v.y;
+		q2->v.z = q1->v.z / q2->v.z;
 	}
 }
 void quatDivQByS(quat *q, const float s){
@@ -200,45 +220,47 @@ void quatDivQByS(quat *q, const float s){
 	}
 }
 
-float quatGetMagnitude(const quat q){
-	return sqrtf(q.w*q.w + q.v.x*q.v.x + q.v.y*q.v.y + q.v.z*q.v.z);
+float quatGetMagnitude(const quat *q){
+	return sqrtf(q->w*q->w + q->v.x*q->v.x + q->v.y*q->v.y + q->v.z*q->v.z);
 }
 
-quat quatGetConjugate(const quat q){
-	return quatNew(q.w, -q.v.x, -q.v.y, -q.v.z);
+quat quatGetConjugate(const quat *q){
+	return quatNew(q->w, -q->v.x, -q->v.y, -q->v.z);
 }
 void quatConjugate(quat *q){
 	quatSet(q, q->w, -q->v.x, -q->v.y, -q->v.z);
 }
 
-quat quatGetNegative(const quat q){
-	return quatNew(-q.w, -q.v.x, -q.v.y, -q.v.z);
+quat quatGetNegative(const quat *q){
+	return quatNew(-q->w, -q->v.x, -q->v.y, -q->v.z);
 }
 void quatNegate(quat *q){
 	quatSet(q, -q->w, -q->v.x, -q->v.y, -q->v.z);
 }
 
-quat quatGetInverse(const quat q){
-	return quatQMultQ(q, quatGetConjugate(q));
+quat quatGetInverse(const quat *q){
+	const quat c = quatGetConjugate(q);
+	return quatQMultQ(q, &c);
 }
 void quatInvert(quat *q){
-	quatMultQByQ1(q, quatGetConjugate(*q));
+	const quat c = quatGetConjugate(q);
+	quatMultQByQ1(q, &c);
 }
 
-quat quatGetUnit(const quat q){
+quat quatGetUnit(const quat *q){
 	const float magnitude = quatGetMagnitude(q);
 	if(magnitude != 0.f){
 		return quatQDivS(q, magnitude);
 	}
-	return q;
+	return *q;
 }
-quat quatGetUnitFast(const quat q){
-	const float magnitudeSquared = q.w*q.w + q.v.x*q.v.x + q.v.y*q.v.y + q.v.z*q.v.z;
+quat quatGetUnitFast(const quat *q){
+	const float magnitudeSquared = q->w*q->w + q->v.x*q->v.x + q->v.y*q->v.y + q->v.z*q->v.z;
 	const float invSqrt = fastInvSqrt(magnitudeSquared);
 	return quatQMultS(q, invSqrt);
 }
 void quatNormalize(quat *q){
-	const float magnitude = quatGetMagnitude(*q);
+	const float magnitude = quatGetMagnitude(q);
 	if(magnitude != 0.f){
 		quatDivQByS(q, magnitude);
 	}
@@ -257,41 +279,42 @@ void quatSetIdentity(quat *q){
 	q->w = 1.f; q->v.x = 0.f; q->v.y = 0.f; q->v.z = 0.f;
 }
 
-void quatAxisAngle(const quat q, float *angle, float *axisX, float *axisY, float *axisZ){
-	float scale = sqrtf(1.f-q.w*q.w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1
+void quatAxisAngle(const quat *q, float *angle, float *axisX, float *axisY, float *axisZ){
+	float scale = sqrtf(1.f-q->w*q->w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1
 	if(scale != 0.f){  // We don't want to risk a potential divide-by-zero error
-		*angle = 2.f*acosf(q.w);
-		*axisX = q.v.x/scale;
-		*axisY = q.v.y/scale;
-		*axisZ = q.v.z/scale;
+		*angle = 2.f*acosf(q->w);
+		*axisX = q->v.x/scale;
+		*axisY = q->v.y/scale;
+		*axisZ = q->v.z/scale;
 	}
 }
 
-float quatDot(const quat q1, const quat q2){
-	return q1.w   * q2.w +
-	       q1.v.x * q2.v.x +
-	       q1.v.y * q2.v.y +
-	       q1.v.z * q2.v.z;
+float quatDot(const quat *q1, const quat *q2){
+	return q1->w   * q2->w +
+	       q1->v.x * q2->v.x +
+	       q1->v.y * q2->v.y +
+	       q1->v.z * q2->v.z;
 }
 
-vec3 quatGetRotatedVec3(const quat q, const vec3 v){
+vec3 quatGetRotatedVec3(const quat *q, const vec3 *v){
 
 	vec3 r;
 
-	const float dot = vec3Dot(q.v, v);
-	const vec3 cross = vec3GetCross(q.v, v);
+	const float dot = vec3Dot(&q->v, v);
+	vec3 cross;
+	vec3Cross(&q->v, v, &cross);
 
-	float m = q.w*q.w-dot;
-	r.x = m*v.x;
-	r.y = m*v.y;
-	r.z = m*v.z;
+	float m = q->w*q->w-dot;
+	r.x = m*v->x;
+	r.y = m*v->y;
+	r.z = m*v->z;
 
 	m = 2.f*dot;
-	r.x += m*q.v.x;
-	r.y += m*q.v.y;
-	r.z += m*q.v.z;
+	r.x += m*q->v.x;
+	r.y += m*q->v.y;
+	r.z += m*q->v.z;
 
-	m = 2.f*q.w;
+	m = 2.f*q->w;
 	r.x += m*cross.x;
 	r.y += m*cross.y;
 	r.z += m*cross.z;
@@ -299,29 +322,30 @@ vec3 quatGetRotatedVec3(const quat q, const vec3 v){
 	return r;
 
 }
-void quatRotateVec3(const quat q, vec3 *v){
+void quatRotateVec3(const quat *q, vec3 *v){
 
-	const float dot = vec3Dot(q.v, *v);
-	const vec3 cross = vec3GetCross(q.v, *v);
+	const float dot = vec3Dot(&q->v, v);
+	vec3 cross;
+	vec3Cross(&q->v, v, &cross);
 
-	float m = q.w*q.w-dot;
+	float m = q->w*q->w-dot;
 	v->x *= m;
 	v->y *= m;
 	v->z *= m;
 
 	m = 2.f*dot;
-	v->x += m*q.v.x;
-	v->y += m*q.v.y;
-	v->z += m*q.v.z;
+	v->x += m*q->v.x;
+	v->y += m*q->v.y;
+	v->z += m*q->v.z;
 
-	m = 2.f*q.w;
+	m = 2.f*q->w;
 	v->x += m*cross.x;
 	v->y += m*cross.y;
 	v->z += m*cross.z;
 
 }
 
-quat quatLookingAt(vec3 eye, vec3 target, vec3 up){
+quat quatLookingAt(const vec3 *eye, const vec3 *target, const vec3 *up){
 
 	quat r;
 
@@ -332,7 +356,7 @@ quat quatLookingAt(vec3 eye, vec3 target, vec3 up){
 		// Eye and target point in opposite directions,
 		// 180 degree rotation around up vector
 		r.w = M_PI;
-		r.v = up;
+		r.v = *up;
 
 	}else if(fabsf(dot - 1.f) < FLT_EPSILON){
 
@@ -341,12 +365,9 @@ quat quatLookingAt(vec3 eye, vec3 target, vec3 up){
 
 	}else{
 
-		float angle = acosf(dot);
-		vec3 axis;
-		vec3Cross(eye, target, &axis);
-		vec3NormalizeFast(&axis);
-		r.w = angle;
-		r.v = axis;
+		r.w = acosf(dot);
+		vec3Cross(eye, target, &r.v);
+		vec3NormalizeFast(&r.v);
 
 	}
 
@@ -354,7 +375,7 @@ quat quatLookingAt(vec3 eye, vec3 target, vec3 up){
 
 }
 
-void quatLookAt(quat *q, vec3 eye, vec3 target, vec3 up){
+void quatLookAt(quat *q, const vec3 *eye, const vec3 *target, const vec3 *up){
 
 	const float dot = vec3Dot(eye, target);
 
@@ -363,7 +384,7 @@ void quatLookAt(quat *q, vec3 eye, vec3 target, vec3 up){
 		// Eye and target point in opposite directions,
 		// 180 degree rotation around up vector
 		q->w = M_PI;
-		q->v = up;
+		q->v = *up;
 
 	}else if(fabsf(dot - 1.f) < FLT_EPSILON){
 
@@ -372,40 +393,122 @@ void quatLookAt(quat *q, vec3 eye, vec3 target, vec3 up){
 
 	}else{
 
-		const float angle = acosf(dot);
-		vec3 axis;
-		vec3Cross(eye, target, &axis);
-		vec3NormalizeFast(&axis);
-		q->w = angle;
-		q->v = axis;
+		q->w = acosf(dot);
+		vec3Cross(eye, target, &q->v);
+		vec3NormalizeFast(&q->v);
 
 	}
 
 }
 
-quat quatLerp(quat q1, quat q2, const float t){
-	quatMultQByS(&q1, 1.f-t);
+quat quatGetLerp(const quat *q1, const quat *q2, const float t){
+	/*
+	**               ^
+	** r = (q1 + (q2 - q1) * t)
+	*/
+	/*quatSubQFromQ1(&q2, q1);
 	quatMultQByS(&q2, t);
-	return quatGetUnitFast(quatQAddQ(q1, q2));
+	quatAddQToQ(&q1, q2);
+	quatNormalizeFast(&q1);
+	return q1;*/
+	quat r;
+	r.w =   q1->w   + (q2->w   - q1->w)   * t;
+	r.v.x = q1->v.x + (q2->v.x - q1->v.x) * t;
+	r.v.x = q1->v.y + (q2->v.y - q1->v.y) * t;
+	r.v.x = q1->v.z + (q2->v.z - q1->v.z) * t;
+	return r;
 }
-quat quatSlerp(quat q1, quat q2, const float t){
+quat quatGetSlerp(const quat *q1, const quat *q2, const float t){
 
-	float cosTheta = quatDot(q1, q2);
+	quat r;
 
-	// If q1 and q2 are > 90 degrees apart, invert one
-	// so it doesn't go the long way around
-	if(cosTheta < 0.f){
-		cosTheta = -cosTheta;
-		quatNegate(&q2);
+	// Cosine of the angle between the two quaternions.
+	const float cosTheta = quatDot(q1, q2);
+	const float cosThetaAbs = fabsf(cosTheta);
+
+	if(cosThetaAbs > 1.f - FLT_EPSILON){
+		// If the angle is small enough, we can just use linear interpolation.
+		quatLerp(q1, q2, t, &r);
+	}else{
+
+		/*
+		** sin(x)^2 + cos(x)^2 = 1
+		** sin(x)^2 = 1 - cos(x)^2
+		** 1 / sin(x) = fastInvSqrt(1 - cos(x)^2)
+		**
+		** Calculating the reciprocal of sin(x) allows us to do
+		** multiplications instead of divisions below, as the
+		** following holds true:
+		**
+		** x * (1 / y) = x / y
+		*/
+		const float angle = acosf(cosThetaAbs);
+		const float sinThetaInv = fastInvSqrt(1.f - cosThetaAbs*cosThetaAbs);
+		const float sinThetaInvT = sinf(angle*(1.f-t)) * sinThetaInv;
+
+		// If q1 and q2 are > 90 degrees apart (cosTheta < 0), negate
+		// sinThetaT so it doesn't go the long way around.
+		const float sinThetaT    = (cosTheta < 0.f) ?
+		                           -(sinf(angle*t) * sinThetaInv) :
+		                           (sinf(angle*t) * sinThetaInv);
+
+		r.w   = q1->w   * sinThetaInvT + q2->w   * sinThetaT;
+		r.v.x = q1->v.x * sinThetaInvT + q2->v.x * sinThetaT;
+		r.v.y = q1->v.y * sinThetaInvT + q2->v.y * sinThetaT;
+		r.v.z = q1->v.z * sinThetaInvT + q2->v.z * sinThetaT;
+
 	}
 
-	if(cosTheta < 1.f - FLT_EPSILON){
-		const float angle = acosf(cosTheta);
-		quatMultQByS(&q1, sinf(angle*(1.f-t)));
-		quatMultQByS(&q2, sinf(angle*t));
-		return quatQDivS(quatQAddQ(q1, q2), sinf(angle));
-	}
+	return r;
 
-	return quatLerp(q1, q2, t);
+}
+void quatLerp(const quat *q1, const quat *q2, const float t, quat *r){
+	/*
+	**               ^
+	** r = (q1 + (q2 - q1) * t)
+	*/
+	r->w =   q1->w   + (q2->w   - q1->w)   * t;
+	r->v.x = q1->v.x + (q2->v.x - q1->v.x) * t;
+	r->v.x = q1->v.y + (q2->v.y - q1->v.y) * t;
+	r->v.x = q1->v.z + (q2->v.z - q1->v.z) * t;
+}
+void quatSlerp(const quat *q1, const quat *q2, const float t, quat *r){
+
+	// Cosine of the angle between the two quaternions.
+	const float cosTheta = quatDot(q1, q2);
+	const float cosThetaAbs = fabsf(cosTheta);
+
+	if(cosThetaAbs > 1.f - FLT_EPSILON){
+		// If the angle is small enough, we can just use linear interpolation.
+		quatLerp(q1, q2, t, r);
+	}else{
+
+		/*
+		** sin(x)^2 + cos(x)^2 = 1
+		** sin(x)^2 = 1 - cos(x)^2
+		** 1 / sin(x) = fastInvSqrt(1 - cos(x)^2)
+		**
+		** Calculating the reciprocal of sin(x) allows us to do
+		** multiplications instead of divisions below, as the
+		** following holds true:
+		**
+		** x * (1 / y) = x / y
+		*/
+		const float angle = acosf(cosThetaAbs);
+		const float sinThetaInv = fastInvSqrt(1.f - cosThetaAbs*cosThetaAbs);
+		const float sinThetaInvT = sinf(angle*(1.f-t)) * sinThetaInv;
+
+		// If q1 and q2 are > 90 degrees apart (cosTheta < 0), negate
+		// sinThetaT so it doesn't go the long way around.
+		const float sinThetaT    = (cosTheta < 0.f) ?
+		                           -(sinf(angle*t) * sinThetaInv) :
+		                           (sinf(angle*t) * sinThetaInv);
+
+		r->w   = q1->w   * sinThetaInvT + q2->w   * sinThetaT;
+		r->v.x = q1->v.x * sinThetaInvT + q2->v.x * sinThetaT;
+		r->v.y = q1->v.y * sinThetaInvT + q2->v.y * sinThetaT;
+		r->v.z = q1->v.z * sinThetaInvT + q2->v.z * sinThetaT;
+
+	}
 
 }

@@ -205,14 +205,14 @@ unsigned char mat4Perspective(mat4 *m, const float fovy, const float aspectRatio
 	m->m[3][0] = 0.f;                     m->m[3][1] = 0.f;       m->m[3][2] = -2.f*zFar*zNear/(zFar-zNear); m->m[3][3] = 0.f;
 	return 1;
 }
-void mat4RotateToFace(mat4 *m, vec3 eye, vec3 target, vec3 up){
+void mat4RotateToFace(mat4 *m, const vec3 *eye, const vec3 *target, const vec3 *up){
 	vec3 zAxis = vec3VSubV(target, eye);
 	vec3NormalizeFast(&zAxis);
 	vec3 xAxis;
-	vec3Cross(zAxis, up, &xAxis);
+	vec3Cross(&zAxis, up, &xAxis);
 	vec3NormalizeFast(&xAxis);
 	vec3 yAxis;
-	vec3Cross(xAxis, zAxis, &yAxis);
+	vec3Cross(&xAxis, &zAxis, &yAxis);
 	vec3NormalizeFast(&yAxis);
 	// Currently right-handed for OpenGL. For left-handed, use the additive inverses of the values in the third row
 	m->m[0][0] =  xAxis.x; m->m[0][1] =  xAxis.y; m->m[0][2] =  xAxis.z; m->m[0][3] = 0.f;
@@ -220,20 +220,20 @@ void mat4RotateToFace(mat4 *m, vec3 eye, vec3 target, vec3 up){
 	m->m[2][0] = -zAxis.x; m->m[2][1] = -zAxis.y; m->m[2][2] = -zAxis.z; m->m[2][3] = 0.f;
 	m->m[3][0] = 0.f;      m->m[3][1] = 0.f;      m->m[3][2] = 0.f;      m->m[3][3] = 1.f;
 }
-void mat4LookAt(mat4 *m, vec3 eye, vec3 target, vec3 up){
+void mat4LookAt(mat4 *m, const vec3 *eye, const vec3 *target, const vec3 *up){
 	vec3 zAxis = vec3VSubV(target, eye);
 	vec3NormalizeFast(&zAxis);
 	vec3 xAxis;
-	vec3Cross(zAxis, up, &xAxis);
+	vec3Cross(&zAxis, up, &xAxis);
 	vec3NormalizeFast(&xAxis);
 	vec3 yAxis;
-	vec3Cross(xAxis, zAxis, &yAxis);
+	vec3Cross(&xAxis, &zAxis, &yAxis);
 	vec3NormalizeFast(&yAxis);
 	// Currently right-handed for OpenGL. For left-handed, use the additive inverses of the values in the third column
-	m->m[0][0] = xAxis.x;              m->m[0][1] = yAxis.x;              m->m[0][2] = -zAxis.x;            m->m[0][3] = 0.f;
-	m->m[1][0] = xAxis.y;              m->m[1][1] = yAxis.y;              m->m[1][2] = -zAxis.y;            m->m[1][3] = 0.f;
-	m->m[2][0] = xAxis.z;              m->m[2][1] = yAxis.z;              m->m[2][2] = -zAxis.z;            m->m[2][3] = 0.f;
-	m->m[3][0] = -vec3Dot(xAxis, eye); m->m[3][1] = -vec3Dot(yAxis, eye); m->m[3][2] = vec3Dot(zAxis, eye); m->m[3][3] = 1.f;
+	m->m[0][0] = xAxis.x;               m->m[0][1] = yAxis.x;               m->m[0][2] = -zAxis.x;             m->m[0][3] = 0.f;
+	m->m[1][0] = xAxis.y;               m->m[1][1] = yAxis.y;               m->m[1][2] = -zAxis.y;             m->m[1][3] = 0.f;
+	m->m[2][0] = xAxis.z;               m->m[2][1] = yAxis.z;               m->m[2][2] = -zAxis.z;             m->m[2][3] = 0.f;
+	m->m[3][0] = -vec3Dot(&xAxis, eye); m->m[3][1] = -vec3Dot(&yAxis, eye); m->m[3][2] = vec3Dot(&zAxis, eye); m->m[3][3] = 1.f;
 }
 
 void mat4Translate(mat4 *m, const float x, const float y, const float z){
@@ -249,11 +249,11 @@ mat4 mat4TranslationMatrix(const float x, const float y, const float z){
 	                {  x,   y,   z, 1.f}}};
 	return r;
 }
-void mat4Rotate(mat4 *m, quat q){
+void mat4Rotate(mat4 *m, const quat *q){
 	mat4 r; mat4Quat(&r, q);
 	mat4MultMByM2(&r, m);
 }
-mat4 mat4RotationMatrix(quat q){
+mat4 mat4RotationMatrix(const quat *q){
 	mat4 r; mat4Quat(&r, q);
 	return r;
 }
@@ -270,16 +270,16 @@ mat4 mat4ScaleMatrix(const float x, const float y, const float z){
 	return r;
 }
 
-void mat4Quat(mat4 *m, quat q){
-	const float sqx = q.v.x*q.v.x;
-	const float sqy = q.v.y*q.v.y;
-	const float sqz = q.v.z*q.v.z;
-	const float txy = q.v.x*q.v.y;
-	const float txz = q.v.x*q.v.z;
-	const float txw = q.v.x*q.w;
-	const float tyz = q.v.y*q.v.z;
-	const float tyw = q.v.y*q.w;
-	const float tzw = q.v.z*q.w;
+void mat4Quat(mat4 *m, const quat *q){
+	const float sqx = q->v.x*q->v.x;
+	const float sqy = q->v.y*q->v.y;
+	const float sqz = q->v.z*q->v.z;
+	const float txy = q->v.x*q->v.y;
+	const float txz = q->v.x*q->v.z;
+	const float txw = q->v.x*q->w;
+	const float tyz = q->v.y*q->v.z;
+	const float tyw = q->v.y*q->w;
+	const float tzw = q->v.z*q->w;
 	m->m[0][0] = 1.f-2.f*(sqy+sqz); m->m[0][1] = 2.f*(txy-tzw);     m->m[0][2] = 2.f*(txz+tyw);     m->m[0][3] = 0.f;
 	m->m[1][0] = 2.f*(txy+tzw);     m->m[1][1] = 1.f-2.f*(sqx+sqz); m->m[1][2] = 2.f*(tyz-txw);     m->m[1][3] = 0.f;
 	m->m[2][0] = 2.f*(txz-tyw);     m->m[2][1] = 2.f*(tyz+txw);     m->m[2][2] = 1.f-2.f*(sqx+sqy); m->m[2][3] = 0.f;

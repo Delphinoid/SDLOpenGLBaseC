@@ -318,19 +318,21 @@ static void sklaiDeltaTransform(sklAnimInstance *sklai, const size_t bone){
 	}else{
 
 		// Get the difference between the start position and end position
-		vec3 difference = vec3VSubV(sklai->animInterpEnd[bone].position, sklai->animInterpStart[bone].position);
+		vec3 difference;
+		vec3SubVFromVR(&sklai->animInterpEnd[bone].position, &sklai->animInterpStart[bone].position, &difference);
 		vec3MultVByS(&difference, sklai->animInterpT);  // Divide it by animInterpT
-		sklai->animState[bone].position = vec3VAddV(sklai->animInterpStart[bone].position, difference);
+		vec3AddVToVR(&sklai->animInterpStart[bone].position, &difference, &sklai->animState[bone].position);
 
 		// Repeat for scale
-		difference = vec3VSubV(sklai->animInterpEnd[bone].scale, sklai->animInterpStart[bone].scale);
+		vec3SubVFromVR(&sklai->animInterpEnd[bone].scale, &sklai->animInterpStart[bone].scale, &difference);
 		vec3MultVByS(&difference, sklai->animInterpT);  // Divide it by animInterpT
-		sklai->animState[bone].scale = vec3VAddV(sklai->animInterpStart[bone].scale, difference);
+		vec3AddVToVR(&sklai->animInterpStart[bone].scale, &difference, &sklai->animState[bone].scale);
 
 		// SLERP between the start orientation and end orientation
-		sklai->animState[bone].orientation = quatSlerp(sklai->animInterpStart[bone].orientation,
-		                                               sklai->animInterpEnd[bone].orientation,
-		                                               sklai->animInterpT);
+		quatSlerp(&sklai->animInterpStart[bone].orientation,
+		          &sklai->animInterpEnd[bone].orientation,
+		          sklai->animInterpT,
+		          &sklai->animState[bone].orientation);
 
 	}
 
@@ -341,14 +343,14 @@ static void sklaiGenerateState(sklAnimInstance *sklai){
 		sklaiDeltaTransform(sklai, i);
 	}
 }
-static void sklaiAnimate(sklAnimInstance *sklai, const float timeElapsed){
+static void sklaiAnimate(sklAnimInstance *sklai, const float elapsedTime){
 	/*if(sklai->animInst.currentFrame >= sklai->anim->animData.frameNum){
 		sklai->animInst.currentFrame = 0;
 	}
 	if(sklai->animInst.nextFrame >= sklai->anim->animData.frameNum){
 		sklai->animInst.nextFrame = 0;
 	}*/
-	animAdvance(&sklai->animInst, &sklai->anim->animData, timeElapsed);
+	animAdvance(&sklai->animInst, &sklai->anim->animData, elapsedTime);
 	sklai->animInterpT = sklai->animInst.currentFrameProgress / sklai->animInst.currentFrameLength;
 	sklaiGenerateState(sklai);
 }
@@ -533,10 +535,10 @@ void skliAddAnimation(sklInstance *skli, const sklAnim *skla, const size_t frame
 void skliChangeSkeleton(sklInstance *skli, skeleton *skl){
 	/** Re-calculate bone lookups for all animation instances. **/
 }
-void skliAnimate(sklInstance *skli, const float timeElapsed){
+void skliAnimate(sklInstance *skli, const float elapsedTime){
 	size_t i;
 	for(i = 0; i < skli->animationNum; ++i){
-		sklaiAnimate(&skli->animations[i], timeElapsed*skli->timeMod);
+		sklaiAnimate(&skli->animations[i], elapsedTime*skli->timeMod);
 	}
 }
 /*static void skliBoneState(const sklInstance *skli, mat4 *state, const sklNode *space, const sklNode *node, const size_t parent, const size_t bone){
@@ -633,7 +635,7 @@ static void skliGenerateBoneState(const sklInstance *skli, const skeleton *skl, 
 				mat4Translate(&state[bone], skli->animations[i].animBoneLookup[animBone]->position.x,
 				                            skli->animations[i].animBoneLookup[animBone]->position.y,
 				                            skli->animations[i].animBoneLookup[animBone]->position.z);
-				mat4Rotate(&state[bone], skli->animations[i].animBoneLookup[animBone]->orientation);
+				mat4Rotate(&state[bone], &skli->animations[i].animBoneLookup[animBone]->orientation);
 				mat4Scale(&state[bone], skli->animations[i].animBoneLookup[animBone]->scale.x,
 				                        skli->animations[i].animBoneLookup[animBone]->scale.y,
 				                        skli->animations[i].animBoneLookup[animBone]->scale.z);

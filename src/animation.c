@@ -1,8 +1,8 @@
 #include "animation.h"
 
-void animAdvance(animationInstance *animInst, const animationData *animData, const float timeElapsed){
+void animAdvance(animationInstance *animInst, const animationData *animData, const float elapsedTime){
 
-	animInst->currentFrameProgress += timeElapsed;
+	animInst->currentFrameProgress += elapsedTime;
 
 	// Check if the frame has finished playing (forwards).
 	if(animInst->currentFrameProgress > animInst->currentFrameLength && animInst->currentFrameLength > 0.f){

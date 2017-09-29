@@ -1,12 +1,13 @@
-#include "renderable.h"
+#include "camera.h"
 #include <stdio.h>
 #include "fps.h"
 
 #define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians
 
-void renderScene(cVector *allRenderables, cVector *allCameras, gfxProgram *gfxPrg);
+void renderScene(cVector *allCameras, gfxProgram *gfxPrg);
 void cleanup(cVector *allTextures,  cVector *allTexWrappers,   cVector *allModels,      cVector *allCameras,
-             cVector *allSkeletons, cVector *allSklAnimations, cVector *allRenderables, gfxProgram *gfxPrg);
+             cVector *allSkeletons, cVector *allSklAnimations, cVector *allRenderables, cVector *allScenes,
+             gfxProgram *gfxPrg);
 
 /** Remember to do regular searches for these important comments when possible **/
 int main(int argc, char *argv[]){
@@ -27,10 +28,11 @@ int main(int argc, char *argv[]){
 	cVector allTextures; cvInit(&allTextures, 1);            // Holds textures
 	cVector allTexWrappers; cvInit(&allTexWrappers, 1);      // Holds textureWrappers
 	cVector allModels; cvInit(&allModels, 1);                // Holds models
-	cVector allCameras; cvInit(&allCameras, 1);              // Holds cameras
+	cVector allCameras; cvInit(&allCameras, 2);              // Holds cameras
 	cVector allSkeletons; cvInit(&allSkeletons, 1);          // Holds skeletons
 	cVector allSklAnimations; cvInit(&allSklAnimations, 1);  // Holds sklAnims
 	cVector allRenderables; cvInit(&allRenderables, 1);      // Holds renderables
+	cVector allScenes; cvInit(&allScenes, 2);                // Holds scenes
 
 	/* Textures */
 	texture tempTex;
@@ -59,14 +61,6 @@ int main(int argc, char *argv[]){
 	mdlLoadWavefrontObj(&tempMdl, prgPath, "Resources\\Models\\CubeTest.obj");
 	cvPush(&allModels, (void *)&tempMdl, sizeof(tempMdl));
 
-	/* Cameras */
-	camera tempCam; camInit(&tempCam);
-	vec3Set(&tempCam.position, 0.f, 2.f, 7.f);
-	cvPush(&allCameras, (void *)&tempCam, sizeof(tempCam));
-	vec3Set(&tempCam.position, 0.f, 0.f, 0.f);
-	tempCam.flags |= CAM_PROJECTION_ORTHO;
-	cvPush(&allCameras, (void *)&tempCam, sizeof(tempCam));
-
 	/* Renderables */
 	renderable tempRndr;
 	rndrInit(&tempRndr);
@@ -80,7 +74,6 @@ int main(int argc, char *argv[]){
 	rndrRotateX(&tempRndr, 45.f);
 	rndrRotateY(&tempRndr, 45.f);
 	tempRndr.rTrans.alpha = 0.5f;
-	tempRndr.hudElement = 1;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 
 	/* Sprite Renderables */
@@ -98,7 +91,6 @@ int main(int argc, char *argv[]){
 	tempRndr.sTrans.relPivot.y = 1.f;
 	tempRndr.rTrans.scale.x = 0.0026f;
 	tempRndr.rTrans.scale.y = 0.0026f;
-	tempRndr.hudElement = 1;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 	tempRndr.sTrans.position.x = 4.f;
 	tempRndr.sTrans.position.y = 0.f;
@@ -108,7 +100,6 @@ int main(int argc, char *argv[]){
 	tempRndr.rTrans.scale.x = 0.026f;
 	tempRndr.rTrans.scale.y = 0.026f;
 	tempRndr.flags |= RNDR_BILLBOARD_TARGET | RNDR_BILLBOARD_Y;
-	tempRndr.hudElement = 0;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 	tempRndr.twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 3);
 	tempRndr.sTrans.position.x = -3.f;
@@ -117,6 +108,31 @@ int main(int argc, char *argv[]){
 	tempRndr.rTrans.scale.y = 0.0065f;
 	tempRndr.flags = 0;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
+
+	/* Scenes */
+	scene tempScene;
+	tempScene.renderableNum = 4;
+	tempScene.renderables = malloc(tempScene.renderableNum * sizeof(renderable *));
+	tempScene.renderables[0] = (renderable *)cvGet(&allRenderables, 0);
+	tempScene.renderables[1] = (renderable *)cvGet(&allRenderables, 2);
+	tempScene.renderables[2] = (renderable *)cvGet(&allRenderables, 4);
+	tempScene.renderables[3] = (renderable *)cvGet(&allRenderables, 5);
+	cvPush(&allScenes, (void *)&tempScene, sizeof(tempScene));
+	tempScene.renderableNum = 2;
+	tempScene.renderables = malloc(tempScene.renderableNum * sizeof(renderable *));
+	tempScene.renderables[0] = (renderable *)cvGet(&allRenderables, 1);
+	tempScene.renderables[1] = (renderable *)cvGet(&allRenderables, 3);
+	cvPush(&allScenes, (void *)&tempScene, sizeof(tempScene));
+
+	/* Cameras */
+	camera tempCam; camInit(&tempCam);
+	vec3Set(&tempCam.position, 0.f, 2.f, 7.f);
+	tempCam.targetScene = (scene *)cvGet(&allScenes, 0);
+	cvPush(&allCameras, (void *)&tempCam, sizeof(tempCam));
+	vec3Set(&tempCam.position, 0.f, 0.f, 0.f);
+	tempCam.flags |= CAM_PROJECTION_ORTHO;
+	tempCam.targetScene = (scene *)cvGet(&allScenes, 1);
+	cvPush(&allCameras, (void *)&tempCam, sizeof(tempCam));
 
 	/** Remove the special deletion code below the main loop as well **/
 	skliLoad(&((renderable *)cvGet(&allRenderables, 0))->skli, prgPath, "Resources\\Skeletons\\CubeTestSkeleton.tds");
@@ -257,7 +273,7 @@ int main(int argc, char *argv[]){
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Render the scene
-		renderScene(&allRenderables, &allCameras, &gfxPrg);
+		renderScene(&allCameras, &gfxPrg);
 
 		// Update the window
 		SDL_GL_SwapWindow(gfxPrg.window);
@@ -271,19 +287,67 @@ int main(int argc, char *argv[]){
 
 	}
 
+
+
+
+
+	float framerate = 1000.f / 128.f;  // Minimum time between renders
+	float tickrate = 1000.f / 64.f;    // Milliseconds per frame to simulate
+	uint32_t currentTime = SDL_GetTicks();
+
+    while(prgRunning){
+
+		const uint32_t startTime = SDL_GetTicks();
+		const uint32_t elapsedTime = startTime - currentTime;
+		currentTime = startTime;
+
+		float timeSlice = elapsedTime;
+
+		while(timeSlice >= tickrate){
+
+			// Take input and update
+			/** **/
+
+			timeSlice -= tickrate;
+
+		}
+
+		// Position between last state and next state
+		const float interp = 1.f - elapsedTime / tickrate;
+
+		// Render
+		/** **/
+
+		// Sleep if necessary to maintain a capped framerate
+		const float sleepTime = framerate - SDL_GetTicks() - startTime;
+		if(sleepTime > 0.f){
+			SDL_Delay((uint32_t)sleepTime);
+		}
+
+    }
+
+
+
+
+
+
+
+
+
 	/** Special deletion code **/
 	sklDelete(((renderable *)cvGet(&allRenderables, 0))->skli.skl);
 	sklDelete(((renderable *)cvGet(&allRenderables, 1))->skli.skl);
 	sklaDelete(((renderable *)cvGet(&allRenderables, 0))->skli.animations[0].anim);
 	sklaDelete(((renderable *)cvGet(&allRenderables, 1))->skli.animations[0].anim);
-	cleanup(&allTextures, &allTexWrappers, &allModels, &allCameras, &allSkeletons, &allSklAnimations, &allRenderables, &gfxPrg);
+	cleanup(&allTextures, &allTexWrappers, &allModels, &allCameras, &allSkeletons, &allSklAnimations, &allRenderables, &allScenes, &gfxPrg);
 
 	return 0;
 
 }
 
 void cleanup(cVector *allTextures,  cVector *allTexWrappers,   cVector *allModels,      cVector *allCameras,
-             cVector *allSkeletons, cVector *allSklAnimations, cVector *allRenderables, gfxProgram *gfxPrg){
+             cVector *allSkeletons, cVector *allSklAnimations, cVector *allRenderables, cVector *allScenes,
+             gfxProgram *gfxPrg){
 
 	gfxDestroyProgram(gfxPrg);
 
@@ -314,6 +378,11 @@ void cleanup(cVector *allTextures,  cVector *allTexWrappers,   cVector *allModel
 		sklaDelete((sklAnim *)cvGet(allSklAnimations, i));
 	}
 	cvClear(allSklAnimations);
+
+	for(i = 0; i < allScenes->size; ++i){
+		scnDelete((scene *)cvGet(allScenes, i));
+	}
+	cvClear(allScenes);
 
 	for(i = 0; i < allRenderables->size; ++i){
 		rndrDelete((renderable *)cvGet(allRenderables, i));

@@ -16,7 +16,6 @@ void rndrInit(renderable *rndr){
 	rtInit(&rndr->rTrans);
 	rndr->sprite = 0;
 	rndr->flags = 0;
-	rndr->hudElement = 0;
 }
 
 /** Finish this **/
@@ -58,14 +57,15 @@ void rndrRotateZ(renderable *rndr, const float changeZ){
 	rndr->sTrans.changeRot.z += changeZ;
 }
 
-void rndrAnimateTexture(renderable *rndr, const float timeElapsed){
-	twiAnimate(&rndr->twi, timeElapsed);
+void rndrAnimateTexture(renderable *rndr, const float elapsedTime){
+	twiAnimate(&rndr->twi, elapsedTime);
 }
 
-void rndrAnimateSkeleton(renderable *rndr, const float timeElapsed){
-	skliAnimate(&rndr->skli, timeElapsed);
+void rndrAnimateSkeleton(renderable *rndr, const float elapsedTime){
+	skliAnimate(&rndr->skli, elapsedTime);
 }
 
+#include "camera.h"
 void rndrGenerateTransform(renderable *rndr, const camera *cam, mat4 *transformMatrix){
 
 	/*
@@ -112,7 +112,7 @@ void rndrGenerateTransform(renderable *rndr, const camera *cam, mat4 *transformM
 				eye = rndr->rTrans.targetPosition;
 				target = rndr->sTrans.position;
 				vec3Set(&up, 0.f, 1.f, 0.f);
-				quatRotateVec3(rndr->rTrans.targetOrientation, &up);
+				quatRotateVec3(&rndr->rTrans.targetOrientation, &up);
 			}else if((rndr->flags & RNDR_BILLBOARD_TARGET_CAMERA) > 0){
 				eye = cam->position;
 				target = rndr->sTrans.position;
@@ -132,19 +132,20 @@ void rndrGenerateTransform(renderable *rndr, const camera *cam, mat4 *transformM
 			if((rndr->flags & RNDR_BILLBOARD_Z) == 0){
 				vec3Set(&up, 0.f, 1.f, 0.f);
 			}
-			mat4RotateToFace(&billboardRotation, eye, target, up);
+			mat4RotateToFace(&billboardRotation, &eye, &target, &up);
 		}
 		mat4MultMByM2(&billboardRotation, transformMatrix);  // Apply billboard rotation
 	}
 
 	/* Rotate the model */
 	// Apply the change in rotation to the current orientation
-	quatMultQByQ2(quatNewEuler(rndr->sTrans.changeRot.x*RADIAN_RATIO,
-	                           rndr->sTrans.changeRot.y*RADIAN_RATIO,
-	                           rndr->sTrans.changeRot.z*RADIAN_RATIO),
-	              &rndr->sTrans.orientation);
+	quat changeRotation;
+	quatSetEuler(&changeRotation, rndr->sTrans.changeRot.x*RADIAN_RATIO,
+	                              rndr->sTrans.changeRot.y*RADIAN_RATIO,
+	                              rndr->sTrans.changeRot.z*RADIAN_RATIO);
+	quatMultQByQ2(&changeRotation, &rndr->sTrans.orientation);
 	vec3SetS(&rndr->sTrans.changeRot, 0.f);  // Reset the change in rotation
-	mat4Rotate(transformMatrix, rndr->sTrans.orientation);
+	mat4Rotate(transformMatrix, &rndr->sTrans.orientation);
 
 	/* Scale the model */
 	mat4Scale(transformMatrix, rndr->rTrans.scale.x, rndr->rTrans.scale.y, rndr->rTrans.scale.z);

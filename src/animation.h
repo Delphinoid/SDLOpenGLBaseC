@@ -25,6 +25,6 @@ typedef struct {
 	size_t nextFrame;
 } animationInstance;
 
-void animAdvance(animationInstance *animInst, const animationData *animData, const float timeElapsed);
+void animAdvance(animationInstance *animInst, const animationData *animData, const float elapsedTime);
 
 #endif

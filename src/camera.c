@@ -12,6 +12,7 @@ void camInit(camera *cam){
 	cam->fovy = 90.f;
 	mat4Identity(&cam->viewMatrix);
 	mat4Identity(&cam->projectionMatrix);
+	cam->targetScene = NULL;
 	cam->flags = CAM_UPDATE_VIEW | CAM_UPDATE_PROJECTION;
 }
 
@@ -56,8 +57,10 @@ void camCalculateUp(camera *cam){  /** Probably not entirely necessary **/
 
 	}*/
 
+	quat camRotation;
+	quatSetEuler(&camRotation, cam->rotation.x*RADIAN_RATIO, cam->rotation.y*RADIAN_RATIO, cam->rotation.z*RADIAN_RATIO);
 	vec3Set(&cam->up, 0.f, 1.f, 0.f);
-	quatRotateVec3(quatNewEuler(cam->rotation.x*RADIAN_RATIO, cam->rotation.y*RADIAN_RATIO, cam->rotation.z*RADIAN_RATIO), &cam->up);
+	quatRotateVec3(&camRotation, &cam->up);
 
 }
 void camUpdateViewMatrix(camera *cam){
@@ -68,10 +71,12 @@ void camUpdateViewMatrix(camera *cam){
 		camCalculateUp(cam);
 
 		/* Set the camera to look at something */
-		mat4LookAt(&cam->viewMatrix, cam->position, cam->target, cam->up);
+		mat4LookAt(&cam->viewMatrix, &cam->position, &cam->target, &cam->up);
 
 		/* Rotate the camera */
-		mat4Rotate(&cam->viewMatrix, quatNewEuler(cam->rotation.x*RADIAN_RATIO, cam->rotation.y*RADIAN_RATIO, cam->rotation.z*RADIAN_RATIO));
+		quat camRotation;
+		quatSetEuler(&camRotation, cam->rotation.x*RADIAN_RATIO, cam->rotation.y*RADIAN_RATIO, cam->rotation.z*RADIAN_RATIO);
+		mat4Rotate(&cam->viewMatrix, &camRotation);
 
 		cam->flags &= ~CAM_UPDATE_VIEW;
 

@@ -100,7 +100,7 @@ void sklaiDelete(sklAnimInstance *sklai);
 
 void skliInit(sklInstance *skli, skeleton *skl);
 unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *filePath);
-void skliAnimate(sklInstance *skli, const float timeElapsed);
+void skliAnimate(sklInstance *skli, const float elapsedTime);
 void skliGenerateState(const sklInstance *skli, const skeleton *skl, mat4 *state);
 void skliDelete(sklInstance *skli);
 
