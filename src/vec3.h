@@ -63,4 +63,6 @@ float vec3Dot(const vec3 *v1, const vec3 *v2);
 vec3 vec3GetCross(const vec3 *v1, const vec3 *v2);
 void vec3Cross(const vec3 *v1, const vec3 *v2, vec3 *r);
 
+void vec3Lerp(const vec3 *v1, const vec3 *v2, const float t, vec3 *r);
+
 #endif

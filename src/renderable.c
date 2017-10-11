@@ -1,4 +1,4 @@
-#include "renderable.h"
+#include "camera.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL_image.h>
@@ -12,8 +12,14 @@ void rndrInit(renderable *rndr){
 	rndr->mdl = NULL;
 	skliInit(&rndr->skli, NULL);
 	twiInit(&rndr->twi, NULL);
-	stInit(&rndr->sTrans);
-	rtInit(&rndr->rTrans);
+	iVec3Init(&rndr->position, 0.f, 0.f, 0.f);
+	iQuatInit(&rndr->orientation);
+	vec3Set(&rndr->rotation, 0.f, 0.f, 0.f);
+	iVec3Init(&rndr->pivot, 0.f, 0.f, 0.f);
+	iVec3Init(&rndr->targetPosition, 0.f, 0.f, 0.f);
+	iQuatInit(&rndr->targetOrientation);
+	iVec3Init(&rndr->scale, 1.f, 1.f, 1.f);
+	iFloatInit(&rndr->alpha, 1.f);
 	rndr->sprite = 0;
 	rndr->flags = 0;
 }
@@ -26,9 +32,37 @@ unsigned char rndrLoad(renderable *rndr, const char *prgPath, const char *filePa
 
 }
 
-unsigned char rndrRenderMethod(renderable *rndr){
-	if(rndr->rTrans.alpha > 0.f){
-		if(rndr->rTrans.alpha < 1.f || twiContainsTranslucency(&rndr->twi)){
+/**void rndrSetRotation(renderable *rndr, const float pitch, const float yaw, const float roll){
+	quatSetEuler(&rndr->orientation.value, pitch*RADIAN_RATIO, yaw*RADIAN_RATIO, roll*RADIAN_RATIO);
+	vec3SetS(&rndr->rotation, 0.f);
+}
+
+void rndrRotateX(renderable *rndr, const float changeX){
+	iVec3GetValue(&rndr->rotation)->x += changeX;
+}
+
+void rndrRotateY(renderable *rndr, const float changeY){
+	iVec3GetValue(&rndr->rotation)->y += changeY;
+}
+
+void rndrRotateZ(renderable *rndr, const float changeZ){
+	iVec3GetValue(&rndr->rotation)->z += changeZ;
+}**/
+
+void rndrResetInterpolation(renderable *rndr){
+	iVec3ResetInterp(&rndr->position);
+	iQuatResetInterp(&rndr->orientation);
+	iVec3ResetInterp(&rndr->pivot);
+	iVec3ResetInterp(&rndr->targetPosition);
+	iQuatResetInterp(&rndr->targetOrientation);
+	iVec3ResetInterp(&rndr->scale);
+	iFloatResetInterp(&rndr->alpha);
+}
+unsigned char rndrRenderMethod(renderable *rndr, const float interpT){
+	// Update alpha.
+	iFloatUpdate(&rndr->alpha, interpT);
+	if(rndr->alpha.render > 0.f){
+		if(rndr->alpha.render < 1.f || twiContainsTranslucency(&rndr->twi)){
 			// The model contains translucency
 			return 1;
 		}else{
@@ -39,22 +73,27 @@ unsigned char rndrRenderMethod(renderable *rndr){
 	// The model is fully transparent
 	return 2;
 }
+unsigned char rndrRenderUpdate(renderable *rndr, const float interpT){
 
-void rndrSetRotation(renderable *rndr, const float newX, const float newY, const float newZ){
-	quatSetEuler(&rndr->sTrans.orientation, newX*RADIAN_RATIO, newY*RADIAN_RATIO, newZ*RADIAN_RATIO);
-	vec3SetS(&rndr->sTrans.changeRot, 0.f);
-}
+	// Apply the change in rotation to the current orientation.
+	if(rndr->rotation.x != 0.f || rndr->rotation.y != 0.f || rndr->rotation.z != 0.f){
+		quat changeRotation;
+		quatSetEuler(&changeRotation, rndr->rotation.x*RADIAN_RATIO,
+		                              rndr->rotation.y*RADIAN_RATIO,
+		                              rndr->rotation.z*RADIAN_RATIO);
+		quatMultQByQ2(&changeRotation, &rndr->orientation.value);
+		vec3SetS(&rndr->rotation, 0.f);
+	}
 
-void rndrRotateX(renderable *rndr, const float changeX){
-	rndr->sTrans.changeRot.x += changeX;
-}
+	// Return whether or not anything has changed.
+	return iVec3Update(&rndr->position,          interpT) |
+	       iQuatUpdate(&rndr->orientation,       interpT) |
+	       iVec3Update(&rndr->pivot,             interpT) |
+	       iVec3Update(&rndr->targetPosition,    interpT) |
+	       iQuatUpdate(&rndr->targetOrientation, interpT) |
+	       iVec3Update(&rndr->scale,             interpT) |
+	       iFloatUpdate(&rndr->alpha,            interpT);  /** Remove alpha updates from here once rndrRenderMethod() is being used by everything. **/
 
-void rndrRotateY(renderable *rndr, const float changeY){
-	rndr->sTrans.changeRot.y += changeY;
-}
-
-void rndrRotateZ(renderable *rndr, const float changeZ){
-	rndr->sTrans.changeRot.z += changeZ;
 }
 
 void rndrAnimateTexture(renderable *rndr, const float elapsedTime){
@@ -65,15 +104,15 @@ void rndrAnimateSkeleton(renderable *rndr, const float elapsedTime){
 	skliAnimate(&rndr->skli, elapsedTime);
 }
 
-#include "camera.h"
-void rndrGenerateTransform(renderable *rndr, const camera *cam, mat4 *transformMatrix){
+/** Remove #include "camera.h" **/
+void rndrGenerateTransform(const renderable *rndr, const camera *cam, mat4 *transformMatrix){
 
 	/*
 	** Translate the model. By translating it from the camera coordinates to begin
 	** with, we can save multiplying the model matrix by the view matrix later on
 	*/
 	*transformMatrix = cam->viewMatrix;  // Start with the view matrix
-	mat4Translate(transformMatrix, rndr->sTrans.position.x, rndr->sTrans.position.y, rndr->sTrans.position.z);
+	mat4Translate(transformMatrix, rndr->position.render.x, rndr->position.render.y, rndr->position.render.z);
 
 	/* Billboarding */
 	// If any of the flags apart from RNDR_BILLBOARD_TARGET are set, continue
@@ -109,18 +148,18 @@ void rndrGenerateTransform(renderable *rndr, const camera *cam, mat4 *transformM
 		}else{
 			vec3 eye, target, up;
 			if((rndr->flags & RNDR_BILLBOARD_TARGET) > 0){
-				eye = rndr->rTrans.targetPosition;
-				target = rndr->sTrans.position;
+				eye = rndr->targetPosition.render;
+				target = rndr->position.render;
 				vec3Set(&up, 0.f, 1.f, 0.f);
-				quatRotateVec3(&rndr->rTrans.targetOrientation, &up);
+				quatRotateVec3(&rndr->targetOrientation.render, &up);
 			}else if((rndr->flags & RNDR_BILLBOARD_TARGET_CAMERA) > 0){
-				eye = cam->position;
-				target = rndr->sTrans.position;
-				up = cam->up;
+				eye = cam->position.render;
+				target = rndr->position.render;
+				up = cam->up.render;
 			}else{
-				eye = cam->position;
-				target = cam->target;
-				up = cam->up;
+				eye = cam->position.render;
+				target = cam->targetPosition.render;
+				up = cam->up.render;
 			}
 			// Lock certain axes if needed
 			if((rndr->flags & RNDR_BILLBOARD_X) == 0){
@@ -138,115 +177,101 @@ void rndrGenerateTransform(renderable *rndr, const camera *cam, mat4 *transformM
 	}
 
 	/* Rotate the model */
-	// Apply the change in rotation to the current orientation
-	quat changeRotation;
-	quatSetEuler(&changeRotation, rndr->sTrans.changeRot.x*RADIAN_RATIO,
-	                              rndr->sTrans.changeRot.y*RADIAN_RATIO,
-	                              rndr->sTrans.changeRot.z*RADIAN_RATIO);
-	quatMultQByQ2(&changeRotation, &rndr->sTrans.orientation);
-	vec3SetS(&rndr->sTrans.changeRot, 0.f);  // Reset the change in rotation
-	mat4Rotate(transformMatrix, &rndr->sTrans.orientation);
+	mat4Rotate(transformMatrix, &rndr->orientation.render);
 
 	/* Scale the model */
-	mat4Scale(transformMatrix, rndr->rTrans.scale.x, rndr->rTrans.scale.y, rndr->rTrans.scale.z);
+	mat4Scale(transformMatrix, rndr->scale.render.x, rndr->scale.render.y, rndr->scale.render.z);
 
 	/*
 	** Translate the model by -scaledPivot. The result is the appearance of the model
 	** "pivoting" around position + scaledPivot
 	*/
-	mat4Translate(transformMatrix, -rndr->sTrans.relPivot.x, -rndr->sTrans.relPivot.y, -rndr->sTrans.relPivot.z);
+	mat4Translate(transformMatrix, -rndr->pivot.render.x, -rndr->pivot.render.y, -rndr->pivot.render.z);
 
 }
 
 void rndrGenerateSprite(const renderable *rndr, vertex *vertices, const mat4 *transformMatrix){
 
-	/* Generate the base sprite quad */
-	vertex tempVert;
-
 	/* Undo the initial translations in rndrGenerateTransform() and use our own */
 	/** Only way to remove this is to duplicate rndrGenerateTransform(). Is it worth it? **/
 	/** Might copy rndrGenerateTransform() but without matrices **/
-	const float left   = -rndr->sTrans.relPivot.x * (twiGetFrameWidth(&rndr->twi) - 1.f);
-	const float top    = -rndr->sTrans.relPivot.y * (twiGetFrameHeight(&rndr->twi) - 1.f);
+	const float left   = -rndr->pivot.render.x * (twiGetFrameWidth(&rndr->twi) - 1.f);
+	const float top    = -rndr->pivot.render.y * (twiGetFrameHeight(&rndr->twi) - 1.f);
 	const float right  = left + twiGetFrameWidth(&rndr->twi);
 	const float bottom = top  + twiGetFrameHeight(&rndr->twi);
-	const float z      = -rndr->sTrans.relPivot.z;
+	const float z      = -rndr->pivot.render.z;
 
 	// Create the top left vertex
-	tempVert.position.x = left;
-	tempVert.position.y = top;
-	tempVert.position.z = z;
-	tempVert.u = 0.f;
-	tempVert.v = 0.f;
-	tempVert.normal.x = 0.f;
-	tempVert.normal.y = 0.f;
-	tempVert.normal.z = 0.f;
-	tempVert.bIDs[0] = -1;
-	tempVert.bIDs[1] = -1;
-	tempVert.bIDs[2] = -1;
-	tempVert.bIDs[3] = -1;
-	tempVert.bWeights[0] = 0.f;
-	tempVert.bWeights[1] = 0.f;
-	tempVert.bWeights[2] = 0.f;
-	tempVert.bWeights[3] = 0.f;
-	vertices[0] = tempVert;
+	vertices[0].position.x = left;
+	vertices[0].position.y = top;
+	vertices[0].position.z = z;
+	vertices[0].u = 0.f;
+	vertices[0].v = 0.f;
+	vertices[0].normal.x = 0.f;
+	vertices[0].normal.y = 0.f;
+	vertices[0].normal.z = 0.f;
+	vertices[0].bIDs[0] = -1;
+	vertices[0].bIDs[1] = -1;
+	vertices[0].bIDs[2] = -1;
+	vertices[0].bIDs[3] = -1;
+	vertices[0].bWeights[0] = 0.f;
+	vertices[0].bWeights[1] = 0.f;
+	vertices[0].bWeights[2] = 0.f;
+	vertices[0].bWeights[3] = 0.f;
 
 	// Create the top right vertex
-	tempVert.position.x = right;
-	tempVert.position.y = top;
-	tempVert.position.z = z;
-	tempVert.u = 1.f;
-	tempVert.v = 0.f;
-	tempVert.normal.x = 0.f;
-	tempVert.normal.y = 0.f;
-	tempVert.normal.z = 0.f;
-	tempVert.bIDs[0] = -1;
-	tempVert.bIDs[1] = -1;
-	tempVert.bIDs[2] = -1;
-	tempVert.bIDs[3] = -1;
-	tempVert.bWeights[0] = 0.f;
-	tempVert.bWeights[1] = 0.f;
-	tempVert.bWeights[2] = 0.f;
-	tempVert.bWeights[3] = 0.f;
-	vertices[1] = tempVert;
+	vertices[1].position.x = right;
+	vertices[1].position.y = top;
+	vertices[1].position.z = z;
+	vertices[1].u = 1.f;
+	vertices[1].v = 0.f;
+	vertices[1].normal.x = 0.f;
+	vertices[1].normal.y = 0.f;
+	vertices[1].normal.z = 0.f;
+	vertices[1].bIDs[0] = -1;
+	vertices[1].bIDs[1] = -1;
+	vertices[1].bIDs[2] = -1;
+	vertices[1].bIDs[3] = -1;
+	vertices[1].bWeights[0] = 0.f;
+	vertices[1].bWeights[1] = 0.f;
+	vertices[1].bWeights[2] = 0.f;
+	vertices[1].bWeights[3] = 0.f;
 
 	// Create the bottom left vertex
-	tempVert.position.x = left;
-	tempVert.position.y = bottom;
-	tempVert.position.z = z;
-	tempVert.u = 0.f;
-	tempVert.v = -1.f;  // Flip the y dimension so the image isn't upside down
-	tempVert.normal.x = 0.f;
-	tempVert.normal.y = 0.f;
-	tempVert.normal.z = 0.f;
-	tempVert.bIDs[0] = -1;
-	tempVert.bIDs[1] = -1;
-	tempVert.bIDs[2] = -1;
-	tempVert.bIDs[3] = -1;
-	tempVert.bWeights[0] = 0.f;
-	tempVert.bWeights[1] = 0.f;
-	tempVert.bWeights[2] = 0.f;
-	tempVert.bWeights[3] = 0.f;
-	vertices[2] = tempVert;
+	vertices[2].position.x = left;
+	vertices[2].position.y = bottom;
+	vertices[2].position.z = z;
+	vertices[2].u = 0.f;
+	vertices[2].v = -1.f;  // Flip the y dimension so the image isn't upside down
+	vertices[2].normal.x = 0.f;
+	vertices[2].normal.y = 0.f;
+	vertices[2].normal.z = 0.f;
+	vertices[2].bIDs[0] = -1;
+	vertices[2].bIDs[1] = -1;
+	vertices[2].bIDs[2] = -1;
+	vertices[2].bIDs[3] = -1;
+	vertices[2].bWeights[0] = 0.f;
+	vertices[2].bWeights[1] = 0.f;
+	vertices[2].bWeights[2] = 0.f;
+	vertices[2].bWeights[3] = 0.f;
 
 	// Create the bottom right vertex
-	tempVert.position.x = right;
-	tempVert.position.y = bottom;
-	tempVert.position.z = z;
-	tempVert.u = 1.f;
-	tempVert.v = -1.f;  // Flip the y dimension so the image isn't upside down
-	tempVert.normal.x = 0.f;
-	tempVert.normal.y = 0.f;
-	tempVert.normal.z = 0.f;
-	tempVert.bIDs[0] = -1;
-	tempVert.bIDs[1] = -1;
-	tempVert.bIDs[2] = -1;
-	tempVert.bIDs[3] = -1;
-	tempVert.bWeights[0] = 0.f;
-	tempVert.bWeights[1] = 0.f;
-	tempVert.bWeights[2] = 0.f;
-	tempVert.bWeights[3] = 0.f;
-	vertices[3] = tempVert;
+	vertices[3].position.x = right;
+	vertices[3].position.y = bottom;
+	vertices[3].position.z = z;
+	vertices[3].u = 1.f;
+	vertices[3].v = -1.f;  // Flip the y dimension so the image isn't upside down
+	vertices[3].normal.x = 0.f;
+	vertices[3].normal.y = 0.f;
+	vertices[3].normal.z = 0.f;
+	vertices[3].bIDs[0] = -1;
+	vertices[3].bIDs[1] = -1;
+	vertices[3].bIDs[2] = -1;
+	vertices[3].bIDs[3] = -1;
+	vertices[3].bWeights[0] = 0.f;
+	vertices[3].bWeights[1] = 0.f;
+	vertices[3].bWeights[2] = 0.f;
+	vertices[3].bWeights[3] = 0.f;
 
 	/* Apply transformations to each vertex */
 	vec4 vertexPos;

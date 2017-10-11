@@ -6,30 +6,34 @@
 #include "scene.h"
 
 #define CAM_PROJECTION_ORTHO    0x01
-#define CAM_UPDATE_VIEW         0x02
-#define CAM_UPDATE_PROJECTION   0x04
+#define CAM_UPDATE_PROJECTION   0x02
+/** Is CAM_UPDATE_VIEW still needed? What about the others? **/
+#define CAM_UPDATE_VIEW         0x04
 
 typedef struct {
-
-	vec3 position;
+	/** Should be in a struct? **/
+	interpVec3 position;
+	interpQuat orientation;
 	vec3 rotation;
-	vec3 target;
-	vec3 up;
-	float fovy;
+	/** Do we REALLY need previousRotation? **/
+	vec3 previousRotation;
+	interpVec3 targetPosition;
+	interpVec3 up;
+	interpFloat fovy;
 	mat4 viewMatrix;
 	mat4 projectionMatrix;
 	scene *targetScene;
 	unsigned char flags;
-
 } camera;
 
 void camInit(camera *cam);
 
+void camResetInterpolation(camera *cam);
 void camCalculateUp(camera *cam);
-void camUpdateViewMatrix(camera *cam);
-void camUpdateProjectionMatrix(camera *cam, const unsigned char aspectRatioX, const unsigned char aspectRatioY);
+void camUpdateViewMatrix(camera *cam, const float interpT);
+void camUpdateProjectionMatrix(camera *cam, const unsigned char aspectRatioX, const unsigned char aspectRatioY, const float interpT);
 
-void camMoveX(camera *cam, const float x);
+/**void camMoveX(camera *cam, const float x);
 void camMoveY(camera *cam, const float y);
 void camMoveZ(camera *cam, const float z);
 void camMove(camera *cam, const float x, const float y, const float z);
@@ -61,6 +65,6 @@ void camSetTarget(camera *cam, const float x, const float y, const float z);
 
 void camSetUp(camera *cam, const float x, const float y, const float z);
 
-void camSetFOV(camera *cam, const float fov);
+void camSetFOV(camera *cam, const float fov);**/
 
 #endif

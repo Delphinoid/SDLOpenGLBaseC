@@ -55,7 +55,7 @@ GLuint twiGetTexHeight(const twInstance *twi);
 GLuint twiGetTexID(const twInstance *twi);
 float twiGetFrameWidth(const twInstance *twi);
 float twiGetFrameHeight(const twInstance *twi);
-void twiGetFrameInfo(const twInstance *twi, float *x, float *y, float *w, float *h, GLuint *frameTexID);
+void twiGetFrameInfo(const twInstance *twi, float *x, float *y, float *w, float *h, GLuint *frameTexID, const float interpT);
 unsigned char twiContainsTranslucency(const twInstance *twi);
 
 #endif

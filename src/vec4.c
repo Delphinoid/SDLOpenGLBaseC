@@ -42,6 +42,9 @@ vec4 vec4VAddS(const vec4 *v, const float s){
 void vec4AddVToV(vec4 *v1, const vec4 *v2){
 	v1->x += v2->x; v1->y += v2->y; v1->z += v2->z; v1->w += v2->w;
 }
+void vec4AddVToVR(const vec4 *v1, const vec4 *v2, vec4 *r){
+	r->x = v1->x + v2->x; r->y = v1->y + v2->y; r->z = v1->z + v2->z; r->w = v1->w + v2->w;
+}
 void vec4AddNToV(vec4 *v, const float x, const float y, const float z, const float w){
 	v->x += x; v->y += y; v->z += z; v->w += w;
 }
@@ -90,6 +93,9 @@ void vec4SubVFromV1(vec4 *v1, const vec4 *v2){
 void vec4SubVFromV2(const vec4 *v1, vec4 *v2){
 	v2->x = v1->x - v2->x; v2->y = v1->y - v2->y; v2->z = v1->z - v2->z; v2->w = v1->w - v2->w;
 }
+void vec4SubVFromVR(const vec4 *v1, const vec4 *v2, vec4 *r){
+	r->x = v1->x - v2->x; r->y = v1->y - v2->y; r->z = v1->z - v2->z; r->w = v1->w - v2->w;
+}
 void vec4SubNFromV(vec4 *v, const float x, const float y, const float z, const float w){
 	v->x -= x; v->y -= y; v->z -= z; v->w -= w;
 }
@@ -126,6 +132,9 @@ vec4 vec4VMultS(const vec4 *v, const float s){
 }
 void vec4MultVByV(vec4 *v1, const vec4 *v2){
 	v1->x *= v2->x; v1->y *= v2->y; v1->z *= v2->z; v1->w *= v2->w;
+}
+void vec4MultVByVR(const vec4 *v1, const vec4 *v2, vec4 *r){
+	r->x = v1->x * v2->x; r->y = v1->y * v2->y; r->z = v1->z * v2->z; r->w = v1->w * v2->w;
 }
 void vec4MultVByN(vec4 *v, const float x, const float y, const float z, const float w){
 	v->x *= x; v->y *= y; v->z *= z; v->w *= w;
@@ -190,8 +199,13 @@ void vec4DivVByV1(vec4 *v1, const vec4 *v2){
 	}
 }
 void vec4DivVByV2(const vec4 *v1, vec4 *v2){
-	if(v1->x != 0.f && v1->y != 0.f && v1->z != 0.f && v1->w != 0.f){
+	if(v2->x != 0.f && v2->y != 0.f && v2->z != 0.f && v2->w != 0.f){
 		v2->x = v1->x / v2->x; v2->y = v1->y / v2->y; v2->z = v1->z / v2->z; v2->w = v1->w / v2->w;
+	}
+}
+void vec4DivVByVR(const vec4 *v1, const vec4 *v2, vec4 *r){
+	if(v2->x != 0.f && v2->y != 0.f && v2->z != 0.f && v2->w != 0.f){
+		r->x = v1->x / v2->x; r->y = v1->y / v2->y; r->z = v1->z / v2->z; r->w = v1->w / v2->w;
 	}
 }
 void vec4DivVByN(vec4 *v, const float x, const float y, const float z, const float w){
@@ -245,4 +259,13 @@ void vec4NormalizeFast(vec4 *v){
 
 float vec4Dot(const vec4 *v1, const vec4 *v2){
 	return v1->x * v2->x + v1->y * v2->y + v1->z * v2->z + v1->w * v2->w;
+}
+
+void vec4Lerp(const vec4 *v1, const vec4 *v2, const float t, vec4 *r){
+	/*
+	** r = v1 + (v2 - v1) * t
+	*/
+	vec4SubVFromVR(v2, v1, r);
+	vec4MultVByS(r, t);
+	vec4AddVToV(r, v1);
 }

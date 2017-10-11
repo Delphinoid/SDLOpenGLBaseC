@@ -61,7 +61,8 @@ typedef struct {
 typedef struct {
 	sklAnim *anim;
 	animationInstance animInst;
-	float animInterpT;
+	//float animInterpFragment;
+	/** Remove animInterpStart and animInterpEnd? **/
 	sklBone *animInterpStart;
 	sklBone *animInterpEnd;
 	sklBone *animState;  // Delta transformations for each bone
@@ -95,12 +96,16 @@ unsigned char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath)
 void sklaDelete(sklAnim *skla);
 
 void sklaiInit(sklAnimInstance *sklai, const sklAnim *skla);
+void sklaiGenerateState(sklAnimInstance *sklai, const float interpT);
+void sklaiAnimate(sklAnimInstance *sklai, const float elapsedTime);
 void sklaiChangeAnim(sklAnimInstance *sklai, const sklAnim *anim, const size_t frame, const float blendTime);
 void sklaiDelete(sklAnimInstance *sklai);
 
 void skliInit(sklInstance *skli, skeleton *skl);
 unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *filePath);
 void skliAnimate(sklInstance *skli, const float elapsedTime);
+void skliGenerateBoneState(const sklInstance *skli, const skeleton *skl, mat4 *state, const size_t bone);
+void skliGenerateAnimState(const sklInstance *skli);
 void skliGenerateState(const sklInstance *skli, const skeleton *skl, mat4 *state);
 void skliDelete(sklInstance *skli);
 

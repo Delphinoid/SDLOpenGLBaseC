@@ -21,6 +21,7 @@ quat quatQAddQ(const quat *q1, const quat *q2);
 quat quatQAddS(const quat *q, const float s);
 quat quatQAddW(const quat *q, const float w);
 void quatAddQToQ(quat *q1, const quat *q2);
+void quatAddQToQR(const quat *q1, const quat *q2, quat *r);
 void quatAddSToQ(quat *q, const float s);
 void quatAddWToQ(quat *q, const float w);
 
@@ -29,6 +30,7 @@ quat quatQSubS(const quat *q, const float s);
 quat quatQSubW(const quat *q, const float w);
 void quatSubQFromQ1(quat *q1, const quat *q2);
 void quatSubQFromQ2(const quat *q1, quat *q2);
+void quatSubQFromQR(const quat *q1, const quat *q2, quat *r);
 void quatSubSFromQ(quat *q, const float s);
 void quatSubWFromQ(quat *q, const float w);
 
@@ -36,12 +38,14 @@ quat quatQMultQ(const quat *q1, const quat *q2);
 quat quatQMultS(const quat *q, const float s);
 void quatMultQByQ1(quat *q1, const quat *q2);
 void quatMultQByQ2(const quat *q1, quat *q2);
+void quatMultQByQR(const quat *q1, const quat *q2, quat *r);
 void quatMultQByS(quat *q, const float s);
 
 quat quatQDivQ(const quat *q1, const quat *q2);
 quat quatQDivS(const quat *q, const float s);
 void quatDivQByQ1(quat *q1, const quat *q2);
 void quatDivQByQ2(const quat *q1, quat *q2);
+void quatDivQByQR(const quat *q1, const quat *q2, quat *r);
 void quatDivQByS(quat *q, const float s);
 
 float quatGetMagnitude(const quat *q);

@@ -15,6 +15,7 @@ mat4 mat4MMultM(const mat4 *m1, const mat4 *m2);
 void mat4MMultByM(const mat4 *m1, const mat4 *m2, mat4 *r);
 void mat4MultMByM1(mat4 *m1, const mat4 *m2);
 void mat4MultMByM2(const mat4 *m1, mat4 *m2);
+void mat4MultMByMR(const mat4 *m1, const mat4 *m2, mat4 *r);
 vec4 mat4VMultM(const vec4 v, const mat4 *m);
 void mat4MultVByM(vec4 *v, const mat4 *m);
 vec4 mat4MMultV(const mat4 *m, const vec4 v);

@@ -4,7 +4,7 @@
 
 #define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians
 
-void renderScene(cVector *allCameras, gfxProgram *gfxPrg);
+void renderScene(cVector *allCameras, const float interpT, gfxProgram *gfxPrg);
 void cleanup(cVector *allTextures,  cVector *allTexWrappers,   cVector *allModels,      cVector *allCameras,
              cVector *allSkeletons, cVector *allSklAnimations, cVector *allRenderables, cVector *allScenes,
              gfxProgram *gfxPrg);
@@ -68,12 +68,12 @@ int main(int argc, char *argv[]){
 	tempRndr.twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 1);
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 	tempRndr.twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 2);
-	tempRndr.sTrans.position.x = 0.5f;
-	tempRndr.sTrans.position.y = 0.5f;
-	vec3SetS(&tempRndr.rTrans.scale, 0.15f);
-	rndrRotateX(&tempRndr, 45.f);
-	rndrRotateY(&tempRndr, 45.f);
-	tempRndr.rTrans.alpha = 0.5f;
+	tempRndr.position.value.x = 0.5f;
+	tempRndr.position.value.y = 0.5f;
+	vec3SetS(&tempRndr.scale.value, 0.15f);
+	tempRndr.rotation.x = 45.f;
+	tempRndr.rotation.y = 45.f;
+	tempRndr.alpha.value = 0.5f;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 
 	/* Sprite Renderables */
@@ -81,31 +81,31 @@ int main(int argc, char *argv[]){
 	tempRndr.sprite = 1;
 	tempRndr.mdl = (model *)cvGet(&allModels, 0);
 	tempRndr.twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
-	tempRndr.sTrans.relPivot.x = 0.5f;
-	tempRndr.sTrans.relPivot.y = 0.5f;
-	tempRndr.rTrans.scale.x = 0.026f;
-	tempRndr.rTrans.scale.y = 0.026f;
+	tempRndr.pivot.value.x = 0.5f;
+	tempRndr.pivot.value.y = 0.5f;
+	tempRndr.scale.value.x = 0.026f;
+	tempRndr.scale.value.y = 0.026f;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
-	tempRndr.sTrans.position.y = 1.f;
-	tempRndr.sTrans.relPivot.x = 0.f;
-	tempRndr.sTrans.relPivot.y = 1.f;
-	tempRndr.rTrans.scale.x = 0.0026f;
-	tempRndr.rTrans.scale.y = 0.0026f;
+	tempRndr.position.value.y = 1.f;
+	tempRndr.pivot.value.x = 0.f;
+	tempRndr.pivot.value.y = 1.f;
+	tempRndr.scale.value.x = 0.0026f;
+	tempRndr.scale.value.y = 0.0026f;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
-	tempRndr.sTrans.position.x = 4.f;
-	tempRndr.sTrans.position.y = 0.f;
-	tempRndr.sTrans.position.z = -3.f;
-	tempRndr.sTrans.relPivot.x = 0.5f;
-	tempRndr.sTrans.relPivot.y = 0.5f;
-	tempRndr.rTrans.scale.x = 0.026f;
-	tempRndr.rTrans.scale.y = 0.026f;
+	tempRndr.position.value.x = 4.f;
+	tempRndr.position.value.y = 0.f;
+	tempRndr.position.value.z = -3.f;
+	tempRndr.pivot.value.x = 0.5f;
+	tempRndr.pivot.value.y = 0.5f;
+	tempRndr.scale.value.x = 0.026f;
+	tempRndr.scale.value.y = 0.026f;
 	tempRndr.flags |= RNDR_BILLBOARD_TARGET | RNDR_BILLBOARD_Y;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 	tempRndr.twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 3);
-	tempRndr.sTrans.position.x = -3.f;
-	tempRndr.sTrans.position.y = -2.f;
-	tempRndr.rTrans.scale.x = 0.0085f;
-	tempRndr.rTrans.scale.y = 0.0065f;
+	tempRndr.position.value.x = -3.f;
+	tempRndr.position.value.y = -2.f;
+	tempRndr.scale.value.x = 0.0085f;
+	tempRndr.scale.value.y = 0.0065f;
 	tempRndr.flags = 0;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 
@@ -126,10 +126,10 @@ int main(int argc, char *argv[]){
 
 	/* Cameras */
 	camera tempCam; camInit(&tempCam);
-	vec3Set(&tempCam.position, 0.f, 2.f, 7.f);
+	vec3Set(&tempCam.position.value, 0.f, 2.f, 7.f);
 	tempCam.targetScene = (scene *)cvGet(&allScenes, 0);
 	cvPush(&allCameras, (void *)&tempCam, sizeof(tempCam));
-	vec3Set(&tempCam.position, 0.f, 0.f, 0.f);
+	vec3Set(&tempCam.position.value, 0.f, 0.f, 0.f);
 	tempCam.flags |= CAM_PROJECTION_ORTHO;
 	tempCam.targetScene = (scene *)cvGet(&allScenes, 1);
 	cvPush(&allCameras, (void *)&tempCam, sizeof(tempCam));
@@ -140,12 +140,14 @@ int main(int argc, char *argv[]){
 
 
 	unsigned char prgRunning = 1;
-	SDL_Event prgEventHandler;
-	fps fpsHandler; fpsStart(&fpsHandler, 61, 121);
 
 	float globalTimeMod = 1.f;
-	uint32_t startTick;
-	uint32_t ticksElapsed = 0;
+	float framerate = 1000.f / 128.f;  // Desired renders per millisecond
+	float tickrate = 1000.f / 64.f;  // Desired updates per millisecond
+	uint32_t nextUpdate = 0.f;
+	uint32_t nextRender = 0.f;
+
+	SDL_Event prgEventHandler;
 
 	unsigned char UP    = 0;
 	unsigned char DOWN  = 0;
@@ -158,25 +160,14 @@ int main(int argc, char *argv[]){
 
 	size_t i;
 
-	while(prgRunning){
+    while(prgRunning){
 
-		/* Set tick that the frame is starting on */
-		startTick = SDL_GetTicks();
-
-		/* Update FPS */
-		fpsUpdate(&fpsHandler);
+		const unsigned char windowChanged = gfxUpdateWindow(&gfxPrg);
 
 
-		/* If the window size has changed, resize the OpenGL viewport */
-		if(gfxUpdateWindow(&gfxPrg)){
-			// Cameras will also have to be adjusted
-			for(i = 0; i < allCameras.size; ++i){
-				((camera *)cvGet(&allCameras, i))->flags |= CAM_UPDATE_PROJECTION;
-			}
-		}
-
-
-		/* Detect input */
+		/* Take input */
+		/** Use input queuing system. **/
+		// Detect input
 		SDL_PollEvent(&prgEventHandler);
 
 		// Exit
@@ -223,105 +214,94 @@ int main(int argc, char *argv[]){
 			}
 		}
 
-
-		/* Handle inputs */
-		if(UP){
-			rndrRotateX((renderable *)cvGet(&allRenderables, 0), -2.f * fpsHandler.fpsMod);
-			//sprRotateX((sprite *)cvGet(&allSprites, 0), -2.f * fpsHandler.fpsMod);
-			camMoveZ((camera *)cvGet(&allCameras, 0), -0.1f * fpsHandler.fpsMod);
-			((renderable *)cvGet(&allRenderables, 4))->rTrans.targetPosition = ((camera *)cvGet(&allCameras, 0))->position;
-		}
-		if(DOWN){
-			rndrRotateX((renderable *)cvGet(&allRenderables, 0), 2.f * fpsHandler.fpsMod);
-			//sprRotateX((sprite *)cvGet(&allSprites, 0), 2.f * fpsHandler.fpsMod);
-			camMoveZ((camera *)cvGet(&allCameras, 0), 0.1f * fpsHandler.fpsMod);
-			((renderable *)cvGet(&allRenderables, 4))->rTrans.targetPosition = ((camera *)cvGet(&allCameras, 0))->position;
-		}
-		if(LEFT){
-			rndrRotateY((renderable *)cvGet(&allRenderables, 0), -2.f * fpsHandler.fpsMod);
-			rndrRotateZ((renderable *)cvGet(&allRenderables, 3), -2.f * fpsHandler.fpsMod);
-			camMoveX((camera *)cvGet(&allCameras, 0), -0.1f * fpsHandler.fpsMod);
-			((renderable *)cvGet(&allRenderables, 4))->rTrans.targetPosition = ((camera *)cvGet(&allCameras, 0))->position;
-		}
-		if(RIGHT){
-			rndrRotateY((renderable *)cvGet(&allRenderables, 0), 2.f * fpsHandler.fpsMod);
-			rndrRotateZ((renderable *)cvGet(&allRenderables, 3), 2.f * fpsHandler.fpsMod);
-			camMoveX((camera *)cvGet(&allCameras, 0), 0.1f * fpsHandler.fpsMod);
-			((renderable *)cvGet(&allRenderables, 4))->rTrans.targetPosition = ((camera *)cvGet(&allCameras, 0))->position;
-		}
-
 		// Get mouse position relative to its position in the last call
 		SDL_GetRelativeMouseState(&mouseRelX, &mouseRelY);
 
 
-		/* Animate */
-		// Animate the renderables
-		for(i = 0; i < allRenderables.size; ++i){
-			rndrAnimateTexture((renderable *)cvGet(&allRenderables, i), (float)ticksElapsed * globalTimeMod);
-			rndrAnimateSkeleton((renderable *)cvGet(&allRenderables, i), (float)ticksElapsed * globalTimeMod);
+		const uint32_t startTime = SDL_GetTicks();
+		while(startTime >= nextUpdate){
+
+			/* Animate */
+			/** Could be merged with the update function but animating should be done in here. **/
+			for(i = 0; i < allRenderables.size; ++i){
+				rndrResetInterpolation((renderable *)cvGet(&allRenderables, i));
+				rndrAnimateTexture((renderable *)cvGet(&allRenderables, i), tickrate * globalTimeMod);
+				rndrAnimateSkeleton((renderable *)cvGet(&allRenderables, i), tickrate * globalTimeMod);
+			}
+
+
+			/* Reset interpolation */
+			for(i = 0; i < allCameras.size; ++i){
+				camResetInterpolation((camera *)cvGet(&allCameras, i));
+			}
+
+
+			/* Handle inputs */
+			if(UP){
+				globalTimeMod = 1.f;
+				((renderable *)cvGet(&allRenderables, 0))->rotation.x += -0.1f * tickrate;
+				((camera *)cvGet(&allCameras, 0))->position.value.z += -0.005f * tickrate;
+				((renderable *)cvGet(&allRenderables, 4))->targetPosition.value = ((camera *)cvGet(&allCameras, 0))->position.value;
+			}
+			if(DOWN){
+				globalTimeMod = -1.f;
+				((renderable *)cvGet(&allRenderables, 0))->rotation.x += 0.1f * tickrate;
+				((camera *)cvGet(&allCameras, 0))->position.value.z += 0.005f * tickrate;
+				((renderable *)cvGet(&allRenderables, 4))->targetPosition.value = ((camera *)cvGet(&allCameras, 0))->position.value;
+			}
+			if(LEFT){
+				((renderable *)cvGet(&allRenderables, 0))->rotation.y += -0.1f * tickrate;
+				((renderable *)cvGet(&allRenderables, 3))->rotation.z += -0.1f * tickrate;
+				((camera *)cvGet(&allCameras, 0))->position.value.x += -0.005f * tickrate;
+				((renderable *)cvGet(&allRenderables, 4))->targetPosition.value = ((camera *)cvGet(&allCameras, 0))->position.value;
+			}
+			if(RIGHT){
+				((renderable *)cvGet(&allRenderables, 0))->rotation.y += 0.1f * tickrate;
+				((renderable *)cvGet(&allRenderables, 3))->rotation.z += 0.1f * tickrate;
+				((camera *)cvGet(&allCameras, 0))->position.value.x += 0.005f * tickrate;
+				((renderable *)cvGet(&allRenderables, 4))->targetPosition.value = ((camera *)cvGet(&allCameras, 0))->position.value;
+			}
+
+
+			/* Next frame */
+			nextUpdate += tickrate;
+
 		}
 
 
 		/* Render the scene */
-		// Update cameras
-		for(i = 0; i < allCameras.size; ++i){
-			camUpdateViewMatrix((camera *)cvGet(&allCameras, i));
-			camUpdateProjectionMatrix((camera *)cvGet(&allCameras, i), gfxPrg.aspectRatioX, gfxPrg.aspectRatioY);
-		}
+		const uint32_t endTime = SDL_GetTicks();
+		if(endTime >= nextRender){
 
-		/** Remove later **/
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			/* Progress between current and next frame. */
+			float interpT = (SDL_GetTicks() - (nextUpdate - tickrate)) / tickrate;
+			if(interpT < 0.f){
+				interpT = 0.f;
+			}else if(interpT > 1.f){
+				interpT = 1.f;
+			}
 
-		// Render the scene
-		renderScene(&allCameras, &gfxPrg);
+			/* Update cameras */
+			for(i = 0; i < allCameras.size; ++i){
+				camUpdateViewMatrix((camera *)cvGet(&allCameras, i), interpT);
+				if(windowChanged){
+					// If the window size changed, update the camera projection matrices as well
+					((camera *)cvGet(&allCameras, i))->flags |= CAM_UPDATE_PROJECTION;
+				}
+				camUpdateProjectionMatrix((camera *)cvGet(&allCameras, i), gfxPrg.aspectRatioX, gfxPrg.aspectRatioY, interpT);
+			}
 
-		// Update the window
-		SDL_GL_SwapWindow(gfxPrg.window);
+			/* Render */
+			/** Remove later **/
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			// Render the scene
+			renderScene(&allCameras, interpT, &gfxPrg);
+			// Update the window
+			SDL_GL_SwapWindow(gfxPrg.window);
 
+			/* Next frame */
+			nextRender = endTime + framerate;
 
-		/* Pause the program to maintain a constant FPS */
-		fpsDelay(&fpsHandler);
-
-		/* Update time elapsed in the last frame */
-		ticksElapsed = SDL_GetTicks() - startTick;
-
-	}
-
-
-
-
-
-	float framerate = 1000.f / 128.f;  // Minimum time between renders
-	float tickrate = 1000.f / 64.f;    // Milliseconds per frame to simulate
-	uint32_t currentTime = SDL_GetTicks();
-
-    while(prgRunning){
-
-		const uint32_t startTime = SDL_GetTicks();
-		const uint32_t elapsedTime = startTime - currentTime;
-		currentTime = startTime;
-
-		float timeSlice = elapsedTime;
-
-		while(timeSlice >= tickrate){
-
-			// Take input and update
-			/** **/
-
-			timeSlice -= tickrate;
-
-		}
-
-		// Position between last state and next state
-		const float interp = 1.f - elapsedTime / tickrate;
-
-		// Render
-		/** **/
-
-		// Sleep if necessary to maintain a capped framerate
-		const float sleepTime = framerate - SDL_GetTicks() - startTime;
-		if(sleepTime > 0.f){
-			SDL_Delay((uint32_t)sleepTime);
 		}
 
     }

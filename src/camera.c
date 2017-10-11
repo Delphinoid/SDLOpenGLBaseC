@@ -5,17 +5,26 @@
 #define RADIAN_RATIO 0.017453292  /* = PI / 180, used for converting degrees to radians */
 
 void camInit(camera *cam){
-	vec3Set(&cam->position, 0.f, 0.f, 0.f);
+	iVec3Init(&cam->position, 0.f, 0.f, 0.f);
+	iQuatInit(&cam->orientation);
 	vec3Set(&cam->rotation, 0.f, 0.f, 0.f);
-	vec3Set(&cam->target, 0.f, 0.f, -1.f);
-	vec3Set(&cam->up, 0.f, 1.f, 0.f);
-	cam->fovy = 90.f;
+	vec3Set(&cam->previousRotation, 0.f, 0.f, 0.f);
+	iVec3Init(&cam->targetPosition, 0.f, 0.f, -1.f);
+	iVec3Init(&cam->up, 0.f, 1.f, 0.f);
+	iFloatInit(&cam->fovy, 90.f);
 	mat4Identity(&cam->viewMatrix);
 	mat4Identity(&cam->projectionMatrix);
 	cam->targetScene = NULL;
 	cam->flags = CAM_UPDATE_VIEW | CAM_UPDATE_PROJECTION;
 }
 
+void camResetInterpolation(camera *cam){
+	iVec3ResetInterp(&cam->position);
+	iQuatResetInterp(&cam->orientation);
+	iVec3ResetInterp(&cam->targetPosition);
+	iVec3ResetInterp(&cam->up);
+	iFloatResetInterp(&cam->fovy);
+}
 void camCalculateUp(camera *cam){  /** Probably not entirely necessary **/
 
 	/*
@@ -57,40 +66,58 @@ void camCalculateUp(camera *cam){  /** Probably not entirely necessary **/
 
 	}*/
 
-	quat camRotation;
-	quatSetEuler(&camRotation, cam->rotation.x*RADIAN_RATIO, cam->rotation.y*RADIAN_RATIO, cam->rotation.z*RADIAN_RATIO);
+	/*quat camRotation;
+	quatSetEuler(&camRotation, cam->rotation.x*RADIAN_RATIO,
+	                           cam->rotation.y*RADIAN_RATIO,
+	                           cam->rotation.z*RADIAN_RATIO);
 	vec3Set(&cam->up, 0.f, 1.f, 0.f);
-	quatRotateVec3(&camRotation, &cam->up);
+	quatRotateVec3(&camRotation, &cam->up);*/
 
 }
-void camUpdateViewMatrix(camera *cam){
+void camUpdateViewMatrix(camera *cam, const float interpT){
 
-	if((cam->flags & CAM_UPDATE_VIEW) > 0){
+	// Check if the camera was rotated.
+	if(cam->rotation.x != cam->previousRotation.x ||
+	   cam->rotation.y != cam->previousRotation.y ||
+	   cam->rotation.z != cam->previousRotation.z){
+		// Update orientation.
+		quatSetEuler(&cam->orientation.value, cam->rotation.x*RADIAN_RATIO,
+		                                      cam->rotation.y*RADIAN_RATIO,
+		                                      cam->rotation.z*RADIAN_RATIO);
+		cam->previousRotation = cam->rotation;
+	}
+
+	/* Only generate a new view matrix if the camera viewport has changed in any way. */
+	if(iVec3Update(&cam->position,       interpT) |
+	   iQuatUpdate(&cam->orientation,    interpT) |
+	   iVec3Update(&cam->targetPosition, interpT) |
+	   iVec3Update(&cam->up,             interpT) ||
+	   (cam->flags & CAM_UPDATE_VIEW) > 0){
 
 		/* Calculate the up vector */
-		camCalculateUp(cam);
+		/**camCalculateUp(cam);**/
 
 		/* Set the camera to look at something */
-		mat4LookAt(&cam->viewMatrix, &cam->position, &cam->target, &cam->up);
+		mat4LookAt(&cam->viewMatrix, &cam->position.render,
+		                             &cam->targetPosition.render,
+		                             &cam->up.render);
 
 		/* Rotate the camera */
-		quat camRotation;
-		quatSetEuler(&camRotation, cam->rotation.x*RADIAN_RATIO, cam->rotation.y*RADIAN_RATIO, cam->rotation.z*RADIAN_RATIO);
-		mat4Rotate(&cam->viewMatrix, &camRotation);
+		mat4Rotate(&cam->viewMatrix, &cam->orientation.render);
 
 		cam->flags &= ~CAM_UPDATE_VIEW;
 
 	}
 
 }
-void camUpdateProjectionMatrix(camera *cam, const unsigned char aspectRatioX, const unsigned char aspectRatioY){
+void camUpdateProjectionMatrix(camera *cam, const unsigned char aspectRatioX, const unsigned char aspectRatioY, const float interpT){
 
-	if((cam->flags & CAM_UPDATE_PROJECTION) > 0){
+	if(((cam->flags & CAM_PROJECTION_ORTHO) == 0 && iFloatUpdate(&cam->fovy, interpT)) || (cam->flags & CAM_UPDATE_PROJECTION) > 0){
 
 		if((cam->flags & CAM_PROJECTION_ORTHO) == 0){
 
 			// CAM_PROJECTION_TYPE is not set, the camera is using a frustum projection matrix
-			mat4Perspective(&cam->projectionMatrix, cam->fovy*RADIAN_RATIO, (float)aspectRatioX / (float)aspectRatioY, 0.1f/cam->fovy, 1000.f);
+			mat4Perspective(&cam->projectionMatrix, cam->fovy.render*RADIAN_RATIO, (float)aspectRatioX / (float)aspectRatioY, 0.1f/cam->fovy.render, 1000.f);
 
 		}else{
 
@@ -108,7 +135,7 @@ void camUpdateProjectionMatrix(camera *cam, const unsigned char aspectRatioX, co
 
 }
 
-void camMoveX(camera *cam, const float x){
+/**void camMoveX(camera *cam, const float x){
 	cam->position.x += x;
 	cam->flags |= CAM_UPDATE_VIEW;
 }
@@ -232,4 +259,4 @@ void camSetUp(camera *cam, const float x, const float y, const float z){
 void camSetFOV(camera *cam, const float fov){
 	cam->fovy = fov;
 	cam->flags |= CAM_UPDATE_PROJECTION;
-}
+}**/
