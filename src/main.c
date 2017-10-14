@@ -63,50 +63,66 @@ int main(int argc, char *argv[]){
 
 	/* Renderables */
 	renderable tempRndr;
-	rndrInit(&tempRndr);
+	rndrInit(&tempRndr, 1);
 	tempRndr.mdl = (model *)cvGet(&allModels, 1);
 	tempRndr.twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 1);
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
+	//
+	rndrInit(&tempRndr, 1);
+	tempRndr.mdl = (model *)cvGet(&allModels, 1);
 	tempRndr.twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 2);
-	tempRndr.position.value.x = 0.5f;
-	tempRndr.position.value.y = 0.5f;
-	vec3SetS(&tempRndr.scale.value, 0.15f);
+	tempRndr.position.value->x = 0.5f;
+	tempRndr.position.value->y = 0.5f;
+	vec3SetS(tempRndr.scale.value, 0.15f);
 	tempRndr.rotation.x = 45.f;
 	tempRndr.rotation.y = 45.f;
-	tempRndr.alpha.value = 0.5f;
+	*tempRndr.alpha.value = 0.5f;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 
 	/* Sprite Renderables */
-	rndrInit(&tempRndr);
+	rndrInit(&tempRndr, 1);
 	tempRndr.sprite = 1;
 	tempRndr.mdl = (model *)cvGet(&allModels, 0);
 	tempRndr.twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
-	tempRndr.pivot.value.x = 0.5f;
-	tempRndr.pivot.value.y = 0.5f;
-	tempRndr.scale.value.x = 0.026f;
-	tempRndr.scale.value.y = 0.026f;
+	tempRndr.pivot.value->x = 0.5f;
+	tempRndr.pivot.value->y = 0.5f;
+	tempRndr.scale.value->x = 0.026f;
+	tempRndr.scale.value->y = 0.026f;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
-	tempRndr.position.value.y = 1.f;
-	tempRndr.pivot.value.x = 0.f;
-	tempRndr.pivot.value.y = 1.f;
-	tempRndr.scale.value.x = 0.0026f;
-	tempRndr.scale.value.y = 0.0026f;
+	//
+	rndrInit(&tempRndr, 1);
+	tempRndr.sprite = 1;
+	tempRndr.mdl = (model *)cvGet(&allModels, 0);
+	tempRndr.twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
+	tempRndr.position.value->y = 1.f;
+	tempRndr.pivot.value->y = 1.f;
+	tempRndr.scale.value->x = 0.0026f;
+	tempRndr.scale.value->y = 0.0026f;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
-	tempRndr.position.value.x = 4.f;
-	tempRndr.position.value.y = 0.f;
-	tempRndr.position.value.z = -3.f;
-	tempRndr.pivot.value.x = 0.5f;
-	tempRndr.pivot.value.y = 0.5f;
-	tempRndr.scale.value.x = 0.026f;
-	tempRndr.scale.value.y = 0.026f;
+	//
+	rndrInit(&tempRndr, 1);
+	tempRndr.sprite = 1;
+	tempRndr.mdl = (model *)cvGet(&allModels, 0);
+	tempRndr.twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
+	tempRndr.position.value->x = 4.f;
+	tempRndr.position.value->z = -3.f;
+	tempRndr.pivot.value->x = 0.5f;
+	tempRndr.pivot.value->y = 0.5f;
+	tempRndr.scale.value->x = 0.026f;
+	tempRndr.scale.value->y = 0.026f;
 	tempRndr.flags |= RNDR_BILLBOARD_TARGET | RNDR_BILLBOARD_Y;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
+	//
+	rndrInit(&tempRndr, 1);
+	tempRndr.sprite = 1;
+	tempRndr.mdl = (model *)cvGet(&allModels, 0);
 	tempRndr.twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 3);
-	tempRndr.position.value.x = -3.f;
-	tempRndr.position.value.y = -2.f;
-	tempRndr.scale.value.x = 0.0085f;
-	tempRndr.scale.value.y = 0.0065f;
-	tempRndr.flags = 0;
+	tempRndr.position.value->x = -3.f;
+	tempRndr.position.value->y = -2.f;
+	tempRndr.pivot.value->x = 0.5f;
+	tempRndr.pivot.value->y = 0.5f;
+	tempRndr.scale.value->x = 0.0085f;
+	tempRndr.scale.value->y = 0.0065f;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 
 	/* Scenes */
@@ -125,11 +141,13 @@ int main(int argc, char *argv[]){
 	cvPush(&allScenes, (void *)&tempScene, sizeof(tempScene));
 
 	/* Cameras */
-	camera tempCam; camInit(&tempCam);
-	vec3Set(&tempCam.position.value, 0.f, 2.f, 7.f);
+	camera tempCam;
+	camInit(&tempCam, 1);
+	vec3Set(tempCam.position.value, 0.f, 2.f, 7.f);
 	tempCam.targetScene = (scene *)cvGet(&allScenes, 0);
 	cvPush(&allCameras, (void *)&tempCam, sizeof(tempCam));
-	vec3Set(&tempCam.position.value, 0.f, 0.f, 0.f);
+	//
+	camInit(&tempCam, 1);
 	tempCam.flags |= CAM_PROJECTION_ORTHO;
 	tempCam.targetScene = (scene *)cvGet(&allScenes, 1);
 	cvPush(&allCameras, (void *)&tempCam, sizeof(tempCam));
@@ -224,7 +242,7 @@ int main(int argc, char *argv[]){
 			/* Animate */
 			/** Could be merged with the update function but animating should be done in here. **/
 			for(i = 0; i < allRenderables.size; ++i){
-				rndrResetInterpolation((renderable *)cvGet(&allRenderables, i));
+				rndrResetInterpolation((renderable *)cvGet(&allRenderables, i), 1);
 				rndrAnimateTexture((renderable *)cvGet(&allRenderables, i), tickrate * globalTimeMod);
 				rndrAnimateSkeleton((renderable *)cvGet(&allRenderables, i), tickrate * globalTimeMod);
 			}
@@ -232,7 +250,7 @@ int main(int argc, char *argv[]){
 
 			/* Reset interpolation */
 			for(i = 0; i < allCameras.size; ++i){
-				camResetInterpolation((camera *)cvGet(&allCameras, i));
+				camResetInterpolation((camera *)cvGet(&allCameras, i), 1);
 			}
 
 
@@ -240,26 +258,26 @@ int main(int argc, char *argv[]){
 			if(UP){
 				globalTimeMod = 1.f;
 				((renderable *)cvGet(&allRenderables, 0))->rotation.x += -0.1f * tickrate;
-				((camera *)cvGet(&allCameras, 0))->position.value.z += -0.005f * tickrate;
-				((renderable *)cvGet(&allRenderables, 4))->targetPosition.value = ((camera *)cvGet(&allCameras, 0))->position.value;
+				((camera *)cvGet(&allCameras, 0))->position.value->z += -0.005f * tickrate;
+				*((renderable *)cvGet(&allRenderables, 4))->targetPosition.value = *((camera *)cvGet(&allCameras, 0))->position.value;
 			}
 			if(DOWN){
 				globalTimeMod = -1.f;
 				((renderable *)cvGet(&allRenderables, 0))->rotation.x += 0.1f * tickrate;
-				((camera *)cvGet(&allCameras, 0))->position.value.z += 0.005f * tickrate;
-				((renderable *)cvGet(&allRenderables, 4))->targetPosition.value = ((camera *)cvGet(&allCameras, 0))->position.value;
+				((camera *)cvGet(&allCameras, 0))->position.value->z += 0.005f * tickrate;
+				*((renderable *)cvGet(&allRenderables, 4))->targetPosition.value = *((camera *)cvGet(&allCameras, 0))->position.value;
 			}
 			if(LEFT){
 				((renderable *)cvGet(&allRenderables, 0))->rotation.y += -0.1f * tickrate;
 				((renderable *)cvGet(&allRenderables, 3))->rotation.z += -0.1f * tickrate;
-				((camera *)cvGet(&allCameras, 0))->position.value.x += -0.005f * tickrate;
-				((renderable *)cvGet(&allRenderables, 4))->targetPosition.value = ((camera *)cvGet(&allCameras, 0))->position.value;
+				((camera *)cvGet(&allCameras, 0))->position.value->x += -0.005f * tickrate;
+				*((renderable *)cvGet(&allRenderables, 4))->targetPosition.value = *((camera *)cvGet(&allCameras, 0))->position.value;
 			}
 			if(RIGHT){
 				((renderable *)cvGet(&allRenderables, 0))->rotation.y += 0.1f * tickrate;
 				((renderable *)cvGet(&allRenderables, 3))->rotation.z += 0.1f * tickrate;
-				((camera *)cvGet(&allCameras, 0))->position.value.x += 0.005f * tickrate;
-				((renderable *)cvGet(&allRenderables, 4))->targetPosition.value = ((camera *)cvGet(&allCameras, 0))->position.value;
+				((camera *)cvGet(&allCameras, 0))->position.value->x += 0.005f * tickrate;
+				*((renderable *)cvGet(&allRenderables, 4))->targetPosition.value = *((camera *)cvGet(&allCameras, 0))->position.value;
 			}
 
 

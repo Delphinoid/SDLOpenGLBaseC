@@ -63,8 +63,8 @@ typedef struct {
 	animationInstance animInst;
 	//float animInterpFragment;
 	/** Remove animInterpStart and animInterpEnd? **/
-	sklBone *animInterpStart;
-	sklBone *animInterpEnd;
+	sklBone *animInterpStart;  // An array bone state arrays to interpolate from
+	sklBone *animInterpEnd;    // An array bone state arrays to interpolate to
 	sklBone *animState;  // Delta transformations for each bone
 	sklBone **animBoneLookup;  // Which bone in animState each bone in skli->skl corresponds to.
 	                           // If the root (first) bone in skli->skl is named "blah" and the

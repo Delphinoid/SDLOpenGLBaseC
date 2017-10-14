@@ -26,9 +26,8 @@ typedef struct {
 	unsigned char flags;
 } camera;
 
-void camInit(camera *cam);
-
-void camResetInterpolation(camera *cam);
+void camInit(camera *cam, const size_t stateNum);
+void camResetInterpolation(camera *cam, const size_t stateNum);
 void camCalculateUp(camera *cam);
 void camUpdateViewMatrix(camera *cam, const float interpT);
 void camUpdateProjectionMatrix(camera *cam, const unsigned char aspectRatioX, const unsigned char aspectRatioY, const float interpT);

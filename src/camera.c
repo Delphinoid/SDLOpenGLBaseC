@@ -4,26 +4,26 @@
 
 #define RADIAN_RATIO 0.017453292  /* = PI / 180, used for converting degrees to radians */
 
-void camInit(camera *cam){
-	iVec3Init(&cam->position, 0.f, 0.f, 0.f);
-	iQuatInit(&cam->orientation);
+void camInit(camera *cam, const size_t stateNum){
+	iVec3Init(&cam->position, 0.f, 0.f, 0.f, stateNum);
+	iQuatInit(&cam->orientation, stateNum);
 	vec3Set(&cam->rotation, 0.f, 0.f, 0.f);
 	vec3Set(&cam->previousRotation, 0.f, 0.f, 0.f);
-	iVec3Init(&cam->targetPosition, 0.f, 0.f, -1.f);
-	iVec3Init(&cam->up, 0.f, 1.f, 0.f);
-	iFloatInit(&cam->fovy, 90.f);
+	iVec3Init(&cam->targetPosition, 0.f, 0.f, -1.f, stateNum);
+	iVec3Init(&cam->up, 0.f, 1.f, 0.f, stateNum);
+	iFloatInit(&cam->fovy, 90.f, stateNum);
 	mat4Identity(&cam->viewMatrix);
 	mat4Identity(&cam->projectionMatrix);
 	cam->targetScene = NULL;
 	cam->flags = CAM_UPDATE_VIEW | CAM_UPDATE_PROJECTION;
 }
 
-void camResetInterpolation(camera *cam){
-	iVec3ResetInterp(&cam->position);
-	iQuatResetInterp(&cam->orientation);
-	iVec3ResetInterp(&cam->targetPosition);
-	iVec3ResetInterp(&cam->up);
-	iFloatResetInterp(&cam->fovy);
+void camResetInterpolation(camera *cam, const size_t stateNum){
+	iVec3ResetInterp(&cam->position, stateNum);
+	iQuatResetInterp(&cam->orientation, stateNum);
+	iVec3ResetInterp(&cam->targetPosition, stateNum);
+	iVec3ResetInterp(&cam->up, stateNum);
+	iFloatResetInterp(&cam->fovy, stateNum);
 }
 void camCalculateUp(camera *cam){  /** Probably not entirely necessary **/
 
@@ -81,9 +81,9 @@ void camUpdateViewMatrix(camera *cam, const float interpT){
 	   cam->rotation.y != cam->previousRotation.y ||
 	   cam->rotation.z != cam->previousRotation.z){
 		// Update orientation.
-		quatSetEuler(&cam->orientation.value, cam->rotation.x*RADIAN_RATIO,
-		                                      cam->rotation.y*RADIAN_RATIO,
-		                                      cam->rotation.z*RADIAN_RATIO);
+		quatSetEuler(cam->orientation.value, cam->rotation.x*RADIAN_RATIO,
+		                                     cam->rotation.y*RADIAN_RATIO,
+		                                     cam->rotation.z*RADIAN_RATIO);
 		cam->previousRotation = cam->rotation;
 	}
 

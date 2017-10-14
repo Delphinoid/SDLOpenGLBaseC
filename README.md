@@ -2,14 +2,14 @@ An extremely condensed version of the OpenGL / SDL application framework I'm cur
 
 List of features to be implemented:
 * Add an entity struct that contains groups of renderables.
-* Cameras should contain a pointer to a scene, and the render code should aim at rendering camera views.
+* Render code should aim at rendering camera views.
 * Sprites should use index buffer objects like models.
-* Create file formats and loading code for the various skeleton structures, renderables, entities and scenes.
+* Create file formats and clean, shared loading code for the various skeleton structures, renderables, entities and scenes.
 * Create an asset handler.
-* Create a proper framerate handler / state interpolator.
 * Models should be able to use multiple textures.
 
 List of queued tweaks:
+* Revisit animation system so a specified number of previous states can be recorded.
 * Replace strtok() with a better function.
 * Tidy up and unify file parsing functionality. Each file parsing function pretty much needs a major rework. Maybe put them in separate files as well (e.g. textureWrapperIO.c).
 * Tidy up and streamline maths functions.

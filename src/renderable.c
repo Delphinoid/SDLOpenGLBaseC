@@ -7,19 +7,19 @@
 
 #define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians
 
-void rndrInit(renderable *rndr){
+void rndrInit(renderable *rndr, const size_t stateNum){
 	rndr->name = NULL;
 	rndr->mdl = NULL;
 	skliInit(&rndr->skli, NULL);
 	twiInit(&rndr->twi, NULL);
-	iVec3Init(&rndr->position, 0.f, 0.f, 0.f);
-	iQuatInit(&rndr->orientation);
+	iVec3Init(&rndr->position, 0.f, 0.f, 0.f, stateNum);
+	iQuatInit(&rndr->orientation, stateNum);
 	vec3Set(&rndr->rotation, 0.f, 0.f, 0.f);
-	iVec3Init(&rndr->pivot, 0.f, 0.f, 0.f);
-	iVec3Init(&rndr->targetPosition, 0.f, 0.f, 0.f);
-	iQuatInit(&rndr->targetOrientation);
-	iVec3Init(&rndr->scale, 1.f, 1.f, 1.f);
-	iFloatInit(&rndr->alpha, 1.f);
+	iVec3Init(&rndr->pivot, 0.f, 0.f, 0.f, stateNum);
+	iVec3Init(&rndr->targetPosition, 0.f, 0.f, 0.f, stateNum);
+	iQuatInit(&rndr->targetOrientation, stateNum);
+	iVec3Init(&rndr->scale, 1.f, 1.f, 1.f, stateNum);
+	iFloatInit(&rndr->alpha, 1.f, stateNum);
 	rndr->sprite = 0;
 	rndr->flags = 0;
 }
@@ -27,7 +27,6 @@ void rndrInit(renderable *rndr){
 /** Finish this **/
 unsigned char rndrLoad(renderable *rndr, const char *prgPath, const char *filePath, cVector *allModels, cVector *allTexWrappers){
 
-	rndrInit(rndr);
 	return 1;
 
 }
@@ -49,14 +48,14 @@ void rndrRotateZ(renderable *rndr, const float changeZ){
 	iVec3GetValue(&rndr->rotation)->z += changeZ;
 }**/
 
-void rndrResetInterpolation(renderable *rndr){
-	iVec3ResetInterp(&rndr->position);
-	iQuatResetInterp(&rndr->orientation);
-	iVec3ResetInterp(&rndr->pivot);
-	iVec3ResetInterp(&rndr->targetPosition);
-	iQuatResetInterp(&rndr->targetOrientation);
-	iVec3ResetInterp(&rndr->scale);
-	iFloatResetInterp(&rndr->alpha);
+void rndrResetInterpolation(renderable *rndr, const size_t stateNum){
+	iVec3ResetInterp(&rndr->position, stateNum);
+	iQuatResetInterp(&rndr->orientation, stateNum);
+	iVec3ResetInterp(&rndr->pivot, stateNum);
+	iVec3ResetInterp(&rndr->targetPosition, stateNum);
+	iQuatResetInterp(&rndr->targetOrientation, stateNum);
+	iVec3ResetInterp(&rndr->scale, stateNum);
+	iFloatResetInterp(&rndr->alpha, stateNum);
 }
 unsigned char rndrRenderMethod(renderable *rndr, const float interpT){
 	// Update alpha.
@@ -81,7 +80,7 @@ unsigned char rndrRenderUpdate(renderable *rndr, const float interpT){
 		quatSetEuler(&changeRotation, rndr->rotation.x*RADIAN_RATIO,
 		                              rndr->rotation.y*RADIAN_RATIO,
 		                              rndr->rotation.z*RADIAN_RATIO);
-		quatMultQByQ2(&changeRotation, &rndr->orientation.value);
+		quatMultQByQ2(&changeRotation, rndr->orientation.value);
 		vec3SetS(&rndr->rotation, 0.f);
 	}
 

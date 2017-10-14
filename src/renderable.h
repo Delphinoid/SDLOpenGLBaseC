@@ -36,13 +36,13 @@ typedef struct {
 	unsigned char flags;
 } renderable;
 
-void rndrInit(renderable *rndr);
+void rndrInit(renderable *rndr, const size_t stateNum);
 unsigned char rndrLoad(renderable *rndr, const char *prgPath, const char *filePath, cVector *allModels, cVector *allTexWrappers);
 /**void rndrSetRotation(renderable *rndr, const float newX, const float newY, const float newZ);
 void rndrRotateX(renderable *rndr, const float changeX);
 void rndrRotateY(renderable *rndr, const float changeY);
 void rndrRotateZ(renderable *rndr, const float changeZ);**/
-void rndrResetInterpolation(renderable *rndr);
+void rndrResetInterpolation(renderable *rndr, const size_t stateNum);
 unsigned char rndrRenderMethod(renderable *rndr, const float interpT);  // Returns 0 if the model is fully opaque, 1 if the model contains translucency and 2 if the model is fully transparent
 unsigned char rndrRenderUpdate(renderable *rndr, const float interpT);
 void rndrAnimateTexture(renderable *rndr, const float elapsedTime);
