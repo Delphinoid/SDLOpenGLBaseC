@@ -17,19 +17,24 @@ typedef struct {
 
 typedef struct {
 	int currentLoops;
-	float blendFrameEnd;
-	size_t currentFrame;
-	size_t nextFrame;
-	float prevElapsedTime;
-	float totalElapsedTime;
+	float *blendFrameProgress;
+	float *blendFrameEnd;
+	size_t *previousAnim;
+	size_t *currentAnim;
+	size_t *currentFrame;
+	size_t *nextFrame;
+	float *prevElapsedTime;
+	float *totalElapsedTime;
 } animationInstance;
 
 /** The two functions below are REALLY bad, redo them later. **/
-void animInit(animationInstance *animInst);
-void animDelete(animationData *animData);
+unsigned char animInstInit(animationInstance *animInst, const size_t stateNum);
+void animInstDelete(animationInstance *animInst);
+void animDataInit(animationData *animData);
+void animDataDelete(animationData *animData);
+void animResetInterpolation(animationInstance *animInst, const size_t stateNum);
 void animAdvance(animationInstance *animInst, const animationData *animData, const float elapsedTime);
-float animGetInterpProgress(const animationInstance *animInst, const animationData *animData, const float interpT);
-size_t animGetInterpFrame(const animationInstance *animInst, const animationData *animData, const float animInterpProgress);
-float animGetInterpT(const animationInstance *animInst, const animationData *animData, const float animInterpProgress, const size_t animInterpFrame, size_t *animInterpFrameNext);
+void animGetRenderData(const animationInstance *animInst, const animationData *animData, const size_t state, const float interpT,
+                       size_t *startAnim, size_t *startFrame, float *startProgress, size_t *endAnim, size_t *endFrame, float *animInterpT);
 
 #endif

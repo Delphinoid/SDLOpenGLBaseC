@@ -1,10 +1,9 @@
 #include "camera.h"
 #include <stdio.h>
-#include "fps.h"
 
 #define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians
 
-void renderScene(cVector *allCameras, const float interpT, gfxProgram *gfxPrg);
+void renderScene(cVector *allCameras, const size_t state, const float interpT, gfxProgram *gfxPrg);
 void cleanup(cVector *allTextures,  cVector *allTexWrappers,   cVector *allModels,      cVector *allCameras,
              cVector *allSkeletons, cVector *allSklAnimations, cVector *allRenderables, cVector *allScenes,
              gfxProgram *gfxPrg);
@@ -25,6 +24,8 @@ int main(int argc, char *argv[]){
 	//
 
 	/** Most of the code below this comment will be removed eventually **/
+	const size_t stateNum = 1;
+
 	cVector allTextures; cvInit(&allTextures, 1);            // Holds textures
 	cVector allTexWrappers; cvInit(&allTexWrappers, 1);      // Holds textureWrappers
 	cVector allModels; cvInit(&allModels, 1);                // Holds models
@@ -63,12 +64,12 @@ int main(int argc, char *argv[]){
 
 	/* Renderables */
 	renderable tempRndr;
-	rndrInit(&tempRndr, 1);
+	rndrInit(&tempRndr, stateNum);
 	tempRndr.mdl = (model *)cvGet(&allModels, 1);
 	tempRndr.twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 1);
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 	//
-	rndrInit(&tempRndr, 1);
+	rndrInit(&tempRndr, stateNum);
 	tempRndr.mdl = (model *)cvGet(&allModels, 1);
 	tempRndr.twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 2);
 	tempRndr.position.value->x = 0.5f;
@@ -80,7 +81,7 @@ int main(int argc, char *argv[]){
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 
 	/* Sprite Renderables */
-	rndrInit(&tempRndr, 1);
+	rndrInit(&tempRndr, stateNum);
 	tempRndr.sprite = 1;
 	tempRndr.mdl = (model *)cvGet(&allModels, 0);
 	tempRndr.twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
@@ -90,7 +91,7 @@ int main(int argc, char *argv[]){
 	tempRndr.scale.value->y = 0.026f;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 	//
-	rndrInit(&tempRndr, 1);
+	rndrInit(&tempRndr, stateNum);
 	tempRndr.sprite = 1;
 	tempRndr.mdl = (model *)cvGet(&allModels, 0);
 	tempRndr.twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
@@ -100,7 +101,7 @@ int main(int argc, char *argv[]){
 	tempRndr.scale.value->y = 0.0026f;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 	//
-	rndrInit(&tempRndr, 1);
+	rndrInit(&tempRndr, stateNum);
 	tempRndr.sprite = 1;
 	tempRndr.mdl = (model *)cvGet(&allModels, 0);
 	tempRndr.twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
@@ -113,7 +114,7 @@ int main(int argc, char *argv[]){
 	tempRndr.flags |= RNDR_BILLBOARD_TARGET | RNDR_BILLBOARD_Y;
 	cvPush(&allRenderables, (void *)&tempRndr, sizeof(tempRndr));
 	//
-	rndrInit(&tempRndr, 1);
+	rndrInit(&tempRndr, stateNum);
 	tempRndr.sprite = 1;
 	tempRndr.mdl = (model *)cvGet(&allModels, 0);
 	tempRndr.twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 3);
@@ -142,19 +143,19 @@ int main(int argc, char *argv[]){
 
 	/* Cameras */
 	camera tempCam;
-	camInit(&tempCam, 1);
+	camInit(&tempCam, stateNum);
 	vec3Set(tempCam.position.value, 0.f, 2.f, 7.f);
 	tempCam.targetScene = (scene *)cvGet(&allScenes, 0);
 	cvPush(&allCameras, (void *)&tempCam, sizeof(tempCam));
 	//
-	camInit(&tempCam, 1);
+	camInit(&tempCam, stateNum);
 	tempCam.flags |= CAM_PROJECTION_ORTHO;
 	tempCam.targetScene = (scene *)cvGet(&allScenes, 1);
 	cvPush(&allCameras, (void *)&tempCam, sizeof(tempCam));
 
-	/** Remove the special deletion code below the main loop as well **/
-	skliLoad(&((renderable *)cvGet(&allRenderables, 0))->skli, prgPath, "Resources\\Skeletons\\CubeTestSkeleton.tds");
-	skliLoad(&((renderable *)cvGet(&allRenderables, 1))->skli, prgPath, "Resources\\Skeletons\\CubeTestSkeleton.tds");
+	/** Remove the special deletion code below the main loop as well. Also remove stateNum from skliLoad(). **/
+	skliLoad(&((renderable *)cvGet(&allRenderables, 0))->skli, stateNum, prgPath, "Resources\\Skeletons\\CubeTestSkeleton.tds");
+	skliLoad(&((renderable *)cvGet(&allRenderables, 1))->skli, stateNum, prgPath, "Resources\\Skeletons\\CubeTestSkeleton.tds");
 
 
 	unsigned char prgRunning = 1;
@@ -242,15 +243,15 @@ int main(int argc, char *argv[]){
 			/* Animate */
 			/** Could be merged with the update function but animating should be done in here. **/
 			for(i = 0; i < allRenderables.size; ++i){
-				rndrResetInterpolation((renderable *)cvGet(&allRenderables, i), 1);
-				rndrAnimateTexture((renderable *)cvGet(&allRenderables, i), tickrate * globalTimeMod);
-				rndrAnimateSkeleton((renderable *)cvGet(&allRenderables, i), tickrate * globalTimeMod);
+				rndrResetInterpolation((renderable *)cvGet(&allRenderables, i), stateNum);
+				rndrAnimateTexture((renderable *)cvGet(&allRenderables, i), stateNum, tickrate * globalTimeMod);
+				rndrAnimateSkeleton((renderable *)cvGet(&allRenderables, i), stateNum, tickrate * globalTimeMod);
 			}
 
 
 			/* Reset interpolation */
 			for(i = 0; i < allCameras.size; ++i){
-				camResetInterpolation((camera *)cvGet(&allCameras, i), 1);
+				camResetInterpolation((camera *)cvGet(&allCameras, i), stateNum);
 			}
 
 
@@ -301,19 +302,19 @@ int main(int argc, char *argv[]){
 
 			/* Update cameras */
 			for(i = 0; i < allCameras.size; ++i){
-				camUpdateViewMatrix((camera *)cvGet(&allCameras, i), interpT);
+				camUpdateViewMatrix((camera *)cvGet(&allCameras, i), 0, interpT);
 				if(windowChanged){
 					// If the window size changed, update the camera projection matrices as well
 					((camera *)cvGet(&allCameras, i))->flags |= CAM_UPDATE_PROJECTION;
 				}
-				camUpdateProjectionMatrix((camera *)cvGet(&allCameras, i), gfxPrg.aspectRatioX, gfxPrg.aspectRatioY, interpT);
+				camUpdateProjectionMatrix((camera *)cvGet(&allCameras, i), gfxPrg.aspectRatioX, gfxPrg.aspectRatioY, 0, interpT);
 			}
 
 			/* Render */
 			/** Remove later **/
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			// Render the scene
-			renderScene(&allCameras, interpT, &gfxPrg);
+			renderScene(&allCameras, 0, interpT, &gfxPrg);
 			// Update the window
 			SDL_GL_SwapWindow(gfxPrg.window);
 

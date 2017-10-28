@@ -38,7 +38,6 @@ typedef struct {
 typedef struct {
 	textureWrapper *tw;
 	float timeMod;
-	size_t currentAnim;
 	animationInstance animInst;
 } twInstance;
 
@@ -48,14 +47,15 @@ void twInit(textureWrapper *tw);
 unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath, cVector *allTextures);
 void twDelete(textureWrapper *tw);
 
-void twiInit(twInstance *twi, textureWrapper *tw);
-void twiAnimate(twInstance *twi, const float elapsedTime);
+unsigned char twiInit(twInstance *twi, textureWrapper *tw, const size_t stateNum);
+void twiAnimate(twInstance *twi, const size_t stateNum, const float elapsedTime);
 GLuint twiGetTexWidth(const twInstance *twi);
 GLuint twiGetTexHeight(const twInstance *twi);
 GLuint twiGetTexID(const twInstance *twi);
 float twiGetFrameWidth(const twInstance *twi);
 float twiGetFrameHeight(const twInstance *twi);
-void twiGetFrameInfo(const twInstance *twi, float *x, float *y, float *w, float *h, GLuint *frameTexID, const float interpT);
+void twiGetFrameInfo(const twInstance *twi, float *x, float *y, float *w, float *h, GLuint *frameTexID, const size_t state, const float interpT);
 unsigned char twiContainsTranslucency(const twInstance *twi);
+void twiDelete(twInstance *twi);
 
 #endif

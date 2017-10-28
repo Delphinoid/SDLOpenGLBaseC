@@ -36,17 +36,17 @@ typedef struct {
 	unsigned char flags;
 } renderable;
 
-void rndrInit(renderable *rndr, const size_t stateNum);
+unsigned char rndrInit(renderable *rndr, const size_t stateNum);
 unsigned char rndrLoad(renderable *rndr, const char *prgPath, const char *filePath, cVector *allModels, cVector *allTexWrappers);
 /**void rndrSetRotation(renderable *rndr, const float newX, const float newY, const float newZ);
 void rndrRotateX(renderable *rndr, const float changeX);
 void rndrRotateY(renderable *rndr, const float changeY);
 void rndrRotateZ(renderable *rndr, const float changeZ);**/
 void rndrResetInterpolation(renderable *rndr, const size_t stateNum);
-unsigned char rndrRenderMethod(renderable *rndr, const float interpT);  // Returns 0 if the model is fully opaque, 1 if the model contains translucency and 2 if the model is fully transparent
-unsigned char rndrRenderUpdate(renderable *rndr, const float interpT);
-void rndrAnimateTexture(renderable *rndr, const float elapsedTime);
-void rndrAnimateSkeleton(renderable *rndr, const float elapsedTime);
+unsigned char rndrRenderMethod(renderable *rndr, const size_t state, const float interpT);  // Returns 0 if the model is fully opaque, 1 if the model contains translucency and 2 if the model is fully transparent
+unsigned char rndrRenderUpdate(renderable *rndr, const size_t state, const float interpT);
+void rndrAnimateTexture(renderable *rndr, const size_t stateNum, const float elapsedTime);
+void rndrAnimateSkeleton(renderable *rndr, const size_t stateNum, const float elapsedTime);
 //void rndrGenerateTransform(const renderable *rndr, const camera *cam, mat4 *transformMatrix);
 //void rndrGenerateSprite(const renderable *rndr, vertex *vertices, const mat4 *transformMatrix);
 void rndrOffsetSpriteTexture(vertex *vertices, const float texFrag[4], const float texWidth, const float texHeight);

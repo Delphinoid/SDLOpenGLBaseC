@@ -240,7 +240,7 @@ void sklDelete(skeleton *skl){
 }
 
 void sklaInit(sklAnim *skla){
-	//
+	// animDataInit(&skla->animData);
 }
 unsigned char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 
@@ -273,11 +273,11 @@ void sklaDelete(sklAnim *skla){
 		}
 		free(skla->frames);
 	}
-	animDelete(&skla->animData);
+	animDataDelete(&skla->animData);
 }
 
-void sklaiInit(sklAnimInstance *sklai, const sklAnim *skla){
-
+unsigned char sklaiInit(sklAnimInstance *sklai, const sklAnim *skla){
+	return 0;
 }
 static inline sklBone **sklaiGetAnimFrame(const sklAnimInstance *sklai, const size_t frame){
 	//return (sklKeyframe *)cvGet(&sklai->anim->keyframes, frame);
@@ -343,23 +343,25 @@ static void sklaiDeltaTransform(sklAnimInstance *sklai, const size_t bone, const
 	}
 
 }
-void sklaiGenerateState(sklAnimInstance *sklai, const float interpT){
-	const float animInterpProgress = animGetInterpProgress(&sklai->animInst, &sklai->anim->animData, interpT);
-	const size_t animInterpFrame = animGetInterpFrame(&sklai->animInst, &sklai->anim->animData, animInterpProgress);
-	size_t animInterpFrameNext;
-	const float animInterpT = animGetInterpT(&sklai->animInst, &sklai->anim->animData, animInterpProgress, animInterpFrame, &animInterpFrameNext);
+void sklaiGenerateState(sklAnimInstance *sklai, const size_t state, const float interpT){
+	size_t startAnim, startFrame;
+	float startProgress;
+	size_t endAnim, endFrame;
+	float animInterpT;
+	animGetRenderData(&sklai->animInst, &sklai->anim->animData, state, interpT, &startAnim, &startFrame, &startProgress, &endAnim, &endFrame, &animInterpT);
 	size_t i;
 	for(i = 0; i < sklai->anim->boneNum; ++i){
-		sklaiDeltaTransform(sklai, i, animInterpFrame, animInterpFrameNext, animInterpT);
+		sklaiDeltaTransform(sklai, i, startFrame, endFrame, animInterpT);
 	}
 }
-void sklaiAnimate(sklAnimInstance *sklai, const float elapsedTime){
+void sklaiAnimate(sklAnimInstance *sklai, const size_t stateNum, const float elapsedTime){
 	/*if(sklai->animInst.currentFrame >= sklai->anim->animData.frameNum){
 		sklai->animInst.currentFrame = 0;
 	}
 	if(sklai->animInst.nextFrame >= sklai->anim->animData.frameNum){
 		sklai->animInst.nextFrame = 0;
 	}*/
+	animResetInterpolation(&sklai->animInst, stateNum);
 	animAdvance(&sklai->animInst, &sklai->anim->animData, elapsedTime);
 	//sklaiGenerateState(sklai);
 }
@@ -442,31 +444,53 @@ void sklaiDelete(sklAnimInstance *sklai){
 	}
 }
 
-void skliInit(sklInstance *skli, skeleton *skl){
+unsigned char skliInit(sklInstance *skli, skeleton *skl, const size_t stateNum){
+	/** Use stateNum. **/
 	skli->skl = skl;
 	skli->timeMod = 1.f;
 	skli->animationNum = 0;
 	skli->animationCapacity = ANIM_START_CAPACITY;
-	skli->animations = malloc(skli->animationCapacity*sizeof(sklAnim));
+	skli->animations = malloc(skli->animationCapacity*sizeof(sklAnimInstance));
+	if(skli->animations == NULL){
+		/** Memory allocation failure. **/
+		return 0;
+	}
 	if(skl != NULL){
-		skli->customState = malloc(skl->boneNum*sizeof(sklBone));
-		/**skli->skeletonState = malloc(skl->boneNum*sizeof(mat4));**/
-		/** Temp? **/
-		sklBone tempBone; boneInit(&tempBone);
-		mat4 identityMatrix; mat4Identity(&identityMatrix);
 		size_t i;
-		for(i = 0; i < skl->boneNum; ++i){
-			skli->customState[i] = tempBone;
-			/**skli->skeletonState[i] = identityMatrix;**/
+		skli->customState = malloc(stateNum*sizeof(sklBone *));
+		if(skli->customState == NULL){
+			/** Memory allocation failure. **/
+			free(skli->animations);
+			return 0;
+		}
+		sklBone tempBone; boneInit(&tempBone);
+		for(i = 0; i < stateNum; ++i){
+			skli->customState[i] = malloc(skl->boneNum*sizeof(sklBone));
+			if(skli->customState[i] == NULL){
+				break;
+			}
+			*skli->customState[i] = tempBone;
+		}
+		// Check for a memory allocation failure.
+		if(i < stateNum){
+			while(i > 0){
+				free(skli->customState[i]);
+				--i;
+			}
+			free(skli->customState);
+			return 0;
 		}
 	}
+	return 1;
 }
-unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *filePath){
+unsigned char skliLoad(sklInstance *skli, const size_t stateNum, const char *prgPath, const char *filePath){
+
+	/** stateNum is temporary. **/
 
 	skeleton *skl = malloc(sizeof(skeleton));
 	sklLoad(skl, prgPath, filePath);
 
-	skliInit(skli, skl);
+	skliInit(skli, skl, stateNum);
 
 	sklAnim *skla = malloc(sizeof(sklAnim));
 	skla->name = malloc(5*sizeof(char));
@@ -506,7 +530,7 @@ unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *fileP
 
 	sklAnimInstance sklai;
 	sklai.anim = skla;
-	animInit(&sklai.animInst);
+	animInstInit(&sklai.animInst, stateNum);
 	sklai.animInterpStart = malloc(skla->boneNum*sizeof(sklBone));
 	sklai.animInterpEnd = malloc(skla->boneNum*sizeof(sklBone));
 	sklai.animState = malloc(skla->boneNum*sizeof(sklBone));
@@ -526,10 +550,10 @@ void skliAddAnimation(sklInstance *skli, const sklAnim *skla, const size_t frame
 void skliChangeSkeleton(sklInstance *skli, skeleton *skl){
 	/** Re-calculate bone lookups for all animation instances. **/
 }
-void skliAnimate(sklInstance *skli, const float elapsedTime){
+void skliAnimate(sklInstance *skli, const size_t stateNum, const float elapsedTime){
 	size_t i;
 	for(i = 0; i < skli->animationNum; ++i){
-		sklaiAnimate(&skli->animations[i], elapsedTime*skli->timeMod);
+		sklaiAnimate(&skli->animations[i], stateNum, elapsedTime*skli->timeMod);
 	}
 }
 /*static void skliBoneState(const sklInstance *skli, mat4 *state, const sklNode *space, const sklNode *node, const size_t parent, const size_t bone){
@@ -671,6 +695,7 @@ void skliDelete(sklInstance *skli){
 	if(skli->customState != NULL){
 		free(skli->customState);
 	}
+	/** animInstDelete() **/
 	/**if(skli->skeletonState != NULL){
 		free(skli->skeletonState);
 	}**/

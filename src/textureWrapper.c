@@ -78,6 +78,7 @@ static unsigned char twaInit(twAnim *twa, const size_t animframeCapacity){
 		free(twa->frameIDs);
 		return 0;
 	}
+	animDataInit(&twa->animData);
 	twa->animData.frameDelays = malloc(animframeCapacity*sizeof(float));
 	if(twa->animData.frameDelays == NULL){
 		printf("Error loading texture wrapper: Memory allocation failure.\n");
@@ -85,8 +86,6 @@ static unsigned char twaInit(twAnim *twa, const size_t animframeCapacity){
 		free(twa->subframeIDs);
 		return 0;
 	}
-	twa->animData.desiredLoops = -1;
-	twa->animData.frameNum = 0;  // Current texture animation being worked on
 	return 1;
 }
 
@@ -150,7 +149,7 @@ static void twaDelete(twAnim *twa){
 	if(twa->subframeIDs != NULL){
 		free(twa->subframeIDs);
 	}
-	animDelete(&twa->animData);
+	animDataDelete(&twa->animData);
 }
 
 static unsigned char twAddFrame(textureWrapper *tw, const twFrame *f, size_t *frameCapacity){
@@ -814,24 +813,24 @@ static inline float *twGetAnimFrameDelay(const textureWrapper *tw, const size_t 
 	return &tw->animations[anim].animData.frameDelays[frame];
 }
 
-void twiInit(twInstance *twi, textureWrapper *tw){
+unsigned char twiInit(twInstance *twi, textureWrapper *tw, const size_t stateNum){
 	twi->tw = tw;
-	twi->currentAnim = 0;
 	twi->timeMod = 1.f;
-	animInit(&twi->animInst);
+	return animInstInit(&twi->animInst, stateNum);
 }
 
-void twiAnimate(twInstance *twi, const float elapsedTime){
-	/*if(twi->currentAnim >= twi->tw->animationNum){
-		twi->currentAnim = 0;
+void twiAnimate(twInstance *twi, const size_t stateNum, const float elapsedTime){
+	/*if(*twi->animInst.currentAnim >= twi->tw->animationNum){
+		*twi->animInst.currentAnim = 0;
 	}
-	if(twi->animInst.currentFrame >= twi->tw->animations[twi->currentAnim].animData.frameNum){
+	if(twi->animInst.currentFrame >= twi->tw->animations[*twi->animInst.currentAnim].animData.frameNum){
 		twi->animInst.currentFrame = 0;
 	}
-	if(twi->animInst.nextFrame >= twi->tw->animations[twi->currentAnim].animData.frameNum){
+	if(twi->animInst.nextFrame >= twi->tw->animations[*twi->animInst.currentAnim].animData.frameNum){
 		twi->animInst.nextFrame = 0;
 	}*/
-	animAdvance(&twi->animInst, &twi->tw->animations[twi->currentAnim].animData, elapsedTime*twi->timeMod);
+	animResetInterpolation(&twi->animInst, stateNum);
+	animAdvance(&twi->animInst, &twi->tw->animations[*twi->animInst.currentAnim].animData, elapsedTime*twi->timeMod);
 }
 
 /**void twiAnimate(twInstance *twi, const uint32_t currentTick, const float globalDelayMod){
@@ -845,42 +844,42 @@ void twiAnimate(twInstance *twi, const float elapsedTime){
 
 	// Only animate if the animation has more than one
 	// frame and can still be animated
-	if(totalDelayMod != 0.f && twGetAnim(twi->tw, twi->currentAnim)->frameNum > 1 &&
-	   (twi->currentLoops < twGetAnim(twi->tw, twi->currentAnim)->desiredLoops ||
-	    twGetAnim(twi->tw, twi->currentAnim)->desiredLoops < 0)){
+	if(totalDelayMod != 0.f && twGetAnim(twi->tw, *twi->animInst.currentAnim)->frameNum > 1 &&
+	   (twi->currentLoops < twGetAnim(twi->tw, *twi->animInst.currentAnim)->desiredLoops ||
+	    twGetAnim(twi->tw, *twi->animInst.currentAnim)->desiredLoops < 0)){
 
 		// Time passed since last update
 		float deltaTime = currentTick - twi->lastUpdate;
 		// Multiplier applied to the current frame's delay in order to slow down / speed up the animation
-		float currentFrameDelay = *twGetAnimFrameDelay(twi->tw, twi->currentAnim, twi->currentFrame)*totalDelayMod;
+		float currentFrameDelay = *twGetAnimFrameDelay(twi->tw, *twi->animInst.currentAnim, twi->currentFrame)*totalDelayMod;
 
 		* While deltaTime exceeds the time that the current frame should last and the
 		texture can still be animated, advance the animation *
 		while(deltaTime >= currentFrameDelay &&
-		      (twi->currentLoops < twGetAnim(twi->tw, twi->currentAnim)->desiredLoops ||
-		       twGetAnim(twi->tw, twi->currentAnim)->desiredLoops < 0)){
+		      (twi->currentLoops < twGetAnim(twi->tw, *twi->animInst.currentAnim)->desiredLoops ||
+		       twGetAnim(twi->tw, *twi->animInst.currentAnim)->desiredLoops < 0)){
 
 			// Subtract the delay from deltaTime and add it to lastUpdate, for the next frame
 			deltaTime -= currentFrameDelay;
 			twi->lastUpdate += currentFrameDelay;
 
 			// Increase currentFrame and check if it exceeds the number of frames
-			if(++twi->currentFrame == twGetAnim(twi->tw, twi->currentAnim)->frameNum){
+			if(++twi->currentFrame == twGetAnim(twi->tw, *twi->animInst.currentAnim)->frameNum){
 				// currentFrame has exceeded the number of frames, increase the loop counter
 				++twi->currentLoops;
-				if(twi->currentLoops < twGetAnim(twi->tw, twi->currentAnim)->desiredLoops ||
-				   twGetAnim(twi->tw, twi->currentAnim)->desiredLoops < 0){
+				if(twi->currentLoops < twGetAnim(twi->tw, *twi->animInst.currentAnim)->desiredLoops ||
+				   twGetAnim(twi->tw, *twi->animInst.currentAnim)->desiredLoops < 0){
 					// If the animation can continue to loop, reset it to the first frame
 					twi->currentFrame = 0;
 				}else{
 					// Otherwise set it to the final frame
-					twi->currentFrame = twGetAnim(twi->tw, twi->currentAnim)->frameNum-1;
+					twi->currentFrame = twGetAnim(twi->tw, *twi->animInst.currentAnim)->frameNum-1;
 					twi->lastUpdate = currentTick;
 				}
 			}
 
 			// Update currentFrameDelay based on the new value of currentFrame
-			currentFrameDelay = *twGetAnimFrameDelay(twi->tw, twi->currentAnim, twi->currentFrame)*totalDelayMod;
+			currentFrameDelay = *twGetAnimFrameDelay(twi->tw, *twi->animInst.currentAnim, twi->currentFrame)*totalDelayMod;
 
 		}
 
@@ -890,8 +889,8 @@ void twiAnimate(twInstance *twi, const float elapsedTime){
 
 /*void twiAnimate(twInstance *twi, uint32_t currentTick, float globalDelayMod){
 	animAdvance(&twi->animState,
-	            &twGetAnim(twi->texWrap, twi->currentAnim)->frameDelays,
-	            twGetAnim(twi->texWrap, twi->currentAnim)->desiredLoops,
+	            &twGetAnim(twi->texWrap, *twi->animInst.currentAnim)->frameDelays,
+	            twGetAnim(twi->texWrap, *twi->animInst.currentAnim)->desiredLoops,
 	            currentTick, twi->delayMod*globalDelayMod);
 }*/
 
@@ -942,60 +941,60 @@ void twiAnimate(twInstance *twi, const float elapsedTime){
 
 GLuint twiGetTexWidth(const twInstance *twi){
 	// Make sure the current animation and frame are valid (within proper bounds)
-	if(twi->currentAnim < twi->tw->animationNum &&
-	   twi->animInst.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum){
-		return twGetAnimFrame(twi->tw, twi->currentAnim, twi->animInst.currentFrame)->baseTexture->width;
+	if(*twi->animInst.currentAnim < twi->tw->animationNum &&
+	   *twi->animInst.currentFrame < twGetAnim(twi->tw, *twi->animInst.currentAnim)->animData.frameNum){
+		return twGetAnimFrame(twi->tw, *twi->animInst.currentAnim, *twi->animInst.currentFrame)->baseTexture->width;
 	}
 	return 0;
 }
 
 GLuint twiGetTexHeight(const twInstance *twi){
 	// Make sure the current animation and frame are valid (within proper bounds)
-	if(twi->currentAnim < twi->tw->animationNum &&
-	   twi->animInst.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum){
-		return twGetAnimFrame(twi->tw, twi->currentAnim, twi->animInst.currentFrame)->baseTexture->height;
+	if(*twi->animInst.currentAnim < twi->tw->animationNum &&
+	   *twi->animInst.currentFrame < twGetAnim(twi->tw, *twi->animInst.currentAnim)->animData.frameNum){
+		return twGetAnimFrame(twi->tw, *twi->animInst.currentAnim, *twi->animInst.currentFrame)->baseTexture->height;
 	}
 	return 0;
 }
 
 GLuint twiGetTexID(const twInstance *twi){
 	// Make sure the current animation and frame are valid (within proper bounds)
-	if(twi->currentAnim < twi->tw->animationNum &&
-	   twi->animInst.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum){
-		return twGetAnimFrame(twi->tw, twi->currentAnim, twi->animInst.currentFrame)->baseTexture->id;
+	if(*twi->animInst.currentAnim < twi->tw->animationNum &&
+	   *twi->animInst.currentFrame < twGetAnim(twi->tw, *twi->animInst.currentAnim)->animData.frameNum){
+		return twGetAnimFrame(twi->tw, *twi->animInst.currentAnim, *twi->animInst.currentFrame)->baseTexture->id;
 	}
 	return 0;
 }
 
 float twiGetFrameWidth(const twInstance *twi){
-	return twGetAnimSubframe(twi->tw, twi->currentAnim, twi->animInst.currentFrame)->w;
+	return twGetAnimSubframe(twi->tw, *twi->animInst.currentAnim, *twi->animInst.currentFrame)->w;
 }
 
 float twiGetFrameHeight(const twInstance *twi){
-	return twGetAnimSubframe(twi->tw, twi->currentAnim, twi->animInst.currentFrame)->h;
+	return twGetAnimSubframe(twi->tw, *twi->animInst.currentAnim, *twi->animInst.currentFrame)->h;
 }
 
-void twiGetFrameInfo(const twInstance *twi, float *x, float *y, float *w, float *h, GLuint *frameTexID, const float interpT){
+void twiGetFrameInfo(const twInstance *twi, float *x, float *y, float *w, float *h, GLuint *frameTexID, const size_t state, const float interpT){
 
 	// Make sure the current animation and frame are valid (within proper bounds)
-	if(twi->currentAnim < twi->tw->animationNum &&
-	   twi->animInst.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum){
+	if(*twi->animInst.currentAnim < twi->tw->animationNum &&
+	   *twi->animInst.currentFrame < twGetAnim(twi->tw, *twi->animInst.currentAnim)->animData.frameNum){
 
 		/*
-		*x = twGetAnimSubframe(twi->tw, twi->currentAnim, twi->animInst.currentFrame)->x;
-		*y = twGetAnimSubframe(twi->tw, twi->currentAnim, twi->animInst.currentFrame)->y;
-		*w = twGetAnimSubframe(twi->tw, twi->currentAnim, twi->animInst.currentFrame)->w;
-		*h = twGetAnimSubframe(twi->tw, twi->currentAnim, twi->animInst.currentFrame)->h;
-		*frameTexID = twGetAnimFrame(twi->tw, twi->currentAnim, twi->animInst.currentFrame)->baseTexture->id;
+		*x = twGetAnimSubframe(twi->tw, *twi->animInst.currentAnim, twi->animInst.currentFrame)->x;
+		*y = twGetAnimSubframe(twi->tw, *twi->animInst.currentAnim, twi->animInst.currentFrame)->y;
+		*w = twGetAnimSubframe(twi->tw, *twi->animInst.currentAnim, twi->animInst.currentFrame)->w;
+		*h = twGetAnimSubframe(twi->tw, *twi->animInst.currentAnim, twi->animInst.currentFrame)->h;
+		*frameTexID = twGetAnimFrame(twi->tw, *twi->animInst.currentAnim, twi->animInst.currentFrame)->baseTexture->id;
 		*/
 
-		const float animInterpProgress = animGetInterpProgress(&twi->animInst, &twGetAnim(twi->tw, twi->currentAnim)->animData, interpT);
-		const size_t animInterpFrame = animGetInterpFrame(&twi->animInst, &twGetAnim(twi->tw, twi->currentAnim)->animData, animInterpProgress);
-		*x = twGetAnimSubframe(twi->tw, twi->currentAnim, animInterpFrame)->x;
-		*y = twGetAnimSubframe(twi->tw, twi->currentAnim, animInterpFrame)->y;
-		*w = twGetAnimSubframe(twi->tw, twi->currentAnim, animInterpFrame)->w;
-		*h = twGetAnimSubframe(twi->tw, twi->currentAnim, animInterpFrame)->h;
-		*frameTexID = twGetAnimFrame(twi->tw, twi->currentAnim, animInterpFrame)->baseTexture->id;
+		size_t startAnim, startFrame;
+		animGetRenderData(&twi->animInst, &twGetAnim(twi->tw, *twi->animInst.currentAnim)->animData, state, interpT, &startAnim, &startFrame, NULL, NULL, NULL, NULL);
+		*x = twGetAnimSubframe(twi->tw, startAnim, startFrame)->x;
+		*y = twGetAnimSubframe(twi->tw, startAnim, startFrame)->y;
+		*w = twGetAnimSubframe(twi->tw, startAnim, startFrame)->w;
+		*h = twGetAnimSubframe(twi->tw, startAnim, startFrame)->h;
+		*frameTexID = twGetAnimFrame(twi->tw, startAnim, startFrame)->baseTexture->id;
 
 	}else{
 
@@ -1011,9 +1010,13 @@ void twiGetFrameInfo(const twInstance *twi, float *x, float *y, float *w, float 
 
 unsigned char twiContainsTranslucency(const twInstance *twi){
 	// Make sure the current animation and frame are valid (within proper bounds)
-	if(twi->currentAnim < twi->tw->animationNum &&
-	   twi->animInst.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum){
-		return twGetAnimFrame(twi->tw, twi->currentAnim, twi->animInst.currentFrame)->baseTexture->translucent;
+	if(*twi->animInst.currentAnim < twi->tw->animationNum &&
+	   *twi->animInst.currentFrame < twGetAnim(twi->tw, *twi->animInst.currentAnim)->animData.frameNum){
+		return twGetAnimFrame(twi->tw, *twi->animInst.currentAnim, *twi->animInst.currentFrame)->baseTexture->translucent;
 	}
 	return 0;
+}
+
+void twiDelete(twInstance *twi){
+	animInstDelete(&twi->animInst);
 }

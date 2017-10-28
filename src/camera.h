@@ -26,11 +26,12 @@ typedef struct {
 	unsigned char flags;
 } camera;
 
-void camInit(camera *cam, const size_t stateNum);
+unsigned char camInit(camera *cam, const size_t stateNum);
 void camResetInterpolation(camera *cam, const size_t stateNum);
 void camCalculateUp(camera *cam);
-void camUpdateViewMatrix(camera *cam, const float interpT);
-void camUpdateProjectionMatrix(camera *cam, const unsigned char aspectRatioX, const unsigned char aspectRatioY, const float interpT);
+void camUpdateViewMatrix(camera *cam, const size_t state, const float interpT);
+void camUpdateProjectionMatrix(camera *cam, const unsigned char aspectRatioX, const unsigned char aspectRatioY, const size_t state, const float interpT);
+void camDelete(camera *cam);
 
 /**void camMoveX(camera *cam, const float x);
 void camMoveY(camera *cam, const float y);

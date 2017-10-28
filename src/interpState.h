@@ -22,18 +22,34 @@
 **
 */
 
+/** Merge previous and update functions. **/
+
 typedef struct {
 	float *previous;
 	float *value;
 	float render;
 } interpFloat;
 
-unsigned char iFloatInit(interpFloat *iFloat, const float s, size_t stateNum);
-unsigned char iFloatResize(interpFloat *iFloat, const size_t oldStateNum, size_t newStateNum);
+unsigned char iFloatInit(interpFloat *iFloat, const size_t stateNum, const float s);
+unsigned char iFloatResize(interpFloat *iFloat, const size_t oldStateNum, const size_t newStateNum);
 void iFloatSkipCurrentInterp(interpFloat *iFloat);
 void iFloatResetInterp(interpFloat *iFloat, const size_t stateNum);
-void iFloatPreviousState(interpFloat *iFloat, float *value, const size_t state, const float interpT);
-unsigned char iFloatUpdate(interpFloat *iFloat, const float interpT);
+unsigned char iFloatUpdate(interpFloat *iFloat, const size_t state, const float interpT);
+void iFloatDelete(interpFloat *iFloat);
+
+
+typedef struct {
+	size_t *previous;
+	size_t *value;
+	size_t render;
+} interpSizeT;
+
+unsigned char iSizeTInit(interpSizeT *iSizeT, const size_t stateNum, const size_t s);
+unsigned char iSizeTResize(interpSizeT *iSizeT, const size_t oldStateNum, const size_t newStateNum);
+void iSizeTSkipCurrentInterp(interpSizeT *iSizeT);
+void iSizeTResetInterp(interpSizeT *iSizeT, const size_t stateNum);
+unsigned char iSizeTUpdate(interpSizeT *iSizeT, const size_t state, const float interpT);
+void iSizeTDelete(interpSizeT *iSizeT);
 
 
 typedef struct {
@@ -42,12 +58,12 @@ typedef struct {
 	vec3 render;
 } interpVec3;
 
-unsigned char iVec3Init(interpVec3 *iVec3, const float x, const float y, const float z, size_t stateNum);
-unsigned char iVec3Resize(interpVec3 *iVec3, const size_t oldStateNum, size_t newStateNum);
+unsigned char iVec3Init(interpVec3 *iVec3, const size_t stateNum, const float x, const float y, const float z);
+unsigned char iVec3Resize(interpVec3 *iVec3, const size_t oldStateNum, const size_t newStateNum);
 void iVec3SkipCurrentInterp(interpVec3 *iVec3);
 void iVec3ResetInterp(interpVec3 *iVec3, const size_t stateNum);
-void iVec3PreviousState(interpVec3 *iVec3, vec3 *value, const size_t state, const float interpT);
-unsigned char iVec3Update(interpVec3 *iVec3, const float interpT);
+unsigned char iVec3Update(interpVec3 *iVec3, const size_t state, const float interpT);
+void iVec3Delete(interpVec3 *iVec3);
 
 
 typedef struct {
@@ -56,11 +72,11 @@ typedef struct {
 	quat render;
 } interpQuat;
 
-unsigned char iQuatInit(interpQuat *iQuat, size_t stateNum);
-unsigned char iQuatResize(interpQuat *iQuat, const size_t oldStateNum, size_t newStateNum);
+unsigned char iQuatInit(interpQuat *iQuat, const size_t stateNum);
+unsigned char iQuatResize(interpQuat *iQuat, const size_t oldStateNum, const size_t newStateNum);
 void iQuatSkipCurrentInterp(interpQuat *iQuat);
 void iQuatResetInterp(interpQuat *iQuat, const size_t stateNum);
-void iQuatPreviousState(interpQuat *iQuat, quat *value, const size_t state, const float interpT);
-unsigned char iQuatUpdate(interpQuat *iQuat, const float interpT);
+unsigned char iQuatUpdate(interpQuat *iQuat, const size_t state, const float interpT);
+void iQuatDelete(interpQuat *iQuat);
 
 #endif
