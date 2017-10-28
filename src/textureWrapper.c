@@ -980,14 +980,6 @@ void twiGetFrameInfo(const twInstance *twi, float *x, float *y, float *w, float 
 	if(*twi->animInst.currentAnim < twi->tw->animationNum &&
 	   *twi->animInst.currentFrame < twGetAnim(twi->tw, *twi->animInst.currentAnim)->animData.frameNum){
 
-		/*
-		*x = twGetAnimSubframe(twi->tw, *twi->animInst.currentAnim, twi->animInst.currentFrame)->x;
-		*y = twGetAnimSubframe(twi->tw, *twi->animInst.currentAnim, twi->animInst.currentFrame)->y;
-		*w = twGetAnimSubframe(twi->tw, *twi->animInst.currentAnim, twi->animInst.currentFrame)->w;
-		*h = twGetAnimSubframe(twi->tw, *twi->animInst.currentAnim, twi->animInst.currentFrame)->h;
-		*frameTexID = twGetAnimFrame(twi->tw, *twi->animInst.currentAnim, twi->animInst.currentFrame)->baseTexture->id;
-		*/
-
 		size_t startAnim, startFrame;
 		animGetRenderData(&twi->animInst, &twGetAnim(twi->tw, *twi->animInst.currentAnim)->animData, state, interpT, &startAnim, &startFrame, NULL, NULL, NULL, NULL);
 		*x = twGetAnimSubframe(twi->tw, startAnim, startFrame)->x;

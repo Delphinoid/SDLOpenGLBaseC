@@ -294,11 +294,11 @@ void rndrOffsetSpriteTexture(vertex *vertices, const float texFrag[4], const flo
 	}
 }
 
-void rndrDelete(renderable *rndr){
+void rndrDelete(renderable *rndr, const size_t stateNum){
 	if(rndr->name != NULL){
 		free(rndr->name);
 	}
-	skliDelete(&rndr->skli);
+	skliDelete(&rndr->skli, stateNum);
 	twiDelete(&rndr->twi);
 	iVec3Delete(&rndr->position);
 	iQuatDelete(&rndr->orientation);

@@ -50,7 +50,8 @@ void rndrAnimateSkeleton(renderable *rndr, const size_t stateNum, const float el
 //void rndrGenerateTransform(const renderable *rndr, const camera *cam, mat4 *transformMatrix);
 //void rndrGenerateSprite(const renderable *rndr, vertex *vertices, const mat4 *transformMatrix);
 void rndrOffsetSpriteTexture(vertex *vertices, const float texFrag[4], const float texWidth, const float texHeight);
-void rndrDelete(renderable *rndr);
+/** Remove stateNum from here. **/
+void rndrDelete(renderable *rndr, const size_t stateNum);
 /** Sort out the functions below, some should be associated with entities **/
 //size_t rndrBoneNum(renderable *rndr);
 //unsigned char rndrGenerateSkeletonState(renderable *rndr);

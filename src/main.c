@@ -6,7 +6,7 @@
 void renderScene(cVector *allCameras, const size_t state, const float interpT, gfxProgram *gfxPrg);
 void cleanup(cVector *allTextures,  cVector *allTexWrappers,   cVector *allModels,      cVector *allCameras,
              cVector *allSkeletons, cVector *allSklAnimations, cVector *allRenderables, cVector *allScenes,
-             gfxProgram *gfxPrg);
+             const size_t stateNum, gfxProgram *gfxPrg);
 
 /** Remember to do regular searches for these important comments when possible **/
 int main(int argc, char *argv[]){
@@ -336,17 +336,18 @@ int main(int argc, char *argv[]){
 	/** Special deletion code **/
 	sklDelete(((renderable *)cvGet(&allRenderables, 0))->skli.skl);
 	sklDelete(((renderable *)cvGet(&allRenderables, 1))->skli.skl);
-	sklaDelete(((renderable *)cvGet(&allRenderables, 0))->skli.animations[0].anim);
-	sklaDelete(((renderable *)cvGet(&allRenderables, 1))->skli.animations[0].anim);
-	cleanup(&allTextures, &allTexWrappers, &allModels, &allCameras, &allSkeletons, &allSklAnimations, &allRenderables, &allScenes, &gfxPrg);
+	sklaDelete(((renderable *)cvGet(&allRenderables, 0))->skli.animations[0]);
+	sklaDelete(((renderable *)cvGet(&allRenderables, 1))->skli.animations[0]);
+	cleanup(&allTextures, &allTexWrappers, &allModels, &allCameras, &allSkeletons, &allSklAnimations, &allRenderables, &allScenes, stateNum, &gfxPrg);
 
 	return 0;
 
 }
 
+/** Remove stateNum from here. **/
 void cleanup(cVector *allTextures,  cVector *allTexWrappers,   cVector *allModels,      cVector *allCameras,
              cVector *allSkeletons, cVector *allSklAnimations, cVector *allRenderables, cVector *allScenes,
-             gfxProgram *gfxPrg){
+             const size_t stateNum, gfxProgram *gfxPrg){
 
 	gfxDestroyProgram(gfxPrg);
 
@@ -384,7 +385,7 @@ void cleanup(cVector *allTextures,  cVector *allTexWrappers,   cVector *allModel
 	cvClear(allScenes);
 
 	for(i = 0; i < allRenderables->size; ++i){
-		rndrDelete((renderable *)cvGet(allRenderables, i));
+		rndrDelete((renderable *)cvGet(allRenderables, i), stateNum);
 	}
 	cvClear(allRenderables);
 

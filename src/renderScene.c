@@ -37,12 +37,10 @@ void renderModel(renderable *rndr, const camera *cam, const size_t state, const 
 		// Generate a state for the model skeleton, transformed into the animated skeleton's space
 		mat4 *skeletonState = malloc(rndr->mdl->skl.boneNum*sizeof(mat4));
 		if(skeletonState != NULL){
-			size_t i;
 			if(rndr->skli.skl != NULL){
-				for(i = 0; i < rndr->skli.animationNum; ++i){
-					sklaiGenerateState(&rndr->skli.animations[i], state, interpT);
-				}
+				skliGenerateAnimStates(&rndr->skli, state, interpT);
 			}
+			size_t i;
 			for(i = 0; i < rndr->mdl->skl.boneNum; ++i){
 				skliGenerateBoneState(&rndr->skli, &rndr->mdl->skl, skeletonState, i);
 				glUniformMatrix4fv(gfxPrg->boneArrayID[i], 1, GL_FALSE, &skeletonState[i].m[0][0]);
