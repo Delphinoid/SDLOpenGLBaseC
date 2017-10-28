@@ -17,19 +17,11 @@ unsigned char animInstInit(animationInstance *animInst, const size_t stateNum){
 		free(animInst->blendFrameProgress);
 		return 0;
 	}
-	animInst->previousAnim = malloc(bytesSizeT);
-	if(animInst->previousAnim == NULL){
-		/** Memory allocation failure. **/
-		free(animInst->blendFrameProgress);
-		free(animInst->blendFrameEnd);
-		return 0;
-	}
 	animInst->currentAnim = malloc(bytesSizeT);
 	if(animInst->currentAnim == NULL){
 		/** Memory allocation failure. **/
 		free(animInst->blendFrameProgress);
 		free(animInst->blendFrameEnd);
-		free(animInst->previousAnim);
 		return 0;
 	}
 	animInst->currentFrame = malloc(bytesSizeT);
@@ -37,8 +29,16 @@ unsigned char animInstInit(animationInstance *animInst, const size_t stateNum){
 		/** Memory allocation failure. **/
 		free(animInst->blendFrameProgress);
 		free(animInst->blendFrameEnd);
-		free(animInst->previousAnim);
 		free(animInst->currentAnim);
+		return 0;
+	}
+	animInst->nextAnim = malloc(bytesSizeT);
+	if(animInst->nextAnim == NULL){
+		/** Memory allocation failure. **/
+		free(animInst->blendFrameProgress);
+		free(animInst->blendFrameEnd);
+		free(animInst->currentAnim);
+		free(animInst->currentFrame);
 		return 0;
 	}
 	animInst->nextFrame = malloc(bytesSizeT);
@@ -46,9 +46,9 @@ unsigned char animInstInit(animationInstance *animInst, const size_t stateNum){
 		/** Memory allocation failure. **/
 		free(animInst->blendFrameProgress);
 		free(animInst->blendFrameEnd);
-		free(animInst->previousAnim);
 		free(animInst->currentAnim);
 		free(animInst->currentFrame);
+		free(animInst->nextAnim);
 		return 0;
 	}
 	animInst->prevElapsedTime = malloc(bytesFloat);
@@ -56,9 +56,9 @@ unsigned char animInstInit(animationInstance *animInst, const size_t stateNum){
 		/** Memory allocation failure. **/
 		free(animInst->blendFrameProgress);
 		free(animInst->blendFrameEnd);
-		free(animInst->previousAnim);
 		free(animInst->currentAnim);
 		free(animInst->currentFrame);
+		free(animInst->nextAnim);
 		free(animInst->nextFrame);
 		return 0;
 	}
@@ -67,9 +67,9 @@ unsigned char animInstInit(animationInstance *animInst, const size_t stateNum){
 		/** Memory allocation failure. **/
 		free(animInst->blendFrameProgress);
 		free(animInst->blendFrameEnd);
-		free(animInst->previousAnim);
 		free(animInst->currentAnim);
 		free(animInst->currentFrame);
+		free(animInst->nextAnim);
 		free(animInst->nextFrame);
 		free(animInst->prevElapsedTime);
 		return 0;
@@ -79,9 +79,9 @@ unsigned char animInstInit(animationInstance *animInst, const size_t stateNum){
 		// Set each value to 0.
 		animInst->blendFrameProgress[i] = 0.f;
 		animInst->blendFrameEnd[i] = 0.f;
-		animInst->previousAnim[i] = 0;
 		animInst->currentAnim[i] = 0;
 		animInst->currentFrame[i] = 0;
+		animInst->nextAnim[i] = 0;
 		animInst->nextFrame[i] = 0;
 		animInst->prevElapsedTime[i] = 0.f;
 		animInst->totalElapsedTime[i] = 0.f;
@@ -95,14 +95,14 @@ void animInstDelete(animationInstance *animInst){
 	if(animInst->blendFrameEnd != NULL){
 		free(animInst->blendFrameEnd);
 	}
-	if(animInst->previousAnim != NULL){
-		free(animInst->previousAnim);
-	}
 	if(animInst->currentAnim != NULL){
 		free(animInst->currentAnim);
 	}
 	if(animInst->currentFrame != NULL){
 		free(animInst->currentFrame);
+	}
+	if(animInst->nextAnim != NULL){
+		free(animInst->nextAnim);
 	}
 	if(animInst->nextFrame != NULL){
 		free(animInst->nextFrame);
@@ -131,9 +131,9 @@ void animResetInterpolation(animationInstance *animInst, const size_t stateNum){
 		// Shift each value over to make room for the new ones.
 		animInst->blendFrameProgress[i] = animInst->blendFrameProgress[i-1];
 		animInst->blendFrameEnd[i] = animInst->blendFrameEnd[i-1];
-		animInst->previousAnim[i] = animInst->previousAnim[i-1];
 		animInst->currentAnim[i] = animInst->currentAnim[i-1];
 		animInst->currentFrame[i] = animInst->currentFrame[i-1];
+		animInst->nextAnim[i] = animInst->nextAnim[i-1];
 		animInst->nextFrame[i] = animInst->nextFrame[i-1];
 		animInst->prevElapsedTime[i] = animInst->prevElapsedTime[i-1];
 		animInst->totalElapsedTime[i] = animInst->totalElapsedTime[i-1];
@@ -272,13 +272,13 @@ void animGetRenderData(const animationInstance *animInst, const animationData *a
 	if(animInst->blendFrameEnd[state] > 0.f){
 		if(interpStartTime < animInst->blendFrameEnd[state]){
 			// Interpolating between frames from two separate animations.
-			*startAnim = animInst->previousAnim[state];
+			*startAnim = animInst->currentAnim[state];
 			*startFrame = animInst->currentFrame[state];
 			if(startProgress != NULL){
 				*startProgress = animInst->blendFrameProgress[state];
 			}
 			if(endAnim != NULL){
-				*endAnim = animInst->currentAnim[state];
+				*endAnim = animInst->nextAnim[state];
 			}
 			if(endFrame != NULL){
 				*endFrame = animInst->nextFrame[state];
@@ -292,13 +292,13 @@ void animGetRenderData(const animationInstance *animInst, const animationData *a
 		}
 	}
 
-	*startAnim = animInst->currentAnim[state];
+	*startAnim = animInst->nextAnim[state];
 	*startFrame = 0;
 	if(startProgress != NULL){
 		*startProgress = 0.f;
 	}
 	if(endAnim != NULL){
-		*endAnim = animInst->currentAnim[state];
+		*endAnim = animInst->nextAnim[state];
 	}
 
 	const float animLength = animData->frameDelays[animData->frameNum-1];

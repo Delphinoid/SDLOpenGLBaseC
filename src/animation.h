@@ -19,9 +19,9 @@ typedef struct {
 	int currentLoops;
 	float *blendFrameProgress;
 	float *blendFrameEnd;
-	size_t *previousAnim;
 	size_t *currentAnim;
 	size_t *currentFrame;
+	size_t *nextAnim;
 	size_t *nextFrame;
 	float *prevElapsedTime;
 	float *totalElapsedTime;
