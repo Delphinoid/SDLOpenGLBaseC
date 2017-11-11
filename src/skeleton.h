@@ -4,6 +4,8 @@
 #include "animation.h"
 #include "mat4.h"
 
+#define MAX_BLEND_INSTANCES 1
+
 // Skeleton bone data
 typedef struct {
 	vec3 position;
@@ -42,13 +44,17 @@ typedef struct {
 
 // Skeletal animation instance
 typedef struct {
-	animationInstance animInst;
-	sklBone *animState;  // Delta transformations for each bone.
+	animationInstance *animInst;  // An array of animations. Size is MAX_BLEND_INSTANCES + 1.
+	                              // Animations after index 0 are used for blending, where smaller indices are more recent.
+	                              // When an animation blend finishes, all of the animations that follow are shifted over to the left.
+	float **animInstBlendProgress;   // The current progress through a blend. Size is MAX_BLEND_INSTANCES * stateNum.
+	float **animInstBlendTime;       // How long to blend between animations for. Size is MAX_BLEND_INSTANCES * stateNum.
 	sklBone **animBoneLookup;  // Which bone in animState each bone in skli->skl corresponds to.
 	                           // If the root (first) bone in skli->skl is named "blah" and the
 	                           // second bone in animState is named "blah", the array will start
 	                           // with animBoneLookup[0] == &animState[1]. If the bone does not
 	                           // exist, its entry points to NULL.
+	sklBone *animState;  // Delta transformations for each bone.
 } sklAnimInstance;
 
 // Skeleton instance
@@ -77,7 +83,7 @@ unsigned char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath)
 void sklaDelete(sklAnim *skla);
 
 unsigned char sklaiInit(sklAnimInstance *sklai, skeleton *skl, const size_t stateNum);
-void sklaiChangeAnim(sklAnimInstance *sklai, const sklAnim *anim, const size_t frame, const float blendTime);
+void sklaiChangeAnim(sklAnimInstance *sklai, const size_t anim, const size_t frame, const float blendTime);
 void sklaiDelete(sklAnimInstance *sklai, const size_t boneNum);
 
 unsigned char skliInit(sklInstance *skli, skeleton *skl, const size_t stateNum);

@@ -21,10 +21,9 @@ typedef struct {
 	sklInstance skli;
 	twInstance twi;
 	/** Should be in a struct? **/
-	interpVec3 position;     // Position of the object
+	interpVec3 position;     // Position of the object relative to its parent
 	interpQuat orientation;  // Quaternion representing orientation
 	vec3 rotation;           // Change in orientation, in Eulers
-	/** Position should be relative to the pivot, not the other way around. **/
 	interpVec3 pivot;        // The point the object is rotated around (relative to its position)
 	interpVec3 targetPosition;     // Target position, used for target billboards
 	interpQuat targetOrientation;  // Target orientation, used for target billboards

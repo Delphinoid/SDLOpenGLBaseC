@@ -601,7 +601,7 @@ unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePa
 			// Make the current animation loop
 			}else if(lineLength >= 6 && strncmp(line, "loop ", 5) == 0){
 				if(currentCommand == 1){
-					tempAnim.animData.desiredLoops = strtol(line+5, NULL, 0);
+					tempAnim.animData.desiredLoops = strtoul(line+5, NULL, 0);
 				}else{
 					printf("Error loading texture wrapper: Animation sub-command \"loop\" invoked on line %u without specifying an animation.\n", currentLine);
 				}
@@ -977,23 +977,24 @@ float twiGetFrameHeight(const twInstance *twi){
 void twiGetFrameInfo(const twInstance *twi, float *x, float *y, float *w, float *h, GLuint *frameTexID, const size_t state, const float interpT){
 
 	// Make sure the current animation and frame are valid (within proper bounds)
-	if(*twi->animInst.currentAnim < twi->tw->animationNum &&
-	   *twi->animInst.currentFrame < twGetAnim(twi->tw, *twi->animInst.currentAnim)->animData.frameNum){
+	if(twi->animInst.currentAnim[state] < twi->tw->animationNum &&
+	   twi->animInst.currentFrame[state] < twGetAnim(twi->tw, twi->animInst.currentAnim[state])->animData.frameNum){
 
-		size_t startAnim, startFrame;
-		animGetRenderData(&twi->animInst, &twGetAnim(twi->tw, *twi->animInst.currentAnim)->animData, state, interpT, &startAnim, &startFrame, NULL, NULL, NULL, NULL);
-		*x = twGetAnimSubframe(twi->tw, startAnim, startFrame)->x;
-		*y = twGetAnimSubframe(twi->tw, startAnim, startFrame)->y;
-		*w = twGetAnimSubframe(twi->tw, startAnim, startFrame)->w;
-		*h = twGetAnimSubframe(twi->tw, startAnim, startFrame)->h;
-		*frameTexID = twGetAnimFrame(twi->tw, startAnim, startFrame)->baseTexture->id;
+		size_t startFrame;
+		animGetRenderData(&twi->animInst, &twGetAnim(twi->tw, twi->animInst.currentAnim[state])->animData,
+		                  state, interpT, &startFrame, NULL, NULL);
+		*x = twGetAnimSubframe(twi->tw, twi->animInst.currentAnim[state], startFrame)->x;
+		*y = twGetAnimSubframe(twi->tw, twi->animInst.currentAnim[state], startFrame)->y;
+		*w = twGetAnimSubframe(twi->tw, twi->animInst.currentAnim[state], startFrame)->w;
+		*h = twGetAnimSubframe(twi->tw, twi->animInst.currentAnim[state], startFrame)->h;
+		*frameTexID = twGetAnimFrame(twi->tw, twi->animInst.currentAnim[state], startFrame)->baseTexture->id;
 
 	}else{
 
-		*x = 0;
-		*y = 0;
-		*w = 0;
-		*h = 0;
+		*x = 0.f;
+		*y = 0.f;
+		*w = 0.f;
+		*h = 0.f;
 		*frameTexID = 0;
 
 	}

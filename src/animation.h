@@ -10,21 +10,18 @@
 */
 
 typedef struct {
-	int desiredLoops;    // How many times the animation will loop (with -1 being infinite times).
-	size_t frameNum;     // The total number of keyframes in the animation.
-	float *frameDelays;  // Represents when each frame ends. "frameEnds" is a more accurate name, but this name is a bit of an inside joke now.
+	unsigned int desiredLoops;  // How many times the animation will loop (with -1 being infinite times).
+	size_t frameNum;            // The total number of keyframes in the animation.
+	float *frameDelays;         // Represents when each frame ends. "frameEnds" is a more accurate name, but this name is a bit of an inside joke now.
 } animationData;
 
 typedef struct {
-	int currentLoops;
-	float *blendFrameProgress;
-	float *blendFrameEnd;
-	size_t *currentAnim;
-	size_t *currentFrame;
-	size_t *nextAnim;
-	size_t *nextFrame;
-	float *prevElapsedTime;
-	float *totalElapsedTime;
+	unsigned int currentLoops;
+	size_t *currentAnim;      // Size is stateNum.
+	size_t *currentFrame;     // Size is stateNum.
+	size_t *nextFrame;        // Size is stateNum.
+	float *prevElapsedTime;   // Size is stateNum.
+	float *totalElapsedTime;  // Size is stateNum.
 } animationInstance;
 
 /** The two functions below are REALLY bad, redo them later. **/
@@ -35,6 +32,6 @@ void animDataDelete(animationData *animData);
 void animResetInterpolation(animationInstance *animInst, const size_t stateNum);
 void animAdvance(animationInstance *animInst, const animationData *animData, const float elapsedTime);
 void animGetRenderData(const animationInstance *animInst, const animationData *animData, const size_t state, const float interpT,
-                       size_t *startAnim, size_t *startFrame, float *startProgress, size_t *endAnim, size_t *endFrame, float *animInterpT);
+                       size_t *startFrame, size_t *endFrame, float *animInterpT);
 
 #endif
