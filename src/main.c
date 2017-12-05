@@ -165,8 +165,12 @@ int main(int argc, char *argv[]){
 	float globalTimeMod = 1.f;
 	float framerate = 1000.f / 128.f;  // Desired renders per millisecond
 	float tickrate = 1000.f / 64.f;  // Desired updates per millisecond
-	uint32_t nextUpdate = 0.f;
-	uint32_t nextRender = 0.f;
+	float nextUpdate = 0.f;
+	float nextRender = 0.f;
+
+	uint32_t updates = 0;
+	uint32_t renders = 0;
+	uint32_t lastPrint = 0;
 
 	SDL_Event prgEventHandler;
 
@@ -239,8 +243,8 @@ int main(int argc, char *argv[]){
 		SDL_GetRelativeMouseState(&mouseRelX, &mouseRelY);
 
 
-		const uint32_t startTime = SDL_GetTicks();
-		while(startTime >= nextUpdate){
+		const float updateStart = (float)SDL_GetTicks();
+		while(updateStart >= nextUpdate){
 
 			/* Animate */
 			/** Could be merged with the update function but animating should be done in here. **/
@@ -286,16 +290,17 @@ int main(int argc, char *argv[]){
 
 			/* Next frame */
 			nextUpdate += tickrate;
+			++updates;
 
 		}
 
 
 		/* Render the scene */
-		const uint32_t endTime = SDL_GetTicks();
-		if(endTime >= nextRender){
+		const float renderStart = (float)SDL_GetTicks();
+		if(renderStart >= nextRender){
 
 			/* Progress between current and next frame. */
-			float interpT = (SDL_GetTicks() - (nextUpdate - tickrate)) / tickrate;
+			float interpT = (renderStart - (nextUpdate - tickrate)) / tickrate;
 			if(interpT < 0.f){
 				interpT = 0.f;
 			}else if(interpT > 1.f){
@@ -321,8 +326,23 @@ int main(int argc, char *argv[]){
 			SDL_GL_SwapWindow(gfxPrg.window);
 
 			/* Next frame */
-			nextRender = endTime + framerate;
+			if(renderStart > nextRender + framerate){
+				// If we fell behind, skip forward so we don't render unnecessarily.
+				nextRender = renderStart + framerate;
+			}else{
+				nextRender += framerate;
+			}
+			++renders;
 
+		}
+
+
+		if(SDL_GetTicks() - lastPrint > 1000){
+			printf("Updates: %u\n", updates);
+			printf("Renders: %u\n", renders);
+			lastPrint = SDL_GetTicks();
+			updates = 0;
+			renders = 0;
 		}
 
     }

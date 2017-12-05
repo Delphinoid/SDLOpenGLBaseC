@@ -355,7 +355,9 @@ static void sklafDelete(sklAnimFragment *sklaf){
 	if(sklaf->animBoneLookup != NULL){
 		free(sklaf->animBoneLookup);
 	}
-	sklabDelete(sklaf->animNext);
+	if(sklaf->animNext != NULL){
+		sklabDelete(sklaf->animNext);
+	}
 }
 
 static unsigned char sklaiInit(sklAnimInstance *sklai, const skeleton *skl, sklAnim *anim, const size_t stateNum){
@@ -509,6 +511,7 @@ static void sklaiDelete(sklAnimInstance *sklai, const size_t boneNum){
 			nextFragment = fragment->animNext->blendAnim;
 		}
 		sklafDelete(fragment);
+		free(fragment);
 		fragment = nextFragment;
 	}
 	if(sklai->animState != NULL){
