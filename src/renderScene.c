@@ -33,16 +33,16 @@ void renderModel(renderable *rndr, const camera *cam, const size_t state, const 
 	glUniform4fv(gfxPrg->textureFragmentID, 1, texFrag);
 
 	/* Generate the skeleton state and feed it to the shader */
-	if(rndr->mdl->skl.bones != NULL){
+	if(rndr->mdl->skl != NULL){
 		// Generate a state for the model skeleton, transformed into the animated skeleton's space
-		mat4 *skeletonState = malloc(rndr->mdl->skl.boneNum*sizeof(mat4));
+		mat4 *skeletonState = malloc(rndr->mdl->skl->boneNum*sizeof(mat4));
 		if(skeletonState != NULL){
 			if(rndr->skli.skl != NULL){
 				skliGenerateAnimStates(&rndr->skli, state, interpT);
 			}
 			size_t i;
-			for(i = 0; i < rndr->mdl->skl.boneNum; ++i){
-				skliGenerateBoneState(&rndr->skli, &rndr->mdl->skl, skeletonState, i);
+			for(i = 0; i < rndr->mdl->skl->boneNum; ++i){
+				skliGenerateBoneState(&rndr->skli, rndr->mdl->skl, skeletonState, i);
 				glUniformMatrix4fv(gfxPrg->boneArrayID[i], 1, GL_FALSE, &skeletonState[i].m[0][0]);
 			}
 			free(skeletonState);

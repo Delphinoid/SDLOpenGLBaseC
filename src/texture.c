@@ -22,6 +22,11 @@ unsigned char tLoad(texture *tex, const char *prgPath, const char *filePath){
 	const size_t pathLen = strlen(prgPath);
 	const size_t fileLen = strlen(filePath);
 	char *fullPath = malloc((pathLen+fileLen+1)*sizeof(char));
+	if(fullPath == NULL){
+		/** Remove printf()s **/
+		printf("Error loading texture: Memory allocation failure.\n");
+		return 0;
+	}
 	memcpy(fullPath, prgPath, pathLen);
 	memcpy(fullPath+pathLen, filePath, fileLen);
 	fullPath[pathLen+fileLen] = '\0';

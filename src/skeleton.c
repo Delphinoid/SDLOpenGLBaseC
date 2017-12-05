@@ -307,167 +307,209 @@ void sklaDelete(sklAnim *skla){
 	animDataDelete(&skla->animData);
 }
 
-unsigned char sklaiInit(sklAnimInstance *sklai, skeleton *skl, const size_t stateNum){
-
-
-
-	sklai->animInst = malloc((1+MAX_BLEND_INSTANCES)*sizeof(animationInstance));
-	if(sklai->animInst == NULL){
+static unsigned char sklabInit(sklAnimBlend *sklab, const size_t stateNum, const float blendTime){
+	sklab->blendProgress = malloc(stateNum * sizeof(float));
+	if(sklab->blendProgress == NULL){
 		/** Memory allocation failure. **/
 		return 0;
 	}
-
-	sklai->animInstBlendProgress = malloc(MAX_BLEND_INSTANCES*sizeof(float));
-	if(sklai->animInstBlendProgress == NULL){
-		/** Memory allocation failure. **/
-		free(sklai->animInst);
-		return 0;
-	}
-
-	sklai->animInstBlendTime = malloc(MAX_BLEND_INSTANCES*sizeof(float));
-	if(sklai->animInstBlendTime == NULL){
-		/** Memory allocation failure. **/
-		free(sklai->animInst);
-		free(sklai->animInstBlendProgress);
-		return 0;
-	}
-
-	sklai->animBoneLookup = malloc(stateNum*sizeof(sklBone *));
-	if(sklai->animBoneLookup == NULL){
-		/** Memory allocation failure. **/
-		free(sklai->animInst);
-		free(sklai->animInstBlendProgress);
-		free(sklai->animInstBlendTime);
-		return 0;
-	}
-
-	sklai->animState = malloc(skl->boneNum*sizeof(sklBone));
-	if(sklai->animState == NULL){
-		/** Memory allocation failure. **/
-		free(sklai->animInst);
-		free(sklai->animInstBlendProgress);
-		free(sklai->animInstBlendTime);
-		free(sklai->animBoneLookup);
-		return 0;
-	}
-
+	sklab->blendTime = blendTime;
 	size_t i;
-	if(animInstInit(sklai->animInst, stateNum)){
-		size_t j;
-		for(i = 0; i < MAX_BLEND_INSTANCES; ++i){
-			if(!animInstInit(&sklai->animInst[1+i], stateNum)){
-				break;
-			}
-			sklai->animInstBlendProgress[i] = malloc(stateNum*sizeof(float));
-			if(sklai->animInstBlendProgress == NULL){
-				animInstDelete(&sklai->animInst[1+i]);
-				sklai->animInstBlendTime[i] = NULL;
-				break;
-			}
-			sklai->animInstBlendTime[i] = malloc(stateNum*sizeof(float));
-			if(sklai->animInstBlendTime == NULL){
-				animInstDelete(&sklai->animInst[1+i]);
-				free(sklai->animInstBlendProgress[i]);
-				break;
-			}
-			for(j = 0; j < stateNum; ++j){
-				sklai->animInstBlendProgress[i][j] = 0.f;
-				sklai->animInstBlendTime[i][j] = 0.f;
-			}
-		}
-		// Error allocating memory, free everything and return.
-		if(i < MAX_BLEND_INSTANCES){
-			while(i > 0){
-				--i;
-				animInstDelete(&sklai->animInst[1+i]);
-				free(sklai->animInstBlendProgress[i]);
-				free(sklai->animInstBlendTime[i]);
-			}
-			free(sklai->animInst);
-			free(sklai->animInstBlendProgress);
-			free(sklai->animInstBlendTime);
-			free(sklai->animBoneLookup);
-			free(sklai->animState);
-			return 0;
-		}
-	}else{
-		// Error allocating memory, free everything and return.
-		free(sklai->animInst);
-		free(sklai->animInstBlendProgress);
-		free(sklai->animInstBlendTime);
-		free(sklai->animBoneLookup);
-		free(sklai->animState);
+	for(i = 0; i < stateNum; ++i){
+		// Set each value to 0.
+		sklab->blendProgress[i] = 0.f;
+	}
+	return 1;
+}
+
+static void sklabDelete(sklAnimBlend *sklab){
+	if(sklab->blendProgress != NULL){
+		free(sklab->blendProgress);
+	}
+}
+
+static unsigned char sklafInit(sklAnimFragment *sklaf, sklAnim *anim, const size_t stateNum){
+	sklaf->animBoneLookup = malloc(anim->boneNum * sizeof(sklBone *));
+	if(sklaf->animBoneLookup == NULL){
+		/** Memory allocation failure. **/
 		return 0;
 	}
-
+	if(!animInstInit(&sklaf->animator, stateNum)){
+		/** Memory allocation failure. **/
+		free(sklaf->animBoneLookup);
+		return 0;
+	}
 	/* Initialize animBoneLookup. */
-	for(i = 0; i < stateNum; ++i){
+	size_t i;
+	for(i = 0; i < anim->boneNum; ++i){
 		/** Create a proper lookup below. **/
 		//
 	}
-
+	sklaf->currentAnim = anim;
+	sklaf->animNext = NULL;
 	return 1;
 }
-void sklaiResetInterpolation(sklAnimInstance *sklai, const size_t stateNum){
-	/* Combines animResetInterpolation() to save multiple unnecessary loops. */
-	size_t i, j;
-	for(i = stateNum-1; i > 0; --i){
-		// Animations
-		for(j = 0; j <= MAX_BLEND_INSTANCES; ++j){
-			sklai->animInst[j].currentAnim[i]      = sklai->animInst[j].currentAnim[i-1];
-			sklai->animInst[j].currentFrame[i]     = sklai->animInst[j].currentFrame[i-1];
-			sklai->animInst[j].nextFrame[i]        = sklai->animInst[j].nextFrame[i-1];
-			sklai->animInst[j].prevElapsedTime[i]  = sklai->animInst[j].prevElapsedTime[i-1];
-			sklai->animInst[j].totalElapsedTime[i] = sklai->animInst[j].totalElapsedTime[i-1];
-		}
-		// Blend variables
-		sklai->animInstBlendProgress[i] = sklai->animInstBlendProgress[i-1];
-		sklai->animInstBlendTime[i]     = sklai->animInstBlendTime[i-1];
+
+static void sklafDelete(sklAnimFragment *sklaf){
+	animInstDelete(&sklaf->animator);
+	if(sklaf->animBoneLookup != NULL){
+		free(sklaf->animBoneLookup);
 	}
+	sklabDelete(sklaf->animNext);
 }
-void sklaiFinishBlend(sklAnimInstance *sklai, const size_t blend){
-	size_t i;
-	for(i = 1+blend; i < MAX_BLEND_INSTANCES; ++i){
-		// Shift all of the following blend animations over.
-		*sklai->animInst[i].currentAnim      = *sklai->animInst[i+1].currentAnim;
-		*sklai->animInst[i].currentFrame     = *sklai->animInst[i+1].currentFrame;
-		*sklai->animInst[i].nextFrame        = *sklai->animInst[i+1].nextFrame;
-		*sklai->animInst[i].prevElapsedTime  = *sklai->animInst[i+1].prevElapsedTime;
-		*sklai->animInst[i].totalElapsedTime = *sklai->animInst[i+1].totalElapsedTime;
-		*sklai->animInstBlendProgress[i-1]     = *sklai->animInstBlendProgress[i];
-		*sklai->animInstBlendTime[i-1]         = *sklai->animInstBlendTime[i];
+
+static unsigned char sklaiInit(sklAnimInstance *sklai, const skeleton *skl, sklAnim *anim, const size_t stateNum){
+	sklai->animState = malloc(skl->boneNum * sizeof(sklBone));
+	if(sklai->animState == NULL){
+		/** Memory allocation failure. **/
+		return 0;
 	}
-	*sklai->animInstBlendProgress[MAX_BLEND_INSTANCES] = 0.f;
-	*sklai->animInstBlendTime[MAX_BLEND_INSTANCES]     = 0.f;
+	sklai->animListHead = malloc(sizeof(sklAnimFragment));
+	if(sklai->animListHead == NULL){
+		/** Memory allocation failure. **/
+		free(sklai->animState);
+		return 0;
+	}
+	if(!sklafInit(sklai->animListHead, anim, stateNum)){
+		/** Memory allocation failure. **/
+		free(sklai->animState);
+		free(sklai->animListHead);
+		return 0;
+	}
+	sklai->animListTail = sklai->animListHead;
+	return 1;
+}
+static void sklaiAnimate(sklAnimInstance *sklai, const size_t stateNum, const float elapsedTime){
+
+	/* Loop through each sklAnimFragment, updating them. */
+	size_t i;
+	sklAnimFragment **fragment = &sklai->animListHead;
+	while(fragment != NULL){
+
+		// Shift the animator variables over to make room for new ones.
+		for(i = stateNum-1; i > 0; --i){
+			(*fragment)->animator.currentFrame[i]     = (*fragment)->animator.currentFrame[i-1];
+			(*fragment)->animator.nextFrame[i]        = (*fragment)->animator.nextFrame[i-1];
+			(*fragment)->animator.prevElapsedTime[i]  = (*fragment)->animator.prevElapsedTime[i-1];
+			(*fragment)->animator.totalElapsedTime[i] = (*fragment)->animator.totalElapsedTime[i-1];
+
+		}
+
+		// Check if the fragment is blending into another.
+		if((*fragment)->animNext != NULL){
+			// Shift the blend variables over to make room for new ones.
+			for(i = stateNum-1; i > 0; --i){
+				(*fragment)->animNext->blendProgress[i] = (*fragment)->animNext->blendProgress[i-1];
+			}
+			// Check if the animation has finished blending on its oldest state.
+			if((*fragment)->animNext->blendProgress[stateNum-1] >= (*fragment)->animNext->blendTime){
+				// Since it's no longer being used in any state, it can be safely freed.
+				sklAnimFragment *nextFragment = (*fragment)->animNext->blendAnim;
+				sklafDelete((*fragment));
+				(*fragment) = nextFragment;
+			}else{
+				// Advance animator.
+				animAdvance(&(*fragment)->animator, &(*fragment)->currentAnim->animData, elapsedTime);
+				// Update the blend and go to the next fragment.
+				*(*fragment)->animNext->blendProgress += elapsedTime;
+				fragment = &(*fragment)->animNext->blendAnim;
+			}
+		}else{
+			// Advance animator.
+			animAdvance(&(*fragment)->animator, &(*fragment)->currentAnim->animData, elapsedTime);
+			// Exit the loop.
+			fragment = NULL;
+		}
+
+	}
 
 }
-void sklaiChangeAnim(sklAnimInstance *sklai, const size_t anim, const size_t frame, const float blendTime){
-	/****/
+static void sklaiGenerateAnimState(sklAnimInstance *sklai, const size_t state, const float interpT){
+
+	float blendTime = 1.f;
+	float blendProgress = 1.f;
+
+	/* Loop through each animation fragment in order, blending between them and generating bone states. */
+	sklAnimFragment *fragment = sklai->animListHead;
+	while(fragment != NULL){
+
+		// If the animation exists in the current state, generate render data for it.
+		if(fragment->animNext == NULL || fragment->animNext->blendProgress[state] < fragment->animNext->blendTime){
+
+			size_t startFrame;
+			size_t endFrame;
+			float animInterpT;
+			animGetRenderData(&fragment->animator, &fragment->currentAnim->animData, state, interpT,
+			                  &startFrame, &endFrame, &animInterpT);
+
+			/* Loop through each bone in the current animation fragment, running interpolation and writing to animState. */
+			size_t i;
+			for(i = 0; i < fragment->currentAnim->boneNum; ++i){
+				// Only continue if the current bone exists in the skeleton.
+				if(fragment->animBoneLookup[i] != NULL){
+
+					// Interpolate between startFrame and endFrame, storing the result in interpBoneEnd.
+					sklBone interpBoneEnd;
+					boneInterpolate(&fragment->currentAnim->frames[startFrame][i], &fragment->currentAnim->frames[endFrame][i],
+					                animInterpT, &interpBoneEnd);
+
+					// Interpolate between animState and interpBoneEnd.
+					sklBone interpBoneStart = *fragment->animBoneLookup[i];
+					const float animInterpTBlend = blendProgress / blendTime;
+					boneInterpolate(&interpBoneStart, &interpBoneEnd, animInterpTBlend, fragment->animBoneLookup[i]);
+
+				}
+			}
+
+			if(fragment->animNext != NULL){
+				// If this fragment marks the beginning of a valid blend, set blendTime and blendProgress for later.
+				// If fragment->animNext != NULL, we can guarantee that fragment->animNext->blendProgress[state] < fragment->animNext->blendTime.
+				blendTime = fragment->animNext->blendTime;
+				blendProgress = fragment->animNext->blendProgress[state];
+			}
+
+		}
+
+		if(fragment->animNext != NULL){
+			fragment = fragment->animNext->blendAnim;
+		}else{
+			fragment = NULL;
+		}
+
+	}
+
 }
-void sklaiDelete(sklAnimInstance *sklai, const size_t boneNum){
-	size_t i;
-	if(sklai->animInst != NULL){
-		for(i = 0; i <= MAX_BLEND_INSTANCES; ++i){
-			animInstDelete(&sklai->animInst[i]);
-		}
-		free(sklai->animInst);
+unsigned char sklaiChangeAnim(sklAnimInstance *sklai, const skeleton *skl, sklAnim *anim, const size_t stateNum, const size_t frame, const float blendTime){
+	/* Allocate room for the new animation fragment in animList. */
+	sklai->animListTail->animNext = malloc(sizeof(sklAnimBlend));
+	if(sklai->animListTail->animNext == NULL){
+		/** Memory allocation failure. **/
+		return 0;
 	}
-	if(sklai->animInstBlendProgress != NULL){
-		for(i = 0; i < MAX_BLEND_INSTANCES; ++i){
-			free(sklai->animInstBlendProgress[i]);
-		}
-		free(sklai->animInstBlendProgress);
+	if(!sklabInit(sklai->animListTail->animNext, stateNum, blendTime)){
+		/** Memory allocation failure. **/
+		free(sklai->animListTail->animNext);
+		return 0;
 	}
-	if(sklai->animInstBlendTime != NULL){
-		for(i = 0; i < MAX_BLEND_INSTANCES; ++i){
-			free(sklai->animInstBlendTime[i]);
-		}
-		free(sklai->animInstBlendTime);
+	if(!sklafInit(sklai->animListTail->animNext->blendAnim, anim, stateNum)){
+		/** Memory allocation failure. **/
+		free(sklai->animListTail->animNext);
+		sklabDelete(sklai->animListTail->animNext);
+		return 0;
 	}
-	if(sklai->animBoneLookup != NULL){
-		for(i = 0; i < boneNum; ++i){
-			free(sklai->animBoneLookup[i]);
+	sklai->animListTail = sklai->animListTail->animNext->blendAnim;
+	return 1;
+}
+static void sklaiDelete(sklAnimInstance *sklai, const size_t boneNum){
+	/* Loop through each sklAnimFragment, deleting them. */
+	sklAnimFragment *fragment = sklai->animListHead;
+	while(fragment != NULL){
+		sklAnimFragment *nextFragment = NULL;
+		if(fragment->animNext != NULL){
+			nextFragment = fragment->animNext->blendAnim;
 		}
+		sklafDelete(fragment);
+		fragment = nextFragment;
 	}
 	if(sklai->animState != NULL){
 		free(sklai->animState);
@@ -479,11 +521,9 @@ unsigned char skliInit(sklInstance *skli, skeleton *skl, const size_t stateNum){
 	skli->skl = skl;
 	skli->timeMod = 1.f;
 	skli->animationNum = 0;
-	skli->animations = NULL;
-	skli->animInstNum = 0;
-	skli->animInstCapacity = ANIM_START_CAPACITY;
-	skli->animInstances = malloc(skli->animInstCapacity*sizeof(sklAnimInstance));
-	if(skli->animInstances == NULL){
+	skli->animationCapacity = ANIM_START_CAPACITY;
+	skli->animations = malloc(skli->animationCapacity*sizeof(sklAnimInstance));
+	if(skli->animations == NULL){
 		/** Memory allocation failure. **/
 		return 0;
 	}
@@ -560,14 +600,10 @@ unsigned char skliLoad(sklInstance *skli, const size_t stateNum, const char *prg
 	skla->frames[2][1] = tempBoneTop;
 	skla->animData.frameDelays[2] = 3000.f;
 
+	sklaiInit(&skli->animations[0], skl, skla, stateNum);
+	skli->animations[0].animListHead->animBoneLookup[0] = &skli->animations[0].animState[0];
+	skli->animations[0].animListHead->animBoneLookup[1] = &skli->animations[0].animState[1];
 	++skli->animationNum;
-	skli->animations = malloc(skli->animationNum*sizeof(sklAnim *));
-	skli->animations[0] = skla;
-
-	sklaiInit(&skli->animInstances[0], skl, stateNum);
-	skli->animInstances[0].animBoneLookup[0] = &skli->animInstances[0].animState[0];
-	skli->animInstances[0].animBoneLookup[1] = &skli->animInstances[0].animState[1];
-	++skli->animInstNum;
 
 	return 1;
 
@@ -575,116 +611,21 @@ unsigned char skliLoad(sklInstance *skli, const size_t stateNum, const char *prg
 void skliAddAnimation(sklInstance *skli, const sklAnim *skla, const size_t frame){
 	//
 }
-void skliChangeSkeleton(sklInstance *skli, skeleton *skl){
-	/** Re-calculate bone lookups for all animation instances. **/
+void skliChangeSkeleton(sklInstance *skli, const skeleton *skl){
+	/** Re-calculate bone lookups for all animation fragments. **/
 }
 void skliAnimate(sklInstance *skli, const size_t stateNum, const float elapsedTime){
-	float elapsedTimeMod = elapsedTime*skli->timeMod;
-	size_t i, j;
-	for(i = 0; i < skli->animInstNum; ++i){
-		// Shift the state variables over to make room for the next state.
-		sklaiResetInterpolation(&skli->animInstances[i], stateNum);
-		// Advance animInst.
-		animAdvance(skli->animInstances[i].animInst, &skli->animations[*skli->animInstances[i].animInst->currentAnim]->animData, elapsedTimeMod);
-		// Handle animation blending.
-		for(j = 0; j < MAX_BLEND_INSTANCES; ++j){
-			// Check if this animation is blending.
-			if(*skli->animInstances[i].animInstBlendTime[j] > 0.f){
-				// Advance the blend by elapsedTimeMod ms.
-				*skli->animInstances[i].animInstBlendProgress[j] += elapsedTimeMod;
-				if(*skli->animInstances[i].animInstBlendProgress[j] < *skli->animInstances[i].animInstBlendTime[j]){
-					// We're still blending, advance the animation.
-					animAdvance(&skli->animInstances[i].animInst[1+j], &skli->animations[*skli->animInstances[i].animInst[1+j].currentAnim]->animData, elapsedTimeMod);
-				}else{
-					// We've finished blending. Shift its states over.
-					sklaiFinishBlend(&skli->animInstances[i], j);
-					--j;
-				}
-			}else{
-				// There should be no gaps between blending animations.
-				// If an animation that is not blending has been found, we're done.
-				break;
-			}
-		}
+	const float elapsedTimeMod = elapsedTime * skli->timeMod;
+	size_t i;
+	for(i = 0; i < skli->animationNum; ++i){
+		sklaiAnimate(&skli->animations[i], stateNum, elapsedTimeMod);
 	}
 }
 void skliGenerateAnimStates(sklInstance *skli, const size_t state, const float interpT){
-
-	size_t startFrame[1+MAX_BLEND_INSTANCES];
-	size_t endFrame[1+MAX_BLEND_INSTANCES];
-	float animInterpT[1+MAX_BLEND_INSTANCES];
-	float animInterpTBlend;
-	sklBone *startBone = NULL;
-	sklBone *endBone = NULL;
-
-	size_t i, j, k;
-	for(i = 0; i < skli->animInstNum; ++i){
-
-		animGetRenderData(skli->animInstances[i].animInst,
-		                  &skli->animations[skli->animInstances[i].animInst->currentAnim[state]]->animData,
-		                  state, interpT, &startFrame[0], &endFrame[0], &animInterpT[0]);
-
-		// Handle animation blending.
-		size_t blendNum = 0;
-		for(j = 1; j <= MAX_BLEND_INSTANCES; ++j){
-			if(skli->animInstances[i].animInstBlendTime[blendNum][state] > 0.f){
-				// The animation is blending, update it.
-				animGetRenderData(&skli->animInstances[i].animInst[j],
-				                  &skli->animations[skli->animInstances[i].animInst[j].currentAnim[state]]->animData,
-				                  state, interpT, &startFrame[j], &endFrame[j], &animInterpT[j]);
-			}else{
-				// There should be no gaps between blending animations.
-				// If an animation that is not blending has been found, we're done.
-				break;
-			}
-			++blendNum;
-		}
-
-		for(k = 0; k < skli->animations[skli->animInstances[i].animInst->currentAnim[state]]->boneNum; ++k){
-
-			if(blendNum > 0){
-
-				sklBone *startBoneBlend, *endBoneBlend;
-				j = blendNum;
-
-				// Calculate the bone state for the last blending animation.
-				startBoneBlend = &skli->animations[skli->animInstances[i].animInst[j].currentAnim[state]]->frames[startFrame[j]][k];
-				endBoneBlend   = &skli->animations[skli->animInstances[i].animInst[j].currentAnim[state]]->frames[endFrame[j]][k];
-				boneInterpolate(startBoneBlend, endBoneBlend, animInterpT[j-1], startBone);
-
-				// Effectively for(j = blendNum; j > 0; --j)
-				while(1){
-
-					// Calculate the bone state for the current blending animation.
-					animInterpTBlend = skli->animInstances[i].animInstBlendProgress[j-1][state] / skli->animInstances[i].animInstBlendTime[j-1][state];
-					startBoneBlend = &skli->animations[skli->animInstances[i].animInst[j-1].currentAnim[state]]->frames[startFrame[j-1]][k];
-					endBoneBlend   = &skli->animations[skli->animInstances[i].animInst[j-1].currentAnim[state]]->frames[endFrame[j-1]][k];
-					boneInterpolate(startBoneBlend, endBoneBlend, animInterpT[j-1], endBone);
-
-					if(j > 1){
-						// If this animation isn't the most recent animation, interpolate between it and the previous blending animation.
-						sklBone temp;
-						boneInterpolate(startBone, endBone, animInterpTBlend, &temp);
-						*startBone = temp;
-						--j;
-					}else{
-						break;
-					}
-
-				}
-
-			}else{
-				animInterpTBlend = *animInterpT;
-				startBone = &skli->animations[skli->animInstances[i].animInst->currentAnim[state]]->frames[*startFrame][k];
-				endBone   = &skli->animations[skli->animInstances[i].animInst->currentAnim[state]]->frames[*endFrame][k];
-			}
-
-			boneInterpolate(startBone, endBone, animInterpTBlend, &skli->animInstances[i].animState[k]);
-
-		}
-
+	size_t i;
+	for(i = 0; i < skli->animationNum; ++i){
+		sklaiGenerateAnimState(&skli->animations[i], state, interpT);
 	}
-
 }
 void skliGenerateBoneState(const sklInstance *skli, const skeleton *skl, mat4 *state, const size_t bone){
 	/*
@@ -709,16 +650,14 @@ void skliGenerateBoneState(const sklInstance *skli, const skeleton *skl, mat4 *s
 		                            skli->skl->bones[animBone].defaultState.position.y,
 		                            skli->skl->bones[animBone].defaultState.position.z);
 		size_t i;
-		for(i = 0; i < skli->animInstNum; ++i){
-			if(skli->animInstances[i].animBoneLookup[animBone] != NULL){
-				mat4Translate(&state[bone], skli->animInstances[i].animBoneLookup[animBone]->position.x,
-				                            skli->animInstances[i].animBoneLookup[animBone]->position.y,
-				                            skli->animInstances[i].animBoneLookup[animBone]->position.z);
-				mat4Rotate(&state[bone], &skli->animInstances[i].animBoneLookup[animBone]->orientation);
-				mat4Scale(&state[bone], skli->animInstances[i].animBoneLookup[animBone]->scale.x,
-				                        skli->animInstances[i].animBoneLookup[animBone]->scale.y,
-				                        skli->animInstances[i].animBoneLookup[animBone]->scale.z);
-			}
+		for(i = 0; i < skli->animationNum; ++i){
+			mat4Translate(&state[bone], skli->animations[i].animState[animBone].position.x,
+			                            skli->animations[i].animState[animBone].position.y,
+			                            skli->animations[i].animState[animBone].position.z);
+			mat4Rotate(&state[bone], &skli->animations[i].animState[animBone].orientation);
+			mat4Scale(&state[bone], skli->animations[i].animState[animBone].scale.x,
+			                        skli->animations[i].animState[animBone].scale.y,
+			                        skli->animations[i].animState[animBone].scale.z);
 		}
 	}else{
 		// If it doesn't exist, use the model's bone position.
@@ -732,32 +671,13 @@ void skliGenerateBoneState(const sklInstance *skli, const skeleton *skl, mat4 *s
 	                            -skl->bones[bone].defaultState.position.y,
 	                            -skl->bones[bone].defaultState.position.z);
 }
-void skliGenerateState(const sklInstance *skli, const skeleton *skl, mat4 *state){
-	/*
-	** Depth-first traversal through skl, running skliGenerateBoneState() on each bone.
-	**
-	** Passing in a skeleton (skl) that is different to skli->skl will result in it
-	** being transformed to fit skli->skl. This can be used for "attaching" models to
-	** other models: for example, if you have a hat model, you can pass its skeleton
-	** in as skl and the skeleton of the entity wearing it in as skli->skl and it will
-	** move the hat onto that entity's head.
-	*/
-	size_t i;
-	for(i = 0; i < skl->boneNum; ++i){
-		// Update the skl bone's state.
-		skliGenerateBoneState(skli, skl, state, i);
-	}
-}
 void skliDelete(sklInstance *skli, const size_t stateNum){
 	if(skli->animations != NULL){
-		free(skli->animations);
-	}
-	if(skli->animInstances != NULL){
 		size_t i;
-		for(i = 0; i < skli->animInstNum; ++i){
-			sklaiDelete(&skli->animInstances[i], skli->skl->boneNum);
+		for(i = 0; i < skli->animationNum; ++i){
+			sklaiDelete(&skli->animations[i], skli->skl->boneNum);
 		}
-		free(skli->animInstances);
+		free(skli->animations);
 	}
 	if(skli->customState != NULL){
 		size_t i;

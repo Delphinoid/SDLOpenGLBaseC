@@ -6,28 +6,28 @@
 
 #define MAX_BLEND_INSTANCES 1
 
-// Skeleton bone data
+// Skeleton bone data.
 typedef struct {
 	vec3 position;
 	quat orientation;
 	vec3 scale;
 } sklBone;
 
-// Skeleton node, containing a bone and the index of its parent
+// Skeleton node, containing a bone and the index of its parent.
 typedef struct {
 	char *name;
 	sklBone defaultState;
 	size_t parent;
 } sklNode;
 
-// Combines the above structures
+// Combines the above structures.
 typedef struct {
 	char *name;
 	size_t boneNum;
 	sklNode *bones;  // Depth-first vector of each bone.
 } skeleton;
 
-// A full animation, containing a vector of keyframes
+// A full animation, containing a vector of keyframes.
 typedef struct {
 	/**
 	*** Redo this with a proper system that finds next bone transforms and
@@ -42,32 +42,72 @@ typedef struct {
 	                   // bone delta transforms (offsets from their default states).
 } sklAnim;
 
-// Skeletal animation instance
+/*
+** Skeletal animation blending contains the following components:
+**
+** An "animation fragment", containing:
+**     A pointer to a skeletal animation (sklAnim).
+**     An animator object, describing the animation's progress on each state.
+**     A bone look-up, translating bones in sklAnim to the sklAnimInstance's animState.
+**     A pointer to an "animation blend".
+**
+** An "animation blend", containing:
+**     A pointer to an "animation fragment", describing the animation that is being blended to.
+**     The length of the blend, in milliseconds.
+**     How long the animations have been blending for on each state, in milliseconds.
+**
+** The skeleton animation instance contains a pointer to the oldest and newest animation
+** fragments (the head and tail of the animation fragment "linked list). When blending to
+** a new animation, a new animation fragment and animation blend are created, and added to
+** the the last animation fragment's animNext. The tail is then adjusted accordingly.
+**
+** When an animation fragment has finished blending, it and its animation blend stay in the
+** linked list, simply being ignored when calculating bone states. Animation fragments and
+** blends are only removed when the oldest state has finished blending them, and they are
+** therefore no longer necessary.
+*/
+
+// Forward declaration for sklAnimBlend.
+typedef struct sklAnimBlend sklAnimBlend;
+
+// Animation fragment, containing an animation pointer, an animator, a bone lookup and a blend.
 typedef struct {
-	animationInstance *animInst;  // An array of animations. Size is MAX_BLEND_INSTANCES + 1.
-	                              // Animations after index 0 are used for blending, where smaller indices are more recent.
-	                              // When an animation blend finishes, all of the animations that follow are shifted over to the left.
-	float **animInstBlendProgress;   // The current progress through a blend. Size is MAX_BLEND_INSTANCES * stateNum.
-	float **animInstBlendTime;       // How long to blend between animations for. Size is MAX_BLEND_INSTANCES * stateNum.
-	sklBone **animBoneLookup;  // Which bone in animState each bone in skli->skl corresponds to.
-	                           // If the root (first) bone in skli->skl is named "blah" and the
+	sklAnim *currentAnim;
+	animationInstance animator;
+	sklBone **animBoneLookup;  // Which bone in animState each bone in currentAnim corresponds to.
+	                           // If the root (first) bone in currentAnim is named "blah" and the
 	                           // second bone in animState is named "blah", the array will start
 	                           // with animBoneLookup[0] == &animState[1]. If the bone does not
 	                           // exist, its entry points to NULL.
+	sklAnimBlend *animNext;
+} sklAnimFragment;
+
+// Animation blend.
+typedef struct sklAnimBlend {
+	sklAnimFragment *blendAnim;  // A pointer to the animation being blended to.
+	float blendTime;       // How long to blend between animations for.
+	float *blendProgress;  // How long the animation has been blending for. Size is stateNum.
+} sklAnimBlend;
+
+// Skeletal animation instance.
+typedef struct {
+	sklAnimFragment *animListHead;  // A pointer to the head of a linked list of animation fragments.
+	                                // Elements are only removed when their animNext is not NULL and
+	                                // their animNext->blendProgress[stateNum] is greater than their
+	                                // animNext->blendTime.
+	sklAnimFragment *animListTail;  // A pointer to the tail of the above linked list of animation fragments.
 	sklBone *animState;  // Delta transformations for each bone.
 } sklAnimInstance;
 
-// Skeleton instance
-/** Restructure for proper element attachments (?? No idea what I was talking about here) **/
+// Skeleton instance.
+/** Restructure for proper element attachments (actually I do know now, but I'm not writing it down) **/
 typedef struct {
 	skeleton *skl;  // Should never be changed manually.
 	float timeMod;
 	/** Can we use pushDynamicArray()? **/
 	size_t animationNum;
-	sklAnim **animations;
-	size_t animInstNum;
-	size_t animInstCapacity;
-	sklAnimInstance *animInstances;
+	size_t animationCapacity;
+	sklAnimInstance *animations;
 	sklBone **customState;  // Array of custom bone transformation arrays, one for each state.
 } sklInstance;
 
@@ -82,16 +122,13 @@ void sklaInit(sklAnim *skla);
 unsigned char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath);
 void sklaDelete(sklAnim *skla);
 
-unsigned char sklaiInit(sklAnimInstance *sklai, skeleton *skl, const size_t stateNum);
-void sklaiChangeAnim(sklAnimInstance *sklai, const size_t anim, const size_t frame, const float blendTime);
-void sklaiDelete(sklAnimInstance *sklai, const size_t boneNum);
+unsigned char sklaiChangeAnim(sklAnimInstance *sklai, const skeleton *skl, sklAnim *anim, const size_t stateNum, const size_t frame, const float blendTime);
 
 unsigned char skliInit(sklInstance *skli, skeleton *skl, const size_t stateNum);
 unsigned char skliLoad(sklInstance *skli, const size_t stateNum, const char *prgPath, const char *filePath);
 void skliAnimate(sklInstance *skli, const size_t stateNum, const float elapsedTime);
 void skliGenerateAnimStates(sklInstance *skli, const size_t state, const float interpT);
 void skliGenerateBoneState(const sklInstance *skli, const skeleton *skl, mat4 *state, const size_t bone);
-void skliGenerateState(const sklInstance *skli, const skeleton *skl, mat4 *state);
 void skliDelete(sklInstance *skli, const size_t stateNum);
 
 #endif

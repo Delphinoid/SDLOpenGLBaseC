@@ -6,28 +6,20 @@ unsigned char animInstInit(animationInstance *animInst, const size_t stateNum){
 	float bytesFloat = stateNum*sizeof(float);
 	size_t bytesSizeT = stateNum*sizeof(size_t);
 	animInst->currentLoops = 0;
-	animInst->currentAnim = malloc(bytesSizeT);
-	if(animInst->currentAnim == NULL){
-		/** Memory allocation failure. **/
-		return 0;
-	}
 	animInst->currentFrame = malloc(bytesSizeT);
 	if(animInst->currentFrame == NULL){
 		/** Memory allocation failure. **/
-		free(animInst->currentAnim);
 		return 0;
 	}
 	animInst->nextFrame = malloc(bytesSizeT);
 	if(animInst->nextFrame == NULL){
 		/** Memory allocation failure. **/
-		free(animInst->currentAnim);
 		free(animInst->currentFrame);
 		return 0;
 	}
 	animInst->prevElapsedTime = malloc(bytesFloat);
 	if(animInst->prevElapsedTime == NULL){
 		/** Memory allocation failure. **/
-		free(animInst->currentAnim);
 		free(animInst->currentFrame);
 		free(animInst->nextFrame);
 		return 0;
@@ -35,7 +27,6 @@ unsigned char animInstInit(animationInstance *animInst, const size_t stateNum){
 	animInst->totalElapsedTime = malloc(bytesFloat);
 	if(animInst->totalElapsedTime == NULL){
 		/** Memory allocation failure. **/
-		free(animInst->currentAnim);
 		free(animInst->currentFrame);
 		free(animInst->nextFrame);
 		free(animInst->prevElapsedTime);
@@ -44,7 +35,6 @@ unsigned char animInstInit(animationInstance *animInst, const size_t stateNum){
 	size_t i;
 	for(i = 0; i < stateNum; ++i){
 		// Set each value to 0.
-		animInst->currentAnim[i] = 0;
 		animInst->currentFrame[i] = 0;
 		animInst->nextFrame[i] = 0;
 		animInst->prevElapsedTime[i] = 0.f;
@@ -53,9 +43,6 @@ unsigned char animInstInit(animationInstance *animInst, const size_t stateNum){
 	return 1;
 }
 void animInstDelete(animationInstance *animInst){
-	if(animInst->currentAnim != NULL){
-		free(animInst->currentAnim);
-	}
 	if(animInst->currentFrame != NULL){
 		free(animInst->currentFrame);
 	}
@@ -83,7 +70,6 @@ void animDataDelete(animationData *animData){
 void animResetInterpolation(animationInstance *animInst, const size_t stateNum){
 	size_t i;
 	for(i = stateNum-1; i > 0; --i){
-		animInst->currentAnim[i] = animInst->currentAnim[i-1];
 		animInst->currentFrame[i] = animInst->currentFrame[i-1];
 		animInst->nextFrame[i] = animInst->nextFrame[i-1];
 		animInst->prevElapsedTime[i] = animInst->prevElapsedTime[i-1];

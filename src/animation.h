@@ -17,7 +17,6 @@ typedef struct {
 
 typedef struct {
 	unsigned int currentLoops;
-	size_t *currentAnim;      // Size is stateNum.
 	size_t *currentFrame;     // Size is stateNum.
 	size_t *nextFrame;        // Size is stateNum.
 	float *prevElapsedTime;   // Size is stateNum.

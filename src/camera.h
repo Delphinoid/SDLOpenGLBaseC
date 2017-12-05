@@ -17,6 +17,7 @@ typedef struct {
 	vec3 rotation;
 	/** Do we REALLY need previousRotation? **/
 	vec3 previousRotation;
+	/** Remove the ResetInterp() functions. **/
 	interpVec3 targetPosition;
 	interpVec3 up;
 	interpFloat fovy;

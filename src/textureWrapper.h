@@ -38,7 +38,8 @@ typedef struct {
 typedef struct {
 	textureWrapper *tw;
 	float timeMod;
-	animationInstance animInst;
+	size_t *currentAnim;  // Size is stateNum.
+	animationInstance animator;
 } twInstance;
 
 /** twLoad() and twiAnimate() may need some tidying up **/

@@ -22,7 +22,9 @@
 **
 */
 
+/** Remove the ResetInterp() functions. **/
 /** Merge previous and update functions. **/
+/** Do we actually need previous? **/
 
 typedef struct {
 	float *previous;

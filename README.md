@@ -1,7 +1,8 @@
 An extremely condensed version of the OpenGL / SDL application framework I'm currently working on, but written in C. The code is very messy and a few things have been modified before being dumped on GitHub. The updates I push to GitHub may be few and far between.
 
 List of features to be implemented:
-* Add an entity struct that contains groups of renderables.
+* Implement a skeletal-based physics system. Include bone restraints, restraint strengths and movement velocities from skeletal animations. Inertia can possibly be set to the floating point INFINITY value to skip physics simulations on objects?
+* (?) Add an entity struct that contains groups of renderables.
 * Render code should aim at rendering camera views.
 * Sprites should use index buffer objects like models.
 * Create file formats and clean, shared loading code for the various skeleton structures, renderables, entities and scenes.

@@ -59,7 +59,7 @@ int main(int argc, char *argv[]){
 	model tempMdl;
 	mdlCreateSprite(&tempMdl, "sprite");
 	cvPush(&allModels, (void *)&tempMdl, sizeof(tempMdl));
-	mdlLoadWavefrontObj(&tempMdl, prgPath, "Resources\\Models\\CubeTest.obj");
+	mdlLoad(&tempMdl, prgPath, "Resources\\Models\\CubeTest.obj");
 	cvPush(&allModels, (void *)&tempMdl, sizeof(tempMdl));
 
 	/* Renderables */
@@ -155,7 +155,9 @@ int main(int argc, char *argv[]){
 
 	/** Remove the special deletion code below the main loop as well. Also remove stateNum from skliLoad(). **/
 	skliLoad(&((renderable *)cvGet(&allRenderables, 0))->skli, stateNum, prgPath, "Resources\\Skeletons\\CubeTestSkeleton.tds");
+	((renderable *)cvGet(&allRenderables, 0))->mdl->skl = ((renderable *)cvGet(&allRenderables, 0))->skli.skl;
 	skliLoad(&((renderable *)cvGet(&allRenderables, 1))->skli, stateNum, prgPath, "Resources\\Skeletons\\CubeTestSkeleton.tds");
+	((renderable *)cvGet(&allRenderables, 1))->mdl->skl = ((renderable *)cvGet(&allRenderables, 1))->skli.skl;
 
 
 	unsigned char prgRunning = 1;
@@ -336,8 +338,8 @@ int main(int argc, char *argv[]){
 	/** Special deletion code **/
 	sklDelete(((renderable *)cvGet(&allRenderables, 0))->skli.skl);
 	sklDelete(((renderable *)cvGet(&allRenderables, 1))->skli.skl);
-	sklaDelete(((renderable *)cvGet(&allRenderables, 0))->skli.animations[0]);
-	sklaDelete(((renderable *)cvGet(&allRenderables, 1))->skli.animations[0]);
+	sklaDelete(((renderable *)cvGet(&allRenderables, 0))->skli.animations[0].animListHead->currentAnim);
+	sklaDelete(((renderable *)cvGet(&allRenderables, 1))->skli.animations[0].animListHead->currentAnim);
 	cleanup(&allTextures, &allTexWrappers, &allModels, &allCameras, &allSkeletons, &allSklAnimations, &allRenderables, &allScenes, stateNum, &gfxPrg);
 
 	return 0;
