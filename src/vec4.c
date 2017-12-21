@@ -1,7 +1,6 @@
 #include "vec4.h"
+#include "engineMath.h"
 #include <math.h>
-
-float fastInvSqrt(float x);
 
 vec4 vec4New(const float x, const float y, const float z, const float w){
 	vec4 v = {.x = x, .y = y, .z = z, .w = w};

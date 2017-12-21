@@ -4,26 +4,48 @@
 
 #define RADIAN_RATIO 0.017453292  /* = PI / 180, used for converting degrees to radians */
 
-unsigned char camInit(camera *cam, const size_t stateNum){
+void camInit(camera *cam){
+	iVec3Init(&cam->position, 0.f, 0.f, 0.f);
+	iQuatInit(&cam->orientation);
 	vec3Set(&cam->rotation, 0.f, 0.f, 0.f);
 	vec3Set(&cam->previousRotation, 0.f, 0.f, 0.f);
+	iVec3Init(&cam->targetPosition, 0.f, 0.f, -1.f);
+	iVec3Init(&cam->up, 0.f, 1.f, 0.f);
+	iFloatInit(&cam->fovy, 90.f);
 	mat4Identity(&cam->viewMatrix);
 	mat4Identity(&cam->projectionMatrix);
 	cam->targetScene = NULL;
 	cam->flags = CAM_UPDATE_VIEW | CAM_UPDATE_PROJECTION;
-	return iVec3Init(&cam->position, stateNum, 0.f, 0.f, 0.f) &&
-	       iQuatInit(&cam->orientation, stateNum) &&
-	       iVec3Init(&cam->targetPosition, stateNum, 0.f, 0.f, -1.f) &&
-	       iVec3Init(&cam->up, stateNum, 0.f, 1.f, 0.f) &&
-	       iFloatInit(&cam->fovy, stateNum, 90.f);
 }
 
-void camResetInterpolation(camera *cam, const size_t stateNum){
-	iVec3ResetInterp(&cam->position, stateNum);
-	iQuatResetInterp(&cam->orientation, stateNum);
-	iVec3ResetInterp(&cam->targetPosition, stateNum);
-	iVec3ResetInterp(&cam->up, stateNum);
-	iFloatResetInterp(&cam->fovy, stateNum);
+void camStateCopy(const camera *o, camera *c){
+	c->position = o->position;
+	c->orientation = o->orientation;
+	c->rotation = o->rotation;
+	c->previousRotation = o->previousRotation;
+	c->targetPosition = o->targetPosition;
+	c->up = o->up;
+	c->fovy = o->fovy;
+	c->viewMatrix = o->viewMatrix;
+	if((o->flags & CAM_UPDATE_VIEW) == 0){
+		/*
+		** Never copy the view matrix as it is always generated before a render,
+		** depending on the interp values.
+		** Only copy the projection matrix if it is not likely to change before
+		** a render.
+		*/
+		c->projectionMatrix = o->projectionMatrix;
+	}
+	c->targetScene = o->targetScene;
+	c->flags = o->flags;
+}
+
+void camResetInterpolation(camera *cam){
+	iVec3ResetInterp(&cam->position);
+	iQuatResetInterp(&cam->orientation);
+	iVec3ResetInterp(&cam->targetPosition);
+	iVec3ResetInterp(&cam->up);
+	iFloatResetInterp(&cam->fovy);
 }
 void camCalculateUp(camera *cam){  /** Probably not entirely necessary **/
 
@@ -74,24 +96,24 @@ void camCalculateUp(camera *cam){  /** Probably not entirely necessary **/
 	quatRotateVec3(&camRotation, &cam->up);*/
 
 }
-void camUpdateViewMatrix(camera *cam, const size_t state, const float interpT){
+void camUpdateViewMatrix(camera *cam, const float interpT){
 
 	// Check if the camera was rotated.
 	if(cam->rotation.x != cam->previousRotation.x ||
 	   cam->rotation.y != cam->previousRotation.y ||
 	   cam->rotation.z != cam->previousRotation.z){
 		// Update orientation.
-		quatSetEuler(cam->orientation.value, cam->rotation.x*RADIAN_RATIO,
-		                                     cam->rotation.y*RADIAN_RATIO,
-		                                     cam->rotation.z*RADIAN_RATIO);
+		quatSetEuler(&cam->orientation.value, cam->rotation.x*RADIAN_RATIO,
+		                                      cam->rotation.y*RADIAN_RATIO,
+		                                      cam->rotation.z*RADIAN_RATIO);
 		cam->previousRotation = cam->rotation;
 	}
 
 	/* Only generate a new view matrix if the camera viewport has changed in any way. */
-	if(iVec3Update(&cam->position,       state, interpT) |
-	   iQuatUpdate(&cam->orientation,    state, interpT) |
-	   iVec3Update(&cam->targetPosition, state, interpT) |
-	   iVec3Update(&cam->up,             state, interpT) ||
+	if(iVec3Update(&cam->position,       interpT) |
+	   iQuatUpdate(&cam->orientation,    interpT) |
+	   iVec3Update(&cam->targetPosition, interpT) |
+	   iVec3Update(&cam->up,             interpT) ||
 	   (cam->flags & CAM_UPDATE_VIEW) > 0){
 
 		/* Calculate the up vector */
@@ -110,9 +132,9 @@ void camUpdateViewMatrix(camera *cam, const size_t state, const float interpT){
 	}
 
 }
-void camUpdateProjectionMatrix(camera *cam, const unsigned char aspectRatioX, const unsigned char aspectRatioY, const size_t state, const float interpT){
+void camUpdateProjectionMatrix(camera *cam, const unsigned char aspectRatioX, const unsigned char aspectRatioY, const float interpT){
 
-	if(((cam->flags & CAM_PROJECTION_ORTHO) == 0 && iFloatUpdate(&cam->fovy, state, interpT)) || (cam->flags & CAM_UPDATE_PROJECTION) > 0){
+	if(((cam->flags & CAM_PROJECTION_ORTHO) == 0 && iFloatUpdate(&cam->fovy, interpT)) || (cam->flags & CAM_UPDATE_PROJECTION) > 0){
 
 		if((cam->flags & CAM_PROJECTION_ORTHO) == 0){
 
@@ -136,11 +158,7 @@ void camUpdateProjectionMatrix(camera *cam, const unsigned char aspectRatioX, co
 }
 
 void camDelete(camera *cam){
-	iVec3Delete(&cam->position);
-	iQuatDelete(&cam->orientation);
-	iVec3Delete(&cam->targetPosition);
-	iVec3Delete(&cam->up);
-	iFloatDelete(&cam->fovy);
+	//
 }
 
 /**void camMoveX(camera *cam, const float x){

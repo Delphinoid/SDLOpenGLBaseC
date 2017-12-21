@@ -1,7 +1,6 @@
 #include "vec3.h"
+#include "engineMath.h"
 #include <math.h>
-
-float fastInvSqrt(float x);
 
 vec3 vec3New(const float x, const float y, const float z){
 	const vec3 v = {.x = x, .y = y, .z = z};

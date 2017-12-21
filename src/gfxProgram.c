@@ -21,6 +21,7 @@ unsigned char gfxInitProgram(gfxProgram *gfxPrg, const char *prgPath){
 	gfxPrg->lastWindowWidth = 0;
 	gfxPrg->lastWindowHeight = 0;
 	gfxPrg->stretchToFit = 0;
+	gfxPrg->windowChanged = 1;
 	return (gfxInitSDL(gfxPrg) && gfxInitOGL(gfxPrg) && gfxLoadShaders(gfxPrg, prgPath) && gfxCreateBuffers(gfxPrg));
 
 }
@@ -323,9 +324,11 @@ unsigned char gfxUpdateWindow(gfxProgram *gfxPrg){
 		glViewport(screenX, screenY, screenWidth, screenHeight);
 		gfxPrg->lastWindowWidth = gfxPrg->windowWidth;
 		gfxPrg->lastWindowHeight = gfxPrg->windowHeight;
-		return 1;
+		gfxPrg->windowChanged = 1;
+	}else{
+		gfxPrg->windowChanged = 0;
 	}
-	return 0;
+	return gfxPrg->windowChanged;
 }
 
 void gfxDestroyProgram(gfxProgram *gfxPrg){

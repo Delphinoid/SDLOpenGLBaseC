@@ -1,8 +1,7 @@
 #include "quat.h"
+#include "engineMath.h"
 #include <math.h>
 #include <float.h>
-
-float fastInvSqrt(float x);
 
 quat quatNew(const float w, const float x, const float y, const float z){
 	quat r = {.w = w, .v.x = x, .v.y = y, .v.z = z};

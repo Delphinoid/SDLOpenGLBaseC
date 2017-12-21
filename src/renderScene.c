@@ -1,5 +1,4 @@
-#include "renderable.h"
-#include "camera.h"
+#include "stateManager.h"
 #include <math.h>
 
 /** THIS FILE IS TEMPORARY **/
@@ -14,15 +13,15 @@ void rndrGenerateTransform(const renderable *rndr, const camera *cam, mat4 *tran
 void rndrGenerateSprite(const renderable *rndr, vertex *vertices, const mat4 *transformMatrix);
 
 /** This should not be necessary! **/
-void renderModel(renderable *rndr, const camera *cam, const size_t state, const float interpT, gfxProgram *gfxPrg){
+void renderModel(renderable *rndr, const camera *cam, const float interpT, gfxProgram *gfxPrg){
 
 	/* Update the renderable for rendering */
-	rndrRenderUpdate(rndr, state, interpT);
+	rndrRenderUpdate(rndr, interpT);
 
 	/* Get texture information for rendering */
 	float texFrag[4];  // The x, y, width and height of the fragment of the texture being rendered
 	GLuint frameTexID;
-	twiGetFrameInfo(&rndr->twi, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &frameTexID, state, interpT);
+	twiGetFrameInfo(&rndr->twi, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &frameTexID, interpT);
 	// Bind the texture (if needed)
 	glActiveTexture(GL_TEXTURE0);
 	if(frameTexID != gfxPrg->lastTexID){
@@ -38,7 +37,7 @@ void renderModel(renderable *rndr, const camera *cam, const size_t state, const 
 		mat4 *skeletonState = malloc(rndr->mdl->skl->boneNum*sizeof(mat4));
 		if(skeletonState != NULL){
 			if(rndr->skli.skl != NULL){
-				skliGenerateAnimStates(&rndr->skli, state, interpT);
+				skliGenerateAnimStates(&rndr->skli, interpT);
 			}
 			size_t i;
 			for(i = 0; i < rndr->mdl->skl->boneNum; ++i){
@@ -69,7 +68,7 @@ void renderModel(renderable *rndr, const camera *cam, const size_t state, const 
 }
 
 /** Clean this up! **/
-void batchRenderSprites(cVector *allSprites, const camera *cam, const size_t state, const float interpT, gfxProgram *gfxPrg){
+void batchRenderSprites(cVector *allSprites, const camera *cam, const float interpT, gfxProgram *gfxPrg){
 
 	// Reset the translucency value
 	glUniform1f(gfxPrg->alphaID, 1);
@@ -94,7 +93,7 @@ void batchRenderSprites(cVector *allSprites, const camera *cam, const size_t sta
 
 		if(curSpr != NULL){
 
-			twiGetFrameInfo(&curSpr->twi, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &currentTexID, state, interpT);
+			twiGetFrameInfo(&curSpr->twi, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &currentTexID, interpT);
 
 			// If the current texture ID differs from the last, render and clear the VBO
 			if(gfxPrg->lastTexID != currentTexID && currentVertexBatchSize >= /**4**/6){
@@ -119,7 +118,7 @@ void batchRenderSprites(cVector *allSprites, const camera *cam, const size_t sta
 
 			// Add sprite to the current batch
 			gfxPrg->lastTexID = currentTexID;
-			rndrRenderUpdate(curSpr, state, interpT);
+			rndrRenderUpdate(curSpr, interpT);
 			rndrGenerateTransform(curSpr, cam, &mvMatrix);
 			rndrGenerateSprite(curSpr, (vertex *)(&currentVertexBatch[currentVertexBatchSize]), &mvMatrix);
 			rndrOffsetSpriteTexture((vertex *)(&currentVertexBatch[currentVertexBatchSize]), texFrag, texWidth, texHeight);
@@ -165,7 +164,7 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *c
 	for(i = 0; i < allModels->size; ++i){
 
 		renderable *curMdl = *((renderable **)cvGet(allModels, i));
-		unsigned int currentRenderMethod = rndrRenderMethod(curMdl, 0, interpT);
+		unsigned int currentRenderMethod = rndrRenderMethod(curMdl, interpT);
 
 		if(currentRenderMethod == 0){  // If the model is fully opaque, add it straight to the render list
 			cvPush(mdlRenderList, (void *)&curMdl, sizeof(renderable *));
@@ -212,26 +211,32 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *c
 
 }
 
-void sortElements(cVector *allCameras,
+/** stateManager should be const. **/
+void sortElements(stateManager *gameStateManager, const size_t stateID,
                   cVector *modelsScene,  cVector *modelsHUD,
                   cVector *spritesScene, cVector *spritesHUD){
 
+	/** Merge with camera updating? **/
 	// Sort models and sprites into their scene and HUD vectors
 	size_t i, j;
-	for(i = 0; i < allCameras->size; ++i){
-		for(j = 0; j < ((camera *)cvGet(allCameras, i))->targetScene->renderableNum; ++j){
-			renderable *curRndr = ((camera *)cvGet(allCameras, i))->targetScene->renderables[j];
-			if(!curRndr->sprite){
-				if(i == 0){
-					cvPush(modelsScene, (void *)&curRndr, sizeof(renderable *));
-				}else{
-					cvPush(modelsHUD, (void *)&curRndr, sizeof(renderable *));
-				}
-			}else{
-				if(i == 0){
-					cvPush(spritesScene, (void *)&curRndr, sizeof(renderable *));
-				}else{
-					cvPush(spritesHUD, (void *)&curRndr, sizeof(renderable *));
+	for(i = 0; i < gameStateManager->cameraCapacity; ++i){
+		if(gameStateManager->cameras[i].state[stateID] != NULL){
+			for(j = 0; j < (*gameStateManager->cameras[i].state[stateID]->targetScene)->renderableNum; ++j){
+				renderable *curRndr = gameStateManager->renderables[(*gameStateManager->cameras[i].state[stateID]->targetScene)->renderableIDs[j]].state[stateID];
+				if(curRndr != NULL){
+					if(!curRndr->sprite){
+						if(i == 0){
+							cvPush(modelsScene, (void *)&curRndr, sizeof(renderable *));
+						}else{
+							cvPush(modelsHUD, (void *)&curRndr, sizeof(renderable *));
+						}
+					}else{
+						if(i == 0){
+							cvPush(spritesScene, (void *)&curRndr, sizeof(renderable *));
+						}else{
+							cvPush(spritesHUD, (void *)&curRndr, sizeof(renderable *));
+						}
+					}
 				}
 			}
 		}
@@ -239,27 +244,40 @@ void sortElements(cVector *allCameras,
 
 }
 
-void renderScene(cVector *allCameras, const size_t state, const float interpT, gfxProgram *gfxPrg){
+/** stateManager should be const. **/
+void renderScene(stateManager *gameStateManager, const size_t stateID, const float interpT, gfxProgram *gfxPrg){
+
+	// Update cameras
+	size_t i;
+	for(i = 0; i < gameStateManager->cameraCapacity; ++i){
+		if(gameStateManager->cameras[i].state[stateID] != NULL){
+			camUpdateViewMatrix(gameStateManager->cameras[i].state[stateID], interpT);
+			if(gfxPrg->windowChanged){
+				// If the window size changed, update the camera projection matrices as well
+				gameStateManager->cameras[i].state[stateID]->flags |= CAM_UPDATE_PROJECTION;
+			}
+			camUpdateProjectionMatrix(gameStateManager->cameras[i].state[stateID], gfxPrg->aspectRatioX, gfxPrg->aspectRatioY, interpT);
+		}
+	}
 
 	// Vector initialization
 	cVector modelsScene;  cvInit(&modelsScene, 1);   // Holds renderable pointers; pointers to scene models
 	cVector modelsHUD;    cvInit(&modelsHUD, 1);     // Holds renderable pointers; pointers to HUD models
 	cVector spritesScene; cvInit(&spritesScene, 1);  // Holds renderable pointers; pointers to scene sprites
 	cVector spritesHUD;   cvInit(&spritesHUD, 1);    // Holds renderable pointers; pointers to HUD sprites
-	sortElements(allCameras, &modelsScene, &modelsHUD, &spritesScene, &spritesHUD);
+	sortElements(gameStateManager, stateID, &modelsScene, &modelsHUD, &spritesScene, &spritesHUD);
 
 	// Depth sort scene models
 	cVector renderList; cvInit(&renderList, 1);  // Holds model pointers; pointers to depth-sorted scene models that must be rendered
-	depthSortModels(&modelsScene, &renderList, (camera *)cvGet(allCameras, 0), interpT);
+	depthSortModels(&modelsScene, &renderList, gameStateManager->cameras[0].state[stateID], interpT);
 	// Render scene models
-	size_t i;
 	for(i = 0; i < renderList.size; ++i){
-		renderModel(*((renderable **)cvGet(&renderList, i)), (camera *)cvGet(allCameras, 0), state, interpT, gfxPrg);
+		renderModel(*((renderable **)cvGet(&renderList, i)), gameStateManager->cameras[0].state[stateID], interpT, gfxPrg);
 	}
 	// Batch render scene sprites
 	// Change the MVP matrix to the frustum projection matrix, as other sprite vertex transformations are done on the CPU through sprCreate()
-	glUniformMatrix4fv(gfxPrg->mvpMatrixID, 1, GL_FALSE, &((camera *)cvGet(allCameras, 0))->projectionMatrix.m[0][0]);
-	batchRenderSprites(&spritesScene, (camera *)cvGet(allCameras, 0), state, interpT, gfxPrg);
+	glUniformMatrix4fv(gfxPrg->mvpMatrixID, 1, GL_FALSE, &gameStateManager->cameras[0].state[stateID]->projectionMatrix.m[0][0]);
+	batchRenderSprites(&spritesScene, gameStateManager->cameras[0].state[stateID], interpT, gfxPrg);
 
 
 	//glClear(GL_DEPTH_BUFFER_BIT);
@@ -267,12 +285,12 @@ void renderScene(cVector *allCameras, const size_t state, const float interpT, g
 	// Render HUD models
 	/** HUD camera? Streamline this to make handling different cameras easily **/
 	for(i = 0; i < modelsHUD.size; ++i){
-		renderModel(*((renderable **)cvGet(&modelsHUD, i)), (camera *)cvGet(allCameras, 1), state, interpT, gfxPrg);
+		renderModel(*((renderable **)cvGet(&modelsHUD, i)), gameStateManager->cameras[1].state[stateID], interpT, gfxPrg);
 	}
 	// Batch render HUD sprites
 	// Change the MVP matrix to the orthographic projection matrix, as other sprite vertex transformations are done on the CPU through sprCreate()
-	glUniformMatrix4fv(gfxPrg->mvpMatrixID, 1, GL_FALSE, &((camera *)cvGet(allCameras, 1))->projectionMatrix.m[0][0]);
-	batchRenderSprites(&spritesHUD, (camera *)cvGet(allCameras, 1), state, interpT, gfxPrg);
+	glUniformMatrix4fv(gfxPrg->mvpMatrixID, 1, GL_FALSE, &gameStateManager->cameras[1].state[stateID]->projectionMatrix.m[0][0]);
+	batchRenderSprites(&spritesHUD, gameStateManager->cameras[1].state[stateID], interpT, gfxPrg);
 
 	cvClear(&renderList);
 	cvClear(&modelsScene);

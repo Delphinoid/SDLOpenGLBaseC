@@ -9,11 +9,11 @@
 
 /*
 ** typedef struct {
-**     type *previous;  // Stores an array of previous values, from most recent to least recent.
-**     type *value;     // Stores an array of current values, from most recent to least recent.
-**     type render;     // Stores the latest value used for rendering. Used to tell when the
-**                      // variable has been changed to potentially save time with matrix
-**                      // calculations before rendering.
+**     type previous;  // Stores the previous value of the variable.
+**     type value;     // Stores the current value of the variable.
+**     type render;    // Stores the value used for rendering. Used to tell when the
+**                     // variable has been changed to potentially save time with
+**                     // matrix calculations before rendering.
 ** } interpType;
 **
 ** Generally, clients will only need to store one previous value and one current value. It becomes
@@ -25,60 +25,90 @@
 /** Remove the ResetInterp() functions. **/
 /** Merge previous and update functions. **/
 /** Do we actually need previous? **/
+/** We definitely don't need render, try and remove it. **/
 
 typedef struct {
-	float *previous;
-	float *value;
+	float previous;
+	float value;
 	float render;
 } interpFloat;
 
-unsigned char iFloatInit(interpFloat *iFloat, const size_t stateNum, const float s);
-unsigned char iFloatResize(interpFloat *iFloat, const size_t oldStateNum, const size_t newStateNum);
-void iFloatSkipCurrentInterp(interpFloat *iFloat);
-void iFloatResetInterp(interpFloat *iFloat, const size_t stateNum);
-unsigned char iFloatUpdate(interpFloat *iFloat, const size_t state, const float interpT);
-void iFloatDelete(interpFloat *iFloat);
+void iFloatInit(interpFloat *iFloat, const float s);
+void iFloatResetInterp(interpFloat *iFloat);
+unsigned char iFloatUpdate(interpFloat *iFloat, const float interpT);
 
 
 typedef struct {
-	size_t *previous;
-	size_t *value;
+	size_t previous;
+	size_t value;
 	size_t render;
 } interpSizeT;
 
-unsigned char iSizeTInit(interpSizeT *iSizeT, const size_t stateNum, const size_t s);
-unsigned char iSizeTResize(interpSizeT *iSizeT, const size_t oldStateNum, const size_t newStateNum);
-void iSizeTSkipCurrentInterp(interpSizeT *iSizeT);
-void iSizeTResetInterp(interpSizeT *iSizeT, const size_t stateNum);
-unsigned char iSizeTUpdate(interpSizeT *iSizeT, const size_t state, const float interpT);
-void iSizeTDelete(interpSizeT *iSizeT);
+void iSizeTInit(interpSizeT *iSizeT, const size_t s);
+void iSizeTResetInterp(interpSizeT *iSizeT);
+unsigned char iSizeTUpdate(interpSizeT *iSizeT, const float interpT);
 
 
 typedef struct {
-	vec3 *previous;
-	vec3 *value;
+	vec3 previous;
+	vec3 value;
 	vec3 render;
 } interpVec3;
 
-unsigned char iVec3Init(interpVec3 *iVec3, const size_t stateNum, const float x, const float y, const float z);
-unsigned char iVec3Resize(interpVec3 *iVec3, const size_t oldStateNum, const size_t newStateNum);
-void iVec3SkipCurrentInterp(interpVec3 *iVec3);
-void iVec3ResetInterp(interpVec3 *iVec3, const size_t stateNum);
-unsigned char iVec3Update(interpVec3 *iVec3, const size_t state, const float interpT);
-void iVec3Delete(interpVec3 *iVec3);
+void iVec3Init(interpVec3 *iVec3, const float x, const float y, const float z);
+void iVec3ResetInterp(interpVec3 *iVec3);
+unsigned char iVec3Update(interpVec3 *iVec3, const float interpT);
 
 
 typedef struct {
-	quat *previous;
-	quat *value;
+	quat previous;
+	quat value;
 	quat render;
 } interpQuat;
 
-unsigned char iQuatInit(interpQuat *iQuat, const size_t stateNum);
-unsigned char iQuatResize(interpQuat *iQuat, const size_t oldStateNum, const size_t newStateNum);
-void iQuatSkipCurrentInterp(interpQuat *iQuat);
-void iQuatResetInterp(interpQuat *iQuat, const size_t stateNum);
-unsigned char iQuatUpdate(interpQuat *iQuat, const size_t state, const float interpT);
-void iQuatDelete(interpQuat *iQuat);
+void iQuatInit(interpQuat *iQuat);
+void iQuatResetInterp(interpQuat *iQuat);
+unsigned char iQuatUpdate(interpQuat *iQuat, const float interpT);
+
+/*
+typedef struct {
+	float previous;
+	float value;
+} interpFloat;
+
+void iFloatInit(interpFloat *iFloat, const float s);
+void iFloatResetInterp(interpFloat *iFloat);
+void iFloatInterpolate(const interpFloat *iFloat, const float interpT, float *r);
+
+
+typedef struct {
+	size_t previous;
+	size_t value;
+} interpSizeT;
+
+void iSizeTInit(interpSizeT *iSizeT, const size_t s);
+void iSizeTResetInterp(interpSizeT *iSizeT);
+void iSizeTInterpolate(const interpSizeT *iSizeT, const float interpT, size_t *r);
+
+
+typedef struct {
+	vec3 previous;
+	vec3 value;
+} interpVec3;
+
+void iVec3Init(interpVec3 *iVec3, const float x, const float y, const float z);
+void iVec3ResetInterp(interpVec3 *iVec3);
+void iVec3Interpolate(const interpVec3 *iVec3, const float interpT, vec3 *r);
+
+
+typedef struct {
+	quat previous;
+	quat value;
+} interpQuat;
+
+void iQuatInit(interpQuat *iQuat);
+void iQuatResetInterp(interpQuat *iQuat);
+void iQuatInterpolate(const interpQuat *iQuat, const float interpT, quat *r);
+*/
 
 #endif

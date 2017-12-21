@@ -17,20 +17,18 @@ typedef struct {
 
 typedef struct {
 	unsigned int currentLoops;
-	size_t *currentFrame;     // Size is stateNum.
-	size_t *nextFrame;        // Size is stateNum.
-	float *prevElapsedTime;   // Size is stateNum.
-	float *totalElapsedTime;  // Size is stateNum.
+	size_t currentFrame;
+	size_t nextFrame;
+	float prevElapsedTime;
+	float totalElapsedTime;
 } animationInstance;
 
 /** The two functions below are REALLY bad, redo them later. **/
-unsigned char animInstInit(animationInstance *animInst, const size_t stateNum);
-void animInstDelete(animationInstance *animInst);
+void animInstInit(animationInstance *animInst);
 void animDataInit(animationData *animData);
 void animDataDelete(animationData *animData);
-void animResetInterpolation(animationInstance *animInst, const size_t stateNum);
 void animAdvance(animationInstance *animInst, const animationData *animData, const float elapsedTime);
-void animGetRenderData(const animationInstance *animInst, const animationData *animData, const size_t state, const float interpT,
+void animGetRenderData(const animationInstance *animInst, const animationData *animData, const float interpT,
                        size_t *startFrame, size_t *endFrame, float *animInterpT);
 
 #endif

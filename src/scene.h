@@ -5,10 +5,13 @@
 
 typedef struct {
 	size_t renderableNum;
-	renderable **renderables;
+	size_t renderableCapacity;
+	size_t *renderableIDs;
 } scene;
 
 void scnInit(scene *scn);
+unsigned char scnLoad(scene *scn);
+unsigned char scnStateCopy(const scene *o, scene *c);
 void scnDelete(scene *scn);
 
 #endif

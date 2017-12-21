@@ -1,3 +1,5 @@
+#include "engineMath.h"
+
 float fastInvSqrt(float x){
 	/* Black magic perfected by some very clever people. */
 	const float halfX = x*0.5f;

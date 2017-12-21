@@ -7,20 +7,21 @@
 
 #define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians
 
-unsigned char rndrInit(renderable *rndr, const size_t stateNum){
+unsigned char rndrInit(renderable *rndr){
 	rndr->name = NULL;
 	rndr->mdl = NULL;
-	vec3Set(&rndr->rotation, 0.f, 0.f, 0.f);
+	iVec3Init(&rndr->position, 0.f, 0.f, 0.f);
+	iQuatInit(&rndr->orientation);
+	//vec3Set(&rndr->rotation, 0.f, 0.f, 0.f);
+	iVec3Init(&rndr->pivot, 0.f, 0.f, 0.f);
+	iVec3Init(&rndr->targetPosition, 0.f, 0.f, 0.f);
+	iQuatInit(&rndr->targetOrientation);
+	iVec3Init(&rndr->scale, 1.f, 1.f, 1.f);
+	iFloatInit(&rndr->alpha, 1.f);
 	rndr->sprite = 0;
 	rndr->flags = 0;
-	return skliInit(&rndr->skli, NULL, stateNum) && twiInit(&rndr->twi, NULL, stateNum) &&
-	       iVec3Init(&rndr->position, stateNum, 0.f, 0.f, 0.f) &&
-	       iQuatInit(&rndr->orientation, stateNum) &&
-	       iVec3Init(&rndr->pivot, stateNum, 0.f, 0.f, 0.f) &&
-	       iVec3Init(&rndr->targetPosition, stateNum, 0.f, 0.f, 0.f) &&
-	       iQuatInit(&rndr->targetOrientation, stateNum) &&
-	       iVec3Init(&rndr->scale, stateNum, 1.f, 1.f, 1.f) &&
-	       iFloatInit(&rndr->alpha, stateNum, 1.f);
+	twiInit(&rndr->twi, NULL);
+	return skliInit(&rndr->skli, NULL);
 }
 
 /** Finish this **/
@@ -28,6 +29,23 @@ unsigned char rndrLoad(renderable *rndr, const char *prgPath, const char *filePa
 
 	return 1;
 
+}
+
+unsigned char rndrStateCopy(const renderable *o, renderable *c){
+	c->name = o->name;
+	c->mdl = o->mdl;
+	c->twi = o->twi;
+	c->position = o->position;
+	c->orientation = o->orientation;
+	//c->rotation = o->rotation;
+	c->pivot = o->pivot;
+	c->targetPosition = o->targetPosition;
+	c->targetOrientation = o->targetOrientation;
+	c->scale = o->scale;
+	c->alpha = o->alpha;
+	c->sprite = o->sprite;
+	c->flags = o->flags;
+	return skliStateCopy(&o->skli, &c->skli);
 }
 
 /**void rndrSetRotation(renderable *rndr, const float pitch, const float yaw, const float roll){
@@ -47,18 +65,18 @@ void rndrRotateZ(renderable *rndr, const float changeZ){
 	iVec3GetValue(&rndr->rotation)->z += changeZ;
 }**/
 
-void rndrResetInterpolation(renderable *rndr, const size_t stateNum){
-	iVec3ResetInterp(&rndr->position, stateNum);
-	iQuatResetInterp(&rndr->orientation, stateNum);
-	iVec3ResetInterp(&rndr->pivot, stateNum);
-	iVec3ResetInterp(&rndr->targetPosition, stateNum);
-	iQuatResetInterp(&rndr->targetOrientation, stateNum);
-	iVec3ResetInterp(&rndr->scale, stateNum);
-	iFloatResetInterp(&rndr->alpha, stateNum);
+void rndrResetInterpolation(renderable *rndr){
+	iVec3ResetInterp(&rndr->position);
+	iQuatResetInterp(&rndr->orientation);
+	iVec3ResetInterp(&rndr->pivot);
+	iVec3ResetInterp(&rndr->targetPosition);
+	iQuatResetInterp(&rndr->targetOrientation);
+	iVec3ResetInterp(&rndr->scale);
+	iFloatResetInterp(&rndr->alpha);
 }
-unsigned char rndrRenderMethod(renderable *rndr, const size_t state, const float interpT){
+unsigned char rndrRenderMethod(renderable *rndr, const float interpT){
 	// Update alpha.
-	iFloatUpdate(&rndr->alpha, state, interpT);
+	iFloatUpdate(&rndr->alpha, interpT);
 	if(rndr->alpha.render > 0.f){
 		if(rndr->alpha.render < 1.f || twiContainsTranslucency(&rndr->twi)){
 			// The model contains translucency
@@ -71,36 +89,36 @@ unsigned char rndrRenderMethod(renderable *rndr, const size_t state, const float
 	// The model is fully transparent
 	return 2;
 }
-unsigned char rndrRenderUpdate(renderable *rndr, const size_t state, const float interpT){
+unsigned char rndrRenderUpdate(renderable *rndr, const float interpT){
 
 	// Apply the change in rotation to the current orientation.
-	if(rndr->rotation.x != 0.f || rndr->rotation.y != 0.f || rndr->rotation.z != 0.f){
+	/*if(rndr->rotation.x != 0.f || rndr->rotation.y != 0.f || rndr->rotation.z != 0.f){
 		quat changeRotation;
 		quatSetEuler(&changeRotation, rndr->rotation.x*RADIAN_RATIO,
 		                              rndr->rotation.y*RADIAN_RATIO,
 		                              rndr->rotation.z*RADIAN_RATIO);
-		quatMultQByQ2(&changeRotation, rndr->orientation.value);
+		quatMultQByQ2(&changeRotation, &rndr->orientation.value);
 		vec3SetS(&rndr->rotation, 0.f);
-	}
+	}*/
 
 	// Return whether or not anything has changed.
 	/** Remove alpha updates from here once rndrRenderMethod() is being used by everything. **/
-	return iVec3Update(&rndr->position,          state, interpT) |
-	       iQuatUpdate(&rndr->orientation,       state, interpT) |
-	       iVec3Update(&rndr->pivot,             state, interpT) |
-	       iVec3Update(&rndr->targetPosition,    state, interpT) |
-	       iQuatUpdate(&rndr->targetOrientation, state, interpT) |
-	       iVec3Update(&rndr->scale,             state, interpT) |
-	       iFloatUpdate(&rndr->alpha,            state, interpT);
+	return iVec3Update(&rndr->position,          interpT) |
+	       iQuatUpdate(&rndr->orientation,       interpT) |
+	       iVec3Update(&rndr->pivot,             interpT) |
+	       iVec3Update(&rndr->targetPosition,    interpT) |
+	       iQuatUpdate(&rndr->targetOrientation, interpT) |
+	       iVec3Update(&rndr->scale,             interpT) |
+	       iFloatUpdate(&rndr->alpha,            interpT);
 
 }
 
-void rndrAnimateTexture(renderable *rndr, const size_t stateNum, const float elapsedTime){
-	twiAnimate(&rndr->twi, stateNum, elapsedTime);
+void rndrAnimateTexture(renderable *rndr, const float elapsedTime){
+	twiAnimate(&rndr->twi, elapsedTime);
 }
 
-void rndrAnimateSkeleton(renderable *rndr, const size_t stateNum, const float elapsedTime){
-	skliAnimate(&rndr->skli, stateNum, elapsedTime);
+void rndrAnimateSkeleton(renderable *rndr, const float elapsedTime){
+	skliAnimate(&rndr->skli, elapsedTime);
 }
 
 /** Remove #include "camera.h" **/
@@ -294,17 +312,9 @@ void rndrOffsetSpriteTexture(vertex *vertices, const float texFrag[4], const flo
 	}
 }
 
-void rndrDelete(renderable *rndr, const size_t stateNum){
+void rndrDelete(renderable *rndr){
 	if(rndr->name != NULL){
 		free(rndr->name);
 	}
-	skliDelete(&rndr->skli, stateNum);
-	twiDelete(&rndr->twi);
-	iVec3Delete(&rndr->position);
-	iQuatDelete(&rndr->orientation);
-	iVec3Delete(&rndr->pivot);
-	iVec3Delete(&rndr->targetPosition);
-	iQuatDelete(&rndr->targetOrientation);
-	iVec3Delete(&rndr->scale);
-	iFloatDelete(&rndr->alpha);
+	skliDelete(&rndr->skli);
 }

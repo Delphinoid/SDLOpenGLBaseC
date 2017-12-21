@@ -54,6 +54,7 @@ typedef struct {
 	int lastWindowWidth;
 	int lastWindowHeight;
 	unsigned char stretchToFit;
+	unsigned char windowChanged;
 
 } gfxProgram;
 

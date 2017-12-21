@@ -2,59 +2,12 @@
 
 /** These animation functions are particularly bad, redo them later maybe? **/
 
-unsigned char animInstInit(animationInstance *animInst, const size_t stateNum){
-	float bytesFloat = stateNum*sizeof(float);
-	size_t bytesSizeT = stateNum*sizeof(size_t);
+void animInstInit(animationInstance *animInst){
 	animInst->currentLoops = 0;
-	animInst->currentFrame = malloc(bytesSizeT);
-	if(animInst->currentFrame == NULL){
-		/** Memory allocation failure. **/
-		return 0;
-	}
-	animInst->nextFrame = malloc(bytesSizeT);
-	if(animInst->nextFrame == NULL){
-		/** Memory allocation failure. **/
-		free(animInst->currentFrame);
-		return 0;
-	}
-	animInst->prevElapsedTime = malloc(bytesFloat);
-	if(animInst->prevElapsedTime == NULL){
-		/** Memory allocation failure. **/
-		free(animInst->currentFrame);
-		free(animInst->nextFrame);
-		return 0;
-	}
-	animInst->totalElapsedTime = malloc(bytesFloat);
-	if(animInst->totalElapsedTime == NULL){
-		/** Memory allocation failure. **/
-		free(animInst->currentFrame);
-		free(animInst->nextFrame);
-		free(animInst->prevElapsedTime);
-		return 0;
-	}
-	size_t i;
-	for(i = 0; i < stateNum; ++i){
-		// Set each value to 0.
-		animInst->currentFrame[i] = 0;
-		animInst->nextFrame[i] = 0;
-		animInst->prevElapsedTime[i] = 0.f;
-		animInst->totalElapsedTime[i] = 0.f;
-	}
-	return 1;
-}
-void animInstDelete(animationInstance *animInst){
-	if(animInst->currentFrame != NULL){
-		free(animInst->currentFrame);
-	}
-	if(animInst->nextFrame != NULL){
-		free(animInst->nextFrame);
-	}
-	if(animInst->prevElapsedTime != NULL){
-		free(animInst->prevElapsedTime);
-	}
-	if(animInst->totalElapsedTime != NULL){
-		free(animInst->totalElapsedTime);
-	}
+	animInst->currentFrame = 0;
+	animInst->nextFrame = 0;
+	animInst->prevElapsedTime = 0.f;
+	animInst->totalElapsedTime = 0.f;
 }
 void animDataInit(animationData *animData){
 	animData->desiredLoops = -1;
@@ -67,85 +20,75 @@ void animDataDelete(animationData *animData){
 	}
 }
 
-void animResetInterpolation(animationInstance *animInst, const size_t stateNum){
-	size_t i;
-	for(i = stateNum-1; i > 0; --i){
-		animInst->currentFrame[i] = animInst->currentFrame[i-1];
-		animInst->nextFrame[i] = animInst->nextFrame[i-1];
-		animInst->prevElapsedTime[i] = animInst->prevElapsedTime[i-1];
-		animInst->totalElapsedTime[i] = animInst->totalElapsedTime[i-1];
-	}
-}
-
 void animAdvance(animationInstance *animInst, const animationData *animData, const float elapsedTime){
 
 	if(animData->frameNum > 0){
 
 		const float animationLength = animData->frameDelays[animData->frameNum-1];
 
-		*animInst->prevElapsedTime = elapsedTime;
+		animInst->prevElapsedTime = elapsedTime;
 		if(animationLength > 0.f && elapsedTime != 0.f){
 
-			*animInst->totalElapsedTime += elapsedTime;
+			animInst->totalElapsedTime += elapsedTime;
 			if(elapsedTime >= 0.f){
 
 				/* Animation is going forwards. */
 				// Handle loops if totalElapsedTime indicates the end of the animation has been passed.
-				if(*animInst->totalElapsedTime > animationLength){
+				if(animInst->totalElapsedTime > animationLength){
 					// Iteratively reset totalElapsedTime so it is once again within the bounds of 0 and animationLength.
 					do {
-						*animInst->totalElapsedTime -= animationLength;
+						animInst->totalElapsedTime -= animationLength;
 						++animInst->currentLoops;
-					} while(*animInst->totalElapsedTime > animationLength);
+					} while(animInst->totalElapsedTime > animationLength);
 					// Check if we've looped too far.
 					if(animInst->currentLoops > animData->desiredLoops){
 						animInst->currentLoops = animData->desiredLoops;
 						if(animData->desiredLoops != -1){
 							// We're not looping infinitely, so place the animation at the end and return.
-							*animInst->currentFrame = animData->frameNum-1;
-							*animInst->nextFrame = *animInst->currentFrame;
-							*animInst->totalElapsedTime = animationLength;
+							animInst->currentFrame = animData->frameNum-1;
+							animInst->nextFrame = animInst->currentFrame;
+							animInst->totalElapsedTime = animationLength;
 							return;
 						}
 					}else{
-						*animInst->currentFrame = 0;
-						*animInst->nextFrame = 1;
+						animInst->currentFrame = 0;
+						animInst->nextFrame = 1;
 					}
 				}
 				// Advance currentFrame.
-				while(*animInst->totalElapsedTime > animData->frameDelays[*animInst->currentFrame]){
-					++(*animInst->currentFrame);
+				while(animInst->totalElapsedTime > animData->frameDelays[animInst->currentFrame]){
+					++animInst->currentFrame;
 				}
 				// Set nextFrame.
-				*animInst->nextFrame = (*animInst->currentFrame)+1;
-				if(*animInst->nextFrame == animData->frameNum){
-					*animInst->nextFrame = 0;
+				animInst->nextFrame = animInst->currentFrame+1;
+				if(animInst->nextFrame == animData->frameNum){
+					animInst->nextFrame = 0;
 				}
 
 			}else{
 
 				/* Animation is going backwards. */
 				// Handle loops if totalElapsedTime indicates the end of the animation has been passed.
-				if(*animInst->totalElapsedTime < 0.f){
+				if(animInst->totalElapsedTime < 0.f){
 					unsigned int prevLoops = animInst->currentLoops;
 					// Iteratively reset totalElapsedTime so it is once again within the bounds of 0 and animationLength.
 					do {
-						*animInst->totalElapsedTime += animationLength;
+						animInst->totalElapsedTime += animationLength;
 						--animInst->currentLoops;
-					} while(*animInst->totalElapsedTime < 0.f);
+					} while(animInst->totalElapsedTime < 0.f);
 					// Check if we've looped too far and currentLoops has reset (as it is unsigned).
 					if(animInst->currentLoops > prevLoops){
 						animInst->currentLoops = 0;
 						if(animData->desiredLoops != -1){
 							// We're not looping infinitely, so place the animation at the beginning and return.
-							*animInst->currentFrame = 0;
-							*animInst->nextFrame = 0;
-							*animInst->totalElapsedTime = 0.f;
+							animInst->currentFrame = 0;
+							animInst->nextFrame = 0;
+							animInst->totalElapsedTime = 0.f;
 							return;
 						}
 					}else{
-						*animInst->currentFrame = animData->frameNum-1;
-						*animInst->nextFrame = 0;
+						animInst->currentFrame = animData->frameNum-1;
+						animInst->nextFrame = 0;
 					}
 				}
 				// Advance currentFrame.
@@ -153,28 +96,28 @@ void animAdvance(animationInstance *animInst, const animationData *animData, con
 				if(animInst->currentFrame == 0){
 					currentFrameStart = 0.f;
 				}else{
-					currentFrameStart = animData->frameDelays[(*animInst->currentFrame)-1];
+					currentFrameStart = animData->frameDelays[animInst->currentFrame-1];
 				}
-				while(*animInst->totalElapsedTime < currentFrameStart){
-					*animInst->nextFrame = *animInst->currentFrame;
-					if(*animInst->currentFrame == 0){
+				while(animInst->totalElapsedTime < currentFrameStart){
+					animInst->nextFrame = animInst->currentFrame;
+					if(animInst->currentFrame == 0){
 						if(animInst->currentLoops > 0){
-							*animInst->currentFrame = animData->frameNum-1;
-							*animInst->totalElapsedTime = animationLength - *animInst->totalElapsedTime;
+							animInst->currentFrame = animData->frameNum-1;
+							animInst->totalElapsedTime = animationLength - animInst->totalElapsedTime;
 							--animInst->currentLoops;
 						}else if(animData->desiredLoops < 0){
-							*animInst->currentFrame = animData->frameNum-1;
-							*animInst->totalElapsedTime = animationLength - *animInst->totalElapsedTime;
+							animInst->currentFrame = animData->frameNum-1;
+							animInst->totalElapsedTime = animationLength - animInst->totalElapsedTime;
 						}else{
 							return;
 						}
 					}else{
-						--(*animInst->currentFrame);
+						--animInst->currentFrame;
 					}
-					if(*animInst->currentFrame == 0){
+					if(animInst->currentFrame == 0){
 						currentFrameStart = 0.f;
 					}else{
-						currentFrameStart = animData->frameDelays[(*animInst->currentFrame)-1];
+						currentFrameStart = animData->frameDelays[animInst->currentFrame-1];
 					}
 				}
 
@@ -186,7 +129,7 @@ void animAdvance(animationInstance *animInst, const animationData *animData, con
 
 }
 
-void animGetRenderData(const animationInstance *animInst, const animationData *animData, const size_t state, const float interpT,
+void animGetRenderData(const animationInstance *animInst, const animationData *animData, const float interpT,
                        size_t *startFrame, size_t *endFrame, float *animInterpT){
 
 	*startFrame = 0;
@@ -194,7 +137,7 @@ void animGetRenderData(const animationInstance *animInst, const animationData *a
 	const float animLength = animData->frameDelays[animData->frameNum-1];
 	if(animLength > 0.f){
 
-		float interpStartTime = animInst->totalElapsedTime[state] - (animInst->prevElapsedTime[state] * (1.f - interpT));
+		float interpStartTime = animInst->totalElapsedTime - (animInst->prevElapsedTime * (1.f - interpT));
 
 		while(interpStartTime < 0.f){
 			interpStartTime += animLength;
