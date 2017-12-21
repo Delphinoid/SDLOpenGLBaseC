@@ -26,14 +26,12 @@ void camStateCopy(const camera *o, camera *c){
 	c->targetPosition = o->targetPosition;
 	c->up = o->up;
 	c->fovy = o->fovy;
-	c->viewMatrix = o->viewMatrix;
 	if((o->flags & CAM_UPDATE_VIEW) == 0){
 		/*
-		** Never copy the view matrix as it is always generated before a render,
-		** depending on the interp values.
-		** Only copy the projection matrix if it is not likely to change before
-		** a render.
+		** Only copy the view and projection matrices if they are
+		** not likely to change before a render.
 		*/
+		c->viewMatrix = o->viewMatrix;
 		c->projectionMatrix = o->projectionMatrix;
 	}
 	c->targetScene = o->targetScene;
