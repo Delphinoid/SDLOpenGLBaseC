@@ -23,16 +23,16 @@ quat quatNewEuler(const float x, const float y, const float z){
 	const float hx = x*0.5f;
 	const float hy = y*0.5f;
 	const float hz = z*0.5f;
-	const float cb = cosf(hx);
-	const float ch = cosf(hy);
-	const float ca = cosf(hz);
-	const float sb = sinf(hx);
-	const float sh = sinf(hy);
-	const float sa = sinf(hz);
-	quat r = {.w   = cb*ch*ca+sb*sh*sa,
-	          .v.x = sb*ch*ca-cb*sh*sa,
-	          .v.y = cb*sh*ca+sb*ch*sa,
-	          .v.z = cb*ch*sa-sb*sh*ca};
+	const float cx = cosf(hx);
+	const float cy = cosf(hy);
+	const float cz = cosf(hz);
+	const float sx = sinf(hx);
+	const float sy = sinf(hy);
+	const float sz = sinf(hz);
+	quat r = {.w   = cx*cy*cz+sx*sy*sz,
+	          .v.x = sx*cy*cz-cx*sy*sz,
+	          .v.y = cx*sy*cz+sx*cy*sz,
+	          .v.z = cx*cy*sz-sx*sy*cz};
 	return r;
 }
 void quatSet(quat *q, const float w, const float x, const float y, const float z){
@@ -52,16 +52,16 @@ void quatSetEuler(quat *q, const float x, const float y, const float z){
 	const float hx = x*0.5f;
 	const float hy = y*0.5f;
 	const float hz = z*0.5f;
-	const float cb = cosf(hx);
-	const float ch = cosf(hy);
-	const float ca = cosf(hz);
-	const float sb = sinf(hx);
-	const float sh = sinf(hy);
-	const float sa = sinf(hz);
-	q->w   = cb*ch*ca+sb*sh*sa;
-	q->v.x = sb*ch*ca-cb*sh*sa;
-	q->v.y = cb*sh*ca+sb*ch*sa;
-	q->v.z = cb*ch*sa-sb*sh*ca;
+	const float cx = cosf(hx);
+	const float cy = cosf(hy);
+	const float cz = cosf(hz);
+	const float sx = sinf(hx);
+	const float sy = sinf(hy);
+	const float sz = sinf(hz);
+	q->w   = cx*cy*cz+sx*sy*sz;
+	q->v.x = sx*cy*cz-cx*sy*sz;
+	q->v.y = cx*sy*cz+sx*cy*sz;
+	q->v.z = cx*cy*sz-sx*sy*cz;
 }
 
 quat quatQAddQ(const quat *q1, const quat *q2){
@@ -437,6 +437,16 @@ quat quatGetLerp(const quat *q1, const quat *q2, const float t){
 	r.v.x = q1->v.z + (q2->v.z - q1->v.z) * t;
 	return r;
 }
+void quatLerp(const quat *q1, const quat *q2, const float t, quat *r){
+	/*
+	**               ^
+	** r = (q1 + (q2 - q1) * t)
+	*/
+	r->w =   q1->w   + (q2->w   - q1->w)   * t;
+	r->v.x = q1->v.x + (q2->v.x - q1->v.x) * t;
+	r->v.x = q1->v.y + (q2->v.y - q1->v.y) * t;
+	r->v.x = q1->v.z + (q2->v.z - q1->v.z) * t;
+}
 quat quatGetSlerp(const quat *q1, const quat *q2, const float t){
 
 	quat r;
@@ -447,7 +457,12 @@ quat quatGetSlerp(const quat *q1, const quat *q2, const float t){
 
 	if(cosThetaAbs > 1.f - FLT_EPSILON){
 		// If the angle is small enough, we can just use linear interpolation.
-		quatLerp(q1, q2, t, &r);
+		// We also need to normalize at least one of the quaternions.
+		quat q1n = *q1;
+		//quat q2n = *q2;
+		quatNormalizeFast(&q1n);
+		//quatNormalizeFast(&q2n);
+		quatLerp(&q1n, q2, t, &r);
 	}else{
 
 		/*
@@ -481,25 +496,20 @@ quat quatGetSlerp(const quat *q1, const quat *q2, const float t){
 	return r;
 
 }
-void quatLerp(const quat *q1, const quat *q2, const float t, quat *r){
-	/*
-	**               ^
-	** r = (q1 + (q2 - q1) * t)
-	*/
-	r->w =   q1->w   + (q2->w   - q1->w)   * t;
-	r->v.x = q1->v.x + (q2->v.x - q1->v.x) * t;
-	r->v.x = q1->v.y + (q2->v.y - q1->v.y) * t;
-	r->v.x = q1->v.z + (q2->v.z - q1->v.z) * t;
-}
 void quatSlerp(const quat *q1, const quat *q2, const float t, quat *r){
 
 	// Cosine of the angle between the two quaternions.
 	const float cosTheta = quatDot(q1, q2);
 	const float cosThetaAbs = fabsf(cosTheta);
 
-	if(cosThetaAbs < FLT_EPSILON){
+	if(cosThetaAbs > 1.f - FLT_EPSILON){
 		// If the angle is small enough, we can just use linear interpolation.
-		quatLerp(q1, q2, t, r);
+		// We also need to normalize at least one of the quaternions.
+		quat q1n = *q1;
+		//quat q2n = *q2;
+		quatNormalizeFast(&q1n);
+		//quatNormalizeFast(&q2n);
+		quatLerp(&q1n, q2, t, r);
 	}else{
 
 		/*

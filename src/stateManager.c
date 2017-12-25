@@ -120,8 +120,7 @@ static inline unsigned char smRenderablesUpdate(stateManager *sm){
 	for(i = 0; i < sm->renderableCapacity; ++i){
 		if(sm->renderables[i].active){
 
-			if(sm->stateNum > 0){
-
+			if(sm->stateNum > 1){
 				/* Shift each state for the current renderable over. */
 				validStates = 0;
 				j = sm->stateNum-1;
@@ -146,9 +145,11 @@ static inline unsigned char smRenderablesUpdate(stateManager *sm){
 							/** Memory allocation failure. **/
 							return 0;
 						}
+						/**/
+						/* Prevents crashing in rndrStateCopy() due to uninitialized variables. */
+						skliInit(&sm->renderables[i].state[0]->skli, NULL, 0);
+						/**/
 					}else{
-						/** Delete this line: **/
-						rndrDelete(lastState);
 						sm->renderables[i].state[0] = lastState;
 					}
 
@@ -193,29 +194,25 @@ unsigned char smRenderableNew(stateManager *sm, size_t *renderableID){
 	size_t i;
 	for(i = 0; i < sm->renderableCapacity; ++i){
 		if(!sm->renderables[i].active){
-			sm->renderables[i].state[0] = malloc(sizeof(renderable));
-			if(sm->renderables[i].state[0] == NULL){
-				/** Memory allocation failure. **/
-				return 0;
-			}
-			sm->renderables[i].active = 1;
-			*renderableID = i;
-			return 1;
+			break;
 		}
 	}
-	/* The renderable array is full, double its size and get a new renderable. */
-	sm->renderableCapacity *= 2;
-	stateRenderable *tempBuffer = realloc(sm->renderables, sm->renderableCapacity * sizeof(stateRenderable *));
-	if(tempBuffer == NULL){
-		/** Memory allocation failure. **/
-		return 0;
+	if(i == sm->renderableCapacity){
+		/* The renderable array is full, double its size and get a new renderable. */
+		sm->renderableCapacity *= 2;
+		stateRenderable *tempBuffer = realloc(sm->renderables, sm->renderableCapacity * sizeof(stateRenderable *));
+		if(tempBuffer == NULL){
+			/** Memory allocation failure. **/
+			return 0;
+		}
+		sm->renderables = tempBuffer;
 	}
-	sm->renderables = tempBuffer;
 	sm->renderables[i].state[0] = malloc(sizeof(renderable));
 	if(sm->renderables[i].state[0] == NULL){
 		/** Memory allocation failure. **/
 		return 0;
 	}
+	rndrInit(sm->renderables[i].state[0]);
 	sm->renderables[i].active = 1;
 	*renderableID = i;
 	return 1;
@@ -235,8 +232,8 @@ static inline unsigned char smScenesUpdate(stateManager *sm){
 	size_t i, j, validStates;
 	for(i = 0; i < sm->sceneCapacity; ++i){
 		if(sm->scenes[i].active){
-			if(sm->stateNum > 0){
 
+			if(sm->stateNum > 1){
 				/* Shift each state for the current scene over. */
 				validStates = 0;
 				j = sm->stateNum-1;
@@ -261,9 +258,11 @@ static inline unsigned char smScenesUpdate(stateManager *sm){
 							/** Memory allocation failure. **/
 							return 0;
 						}
+						/**/
+						/* Prevents crashing in scnStateCopy() due to uninitialized variables. */
+						scnInit(sm->scenes[i].state[0]);
+						/**/
 					}else{
-						/** Delete this line: **/
-						scnDelete(lastState);
 						sm->scenes[i].state[0] = lastState;
 					}
 
@@ -293,6 +292,7 @@ static inline unsigned char smScenesUpdate(stateManager *sm){
 				}
 
 			}
+
 		}
 	}
 	return 1;
@@ -302,29 +302,25 @@ unsigned char smSceneNew(stateManager *sm, size_t *sceneID){
 	size_t i;
 	for(i = 0; i < sm->sceneCapacity; ++i){
 		if(!sm->scenes[i].active){
-			sm->scenes[i].state[0] = malloc(sizeof(scene));
-			if(sm->scenes[i].state[0] == NULL){
-				/** Memory allocation failure. **/
-				return 0;
-			}
-			sm->scenes[i].active = 1;
-			*sceneID = i;
-			return 1;
+			break;
 		}
 	}
-	/* The scene array is full, double its size and get a new scene. */
-	sm->sceneCapacity *= 2;
-	stateScene *tempBuffer = realloc(sm->scenes, sm->sceneCapacity * sizeof(stateScene *));
-	if(tempBuffer == NULL){
-		/** Memory allocation failure. **/
-		return 0;
+	if(i == sm->sceneCapacity){
+		/* The scene array is full, double its size and get a new scene. */
+		sm->sceneCapacity *= 2;
+		stateScene *tempBuffer = realloc(sm->scenes, sm->sceneCapacity * sizeof(stateScene *));
+		if(tempBuffer == NULL){
+			/** Memory allocation failure. **/
+			return 0;
+		}
+		sm->scenes = tempBuffer;
 	}
-	sm->scenes = tempBuffer;
 	sm->scenes[i].state[0] = malloc(sizeof(scene));
 	if(sm->scenes[i].state[0] == NULL){
 		/** Memory allocation failure. **/
 		return 0;
 	}
+	scnInit(sm->scenes[i].state[0]);
 	sm->scenes[i].active = 1;
 	*sceneID = i;
 	return 1;
@@ -344,8 +340,8 @@ static inline unsigned char smCamerasUpdate(stateManager *sm){
 	size_t i, j, validStates;
 	for(i = 0; i < sm->cameraCapacity; ++i){
 		if(sm->cameras[i].active){
-			if(sm->stateNum > 0){
 
+			if(sm->stateNum > 1){
 				/* Shift each state for the current camera over. */
 				validStates = 0;
 				j = sm->stateNum-1;
@@ -370,9 +366,10 @@ static inline unsigned char smCamerasUpdate(stateManager *sm){
 							/** Memory allocation failure. **/
 							return 0;
 						}
+						/**/
+						/**camInit(sm->cameras[i].state[0]);**/
+						/**/
 					}else{
-						/** Delete this line: **/
-						//camDelete(lastState);
 						sm->cameras[i].state[0] = lastState;
 					}
 
@@ -418,29 +415,25 @@ unsigned char smCameraNew(stateManager *sm, size_t *cameraID){
 	size_t i;
 	for(i = 0; i < sm->cameraCapacity; ++i){
 		if(!sm->cameras[i].active){
-			sm->cameras[i].state[0] = malloc(sizeof(camera));
-			if(sm->cameras[i].state[0] == NULL){
-				/** Memory allocation failure. **/
-				return 0;
-			}
-			sm->cameras[i].active = 1;
-			*cameraID = i;
-			return 1;
+			break;
 		}
 	}
-	/* The camera array is full, double its size and get a new camera. */
-	sm->cameraCapacity *= 2;
-	stateCamera *tempBuffer = realloc(sm->cameras, sm->cameraCapacity * sizeof(stateCamera *));
-	if(tempBuffer == NULL){
-		/** Memory allocation failure. **/
-		return 0;
+	if(i == sm->cameraCapacity){
+		/* The camera array is full, double its size and get a new camera. */
+		sm->cameraCapacity *= 2;
+		stateCamera *tempBuffer = realloc(sm->cameras, sm->cameraCapacity * sizeof(stateCamera *));
+		if(tempBuffer == NULL){
+			/** Memory allocation failure. **/
+			return 0;
+		}
+		sm->cameras = tempBuffer;
 	}
-	sm->cameras = tempBuffer;
 	sm->cameras[i].state[0] = malloc(sizeof(camera));
 	if(sm->cameras[i].state[0] == NULL){
 		/** Memory allocation failure. **/
 		return 0;
 	}
+	camInit(sm->cameras[i].state[0]);
 	sm->cameras[i].active = 1;
 	*cameraID = i;
 	return 1;

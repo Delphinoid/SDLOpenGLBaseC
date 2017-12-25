@@ -31,6 +31,7 @@ void renderModel(renderable *rndr, const camera *cam, const float interpT, gfxPr
 	// Feed the texture coordinates to the shader
 	glUniform4fv(gfxPrg->textureFragmentID, 1, texFrag);
 
+
 	/* Generate the skeleton state and feed it to the shader */
 	if(rndr->mdl->skl != NULL){
 		// Generate a state for the model skeleton, transformed into the animated skeleton's space
@@ -71,7 +72,7 @@ void renderModel(renderable *rndr, const camera *cam, const float interpT, gfxPr
 void batchRenderSprites(cVector *allSprites, const camera *cam, const float interpT, gfxProgram *gfxPrg){
 
 	// Reset the translucency value
-	glUniform1f(gfxPrg->alphaID, 1);
+	glUniform1f(gfxPrg->alphaID, 1.f);
 	// Bind the VAO
 	glBindVertexArray((*((renderable **)cvGet(allSprites, 0)))->mdl->vaoID);
 
@@ -247,54 +248,59 @@ void sortElements(stateManager *gameStateManager, const size_t stateID,
 /** stateManager should be const. **/
 void renderScene(stateManager *gameStateManager, const size_t stateID, const float interpT, gfxProgram *gfxPrg){
 
-	// Update cameras
+	// Update cameras.
 	size_t i;
 	for(i = 0; i < gameStateManager->cameraCapacity; ++i){
 		if(gameStateManager->cameras[i].state[stateID] != NULL){
 			camUpdateViewMatrix(gameStateManager->cameras[i].state[stateID], interpT);
 			if(gfxPrg->windowChanged){
-				// If the window size changed, update the camera projection matrices as well
+				// If the window size changed, update the camera projection matrices as well.
 				gameStateManager->cameras[i].state[stateID]->flags |= CAM_UPDATE_PROJECTION;
 			}
 			camUpdateProjectionMatrix(gameStateManager->cameras[i].state[stateID], gfxPrg->aspectRatioX, gfxPrg->aspectRatioY, interpT);
 		}
 	}
 
-	// Vector initialization
-	cVector modelsScene;  cvInit(&modelsScene, 1);   // Holds renderable pointers; pointers to scene models
-	cVector modelsHUD;    cvInit(&modelsHUD, 1);     // Holds renderable pointers; pointers to HUD models
-	cVector spritesScene; cvInit(&spritesScene, 1);  // Holds renderable pointers; pointers to scene sprites
-	cVector spritesHUD;   cvInit(&spritesHUD, 1);    // Holds renderable pointers; pointers to HUD sprites
+	// Vector initialization.
+	cVector modelsScene;  cvInit(&modelsScene, 1);   // Holds renderable pointers; pointers to scene models.
+	cVector modelsHUD;    cvInit(&modelsHUD, 1);     // Holds renderable pointers; pointers to HUD models.
+	cVector spritesScene; cvInit(&spritesScene, 1);  // Holds renderable pointers; pointers to scene sprites.
+	cVector spritesHUD;   cvInit(&spritesHUD, 1);    // Holds renderable pointers; pointers to HUD sprites.
 	sortElements(gameStateManager, stateID, &modelsScene, &modelsHUD, &spritesScene, &spritesHUD);
 
-	// Depth sort scene models
-	cVector renderList; cvInit(&renderList, 1);  // Holds model pointers; pointers to depth-sorted scene models that must be rendered
-	depthSortModels(&modelsScene, &renderList, gameStateManager->cameras[0].state[stateID], interpT);
-	// Render scene models
-	for(i = 0; i < renderList.size; ++i){
-		renderModel(*((renderable **)cvGet(&renderList, i)), gameStateManager->cameras[0].state[stateID], interpT, gfxPrg);
+	// Render the main scene.
+	if(gameStateManager->cameras[0].state[stateID] != NULL){
+		// Depth sort scene models.
+		cVector renderList; cvInit(&renderList, 1);  // Holds model pointers; pointers to depth-sorted scene models that must be rendered.
+		depthSortModels(&modelsScene, &renderList, gameStateManager->cameras[0].state[stateID], interpT);
+		// Render scene models.
+		for(i = 0; i < renderList.size; ++i){
+			renderModel(*((renderable **)cvGet(&renderList, i)), gameStateManager->cameras[0].state[stateID], interpT, gfxPrg);
+		}
+		// Batch render scene sprites.
+		// Change the MVP matrix to the frustum projection matrix, as other sprite vertex transformations are done on the CPU through sprCreate().
+		glUniformMatrix4fv(gfxPrg->mvpMatrixID, 1, GL_FALSE, &gameStateManager->cameras[0].state[stateID]->projectionMatrix.m[0][0]);
+		batchRenderSprites(&spritesScene, gameStateManager->cameras[0].state[stateID], interpT, gfxPrg);
+		cvClear(&renderList);
 	}
-	// Batch render scene sprites
-	// Change the MVP matrix to the frustum projection matrix, as other sprite vertex transformations are done on the CPU through sprCreate()
-	glUniformMatrix4fv(gfxPrg->mvpMatrixID, 1, GL_FALSE, &gameStateManager->cameras[0].state[stateID]->projectionMatrix.m[0][0]);
-	batchRenderSprites(&spritesScene, gameStateManager->cameras[0].state[stateID], interpT, gfxPrg);
-
 
 	//glClear(GL_DEPTH_BUFFER_BIT);
 
-	// Render HUD models
-	/** HUD camera? Streamline this to make handling different cameras easily **/
-	for(i = 0; i < modelsHUD.size; ++i){
-		renderModel(*((renderable **)cvGet(&modelsHUD, i)), gameStateManager->cameras[1].state[stateID], interpT, gfxPrg);
+	// Render the HUD scene.
+	if(gameStateManager->cameras[1].state[stateID] != NULL){
+		// Render HUD models.
+		/** HUD camera? Streamline this to make handling different cameras easily **/
+		for(i = 0; i < modelsHUD.size; ++i){
+			renderModel(*((renderable **)cvGet(&modelsHUD, i)), gameStateManager->cameras[1].state[stateID], interpT, gfxPrg);
+		}
+		// Batch render HUD sprites.
+		// Change the MVP matrix to the orthographic projection matrix, as other sprite vertex transformations are done on the CPU through sprCreate().
+		glUniformMatrix4fv(gfxPrg->mvpMatrixID, 1, GL_FALSE, &gameStateManager->cameras[1].state[stateID]->projectionMatrix.m[0][0]);
+		batchRenderSprites(&spritesHUD, gameStateManager->cameras[1].state[stateID], interpT, gfxPrg);
+		cvClear(&modelsHUD);
 	}
-	// Batch render HUD sprites
-	// Change the MVP matrix to the orthographic projection matrix, as other sprite vertex transformations are done on the CPU through sprCreate()
-	glUniformMatrix4fv(gfxPrg->mvpMatrixID, 1, GL_FALSE, &gameStateManager->cameras[1].state[stateID]->projectionMatrix.m[0][0]);
-	batchRenderSprites(&spritesHUD, gameStateManager->cameras[1].state[stateID], interpT, gfxPrg);
 
-	cvClear(&renderList);
 	cvClear(&modelsScene);
-	cvClear(&modelsHUD);
 	cvClear(&spritesScene);
 	cvClear(&spritesHUD);
 

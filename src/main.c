@@ -121,6 +121,7 @@ int main(int argc, char *argv[]){
 	gameStateManager.renderables[tempID].state[0]->twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 3);
 	gameStateManager.renderables[tempID].state[0]->position.value.x = -3.f;
 	gameStateManager.renderables[tempID].state[0]->position.value.y = -2.f;
+	gameStateManager.renderables[tempID].state[0]->position.value.z = -3.f;
 	gameStateManager.renderables[tempID].state[0]->pivot.value.x = 0.5f;
 	gameStateManager.renderables[tempID].state[0]->pivot.value.y = 0.5f;
 	gameStateManager.renderables[tempID].state[0]->scale.value.x = 0.0085f;
@@ -129,6 +130,7 @@ int main(int argc, char *argv[]){
 	/* Scenes */
 	smSceneNew(&gameStateManager, &tempID);
 	gameStateManager.scenes[tempID].state[0]->renderableNum = 4;
+	gameStateManager.scenes[tempID].state[0]->renderableCapacity = 4;
 	gameStateManager.scenes[tempID].state[0]->renderableIDs = malloc(gameStateManager.scenes[tempID].state[0]->renderableNum * sizeof(size_t));
 	gameStateManager.scenes[tempID].state[0]->renderableIDs[0] = 0;
 	gameStateManager.scenes[tempID].state[0]->renderableIDs[1] = 2;
@@ -137,6 +139,7 @@ int main(int argc, char *argv[]){
 	//
 	smSceneNew(&gameStateManager, &tempID);
 	gameStateManager.scenes[tempID].state[0]->renderableNum = 2;
+	gameStateManager.scenes[tempID].state[0]->renderableCapacity = 2;
 	gameStateManager.scenes[tempID].state[0]->renderableIDs = malloc(gameStateManager.scenes[tempID].state[0]->renderableNum * sizeof(size_t));
 	gameStateManager.scenes[tempID].state[0]->renderableIDs[0] = 1;
 	gameStateManager.scenes[tempID].state[0]->renderableIDs[1] = 3;
@@ -163,7 +166,7 @@ int main(int argc, char *argv[]){
 
 	float globalTimeMod = 1.f;
 	float framerate = 1000.f / 128.f;  // Desired renders per millisecond
-	float tickrate = 1000.f / 64.f;  // Desired updates per millisecond
+	float tickrate = 1000.f / 128.f;  // Desired updates per millisecond
 	float nextUpdate = 0.f;
 	float nextRender = 0.f;
 

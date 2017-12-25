@@ -11,6 +11,8 @@ typedef struct {
 
 void scnInit(scene *scn);
 unsigned char scnLoad(scene *scn);
+unsigned char scnRenderableAdd(scene *scn, const size_t renderableID);
+void scnRenderableRemove(scene *scn, size_t pos);
 unsigned char scnStateCopy(const scene *o, scene *c);
 void scnDelete(scene *scn);
 

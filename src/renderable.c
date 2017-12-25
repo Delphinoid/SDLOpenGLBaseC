@@ -21,7 +21,7 @@ unsigned char rndrInit(renderable *rndr){
 	rndr->sprite = 0;
 	rndr->flags = 0;
 	twiInit(&rndr->twi, NULL);
-	return skliInit(&rndr->skli, NULL);
+	return skliInit(&rndr->skli, NULL, 0);
 }
 
 /** Finish this **/
@@ -37,7 +37,6 @@ unsigned char rndrStateCopy(const renderable *o, renderable *c){
 	c->twi = o->twi;
 	c->position = o->position;
 	c->orientation = o->orientation;
-	//c->rotation = o->rotation;
 	c->pivot = o->pivot;
 	c->targetPosition = o->targetPosition;
 	c->targetOrientation = o->targetOrientation;

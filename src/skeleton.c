@@ -5,7 +5,6 @@
 #define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians
 
 #define BONE_START_CAPACITY 1
-#define ANIM_START_CAPACITY 1
 
 void boneInit(sklBone *bone){
 	vec3SetS(&bone->position, 0.f);
@@ -508,9 +507,9 @@ static void sklaiGenerateAnimState(sklAnimInstance *sklai, const float interpT){
 					                animInterpT, &interpBoneEnd);
 
 					// Interpolate between animState and interpBoneEnd.
-					sklBone interpBoneStart = *fragment->animBoneLookup[i];
+					sklBone *interpBoneStart = fragment->animBoneLookup[i];
 					const float animInterpTBlend = blendProgress / blendTime;
-					boneInterpolate(&interpBoneStart, &interpBoneEnd, animInterpTBlend, fragment->animBoneLookup[i]);
+					boneInterpolate(interpBoneStart, &interpBoneEnd, animInterpTBlend, fragment->animBoneLookup[i]);
 
 				}
 			}
@@ -555,20 +554,27 @@ unsigned char sklaiChangeAnim(sklAnimInstance *sklai, const skeleton *skl, sklAn
 	return 1;
 }
 
-unsigned char skliInit(sklInstance *skli, skeleton *skl){
-	/** Use stateNum. **/
-	skli->skl = skl;
-	skli->timeMod = 1.f;
-	skli->animationNum = 0;
-	skli->animationCapacity = ANIM_START_CAPACITY;
-	skli->animations = malloc(skli->animationCapacity*sizeof(sklAnimInstance));
-	if(skli->animations == NULL){
-		/** Memory allocation failure. **/
-		return 0;
+unsigned char skliInit(sklInstance *skli, skeleton *skl, const size_t animationCapacity){
+
+	size_t i;
+
+	if(animationCapacity > 0){
+		skli->animations = malloc(animationCapacity*sizeof(sklAnimInstance));
+		if(skli->animations == NULL){
+			/** Memory allocation failure. **/
+			return 0;
+		}
+		for(i = 0; i < animationCapacity; ++i){
+			skli->animations[i].animListHead = NULL;
+			skli->animations[i].animListTail = NULL;
+			skli->animations[i].animState = NULL;
+		}
+	}else{
+		skli->animations = NULL;
 	}
+
 	if(skl != NULL){
 		/** Remove this NULL check. Also remove it from skliStateCopy. **/
-		size_t i;
 		skli->customState = malloc(skl->boneNum*sizeof(sklBone));
 		if(skli->customState == NULL){
 			/** Memory allocation failure. **/
@@ -581,6 +587,12 @@ unsigned char skliInit(sklInstance *skli, skeleton *skl){
 	}else{
 		skli->customState = NULL;
 	}
+
+	skli->skl = skl;
+	skli->timeMod = 1.f;
+	skli->animationNum = 0;
+	skli->animationCapacity = animationCapacity;
+
 	return 1;
 }
 unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *filePath){
@@ -590,7 +602,7 @@ unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *fileP
 	skeleton *skl = malloc(sizeof(skeleton));
 	sklLoad(skl, prgPath, filePath);
 
-	skliInit(skli, skl);
+	skliInit(skli, skl, 1);
 
 	sklAnim *skla = malloc(sizeof(sklAnim));
 	skla->name = malloc(5*sizeof(char));
@@ -639,29 +651,72 @@ unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *fileP
 unsigned char skliStateCopy(const sklInstance *o, sklInstance *c){
 
 	size_t i;
+	if(c->animationCapacity != o->animationCapacity){
 
-	c->animations = malloc(o->animationCapacity * sizeof(sklAnimInstance));
-	if(c->animations == NULL){
-		/** Memory allocation failure. **/
-		return 0;
-	}
-	if(o->skl != NULL){
-		/** Remove this NULL check. Also remove it from skliInit. **/
-		c->customState = malloc(o->skl->boneNum * sizeof(sklBone));
-		if(c->customState == NULL){
+		/*
+		** We need to allocate more or less memory so that
+		** the memory allocated for both animation arrays match.
+		*/
+		sklAnimInstance *tempBuffer = malloc(o->animationCapacity*sizeof(sklAnimInstance));
+		if(tempBuffer == NULL){
 			/** Memory allocation failure. **/
-			free(c->animations);
 			return 0;
 		}
-		for(i = 0; i < o->skl->boneNum; ++i){
-			c->customState[i] = o->customState[i];
+
+		if(c->animationCapacity < o->animationCapacity){
+
+			for(i = 0; i < c->animationCapacity; ++i){
+				tempBuffer[i] = c->animations[i];
+			}
+			while(i < o->animationCapacity){
+				tempBuffer[i].animListHead = NULL;
+				tempBuffer[i].animListTail = NULL;
+				tempBuffer[i].animState = NULL;
+				++i;
+			}
+
+		}else if(o->animationCapacity < c->animationCapacity){
+
+			for(i = 0; i < o->animationCapacity; ++i){
+				tempBuffer[i] = c->animations[i];
+			}
+			while(i < c->animationCapacity){
+				sklaiDelete(&c->animations[i], c->skl->boneNum);
+				++i;
+			}
+
 		}
+
+		c->animations = tempBuffer;
+
+	}
+	c->animationCapacity = o->animationCapacity;
+
+	if(o->skl != NULL){
+		if(c->skl == NULL || c->skl->boneNum != o->skl->boneNum){
+			/*
+			** We need to allocate more or less memory so that
+			** the memory allocated for both custom states match.
+			*/
+			sklBone *tempBuffer = malloc(o->skl->boneNum*sizeof(sklBone));
+			if(tempBuffer == NULL){
+				/** Memory allocation failure. **/
+				return 0;
+			}
+			if(c->customState != NULL){
+				free(c->customState);
+			}
+			c->customState = tempBuffer;
+		}
+		memcpy(c->customState, o->customState, o->skl->boneNum*sizeof(sklBone));
 	}else{
 		c->customState = NULL;
 	}
+	c->skl = o->skl;
 
 	/* Copy each sklAnimInstance over. */
 	for(i = 0; i < o->animationNum; ++i){
+		sklaiDelete(&c->animations[i], o->skl->boneNum);
 		if(!sklaiStateCopy(&o->animations[i], &c->animations[i], o->skl->boneNum)){
 			break;
 		}
@@ -679,11 +734,8 @@ unsigned char skliStateCopy(const sklInstance *o, sklInstance *c){
 		return 0;
 	}
 
-	c->skl = o->skl;
 	c->timeMod = o->timeMod;
 	c->animationNum = o->animationNum;
-	c->animationCapacity = o->animationCapacity;
-
 	return 1;
 
 }

@@ -78,8 +78,8 @@ quat quatLookingAt(const vec3 *eye, const vec3 *target, const vec3 *up);
 void quatLookAt(quat *q, const vec3 *eye, const vec3 *target, const vec3 *up);
 
 quat quatGetLerp(const quat *q1, const quat *q2, const float t);
-quat quatGetSlerp(const quat *q1, const quat *q2, const float t);
 void quatLerp(const quat *q1, const quat *q2, const float t, quat *r);
+quat quatGetSlerp(const quat *q1, const quat *q2, const float t);
 void quatSlerp(const quat *q1, const quat *q2, const float t, quat *r);
 
 #endif

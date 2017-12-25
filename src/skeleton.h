@@ -126,7 +126,7 @@ void sklaDelete(sklAnim *skla);
 
 unsigned char sklaiChangeAnim(sklAnimInstance *sklai, const skeleton *skl, sklAnim *anim, const size_t frame, const float blendTime);
 
-unsigned char skliInit(sklInstance *skli, skeleton *skl);
+unsigned char skliInit(sklInstance *skli, skeleton *skl, const size_t animationCapacity);
 unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *filePath);
 unsigned char skliStateCopy(const sklInstance *o, sklInstance *c);
 void skliAnimate(sklInstance *skli, const float elapsedTime);

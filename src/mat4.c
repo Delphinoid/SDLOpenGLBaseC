@@ -294,17 +294,17 @@ mat4 mat4ScaleMatrix(const float x, const float y, const float z){
 }
 
 void mat4Quat(mat4 *m, const quat *q){
-	const float sqx = q->v.x*q->v.x;
-	const float sqy = q->v.y*q->v.y;
-	const float sqz = q->v.z*q->v.z;
-	const float txy = q->v.x*q->v.y;
-	const float txz = q->v.x*q->v.z;
-	const float txw = q->v.x*q->w;
-	const float tyz = q->v.y*q->v.z;
-	const float tyw = q->v.y*q->w;
-	const float tzw = q->v.z*q->w;
-	m->m[0][0] = 1.f-2.f*(sqy+sqz); m->m[0][1] = 2.f*(txy-tzw);     m->m[0][2] = 2.f*(txz+tyw);     m->m[0][3] = 0.f;
-	m->m[1][0] = 2.f*(txy+tzw);     m->m[1][1] = 1.f-2.f*(sqx+sqz); m->m[1][2] = 2.f*(tyz-txw);     m->m[1][3] = 0.f;
-	m->m[2][0] = 2.f*(txz-tyw);     m->m[2][1] = 2.f*(tyz+txw);     m->m[2][2] = 1.f-2.f*(sqx+sqy); m->m[2][3] = 0.f;
-	m->m[3][0] = 0.f;               m->m[3][1] = 0.f;               m->m[3][2] = 0.f;               m->m[3][3] = 1.f;
+	const float xx = q->v.x*q->v.x;
+	const float yy = q->v.y*q->v.y;
+	const float zz = q->v.z*q->v.z;
+	const float xy = q->v.x*q->v.y;
+	const float xz = q->v.x*q->v.z;
+	const float xw = q->v.x*q->w;
+	const float yz = q->v.y*q->v.z;
+	const float yw = q->v.y*q->w;
+	const float zw = q->v.z*q->w;
+	m->m[0][0] = 1.f-2.f*(yy+zz); m->m[0][1] = 2.f*(xy-zw);     m->m[0][2] = 2.f*(xz+yw);     m->m[0][3] = 0.f;
+	m->m[1][0] = 2.f*(xy+zw);     m->m[1][1] = 1.f-2.f*(xx+zz); m->m[1][2] = 2.f*(yz-xw);     m->m[1][3] = 0.f;
+	m->m[2][0] = 2.f*(xz-yw);     m->m[2][1] = 2.f*(yz+xw);     m->m[2][2] = 1.f-2.f*(xx+yy); m->m[2][3] = 0.f;
+	m->m[3][0] = 0.f;             m->m[3][1] = 0.f;             m->m[3][2] = 0.f;             m->m[3][3] = 1.f;
 }
