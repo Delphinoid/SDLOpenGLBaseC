@@ -165,8 +165,8 @@ int main(int argc, char *argv[]){
 	unsigned char prgRunning = 1;
 
 	float globalTimeMod = 1.f;
-	float framerate = 1000.f / 128.f;  // Desired renders per millisecond
-	float tickrate = 1000.f / 128.f;  // Desired updates per millisecond
+	float framerate = 1000.f / 125.f;  // Desired renders per millisecond
+	float tickrate = 1000.f / 125.f;  // Desired updates per millisecond
 	float nextUpdate = 0.f;
 	float nextRender = 0.f;
 
