@@ -167,6 +167,8 @@ int main(int argc, char *argv[]){
 	float globalTimeMod = 1.f;
 	float framerate = 1000.f / 125.f;  // Desired renders per millisecond
 	float tickrate = 1000.f / 125.f;  // Desired updates per millisecond
+	float tickratio = tickrate / 1000.f;  // 1 / updates per second.
+
 	float nextUpdate = 0.f;
 	float nextRender = 0.f;
 
@@ -255,35 +257,35 @@ int main(int argc, char *argv[]){
 			if(UP){
 				globalTimeMod = 1.f;
 				/** changeRotation is created to initialize the second renderable. **/
-				quatSetEuler(&changeRotation, -0.1f*tickrate*RADIAN_RATIO, 0.f, 0.f);
-				quatMultQByQ2(&changeRotation, &gameStateManager.renderables[0].state[0]->orientation.value);
-				gameStateManager.cameras[0].state[0]->position.value.z += -0.005f * tickrate;
+				quatSetEuler(&changeRotation, -90.f*RADIAN_RATIO, 0.f, 0.f);
+				quatRotate(&gameStateManager.renderables[0].state[0]->orientation.value, &changeRotation, tickratio, &gameStateManager.renderables[0].state[0]->orientation.value);
+				gameStateManager.cameras[0].state[0]->position.value.z += -5.f * tickratio;
 				gameStateManager.renderables[4].state[0]->targetPosition.value = gameStateManager.cameras[0].state[0]->position.value;
 			}
 			if(DOWN){
 				globalTimeMod = -1.f;
 				/** changeRotation is created to initialize the second renderable. **/
-				quatSetEuler(&changeRotation, 0.1f*tickrate*RADIAN_RATIO, 0.f, 0.f);
-				quatMultQByQ2(&changeRotation, &gameStateManager.renderables[0].state[0]->orientation.value);
-				gameStateManager.cameras[0].state[0]->position.value.z += 0.005f * tickrate;
+				quatSetEuler(&changeRotation, 90.f*RADIAN_RATIO, 0.f, 0.f);
+				quatRotate(&gameStateManager.renderables[0].state[0]->orientation.value, &changeRotation, tickratio, &gameStateManager.renderables[0].state[0]->orientation.value);
+				gameStateManager.cameras[0].state[0]->position.value.z += 5.f * tickratio;
 				gameStateManager.renderables[4].state[0]->targetPosition.value = gameStateManager.cameras[0].state[0]->position.value;
 			}
 			if(LEFT){
 				/** changeRotation is created to initialize the second renderable. **/
-				quatSetEuler(&changeRotation, 0.f, -0.1f*tickrate*RADIAN_RATIO, 0.f);
-				quatMultQByQ2(&changeRotation, &gameStateManager.renderables[0].state[0]->orientation.value);
-				quatSetEuler(&changeRotation, 0.f, 0.f, -0.1f*tickrate*RADIAN_RATIO);
-				quatMultQByQ2(&changeRotation, &gameStateManager.renderables[3].state[0]->orientation.value);
-				gameStateManager.cameras[0].state[0]->position.value.x += -0.005f * tickrate;
+				quatSetEuler(&changeRotation, 0.f, -90.f*RADIAN_RATIO, 0.f);
+				quatRotate(&gameStateManager.renderables[0].state[0]->orientation.value, &changeRotation, tickratio, &gameStateManager.renderables[0].state[0]->orientation.value);
+				quatSetEuler(&changeRotation, 0.f, 0.f, -90.f*RADIAN_RATIO);
+				quatRotate(&gameStateManager.renderables[3].state[0]->orientation.value, &changeRotation, tickratio, &gameStateManager.renderables[3].state[0]->orientation.value);
+				gameStateManager.cameras[0].state[0]->position.value.x += -5.f * tickratio;
 				gameStateManager.renderables[4].state[0]->targetPosition.value = gameStateManager.cameras[0].state[0]->position.value;
 			}
 			if(RIGHT){
 				/** changeRotation is created to initialize the second renderable. **/
-				quatSetEuler(&changeRotation, 0.f, 0.1f*tickrate*RADIAN_RATIO, 0.f);
-				quatMultQByQ2(&changeRotation, &gameStateManager.renderables[0].state[0]->orientation.value);
-				quatSetEuler(&changeRotation, 0.f, 0.f, 0.1f*tickrate*RADIAN_RATIO);
-				quatMultQByQ2(&changeRotation, &gameStateManager.renderables[3].state[0]->orientation.value);
-				gameStateManager.cameras[0].state[0]->position.value.x += 0.005f * tickrate;
+				quatSetEuler(&changeRotation, 0.f, 90.f*RADIAN_RATIO, 0.f);
+				quatRotate(&gameStateManager.renderables[0].state[0]->orientation.value, &changeRotation, tickratio, &gameStateManager.renderables[0].state[0]->orientation.value);
+				quatSetEuler(&changeRotation, 0.f, 0.f, 90.f*RADIAN_RATIO);
+				quatRotate(&gameStateManager.renderables[3].state[0]->orientation.value, &changeRotation, tickratio, &gameStateManager.renderables[3].state[0]->orientation.value);
+				gameStateManager.cameras[0].state[0]->position.value.x += 5.f * tickratio;
 				gameStateManager.renderables[4].state[0]->targetPosition.value = gameStateManager.cameras[0].state[0]->position.value;
 			}
 
@@ -357,8 +359,8 @@ int main(int argc, char *argv[]){
 	/** Special deletion code **/
 	sklDelete(gameStateManager.renderables[0].state[0]->skli.skl);
 	sklDelete(gameStateManager.renderables[1].state[0]->skli.skl);
-	sklaDelete(gameStateManager.renderables[0].state[0]->skli.animations[0].animListHead->currentAnim);
-	sklaDelete(gameStateManager.renderables[1].state[0]->skli.animations[0].animListHead->currentAnim);
+	sklaDelete(gameStateManager.renderables[0].state[0]->skli.animations[0].animFrags[0].currentAnim);
+	sklaDelete(gameStateManager.renderables[1].state[0]->skli.animations[0].animFrags[0].currentAnim);
 	cleanup(&gfxPrg, &gameStateManager, &allTextures, &allTexWrappers, &allModels, &allSkeletons, &allSklAnimations);
 
 	return 0;

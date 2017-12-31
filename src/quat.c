@@ -3,6 +3,10 @@
 #include <math.h>
 #include <float.h>
 
+#define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians
+#define QUAT_LERP_ANGLE cos(RADIAN_RATIO)
+//#define QUAT_LERP_ANGLE (1.f-FLT_EPSILON)
+
 quat quatNew(const float w, const float x, const float y, const float z){
 	quat r = {.w = w, .v.x = x, .v.y = y, .v.z = z};
 	return r;
@@ -425,16 +429,11 @@ quat quatGetLerp(const quat *q1, const quat *q2, const float t){
 	**               ^
 	** r = (q1 + (q2 - q1) * t)
 	*/
-	/*quatSubQFromQ1(&q2, q1);
-	quatMultQByS(&q2, t);
-	quatAddQToQ(&q1, q2);
-	quatNormalizeFast(&q1);
-	return q1;*/
 	quat r;
-	r.w =   q1->w   + (q2->w   - q1->w)   * t;
+	r.w   = q1->w   + (q2->w   - q1->w)   * t;
 	r.v.x = q1->v.x + (q2->v.x - q1->v.x) * t;
-	r.v.x = q1->v.y + (q2->v.y - q1->v.y) * t;
-	r.v.x = q1->v.z + (q2->v.z - q1->v.z) * t;
+	r.v.y = q1->v.y + (q2->v.y - q1->v.y) * t;
+	r.v.z = q1->v.z + (q2->v.z - q1->v.z) * t;
 	return r;
 }
 void quatLerp(const quat *q1, const quat *q2, const float t, quat *r){
@@ -442,10 +441,10 @@ void quatLerp(const quat *q1, const quat *q2, const float t, quat *r){
 	**               ^
 	** r = (q1 + (q2 - q1) * t)
 	*/
-	r->w =   q1->w   + (q2->w   - q1->w)   * t;
+	r->w   = q1->w   + (q2->w   - q1->w)   * t;
 	r->v.x = q1->v.x + (q2->v.x - q1->v.x) * t;
-	r->v.x = q1->v.y + (q2->v.y - q1->v.y) * t;
-	r->v.x = q1->v.z + (q2->v.z - q1->v.z) * t;
+	r->v.y = q1->v.y + (q2->v.y - q1->v.y) * t;
+	r->v.z = q1->v.z + (q2->v.z - q1->v.z) * t;
 }
 quat quatGetSlerp(const quat *q1, const quat *q2, const float t){
 
@@ -453,16 +452,11 @@ quat quatGetSlerp(const quat *q1, const quat *q2, const float t){
 
 	// Cosine of the angle between the two quaternions.
 	const float cosTheta = quatDot(q1, q2);
-	const float cosThetaAbs = fabsf(cosTheta);
+	const float cosThetaAbs = fabs(cosTheta);
 
-	if(cosThetaAbs > 1.f - FLT_EPSILON){
+	if(cosThetaAbs > QUAT_LERP_ANGLE){
 		// If the angle is small enough, we can just use linear interpolation.
-		// We also need to normalize at least one of the quaternions.
-		quat q1n = *q1;
-		//quat q2n = *q2;
-		quatNormalizeFast(&q1n);
-		//quatNormalizeFast(&q2n);
-		quatLerp(&q1n, q2, t, &r);
+		quatLerp(q1, q2, t, &r);
 	}else{
 
 		/*
@@ -476,15 +470,19 @@ quat quatGetSlerp(const quat *q1, const quat *q2, const float t){
 		**
 		** x * (1 / y) = x / y
 		*/
-		const float angle = acosf(cosThetaAbs);
-		const float sinThetaInv = fastInvSqrt(1.f - cosThetaAbs*cosThetaAbs);
-		const float sinThetaInvT = sinf(angle*(1.f-t)) * sinThetaInv;
+
+		const float theta = acosf(cosThetaAbs);
+		const float sinThetaInv = fastInvSqrt(1.f - cosThetaAbs * cosThetaAbs);
+		const float sinThetaInvT = sinf(theta * (1.f - t)) * sinThetaInv;
 
 		// If q1 and q2 are > 90 degrees apart (cosTheta < 0), negate
 		// sinThetaT so it doesn't go the long way around.
-		const float sinThetaT    = (cosTheta < 0.f) ?
-		                           -(sinf(angle*t) * sinThetaInv) :
-		                           (sinf(angle*t) * sinThetaInv);
+		float sinThetaT;
+		if(cosTheta >= 0.f){
+			sinThetaT = sinf(theta * t) * sinThetaInv;
+		}else{
+			sinThetaT = -(sinf(theta * t) * sinThetaInv);
+		}
 
 		r.w   = q1->w   * sinThetaInvT + q2->w   * sinThetaT;
 		r.v.x = q1->v.x * sinThetaInvT + q2->v.x * sinThetaT;
@@ -493,6 +491,7 @@ quat quatGetSlerp(const quat *q1, const quat *q2, const float t){
 
 	}
 
+	quatNormalizeFast(&r);
 	return r;
 
 }
@@ -500,16 +499,11 @@ void quatSlerp(const quat *q1, const quat *q2, const float t, quat *r){
 
 	// Cosine of the angle between the two quaternions.
 	const float cosTheta = quatDot(q1, q2);
-	const float cosThetaAbs = fabsf(cosTheta);
+	const float cosThetaAbs = fabs(cosTheta);
 
-	if(cosThetaAbs > 1.f - FLT_EPSILON){
+	if(cosThetaAbs > QUAT_LERP_ANGLE){
 		// If the angle is small enough, we can just use linear interpolation.
-		// We also need to normalize at least one of the quaternions.
-		quat q1n = *q1;
-		//quat q2n = *q2;
-		quatNormalizeFast(&q1n);
-		//quatNormalizeFast(&q2n);
-		quatLerp(&q1n, q2, t, r);
+		quatLerp(q1, q2, t, r);
 	}else{
 
 		/*
@@ -523,15 +517,19 @@ void quatSlerp(const quat *q1, const quat *q2, const float t, quat *r){
 		**
 		** x * (1 / y) = x / y
 		*/
-		const float angle = acosf(cosThetaAbs);
-		const float sinThetaInv = fastInvSqrt(1.f - cosThetaAbs*cosThetaAbs);
-		const float sinThetaInvT = sinf(angle*(1.f-t)) * sinThetaInv;
+
+		const float theta = acosf(cosThetaAbs);
+		const float sinThetaInv = fastInvSqrt(1.f - cosThetaAbs * cosThetaAbs);
+		const float sinThetaInvT = sinf(theta * (1.f - t)) * sinThetaInv;
 
 		// If q1 and q2 are > 90 degrees apart (cosTheta < 0), negate
 		// sinThetaT so it doesn't go the long way around.
-		const float sinThetaT    = (cosTheta < 0.f) ?
-		                           -(sinf(angle*t) * sinThetaInv) :
-		                           (sinf(angle*t) * sinThetaInv);
+		float sinThetaT;
+		if(cosTheta >= 0.f){
+			sinThetaT = sinf(theta * t) * sinThetaInv;
+		}else{
+			sinThetaT = -(sinf(theta * t) * sinThetaInv);
+		}
 
 		r->w   = q1->w   * sinThetaInvT + q2->w   * sinThetaT;
 		r->v.x = q1->v.x * sinThetaInvT + q2->v.x * sinThetaT;
@@ -540,4 +538,13 @@ void quatSlerp(const quat *q1, const quat *q2, const float t, quat *r){
 
 	}
 
+	quatNormalizeFast(r);
+
+}
+
+void quatRotate(const quat *q1, const quat *q2, const float t, quat *r){
+	quat temp;
+	quatMultQByQR(q1, q2, &temp);
+	//*r = temp;
+	quatSlerp(q1, &temp, t, r);
 }

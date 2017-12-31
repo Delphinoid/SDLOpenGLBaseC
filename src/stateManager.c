@@ -232,7 +232,6 @@ static inline unsigned char smScenesUpdate(stateManager *sm){
 	size_t i, j, validStates;
 	for(i = 0; i < sm->sceneCapacity; ++i){
 		if(sm->scenes[i].active){
-
 			if(sm->stateNum > 1){
 				/* Shift each state for the current scene over. */
 				validStates = 0;
@@ -477,7 +476,7 @@ void smDelete(stateManager *sm){
 		}
 		free(sm->scenes[i].state);
 	}
-	free(sm->renderables);
+	free(sm->scenes);
 
 	for(i = 0; i < sm->cameraCapacity; ++i){
 		for(j = 0; j < sm->stateNum; ++j){

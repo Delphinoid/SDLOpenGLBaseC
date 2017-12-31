@@ -66,36 +66,25 @@ typedef struct {
 */
 /** ^ Last paragraph. **/
 
-// Forward declaration for sklAnimBlend.
-typedef struct sklAnimBlend sklAnimBlend;
-
 // Animation fragment, containing an animation pointer, an animator, a bone lookup and a blend.
 typedef struct {
 	sklAnim *currentAnim;
 	animationInstance animator;
-	/** Move animBoneLookup. **/
+	/** Really need to move animBoneLookup. **/
 	sklBone **animBoneLookup;  // Which bone in animState each bone in currentAnim corresponds to.
 	                           // If the root (first) bone in currentAnim is named "blah" and the
 	                           // second bone in animState is named "blah", the array will start
 	                           // with animBoneLookup[0] == &animState[1]. If the bone does not
 	                           // exist, its entry points to NULL.
-	sklAnimBlend *animNext;
+	float animBlendTime;      // How long to blend between this and the next animation for. A value of -1 means there is currently no blend.
+	float animBlendProgress;  // How long the animation has been blending for. A value of -1 means there is currently no blend.
 } sklAnimFragment;
-
-// Animation blend.
-typedef struct sklAnimBlend {
-	sklAnimFragment *blendAnim;  // A pointer to the animation being blended to.
-	float blendTime;      // How long to blend between animations for.
-	float blendProgress;  // How long the animation has been blending for. Size is stateNum.
-} sklAnimBlend;
 
 // Skeletal animation instance.
 typedef struct {
-	sklAnimFragment *animListHead;  // A pointer to the head of a linked list of animation fragments.
-	                                // Elements are only removed when their animNext is not NULL and
-	                                // their animNext->blendProgress[stateNum] is greater than their
-	                                // animNext->blendTime.
-	sklAnimFragment *animListTail;  // A pointer to the tail of the above linked list of animation fragments.
+	size_t animFragNum;
+	size_t animFragCapacity;
+	sklAnimFragment *animFrags;
 	/** Move animState. **/
 	sklBone *animState;  // Delta transformations for each bone.
 } sklAnimInstance;
