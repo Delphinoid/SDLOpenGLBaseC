@@ -4,46 +4,52 @@
 
 #define RADIAN_RATIO 0.017453292  /* = PI / 180, used for converting degrees to radians */
 
-void camInit(camera *cam){
-	iVec3Init(&cam->position, 0.f, 0.f, 0.f);
-	iQuatInit(&cam->orientation);
-	vec3Set(&cam->rotation, 0.f, 0.f, 0.f);
-	vec3Set(&cam->previousRotation, 0.f, 0.f, 0.f);
-	iVec3Init(&cam->targetPosition, 0.f, 0.f, -1.f);
-	iVec3Init(&cam->up, 0.f, 1.f, 0.f);
-	iFloatInit(&cam->fovy, 90.f);
-	mat4Identity(&cam->viewMatrix);
-	mat4Identity(&cam->projectionMatrix);
-	cam->targetScene = NULL;
-	cam->flags = CAM_UPDATE_VIEW | CAM_UPDATE_PROJECTION;
+unsigned char camInit(void *cam){
+	return 1;
 }
 
-void camStateCopy(const camera *o, camera *c){
-	c->position = o->position;
-	c->orientation = o->orientation;
-	c->rotation = o->rotation;
-	c->previousRotation = o->previousRotation;
-	c->targetPosition = o->targetPosition;
-	c->up = o->up;
-	c->fovy = o->fovy;
-	if((o->flags & CAM_UPDATE_VIEW) == 0){
+unsigned char camNew(void *cam){
+	iVec3Init(&((camera *)cam)->position, 0.f, 0.f, 0.f);
+	iQuatInit(&((camera *)cam)->orientation);
+	vec3Set(&((camera *)cam)->rotation, 0.f, 0.f, 0.f);
+	vec3Set(&((camera *)cam)->previousRotation, 0.f, 0.f, 0.f);
+	iVec3Init(&((camera *)cam)->targetPosition, 0.f, 0.f, -1.f);
+	iVec3Init(&((camera *)cam)->up, 0.f, 1.f, 0.f);
+	iFloatInit(&((camera *)cam)->fovy, 90.f);
+	mat4Identity(&((camera *)cam)->viewMatrix);
+	mat4Identity(&((camera *)cam)->projectionMatrix);
+	((camera *)cam)->targetScene = NULL;
+	((camera *)cam)->flags = CAM_UPDATE_VIEW | CAM_UPDATE_PROJECTION;
+	return 1;
+}
+
+unsigned char camStateCopy(const void *o, void *c){
+	((camera *)c)->position = ((camera *)o)->position;
+	((camera *)c)->orientation = ((camera *)o)->orientation;
+	((camera *)c)->rotation = ((camera *)o)->rotation;
+	((camera *)c)->previousRotation = ((camera *)o)->previousRotation;
+	((camera *)c)->targetPosition = ((camera *)o)->targetPosition;
+	((camera *)c)->up = ((camera *)o)->up;
+	((camera *)c)->fovy = ((camera *)o)->fovy;
+	if((((camera *)o)->flags & CAM_UPDATE_VIEW) == 0){
 		/*
 		** Only copy the view and projection matrices if they are
 		** not likely to change before a render.
 		*/
-		c->viewMatrix = o->viewMatrix;
-		c->projectionMatrix = o->projectionMatrix;
+		((camera *)c)->viewMatrix = ((camera *)o)->viewMatrix;
+		((camera *)c)->projectionMatrix = ((camera *)o)->projectionMatrix;
 	}
-	c->targetScene = o->targetScene;
-	c->flags = o->flags;
+	((camera *)c)->targetScene = ((camera *)o)->targetScene;
+	((camera *)c)->flags = ((camera *)o)->flags;
+	return 1;
 }
 
-void camResetInterpolation(camera *cam){
-	iVec3ResetInterp(&cam->position);
-	iQuatResetInterp(&cam->orientation);
-	iVec3ResetInterp(&cam->targetPosition);
-	iVec3ResetInterp(&cam->up);
-	iFloatResetInterp(&cam->fovy);
+void camResetInterpolation(void *cam){
+	iVec3ResetInterp(&((camera *)cam)->position);
+	iQuatResetInterp(&((camera *)cam)->orientation);
+	iVec3ResetInterp(&((camera *)cam)->targetPosition);
+	iVec3ResetInterp(&((camera *)cam)->up);
+	iFloatResetInterp(&((camera *)cam)->fovy);
 }
 void camCalculateUp(camera *cam){  /** Probably not entirely necessary **/
 
@@ -155,7 +161,7 @@ void camUpdateProjectionMatrix(camera *cam, const unsigned char aspectRatioX, co
 
 }
 
-void camDelete(camera *cam){
+void camDelete(void *cam){
 	//
 }
 

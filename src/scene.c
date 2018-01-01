@@ -2,10 +2,36 @@
 
 #define SCENE_START_CAPACITY 1
 
-void scnInit(scene *scn){
-	scn->renderableNum = 0;
-	scn->renderableCapacity = 0;
-	scn->renderableIDs = NULL;
+unsigned char scnInit(void *scn){
+	((scene *)scn)->renderableNum = 0;
+	((scene *)scn)->renderableCapacity = 0;
+	((scene *)scn)->renderableIDs = NULL;
+	return 1;
+}
+
+unsigned char scnStateCopy(const void *o, void *c){
+	if(((scene *)c)->renderableCapacity != ((scene *)o)->renderableCapacity){
+		/*
+		** We need to allocate more or less memory so that
+		** the memory allocated for both scenes match.
+		*/
+		size_t *tempBuffer = malloc(((scene *)o)->renderableCapacity*sizeof(size_t));
+		if(tempBuffer == NULL){
+			/** Memory allocation failure. **/
+			return 0;
+		}
+		free(((scene *)c)->renderableIDs);
+		((scene *)c)->renderableIDs = tempBuffer;
+		((scene *)c)->renderableCapacity = ((scene *)o)->renderableCapacity;
+	}
+	memcpy(((scene *)c)->renderableIDs, ((scene *)o)->renderableIDs, ((scene *)o)->renderableNum*sizeof(size_t));
+	((scene *)c)->renderableNum = ((scene *)o)->renderableNum;
+	((scene *)c)->renderableCapacity = ((scene *)o)->renderableCapacity;
+	return 1;
+}
+
+void scnResetInterpolation(void *scn){
+	//
 }
 
 unsigned char scnLoad(scene *scn){
@@ -41,29 +67,8 @@ void scnRenderableRemove(scene *scn, size_t pos){
 	}
 }
 
-unsigned char scnStateCopy(const scene *o, scene *c){
-	if(c->renderableCapacity != o->renderableCapacity){
-		/*
-		** We need to allocate more or less memory so that
-		** the memory allocated for both scenes match.
-		*/
-		size_t *tempBuffer = malloc(o->renderableCapacity*sizeof(size_t));
-		if(tempBuffer == NULL){
-			/** Memory allocation failure. **/
-			return 0;
-		}
-		free(c->renderableIDs);
-		c->renderableIDs = tempBuffer;
-		c->renderableCapacity = o->renderableCapacity;
-	}
-	memcpy(c->renderableIDs, o->renderableIDs, o->renderableNum*sizeof(size_t));
-	c->renderableNum = o->renderableNum;
-	c->renderableCapacity = o->renderableCapacity;
-	return 1;
-}
-
-void scnDelete(scene *scn){
-	if(scn->renderableIDs != NULL){
-		free(scn->renderableIDs);
+void scnDelete(void *scn){
+	if(((scene *)scn)->renderableIDs != NULL){
+		free(((scene *)scn)->renderableIDs);
 	}
 }

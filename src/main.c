@@ -1,4 +1,4 @@
-#include "stateManager.h"
+#include "stateManagerHelpers.h"
 #include <stdio.h>
 
 #define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians
@@ -26,7 +26,10 @@ int main(int argc, char *argv[]){
 
 	/** Most of the code below this comment will be removed eventually **/
 	stateManager gameStateManager;
-	smInit(&gameStateManager, 6, 2, 2, 2);
+	smInit(&gameStateManager, 2);
+	smObjectTypeNew(&gameStateManager, &rndrInit, &rndrNew, &rndrStateCopy, &rndrResetInterpolation, &rndrDelete, sizeof(renderable), 6);
+	smObjectTypeNew(&gameStateManager, &scnInit,  &scnInit, &scnStateCopy,  &scnResetInterpolation,  &scnDelete,  sizeof(scene),      2);
+	smObjectTypeNew(&gameStateManager, &camInit,  &camNew,  &camStateCopy,  &camResetInterpolation,  &camDelete,  sizeof(camera),     2);
 
 	cVector allTextures; cvInit(&allTextures, 1);            // Holds textures
 	cVector allTexWrappers; cvInit(&allTexWrappers, 1);      // Holds textureWrappers
@@ -63,103 +66,98 @@ int main(int argc, char *argv[]){
 
 	/* Renderables */
 	size_t tempID;
-	smRenderableNew(&gameStateManager, &tempID);
-	rndrInit(gameStateManager.renderables[tempID].state[0]);
-	gameStateManager.renderables[tempID].state[0]->mdl = (model *)cvGet(&allModels, 1);
-	gameStateManager.renderables[tempID].state[0]->twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 1);
+	smObjectNew(&gameStateManager, SM_TYPE_RENDERABLE, &tempID);
+	rndrGetState(&gameStateManager, tempID, 0)->mdl = (model *)cvGet(&allModels, 1);
+	rndrGetState(&gameStateManager, tempID, 0)->twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 1);
 	//
-	smRenderableNew(&gameStateManager, &tempID);
-	rndrInit(gameStateManager.renderables[tempID].state[0]);
-	gameStateManager.renderables[tempID].state[0]->mdl = (model *)cvGet(&allModels, 1);
-	gameStateManager.renderables[tempID].state[0]->twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 2);
-	gameStateManager.renderables[tempID].state[0]->position.value.x = 0.5f;
-	gameStateManager.renderables[tempID].state[0]->position.value.y = 0.5f;
-	vec3SetS(&gameStateManager.renderables[tempID].state[0]->scale.value, 0.15f);
+	smObjectNew(&gameStateManager, SM_TYPE_RENDERABLE, &tempID);
+	rndrGetState(&gameStateManager, tempID, 0)->mdl = (model *)cvGet(&allModels, 1);
+	rndrGetState(&gameStateManager, tempID, 0)->twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 2);
+	rndrGetState(&gameStateManager, tempID, 0)->position.value.x = 0.5f;
+	rndrGetState(&gameStateManager, tempID, 0)->position.value.y = 0.5f;
+	vec3SetS(&rndrGetState(&gameStateManager, tempID, 0)->scale.value, 0.15f);
 	quat changeRotation;
 	quatSetEuler(&changeRotation, 45.f, 45.f, 0.f);
-	quatMultQByQ2(&changeRotation, &gameStateManager.renderables[tempID].state[0]->orientation.value);
-	gameStateManager.renderables[tempID].state[0]->alpha.value = 0.5f;
+	quatMultQByQ2(&changeRotation, &rndrGetState(&gameStateManager, tempID, 0)->orientation.value);
+	rndrGetState(&gameStateManager, tempID, 0)->alpha.value = 0.5f;
 
 	/* Sprite Renderables */
-	smRenderableNew(&gameStateManager, &tempID);
-	rndrInit(gameStateManager.renderables[tempID].state[0]);
-	gameStateManager.renderables[tempID].state[0]->sprite = 1;
-	gameStateManager.renderables[tempID].state[0]->mdl = (model *)cvGet(&allModels, 0);
-	gameStateManager.renderables[tempID].state[0]->twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
-	gameStateManager.renderables[tempID].state[0]->pivot.value.x = 0.5f;
-	gameStateManager.renderables[tempID].state[0]->pivot.value.y = 0.5f;
-	gameStateManager.renderables[tempID].state[0]->scale.value.x = 0.026f;
-	gameStateManager.renderables[tempID].state[0]->scale.value.y = 0.026f;
+	smObjectNew(&gameStateManager, SM_TYPE_RENDERABLE, &tempID);
+	rndrGetState(&gameStateManager, tempID, 0)->sprite = 1;
+	rndrGetState(&gameStateManager, tempID, 0)->mdl = (model *)cvGet(&allModels, 0);
+	rndrGetState(&gameStateManager, tempID, 0)->twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
+	rndrGetState(&gameStateManager, tempID, 0)->pivot.value.x = 0.5f;
+	rndrGetState(&gameStateManager, tempID, 0)->pivot.value.y = 0.5f;
+	rndrGetState(&gameStateManager, tempID, 0)->scale.value.x = 0.026f;
+	rndrGetState(&gameStateManager, tempID, 0)->scale.value.y = 0.026f;
 	//
-	smRenderableNew(&gameStateManager, &tempID);
-	rndrInit(gameStateManager.renderables[tempID].state[0]);
-	gameStateManager.renderables[tempID].state[0]->sprite = 1;
-	gameStateManager.renderables[tempID].state[0]->mdl = (model *)cvGet(&allModels, 0);
-	gameStateManager.renderables[tempID].state[0]->twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
-	gameStateManager.renderables[tempID].state[0]->position.value.y = 1.f;
-	gameStateManager.renderables[tempID].state[0]->pivot.value.y = 1.f;
-	gameStateManager.renderables[tempID].state[0]->scale.value.x = 0.0026f;
-	gameStateManager.renderables[tempID].state[0]->scale.value.y = 0.0026f;
+	smObjectNew(&gameStateManager, SM_TYPE_RENDERABLE, &tempID);
+	rndrInit(rndrGetState(&gameStateManager, tempID, 0));
+	rndrGetState(&gameStateManager, tempID, 0)->sprite = 1;
+	rndrGetState(&gameStateManager, tempID, 0)->mdl = (model *)cvGet(&allModels, 0);
+	rndrGetState(&gameStateManager, tempID, 0)->twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
+	rndrGetState(&gameStateManager, tempID, 0)->position.value.y = 1.f;
+	rndrGetState(&gameStateManager, tempID, 0)->pivot.value.y = 1.f;
+	rndrGetState(&gameStateManager, tempID, 0)->scale.value.x = 0.0026f;
+	rndrGetState(&gameStateManager, tempID, 0)->scale.value.y = 0.0026f;
 	//
-	smRenderableNew(&gameStateManager, &tempID);
-	rndrInit(gameStateManager.renderables[tempID].state[0]);
-	gameStateManager.renderables[tempID].state[0]->sprite = 1;
-	gameStateManager.renderables[tempID].state[0]->mdl = (model *)cvGet(&allModels, 0);
-	gameStateManager.renderables[tempID].state[0]->twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
-	gameStateManager.renderables[tempID].state[0]->position.value.x = 4.f;
-	gameStateManager.renderables[tempID].state[0]->position.value.z = -3.f;
-	gameStateManager.renderables[tempID].state[0]->pivot.value.x = 0.5f;
-	gameStateManager.renderables[tempID].state[0]->pivot.value.y = 0.5f;
-	gameStateManager.renderables[tempID].state[0]->scale.value.x = 0.026f;
-	gameStateManager.renderables[tempID].state[0]->scale.value.y = 0.026f;
-	gameStateManager.renderables[tempID].state[0]->flags |= RNDR_BILLBOARD_TARGET | RNDR_BILLBOARD_Y;
+	smObjectNew(&gameStateManager, SM_TYPE_RENDERABLE, &tempID);
+	rndrInit(rndrGetState(&gameStateManager, tempID, 0));
+	rndrGetState(&gameStateManager, tempID, 0)->sprite = 1;
+	rndrGetState(&gameStateManager, tempID, 0)->mdl = (model *)cvGet(&allModels, 0);
+	rndrGetState(&gameStateManager, tempID, 0)->twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
+	rndrGetState(&gameStateManager, tempID, 0)->position.value.x = 4.f;
+	rndrGetState(&gameStateManager, tempID, 0)->position.value.z = -3.f;
+	rndrGetState(&gameStateManager, tempID, 0)->pivot.value.x = 0.5f;
+	rndrGetState(&gameStateManager, tempID, 0)->pivot.value.y = 0.5f;
+	rndrGetState(&gameStateManager, tempID, 0)->scale.value.x = 0.026f;
+	rndrGetState(&gameStateManager, tempID, 0)->scale.value.y = 0.026f;
+	rndrGetState(&gameStateManager, tempID, 0)->flags |= RNDR_BILLBOARD_TARGET | RNDR_BILLBOARD_Y;
 	//
-	smRenderableNew(&gameStateManager, &tempID);
-	rndrInit(gameStateManager.renderables[tempID].state[0]);
-	gameStateManager.renderables[tempID].state[0]->sprite = 1;
-	gameStateManager.renderables[tempID].state[0]->mdl = (model *)cvGet(&allModels, 0);
-	gameStateManager.renderables[tempID].state[0]->twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 3);
-	gameStateManager.renderables[tempID].state[0]->position.value.x = -3.f;
-	gameStateManager.renderables[tempID].state[0]->position.value.y = -2.f;
-	gameStateManager.renderables[tempID].state[0]->position.value.z = -3.f;
-	gameStateManager.renderables[tempID].state[0]->pivot.value.x = 0.5f;
-	gameStateManager.renderables[tempID].state[0]->pivot.value.y = 0.5f;
-	gameStateManager.renderables[tempID].state[0]->scale.value.x = 0.0085f;
-	gameStateManager.renderables[tempID].state[0]->scale.value.y = 0.0065f;
+	smObjectNew(&gameStateManager, SM_TYPE_RENDERABLE, &tempID);
+	rndrInit(rndrGetState(&gameStateManager, tempID, 0));
+	rndrGetState(&gameStateManager, tempID, 0)->sprite = 1;
+	rndrGetState(&gameStateManager, tempID, 0)->mdl = (model *)cvGet(&allModels, 0);
+	rndrGetState(&gameStateManager, tempID, 0)->twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 3);
+	rndrGetState(&gameStateManager, tempID, 0)->position.value.x = -3.f;
+	rndrGetState(&gameStateManager, tempID, 0)->position.value.y = -2.f;
+	rndrGetState(&gameStateManager, tempID, 0)->position.value.z = -3.f;
+	rndrGetState(&gameStateManager, tempID, 0)->pivot.value.x = 0.5f;
+	rndrGetState(&gameStateManager, tempID, 0)->pivot.value.y = 0.5f;
+	rndrGetState(&gameStateManager, tempID, 0)->scale.value.x = 0.0085f;
+	rndrGetState(&gameStateManager, tempID, 0)->scale.value.y = 0.0065f;
 
 	/* Scenes */
-	smSceneNew(&gameStateManager, &tempID);
-	gameStateManager.scenes[tempID].state[0]->renderableNum = 4;
-	gameStateManager.scenes[tempID].state[0]->renderableCapacity = 4;
-	gameStateManager.scenes[tempID].state[0]->renderableIDs = malloc(gameStateManager.scenes[tempID].state[0]->renderableNum * sizeof(size_t));
-	gameStateManager.scenes[tempID].state[0]->renderableIDs[0] = 0;
-	gameStateManager.scenes[tempID].state[0]->renderableIDs[1] = 2;
-	gameStateManager.scenes[tempID].state[0]->renderableIDs[2] = 4;
-	gameStateManager.scenes[tempID].state[0]->renderableIDs[3] = 5;
+	smObjectNew(&gameStateManager, SM_TYPE_SCENE, &tempID);
+	scnGetState(&gameStateManager, tempID, 0)->renderableNum = 4;
+	scnGetState(&gameStateManager, tempID, 0)->renderableCapacity = 4;
+	scnGetState(&gameStateManager, tempID, 0)->renderableIDs = malloc(scnGetState(&gameStateManager, tempID, 0)->renderableNum * sizeof(size_t));
+	scnGetState(&gameStateManager, tempID, 0)->renderableIDs[0] = 0;
+	scnGetState(&gameStateManager, tempID, 0)->renderableIDs[1] = 2;
+	scnGetState(&gameStateManager, tempID, 0)->renderableIDs[2] = 4;
+	scnGetState(&gameStateManager, tempID, 0)->renderableIDs[3] = 5;
 	//
-	smSceneNew(&gameStateManager, &tempID);
-	gameStateManager.scenes[tempID].state[0]->renderableNum = 2;
-	gameStateManager.scenes[tempID].state[0]->renderableCapacity = 2;
-	gameStateManager.scenes[tempID].state[0]->renderableIDs = malloc(gameStateManager.scenes[tempID].state[0]->renderableNum * sizeof(size_t));
-	gameStateManager.scenes[tempID].state[0]->renderableIDs[0] = 1;
-	gameStateManager.scenes[tempID].state[0]->renderableIDs[1] = 3;
+	smObjectNew(&gameStateManager, SM_TYPE_SCENE, &tempID);
+	scnGetState(&gameStateManager, tempID, 0)->renderableNum = 2;
+	scnGetState(&gameStateManager, tempID, 0)->renderableCapacity = 2;
+	scnGetState(&gameStateManager, tempID, 0)->renderableIDs = malloc(scnGetState(&gameStateManager, tempID, 0)->renderableNum * sizeof(size_t));
+	scnGetState(&gameStateManager, tempID, 0)->renderableIDs[0] = 1;
+	scnGetState(&gameStateManager, tempID, 0)->renderableIDs[1] = 3;
 
 	/* Cameras */
-	smCameraNew(&gameStateManager, &tempID);
-	camInit(gameStateManager.cameras[tempID].state[0]);
-	vec3Set(&gameStateManager.cameras[tempID].state[0]->position.value, 0.f, 2.f, 7.f);
-	gameStateManager.cameras[tempID].state[0]->targetScene = &gameStateManager.scenes[0].state[0];
+	smObjectNew(&gameStateManager, SM_TYPE_CAMERA, &tempID);
+	vec3Set(&camGetState(&gameStateManager, tempID, 0)->position.value, 0.f, 2.f, 7.f);
+	camGetState(&gameStateManager, tempID, 0)->targetScene = (scene **)&gameStateManager.objectType[SM_TYPE_SCENE].instance[0].state[0];
 	//
-	smCameraNew(&gameStateManager, &tempID);
-	camInit(gameStateManager.cameras[tempID].state[0]);
-	gameStateManager.cameras[tempID].state[0]->flags |= CAM_PROJECTION_ORTHO;
-	gameStateManager.cameras[tempID].state[0]->targetScene = &gameStateManager.scenes[1].state[0];
+	smObjectNew(&gameStateManager, SM_TYPE_CAMERA, &tempID);
+	camGetState(&gameStateManager, tempID, 0)->flags |= CAM_PROJECTION_ORTHO;
+	camGetState(&gameStateManager, tempID, 0)->targetScene = (scene **)&gameStateManager.objectType[SM_TYPE_SCENE].instance[1].state[0];
 
 	/** Remove the special deletion code below the main loop as well. **/
-	skliLoad(&gameStateManager.renderables[0].state[0]->skli, prgPath, "Resources\\Skeletons\\CubeTestSkeleton.tds");
-	gameStateManager.renderables[0].state[0]->mdl->skl = gameStateManager.renderables[0].state[0]->skli.skl;
-	skliLoad(&gameStateManager.renderables[1].state[0]->skli, prgPath, "Resources\\Skeletons\\CubeTestSkeleton.tds");
-	gameStateManager.renderables[1].state[0]->mdl->skl = gameStateManager.renderables[1].state[0]->skli.skl;
+	skliLoad(&rndrGetState(&gameStateManager, 0, 0)->skli, prgPath, "Resources\\Skeletons\\CubeTestSkeleton.tds");
+	rndrGetState(&gameStateManager, 0, 0)->mdl->skl = rndrGetState(&gameStateManager, 0, 0)->skli.skl;
+	skliLoad(&rndrGetState(&gameStateManager, 1, 0)->skli, prgPath, "Resources\\Skeletons\\CubeTestSkeleton.tds");
+	rndrGetState(&gameStateManager, 1, 0)->mdl->skl = rndrGetState(&gameStateManager, 1, 0)->skli.skl;
 
 
 	unsigned char prgRunning = 1;
@@ -258,44 +256,44 @@ int main(int argc, char *argv[]){
 				globalTimeMod = 1.f;
 				/** changeRotation is created to initialize the second renderable. **/
 				quatSetEuler(&changeRotation, -90.f*RADIAN_RATIO, 0.f, 0.f);
-				quatRotate(&gameStateManager.renderables[0].state[0]->orientation.value, &changeRotation, tickratio, &gameStateManager.renderables[0].state[0]->orientation.value);
-				gameStateManager.cameras[0].state[0]->position.value.z += -5.f * tickratio;
-				gameStateManager.renderables[4].state[0]->targetPosition.value = gameStateManager.cameras[0].state[0]->position.value;
+				quatRotate(&rndrGetState(&gameStateManager, 0, 0)->orientation.value, &changeRotation, tickratio, &rndrGetState(&gameStateManager, 0, 0)->orientation.value);
+				camGetState(&gameStateManager, 0, 0)->position.value.z += -5.f * tickratio;
+				rndrGetState(&gameStateManager, 4, 0)->targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
 			}
 			if(DOWN){
 				globalTimeMod = -1.f;
 				/** changeRotation is created to initialize the second renderable. **/
 				quatSetEuler(&changeRotation, 90.f*RADIAN_RATIO, 0.f, 0.f);
-				quatRotate(&gameStateManager.renderables[0].state[0]->orientation.value, &changeRotation, tickratio, &gameStateManager.renderables[0].state[0]->orientation.value);
-				gameStateManager.cameras[0].state[0]->position.value.z += 5.f * tickratio;
-				gameStateManager.renderables[4].state[0]->targetPosition.value = gameStateManager.cameras[0].state[0]->position.value;
+				quatRotate(&rndrGetState(&gameStateManager, 0, 0)->orientation.value, &changeRotation, tickratio, &rndrGetState(&gameStateManager, 0, 0)->orientation.value);
+				camGetState(&gameStateManager, 0, 0)->position.value.z += 5.f * tickratio;
+				rndrGetState(&gameStateManager, 4, 0)->targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
 			}
 			if(LEFT){
 				/** changeRotation is created to initialize the second renderable. **/
 				quatSetEuler(&changeRotation, 0.f, -90.f*RADIAN_RATIO, 0.f);
-				quatRotate(&gameStateManager.renderables[0].state[0]->orientation.value, &changeRotation, tickratio, &gameStateManager.renderables[0].state[0]->orientation.value);
+				quatRotate(&rndrGetState(&gameStateManager, 0, 0)->orientation.value, &changeRotation, tickratio, &rndrGetState(&gameStateManager, 0, 0)->orientation.value);
 				quatSetEuler(&changeRotation, 0.f, 0.f, -90.f*RADIAN_RATIO);
-				quatRotate(&gameStateManager.renderables[3].state[0]->orientation.value, &changeRotation, tickratio, &gameStateManager.renderables[3].state[0]->orientation.value);
-				gameStateManager.cameras[0].state[0]->position.value.x += -5.f * tickratio;
-				gameStateManager.renderables[4].state[0]->targetPosition.value = gameStateManager.cameras[0].state[0]->position.value;
+				quatRotate(&rndrGetState(&gameStateManager, 3, 0)->orientation.value, &changeRotation, tickratio, &rndrGetState(&gameStateManager, 3, 0)->orientation.value);
+				camGetState(&gameStateManager, 0, 0)->position.value.x += -5.f * tickratio;
+				rndrGetState(&gameStateManager, 4, 0)->targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
 			}
 			if(RIGHT){
 				/** changeRotation is created to initialize the second renderable. **/
 				quatSetEuler(&changeRotation, 0.f, 90.f*RADIAN_RATIO, 0.f);
-				quatRotate(&gameStateManager.renderables[0].state[0]->orientation.value, &changeRotation, tickratio, &gameStateManager.renderables[0].state[0]->orientation.value);
+				quatRotate(&rndrGetState(&gameStateManager, 0, 0)->orientation.value, &changeRotation, tickratio, &rndrGetState(&gameStateManager, 0, 0)->orientation.value);
 				quatSetEuler(&changeRotation, 0.f, 0.f, 90.f*RADIAN_RATIO);
-				quatRotate(&gameStateManager.renderables[3].state[0]->orientation.value, &changeRotation, tickratio, &gameStateManager.renderables[3].state[0]->orientation.value);
-				gameStateManager.cameras[0].state[0]->position.value.x += 5.f * tickratio;
-				gameStateManager.renderables[4].state[0]->targetPosition.value = gameStateManager.cameras[0].state[0]->position.value;
+				quatRotate(&rndrGetState(&gameStateManager, 3, 0)->orientation.value, &changeRotation, tickratio, &rndrGetState(&gameStateManager, 3, 0)->orientation.value);
+				camGetState(&gameStateManager, 0, 0)->position.value.x += 5.f * tickratio;
+				rndrGetState(&gameStateManager, 4, 0)->targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
 			}
 
 			/* Animate */
 			/** Could be merged with the update function but animating should be done in here. **/
-			for(i = 0; i < gameStateManager.renderableCapacity; ++i){
+			for(i = 0; i < gameStateManager.objectType[SM_TYPE_RENDERABLE].capacity; ++i){
 				/* Update the renderable for rendering */
-				if(gameStateManager.renderables[i].state[0] != NULL){
-					rndrAnimateTexture(gameStateManager.renderables[i].state[0], tickrate * globalTimeMod);
-					rndrAnimateSkeleton(gameStateManager.renderables[i].state[0], tickrate * globalTimeMod);
+				if(rndrGetState(&gameStateManager, i, 0) != NULL){
+					rndrAnimateTexture(rndrGetState(&gameStateManager, i, 0), tickrate * globalTimeMod);
+					rndrAnimateSkeleton(rndrGetState(&gameStateManager, i, 0), tickrate * globalTimeMod);
 				}
 			}
 
@@ -357,10 +355,10 @@ int main(int argc, char *argv[]){
 
 
 	/** Special deletion code **/
-	sklDelete(gameStateManager.renderables[0].state[0]->skli.skl);
-	sklDelete(gameStateManager.renderables[1].state[0]->skli.skl);
-	sklaDelete(gameStateManager.renderables[0].state[0]->skli.animations[0].animFrags[0].currentAnim);
-	sklaDelete(gameStateManager.renderables[1].state[0]->skli.animations[0].animFrags[0].currentAnim);
+	sklDelete(rndrGetState(&gameStateManager, 0, 0)->skli.skl);
+	sklDelete(rndrGetState(&gameStateManager, 1, 0)->skli.skl);
+	sklaDelete(rndrGetState(&gameStateManager, 0, 0)->skli.animations[0].animFrags[0].currentAnim);
+	sklaDelete(rndrGetState(&gameStateManager, 1, 0)->skli.animations[0].animFrags[0].currentAnim);
 	cleanup(&gfxPrg, &gameStateManager, &allTextures, &allTexWrappers, &allModels, &allSkeletons, &allSklAnimations);
 
 	return 0;

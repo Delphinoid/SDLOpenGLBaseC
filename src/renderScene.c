@@ -1,4 +1,4 @@
-#include "stateManager.h"
+#include "stateManagerHelpers.h"
 #include <math.h>
 
 /** THIS FILE IS TEMPORARY **/
@@ -220,10 +220,10 @@ void sortElements(stateManager *gameStateManager, const size_t stateID,
 	/** Merge with camera updating? **/
 	// Sort models and sprites into their scene and HUD vectors
 	size_t i, j;
-	for(i = 0; i < gameStateManager->cameraCapacity; ++i){
-		if(gameStateManager->cameras[i].state[stateID] != NULL){
-			for(j = 0; j < (*gameStateManager->cameras[i].state[stateID]->targetScene)->renderableNum; ++j){
-				renderable *curRndr = gameStateManager->renderables[(*gameStateManager->cameras[i].state[stateID]->targetScene)->renderableIDs[j]].state[stateID];
+	for(i = 0; i < gameStateManager->objectType[SM_TYPE_CAMERA].capacity; ++i){
+		if(camGetState(gameStateManager, i, stateID) != NULL){
+			for(j = 0; j < (*camGetState(gameStateManager, i, stateID)->targetScene)->renderableNum; ++j){
+				renderable *curRndr = rndrGetState(gameStateManager, (*camGetState(gameStateManager, i, stateID)->targetScene)->renderableIDs[j], stateID);
 				if(curRndr != NULL){
 					if(!curRndr->sprite){
 						if(i == 0){
@@ -250,14 +250,14 @@ void renderScene(stateManager *gameStateManager, const size_t stateID, const flo
 
 	// Update cameras.
 	size_t i;
-	for(i = 0; i < gameStateManager->cameraCapacity; ++i){
-		if(gameStateManager->cameras[i].state[stateID] != NULL){
-			camUpdateViewMatrix(gameStateManager->cameras[i].state[stateID], interpT);
+	for(i = 0; i < gameStateManager->objectType[SM_TYPE_CAMERA].capacity; ++i){
+		if(camGetState(gameStateManager, i, stateID) != NULL){
+			camUpdateViewMatrix(camGetState(gameStateManager, i, stateID), interpT);
 			if(gfxPrg->windowChanged){
 				// If the window size changed, update the camera projection matrices as well.
-				gameStateManager->cameras[i].state[stateID]->flags |= CAM_UPDATE_PROJECTION;
+				camGetState(gameStateManager, i, stateID)->flags |= CAM_UPDATE_PROJECTION;
 			}
-			camUpdateProjectionMatrix(gameStateManager->cameras[i].state[stateID], gfxPrg->aspectRatioX, gfxPrg->aspectRatioY, interpT);
+			camUpdateProjectionMatrix(camGetState(gameStateManager, i, stateID), gfxPrg->aspectRatioX, gfxPrg->aspectRatioY, interpT);
 		}
 	}
 
@@ -269,34 +269,34 @@ void renderScene(stateManager *gameStateManager, const size_t stateID, const flo
 	sortElements(gameStateManager, stateID, &modelsScene, &modelsHUD, &spritesScene, &spritesHUD);
 
 	// Render the main scene.
-	if(gameStateManager->cameras[0].state[stateID] != NULL){
+	if(camGetState(gameStateManager, 0, stateID) != NULL){
 		// Depth sort scene models.
 		cVector renderList; cvInit(&renderList, 1);  // Holds model pointers; pointers to depth-sorted scene models that must be rendered.
-		depthSortModels(&modelsScene, &renderList, gameStateManager->cameras[0].state[stateID], interpT);
+		depthSortModels(&modelsScene, &renderList, camGetState(gameStateManager, 0, stateID), interpT);
 		// Render scene models.
 		for(i = 0; i < renderList.size; ++i){
-			renderModel(*((renderable **)cvGet(&renderList, i)), gameStateManager->cameras[0].state[stateID], interpT, gfxPrg);
+			renderModel(*((renderable **)cvGet(&renderList, i)), camGetState(gameStateManager, 0, stateID), interpT, gfxPrg);
 		}
 		// Batch render scene sprites.
 		// Change the MVP matrix to the frustum projection matrix, as other sprite vertex transformations are done on the CPU through sprCreate().
-		glUniformMatrix4fv(gfxPrg->mvpMatrixID, 1, GL_FALSE, &gameStateManager->cameras[0].state[stateID]->projectionMatrix.m[0][0]);
-		batchRenderSprites(&spritesScene, gameStateManager->cameras[0].state[stateID], interpT, gfxPrg);
+		glUniformMatrix4fv(gfxPrg->mvpMatrixID, 1, GL_FALSE, &camGetState(gameStateManager, 0, stateID)->projectionMatrix.m[0][0]);
+		batchRenderSprites(&spritesScene, camGetState(gameStateManager, 0, stateID), interpT, gfxPrg);
 		cvClear(&renderList);
 	}
 
 	//glClear(GL_DEPTH_BUFFER_BIT);
 
 	// Render the HUD scene.
-	if(gameStateManager->cameras[1].state[stateID] != NULL){
+	if(camGetState(gameStateManager, 1, stateID) != NULL){
 		// Render HUD models.
 		/** HUD camera? Streamline this to make handling different cameras easily **/
 		for(i = 0; i < modelsHUD.size; ++i){
-			renderModel(*((renderable **)cvGet(&modelsHUD, i)), gameStateManager->cameras[1].state[stateID], interpT, gfxPrg);
+			renderModel(*((renderable **)cvGet(&modelsHUD, i)), camGetState(gameStateManager, 1, stateID), interpT, gfxPrg);
 		}
 		// Batch render HUD sprites.
 		// Change the MVP matrix to the orthographic projection matrix, as other sprite vertex transformations are done on the CPU through sprCreate().
-		glUniformMatrix4fv(gfxPrg->mvpMatrixID, 1, GL_FALSE, &gameStateManager->cameras[1].state[stateID]->projectionMatrix.m[0][0]);
-		batchRenderSprites(&spritesHUD, gameStateManager->cameras[1].state[stateID], interpT, gfxPrg);
+		glUniformMatrix4fv(gfxPrg->mvpMatrixID, 1, GL_FALSE, &camGetState(gameStateManager, 1, stateID)->projectionMatrix.m[0][0]);
+		batchRenderSprites(&spritesHUD, camGetState(gameStateManager, 1, stateID), interpT, gfxPrg);
 		cvClear(&modelsHUD);
 	}
 

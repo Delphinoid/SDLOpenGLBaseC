@@ -7,21 +7,51 @@
 
 #define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians
 
-unsigned char rndrInit(renderable *rndr){
-	rndr->name = NULL;
-	rndr->mdl = NULL;
-	iVec3Init(&rndr->position, 0.f, 0.f, 0.f);
-	iQuatInit(&rndr->orientation);
-	//vec3Set(&rndr->rotation, 0.f, 0.f, 0.f);
-	iVec3Init(&rndr->pivot, 0.f, 0.f, 0.f);
-	iVec3Init(&rndr->targetPosition, 0.f, 0.f, 0.f);
-	iQuatInit(&rndr->targetOrientation);
-	iVec3Init(&rndr->scale, 1.f, 1.f, 1.f);
-	iFloatInit(&rndr->alpha, 1.f);
-	rndr->sprite = 0;
-	rndr->flags = 0;
-	twiInit(&rndr->twi, NULL);
-	return skliInit(&rndr->skli, NULL, 0);
+unsigned char rndrInit(void *rndr){
+	return skliInit(&((renderable *)rndr)->skli, NULL, 0);
+}
+
+unsigned char rndrNew(void *rndr){
+	((renderable *)rndr)->name = NULL;
+	((renderable *)rndr)->mdl = NULL;
+	iVec3Init(&((renderable *)rndr)->position, 0.f, 0.f, 0.f);
+	iQuatInit(&((renderable *)rndr)->orientation);
+	//vec3Set(&((renderable *)rndr)->rotation, 0.f, 0.f, 0.f);
+	iVec3Init(&((renderable *)rndr)->pivot, 0.f, 0.f, 0.f);
+	iVec3Init(&((renderable *)rndr)->targetPosition, 0.f, 0.f, 0.f);
+	iQuatInit(&((renderable *)rndr)->targetOrientation);
+	iVec3Init(&((renderable *)rndr)->scale, 1.f, 1.f, 1.f);
+	iFloatInit(&((renderable *)rndr)->alpha, 1.f);
+	((renderable *)rndr)->sprite = 0;
+	((renderable *)rndr)->flags = 0;
+	twiInit(&((renderable *)rndr)->twi, NULL);
+	return rndrInit(rndr);
+}
+
+unsigned char rndrStateCopy(const void *o, void *c){
+	((renderable *)c)->name = ((renderable *)o)->name;
+	((renderable *)c)->mdl = ((renderable *)o)->mdl;
+	((renderable *)c)->twi = ((renderable *)o)->twi;
+	((renderable *)c)->position = ((renderable *)o)->position;
+	((renderable *)c)->orientation = ((renderable *)o)->orientation;
+	((renderable *)c)->pivot = ((renderable *)o)->pivot;
+	((renderable *)c)->targetPosition = ((renderable *)o)->targetPosition;
+	((renderable *)c)->targetOrientation = ((renderable *)o)->targetOrientation;
+	((renderable *)c)->scale = ((renderable *)o)->scale;
+	((renderable *)c)->alpha = ((renderable *)o)->alpha;
+	((renderable *)c)->sprite = ((renderable *)o)->sprite;
+	((renderable *)c)->flags = ((renderable *)o)->flags;
+	return skliStateCopy(&((renderable *)o)->skli, &((renderable *)c)->skli);
+}
+
+void rndrResetInterpolation(void *rndr){
+	iVec3ResetInterp(&((renderable *)rndr)->position);
+	iQuatResetInterp(&((renderable *)rndr)->orientation);
+	iVec3ResetInterp(&((renderable *)rndr)->pivot);
+	iVec3ResetInterp(&((renderable *)rndr)->targetPosition);
+	iQuatResetInterp(&((renderable *)rndr)->targetOrientation);
+	iVec3ResetInterp(&((renderable *)rndr)->scale);
+	iFloatResetInterp(&((renderable *)rndr)->alpha);
 }
 
 /** Finish this **/
@@ -29,22 +59,6 @@ unsigned char rndrLoad(renderable *rndr, const char *prgPath, const char *filePa
 
 	return 1;
 
-}
-
-unsigned char rndrStateCopy(const renderable *o, renderable *c){
-	c->name = o->name;
-	c->mdl = o->mdl;
-	c->twi = o->twi;
-	c->position = o->position;
-	c->orientation = o->orientation;
-	c->pivot = o->pivot;
-	c->targetPosition = o->targetPosition;
-	c->targetOrientation = o->targetOrientation;
-	c->scale = o->scale;
-	c->alpha = o->alpha;
-	c->sprite = o->sprite;
-	c->flags = o->flags;
-	return skliStateCopy(&o->skli, &c->skli);
 }
 
 /**void rndrSetRotation(renderable *rndr, const float pitch, const float yaw, const float roll){
@@ -64,15 +78,6 @@ void rndrRotateZ(renderable *rndr, const float changeZ){
 	iVec3GetValue(&rndr->rotation)->z += changeZ;
 }**/
 
-void rndrResetInterpolation(renderable *rndr){
-	iVec3ResetInterp(&rndr->position);
-	iQuatResetInterp(&rndr->orientation);
-	iVec3ResetInterp(&rndr->pivot);
-	iVec3ResetInterp(&rndr->targetPosition);
-	iQuatResetInterp(&rndr->targetOrientation);
-	iVec3ResetInterp(&rndr->scale);
-	iFloatResetInterp(&rndr->alpha);
-}
 unsigned char rndrRenderMethod(renderable *rndr, const float interpT){
 	// Update alpha.
 	iFloatUpdate(&rndr->alpha, interpT);
@@ -311,9 +316,9 @@ void rndrOffsetSpriteTexture(vertex *vertices, const float texFrag[4], const flo
 	}
 }
 
-void rndrDelete(renderable *rndr){
-	if(rndr->name != NULL){
-		free(rndr->name);
+void rndrDelete(void *rndr){
+	if(((renderable *)rndr)->name != NULL){
+		free(((renderable *)rndr)->name);
 	}
-	skliDelete(&rndr->skli);
+	skliDelete(&((renderable *)rndr)->skli);
 }
