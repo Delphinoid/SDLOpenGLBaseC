@@ -325,12 +325,7 @@ int main(int argc, char *argv[]){
 			SDL_GL_SwapWindow(gfxPrg.window);
 
 			/* Next frame */
-			if(renderStart > nextRender + framerate){
-				// If we fell behind, skip forward so we don't render unnecessarily.
-				nextRender = renderStart + framerate;
-			}else{
-				nextRender += framerate;
-			}
+			nextRender = renderStart + framerate;
 			++renders;
 
 		}
