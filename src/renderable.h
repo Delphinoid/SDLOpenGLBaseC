@@ -37,7 +37,7 @@ typedef struct {
 
 unsigned char rndrInit(void *rndr);
 unsigned char rndrNew(void *rndr);
-unsigned char rndrStateCopy(const void *o, void *c);
+unsigned char rndrStateCopy(void *o, void *c);
 void rndrResetInterpolation(void *rndr);
 unsigned char rndrLoad(renderable *rndr, const char *prgPath, const char *filePath, cVector *allModels, cVector *allTexWrappers);
 /**void rndrSetRotation(renderable *rndr, const float newX, const float newY, const float newZ);

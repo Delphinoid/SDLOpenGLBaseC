@@ -53,29 +53,6 @@ mat4 mat4MMultM(const mat4 *m1, const mat4 *m2){
 	return r;
 
 }
-void mat4MMultByM(const mat4 *m1, const mat4 *m2, mat4 *r){
-
-	r->m[0][0] = m1->m[0][0]*m2->m[0][0] + m1->m[0][1]*m2->m[1][0] + m1->m[0][2]*m2->m[2][0] + m1->m[0][3]*m2->m[3][0];
-	r->m[0][1] = m1->m[0][0]*m2->m[0][1] + m1->m[0][1]*m2->m[1][1] + m1->m[0][2]*m2->m[2][1] + m1->m[0][3]*m2->m[3][1];
-	r->m[0][2] = m1->m[0][0]*m2->m[0][2] + m1->m[0][1]*m2->m[1][2] + m1->m[0][2]*m2->m[2][2] + m1->m[0][3]*m2->m[3][2];
-	r->m[0][3] = m1->m[0][0]*m2->m[0][3] + m1->m[0][1]*m2->m[1][3] + m1->m[0][2]*m2->m[2][3] + m1->m[0][3]*m2->m[3][3];
-
-	r->m[1][0] = m1->m[1][0]*m2->m[0][0] + m1->m[1][1]*m2->m[1][0] + m1->m[1][2]*m2->m[2][0] + m1->m[1][3]*m2->m[3][0];
-	r->m[1][1] = m1->m[1][0]*m2->m[0][1] + m1->m[1][1]*m2->m[1][1] + m1->m[1][2]*m2->m[2][1] + m1->m[1][3]*m2->m[3][1];
-	r->m[1][2] = m1->m[1][0]*m2->m[0][2] + m1->m[1][1]*m2->m[1][2] + m1->m[1][2]*m2->m[2][2] + m1->m[1][3]*m2->m[3][2];
-	r->m[1][3] = m1->m[1][0]*m2->m[0][3] + m1->m[1][1]*m2->m[1][3] + m1->m[1][2]*m2->m[2][3] + m1->m[1][3]*m2->m[3][3];
-
-	r->m[2][0] = m1->m[2][0]*m2->m[0][0] + m1->m[2][1]*m2->m[1][0] + m1->m[2][2]*m2->m[2][0] + m1->m[2][3]*m2->m[3][0];
-	r->m[2][1] = m1->m[2][0]*m2->m[0][1] + m1->m[2][1]*m2->m[1][1] + m1->m[2][2]*m2->m[2][1] + m1->m[2][3]*m2->m[3][1];
-	r->m[2][2] = m1->m[2][0]*m2->m[0][2] + m1->m[2][1]*m2->m[1][2] + m1->m[2][2]*m2->m[2][2] + m1->m[2][3]*m2->m[3][2];
-	r->m[2][3] = m1->m[2][0]*m2->m[0][3] + m1->m[2][1]*m2->m[1][3] + m1->m[2][2]*m2->m[2][3] + m1->m[2][3]*m2->m[3][3];
-
-	r->m[3][0] = m1->m[3][0]*m2->m[0][0] + m1->m[3][1]*m2->m[1][0] + m1->m[3][2]*m2->m[2][0] + m1->m[3][3]*m2->m[3][0];
-	r->m[3][1] = m1->m[3][0]*m2->m[0][1] + m1->m[3][1]*m2->m[1][1] + m1->m[3][2]*m2->m[2][1] + m1->m[3][3]*m2->m[3][1];
-	r->m[3][2] = m1->m[3][0]*m2->m[0][2] + m1->m[3][1]*m2->m[1][2] + m1->m[3][2]*m2->m[2][2] + m1->m[3][3]*m2->m[3][2];
-	r->m[3][3] = m1->m[3][0]*m2->m[0][3] + m1->m[3][1]*m2->m[1][3] + m1->m[3][2]*m2->m[2][3] + m1->m[3][3]*m2->m[3][3];
-
-}
 void mat4MultMByM1(mat4 *m1, const mat4 *m2){
 
 	mat4 r;
@@ -265,6 +242,12 @@ void mat4Translate(mat4 *m, const float x, const float y, const float z){
 	m->m[3][2] = m->m[0][2] * x + m->m[1][2] * y + m->m[2][2] * z + m->m[3][2];
 	m->m[3][3] = m->m[0][3] * x + m->m[1][3] * y + m->m[2][3] * z + m->m[3][3];
 }
+void mat4SetTranslationMatrix(mat4 *m, const float x, const float y, const float z){
+	m->m[0][0] = 1.f; m->m[0][1] = 0.f; m->m[0][2] = 0.f; m->m[0][3] = 0.f;
+	m->m[1][0] = 0.f; m->m[1][1] = 1.f; m->m[1][2] = 0.f; m->m[1][3] = 0.f;
+	m->m[2][0] = 0.f; m->m[2][1] = 0.f; m->m[2][2] = 1.f; m->m[2][3] = 0.f;
+	m->m[3][0] = x;   m->m[3][1] = y;   m->m[3][2] = z;   m->m[3][3] = 1.f;
+}
 mat4 mat4TranslationMatrix(const float x, const float y, const float z){
 	mat4 r = {.m = {{1.f, 0.f, 0.f, 0.f},
 	                {0.f, 1.f, 0.f, 0.f},
@@ -276,6 +259,9 @@ void mat4Rotate(mat4 *m, const quat *q){
 	mat4 r; mat4Quat(&r, q);
 	mat4MultMByM2(&r, m);
 }
+void mat4SetRotationMatrix(mat4 *m, const quat *q){
+	mat4Quat(m, q);
+}
 mat4 mat4RotationMatrix(const quat *q){
 	mat4 r; mat4Quat(&r, q);
 	return r;
@@ -284,6 +270,12 @@ void mat4Scale(mat4 *m, const float x, const float y, const float z){
 	m->m[0][0] *= x; m->m[0][1] *= x; m->m[0][2] *= x; m->m[0][3] *= x;
 	m->m[1][0] *= y; m->m[1][1] *= y; m->m[1][2] *= y; m->m[1][3] *= y;
 	m->m[2][0] *= z; m->m[2][1] *= z; m->m[2][2] *= z; m->m[2][3] *= z;
+}
+void mat4SetScaleMatrix(mat4 *m, const float x, const float y, const float z){
+	m->m[0][0] = x;   m->m[0][1] = 0.f; m->m[0][2] = 0.f; m->m[0][3] = 0.f;
+	m->m[1][0] = 0.f; m->m[1][1] = y;   m->m[1][2] = 0.f; m->m[1][3] = 0.f;
+	m->m[2][0] = 0.f; m->m[2][1] = 0.f; m->m[2][2] = z;   m->m[2][3] = 0.f;
+	m->m[3][0] = 0.f; m->m[3][1] = 0.f; m->m[3][2] = 0.f; m->m[3][3] = 1.f;
 }
 mat4 mat4ScaleMatrix(const float x, const float y, const float z){
 	mat4 r = {.m = {{  x, 0.f, 0.f, 0.f},

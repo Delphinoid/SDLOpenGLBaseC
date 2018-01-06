@@ -9,7 +9,7 @@ unsigned char scnInit(void *scn){
 	return 1;
 }
 
-unsigned char scnStateCopy(const void *o, void *c){
+unsigned char scnStateCopy(void *o, void *c){
 	if(((scene *)c)->renderableCapacity != ((scene *)o)->renderableCapacity){
 		/*
 		** We need to allocate more or less memory so that

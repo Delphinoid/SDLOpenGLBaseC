@@ -23,7 +23,7 @@ unsigned char camNew(void *cam){
 	return 1;
 }
 
-unsigned char camStateCopy(const void *o, void *c){
+unsigned char camStateCopy(void *o, void *c){
 	((camera *)c)->position = ((camera *)o)->position;
 	((camera *)c)->orientation = ((camera *)o)->orientation;
 	((camera *)c)->rotation = ((camera *)o)->rotation;

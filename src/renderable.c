@@ -28,7 +28,7 @@ unsigned char rndrNew(void *rndr){
 	return rndrInit(rndr);
 }
 
-unsigned char rndrStateCopy(const void *o, void *c){
+unsigned char rndrStateCopy(void *o, void *c){
 	((renderable *)c)->name = ((renderable *)o)->name;
 	((renderable *)c)->mdl = ((renderable *)o)->mdl;
 	((renderable *)c)->twi = ((renderable *)o)->twi;

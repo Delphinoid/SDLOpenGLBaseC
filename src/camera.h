@@ -30,7 +30,7 @@ typedef struct {
 
 unsigned char camInit(void *cam);
 unsigned char camNew(void *cam);
-unsigned char camStateCopy(const void *o, void *c);
+unsigned char camStateCopy(void *o, void *c);
 void camResetInterpolation(void *cam);
 void camCalculateUp(camera *cam);
 void camUpdateViewMatrix(camera *cam, const float interpT);

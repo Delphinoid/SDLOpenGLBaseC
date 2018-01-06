@@ -542,6 +542,10 @@ void quatSlerp(const quat *q1, const quat *q2, const float t, quat *r){
 
 }
 
+void quatIntegrate(const quat *q, const vec3 *v, const float t, quat *r){
+
+}
+
 void quatRotate(const quat *q1, const quat *q2, const float t, quat *r){
 	quat temp;
 	quatMultQByQR(q1, q2, &temp);

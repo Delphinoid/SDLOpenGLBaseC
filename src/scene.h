@@ -10,7 +10,7 @@ typedef struct {
 } scene;
 
 unsigned char scnInit(void *scn);
-unsigned char scnStateCopy(const void *o, void *c);
+unsigned char scnStateCopy(void *o, void *c);
 void scnResetInterpolation(void *scn);
 unsigned char scnLoad(scene *scn);
 unsigned char scnRenderableAdd(scene *scn, const size_t renderableID);

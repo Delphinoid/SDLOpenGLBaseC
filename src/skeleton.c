@@ -367,7 +367,7 @@ static void sklaiDelete(sklAnimInstance *sklai){
 		free(sklai->animState);
 	}
 }
-static unsigned char sklaiStateCopy(const sklAnimInstance *osklai, sklAnimInstance *csklai, const skeleton *oskl, const skeleton *cskl){
+static unsigned char sklaiStateCopy(sklAnimInstance *osklai, sklAnimInstance *csklai, const skeleton *oskl, const skeleton *cskl){
 
 	if(oskl != NULL && (cskl == NULL || cskl->boneNum != oskl->boneNum)){
 		if(csklai->animState != NULL){
@@ -649,7 +649,7 @@ unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *fileP
 	return 1;
 
 }
-unsigned char skliStateCopy(const sklInstance *o, sklInstance *c){
+unsigned char skliStateCopy(sklInstance *o, sklInstance *c){
 
 	size_t i;
 	if(c->animationCapacity != o->animationCapacity || c->animations == NULL){
@@ -757,49 +757,56 @@ void skliGenerateAnimStates(sklInstance *skli, const float interpT){
 		sklaiGenerateAnimState(&skli->animations[i], interpT);
 	}
 }
-void skliGenerateBoneState(const sklInstance *skli, const skeleton *skl, mat4 *state, const size_t bone){
+static void skliGenerateBoneState(const sklInstance *skli, mat4 *state, const size_t bone){
+
 	/*
 	** Update the transform state of the specified bone. Uses the delta transforms
 	** in animState from each sklAnimInstance if possible.
 	*/
+
+	// Translate the bone into its default space and apply each animation transform.
+	size_t i;
+	mat4SetTranslationMatrix(&state[bone], skli->skl->bones[bone].defaultState.position.x,
+	                                       skli->skl->bones[bone].defaultState.position.y,
+	                                       skli->skl->bones[bone].defaultState.position.z);
+	mat4Rotate(&state[bone], &skli->skl->bones[bone].defaultState.orientation);
+	mat4Scale(&state[bone], skli->skl->bones[bone].defaultState.scale.x,
+	                        skli->skl->bones[bone].defaultState.scale.y,
+	                        skli->skl->bones[bone].defaultState.scale.z);
+	for(i = 0; i < skli->animationNum; ++i){
+		mat4Translate(&state[bone], skli->animations[i].animState[bone].position.x,
+		                            skli->animations[i].animState[bone].position.y,
+		                            skli->animations[i].animState[bone].position.z);
+		mat4Rotate(&state[bone], &skli->animations[i].animState[bone].orientation);
+		mat4Scale(&state[bone], skli->animations[i].animState[bone].scale.x,
+		                        skli->animations[i].animState[bone].scale.y,
+		                        skli->animations[i].animState[bone].scale.z);
+	}
+
+}
+void skliGenerateBoneStates(const sklInstance *skli, mat4 *state){
+	size_t i;
+	for(i = 0; i < skli->skl->boneNum; ++i){
+		skliGenerateBoneState(skli, state, i);
+	}
+}
+void skliApplyBoneState(const sklInstance *skli, const mat4 *skeletonState, const skeleton *skl, mat4 *state, const size_t bone){
 	// Apply parent transforms first if possible.
 	if(bone != skl->bones[bone].parent){
 		state[bone] = state[skl->bones[bone].parent];
 	}else{
 		mat4Identity(&state[bone]);
 	}
-	/*
-	** If the bone exists in the animated skeleton,
-	** translate the vertices into its space and
-	** apply each animation transform.
-	*/
-	/** Could definitely be better, using sklFindBone() is horrible. **/
 	size_t animBone = sklFindBone(skli->skl, skl->bones[bone].name);
 	if(animBone < skli->skl->boneNum){
-		mat4Translate(&state[bone], skli->skl->bones[animBone].defaultState.position.x,
-		                            skli->skl->bones[animBone].defaultState.position.y,
-		                            skli->skl->bones[animBone].defaultState.position.z);
-		size_t i;
-		for(i = 0; i < skli->animationNum; ++i){
-			mat4Translate(&state[bone], skli->animations[i].animState[animBone].position.x,
-			                            skli->animations[i].animState[animBone].position.y,
-			                            skli->animations[i].animState[animBone].position.z);
-			mat4Rotate(&state[bone], &skli->animations[i].animState[animBone].orientation);
-			mat4Scale(&state[bone], skli->animations[i].animState[animBone].scale.x,
-			                        skli->animations[i].animState[animBone].scale.y,
-			                        skli->animations[i].animState[animBone].scale.z);
-		}
-	}else{
-		// If it doesn't exist, use the model's bone position.
-		mat4Translate(&state[bone], skl->bones[bone].defaultState.position.x,
-		                            skl->bones[bone].defaultState.position.y,
-		                            skl->bones[bone].defaultState.position.z);
+		mat4 temp = state[bone];
+		mat4MultMByMR(&temp, &skeletonState[animBone], &state[bone]);
+		// Translate the vertices back by the model's default bone position.
+		// This makes more sense when diagrammed.
+		mat4Translate(&state[bone], -skl->bones[bone].defaultState.position.x,
+		                            -skl->bones[bone].defaultState.position.y,
+		                            -skl->bones[bone].defaultState.position.z);
 	}
-	// Translate them back by the model's bone position.
-	// This and the previous translation make more sense when diagrammed.
-	mat4Translate(&state[bone], -skl->bones[bone].defaultState.position.x,
-	                            -skl->bones[bone].defaultState.position.y,
-	                            -skl->bones[bone].defaultState.position.z);
 }
 void skliDelete(sklInstance *skli){
 	if(skli->animations != NULL){

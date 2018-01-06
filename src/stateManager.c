@@ -2,7 +2,7 @@
 #include <string.h>
 
 unsigned char smObjectTypeNew(stateManager *sm, unsigned char (*stateInit)(void*),
-                              unsigned char (*stateNew)(void*), unsigned char (*stateCopy)(const void*, void*),
+                              unsigned char (*stateNew)(void*), unsigned char (*stateCopy)(void*, void*),
                               void (*stateResetInterpolation)(void*), void (*stateDelete)(void*),
                               const size_t size, const size_t capacity){
 

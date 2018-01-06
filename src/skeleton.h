@@ -86,11 +86,11 @@ typedef struct {
 	size_t animFragCapacity;
 	sklAnimFragment *animFrags;
 	/** Move animState. **/
-	sklBone *animState;  // Delta transformations for each bone.
+	sklBone *animState;  /** Is there any point storing this in previous states? **/  // Delta transformations for each bone in sklai->skl.
 } sklAnimInstance;
 
 // Skeleton instance.
-/** Restructure for proper element attachments (actually I do know now, but I'm not writing it down) **/
+/** Restructure for proper element attachments (and I've forgotten again, fantastic) **/
 typedef struct {
 	skeleton *skl;  // Should never be changed manually.
 	float timeMod;
@@ -117,10 +117,11 @@ unsigned char sklaiChangeAnim(sklAnimInstance *sklai, const skeleton *skl, sklAn
 
 unsigned char skliInit(sklInstance *skli, skeleton *skl, const size_t animationCapacity);
 unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *filePath);
-unsigned char skliStateCopy(const sklInstance *o, sklInstance *c);
+unsigned char skliStateCopy(sklInstance *o, sklInstance *c);
 void skliAnimate(sklInstance *skli, const float elapsedTime);
 void skliGenerateAnimStates(sklInstance *skli, const float interpT);
-void skliGenerateBoneState(const sklInstance *skli, const skeleton *skl, mat4 *state, const size_t bone);
+void skliGenerateBoneStates(const sklInstance *skli, mat4 *state);
+void skliApplyBoneState(const sklInstance *skli, const mat4 *skeletonState, const skeleton *skl, mat4 *state, const size_t bone);
 void skliDelete(sklInstance *skli);
 
 #endif

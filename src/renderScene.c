@@ -31,21 +31,21 @@ void renderModel(renderable *rndr, const camera *cam, const float interpT, gfxPr
 	// Feed the texture coordinates to the shader
 	glUniform4fv(gfxPrg->textureFragmentID, 1, texFrag);
 
-
 	/* Generate the skeleton state and feed it to the shader */
-	if(rndr->mdl->skl != NULL){
-		// Generate a state for the model skeleton, transformed into the animated skeleton's space
-		mat4 *skeletonState = malloc(rndr->mdl->skl->boneNum*sizeof(mat4));
-		if(skeletonState != NULL){
-			if(rndr->skli.skl != NULL){
-				skliGenerateAnimStates(&rndr->skli, interpT);
-			}
+	if(rndr->skli.skl != NULL){
+		// Generate a state for the animated skeleton.
+		mat4 skeletonState[rndr->skli.skl->boneNum];
+		skliGenerateAnimStates(&rndr->skli, interpT);
+		skliGenerateBoneStates(&rndr->skli, skeletonState);
+		// Apply the state to the model skeleton.
+		/** Expand this for an array of model / texture pairs. **/
+		if(rndr->mdl->skl != NULL){
 			size_t i;
+			mat4 boneState[rndr->mdl->skl->boneNum];
 			for(i = 0; i < rndr->mdl->skl->boneNum; ++i){
-				skliGenerateBoneState(&rndr->skli, rndr->mdl->skl, skeletonState, i);
-				glUniformMatrix4fv(gfxPrg->boneArrayID[i], 1, GL_FALSE, &skeletonState[i].m[0][0]);
+				skliApplyBoneState(&rndr->skli, skeletonState, rndr->mdl->skl, boneState, i);
+				glUniformMatrix4fv(gfxPrg->boneArrayID[i], 1, GL_FALSE, &boneState[i].m[0][0]);
 			}
-			free(skeletonState);
 		}
 	}
 
