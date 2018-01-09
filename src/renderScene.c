@@ -34,16 +34,15 @@ void renderModel(renderable *rndr, const camera *cam, const float interpT, gfxPr
 	/* Generate the skeleton state and feed it to the shader */
 	if(rndr->skli.skl != NULL){
 		// Generate a state for the animated skeleton.
-		mat4 skeletonState[rndr->skli.skl->boneNum];
-		skliGenerateAnimStates(&rndr->skli, interpT);
-		skliGenerateBoneStates(&rndr->skli, skeletonState);
+		bone skeletonState[rndr->skli.skl->boneNum];
+		skliGenerateSkeletonState(&rndr->skli, &skeletonState[0], interpT);
 		// Apply the state to the model skeleton.
 		/** Expand this for an array of model / texture pairs. **/
 		if(rndr->mdl->skl != NULL){
 			size_t i;
 			mat4 boneState[rndr->mdl->skl->boneNum];
 			for(i = 0; i < rndr->mdl->skl->boneNum; ++i){
-				skliApplyBoneState(&rndr->skli, skeletonState, rndr->mdl->skl, boneState, i);
+				skliGenerateBoneState(&rndr->skli, &skeletonState[0], rndr->mdl->skl, boneState, i);
 				glUniformMatrix4fv(gfxPrg->boneArrayID[i], 1, GL_FALSE, &boneState[i].m[0][0]);
 			}
 		}

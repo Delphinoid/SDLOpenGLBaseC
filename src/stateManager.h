@@ -7,27 +7,27 @@
 
 typedef struct {
 	signed char active;  // Whether or not this slot is free.
-	void **state;          // An array of pointers to objects. Objects that no longer exist have NULL entries.
+	void **state;        // An array of pointers to objects. Objects that no longer exist have NULL entries.
 } stateObject;
 
 typedef struct {
+	size_t size;            // The size of the object struct.
+	size_t capacity;        // The size of stateObjectType.instance.
+	stateObject *instance;  // Each instance of this type of object.
 	signed char (*stateInit)(void*);
 	signed char (*stateNew)(void*);
 	signed char (*stateCopy)(void*, void*);
 	void (*stateResetInterpolation)(void*);
 	void (*stateDelete)(void*);
-	size_t size;
-	size_t capacity;
-	stateObject *instance;
 } stateObjectType;
 
 typedef struct stateManager{
 
-	size_t stateNum;
-	size_t currentStateID;
+	size_t stateNum;        // The number of states being recorded.
+	size_t currentStateID;  // The current state we are up to.
 
-	size_t objectTypeNum;
-	stateObjectType *objectType;
+	size_t objectTypeNum;         // How many different types of objects are being recorded.
+	stateObjectType *objectType;  // An array of object types being recorded.
 
 } stateManager;
 

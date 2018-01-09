@@ -132,6 +132,10 @@ void animAdvance(animationInstance *animInst, const animationData *animData, con
 void animGetRenderData(const animationInstance *animInst, const animationData *animData, const float interpT,
                        size_t *startFrame, size_t *endFrame, float *animInterpT){
 
+	/*
+	** Calculates the start frame, the end frame and the progress through the two based on the provided data.
+	*/
+
 	*startFrame = 0;
 
 	const float animLength = animData->frameDelays[animData->frameNum-1];

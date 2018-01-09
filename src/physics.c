@@ -1,20 +1,23 @@
 #include "physics.h"
 
-static void integrateEuler(physicsBody *body, const float elapsedTime){
+#define INTEGRATION_STEPS_EULER 8
+#define INTEGRATION_STEPS_RUNGEKUTTA 4
+
+static void bodyIntegrateEuler(physicsBody *body, const float t){
 	/* Euler integration scheme. */
 
 }
 
-static void integrateVerlet(physicsBody *body, const float elapsedTime){
+static void bodyIntegrateVerlet(physicsBody *body, const float t){
 	/* Verlet integration scheme. */
 
 }
 
-static void integrateRungeKutta(physicsBody *body, const float elapsedTime){
+static void bodyIntegrateRungeKutta(physicsBody *body, const float t){
 	/* RK4 integration scheme. */
 
 }
 
-static void integrator(physicsBody *body, const float elapsedTime){
+static void bodyIntegrator(physicsBody *body, const float t){
 
 }
