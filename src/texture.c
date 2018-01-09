@@ -15,7 +15,7 @@ void tInit(texture *tex){
 	tex->translucent = 0;
 }
 
-unsigned char tLoad(texture *tex, const char *prgPath, const char *filePath){
+signed char tLoad(texture *tex, const char *prgPath, const char *filePath){
 
 	tInit(tex);
 

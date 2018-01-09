@@ -53,13 +53,13 @@ typedef struct {
 	unsigned char aspectRatioY;
 	int lastWindowWidth;
 	int lastWindowHeight;
-	unsigned char stretchToFit;
-	unsigned char windowChanged;
+	signed char stretchToFit;
+	signed char windowChanged;
 
 } gfxProgram;
 
-unsigned char gfxInitProgram(gfxProgram *gfxPrg, const char *prgPath);
-unsigned char gfxUpdateWindow(gfxProgram *gfxPrg);
+signed char gfxInitProgram(gfxProgram *gfxPrg, const char *prgPath);
+signed char gfxUpdateWindow(gfxProgram *gfxPrg);
 void gfxDestroyProgram(gfxProgram *gfxPrg);
 
 #endif

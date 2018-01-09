@@ -25,7 +25,7 @@
 		free(tempBoneWeights); \
 	} \
 
-unsigned char pushDynamicArray(void **vector, const void *element, const size_t bytes, size_t *size, size_t *capacity);
+signed char pushDynamicArray(void **vector, const void *element, const size_t bytes, size_t *size, size_t *capacity);
 
 void vertInit(vertex *v){
 	vec3SetS(&v->position, 0.f);
@@ -36,7 +36,7 @@ void vertInit(vertex *v){
 }
 
 /** Should meshes really be storing physical properties? **/
-unsigned char meshLoadWavefrontObj(mesh *m, const char *filePath/**, const unsigned char generatePhysProperties**/){
+signed char meshLoadWavefrontObj(mesh *m, const char *filePath/**, const signed char generatePhysProperties**/){
 
 	size_t vertexCapacity = VERTEX_START_CAPACITY;
 	m->vertices = malloc(vertexCapacity*sizeof(vertex));
@@ -435,7 +435,7 @@ unsigned char meshLoadWavefrontObj(mesh *m, const char *filePath/**, const unsig
 					}
 
 					// Check if the vertex has already been loaded, and if so add an index
-					unsigned char foundVertex = 0;
+					signed char foundVertex = 0;
 					size_t j;
 					for(j = 0; j < m->vertexNum; ++j){
 						vertex *checkVert = &m->vertices[j];

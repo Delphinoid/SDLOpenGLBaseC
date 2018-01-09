@@ -17,7 +17,7 @@ void mdlInit(model *mdl){
 	mdl->iboID = 0;
 }
 
-unsigned char mdlLoad(model *mdl, const char *prgPath, const char *filePath){
+signed char mdlLoad(model *mdl, const char *prgPath, const char *filePath){
 
 	/** Create a proper model file that loads a specified mesh, a name and a skeleton. **/
 
@@ -82,7 +82,7 @@ static void mdlVertexAttributes(){
 }
 
 /** Change this function later **/
-unsigned char mdlCreateSprite(model *mdl, const char *name){
+signed char mdlCreateSprite(model *mdl, const char *name){
 
 	mdlInit(mdl);
 	GLenum glError;

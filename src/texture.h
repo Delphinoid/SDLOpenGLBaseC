@@ -9,12 +9,12 @@ typedef struct {
 	GLuint id;
 	GLuint width;
 	GLuint height;
-	unsigned char translucent;  // If this is set, the texture contains translucency. Used when depth sorting before rendering
+	signed char translucent;  // If this is set, the texture contains translucency. Used when depth sorting before rendering
 
 } texture;
 
 void tInit(texture *tex);
-unsigned char tLoad(texture *tex, const char *prgPath, const char *filePath);
+signed char tLoad(texture *tex, const char *prgPath, const char *filePath);
 void tDelete(texture *tex);
 
 #endif

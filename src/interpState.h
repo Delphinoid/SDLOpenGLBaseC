@@ -35,7 +35,7 @@ typedef struct {
 
 void iFloatInit(interpFloat *iFloat, const float s);
 void iFloatResetInterp(interpFloat *iFloat);
-unsigned char iFloatUpdate(interpFloat *iFloat, const float interpT);
+signed char iFloatUpdate(interpFloat *iFloat, const float interpT);
 
 
 typedef struct {
@@ -46,7 +46,7 @@ typedef struct {
 
 void iSizeTInit(interpSizeT *iSizeT, const size_t s);
 void iSizeTResetInterp(interpSizeT *iSizeT);
-unsigned char iSizeTUpdate(interpSizeT *iSizeT, const float interpT);
+signed char iSizeTUpdate(interpSizeT *iSizeT, const float interpT);
 
 
 typedef struct {
@@ -57,7 +57,7 @@ typedef struct {
 
 void iVec3Init(interpVec3 *iVec3, const float x, const float y, const float z);
 void iVec3ResetInterp(interpVec3 *iVec3);
-unsigned char iVec3Update(interpVec3 *iVec3, const float interpT);
+signed char iVec3Update(interpVec3 *iVec3, const float interpT);
 
 
 typedef struct {
@@ -68,7 +68,7 @@ typedef struct {
 
 void iQuatInit(interpQuat *iQuat);
 void iQuatResetInterp(interpQuat *iQuat);
-unsigned char iQuatUpdate(interpQuat *iQuat, const float interpT);
+signed char iQuatUpdate(interpQuat *iQuat, const float interpT);
 
 /*
 typedef struct {

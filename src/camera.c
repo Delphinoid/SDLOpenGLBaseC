@@ -4,11 +4,11 @@
 
 #define RADIAN_RATIO 0.017453292  /* = PI / 180, used for converting degrees to radians */
 
-unsigned char camInit(void *cam){
+signed char camInit(void *cam){
 	return 1;
 }
 
-unsigned char camNew(void *cam){
+signed char camNew(void *cam){
 	iVec3Init(&((camera *)cam)->position, 0.f, 0.f, 0.f);
 	iQuatInit(&((camera *)cam)->orientation);
 	vec3Set(&((camera *)cam)->rotation, 0.f, 0.f, 0.f);
@@ -23,7 +23,7 @@ unsigned char camNew(void *cam){
 	return 1;
 }
 
-unsigned char camStateCopy(void *o, void *c){
+signed char camStateCopy(void *o, void *c){
 	((camera *)c)->position = ((camera *)o)->position;
 	((camera *)c)->orientation = ((camera *)o)->orientation;
 	((camera *)c)->rotation = ((camera *)o)->rotation;

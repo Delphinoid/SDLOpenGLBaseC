@@ -9,7 +9,7 @@ void trieInit(trieNode *node, char c){
 	node->cmd = NULL;
 }
 
-unsigned char trieNext(trieNode **node, char c){
+signed char trieNext(trieNode **node, char c){
 	/* Gets the next node when finding a command. */
 	// Loop through node's children until we find a child
 	// that matches c.
@@ -26,7 +26,7 @@ unsigned char trieNext(trieNode **node, char c){
 	return 0;
 }
 
-unsigned char trieAddNode(trieNode **node, char c){
+signed char trieAddNode(trieNode **node, char c){
 	/*
 	** Same as trieNext(), but creates a new node when necessary.
 	*/
@@ -64,7 +64,7 @@ unsigned char trieAddNode(trieNode **node, char c){
 	return 0;
 }
 
-unsigned char cmdValid(char *name, command cmd){
+signed char cmdValid(char *name, command cmd){
 	size_t index = 0;
 	// Make sure the name and function pointer are not NULL.
 	if(name != NULL && cmd != NULL){
@@ -82,7 +82,7 @@ unsigned char cmdValid(char *name, command cmd){
 	}
 	return index > 0;
 }
-unsigned char cmdParse(char *str){
+signed char cmdParse(char *str){
 	return 0;
 }
 
@@ -96,7 +96,7 @@ void conInit(console *con){
 	con->cmdLookup.children = NULL;
 	con->cmdLookup.cmd = NULL;
 }
-unsigned char conAddCommand(console *con, char *name, unsigned char (*func)(unsigned int argc, char *argv[])){
+signed char conAddCommand(console *con, char *name, signed char (*func)(unsigned int argc, char *argv[])){
 	// Check if the command is valid before adding it.
 	if(cmdValid(name, func)){
 		trieNode *node = &con->cmdLookup;
@@ -121,7 +121,7 @@ unsigned char conAddCommand(console *con, char *name, unsigned char (*func)(unsi
 	}
 	return 0;
 }
-unsigned char conRemoveCommand(console *con, char *name){
+signed char conRemoveCommand(console *con, char *name){
 	/*trieNode *node = &con->cmdLookup;
 	trieNode *last = NULL;
 	size_t index = 0;
@@ -142,7 +142,7 @@ unsigned char conRemoveCommand(console *con, char *name){
 	}*/
 	return 0;
 }
-unsigned char conFindCommand(console *con, char *name, command *cmd){
+signed char conFindCommand(console *con, char *name, command *cmd){
 	/** Any non-null-terminated input name has unexpected results. **/
 	trieNode *node = &con->cmdLookup;
 	size_t index = 0;

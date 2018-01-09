@@ -160,7 +160,7 @@ int main(int argc, char *argv[]){
 	rndrGetState(&gameStateManager, 1, 0)->mdl->skl = rndrGetState(&gameStateManager, 1, 0)->skli.skl;
 
 
-	unsigned char prgRunning = 1;
+	signed char prgRunning = 1;
 
 	float globalTimeMod = 1.f;
 	float framerate = 1000.f / 125.f;  // Desired renders per millisecond
@@ -176,12 +176,12 @@ int main(int argc, char *argv[]){
 
 	SDL_Event prgEventHandler;
 
-	unsigned char UP    = 0;
-	unsigned char DOWN  = 0;
-	unsigned char LEFT  = 0;
-	unsigned char RIGHT = 0;
+	signed char UP    = 0;
+	signed char DOWN  = 0;
+	signed char LEFT  = 0;
+	signed char RIGHT = 0;
 
-	unsigned char lockMouse = 0;
+	signed char lockMouse = 0;
 	int mouseRelX;
 	int mouseRelY;
 

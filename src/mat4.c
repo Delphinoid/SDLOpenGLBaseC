@@ -173,7 +173,7 @@ mat4 mat4GetTranspose(const mat4 *m){
 void mat4Transpose(mat4 *m){
 	*m = mat4GetTranspose(m);
 }
-unsigned char mat4Frustum(mat4 *m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar){
+signed char mat4Frustum(mat4 *m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar){
 	if(left == right || bottom == top || zNear == zFar){
 		return 0;
 	}
@@ -183,7 +183,7 @@ unsigned char mat4Frustum(mat4 *m, const float left, const float right, const fl
 	m->m[3][0] = 0.f;                       m->m[3][1] = 0.f;                       m->m[3][2] = 2.f*zFar*zNear/(zFar-zNear); m->m[3][3] = 0.f;
 	return 1;
 }
-unsigned char mat4Ortho(mat4 *m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar){
+signed char mat4Ortho(mat4 *m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar){
 	if(left == right || bottom == top || zNear == zFar){
 		return 0;
 	}
@@ -193,7 +193,7 @@ unsigned char mat4Ortho(mat4 *m, const float left, const float right, const floa
 	m->m[3][0] = -((right+left)/(right-left)); m->m[3][1] = -((top+bottom)/(top-bottom)); m->m[3][2] = -((zFar+zNear)/(zFar-zNear)); m->m[3][3] = 1.f;
 	return 1;
 }
-unsigned char mat4Perspective(mat4 *m, const float fovy, const float aspectRatio, const float zNear, const float zFar){
+signed char mat4Perspective(mat4 *m, const float fovy, const float aspectRatio, const float zNear, const float zFar){
 	if(fovy == 0.f || aspectRatio == 0.f || zNear == zFar){
 		return 0;
 	}

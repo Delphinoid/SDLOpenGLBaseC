@@ -7,12 +7,12 @@
 
 size_t ltostr(long n, char **s);
 
-static unsigned char gfxInitSDL(gfxProgram *gfxPrg);
-static unsigned char gfxInitOGL(gfxProgram *gfxPrg);
-static unsigned char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath);
-static unsigned char gfxCreateBuffers(gfxProgram *gfxPrg);
+static signed char gfxInitSDL(gfxProgram *gfxPrg);
+static signed char gfxInitOGL(gfxProgram *gfxPrg);
+static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath);
+static signed char gfxCreateBuffers(gfxProgram *gfxPrg);
 
-unsigned char gfxInitProgram(gfxProgram *gfxPrg, const char *prgPath){
+signed char gfxInitProgram(gfxProgram *gfxPrg, const char *prgPath){
 
 	gfxPrg->windowWidth = DEFAULT_WIDTH;
 	gfxPrg->windowHeight = DEFAULT_HEIGHT;
@@ -26,7 +26,7 @@ unsigned char gfxInitProgram(gfxProgram *gfxPrg, const char *prgPath){
 
 }
 
-static unsigned char gfxInitSDL(gfxProgram *gfxPrg){
+static signed char gfxInitSDL(gfxProgram *gfxPrg){
 
 	/* Initialize SDL */
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0){
@@ -65,7 +65,7 @@ static unsigned char gfxInitSDL(gfxProgram *gfxPrg){
 
 }
 
-static unsigned char gfxInitOGL(gfxProgram *gfxPrg){
+static signed char gfxInitOGL(gfxProgram *gfxPrg){
 
 	/* Initialize GLEW */
 	glewExperimental = GL_TRUE;
@@ -97,7 +97,7 @@ static unsigned char gfxInitOGL(gfxProgram *gfxPrg){
 
 }
 
-static unsigned char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
+static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 
 	/* Vertex shader */
 	const char *vertexShaderExtra = "Resources\\Shaders\\vertexShader.vsh";
@@ -263,7 +263,7 @@ static unsigned char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 
 }
 
-static unsigned char gfxCreateBuffers(gfxProgram *gfxPrg){
+static signed char gfxCreateBuffers(gfxProgram *gfxPrg){
 
 	/* Set lastTexID to 0 since we haven't rendered anything yet */
 	gfxPrg->lastTexID = 0;
@@ -296,7 +296,7 @@ static unsigned char gfxCreateBuffers(gfxProgram *gfxPrg){
 
 }
 
-unsigned char gfxUpdateWindow(gfxProgram *gfxPrg){
+signed char gfxUpdateWindow(gfxProgram *gfxPrg){
 	SDL_GetWindowSize(gfxPrg->window, &gfxPrg->windowWidth, &gfxPrg->windowHeight);
 	if(gfxPrg->windowWidth != gfxPrg->lastWindowWidth || gfxPrg->windowHeight != gfxPrg->lastWindowHeight){
 		GLint screenX, screenY, screenWidth, screenHeight;

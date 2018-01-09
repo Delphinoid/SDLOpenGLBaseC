@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-/*unsigned char nextToken(const char *str, const char *delims, size_t *tokenOffset, size_t *tokenLength){
+/*signed char nextToken(const char *str, const char *delims, size_t *tokenOffset, size_t *tokenLength){
 	* Replacement for strtok() because it's a horrible function. *
 	char *tokenStart = NULL;
 	const char *currentChar = str+(*tokenOffset);
@@ -29,7 +29,7 @@
 	return 0;
 }*/
 
-unsigned char pushDynamicArray(void **vector, const void *element, const size_t bytes, size_t *size, size_t *capacity){
+signed char pushDynamicArray(void **vector, const void *element, const size_t bytes, size_t *size, size_t *capacity){
 	/* Push an element into a dynamic array. */
 	if(*size == *capacity){
 		*capacity *= 2;
@@ -54,7 +54,7 @@ size_t ltostr(long n, char **s){
 		*(*s+1) = '\0';
 		l = 1;
 	}else{
-		size_t m = 12;  // Max number length (including minus sign and null terminator).
+		const size_t m = 12;  // Max number length (including minus sign and null terminator).
 		l = m;
 		*s = malloc(m*sizeof(char));
 		// Add a minus sign to the beginning if necessary.

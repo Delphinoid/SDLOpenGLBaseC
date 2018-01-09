@@ -18,8 +18,8 @@ typedef struct {
 } model;
 
 void mdlInit(model *mdl);
-unsigned char mdlLoad(model *mdl, const char *prgPath, const char *filePath);
-unsigned char mdlCreateSprite(model *mdl, const char *name);
+signed char mdlLoad(model *mdl, const char *prgPath, const char *filePath);
+signed char mdlCreateSprite(model *mdl, const char *name);
 void mdlDelete(model *mdl);
 
 #endif

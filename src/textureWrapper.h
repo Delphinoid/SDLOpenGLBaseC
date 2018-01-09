@@ -45,7 +45,7 @@ typedef struct {
 /** twLoad() and twiAnimate() may need some tidying up **/
 void twInit(textureWrapper *tw);
 /** I don't like allTextures being passed in here at all **/
-unsigned char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath, cVector *allTextures);
+signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath, cVector *allTextures);
 void twDelete(textureWrapper *tw);
 
 void twiInit(twInstance *twi, textureWrapper *tw);
@@ -56,6 +56,6 @@ GLuint twiGetTexID(const twInstance *twi);
 float twiGetFrameWidth(const twInstance *twi);
 float twiGetFrameHeight(const twInstance *twi);
 void twiGetFrameInfo(const twInstance *twi, float *x, float *y, float *w, float *h, GLuint *frameTexID, const float interpT);
-unsigned char twiContainsTranslucency(const twInstance *twi);
+signed char twiContainsTranslucency(const twInstance *twi);
 
 #endif

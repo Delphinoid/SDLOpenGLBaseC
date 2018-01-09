@@ -13,7 +13,6 @@ typedef struct {
 	mesh hull;
 	float area;
 	vec3 centroid;
-	float inertia;  // Use INFINITY to represent fixed objects, such as terrain.
 	float mass;  // The mass of the object, in kilograms.
 
 	/* Physical properties required only for simulation. */
@@ -52,6 +51,6 @@ typedef struct {
 	physicsBody *bodies;  // Depth-first vector of each body.
 } kinematicsChain;
 
-unsigned char gjkCollision(const physicsBody *obj1, const physicsBody *obj2, vec3 *mtv);
+signed char gjkCollision(const physicsBody *obj1, const physicsBody *obj2, vec3 *mtv);
 
 #endif

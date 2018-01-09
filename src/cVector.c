@@ -1,7 +1,7 @@
 #include "cVector.h"
 #include <string.h>
 
-unsigned char cvInit(cVector *vec, const size_t capacity){
+signed char cvInit(cVector *vec, const size_t capacity){
 	vec->size = 0;
 	void **tempBuffer = malloc(sizeof(void *) * capacity);
 	if(capacity > 0 && tempBuffer == NULL){
@@ -12,7 +12,7 @@ unsigned char cvInit(cVector *vec, const size_t capacity){
 	return 1;
 }
 
-unsigned char cvResize(cVector *vec, const size_t capacity){
+signed char cvResize(cVector *vec, const size_t capacity){
 	if(vec->capacity != capacity){
 		void **tempBuffer = realloc(vec->buffer, sizeof(void *) * capacity);
 		if(tempBuffer == NULL){
@@ -24,7 +24,7 @@ unsigned char cvResize(cVector *vec, const size_t capacity){
 	return 1;
 }
 
-unsigned char cvPush(cVector *vec, const void *data, const size_t bytes){
+signed char cvPush(cVector *vec, const void *data, const size_t bytes){
 	void *tempPointer = malloc(bytes);
 	if(tempPointer == NULL){
 		return 0;
@@ -39,7 +39,7 @@ unsigned char cvPush(cVector *vec, const void *data, const size_t bytes){
 	return 1;
 }
 
-unsigned char cvPop(cVector *vec){
+signed char cvPop(cVector *vec){
 	if(vec->size > 0){
 		free(vec->buffer[--vec->size]);
 		return 1;
@@ -47,7 +47,7 @@ unsigned char cvPop(cVector *vec){
 	return 0;
 }
 
-unsigned char cvInsert(cVector *vec, const size_t pos, const void *data, const size_t bytes){
+signed char cvInsert(cVector *vec, const size_t pos, const void *data, const size_t bytes){
 	if(pos < vec->size){
 		void *tempPointer = malloc(bytes);
 		if(tempPointer != NULL){
@@ -70,7 +70,7 @@ unsigned char cvInsert(cVector *vec, const size_t pos, const void *data, const s
 	return 0;
 }
 
-unsigned char cvErase(cVector *vec, const size_t pos){
+signed char cvErase(cVector *vec, const size_t pos){
 	if(pos < vec->size){
 		free(vec->buffer[pos]);
 		--vec->size;
@@ -90,7 +90,7 @@ void *cvGet(cVector *vec, const size_t pos){
 	return NULL;
 }
 
-unsigned char cvSet(cVector *vec, const size_t pos, const void *data, const size_t bytes){
+signed char cvSet(cVector *vec, const size_t pos, const void *data, const size_t bytes){
 	if(pos < vec->size){
 		void *tempPointer = malloc(bytes);
 		if(tempPointer != NULL){

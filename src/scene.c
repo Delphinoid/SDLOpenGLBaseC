@@ -2,14 +2,14 @@
 
 #define SCENE_START_CAPACITY 1
 
-unsigned char scnInit(void *scn){
+signed char scnInit(void *scn){
 	((scene *)scn)->renderableNum = 0;
 	((scene *)scn)->renderableCapacity = 0;
 	((scene *)scn)->renderableIDs = NULL;
 	return 1;
 }
 
-unsigned char scnStateCopy(void *o, void *c){
+signed char scnStateCopy(void *o, void *c){
 	if(((scene *)c)->renderableCapacity != ((scene *)o)->renderableCapacity){
 		/*
 		** We need to allocate more or less memory so that
@@ -34,11 +34,11 @@ void scnResetInterpolation(void *scn){
 	//
 }
 
-unsigned char scnLoad(scene *scn){
+signed char scnLoad(scene *scn){
 	return 1;
 }
 
-unsigned char scnRenderableAdd(scene *scn, const size_t renderableID){
+signed char scnRenderableAdd(scene *scn, const size_t renderableID){
 	if(scn->renderableNum >= scn->renderableCapacity){
 		/* Allocate room for more renderable IDs. */
 		/**if(scn->renderableCapacity == 0){

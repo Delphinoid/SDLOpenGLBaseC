@@ -6,14 +6,14 @@
 /** Remove "active" property from state types? **/
 
 typedef struct {
-	unsigned char active;  // Whether or not this slot is free.
+	signed char active;  // Whether or not this slot is free.
 	void **state;          // An array of pointers to objects. Objects that no longer exist have NULL entries.
 } stateObject;
 
 typedef struct {
-	unsigned char (*stateInit)(void*);
-	unsigned char (*stateNew)(void*);
-	unsigned char (*stateCopy)(void*, void*);
+	signed char (*stateInit)(void*);
+	signed char (*stateNew)(void*);
+	signed char (*stateCopy)(void*, void*);
 	void (*stateResetInterpolation)(void*);
 	void (*stateDelete)(void*);
 	size_t size;
@@ -31,17 +31,17 @@ typedef struct stateManager{
 
 } stateManager;
 
-unsigned char smObjectTypeNew(stateManager *sm, unsigned char (*stateInit)(void*),
-                              unsigned char (*stateNew)(void*), unsigned char (*stateCopy)(void*, void*),
-                              void (*stateResetInterpolation)(void*), void (*stateDelete)(void*),
-                              const size_t size, const size_t capacity);
+signed char smObjectTypeNew(stateManager *sm, signed char (*stateInit)(void*),
+                            signed char (*stateNew)(void*), signed char (*stateCopy)(void*, void*),
+                            void (*stateResetInterpolation)(void*), void (*stateDelete)(void*),
+                            const size_t size, const size_t capacity);
 
-unsigned char smObjectNew(stateManager *sm, const size_t objectTypeID, size_t *objectID);
+signed char smObjectNew(stateManager *sm, const size_t objectTypeID, size_t *objectID);
 void smObjectDelete(stateManager *sm, const size_t objectTypeID, const size_t objectID);
 
 void smInit(stateManager *sm, const size_t stateNum);
-unsigned char smPrepareNextState(stateManager *sm);
-unsigned char smGenerateDeltaState(const stateManager *sm, const size_t stateID);
+signed char smPrepareNextState(stateManager *sm);
+signed char smGenerateDeltaState(const stateManager *sm, const size_t stateID);
 void smDelete(stateManager *sm);
 
 #endif

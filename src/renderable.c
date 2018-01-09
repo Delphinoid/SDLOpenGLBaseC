@@ -7,11 +7,11 @@
 
 #define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians
 
-unsigned char rndrInit(void *rndr){
+signed char rndrInit(void *rndr){
 	return skliInit(&((renderable *)rndr)->skli, NULL, 0);
 }
 
-unsigned char rndrNew(void *rndr){
+signed char rndrNew(void *rndr){
 	((renderable *)rndr)->name = NULL;
 	((renderable *)rndr)->mdl = NULL;
 	iVec3Init(&((renderable *)rndr)->position, 0.f, 0.f, 0.f);
@@ -28,7 +28,7 @@ unsigned char rndrNew(void *rndr){
 	return rndrInit(rndr);
 }
 
-unsigned char rndrStateCopy(void *o, void *c){
+signed char rndrStateCopy(void *o, void *c){
 	((renderable *)c)->name = ((renderable *)o)->name;
 	((renderable *)c)->mdl = ((renderable *)o)->mdl;
 	((renderable *)c)->twi = ((renderable *)o)->twi;
@@ -55,7 +55,7 @@ void rndrResetInterpolation(void *rndr){
 }
 
 /** Finish this **/
-unsigned char rndrLoad(renderable *rndr, const char *prgPath, const char *filePath, cVector *allModels, cVector *allTexWrappers){
+signed char rndrLoad(renderable *rndr, const char *prgPath, const char *filePath, cVector *allModels, cVector *allTexWrappers){
 
 	return 1;
 
@@ -78,7 +78,7 @@ void rndrRotateZ(renderable *rndr, const float changeZ){
 	iVec3GetValue(&rndr->rotation)->z += changeZ;
 }**/
 
-unsigned char rndrRenderMethod(renderable *rndr, const float interpT){
+signed char rndrRenderMethod(renderable *rndr, const float interpT){
 	// Update alpha.
 	iFloatUpdate(&rndr->alpha, interpT);
 	if(rndr->alpha.render > 0.f){
@@ -93,7 +93,7 @@ unsigned char rndrRenderMethod(renderable *rndr, const float interpT){
 	// The model is fully transparent
 	return 2;
 }
-unsigned char rndrRenderUpdate(renderable *rndr, const float interpT){
+signed char rndrRenderUpdate(renderable *rndr, const float interpT){
 
 	// Apply the change in rotation to the current orientation.
 	/*if(rndr->rotation.x != 0.f || rndr->rotation.y != 0.f || rndr->rotation.z != 0.f){

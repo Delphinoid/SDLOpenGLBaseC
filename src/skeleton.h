@@ -82,6 +82,7 @@ typedef struct {
 
 // Skeletal animation instance.
 typedef struct {
+	signed char additive;  // Whether the animation adds to previous animation instances or overwrites them.
 	size_t animFragNum;
 	size_t animFragCapacity;
 	sklAnimFragment *animFrags;
@@ -99,6 +100,7 @@ typedef struct {
 	size_t animationCapacity;
 	sklAnimInstance *animations;
 	/** Move sklAnimInstance's animState here if possible. **/
+	sklBone *deltaState;
 	sklBone *customState;  // Array of custom bone transformations.
 } sklInstance;
 
@@ -106,18 +108,18 @@ void boneInit(sklBone *bone);
 void boneInterpolate(const sklBone *b1, const sklBone *b2, const float t, sklBone *r);
 
 void sklInit(skeleton *skl);
-unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath);
+signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath);
 void sklDelete(skeleton *skl);
 
 void sklaInit(sklAnim *skla);
-unsigned char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath);
+signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath);
 void sklaDelete(sklAnim *skla);
 
-unsigned char sklaiChangeAnim(sklAnimInstance *sklai, const skeleton *skl, sklAnim *anim, const size_t frame, const float blendTime);
+signed char sklaiChangeAnim(sklAnimInstance *sklai, const skeleton *skl, sklAnim *anim, const size_t frame, const float blendTime);
 
-unsigned char skliInit(sklInstance *skli, skeleton *skl, const size_t animationCapacity);
-unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *filePath);
-unsigned char skliStateCopy(sklInstance *o, sklInstance *c);
+signed char skliInit(sklInstance *skli, skeleton *skl, const size_t animationCapacity);
+signed char skliLoad(sklInstance *skli, const char *prgPath, const char *filePath);
+signed char skliStateCopy(sklInstance *o, sklInstance *c);
 void skliAnimate(sklInstance *skli, const float elapsedTime);
 void skliGenerateAnimStates(sklInstance *skli, const float interpT);
 void skliGenerateBoneStates(const sklInstance *skli, mat4 *state);

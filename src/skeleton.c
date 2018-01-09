@@ -44,7 +44,7 @@ void boneInterpolate(const sklBone *b1, const sklBone *b2, const float t, sklBon
 
 }
 
-static unsigned char sklResizeToFit(skeleton *skl, const size_t boneCapacity){
+static signed char sklResizeToFit(skeleton *skl, const size_t boneCapacity){
 	if(skl->boneNum != boneCapacity){
 		skl->bones = realloc(skl->bones, skl->boneNum*sizeof(sklNode));
 		if(skl->bones == NULL){
@@ -59,7 +59,7 @@ void sklInit(skeleton *skl){
 	skl->boneNum = 0;
 	skl->bones = NULL;
 }
-unsigned char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
+signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 
 	sklInit(skl);
 
@@ -273,7 +273,7 @@ void sklDelete(skeleton *skl){
 void sklaInit(sklAnim *skla){
 	// animDataInit(&skla->animData);
 }
-unsigned char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
+signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 
 	sklaInit(skla);
 
@@ -307,7 +307,7 @@ void sklaDelete(sklAnim *skla){
 	animDataDelete(&skla->animData);
 }
 
-static unsigned char sklafInit(sklAnimFragment *sklaf, sklAnim *anim){
+static signed char sklafInit(sklAnimFragment *sklaf, sklAnim *anim){
 	sklaf->animBoneLookup = malloc(anim->boneNum * sizeof(sklBone *));
 	if(sklaf->animBoneLookup == NULL){
 		/** Memory allocation failure. **/
@@ -332,7 +332,7 @@ static void sklafDelete(sklAnimFragment *sklaf){
 	}
 }
 
-static unsigned char sklaiInit(sklAnimInstance *sklai, const skeleton *skl, sklAnim *anim){
+static signed char sklaiInit(sklAnimInstance *sklai, const skeleton *skl, sklAnim *anim){
 	sklai->animFrags = malloc(ANIM_FRAGMENT_START_CAPACITY * sizeof(sklAnimFragment));
 	if(sklai->animFrags == NULL){
 		/** Memory allocation failure. **/
@@ -352,6 +352,7 @@ static unsigned char sklaiInit(sklAnimInstance *sklai, const skeleton *skl, sklA
 	}
 	sklai->animFragNum = 1;
 	sklai->animFragCapacity = ANIM_FRAGMENT_START_CAPACITY;
+	sklai->additive = 1;
 	return 1;
 }
 static void sklaiDelete(sklAnimInstance *sklai){
@@ -367,7 +368,7 @@ static void sklaiDelete(sklAnimInstance *sklai){
 		free(sklai->animState);
 	}
 }
-static unsigned char sklaiStateCopy(sklAnimInstance *osklai, sklAnimInstance *csklai, const skeleton *oskl, const skeleton *cskl){
+static signed char sklaiStateCopy(sklAnimInstance *osklai, sklAnimInstance *csklai, const skeleton *oskl, const skeleton *cskl){
 
 	if(oskl != NULL && (cskl == NULL || cskl->boneNum != oskl->boneNum)){
 		if(csklai->animState != NULL){
@@ -442,6 +443,7 @@ static unsigned char sklaiStateCopy(sklAnimInstance *osklai, sklAnimInstance *cs
 		csklai->animState[i] = osklai->animState[i];
 	}
 
+	csklai->additive = osklai->additive;
 	return 1;
 
 }
@@ -531,7 +533,7 @@ static void sklaiGenerateAnimState(sklAnimInstance *sklai, const float interpT){
 	}
 
 }
-unsigned char sklaiChangeAnim(sklAnimInstance *sklai, const skeleton *skl, sklAnim *anim, const size_t frame, const float blendTime){
+signed char sklaiChangeAnim(sklAnimInstance *sklai, const skeleton *skl, sklAnim *anim, const size_t frame, const float blendTime){
 	if(blendTime <= 0.f){
 		sklafDelete(&sklai->animFrags[sklai->animFragNum-1]);
 		return sklafInit(&sklai->animFrags[sklai->animFragNum-1], anim);
@@ -554,7 +556,7 @@ unsigned char sklaiChangeAnim(sklAnimInstance *sklai, const skeleton *skl, sklAn
 	return 1;
 }
 
-unsigned char skliInit(sklInstance *skli, skeleton *skl, const size_t animationCapacity){
+signed char skliInit(sklInstance *skli, skeleton *skl, const size_t animationCapacity){
 
 	size_t i;
 
@@ -596,7 +598,7 @@ unsigned char skliInit(sklInstance *skli, skeleton *skl, const size_t animationC
 
 	return 1;
 }
-unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *filePath){
+signed char skliLoad(sklInstance *skli, const char *prgPath, const char *filePath){
 
 	/** stateNum is temporary. **/
 
@@ -649,7 +651,7 @@ unsigned char skliLoad(sklInstance *skli, const char *prgPath, const char *fileP
 	return 1;
 
 }
-unsigned char skliStateCopy(sklInstance *o, sklInstance *c){
+signed char skliStateCopy(sklInstance *o, sklInstance *c){
 
 	size_t i;
 	if(c->animationCapacity != o->animationCapacity || c->animations == NULL){
@@ -764,8 +766,8 @@ static void skliGenerateBoneState(const sklInstance *skli, mat4 *state, const si
 	** in animState from each sklAnimInstance if possible.
 	*/
 
-	// Translate the bone into its default space and apply each animation transform.
-	size_t i;
+	// Translate the bone into its default space.
+	size_t i = skli->animationNum;
 	mat4SetTranslationMatrix(&state[bone], skli->skl->bones[bone].defaultState.position.x,
 	                                       skli->skl->bones[bone].defaultState.position.y,
 	                                       skli->skl->bones[bone].defaultState.position.z);
@@ -773,7 +775,17 @@ static void skliGenerateBoneState(const sklInstance *skli, mat4 *state, const si
 	mat4Scale(&state[bone], skli->skl->bones[bone].defaultState.scale.x,
 	                        skli->skl->bones[bone].defaultState.scale.y,
 	                        skli->skl->bones[bone].defaultState.scale.z);
-	for(i = 0; i < skli->animationNum; ++i){
+
+	// Find the last non-additive animation.
+	while(i > 0){
+		--i;
+		if(!skli->animations[i].additive){
+			break;
+		}
+	}
+
+	// Apply each animation starting from the last non-additive animation.
+	while(i < skli->animationNum){
 		mat4Translate(&state[bone], skli->animations[i].animState[bone].position.x,
 		                            skli->animations[i].animState[bone].position.y,
 		                            skli->animations[i].animState[bone].position.z);
@@ -781,6 +793,7 @@ static void skliGenerateBoneState(const sklInstance *skli, mat4 *state, const si
 		mat4Scale(&state[bone], skli->animations[i].animState[bone].scale.x,
 		                        skli->animations[i].animState[bone].scale.y,
 		                        skli->animations[i].animState[bone].scale.z);
+		++i;
 	}
 
 }

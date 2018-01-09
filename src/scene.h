@@ -9,11 +9,11 @@ typedef struct {
 	size_t *renderableIDs;
 } scene;
 
-unsigned char scnInit(void *scn);
-unsigned char scnStateCopy(void *o, void *c);
+signed char scnInit(void *scn);
+signed char scnStateCopy(void *o, void *c);
 void scnResetInterpolation(void *scn);
-unsigned char scnLoad(scene *scn);
-unsigned char scnRenderableAdd(scene *scn, const size_t renderableID);
+signed char scnLoad(scene *scn);
+signed char scnRenderableAdd(scene *scn, const size_t renderableID);
 void scnRenderableRemove(scene *scn, size_t pos);
 void scnDelete(void *scn);
 

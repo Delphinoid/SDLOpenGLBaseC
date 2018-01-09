@@ -1,10 +1,10 @@
 #include "stateManager.h"
 #include <string.h>
 
-unsigned char smObjectTypeNew(stateManager *sm, unsigned char (*stateInit)(void*),
-                              unsigned char (*stateNew)(void*), unsigned char (*stateCopy)(void*, void*),
-                              void (*stateResetInterpolation)(void*), void (*stateDelete)(void*),
-                              const size_t size, const size_t capacity){
+signed char smObjectTypeNew(stateManager *sm, signed char (*stateInit)(void*),
+                            signed char (*stateNew)(void*), signed char (*stateCopy)(void*, void*),
+                            void (*stateResetInterpolation)(void*), void (*stateDelete)(void*),
+                            const size_t size, const size_t capacity){
 
 	size_t i, j;
 
@@ -64,7 +64,7 @@ unsigned char smObjectTypeNew(stateManager *sm, unsigned char (*stateInit)(void*
 	return 1;
 
 }
-static inline unsigned char smObjectTypeUpdate(stateManager *sm, const size_t objectTypeID){
+static inline signed char smObjectTypeUpdate(stateManager *sm, const size_t objectTypeID){
 	/*
 	** For each object, shift its state pointers over. Move its last state
 	** object pointer to the front and copy the latest state object into it.
@@ -158,7 +158,7 @@ static inline void smObjectTypeDelete(stateManager *sm, const size_t objectTypeI
 	free(sm->objectType[objectTypeID].instance);
 }
 
-unsigned char smObjectNew(stateManager *sm, const size_t objectTypeID, size_t *objectID){
+signed char smObjectNew(stateManager *sm, const size_t objectTypeID, size_t *objectID){
 	/* Search for an inactive scene and allocate a state for it. */
 	size_t i;
 	for(i = 0; i < sm->objectType[objectTypeID].capacity; ++i){
@@ -198,7 +198,7 @@ void smInit(stateManager *sm, const size_t stateNum){
 	sm->objectTypeNum = 0;
 	sm->objectType = NULL;
 }
-unsigned char smPrepareNextState(stateManager *sm){
+signed char smPrepareNextState(stateManager *sm){
 	size_t i;
 	++sm->currentStateID;
 	for(i = 0; i < sm->objectTypeNum; ++i){
@@ -208,7 +208,7 @@ unsigned char smPrepareNextState(stateManager *sm){
 	}
 	return 1;
 }
-unsigned char smGenerateDeltaState(const stateManager *sm, const size_t stateID){
+signed char smGenerateDeltaState(const stateManager *sm, const size_t stateID){
 	return 1;
 }
 void smDelete(stateManager *sm){

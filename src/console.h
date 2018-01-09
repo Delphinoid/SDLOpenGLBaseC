@@ -5,9 +5,9 @@
 ** A command is effectively a pointer to a function that fits
 ** the following prototype:
 **
-** unsigned char func(unsigned int argc, char *argv[]);
+** signed char func(unsigned int argc, char *argv[]);
 */
-typedef unsigned char (*command)(unsigned int argc, char *argv[]);
+typedef signed char (*command)(unsigned int argc, char *argv[]);
 
 typedef struct trieNode trieNode;
 typedef struct trieNode {
@@ -24,8 +24,8 @@ typedef struct {
 } console;
 
 void conInit(console *con);
-unsigned char conAddCommand(console *con, char *name, unsigned char (*func)(unsigned int argc, char *argv[]));
-unsigned char conRemoveCommand(console *con, char *name);
-unsigned char conFindCommand(console *con, char *name, command *cmd);
+signed char conAddCommand(console *con, char *name, signed char (*func)(unsigned int argc, char *argv[]));
+signed char conRemoveCommand(console *con, char *name);
+signed char conFindCommand(console *con, char *name, command *cmd);
 
 #endif

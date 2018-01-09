@@ -14,12 +14,12 @@ static inline void gjkSupport(const physicsBody *body1, const physicsBody *body2
 	// negative axis for the second polygon; this will
 	// give us the two closest vertices along a given
 	// axis.
-	size_t index1 = meshGetFarthestVertex(&body1->hull, axis);
+	const size_t index1 = meshGetFarthestVertex(&body1->hull, axis);
 	vec3 axisNegative;
 	axisNegative.x = -axis->x;
 	axisNegative.y = -axis->y;
 	axisNegative.z = -axis->z;
-	size_t index2 = meshGetFarthestVertex(&body2->hull, &axisNegative);
+	const size_t index2 = meshGetFarthestVertex(&body2->hull, &axisNegative);
 
 	// Get the "Minkowski Difference" of the two vertices.
 	r->x = body1->hull.vertices[index1].position.x - body2->hull.vertices[index2].position.x;
@@ -93,7 +93,7 @@ static inline void gjkTriangle(unsigned char *simplexVertices, vec3 *a, vec3 *b,
 
 }
 
-static inline unsigned char gjkTetrahedron(unsigned char *simplexVertices, vec3 *a, vec3 *b, vec3 *c, vec3 *d, vec3 *axis){
+static inline signed char gjkTetrahedron(unsigned char *simplexVertices, vec3 *a, vec3 *b, vec3 *c, vec3 *d, vec3 *axis){
 
 	// Check if the normal of ABC is crossing the origin.
 	const vec3 AO = {.x = -a->x,
@@ -144,7 +144,7 @@ static inline void epaMTV(const physicsBody *body1, const physicsBody *body2, co
 	//
 }
 
-unsigned char gjkCollision(const physicsBody *body1, const physicsBody *body2, vec3 *mtv){
+signed char gjkCollision(const physicsBody *body1, const physicsBody *body2, vec3 *mtv){
 
 	/*
 	** Implementation of the Gilbert-Johnson-Keerthi distance algorithm,

@@ -30,7 +30,7 @@ typedef struct {
 void vertInit(vertex *v);
 size_t meshGetFarthestVertex(const mesh *m, const vec3 *axis);
 /** Should meshes really be storing physical properties? **/
-unsigned char meshLoadWavefrontObj(mesh *m, const char *filePath/**, const unsigned char generatePhysProperties**/);
+signed char meshLoadWavefrontObj(mesh *m, const char *filePath/**, const signed char generatePhysProperties**/);
 void meshDelete(mesh *m);
 
 #endif
