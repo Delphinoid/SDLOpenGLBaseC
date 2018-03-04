@@ -15,6 +15,7 @@ typedef struct {
 
 void tInit(texture *tex);
 signed char tLoad(texture *tex, const char *prgPath, const char *filePath);
+signed char tDefault(texture *tex);
 void tDelete(texture *tex);
 
 #endif

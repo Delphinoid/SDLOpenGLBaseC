@@ -1,9 +1,9 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include "vec3.h"
-#include "mat4.h"
 #include "scene.h"
+#include "interpState.h"
+#include "mat4.h"
 
 #define CAM_PROJECTION_ORTHO    0x01
 #define CAM_UPDATE_PROJECTION   0x02

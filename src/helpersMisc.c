@@ -1,4 +1,4 @@
-#include <stdlib.h>
+#include "helpersMisc.h"
 #include <string.h>
 
 /*signed char nextToken(const char *str, const char *delims, size_t *tokenOffset, size_t *tokenLength){
@@ -40,13 +40,13 @@ signed char pushDynamicArray(void **vector, const void *element, const size_t by
 			return 0;
 		}
 	}
-	memcpy((*vector)+(*size)*bytes, element, bytes);
+	memcpy(((char *)(*vector))+(*size)*bytes, element, bytes);
 	++(*size);
 	return 1;
 }
 
-size_t ltostr(long n, char **s){
-	/* Converts a long to a C-string. */
+/*size_t ltostr(long n, char **s){
+	* Converts a long to a C-string. *
 	size_t l;  // Length of the ouput (discluding null terminator).
 	if(n == 0){
 		*s = malloc(2*sizeof(char));
@@ -79,6 +79,41 @@ size_t ltostr(long n, char **s){
 		l = m-l+1;
 		realloc(s, l);
 		*(*s+l--) = '\0';
+	}
+	return l;
+}*/
+
+size_t ltostr(long n, char *s){
+	/* Converts a long to a C-string. */
+	size_t l;  // Length of the ouput (discluding null terminator).
+	if(n == 0){
+		s[0] = '0';
+		l = 1;
+	}else{
+		const size_t m = LTOSTR_MAX_LENGTH;
+		l = m;
+		// Add a minus sign to the beginning if necessary.
+		if(n < 0){
+			s[0] = '-';
+			n = -n;
+		}else{
+			s[0] = '\0';
+		}
+		// Loop through the number backwards.
+		while(n > 0){
+			--l;
+			s[l] = '0' + n % 10;
+			n /= 10;
+		}
+		// Shift everything from the end of the array over to the beginning.
+		if(s[0] == '-'){
+			memcpy(&s[1], &s[l], m-l);
+		}else{
+			memcpy(&s[0], &s[l], m-l);
+		}
+		// Add a null terminator.
+		l = m-l;
+		s[l+1] = '\0';
 	}
 	return l;
 }

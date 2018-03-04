@@ -1,4 +1,3 @@
-#include "vec3.h"
 #include "engineMath.h"
 #include <math.h>
 
@@ -219,7 +218,7 @@ float vec3GetMagnitude(const vec3 *v){
 vec3 vec3GetUnit(const vec3 *v){
 	const float magnitude = vec3GetMagnitude(v);
 	if(magnitude != 0.f){
-		return vec3VDivS(v, magnitude);
+		return vec3VMultS(v, 1.f/magnitude);
 	}
 	return *v;
 }
@@ -231,7 +230,7 @@ vec3 vec3GetUnitFast(const vec3 *v){
 void vec3Normalize(vec3 *v){
 	const float magnitude = vec3GetMagnitude(v);
 	if(magnitude != 0.f){
-		vec3DivVByS(v, magnitude);
+		vec3MultVByS(v, 1.f/magnitude);
 	}
 }
 void vec3NormalizeFast(vec3 *v){

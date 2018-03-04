@@ -2,14 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-void trieInit(trieNode *node, char c){
+void trieInit(cmdTrieNode *node, char c){
 	node->value = c;
 	node->childNum = 0;
 	node->children = NULL;
 	node->cmd = NULL;
 }
 
-signed char trieNext(trieNode **node, char c){
+signed char trieNext(cmdTrieNode **node, char c){
 	/* Gets the next node when finding a command. */
 	// Loop through node's children until we find a child
 	// that matches c.
@@ -26,7 +26,7 @@ signed char trieNext(trieNode **node, char c){
 	return 0;
 }
 
-signed char trieAddNode(trieNode **node, char c){
+signed char trieAddNode(cmdTrieNode **node, char c){
 	/*
 	** Same as trieNext(), but creates a new node when necessary.
 	*/
@@ -39,12 +39,12 @@ signed char trieAddNode(trieNode **node, char c){
 		}else if(c < (*node)->children[index].value){
 			// Insert node before index.
 			++(*node)->childNum;
-			trieNode *tempBuffer = realloc((*node)->children, (*node)->childNum * sizeof(trieNode));
+			cmdTrieNode *tempBuffer = realloc((*node)->children, (*node)->childNum * sizeof(cmdTrieNode));
 			if(tempBuffer != NULL){
 				(*node)->children = tempBuffer;
 				memmove(&((*node)->children[index])+1,
 				        &((*node)->children[index]),
-				        ((*node)->childNum - 1 - index) * sizeof(trieNode));
+				        ((*node)->childNum - 1 - index) * sizeof(cmdTrieNode));
 				trieInit(&((*node)->children[index]), c);
 				*node = &(*node)->children[index];
 				return 1;
@@ -54,7 +54,7 @@ signed char trieAddNode(trieNode **node, char c){
 	}
 	// Append node to the end.
 	++(*node)->childNum;
-	trieNode *tempBuffer = realloc((*node)->children, (*node)->childNum * sizeof(trieNode));
+	cmdTrieNode *tempBuffer = realloc((*node)->children, (*node)->childNum * sizeof(cmdTrieNode));
 	if(tempBuffer != NULL){
 		(*node)->children = tempBuffer;
 		trieInit(&((*node)->children[index]), c);
@@ -96,10 +96,10 @@ void conInit(console *con){
 	con->cmdLookup.children = NULL;
 	con->cmdLookup.cmd = NULL;
 }
-signed char conAddCommand(console *con, char *name, signed char (*func)(unsigned int argc, char *argv[])){
+signed char conAddCommand(console *con, char *name, signed char (*func)(const cmdVariables *cmdv, const cmdInput *cmdi)){
 	// Check if the command is valid before adding it.
 	if(cmdValid(name, func)){
-		trieNode *node = &con->cmdLookup;
+		cmdTrieNode *node = &con->cmdLookup;
 		size_t index = 0;
 		// Go through each character in name, adding
 		// a node when we don't have a match.
@@ -122,8 +122,8 @@ signed char conAddCommand(console *con, char *name, signed char (*func)(unsigned
 	return 0;
 }
 signed char conRemoveCommand(console *con, char *name){
-	/*trieNode *node = &con->cmdLookup;
-	trieNode *last = NULL;
+	/*cmdTrieNode *node = &con->cmdLookup;
+	cmdTrieNode *last = NULL;
 	size_t index = 0;
 	while(name[index] != '\0' && trieNext(&node, name[index])){
 		if(node->childNum == 1 && last == NULL){
@@ -144,7 +144,7 @@ signed char conRemoveCommand(console *con, char *name){
 }
 signed char conFindCommand(console *con, char *name, command *cmd){
 	/** Any non-null-terminated input name has unexpected results. **/
-	trieNode *node = &con->cmdLookup;
+	cmdTrieNode *node = &con->cmdLookup;
 	size_t index = 0;
 	while(trieNext(&node, name[index])){
 		++index;

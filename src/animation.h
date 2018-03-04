@@ -10,13 +10,13 @@
 */
 
 typedef struct {
-	unsigned int desiredLoops;  // How many times the animation will loop (with -1 being infinite times).
-	size_t frameNum;            // The total number of keyframes in the animation.
-	float *frameDelays;         // Represents when each frame ends. "frameEnds" is a more accurate name, but this name is a bit of an inside joke now.
+	signed char desiredLoops;  // How many times the animation will loop (with -1 being infinite times).
+	size_t frameNum;           // The total number of keyframes in the animation.
+	float *frameDelays;        // Represents when each frame ends. "frameEnds" is a more accurate name, but this name is a bit of an inside joke now.
 } animationData;
 
 typedef struct {
-	unsigned int currentLoops;
+	signed char currentLoops;
 	size_t currentFrame;
 	size_t nextFrame;
 	float prevElapsedTime;

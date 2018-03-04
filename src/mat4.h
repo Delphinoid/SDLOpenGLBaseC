@@ -20,8 +20,14 @@ void mat4MultVByM(vec4 *v, const mat4 *m);
 vec4 mat4MMultV(const mat4 *m, const vec4 v);
 void mat4MultMByV(const mat4 *m, vec4 *v);
 
+float mat4Determinant(const mat4 *m);
+
 mat4 mat4GetTranspose(const mat4 *m);
 void mat4Transpose(mat4 *m);
+void mat4TransposeR(const mat4 *m, mat4 *r);
+
+signed char mat4Invert(mat4 *m);
+signed char mat4InvertR(const mat4 *m, mat4 *r);
 
 signed char mat4Frustum(mat4 *m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar);
 signed char mat4Ortho(mat4 *m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar);

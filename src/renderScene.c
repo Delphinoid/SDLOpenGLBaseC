@@ -1,3 +1,5 @@
+#include "gfxProgram.h"
+#include "object.h"
 #include "stateManagerHelpers.h"
 #include <math.h>
 
@@ -9,60 +11,84 @@
 /** THIS FILE IS TEMPORARY **/
 /** THIS FILE IS TEMPORARY **/
 
-void rndrGenerateTransform(const renderable *rndr, const camera *cam, mat4 *transformMatrix);
-void rndrGenerateSprite(const renderable *rndr, vertex *vertices, const mat4 *transformMatrix);
-
 /** This should not be necessary! **/
-void renderModel(renderable *rndr, const camera *cam, const float interpT, gfxProgram *gfxPrg){
+void renderModel(object *obj, const camera *cam, const float interpT, gfxProgram *gfxPrg){
 
-	/* Update the renderable for rendering */
-	rndrRenderUpdate(rndr, interpT);
+	size_t i;
+	mat4 mvpMatrix;
 
-	/* Get texture information for rendering */
-	float texFrag[4];  // The x, y, width and height of the fragment of the texture being rendered
-	GLuint frameTexID;
-	twiGetFrameInfo(&rndr->twi, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &frameTexID, interpT);
-	// Bind the texture (if needed)
-	glActiveTexture(GL_TEXTURE0);
-	if(frameTexID != gfxPrg->lastTexID){
-		gfxPrg->lastTexID = frameTexID;
-		glBindTexture(GL_TEXTURE_2D, frameTexID);
-	}
-	// Feed the texture coordinates to the shader
-	glUniform4fv(gfxPrg->textureFragmentID, 1, texFrag);
+	/* Update the object's configuration for rendering. */
+	rndrConfigRenderUpdate(&obj->configuration, interpT);  /** Only line that requires non-const object. **/
 
-	/* Generate the skeleton state and feed it to the shader */
-	if(rndr->skli.skl != NULL){
-		// Generate a state for the animated skeleton.
-		bone skeletonState[rndr->skli.skl->boneNum];
-		skliGenerateSkeletonState(&rndr->skli, &skeletonState[0], interpT);
-		// Apply the state to the model skeleton.
-		/** Expand this for an array of model / texture pairs. **/
-		if(rndr->mdl->skl != NULL){
-			size_t i;
-			mat4 boneState[rndr->mdl->skl->boneNum];
-			for(i = 0; i < rndr->mdl->skl->boneNum; ++i){
-				skliGenerateBoneState(&rndr->skli, &skeletonState[0], rndr->mdl->skl, boneState, i);
-				glUniformMatrix4fv(gfxPrg->boneArrayID[i], 1, GL_FALSE, &boneState[i].m[0][0]);
+	/* Interpolate between the previous and last skeleton states. */
+	if(obj->skl != NULL){  /** Remove? **/
+		for(i = 0; i < obj->skl->boneNum; ++i){
+			// If the bone has been simulated, use its position and orientation.
+			if((obj->physicsState[i].flags & PHYSICS_BODY_SIMULATE) > 0){
+				/**
+				obj->skeletonState[0][i].position    = obj->physicsState[i].position;
+				obj->skeletonState[0][i].orientation = obj->physicsState[i].orientation;
+				**/
 			}
+			boneInterpolate(&obj->skeletonState[1][i], &obj->skeletonState[0][i], interpT, &gfxPrg->sklAnimationState[i]);
 		}
 	}
 
 	/* Feed the translucency multiplier to the shader */
-	glUniform1f(gfxPrg->alphaID, rndr->alpha.render);
+	glUniform1f(gfxPrg->alphaID, obj->configuration.alpha.render);
 
-	/* Generate the MVP matrix and feed it to the shader */
-	mat4 mvpMatrix;
-	rndrGenerateTransform(rndr, cam, &mvpMatrix);
+	/* Generate the MVP matrix and feed it to the shader. */
+	rndrConfigGenerateTransform(&obj->configuration, cam, &mvpMatrix);
 	mat4MultMByM1(&mvpMatrix, &cam->projectionMatrix);
 	glUniformMatrix4fv(gfxPrg->mvpMatrixID, 1, GL_FALSE, &mvpMatrix.m[0][0]);
 
-	/* Render the model */
-	glBindVertexArray(rndr->mdl->vaoID);
-	if(rndr->mdl->indexNum > 0){
-		glDrawElements(GL_TRIANGLES, rndr->mdl->indexNum, GL_UNSIGNED_INT, (void *)0);
-	}else{
-		glDrawArrays(GL_TRIANGLES, 0, rndr->mdl->vertexNum);
+	/* Draw each renderable. */
+	for(i = 0; i < obj->renderableNum; ++i){
+
+		if(obj->renderables[i].mdl != NULL){  /** Remove? **/
+
+			/* Get texture information for rendering and feed it to the shader. */
+			float texFrag[4];  // The x, y, width and height of the fragment of the texture being rendered.
+			GLuint frameTexID;
+			twiGetFrameInfo(&obj->renderables[i].twi, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &frameTexID, interpT);
+			// Bind the texture (if needed).
+			glActiveTexture(GL_TEXTURE0);
+			if(frameTexID != gfxPrg->lastTexID){
+				gfxPrg->lastTexID = frameTexID;
+				glBindTexture(GL_TEXTURE_2D, frameTexID);
+			}
+			// Feed the texture coordinates to the shader.
+			glUniform4fv(gfxPrg->textureFragmentID, 1, texFrag);
+
+			/* Generate the renderable configuration based off the animated skeleton, if possible. */
+			if(obj->renderables[i].mdl->skl != NULL){
+				size_t j;
+				if(obj->skl != NULL){
+					// If there is a valid animated skeleton, apply animation transformations.
+					for(j = 0; j < obj->renderables[i].mdl->skl->boneNum; ++j){
+						skliGenerateBoneStateFromGlobal(&gfxPrg->sklAnimationState[0], obj->skl, obj->renderables[i].mdl->skl, &gfxPrg->sklTransformBuffer[0], j);
+						glUniformMatrix4fv(gfxPrg->boneArrayID[j], 1, GL_FALSE, &gfxPrg->sklTransformBuffer[j].m[0][0]);
+					}
+				}else{
+					// If there is no animated skeleton, only apply the model's skeleton's default state transformations.
+					for(j = 0; j < obj->renderables[i].mdl->skl->boneNum; ++j){
+						skliGenerateDefaultState(obj->renderables[i].mdl->skl, &gfxPrg->sklTransformBuffer[0], j);
+						glUniformMatrix4fv(gfxPrg->boneArrayID[j], 1, GL_FALSE, &gfxPrg->sklTransformBuffer[j].m[0][0]);
+					}
+				}
+
+			}
+
+			/* Render the model. */
+			glBindVertexArray(obj->renderables[i].mdl->vaoID);
+			if(obj->renderables[i].mdl->indexNum > 0){
+				glDrawElements(GL_TRIANGLES, obj->renderables[i].mdl->indexNum, GL_UNSIGNED_INT, (void *)0);
+			}else{
+				glDrawArrays(GL_TRIANGLES, 0, obj->renderables[i].mdl->vertexNum);
+			}
+
+		}
+
 	}
 
 }
@@ -70,71 +96,102 @@ void renderModel(renderable *rndr, const camera *cam, const float interpT, gfxPr
 /** Clean this up! **/
 void batchRenderSprites(cVector *allSprites, const camera *cam, const float interpT, gfxProgram *gfxPrg){
 
-	// Reset the translucency value
-	glUniform1f(gfxPrg->alphaID, 1.f);
-	// Bind the VAO
-	glBindVertexArray((*((renderable **)cvGet(allSprites, 0)))->mdl->vaoID);
-
+	object *curSpr;
+	size_t i;
+	size_t j = 0;
 	mat4 mvMatrix;
 	float texFrag[4];
 	GLuint texWidth;
 	GLuint texHeight;
 	GLuint currentTexID;
-	vertex currentVertexBatch[allSprites->size * /**4**/6];
+	GLuint vboID;
 	size_t currentVertexBatchSize = 0;
 	/**size_t currentIndexBatch[allSprites->size * 6];
 	size_t currentIndexBatchSize = 0;**/
 
-	renderable *curSpr;
-	size_t i;
+	// Find the first sprite with a valid renderable.
+	// Bind its VAO and use its VBO to draw every other sprite.
 	for(i = 0; i < allSprites->size; ++i){
+		curSpr = *((object **)cvGet(allSprites, i));
+		if(curSpr != NULL){  /** Remove? **/
+			for(j = 0; j < curSpr->renderableNum; ++j){
+				if(curSpr->renderables[j].mdl != NULL){  /** Remove? **/
+					// Bind the VAO
+					glBindVertexArray((*((object **)cvGet(allSprites, i)))->renderables[j].mdl->vaoID);
+					vboID = (*((object **)cvGet(allSprites, i)))->renderables[j].mdl->vboID;
+					goto EXIT;
+				}
+			}
+		}
+	}
+	EXIT:
 
-		curSpr = *((renderable **)cvGet(allSprites, i));
+	// Reset the translucency value
+	glUniform1f(gfxPrg->alphaID, 1.f);
 
-		if(curSpr != NULL){
+	while(i < allSprites->size){
 
-			twiGetFrameInfo(&curSpr->twi, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &currentTexID, interpT);
+		curSpr = *((object **)cvGet(allSprites, i));
 
-			// If the current texture ID differs from the last, render and clear the VBO
-			if(gfxPrg->lastTexID != currentTexID && currentVertexBatchSize >= /**4**/6){
-				// We need the texture width and height to get around texture offset calculations in the shader
-				/** This shouldn't be necessary! **/
-				glUniform4f(gfxPrg->textureFragmentID, 0.f, 0.f, texWidth, texHeight);
+		if(curSpr != NULL){  /** Remove? **/
 
-				glBindTexture(GL_TEXTURE_2D, gfxPrg->lastTexID);
-				glBindBuffer(GL_ARRAY_BUFFER, curSpr->mdl->vboID);  /** Why does this need to be bound...? **/
-				glBufferData(GL_ARRAY_BUFFER, sizeof(currentVertexBatch), &currentVertexBatch[0], GL_DYNAMIC_DRAW);
-				/**glBindBuffer(GL_ARRAY_BUFFER, curSpr->mdl->iboID);
-				glBufferData(GL_ARRAY_BUFFER, sizeof(currentIndexBatch), &currentIndexBatch[0], GL_DYNAMIC_DRAW);
-				glDrawElements(GL_TRIANGLES, currentIndexBatchSize, GL_UNSIGNED_INT, (void *)0);**/
-				glDrawArrays(GL_TRIANGLES, 0, currentVertexBatchSize);
-				currentVertexBatchSize = 0;
-				/**currentIndexBatchSize = 0;**/
+			rndrConfigRenderUpdate(&curSpr->configuration, interpT);
+			rndrConfigGenerateTransform(&curSpr->configuration, cam, &mvMatrix);
+
+			while(j < curSpr->renderableNum){
+
+				if(curSpr->renderables[j].mdl != NULL){  /** Remove? **/
+
+					twiGetFrameInfo(&curSpr->renderables[j].twi, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &currentTexID, interpT);
+
+					// If the current texture ID differs from the last, render and clear the VBO
+					if((gfxPrg->lastTexID != currentTexID && currentVertexBatchSize >= /**4**/6) || currentVertexBatchSize >= SPR_MAX_BATCH_SIZE){
+						// We need the texture width and height to get around texture offset calculations in the shader
+						/** This shouldn't be necessary! **/
+						glUniform4f(gfxPrg->textureFragmentID, 0.f, 0.f, texWidth, texHeight);
+
+						glBindTexture(GL_TEXTURE_2D, gfxPrg->lastTexID);
+						glBindBuffer(GL_ARRAY_BUFFER, vboID);  /** Why does this need to be bound...? **/
+						glBufferData(GL_ARRAY_BUFFER, sizeof(gfxPrg->sprVertexBatchBuffer), &gfxPrg->sprVertexBatchBuffer[0], GL_DYNAMIC_DRAW);
+						/**glBindBuffer(GL_ARRAY_BUFFER, curSpr->renderables[j].mdl->iboID);
+						glBufferData(GL_ARRAY_BUFFER, sizeof(currentIndexBatch), &currentIndexBatch[0], GL_DYNAMIC_DRAW);
+						glDrawElements(GL_TRIANGLES, currentIndexBatchSize, GL_UNSIGNED_INT, (void *)0);**/
+						glDrawArrays(GL_TRIANGLES, 0, currentVertexBatchSize);
+						currentVertexBatchSize = 0;
+						/**currentIndexBatchSize = 0;**/
+					}
+
+					// Get the texture's width and height for calculating the texture's UV offsets outside of the shader
+					texWidth  = twiGetTexWidth(&curSpr->renderables[j].twi);
+					texHeight = twiGetTexHeight(&curSpr->renderables[j].twi);
+
+					// Add sprite to the current batch
+					gfxPrg->lastTexID = currentTexID;
+					rndrConfigGenerateSprite(&curSpr->configuration, &curSpr->renderables[j].twi, (vertex *)(&gfxPrg->sprVertexBatchBuffer[currentVertexBatchSize]), &mvMatrix);
+					rndrConfigOffsetSpriteTexture((vertex *)(&gfxPrg->sprVertexBatchBuffer[currentVertexBatchSize]), texFrag, texWidth, texHeight);
+					gfxPrg->sprVertexBatchBuffer[currentVertexBatchSize+5] = gfxPrg->sprVertexBatchBuffer[currentVertexBatchSize];
+					gfxPrg->sprVertexBatchBuffer[currentVertexBatchSize+4] = gfxPrg->sprVertexBatchBuffer[currentVertexBatchSize+2];
+					gfxPrg->sprVertexBatchBuffer[currentVertexBatchSize+2] = gfxPrg->sprVertexBatchBuffer[currentVertexBatchSize+3];
+					currentVertexBatchSize += /**4**/6;
+					/**currentIndexBatch[currentIndexBatchSize]   = 0;
+					currentIndexBatch[currentIndexBatchSize+1] = 1;
+					currentIndexBatch[currentIndexBatchSize+2] = 3;
+					currentIndexBatch[currentIndexBatchSize+3] = 3;
+					currentIndexBatch[currentIndexBatchSize+4] = 2;
+					currentIndexBatch[currentIndexBatchSize+5] = 0;
+					currentIndexBatchSize += 6;**/
+
+				}
+
+				++j;
+
 			}
 
-			// Get the texture's width and height for calculating the texture's UV offsets outside of the shader
-			texWidth  = twiGetTexWidth(&curSpr->twi);
-			texHeight = twiGetTexHeight(&curSpr->twi);
-
-			// Add sprite to the current batch
-			gfxPrg->lastTexID = currentTexID;
-			rndrRenderUpdate(curSpr, interpT);
-			rndrGenerateTransform(curSpr, cam, &mvMatrix);
-			rndrGenerateSprite(curSpr, (vertex *)(&currentVertexBatch[currentVertexBatchSize]), &mvMatrix);
-			rndrOffsetSpriteTexture((vertex *)(&currentVertexBatch[currentVertexBatchSize]), texFrag, texWidth, texHeight);
-			currentVertexBatch[currentVertexBatchSize+5] = currentVertexBatch[currentVertexBatchSize];
-			currentVertexBatch[currentVertexBatchSize+4] = currentVertexBatch[currentVertexBatchSize+2];
-			currentVertexBatch[currentVertexBatchSize+2] = currentVertexBatch[currentVertexBatchSize+3];
-			currentVertexBatchSize += /**4**/6;
-			/**currentIndexBatch[currentIndexBatchSize]   = 0;
-			currentIndexBatch[currentIndexBatchSize+1] = 1;
-			currentIndexBatch[currentIndexBatchSize+2] = 3;
-			currentIndexBatch[currentIndexBatchSize+3] = 3;
-			currentIndexBatch[currentIndexBatchSize+4] = 2;
-			currentIndexBatch[currentIndexBatchSize+5] = 0;
-			currentIndexBatchSize += 6;**/
+			j = 0;
 
 		}
+
+		++i;
 
 	}
 
@@ -144,8 +201,8 @@ void batchRenderSprites(cVector *allSprites, const camera *cam, const float inte
 		glUniform4f(gfxPrg->textureFragmentID, 0.f, 0.f, texWidth, texHeight);
 
 		glBindTexture(GL_TEXTURE_2D, gfxPrg->lastTexID);
-		glBindBuffer(GL_ARRAY_BUFFER, curSpr->mdl->vboID);  /** Why does this need to be bound...? **/
-		glBufferData(GL_ARRAY_BUFFER, sizeof(currentVertexBatch), &currentVertexBatch[0], GL_DYNAMIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, vboID);  /** Why does this need to be bound...? **/
+		glBufferData(GL_ARRAY_BUFFER, sizeof(gfxPrg->sprVertexBatchBuffer), &gfxPrg->sprVertexBatchBuffer[0], GL_DYNAMIC_DRAW);
 		/**glBindBuffer(GL_ARRAY_BUFFER, curSpr->mdl->iboID);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(currentIndexBatch), &currentIndexBatch[0], GL_DYNAMIC_DRAW);
 		glDrawElements(GL_TRIANGLES, currentIndexBatchSize, GL_UNSIGNED_INT, (void *)0);**/
@@ -156,25 +213,26 @@ void batchRenderSprites(cVector *allSprites, const camera *cam, const float inte
 
 void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *cam, const float interpT){
 
-	cVector translucentModels; cvInit(&translucentModels, 1);  // Holds renderable pointers
+	cVector translucentModels; cvInit(&translucentModels, 1);  // Holds object pointers
 	cVector distances;  cvInit(&distances, 1);  // Holds floats
 
 	// Sort the different models into groups of those that are opaque and those that contain translucency
 	size_t i;
 	for(i = 0; i < allModels->size; ++i){
 
-		renderable *curMdl = *((renderable **)cvGet(allModels, i));
-		unsigned int currentRenderMethod = rndrRenderMethod(curMdl, interpT);
+		object *curMdl = *((object **)cvGet(allModels, i));
+		unsigned int currentRenderMethod = objRenderMethod(curMdl, interpT);
 
 		if(currentRenderMethod == 0){  // If the model is fully opaque, add it straight to the render list
-			cvPush(mdlRenderList, (void *)&curMdl, sizeof(renderable *));
+			cvPush(mdlRenderList, (void *)&curMdl, sizeof(object *));
 		}else if(currentRenderMethod == 1){  // If the model contains translucency, it'll need to be depth sorted
-			cvPush(&translucentModels, (void *)&curMdl, sizeof(renderable *));
-			float tempDistance = (sqrt(abs((curMdl->position.render.x - cam->position.render.x) * (curMdl->position.render.x - cam->position.render.x) +
-			                               (curMdl->position.render.y - cam->position.render.y) * (curMdl->position.render.y - cam->position.render.y) +
-			                               (curMdl->position.render.z - cam->position.render.z) * (curMdl->position.render.z - cam->position.render.z))));
+			cvPush(&translucentModels, (void *)&curMdl, sizeof(object *));
+			float tempDistance = (sqrt(abs((curMdl->configuration.position.render.x - cam->position.render.x) * (curMdl->configuration.position.render.x - cam->position.render.x) +
+			                               (curMdl->configuration.position.render.y - cam->position.render.y) * (curMdl->configuration.position.render.y - cam->position.render.y) +
+			                               (curMdl->configuration.position.render.z - cam->position.render.z) * (curMdl->configuration.position.render.z - cam->position.render.z))));
 			cvPush(&distances, (void *)&tempDistance, sizeof(float));
 		}
+
 		// If currentRenderMethod is anything else (e.g. 2), the model will not be rendered at all
 
 	}
@@ -191,9 +249,9 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *c
 				cvSet(&distances, j-1, cvGet(&distances, j), sizeof(float));
 				cvSet(&distances, j, (void *)&tempDistance, sizeof(float));
 
-				renderable *tempModel = *((renderable **)cvGet(&translucentModels, j-1));
-				cvSet(&translucentModels, j-1, cvGet(&translucentModels, j), sizeof(renderable *));
-				cvSet(&translucentModels, j, (void *)&tempModel, sizeof(renderable *));
+				object *tempModel = *((object **)cvGet(&translucentModels, j-1));
+				cvSet(&translucentModels, j-1, cvGet(&translucentModels, j), sizeof(object *));
+				cvSet(&translucentModels, j, (void *)&tempModel, sizeof(object *));
 
 			}
 
@@ -204,7 +262,7 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *c
 	// Combine the three vectors
 	cvResize(mdlRenderList, mdlRenderList->size + translucentModels.size);
 	for(i = 0; i < translucentModels.size; ++i){
-		cvPush(mdlRenderList, cvGet(&translucentModels, i), sizeof(renderable *));
+		cvPush(mdlRenderList, cvGet(&translucentModels, i), sizeof(object *));
 	}
 	cvClear(&translucentModels);
 	cvClear(&distances);
@@ -217,24 +275,28 @@ void sortElements(stateManager *gameStateManager, const size_t stateID,
                   cVector *spritesScene, cVector *spritesHUD){
 
 	/** Merge with camera updating? **/
+	/**
+	*** Use separate vectors for translucent objects, or render
+	*** opaque objects after a glEnable(GL_CULL_FACE).
+	**/
 	// Sort models and sprites into their scene and HUD vectors
 	size_t i, j;
 	for(i = 0; i < gameStateManager->objectType[SM_TYPE_CAMERA].capacity; ++i){
 		if(camGetState(gameStateManager, i, stateID) != NULL){
-			for(j = 0; j < (*camGetState(gameStateManager, i, stateID)->targetScene)->renderableNum; ++j){
-				renderable *curRndr = rndrGetState(gameStateManager, (*camGetState(gameStateManager, i, stateID)->targetScene)->renderableIDs[j], stateID);
-				if(curRndr != NULL){
-					if(!curRndr->sprite){
+			for(j = 0; j < (*camGetState(gameStateManager, i, stateID)->targetScene)->objectNum; ++j){
+				object *curObj = objGetState(gameStateManager, (*camGetState(gameStateManager, i, stateID)->targetScene)->objectIDs[j], stateID);
+				if(curObj != NULL){
+					if(!curObj->configuration.sprite){
 						if(i == 0){
-							cvPush(modelsScene, (void *)&curRndr, sizeof(renderable *));
+							cvPush(modelsScene, (void *)&curObj, sizeof(object *));
 						}else{
-							cvPush(modelsHUD, (void *)&curRndr, sizeof(renderable *));
+							cvPush(modelsHUD, (void *)&curObj, sizeof(object *));
 						}
 					}else{
 						if(i == 0){
-							cvPush(spritesScene, (void *)&curRndr, sizeof(renderable *));
+							cvPush(spritesScene, (void *)&curObj, sizeof(object *));
 						}else{
-							cvPush(spritesHUD, (void *)&curRndr, sizeof(renderable *));
+							cvPush(spritesHUD, (void *)&curObj, sizeof(object *));
 						}
 					}
 				}
@@ -261,10 +323,10 @@ void renderScene(stateManager *gameStateManager, const size_t stateID, const flo
 	}
 
 	// Vector initialization.
-	cVector modelsScene;  cvInit(&modelsScene, 1);   // Holds renderable pointers; pointers to scene models.
-	cVector modelsHUD;    cvInit(&modelsHUD, 1);     // Holds renderable pointers; pointers to HUD models.
-	cVector spritesScene; cvInit(&spritesScene, 1);  // Holds renderable pointers; pointers to scene sprites.
-	cVector spritesHUD;   cvInit(&spritesHUD, 1);    // Holds renderable pointers; pointers to HUD sprites.
+	cVector modelsScene;  cvInit(&modelsScene, 1);   // Holds object pointers; pointers to scene models.
+	cVector modelsHUD;    cvInit(&modelsHUD, 1);     // Holds object pointers; pointers to HUD models.
+	cVector spritesScene; cvInit(&spritesScene, 1);  // Holds object pointers; pointers to scene sprites.
+	cVector spritesHUD;   cvInit(&spritesHUD, 1);    // Holds object pointers; pointers to HUD sprites.
 	sortElements(gameStateManager, stateID, &modelsScene, &modelsHUD, &spritesScene, &spritesHUD);
 
 	// Render the main scene.
@@ -274,7 +336,7 @@ void renderScene(stateManager *gameStateManager, const size_t stateID, const flo
 		depthSortModels(&modelsScene, &renderList, camGetState(gameStateManager, 0, stateID), interpT);
 		// Render scene models.
 		for(i = 0; i < renderList.size; ++i){
-			renderModel(*((renderable **)cvGet(&renderList, i)), camGetState(gameStateManager, 0, stateID), interpT, gfxPrg);
+			renderModel(*((object **)cvGet(&renderList, i)), camGetState(gameStateManager, 0, stateID), interpT, gfxPrg);
 		}
 		// Batch render scene sprites.
 		// Change the MVP matrix to the frustum projection matrix, as other sprite vertex transformations are done on the CPU through sprCreate().
@@ -290,7 +352,7 @@ void renderScene(stateManager *gameStateManager, const size_t stateID, const flo
 		// Render HUD models.
 		/** HUD camera? Streamline this to make handling different cameras easily **/
 		for(i = 0; i < modelsHUD.size; ++i){
-			renderModel(*((renderable **)cvGet(&modelsHUD, i)), camGetState(gameStateManager, 1, stateID), interpT, gfxPrg);
+			renderModel(*((object **)cvGet(&modelsHUD, i)), camGetState(gameStateManager, 1, stateID), interpT, gfxPrg);
 		}
 		// Batch render HUD sprites.
 		// Change the MVP matrix to the orthographic projection matrix, as other sprite vertex transformations are done on the CPU through sprCreate().

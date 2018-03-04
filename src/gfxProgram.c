@@ -1,11 +1,9 @@
 #include "gfxProgram.h"
+#include "helpersMisc.h"
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
-#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-
-size_t ltostr(long n, char **s);
 
 static signed char gfxInitSDL(gfxProgram *gfxPrg);
 static signed char gfxInitOGL(gfxProgram *gfxPrg);
@@ -105,7 +103,7 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 	const size_t vsExtraLen = strlen(vertexShaderExtra);
 	char *vertexShaderPath = malloc((pathLen+vsExtraLen+1)*sizeof(char));
 	if(vertexShaderPath == NULL){
-		printf("Error loading vertex shader: Memory allocation failure.\n");
+		/** Memory allocation failure. **/
 		return 0;
 	}
 	memcpy(vertexShaderPath, prgPath, pathLen);
@@ -114,13 +112,13 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 
 	/* Load vertex shader */
 	FILE *vertexShaderFile = fopen(vertexShaderPath, "rb");
-	free(vertexShaderPath);
 	fseek(vertexShaderFile, 0, SEEK_END);
 	long size = ftell(vertexShaderFile);
 	rewind(vertexShaderFile);
 	char *vertexShaderCode = malloc((size+1)*sizeof(char));
 	if(vertexShaderCode == NULL){
-		printf("Error loading vertex shader: Memory allocation failure.\n");
+		/** Memory allocation failure. **/
+		free(vertexShaderPath);
 		return 0;
 	}
 	fread(vertexShaderCode, sizeof(char), size, vertexShaderFile);
@@ -131,8 +129,9 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 	gfxPrg->vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
 	const char *vertexShaderCodePointer = vertexShaderCode;
 	glShaderSource(gfxPrg->vertexShaderID, 1, &vertexShaderCodePointer, NULL);
-	free(vertexShaderCode);
 	glCompileShader(gfxPrg->vertexShaderID);
+	free(vertexShaderPath);
+	free(vertexShaderCode);
 
 	/* Validate vertex shader */
 	GLint compileStatus = GL_FALSE;
@@ -140,9 +139,10 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 	glGetShaderiv(gfxPrg->vertexShaderID, GL_COMPILE_STATUS, &compileStatus);
  	glGetShaderiv(gfxPrg->vertexShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
  	if(infoLogLength > 1){
-		char vertexShaderError[infoLogLength+1];
+		char *vertexShaderError = malloc((infoLogLength+1)*sizeof(char));
  		glGetShaderInfoLog(gfxPrg->vertexShaderID, infoLogLength, NULL, &vertexShaderError[0]);
  		printf("Error validating vertex shader: %s", &vertexShaderError[0]);
+ 		free(vertexShaderError);
  		return 0;
  	}
 
@@ -152,7 +152,7 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 	const size_t fsExtraLen = strlen(fragmentShaderExtra);
 	char *fragmentShaderPath = malloc((pathLen+fsExtraLen+1)*sizeof(char));
 	if(fragmentShaderPath == NULL){
-		printf("Error loading vertex shader: Memory allocation failure.\n");
+		/** Memory allocation failure. **/
 		return 0;
 	}
 	memcpy(fragmentShaderPath, prgPath, pathLen);
@@ -161,13 +161,13 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 
 	/* Load fragment shader */
 	FILE *fragmentShaderFile = fopen(fragmentShaderPath, "rb");
-	free(fragmentShaderPath);
 	fseek(fragmentShaderFile, 0, SEEK_END);
 	size = ftell(fragmentShaderFile);
 	rewind(fragmentShaderFile);
 	char *fragmentShaderCode = malloc((size+1)*sizeof(char));
 	if(fragmentShaderCode == NULL){
-		printf("Error loading vertex shader: Memory allocation failure.\n");
+		/** Memory allocation failure. **/
+		free(fragmentShaderPath);
 		return 0;
 	}
 	fread(fragmentShaderCode, sizeof(char), size, fragmentShaderFile);
@@ -178,16 +178,18 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 	gfxPrg->fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
 	const char *fragmentShaderCodePointer = fragmentShaderCode;
 	glShaderSource(gfxPrg->fragmentShaderID, 1, &fragmentShaderCodePointer, NULL);
-	free(fragmentShaderCode);
 	glCompileShader(gfxPrg->fragmentShaderID);
+	free(fragmentShaderPath);
+	free(fragmentShaderCode);
 
 	/* Validate fragment shader */
 	glGetShaderiv(gfxPrg->fragmentShaderID, GL_COMPILE_STATUS, &compileStatus);
  	glGetShaderiv(gfxPrg->fragmentShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
  	if(infoLogLength > 1){
-		char fragmentShaderError[infoLogLength+1];
+		char *fragmentShaderError = malloc((infoLogLength+1)*sizeof(char));
  		glGetShaderInfoLog(gfxPrg->fragmentShaderID, infoLogLength, NULL, &fragmentShaderError[0]);
  		printf("Error validating fragment shader: %s", &fragmentShaderError[0]);
+ 		free(fragmentShaderError);
  		return 0;
  	}
 
@@ -214,37 +216,33 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 
 	/* Create references to each bone  */
 	size_t i;
-	for(i = 0; i < MAX_BONE_NUM; ++i){
+	for(i = 0; i < SKL_MAX_BONE_NUM; ++i){
 
-		char *num;
-		const size_t numLen = ltostr(i, &num);
-		char uniformString[10+numLen+2];
+		char num[LTOSTR_MAX_LENGTH];
+		const size_t numLen = ltostr(i, &num[0]);
+		char uniformString[11+LTOSTR_MAX_LENGTH];
 
-		memcpy(&uniformString, "boneArray[", 10);
+		memcpy(&uniformString[0], "boneArray[", 10);
 		memcpy(&uniformString[10], num, numLen);
 		uniformString[10+numLen] = ']';
 		uniformString[10+numLen+1] = '\0';
 		gfxPrg->boneArrayID[i] = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);
 
-		free(num);
-
 	}
 
 	/* Create references to each texture sampler */
-	for(i = 0; i < MAX_TEX_SAMPLER_NUM; ++i){
+	for(i = 0; i < GFX_MAX_TEX_SAMPLER_NUM; ++i){
 
-		char *num;
-		const size_t numLen = ltostr(i, &num);
-		char uniformString[15+numLen+2];
+		char num[LTOSTR_MAX_LENGTH];
+		const size_t numLen = ltostr(i, &num[0]);
+		char uniformString[11+LTOSTR_MAX_LENGTH];
 
-		memcpy(&uniformString, "textureSampler[", 15);
-		memcpy(&uniformString+15, num, numLen);
+		memcpy(&uniformString[0], "textureSampler[", 15);
+		memcpy(&uniformString[15], num, numLen);
 		uniformString[15+numLen] = ']';
 		uniformString[15+numLen+1] = '\0';
 		gfxPrg->textureSamplerArrayID[i] = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);
 		glUniform1i(gfxPrg->textureSamplerArrayID[i], 0);
-
-		free(num);
 
 	}
 
@@ -252,13 +250,8 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 	GLenum glError = glGetError();
 	if(glError != GL_NO_ERROR){
 		printf("Error loading shaders: %u\n", glError);
-		free(vertexShaderPath);   free(vertexShaderCode);
- 		free(fragmentShaderPath); free(fragmentShaderCode);
 		return 0;
 	}
-
-	free(vertexShaderPath);   free(vertexShaderCode);
-	free(fragmentShaderPath); free(fragmentShaderCode);
  	return 1;
 
 }

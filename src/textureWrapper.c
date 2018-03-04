@@ -14,7 +14,7 @@
 static signed char twfInit(twFrame *twf, const size_t subframeCapacity){
 	twf->subframes = malloc(subframeCapacity*sizeof(twBounds));
 	if(twf->subframes == NULL){
-		printf("Error loading texture wrapper: Memory allocation failure.\n");
+		/** Memory allocation failure. **/
 		return 0;
 	}
 	return 1;
@@ -25,7 +25,7 @@ static signed char twfAddSubframe(twFrame *twf, const twBounds *sf, size_t *subf
 		*subframeCapacity *= 2;
 		twf->subframes = realloc(twf->subframes, *subframeCapacity*sizeof(twBounds));
 		if(twf->subframes == NULL){
-			printf("Error loading texture wrapper: Memory allocation failure.\n");
+			/** Memory allocation failure. **/
 			return 0;
 		}
 	}
@@ -37,7 +37,7 @@ static signed char twfAddDefaultSubframe(twFrame *twf, const size_t subframeCapa
 	if(subframeCapacity != twf->subframeNum+1){
 		twf->subframes = realloc(twf->subframes, (twf->subframeNum+1)*sizeof(twBounds));
 		if(twf->subframes == NULL){
-			printf("Error loading texture wrapper: Memory allocation failure.\n");
+			/** Memory allocation failure. **/
 			return 0;
 		}
 	}
@@ -53,7 +53,7 @@ static signed char twfResizeToFit(twFrame *twf, const size_t subframeCapacity){
 	if(twf->subframeNum != subframeCapacity){
 		twf->subframes = realloc(twf->subframes, twf->subframeNum*sizeof(twBounds));
 		if(twf->subframes == NULL){
-			printf("Error loading texture wrapper: Memory allocation failure.\n");
+			/** Memory allocation failure. **/
 			return 0;
 		}
 	}
@@ -69,19 +69,19 @@ static void twfDelete(twFrame *twf){
 static signed char twaInit(twAnim *twa, const size_t animframeCapacity){
 	twa->frameIDs = malloc(animframeCapacity*sizeof(size_t));
 	if(twa->frameIDs == NULL){
-		printf("Error loading texture wrapper: Memory allocation failure.\n");
+		/** Memory allocation failure. **/
 		return 0;
 	}
 	twa->subframeIDs = malloc(animframeCapacity*sizeof(size_t));
 	if(twa->subframeIDs == NULL){
-		printf("Error loading texture wrapper: Memory allocation failure.\n");
+		/** Memory allocation failure. **/
 		free(twa->frameIDs);
 		return 0;
 	}
 	animDataInit(&twa->animData);
 	twa->animData.frameDelays = malloc(animframeCapacity*sizeof(float));
 	if(twa->animData.frameDelays == NULL){
-		printf("Error loading texture wrapper: Memory allocation failure.\n");
+		/** Memory allocation failure. **/
 		free(twa->frameIDs);
 		free(twa->subframeIDs);
 		return 0;
@@ -94,18 +94,18 @@ static signed char twaAddFrame(twAnim *twa, const size_t f, const size_t sf, con
 		*animframeCapacity *= 2;
 		twa->frameIDs = realloc(twa->frameIDs, *animframeCapacity*sizeof(size_t));
 		if(twa->frameIDs == NULL){
-			printf("Error loading texture wrapper: Memory allocation failure.\n");
+			/** Memory allocation failure. **/
 			return 0;
 		}
 		twa->subframeIDs = realloc(twa->subframeIDs, *animframeCapacity*sizeof(size_t));
 		if(twa->subframeIDs == NULL){
-			printf("Error loading texture wrapper: Memory allocation failure.\n");
+			/** Memory allocation failure. **/
 			free(twa->frameIDs);
 			return 0;
 		}
 		twa->animData.frameDelays = realloc(twa->animData.frameDelays, *animframeCapacity*sizeof(float));
 		if(twa->animData.frameDelays == NULL){
-			printf("Error loading texture wrapper: Memory allocation failure.\n");
+			/** Memory allocation failure. **/
 			free(twa->frameIDs);
 			free(twa->subframeIDs);
 			return 0;
@@ -122,18 +122,18 @@ static signed char twaResizeToFit(twAnim *twa, const size_t animframeCapacity){
 	if(twa->animData.frameNum != animframeCapacity){
 		twa->frameIDs = realloc(twa->frameIDs, twa->animData.frameNum*sizeof(size_t));
 		if(twa->frameIDs == NULL){
-			printf("Error loading texture wrapper: Memory allocation failure.\n");
+			/** Memory allocation failure. **/
 			return 0;
 		}
 		twa->subframeIDs = realloc(twa->subframeIDs, twa->animData.frameNum*sizeof(size_t));
 		if(twa->subframeIDs == NULL){
-			printf("Error loading texture wrapper: Memory allocation failure.\n");
+			/** Memory allocation failure. **/
 			free(twa->frameIDs);
 			return 0;
 		}
 		twa->animData.frameDelays = realloc(twa->animData.frameDelays, twa->animData.frameNum*sizeof(float));
 		if(twa->animData.frameDelays == NULL){
-			printf("Error loading texture wrapper: Memory allocation failure.\n");
+			/** Memory allocation failure. **/
 			free(twa->frameIDs);
 			free(twa->subframeIDs);
 			return 0;
@@ -157,7 +157,7 @@ static signed char twAddFrame(textureWrapper *tw, const twFrame *f, size_t *fram
 		*frameCapacity *= 2;
 		tw->frames = realloc(tw->frames, *frameCapacity*sizeof(twFrame));
 		if(tw->frames == NULL){
-			printf("Error loading texture wrapper: Memory allocation failure.\n");
+			/** Memory allocation failure. **/
 			free(tw->animations);
 			return 0;
 		}
@@ -171,7 +171,7 @@ static signed char twAddAnim(textureWrapper *tw, const twAnim *a, size_t *animCa
 		*animCapacity *= 2;
 		tw->animations = realloc(tw->animations, *animCapacity*sizeof(twAnim));
 		if(tw->animations == NULL){
-			printf("Error loading texture wrapper: Memory allocation failure.\n");
+			/** Memory allocation failure. **/
 			free(tw->frames);
 			return 0;
 		}
@@ -184,14 +184,14 @@ static signed char twResizeToFit(textureWrapper *tw, const size_t frameCapacity,
 	if(tw->frameNum != frameCapacity){
 		tw->frames = realloc(tw->frames, tw->frameNum*sizeof(twFrame));
 		if(tw->frames == NULL){
-			printf("Error loading texture wrapper: Memory allocation failure.\n");
+			/** Memory allocation failure. **/
 			return 0;
 		}
 	}
 	if(tw->animationNum != animCapacity){
 		tw->animations = realloc(tw->animations, tw->animationNum*sizeof(twAnim));
 		if(tw->animations == NULL){
-			printf("Error loading texture wrapper: Memory allocation failure.\n");
+			/** Memory allocation failure. **/
 			free(tw->frames);
 			return 0;
 		}
@@ -214,14 +214,14 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 	size_t frameCapacity = FRAME_START_CAPACITY;
 	tw->frames = malloc(frameCapacity*sizeof(twFrame));
 	if(tw->frames == NULL){
-		printf("Error loading texture wrapper: Memory allocation failure.\n");
+		/** Memory allocation failure. **/
 		return 0;
 	}
 
 	size_t animCapacity = ANIM_START_CAPACITY;
 	tw->animations = malloc(animCapacity*sizeof(twAnim));
 	if(tw->animations == NULL){
-		printf("Error loading texture wrapper: Memory allocation failure.\n");
+		/** Memory allocation failure. **/
 		free(tw->frames);
 		return 0;
 	}
@@ -291,7 +291,7 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 				if(currentCommand == -1){
 					tw->name = malloc((lineLength-4) * sizeof(char));
 					if(tw->name == NULL){
-						printf("Error loading texture wrapper: Memory allocation failure.\n");
+						/** Memory allocation failure. **/
 						twaDelete(&tempAnim);
 						twDelete(tw);
 						free(fullPath);
@@ -767,7 +767,7 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 	if(tw->name == NULL || tw->name[0] == '\0'){
 		tw->name = malloc((fileLen+1)*sizeof(char));
 		if(tw->name == NULL){
-			printf("Error loading texture wrapper: Memory allocation failure.\n");
+			/** Memory allocation failure. **/
 			twDelete(tw);
 			return 0;
 		}
@@ -981,8 +981,8 @@ void twiGetFrameInfo(const twInstance *twi, float *x, float *y, float *w, float 
 	   twi->animator.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum){
 
 		size_t startFrame;
-		animGetRenderData(&twi->animator, &twGetAnim(twi->tw, twi->currentAnim)->animData,
-		                  interpT, &startFrame, NULL, NULL);
+		animGetRenderData(&twi->animator, &twGetAnim(twi->tw, twi->currentAnim)->animData, interpT,
+		                  &startFrame, NULL, NULL);
 		*x = twGetAnimSubframe(twi->tw, twi->currentAnim, startFrame)->x;
 		*y = twGetAnimSubframe(twi->tw, twi->currentAnim, startFrame)->y;
 		*w = twGetAnimSubframe(twi->tw, twi->currentAnim, startFrame)->w;

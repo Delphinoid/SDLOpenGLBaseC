@@ -52,12 +52,18 @@ float quatGetMagnitude(const quat *q);
 
 quat quatGetConjugate(const quat *q);
 void quatConjugate(quat *q);
+void quatConjugateR(const quat *q, quat *r);
 
 quat quatGetNegative(const quat *q);
 void quatNegate(quat *q);
+void quatNegateR(const quat *q, quat *r);
 
 quat quatGetInverse(const quat *q);
 void quatInvert(quat *q);
+void quatInvertR(const quat *q, quat *r);
+
+quat quatGetDifference(const quat *q1, const quat *q2);
+void quatDifference(const quat *q1, const quat *q2, quat *r);
 
 quat quatGetUnit(const quat *q);
 quat quatGetUnitFast(const quat *q);
@@ -68,6 +74,7 @@ quat quatIdentity();
 void quatSetIdentity(quat *q);
 
 void quatAxisAngle(const quat *q, float *angle, float *axisX, float *axisY, float *axisZ);
+void quatAxisAngleFast(const quat *q, float *angle, float *axisX, float *axisY, float *axisZ);
 
 float quatDot(const quat *q1, const quat *q2);
 

@@ -1,5 +1,5 @@
 #include "mat4.h"
-#include <stdlib.h>
+#include <stddef.h>
 #include <math.h>
 
 void mat4Identity(mat4 *m){
@@ -163,6 +163,21 @@ void mat4MultMByV(const mat4 *m, vec4 *v){
 	v->x = r.x; v->y = r.y; v->z = r.z; v->w = r.w;
 }
 
+float mat4Determinant(const mat4 *m){
+	return m->m[0][0] * (m->m[1][1] * (m->m[2][2]*m->m[3][3] - m->m[2][3]*m->m[3][2]) -
+	                     m->m[1][2] * (m->m[2][1]*m->m[3][3] - m->m[2][3]*m->m[3][1]) +
+	                     m->m[1][3] * (m->m[2][1]*m->m[3][2] - m->m[2][2]*m->m[3][1])) -
+	       m->m[0][1] * (m->m[1][0] * (m->m[2][2]*m->m[3][3] - m->m[2][3]*m->m[3][2]) -
+	                     m->m[1][2] * (m->m[2][0]*m->m[3][3] - m->m[2][3]*m->m[3][0]) +
+	                     m->m[1][3] * (m->m[2][0]*m->m[3][2] - m->m[2][2]*m->m[3][0])) +
+	       m->m[0][2] * (m->m[1][0] * (m->m[2][1]*m->m[3][3] - m->m[2][3]*m->m[3][1]) -
+	                     m->m[1][1] * (m->m[2][0]*m->m[3][3] - m->m[2][3]*m->m[3][0]) +
+	                     m->m[1][3] * (m->m[2][0]*m->m[3][1] - m->m[2][1]*m->m[3][0])) -
+	       m->m[0][3] * (m->m[1][0] * (m->m[2][1]*m->m[3][2] - m->m[2][2]*m->m[3][1]) -
+	                     m->m[1][1] * (m->m[2][0]*m->m[3][2] - m->m[2][2]*m->m[3][0]) +
+	                     m->m[1][2] * (m->m[2][0]*m->m[3][1] - m->m[2][1]*m->m[3][0]));
+}
+
 mat4 mat4GetTranspose(const mat4 *m){
 	mat4 r = {.m = {{m->m[0][0], m->m[1][0], m->m[2][0], m->m[3][0]},
 	                {m->m[0][1], m->m[1][1], m->m[2][1], m->m[3][1]},
@@ -171,8 +186,41 @@ mat4 mat4GetTranspose(const mat4 *m){
 	return r;
 }
 void mat4Transpose(mat4 *m){
-	*m = mat4GetTranspose(m);
+	float swap = m->m[1][0];
+	m->m[1][0] = m->m[0][1];
+	m->m[0][1] = swap;
+	swap = m->m[2][0];
+	m->m[2][0] = m->m[0][2];
+	m->m[0][2] = swap;
+	swap = m->m[3][0];
+	m->m[3][0] = m->m[0][3];
+	m->m[0][3] = swap;
+	swap = m->m[2][1];
+	m->m[2][1] = m->m[1][2];
+	m->m[1][2] = swap;
+	swap = m->m[3][1];
+	m->m[3][1] = m->m[1][3];
+	m->m[1][3] = swap;
+	swap = m->m[3][2];
+	m->m[3][2] = m->m[2][3];
+	m->m[2][3] = swap;
 }
+void mat4TransposeR(const mat4 *m, mat4 *r){
+	r->m[0][0] = m->m[0][0]; r->m[0][1] = m->m[1][0]; r->m[0][2] = m->m[2][0]; r->m[0][3] = m->m[3][0];
+	r->m[1][0] = m->m[0][1]; r->m[1][1] = m->m[1][1]; r->m[1][2] = m->m[2][1]; r->m[1][3] = m->m[3][1];
+	r->m[2][0] = m->m[0][2]; r->m[2][1] = m->m[1][2]; r->m[2][2] = m->m[2][2]; r->m[2][3] = m->m[3][2];
+	r->m[3][0] = m->m[0][3]; r->m[3][1] = m->m[1][3]; r->m[3][2] = m->m[2][3]; r->m[3][3] = m->m[3][3];
+}
+
+signed char mat4Invert(mat4 *m){
+	/* Find the inverse using Gauss-Jordan elimination. */
+	return 0;
+}
+signed char mat4InvertR(const mat4 *m, mat4 *r){
+	/* Find the inverse using Gauss-Jordan elimination. */
+	return 0;
+}
+
 signed char mat4Frustum(mat4 *m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar){
 	if(left == right || bottom == top || zNear == zFar){
 		return 0;

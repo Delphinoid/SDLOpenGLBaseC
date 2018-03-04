@@ -1,7 +1,7 @@
 #ifndef INTERPSTATE_H
 #define INTERPSTATE_H
 
-#include <stdlib.h>
+#include <stddef.h>
 #include "vec3.h"
 #include "quat.h"
 

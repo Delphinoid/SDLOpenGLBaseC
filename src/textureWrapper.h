@@ -42,9 +42,9 @@ typedef struct {
 	animationInstance animator;
 } twInstance;
 
-/** twLoad() and twiAnimate() may need some tidying up **/
+/** twLoad() and twiAnimate() may need some tidying up. **/
 void twInit(textureWrapper *tw);
-/** I don't like allTextures being passed in here at all **/
+/** I don't like allTextures being passed in here at all. **/
 signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath, cVector *allTextures);
 void twDelete(textureWrapper *tw);
 

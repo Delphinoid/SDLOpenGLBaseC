@@ -38,19 +38,41 @@ void boneInterpolate(const bone *b1, const bone *b2, const float t, bone *r){
 
 }
 
+void boneTransformAppendPosition(const bone *b1, const bone *b2, bone *r){
+	// Calculate total translation.
+	vec3 tempVec3;
+	quat tempQuat;
+	quatNegateR(&b1->orientation, &tempQuat);  /** Is this right? **/
+	vec3MultVByVR(&b2->position, &b1->scale, &tempVec3);   // Scale
+	quatRotateVec3(&tempQuat, &tempVec3);                  // Rotate
+	vec3AddVToVR(&tempVec3, &b1->position, &r->position);  // Translate
+}
+
+void boneTransformAppendOrientation(const bone *b1, const bone *b2, bone *r){
+	// Calculate total orientation.
+	quat tempQuat;
+	quatMultQByQR(&b2->orientation, &b1->orientation, &tempQuat);
+	r->orientation = tempQuat;
+}
+
+void boneTransformAppendScale(const bone *b1, const bone *b2, bone *r){
+	// Calculate total scale.
+	vec3MultVByVR(&b2->scale, &b1->scale, &r->scale);
+}
+
 void boneTransformAppend(const bone *b1, const bone *b2, bone *r){
 	/*
 	** Adds the transformations for b2 to b1 and store the result in r.
 	** Used for getting the total sum of all transformations of a bone.
 	*/
 	// Calculate total translation.
-	vec3 tempVec3 = b2->position;
-	vec3MultVByV(&tempVec3, &b1->scale);          // Scale
-	quatRotateVec3(&b1->orientation, &tempVec3);  // Rotate
-	vec3AddVToV(&tempVec3, &b1->position);        // Translate
-	r->position = tempVec3;
-	// Calculate total orientation.
+	vec3 tempVec3;
 	quat tempQuat;
+	quatNegateR(&b1->orientation, &tempQuat);  /** Is this right? **/
+	vec3MultVByVR(&b2->position, &b1->scale, &tempVec3);   // Scale
+	quatRotateVec3(&tempQuat, &tempVec3);                  // Rotate
+	vec3AddVToVR(&tempVec3, &b1->position, &r->position);  // Translate
+	// Calculate total orientation.
 	quatMultQByQR(&b2->orientation, &b1->orientation, &tempQuat);
 	r->orientation = tempQuat;
 	// Calculate total scale.

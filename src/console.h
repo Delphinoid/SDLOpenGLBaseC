@@ -1,30 +1,40 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
+typedef struct {
+	// Contains each console variable.
+
+} cmdVariables;
+
 /*
 ** A command is effectively a pointer to a function that fits
 ** the following prototype:
 **
-** signed char func(unsigned int argc, char *argv[]);
+** signed char func(const cmdVariables *cmdv, const cmdInput *cmdi);
 */
-typedef signed char (*command)(unsigned int argc, char *argv[]);
+typedef struct {
+	signed char parsed;  // Whether or not argv is parsed in the expected format or as a string
+	unsigned int argc;
+	void *argv;
+} cmdInput;
+typedef signed char (*command)(const cmdVariables *cmdv, const cmdInput *cmdi);
 
-typedef struct trieNode trieNode;
-typedef struct trieNode {
+typedef struct cmdTrieNode cmdTrieNode;
+typedef struct cmdTrieNode {
 	char value;
 	unsigned char childNum;
-	trieNode *children;
+	cmdTrieNode *children;
 	command cmd;
-} trieNode;
+} cmdTrieNode;
 
 typedef struct {
-	trieNode cmdLookup;
-	//char *displayData[512];       // An array of lines
+	cmdTrieNode cmdLookup;
+	//char *displayData[512];       // An array of lines.
 	//unsigned int displayDataEnd;  // The element displayData ends on.
 } console;
 
 void conInit(console *con);
-signed char conAddCommand(console *con, char *name, signed char (*func)(unsigned int argc, char *argv[]));
+signed char conAddCommand(console *con, char *name, signed char (*func)(const cmdVariables *cmdv, const cmdInput *cmdi));
 signed char conRemoveCommand(console *con, char *name);
 signed char conFindCommand(console *con, char *name, command *cmd);
 

@@ -4,7 +4,7 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
-#include "mat4.h"
+#include "model.h"
 
 #define DEFAULT_GL_VERSION_MAJOR 3
 #define DEFAULT_GL_VERSION_MINOR 3
@@ -16,8 +16,8 @@
 #define DEFAULT_CHANNELS 2
 #define DEFAULT_CHUNKSIZE 2048
 
-#define MAX_BONE_NUM 128
-#define MAX_TEX_SAMPLER_NUM 1
+#define SPR_MAX_BATCH_SIZE (6*64)  /** Move this! **/
+#define GFX_MAX_TEX_SAMPLER_NUM 1
 
 typedef struct {
 
@@ -33,11 +33,18 @@ typedef struct {
 	// Per-instance uniforms
 	GLuint mvpMatrixID;
 	GLuint textureFragmentID;
-	GLuint boneArrayID[MAX_BONE_NUM];
+	GLuint boneArrayID[SKL_MAX_BONE_NUM];
 	GLuint alphaID;
 
+	// Uniform buffers
+	vertex sprVertexBatchBuffer[SPR_MAX_BATCH_SIZE];  // An array of vertices used for batch rendering sprites.
+	bone sklAnimationState[SKL_MAX_BONE_NUM];  // Stores the configuration of each bone before converting it to matrix form.
+	mat4 sklTransformBuffer[SKL_MAX_BONE_NUM];  // Stores a matrix transformation for each bone before it is fed to the shader.
+	                                            // Just passing in bones would force the shader to recalculate matrices for a
+	                                            // bone every single time it's used by a vertex.
+
 	// Texture samplers
-	GLuint textureSamplerArrayID[MAX_TEX_SAMPLER_NUM];
+	GLuint textureSamplerArrayID[GFX_MAX_TEX_SAMPLER_NUM];
 
 	// Previously bound texture ID for more efficient binding
 	GLuint lastTexID;

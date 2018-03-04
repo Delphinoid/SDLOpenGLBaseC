@@ -5,7 +5,6 @@
 
 #define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians
 #define QUAT_LERP_ANGLE cos(RADIAN_RATIO)
-//#define QUAT_LERP_ANGLE (1.f-FLT_EPSILON)
 
 quat quatNew(const float w, const float x, const float y, const float z){
 	quat r = {.w = w, .v.x = x, .v.y = y, .v.z = z};
@@ -253,21 +252,44 @@ quat quatGetConjugate(const quat *q){
 void quatConjugate(quat *q){
 	quatSet(q, q->w, -q->v.x, -q->v.y, -q->v.z);
 }
+void quatConjugateR(const quat *q, quat *r){
+	quatSet(r, q->w, -q->v.x, -q->v.y, -q->v.z);
+}
 
 quat quatGetNegative(const quat *q){
-	return quatNew(-q->w, -q->v.x, -q->v.y, -q->v.z);
+	return quatNew(-q->w, q->v.x, q->v.y, q->v.z);
 }
 void quatNegate(quat *q){
-	quatSet(q, -q->w, -q->v.x, -q->v.y, -q->v.z);
+	q->w = -q->w;
+}
+void quatNegateR(const quat *q, quat *r){
+	quatSet(r, -q->w, q->v.x, q->v.y, q->v.z);
 }
 
 quat quatGetInverse(const quat *q){
-	const quat c = quatGetConjugate(q);
+	quat c;
+	quatConjugateR(q, &c);
 	return quatQMultQ(q, &c);
 }
 void quatInvert(quat *q){
-	const quat c = quatGetConjugate(q);
+	quat c;
+	quatConjugateR(q, &c);
 	quatMultQByQ1(q, &c);
+}
+void quatInvertR(const quat *q, quat *r){
+	quatConjugateR(q, r);
+	quatMultQByQ2(q, r);
+}
+
+quat quatGetDifference(const quat *q1, const quat *q2){
+	quat r;
+	quatInvertR(q1, &r);
+	quatMultQByQ1(&r, q2);
+	return r;
+}
+void quatDifference(const quat *q1, const quat *q2, quat *r){
+	quatInvertR(q1, r);
+	quatMultQByQ1(r, q2);
 }
 
 quat quatGetUnit(const quat *q){
@@ -305,11 +327,19 @@ void quatSetIdentity(quat *q){
 void quatAxisAngle(const quat *q, float *angle, float *axisX, float *axisY, float *axisZ){
 	float scale = sqrtf(1.f-q->w*q->w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1
 	if(scale != 0.f){  // We don't want to risk a potential divide-by-zero error
+		scale = 1.f/scale;
 		*angle = 2.f*acosf(q->w);
-		*axisX = q->v.x/scale;
-		*axisY = q->v.y/scale;
-		*axisZ = q->v.z/scale;
+		*axisX = q->v.x*scale;
+		*axisY = q->v.y*scale;
+		*axisZ = q->v.z*scale;
 	}
+}
+void quatAxisAngleFast(const quat *q, float *angle, float *axisX, float *axisY, float *axisZ){
+	float scale = fastInvSqrt(1.f-q->w*q->w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1
+	*angle = 2.f*acosf(q->w);
+	*axisX = q->v.x*scale;
+	*axisY = q->v.y*scale;
+	*axisZ = q->v.z*scale;
 }
 
 float quatDot(const quat *q1, const quat *q2){
@@ -323,7 +353,7 @@ vec3 quatGetRotatedVec3(const quat *q, const vec3 *v){
 
 	vec3 r;
 
-	const float dot = vec3Dot(&q->v, v);
+	/*const float dot = vec3Dot(&q->v, v);
 	vec3 cross;
 	vec3Cross(&q->v, v, &cross);
 
@@ -340,14 +370,34 @@ vec3 quatGetRotatedVec3(const quat *q, const vec3 *v){
 	m = 2.f*q->w;
 	r.x += m*cross.x;
 	r.y += m*cross.y;
-	r.z += m*cross.z;
+	r.z += m*cross.z;*/
+
+	const float dotQV = vec3Dot(&q->v, v);
+	const float dotQQ = vec3Dot(&q->v, &q->v);
+	float m = q->w*q->w - dotQQ;
+	vec3 crossQV;
+	vec3Cross(&q->v, v, &crossQV);
+
+	r.x *= m;
+	r.y *= m;
+	r.z *= m;
+
+	m = 2.f * dotQV;
+	r.x += m * q->v.x;
+	r.y += m * q->v.y;
+	r.z += m * q->v.z;
+
+	m = 2.f * q->w;
+	r.x += m * crossQV.x;
+	r.y += m * crossQV.y;
+	r.z += m * crossQV.z;
 
 	return r;
 
 }
 void quatRotateVec3(const quat *q, vec3 *v){
 
-	const float dot = vec3Dot(&q->v, v);
+	/*const float dot = vec3Dot(&q->v, v);
 	vec3 cross;
 	vec3Cross(&q->v, v, &cross);
 
@@ -364,7 +414,27 @@ void quatRotateVec3(const quat *q, vec3 *v){
 	m = 2.f*q->w;
 	v->x += m*cross.x;
 	v->y += m*cross.y;
-	v->z += m*cross.z;
+	v->z += m*cross.z;*/
+
+	const float dotQV = vec3Dot(&q->v, v);
+	const float dotQQ = vec3Dot(&q->v, &q->v);
+	float m = q->w*q->w - dotQQ;
+	vec3 crossQV;
+	vec3Cross(&q->v, v, &crossQV);
+
+	v->x *= m;
+	v->y *= m;
+	v->z *= m;
+
+	m = 2.f * dotQV;
+	v->x += m * q->v.x;
+	v->y += m * q->v.y;
+	v->z += m * q->v.z;
+
+	m = 2.f * q->w;
+	v->x += m * crossQV.x;
+	v->y += m * crossQV.y;
+	v->z += m * crossQV.z;
 
 }
 

@@ -1,14 +1,30 @@
-#include "mesh.h"
+#include "model.h"
+#include "helpersMisc.h"
 #include <string.h>
 #include <stdio.h>
 
-#define DEFAULT_VERTEX_MASS 1
-#define VERTEX_START_CAPACITY 1
-#define INDEX_START_CAPACITY 1
+/** Merge mdlWavefrontObjLoad() with mdlLoad(). **/
+
+#define MDL_VERTEX_START_CAPACITY 1
+#define MDL_INDEX_START_CAPACITY 1
 
 /** Remove printf()s **/
 
-#define freeHelpersWavefrontObj() \
+#define mdlWavefrontObjFreeReturns() \
+	if(*name != NULL){ \
+		free(*name); \
+	} \
+	if(*vertices != NULL){ \
+		free(*vertices); \
+	} \
+	if(*indices != NULL){ \
+		free(*indices); \
+	} \
+	if(*sklPath != NULL){ \
+		free(*sklPath); \
+	}
+
+#define mdlWavefrontObjFreeHelpers() \
 	if(tempPositions != NULL){ \
 		free(tempPositions); \
 	} \
@@ -23,85 +39,75 @@
 	} \
 	if(tempBoneWeights != NULL){ \
 		free(tempBoneWeights); \
-	} \
+	}
 
-signed char pushDynamicArray(void **vector, const void *element, const size_t bytes, size_t *size, size_t *capacity);
+signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex **vertices, size_t *indexNum, size_t **indices, char **name, char **sklPath){
 
-void vertInit(vertex *v){
-	vec3SetS(&v->position, 0.f);
-	v->u  = 0.f; v->v  = 0.f;
-	vec3SetS(&v->normal, 0.f);
-	v->bIDs[0]     = -1;  v->bIDs[1]     = -1;  v->bIDs[2]     = -1;  v->bIDs[3] = -1;
-	v->bWeights[0] = 0.f; v->bWeights[1] = 0.f; v->bWeights[2] = 0.f; v->bWeights[3] = 0.f;
-}
-
-/** Should meshes really be storing physical properties? **/
-signed char meshLoadWavefrontObj(mesh *m, const char *filePath/**, const signed char generatePhysProperties**/){
-
-	size_t vertexCapacity = VERTEX_START_CAPACITY;
-	m->vertices = malloc(vertexCapacity*sizeof(vertex));
-	if(m->vertices == NULL){
-		printf("Error loading mesh: Memory allocation failure.\n");
+	size_t vertexCapacity = MDL_VERTEX_START_CAPACITY;
+	*vertices = malloc(vertexCapacity*sizeof(vertex));
+	if(*vertices == NULL){
+		/** Memory allocation failure. **/
 		return 0;
 	}
 
-	size_t indexCapacity = INDEX_START_CAPACITY;
-	m->indices = malloc(indexCapacity*sizeof(size_t));
-	if(m->indices == NULL){
-		printf("Error loading mesh: Memory allocation failure.\n");
-		free(m->vertices);
+	size_t indexCapacity = MDL_INDEX_START_CAPACITY;
+	*indices = malloc(indexCapacity*sizeof(size_t));
+	if(*indices == NULL){
+		/** Memory allocation failure. **/
+		free(*vertices);
 		return 0;
 	}
 
-	/**if(generatePhysProperties){
-		m->area = 0.f;
-		m->mass = 0.f;
-		vec3SetS(&m->centroid, 0.f);
+	/**const signed char generatePhysProperties = (mass != NULL && area != NULL && centroid != NULL);
+	if(generatePhysProperties){
+		*mass = 0.f;
+		*area = 0.f;
+		vec3SetS(centroid, 0.f);
 	}**/
-	m->vertexNum = 0;
-	m->indexNum = 0;
+	*vertexNum = 0;
+	*indexNum = 0;
 
 	// Temporarily holds vertex positions before they are pushed into vertices
 	size_t tempPositionsSize = 0;
-	size_t tempPositionsCapacity = 1*VERTEX_START_CAPACITY;
+	size_t tempPositionsCapacity = 1*MDL_VERTEX_START_CAPACITY;
 	float *tempPositions = malloc(tempPositionsCapacity*sizeof(float));
 	if(tempPositions == NULL){
-		printf("Error loading mesh: Memory allocation failure.\n");
-		free(m->vertices);
-		free(m->indices);
+		/** Memory allocation failure. **/
+		free(*vertices);
+		free(*indices);
 		return 0;
 	}
 	// Temporarily holds vertex UVs they are pushed into vertices
 	size_t tempTexCoordsSize = 0;
-	size_t tempTexCoordsCapacity = 1*VERTEX_START_CAPACITY;
+	size_t tempTexCoordsCapacity = 1*MDL_VERTEX_START_CAPACITY;
 	float *tempTexCoords = malloc(tempTexCoordsCapacity*sizeof(float));
 	if(tempTexCoords == NULL){
-		printf("Error loading mesh: Memory allocation failure.\n");
-		free(m->vertices);
-		free(m->indices);
+		/** Memory allocation failure. **/
+		free(*vertices);
+		free(*indices);
 		free(tempPositions);
 		return 0;
 	}
 	// Temporarily holds vertex normals before they are pushed into vertices
 	size_t tempNormalsSize = 0;
-	size_t tempNormalsCapacity = 1*VERTEX_START_CAPACITY;
+	size_t tempNormalsCapacity = 1*MDL_VERTEX_START_CAPACITY;
 	float *tempNormals = malloc(tempNormalsCapacity*sizeof(float));
 	if(tempNormals == NULL){
-		printf("Error loading mesh: Memory allocation failure.\n");
-		free(m->vertices);
-		free(m->indices);
+		/** Memory allocation failure. **/
+		free(*vertices);
+		free(*indices);
 		free(tempPositions);
 		free(tempTexCoords);
 		return 0;
 	}
 	// Temporarily holds bone IDs before they are pushed into vertices
 	size_t tempBoneIDsSize = 0;
-	size_t tempBoneIDsCapacity = 1*VERTEX_START_CAPACITY;
+	size_t tempBoneIDsCapacity = 1*MDL_VERTEX_START_CAPACITY;
 	int   *tempBoneIDs = malloc(tempBoneIDsCapacity*sizeof(int));
 	if(tempBoneIDs == NULL){
-		printf("Error loading mesh: Memory allocation failure.\n");
-		free(m->vertices);
-		free(m->indices);
+		/** Memory allocation failure. **/
+		free(*vertices);
+		free(*indices);
 		free(tempPositions);
 		free(tempTexCoords);
 		free(tempNormals);
@@ -109,12 +115,12 @@ signed char meshLoadWavefrontObj(mesh *m, const char *filePath/**, const signed 
 	}
 	// Temporarily holds bone weights before they are pushed into vertices
 	size_t tempBoneWeightsSize = 0;
-	size_t tempBoneWeightsCapacity = 1*VERTEX_START_CAPACITY;
+	size_t tempBoneWeightsCapacity = 1*MDL_VERTEX_START_CAPACITY;
 	float *tempBoneWeights = malloc(tempBoneWeightsCapacity*sizeof(float));
 	if(tempBoneWeights == NULL){
-		printf("Error loading mesh: Memory allocation failure.\n");
-		free(m->vertices);
-		free(m->indices);
+		/** Memory allocation failure. **/
+		free(*vertices);
+		free(*indices);
 		free(tempPositions);
 		free(tempTexCoords);
 		free(tempNormals);
@@ -171,20 +177,21 @@ signed char meshLoadWavefrontObj(mesh *m, const char *filePath/**, const signed 
 			lineLength -= newOffset;
 
 			// Name
-			if(lineLength >= 6 && strncmp(line, "name ", 5) == 0){
-				/** *name = malloc((lineLength-4) * sizeof(char));
+			if(name != NULL && *name == NULL && lineLength >= 6 && strncmp(line, "name ", 5) == 0){
+				*name = malloc((lineLength-4) * sizeof(char));
 				if(*name == NULL){
-					printf("Error loading model: Memory allocation failure.\n");
-					freeHelpersWavefrontObj();
+					/** Memory allocation failure. **/
+					mdlWavefrontObjFreeHelpers();
+					mdlWavefrontObjFreeReturns();
 					fclose(mdlInfo);
 					return 0;
 				}
 				strncpy(*name, line+5, lineLength-5);
-				(*name)[lineLength-5] = '\0';**/
+				(*name)[lineLength-5] = '\0';
 
 			// Skeleton
-			}else if(lineLength > 9 && strncmp(line, "skeleton ", 9) == 0){
-				/**const char *firstQuote = strchr(line, '"');
+			}else if(sklPath != NULL && *sklPath == NULL && lineLength > 9 && strncmp(line, "skeleton ", 9) == 0){
+				const char *firstQuote = strchr(line, '"');
 				const char *lastQuote = strrchr(line, '"');
 				size_t pathBegin;
 				size_t pathLength;
@@ -192,41 +199,46 @@ signed char meshLoadWavefrontObj(mesh *m, const char *filePath/**, const signed 
 					pathBegin = firstQuote-line+1;
 					pathLength = lastQuote-line-pathBegin;
 				}else{  // If the skeleton path wasn't surrounded by quotes, don't give up:
-					pathBegin = 8;
-					pathLength = lineLength-8;
+					pathBegin = 9;
+					pathLength = lineLength-9;
 				}
-				char *sklPath = malloc((pathLength+1) * sizeof(char));
-				strncpy(sklPath, line+pathBegin, pathLength);
-				sklPath[pathLength] = '\0';
-				sklLoad(&mdl->skl, prgPath, sklPath);
-				free(sklPath);**/
+				*sklPath = malloc((pathLength+1) * sizeof(char));
+				if(*sklPath == NULL){
+					/** Memory allocation failure. **/
+					mdlWavefrontObjFreeHelpers();
+					mdlWavefrontObjFreeReturns();
+					fclose(mdlInfo);
+					return 0;
+				}
+				strncpy(*sklPath, line+pathBegin, pathLength);
+				(*sklPath)[pathLength] = '\0';
 
 			// Vertex data
 			}else if(lineLength >= 7 && strncmp(line, "v ", 2) == 0){
 				char *token = strtok(line+2, " ");
 				float curVal = strtod(token, NULL);
 				if(!pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity)){
-					printf("Error loading mesh: Memory allocation failure.\n");
-					freeHelpersWavefrontObj();
-					meshDelete(m);
+					/** Memory allocation failure. **/
+					mdlWavefrontObjFreeHelpers();
+					mdlWavefrontObjFreeReturns();
 					fclose(mdlInfo);
 					return 0;
 				}
 				token = strtok(NULL, " ");
 				curVal = strtod(token, NULL);
 				if(!pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity)){
-					printf("Error loading mesh: Memory allocation failure.\n");
-					freeHelpersWavefrontObj();
-					meshDelete(m);
+					/** Memory allocation failure. **/
+					mdlWavefrontObjFreeHelpers();
+					mdlWavefrontObjFreeReturns();
 					fclose(mdlInfo);
 					return 0;
 				}
 				token = strtok(NULL, " ");
 				curVal = strtod(token, NULL);
 				if(!pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity)){
-					printf("Error loading mesh: Memory allocation failure.\n");
-					freeHelpersWavefrontObj();
-					meshDelete(m);
+					/** Memory allocation failure. **/
+					mdlWavefrontObjFreeHelpers();
+					mdlWavefrontObjFreeReturns();
 					fclose(mdlInfo);
 					return 0;
 				}
@@ -235,36 +247,36 @@ signed char meshLoadWavefrontObj(mesh *m, const char *filePath/**, const signed 
 				if(token != NULL){
 					int curBoneID = strtoul(token, NULL, 0);
 					if(!pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity)){
-						printf("Error loading mesh: Memory allocation failure.\n");
-						freeHelpersWavefrontObj();
-						meshDelete(m);
+						/** Memory allocation failure. **/
+						mdlWavefrontObjFreeHelpers();
+						mdlWavefrontObjFreeReturns();
 						fclose(mdlInfo);
 						return 0;
 					}
 					token = strtok(NULL, " ");
 					curBoneID = strtoul(token, NULL, 0);
 					if(!pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity)){
-						printf("Error loading mesh: Memory allocation failure.\n");
-						freeHelpersWavefrontObj();
-						meshDelete(m);
+						/** Memory allocation failure. **/
+						mdlWavefrontObjFreeHelpers();
+						mdlWavefrontObjFreeReturns();
 						fclose(mdlInfo);
 						return 0;
 					}
 					token = strtok(NULL, " ");
 					curBoneID = strtoul(token, NULL, 0);
 					if(!pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity)){
-						printf("Error loading mesh: Memory allocation failure.\n");
-						freeHelpersWavefrontObj();
-						meshDelete(m);
+						/** Memory allocation failure. **/
+						mdlWavefrontObjFreeHelpers();
+						mdlWavefrontObjFreeReturns();
 						fclose(mdlInfo);
 						return 0;
 					}
 					token = strtok(NULL, " ");
 					curBoneID = strtoul(token, NULL, 0);
 					if(!pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity)){
-						printf("Error loading mesh: Memory allocation failure.\n");
-						freeHelpersWavefrontObj();
-						meshDelete(m);
+						/** Memory allocation failure. **/
+						mdlWavefrontObjFreeHelpers();
+						mdlWavefrontObjFreeReturns();
 						fclose(mdlInfo);
 						return 0;
 					}
@@ -272,36 +284,36 @@ signed char meshLoadWavefrontObj(mesh *m, const char *filePath/**, const signed 
 					if(token != NULL){
 						curVal = strtod(token, NULL);
 						if(!pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity)){
-							printf("Error loading mesh: Memory allocation failure.\n");
-							freeHelpersWavefrontObj();
-							meshDelete(m);
+							/** Memory allocation failure. **/
+							mdlWavefrontObjFreeHelpers();
+							mdlWavefrontObjFreeReturns();
 							fclose(mdlInfo);
 							return 0;
 						}
 						token = strtok(NULL, " ");
 						curVal = strtod(token, NULL);
 						if(!pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity)){
-							printf("Error loading mesh: Memory allocation failure.\n");
-							freeHelpersWavefrontObj();
-							meshDelete(m);
+							/** Memory allocation failure. **/
+							mdlWavefrontObjFreeHelpers();
+							mdlWavefrontObjFreeReturns();
 							fclose(mdlInfo);
 							return 0;
 						}
 						token = strtok(NULL, " ");
 						curVal = strtod(token, NULL);
 						if(!pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity)){
-							printf("Error loading mesh: Memory allocation failure.\n");
-							freeHelpersWavefrontObj();
-							meshDelete(m);
+							/** Memory allocation failure. **/
+							mdlWavefrontObjFreeHelpers();
+							mdlWavefrontObjFreeReturns();
 							fclose(mdlInfo);
 							return 0;
 						}
 						token = strtok(NULL, " ");
 						curVal = strtod(token, NULL);
 						if(!pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity)){
-							printf("Error loading mesh: Memory allocation failure.\n");
-							freeHelpersWavefrontObj();
-							meshDelete(m);
+							/** Memory allocation failure. **/
+							mdlWavefrontObjFreeHelpers();
+							mdlWavefrontObjFreeReturns();
 							fclose(mdlInfo);
 							return 0;
 						}
@@ -313,18 +325,18 @@ signed char meshLoadWavefrontObj(mesh *m, const char *filePath/**, const signed 
 				char *token = strtok(line+3, " ");
 				float curVal = strtod(token, NULL);
 				if(!pushDynamicArray((void **)&tempTexCoords, &curVal, sizeof(curVal), &tempTexCoordsSize, &tempTexCoordsCapacity)){
-					printf("Error loading mesh: Memory allocation failure.\n");
-					freeHelpersWavefrontObj();
-					meshDelete(m);
+					/** Memory allocation failure. **/
+					mdlWavefrontObjFreeHelpers();
+					mdlWavefrontObjFreeReturns();
 					fclose(mdlInfo);
 					return 0;
 				}
 				token = strtok(NULL, " ");
 				curVal = strtod(token, NULL);
 				if(!pushDynamicArray((void **)&tempTexCoords, &curVal, sizeof(curVal), &tempTexCoordsSize, &tempTexCoordsCapacity)){
-					printf("Error loading mesh: Memory allocation failure.\n");
-					freeHelpersWavefrontObj();
-					meshDelete(m);
+					/** Memory allocation failure. **/
+					mdlWavefrontObjFreeHelpers();
+					mdlWavefrontObjFreeReturns();
 					fclose(mdlInfo);
 					return 0;
 				}
@@ -334,27 +346,27 @@ signed char meshLoadWavefrontObj(mesh *m, const char *filePath/**, const signed 
 				char *token = strtok(line+3, " ");
 				float curVal = strtod(token, NULL);
 				if(!pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity)){
-					printf("Error loading mesh: Memory allocation failure.\n");
-					freeHelpersWavefrontObj();
-					meshDelete(m);
+					/** Memory allocation failure. **/
+					mdlWavefrontObjFreeHelpers();
+					mdlWavefrontObjFreeReturns();
 					fclose(mdlInfo);
 					return 0;
 				}
 				token = strtok(NULL, " ");
 				curVal = strtod(token, NULL);
 				if(!pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity)){
-					printf("Error loading mesh: Memory allocation failure.\n");
-					freeHelpersWavefrontObj();
-					meshDelete(m);
+					/** Memory allocation failure. **/
+					mdlWavefrontObjFreeHelpers();
+					mdlWavefrontObjFreeReturns();
 					fclose(mdlInfo);
 					return 0;
 				}
 				token = strtok(NULL, " ");
 				curVal = strtod(token, NULL);
 				if(!pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity)){
-					printf("Error loading mesh: Memory allocation failure.\n");
-					freeHelpersWavefrontObj();
-					meshDelete(m);
+					/** Memory allocation failure. **/
+					mdlWavefrontObjFreeHelpers();
+					mdlWavefrontObjFreeReturns();
 					fclose(mdlInfo);
 					return 0;
 				}
@@ -371,9 +383,6 @@ signed char meshLoadWavefrontObj(mesh *m, const char *filePath/**, const signed 
 					token = strtok(NULL, " /");
 					normalIndex[i] = strtoul(token, NULL, 0);
 					token = strtok(NULL, " /");
-
-					// Reset tempVert member variables
-					vertInit(&tempVert);
 
 					// Create a vertex from the given data
 					// Vertex positional data
@@ -437,22 +446,15 @@ signed char meshLoadWavefrontObj(mesh *m, const char *filePath/**, const signed 
 					// Check if the vertex has already been loaded, and if so add an index
 					signed char foundVertex = 0;
 					size_t j;
-					for(j = 0; j < m->vertexNum; ++j){
-						vertex *checkVert = &m->vertices[j];
+					for(j = 0; j < *vertexNum; ++j){
+						vertex *checkVert = &(*vertices)[j];
 						/** CHECK BONE DATA HERE **/
-						if(checkVert->position.x  == tempVert.position.x  && checkVert->position.y  == tempVert.position.y  && checkVert->position.z == tempVert.position.z &&
-						   checkVert->u           == tempVert.u           && checkVert->v           == tempVert.v           &&
-						   checkVert->normal.x    == tempVert.normal.x    && checkVert->normal.y    == tempVert.normal.y    && checkVert->normal.z   == tempVert.normal.z   &&
-						   checkVert->bIDs[0]     == tempVert.bIDs[0]     && checkVert->bIDs[1]     == tempVert.bIDs[1]     &&
-						   checkVert->bIDs[2]     == tempVert.bIDs[2]     && checkVert->bIDs[3]     == tempVert.bIDs[3]     &&
-						   checkVert->bWeights[0] == tempVert.bWeights[0] && checkVert->bWeights[1] == tempVert.bWeights[1] &&
-						   checkVert->bWeights[2] == tempVert.bWeights[2] && checkVert->bWeights[3] == tempVert.bWeights[3]){
-
+						if(memcmp(checkVert, &tempVert, sizeof(vertex)) == 0){
 							// Resize indices if there's not enough room
-							if(!pushDynamicArray((void **)&m->indices, &j, sizeof(j), &m->indexNum, &indexCapacity)){
-								printf("Error loading mesh: Memory allocation failure. %i\n", indexCapacity);
-								freeHelpersWavefrontObj();
-								meshDelete(m);
+							if(!pushDynamicArray((void **)indices, &j, sizeof(j), indexNum, &indexCapacity)){
+								/** Memory allocation failure. **/
+								mdlWavefrontObjFreeHelpers();
+								mdlWavefrontObjFreeReturns();
 								fclose(mdlInfo);
 								return 0;
 							}
@@ -464,22 +466,23 @@ signed char meshLoadWavefrontObj(mesh *m, const char *filePath/**, const signed 
 					// If the vertex has not yet been loaded, add it to both the vertex vector and the index vector
 					if(!foundVertex){
 						// Resize indices if there's not enough room
-						if(!pushDynamicArray((void **)&m->indices, &m->vertexNum, sizeof(m->vertexNum), &m->indexNum, &indexCapacity) ||
-						   !pushDynamicArray((void **)&m->vertices, &tempVert, sizeof(tempVert), &m->vertexNum, &vertexCapacity)){
-							printf("Error loading mesh: Memory allocation failure.\n");
-							freeHelpersWavefrontObj();
-							meshDelete(m);
+						if(!pushDynamicArray((void **)indices, vertexNum, sizeof(*vertexNum), indexNum, &indexCapacity) ||
+						   !pushDynamicArray((void **)vertices, &tempVert, sizeof(tempVert), vertexNum, &vertexCapacity)){
+							/** Memory allocation failure. **/
+							mdlWavefrontObjFreeHelpers();
+							mdlWavefrontObjFreeReturns();
 							fclose(mdlInfo);
 							return 0;
 						}
-						/**if(generatePhysProperties && m->vertexNum > 1){
-							float temp = m->vertices[m->vertexNum-2].position.x * m->vertices[m->vertexNum-1].position.y -
-							             m->vertices[m->vertexNum-2].position.y * m->vertices[m->vertexNum-1].position.x;
-							m->centroid.x += (m->vertices[m->vertexNum-2].position.x + m->vertices[m->vertexNum-1].position.x)*temp;
-							m->centroid.y += (m->vertices[m->vertexNum-2].position.y + m->vertices[m->vertexNum-1].position.y)*temp;
-							m->centroid.z += (m->vertices[m->vertexNum-2].position.z + m->vertices[m->vertexNum-1].position.z)*temp;
-							m->area += temp;
-							m->mass += DEFAULT_VERTEX_MASS;
+						// Generate physics properties if necessary
+						/**if(generatePhysProperties && *vertexNum > 1){
+							float temp = (*vertices)[(*vertexNum)-2].position.x * (*vertices)[(*vertexNum)-1].position.y -
+							             (*vertices)[(*vertexNum)-2].position.y * (*vertices)[(*vertexNum)-1].position.x;
+							centroid->x += ((*vertices)[(*vertexNum)-2].position.x + (*vertices)[(*vertexNum)-1].position.x)*temp;
+							centroid->y += ((*vertices)[(*vertexNum)-2].position.y + (*vertices)[(*vertexNum)-1].position.y)*temp;
+							centroid->z += ((*vertices)[(*vertexNum)-2].position.z + (*vertices)[(*vertexNum)-1].position.z)*temp;
+							*area += temp;
+							*mass += DEFAULT_VERTEX_MASS;
 						}**/
 					}
 
@@ -490,61 +493,33 @@ signed char meshLoadWavefrontObj(mesh *m, const char *filePath/**, const signed 
 		}
 
 		fclose(mdlInfo);
-		freeHelpersWavefrontObj();
+		mdlWavefrontObjFreeHelpers();
 
 	}else{
 		printf("Error loading model: Couldn't open %s\n", filePath);
-		freeHelpersWavefrontObj();
-		meshDelete(m);
+		mdlWavefrontObjFreeHelpers();
+		mdlWavefrontObjFreeReturns();
 		return 0;
 	}
 
 	/**if(generatePhysProperties){
 		// Final iteration with the last and first vertices.
-		float temp = m->vertices[m->vertexNum-1].position.x * m->vertices[0].position.y -
-		             m->vertices[m->vertexNum-1].position.y * m->vertices[0].position.x;
-		m->centroid.x += (m->vertices[m->vertexNum-1].position.x + m->vertices[0].position.x)*temp;
-		m->centroid.y += (m->vertices[m->vertexNum-1].position.y + m->vertices[0].position.y)*temp;
-		m->centroid.z += (m->vertices[m->vertexNum-1].position.z + m->vertices[0].position.z)*temp;
-		m->area += temp;
-		m->mass += DEFAULT_VERTEX_MASS;
+		float temp = (*vertices)[(*vertexNum)-1].position.x * (*vertices)[0].position.y -
+		             (*vertices)[(*vertexNum)-1].position.y * (*vertices)[0].position.x;
+		centroid->x += ((*vertices)[(*vertexNum)-1].position.x + (*vertices)[0].position.x)*temp;
+		centroid->y += ((*vertices)[(*vertexNum)-1].position.y + (*vertices)[0].position.y)*temp;
+		centroid->z += ((*vertices)[(*vertexNum)-1].position.z + (*vertices)[0].position.z)*temp;
+		*area += temp;
+		*mass += DEFAULT_VERTEX_MASS;
 
 		// Calculate the mesh's final area and center of mass.
-		m->area *= 0.5f;
-		temp = 1.f/(6.f*m->area);
-		m->centroid.x *= temp;
-		m->centroid.y *= temp;
-		m->centroid.z *= temp;
+		*area *= 0.5f;
+		temp = 1.f/(6.f*(*area));
+		centroid->x *= temp;
+		centroid->y *= temp;
+		centroid->z *= temp;
 	}**/
 
 	return 1;
 
-}
-
-size_t meshGetFarthestVertex(const mesh *m, const vec3 *axis){
-	/*
-	** Finds the vertex in mesh that is farthest in
-	** the direction of axis by projecting each
-	** vertex onto the axis.
-	*/
-	/** Generate a world state for each vertex? **/
-	size_t r = 0;
-	float max = vec3Dot(&m->vertices[0].position, axis);
-	for(size_t i = 1; i < m->vertexNum; ++i){
-		float s = vec3Dot(&m->vertices[i].position, axis);
-		if(s > max){
-			max = s;
-			r = i;
-		}
-	}
-	return r;
-}
-
-void meshDelete(mesh *m){
-	if(m->vertices != NULL){
-		free(m->vertices);
-	}
-	if(m->indices != NULL){
-		free(m->indices);
-	}
 }

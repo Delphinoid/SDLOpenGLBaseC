@@ -24,7 +24,7 @@ signed char tLoad(texture *tex, const char *prgPath, const char *filePath){
 	char *fullPath = malloc((pathLen+fileLen+1)*sizeof(char));
 	if(fullPath == NULL){
 		/** Remove printf()s **/
-		printf("Error loading texture: Memory allocation failure.\n");
+		/** Memory allocation failure. **/
 		return 0;
 	}
 	memcpy(fullPath, prgPath, pathLen);
@@ -89,7 +89,7 @@ signed char tLoad(texture *tex, const char *prgPath, const char *filePath){
 
 	tex->name = malloc((fileLen+1)*sizeof(char));
 	if(tex->name == NULL){
-		printf("Error loading texture: Memory allocation failure.\n");
+		/** Memory allocation failure. **/
 		tDelete(tex);
 		return 0;
 	}
@@ -98,6 +98,10 @@ signed char tLoad(texture *tex, const char *prgPath, const char *filePath){
 
 	return 1;
 
+}
+
+signed char tDefault(texture *tex){
+	/** **/
 }
 
 void tDelete(texture *tex){

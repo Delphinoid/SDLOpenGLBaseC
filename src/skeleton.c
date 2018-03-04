@@ -4,16 +4,14 @@
 
 #define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians
 
-#define BONE_START_CAPACITY 1
 #define ANIM_FRAGMENT_START_CAPACITY 1
 
-static signed char sklResizeToFit(skeleton *skl, const size_t boneCapacity){
-	if(skl->boneNum != boneCapacity){
-		skl->bones = realloc(skl->bones, skl->boneNum*sizeof(sklNode));
-		if(skl->bones == NULL){
-			printf("Error loading skeleton: Memory allocation failure.\n");
-			return 0;
-		}
+static signed char sklResizeToFit(skeleton *skl){
+	bone *tempBuffer = realloc(skl->bones, skl->boneNum*sizeof(sklNode));
+	if(tempBuffer == NULL){
+		/** Memory allocation failure. **/
+		sklDelete(skl);
+		return 0;
 	}
 	return 1;
 }
@@ -26,11 +24,9 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 
 	sklInit(skl);
 
-	size_t boneCapacity = BONE_START_CAPACITY;
-
-	skl->bones = malloc(boneCapacity*sizeof(sklNode));
+	skl->bones = malloc(SKL_MAX_BONE_NUM*sizeof(sklNode));
 	if(skl->bones == NULL){
-		printf("Error loading skeleton: Memory allocation failure.\n");
+		/** Memory allocation failure. **/
 		return 0;
 	}
 
@@ -50,7 +46,7 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 	size_t lineLength;
 
 	if(sklInfo != NULL){
-		while(fgets(lineFeed, sizeof(lineFeed), sklInfo)){
+		while(fgets(lineFeed, sizeof(lineFeed), sklInfo) && skl->boneNum < SKL_MAX_BONE_NUM){
 
 			line = lineFeed;
 			++currentLine;
@@ -92,7 +88,7 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 				if(currentCommand == -1){
 					skl->name = malloc((lineLength-4) * sizeof(char));
 					if(skl->name == NULL){
-						printf("Error loading skeleton: Memory allocation failure.\n");
+						/** Memory allocation failure. **/
 						sklDelete(skl);
 						free(fullPath);
 						fclose(sklInfo);
@@ -124,23 +120,10 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 
 				if(token != NULL){
 
-					if(skl->boneNum >= boneCapacity){
-						boneCapacity *= 2;
-						sklNode *tempBuffer = realloc(skl->bones, boneCapacity*sizeof(sklNode));
-						if(tempBuffer == NULL){
-							printf("Error loading skeleton: Memory allocation failure.\n");
-							sklDelete(skl);
-							free(fullPath);
-							fclose(sklInfo);
-							return 0;
-						}
-						skl->bones = tempBuffer;
-					}
-
 					size_t nameLen = strlen(token);
 					skl->bones[skl->boneNum].name = malloc((nameLen+1)*sizeof(char));
 					if(skl->bones[skl->boneNum].name == NULL){
-						printf("Error loading skeleton: Memory allocation failure.\n");
+						/** Memory allocation failure. **/
 						sklDelete(skl);
 						free(fullPath);
 						fclose(sklInfo);
@@ -159,7 +142,7 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 					}
 
 					vec3Set(&skl->bones[skl->boneNum].defaultState.position, data[0][0], data[0][1], data[0][2]);
-					quatSetEuler(&skl->bones[skl->boneNum].defaultState.orientation, data[1][0], data[1][1], data[1][2]);
+					quatSetEuler(&skl->bones[skl->boneNum].defaultState.orientation, data[1][0]*RADIAN_RATIO, data[1][1]*RADIAN_RATIO, data[1][2]*RADIAN_RATIO);
 					vec3Set(&skl->bones[skl->boneNum].defaultState.scale, data[2][0], data[2][1], data[2][2]);
 
 					skl->bones[skl->boneNum].parent = parent;
@@ -196,7 +179,7 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 	if(skl->name == NULL || skl->name[0] == '\0'){
 		skl->name = malloc((fileLen+1)*sizeof(char));
 		if(skl->name == NULL){
-			printf("Error loading skeleton: Memory allocation failure.\n");
+			/** Memory allocation failure. **/
 			sklDelete(skl);
 			return 0;
 		}
@@ -204,16 +187,37 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 		skl->name[fileLen] = '\0';
 	}
 
-	return sklResizeToFit(skl, boneCapacity);
+	return sklResizeToFit(skl);
 
 }
-static size_t sklFindBone(skeleton *skl, const char *name){
-	if(skl != NULL){
-		size_t i;
-		for(i = 0; i < skl->boneNum; ++i){
-			if(skl->bones[i].name != NULL && strcmp(skl->bones[i].name, name) == 0){
-				return i;
-			}
+signed char sklDefault(skeleton *skl){
+	skl->bones = malloc(sizeof(sklNode));
+	if(skl->bones == NULL){
+		/** Memory allocation failure. **/
+		return 0;
+	}
+	skl->bones[0].name = malloc(5*sizeof(char));
+	if(skl->bones[0].name == NULL){
+		/** Memory allocation failure. **/
+		free(skl->bones);
+		return 0;
+	}
+	skl->name = NULL;
+	skl->boneNum = 1;
+	skl->bones[0].name[0] = 'r';
+	skl->bones[0].name[1] = 'o';
+	skl->bones[0].name[2] = 'o';
+	skl->bones[0].name[3] = 't';
+	skl->bones[0].name[4] = '\0';
+	boneInit(&skl->bones[0].defaultState);
+	skl->bones[0].parent = 0;
+	return 1;
+}
+size_t sklFindBone(const skeleton *skl, const char *name){
+	size_t i;
+	for(i = 0; i < skl->boneNum; ++i){
+		if(skl->bones[i].name != NULL && strcmp(skl->bones[i].name, name) == 0){
+			return i;
 		}
 	}
 	return (size_t)-1;
@@ -295,7 +299,7 @@ static void sklafDelete(sklAnimFragment *sklaf){
 	}
 }
 
-static signed char sklaiInit(sklAnimInstance *sklai, const skeleton *skl, sklAnim *anim){
+static signed char sklaiInit(sklAnimInstance *sklai, sklAnim *anim){
 	sklai->animFrags = malloc(ANIM_FRAGMENT_START_CAPACITY * sizeof(sklAnimFragment));
 	if(sklai->animFrags == NULL){
 		/** Memory allocation failure. **/
@@ -306,6 +310,7 @@ static signed char sklaiInit(sklAnimInstance *sklai, const skeleton *skl, sklAni
 		free(sklai->animFrags);
 		return 0;
 	}
+	sklai->timeMod = 1.f;
 	sklai->animFragNum = 1;
 	sklai->animFragCapacity = ANIM_FRAGMENT_START_CAPACITY;
 	//sklai->additive = 1;
@@ -321,7 +326,7 @@ static void sklaiDelete(sklAnimInstance *sklai){
 		free(sklai->animFrags);
 	}
 }
-static signed char sklaiStateCopy(sklAnimInstance *osklai, sklAnimInstance *csklai, const skeleton *oskl, const skeleton *cskl){
+static signed char sklaiStateCopy(sklAnimInstance *osklai, sklAnimInstance *csklai){
 
 	while(csklai->animFragNum > osklai->animFragNum){
 		--csklai->animFragNum;
@@ -378,11 +383,14 @@ static signed char sklaiStateCopy(sklAnimInstance *osklai, sklAnimInstance *cskl
 	}
 	csklai->animFragNum = osklai->animFragNum;
 
+	csklai->timeMod = osklai->timeMod;
 	//csklai->additive = osklai->additive;
 	return 1;
 
 }
-static void sklaiAnimate(sklAnimInstance *sklai, const float elapsedTime){
+void sklaiAnimate(sklAnimInstance *sklai, const float elapsedTime){
+
+	const float elapsedTimeMod = elapsedTime * sklai->timeMod;
 
 	/* Loop through each sklAnimFragment, updating them. */
 	size_t fragmentID = 0;
@@ -403,25 +411,25 @@ static void sklaiAnimate(sklAnimInstance *sklai, const float elapsedTime){
 				}
 			}else{
 				// Advance animator, update the blend and go to the next fragment.
-				animAdvance(&sklai->animFrags[fragmentID].animator, &sklai->animFrags[fragmentID].currentAnim->animData, elapsedTime);
-				sklai->animFrags[fragmentID].animBlendProgress += elapsedTime;
+				animAdvance(&sklai->animFrags[fragmentID].animator, &sklai->animFrags[fragmentID].currentAnim->animData, elapsedTimeMod);
+				sklai->animFrags[fragmentID].animBlendProgress += elapsedTimeMod;
 				++fragmentID;
 			}
 		}else{
 			// Advance animator and exit.
-			animAdvance(&sklai->animFrags[fragmentID].animator, &sklai->animFrags[fragmentID].currentAnim->animData, elapsedTime);
+			animAdvance(&sklai->animFrags[fragmentID].animator, &sklai->animFrags[fragmentID].currentAnim->animData, elapsedTimeMod);
 			break;
 		}
 
 	}
 
 }
-static void sklaiGenerateAnimState(sklAnimInstance *sklai, bone *skeletonState, const size_t boneNum, const float interpT){
+void sklaiGenerateAnimState(sklAnimInstance *sklai, bone *skeletonState, const size_t boneNum, const float interpT){
 
 	size_t i;
 	size_t fragmentID = 0;
 	float animInterpTBlend = 1.f;
-	bone lastState[boneNum];  // Temporarily holds states of bones from previous animation fragments.
+	bone lastState[SKL_MAX_BONE_NUM];  // Temporarily holds states of bones from previous animation fragments.
 
 	/* Loop through each animation fragment in order, blending between them and generating bone states. */
 	while(fragmentID < sklai->animFragNum){
@@ -436,7 +444,7 @@ static void sklaiGenerateAnimState(sklAnimInstance *sklai, bone *skeletonState, 
 			animGetRenderData(&sklai->animFrags[fragmentID].animator, &sklai->animFrags[fragmentID].currentAnim->animData, interpT,
 			                  &startFrame, &endFrame, &animInterpT);
 
-			/* Loop through each bone in the current animation fragment, running interpolation and writing to animState. */
+			/* Loop through each bone in the current animation fragment, running interpolation and writing to skeletonState. */
 			for(i = 0; i < sklai->animFrags[fragmentID].currentAnim->boneNum; ++i){
 				// Only continue if the current bone exists in the skeleton.
 				if(sklai->animFrags[fragmentID].animBoneLookup[i] != (size_t)-1){
@@ -499,11 +507,9 @@ signed char sklaiChangeAnim(sklAnimInstance *sklai, const skeleton *skl, sklAnim
 	return 1;
 }
 
-signed char skliInit(sklInstance *skli, skeleton *skl, const size_t animationCapacity){
-
-	size_t i;
-
+signed char skliInit(sklInstance *skli, const size_t animationCapacity){
 	if(animationCapacity > 0){
+		size_t i;
 		skli->animations = malloc(animationCapacity*sizeof(sklAnimInstance));
 		if(skli->animations == NULL){
 			/** Memory allocation failure. **/
@@ -517,37 +523,16 @@ signed char skliInit(sklInstance *skli, skeleton *skl, const size_t animationCap
 	}else{
 		skli->animations = NULL;
 	}
-
-	if(skl != NULL){
-		/** Remove this NULL check. Also remove it from skliStateCopy. **/
-		skli->customState = malloc(skl->boneNum*sizeof(bone));
-		if(skli->customState == NULL){
-			/** Memory allocation failure. **/
-			free(skli->animations);
-			return 0;
-		}
-		for(i = 0; i < skl->boneNum; ++i){
-			boneInit(&skli->customState[i]);
-		}
-	}else{
-		skli->customState = NULL;
-	}
-
-	skli->skl = skl;
 	skli->timeMod = 1.f;
 	skli->animationNum = 0;
 	skli->animationCapacity = animationCapacity;
-
 	return 1;
 }
 signed char skliLoad(sklInstance *skli, const char *prgPath, const char *filePath){
 
 	/** stateNum is temporary. **/
 
-	skeleton *skl = malloc(sizeof(skeleton));
-	sklLoad(skl, prgPath, filePath);
-
-	skliInit(skli, skl, 1);
+	skliInit(skli, 1);
 
 	sklAnim *skla = malloc(sizeof(sklAnim));
 	skla->name = malloc(5*sizeof(char));
@@ -586,7 +571,7 @@ signed char skliLoad(sklInstance *skli, const char *prgPath, const char *filePat
 	skla->frames[2][1] = tempBoneTop;
 	skla->animData.frameDelays[2] = 3000.f;
 
-	sklaiInit(&skli->animations[0], skl, skla);
+	sklaiInit(&skli->animations[0], skla);
 	skli->animations[0].animFrags[0].animBoneLookup[0] = 0;
 	skli->animations[0].animFrags[0].animBoneLookup[1] = 1;
 	++skli->animationNum;
@@ -639,7 +624,7 @@ signed char skliStateCopy(sklInstance *o, sklInstance *c){
 
 	/* Copy each sklAnimInstance over. */
 	for(i = 0; i < o->animationNum; ++i){
-		if(!sklaiStateCopy(&o->animations[i], &c->animations[i], o->skl, c->skl)){
+		if(!sklaiStateCopy(&o->animations[i], &c->animations[i])){
 			break;
 		}
 	}
@@ -656,28 +641,6 @@ signed char skliStateCopy(sklInstance *o, sklInstance *c){
 	}
 	c->animationNum = o->animationNum;
 
-	if(o->skl != NULL){
-		if(c->skl == NULL || c->skl->boneNum != o->skl->boneNum){
-			/*
-			** We need to allocate more or less memory so that
-			** the memory allocated for both custom states match.
-			*/
-			bone *tempBuffer = malloc(o->skl->boneNum*sizeof(bone));
-			if(tempBuffer == NULL){
-				/** Memory allocation failure. **/
-				return 0;
-			}
-			if(c->customState != NULL){
-				free(c->customState);
-			}
-			c->customState = tempBuffer;
-		}
-		memcpy(c->customState, o->customState, o->skl->boneNum*sizeof(bone));
-	}else{
-		c->customState = NULL;
-	}
-	c->skl = o->skl;
-
 	c->timeMod = o->timeMod;
 	return 1;
 
@@ -688,36 +651,39 @@ void skliAddAnimation(sklInstance *skli, const sklAnim *skla, const size_t frame
 void skliChangeSkeleton(sklInstance *skli, const skeleton *skl){
 	/** Re-calculate bone lookups for all animation fragments. **/
 }
-void skliAnimate(sklInstance *skli, const float elapsedTime){
-	const float elapsedTimeMod = elapsedTime * skli->timeMod;
-	size_t i;
-	for(i = 0; i < skli->animationNum; ++i){
-		sklaiAnimate(&skli->animations[i], elapsedTimeMod);
-	}
-}
-void skliGenerateSkeletonState(sklInstance *skli, bone *skeletonState, const float interpT){
-	size_t i;
-	for(i = 0; i < skli->skl->boneNum; ++i){
-		// Instead of initializing the bone states to unit vectors / quaternions,
-		// we can set them to their accompanied custom states to save doing it later.
-		skeletonState[i] = skli->customState[i];
-	}
-	for(i = 0; i < skli->animationNum; ++i){
-		sklaiGenerateAnimState(&skli->animations[i], skeletonState, skli->skl->boneNum, interpT);
-	}
-}
-void skliGenerateBoneState(const sklInstance *skli, const bone *skeletonState, const skeleton *skl, mat4 *state, const size_t boneID){
+void skliGenerateDefaultState(const skeleton *skl, mat4 *state, const size_t boneID){
 
-	// Apply parent transformations.
+	// Apply parent transformations first if possible.
 	if(boneID != skl->bones[boneID].parent){
 		state[boneID] = state[skl->bones[boneID].parent];
 	}else{
 		mat4Identity(&state[boneID]);
 	}
 
-	// Apply parent transforms first if possible.
-	size_t animBone = sklFindBone(skli->skl, skl->bones[boneID].name);
-	if(animBone < skli->skl->boneNum){
+	// Apply default state transformations.
+	mat4Translate(&state[boneID], skl->bones[boneID].defaultState.position.x,
+	                              skl->bones[boneID].defaultState.position.y,
+	                              skl->bones[boneID].defaultState.position.z);
+	mat4Rotate(&state[boneID], &skl->bones[boneID].defaultState.orientation);
+	mat4Scale(&state[boneID], skl->bones[boneID].defaultState.scale.x,
+	                          skl->bones[boneID].defaultState.scale.y,
+	                          skl->bones[boneID].defaultState.scale.z);
+
+}
+void skliGenerateBoneStateFromLocal(const bone *skeletonState, const skeleton *oskl, const skeleton *mskl, mat4 *state, const size_t boneID){
+
+	// Apply parent transformations first if possible.
+	// This optimization is only relevant if the bones are in local space.
+	if(boneID != mskl->bones[boneID].parent){
+		state[boneID] = state[mskl->bones[boneID].parent];
+	}else{
+		mat4Identity(&state[boneID]);
+	}
+
+	size_t animBone = sklFindBone(oskl, mskl->bones[boneID].name);
+	if(animBone < oskl->boneNum){
+
+		//quat inverseOrientation;
 
 		// Apply animation transformations.
 		mat4Translate(&state[boneID], skeletonState[animBone].position.x,
@@ -728,22 +694,47 @@ void skliGenerateBoneState(const sklInstance *skli, const bone *skeletonState, c
 		                          skeletonState[animBone].scale.y,
 		                          skeletonState[animBone].scale.z);
 
-		// Translate the vertices back by the model's default bone position.
+		// Apply model's negative default state transformations.
+		mat4Translate(&state[boneID], -mskl->bones[boneID].defaultState.position.x,
+		                              -mskl->bones[boneID].defaultState.position.y,
+		                              -mskl->bones[boneID].defaultState.position.z);
+		/** Probably won't keep what's below. **/
+		/*quatInverseR(&mskl->bones[boneID].defaultState.orientation, &inverseOrientation);
+		mat4Rotate(&state[boneID], &inverseOrientation);
+		mat4Scale(&state[boneID], 1.f/mskl->bones[boneID].defaultState.scale.x,
+		                          1.f/mskl->bones[boneID].defaultState.scale.y,
+		                          1.f/mskl->bones[boneID].defaultState.scale.z);*/
+
+		// Apply object's default state transformations.
 		// This makes more sense when diagrammed.
-		mat4Translate(&state[boneID], -skl->bones[boneID].defaultState.position.x,
-		                              -skl->bones[boneID].defaultState.position.y,
-		                              -skl->bones[boneID].defaultState.position.z);
+		mat4Translate(&state[boneID], oskl->bones[animBone].defaultState.position.x,
+		                              oskl->bones[animBone].defaultState.position.y,
+		                              oskl->bones[animBone].defaultState.position.z);
+		mat4Rotate(&state[boneID], &oskl->bones[animBone].defaultState.orientation);
+		/** Probably won't keep what's below. **/
+		mat4Scale(&state[boneID], oskl->bones[animBone].defaultState.scale.x,//*oskl->bones[animBone].defaultState.scale.x,
+		                          oskl->bones[animBone].defaultState.scale.y,//*oskl->bones[animBone].defaultState.scale.y,
+		                          oskl->bones[animBone].defaultState.scale.z);//*oskl->bones[animBone].defaultState.scale.z);
 
 	}
 
-	// Apply default state transformations.
-	mat4Translate(&state[boneID], skli->skl->bones[boneID].defaultState.position.x,
-	                              skli->skl->bones[boneID].defaultState.position.y,
-	                              skli->skl->bones[boneID].defaultState.position.z);
-	mat4Rotate(&state[boneID], &skli->skl->bones[boneID].defaultState.orientation);
-	mat4Scale(&state[boneID], skli->skl->bones[boneID].defaultState.scale.x,
-	                          skli->skl->bones[boneID].defaultState.scale.y,
-	                          skli->skl->bones[boneID].defaultState.scale.z);
+}
+void skliGenerateBoneStateFromGlobal(const bone *skeletonState, const skeleton *oskl, const skeleton *mskl, mat4 *state, const size_t boneID){
+
+	size_t animBone = sklFindBone(oskl, mskl->bones[boneID].name);
+	if(animBone < oskl->boneNum){
+
+		// Apply animation transformations.
+		mat4SetTranslationMatrix(&state[boneID], skeletonState[animBone].position.x,
+		                                         skeletonState[animBone].position.y,
+		                                         skeletonState[animBone].position.z);
+		mat4Rotate(&state[boneID], &skeletonState[animBone].orientation);
+		mat4Scale(&state[boneID], skeletonState[animBone].scale.x,
+		                          skeletonState[animBone].scale.y,
+		                          skeletonState[animBone].scale.z);
+
+	}
+
 
 }
 void skliDelete(sklInstance *skli){
@@ -753,8 +744,5 @@ void skliDelete(sklInstance *skli){
 			sklaiDelete(&skli->animations[i]);
 		}
 		free(skli->animations);
-	}
-	if(skli->customState != NULL){
-		free(skli->customState);
 	}
 }
