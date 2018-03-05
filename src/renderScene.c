@@ -63,17 +63,41 @@ void renderModel(object *obj, const camera *cam, const float interpT, gfxProgram
 			/* Generate the renderable configuration based off the animated skeleton, if possible. */
 			if(obj->renderables[i].mdl->skl != NULL){
 				size_t j;
+				bone identity;
+				boneInit(&identity);
 				if(obj->skl != NULL){
 					// If there is a valid animated skeleton, apply animation transformations.
 					for(j = 0; j < obj->renderables[i].mdl->skl->boneNum; ++j){
-						skliGenerateBoneStateFromGlobal(&gfxPrg->sklAnimationState[0], obj->skl, obj->renderables[i].mdl->skl, &gfxPrg->sklTransformBuffer[0], j);
-						glUniformMatrix4fv(gfxPrg->boneArrayID[j], 1, GL_FALSE, &gfxPrg->sklTransformBuffer[j].m[0][0]);
+						size_t animBone = sklFindBone(obj->skl, obj->renderables[i].mdl->skl->bones[j].name);
+						if(animBone < obj->skl->boneNum){
+							// If the animated bone is in the model, pass in its animation transforms.
+							glUniform3f(gfxPrg->bonePositionArrayID[j], gfxPrg->sklAnimationState[animBone].position.x,
+							                                            gfxPrg->sklAnimationState[animBone].position.y,
+							                                            gfxPrg->sklAnimationState[animBone].position.z);
+							glUniform4f(gfxPrg->boneOrientationArrayID[j], gfxPrg->sklAnimationState[animBone].orientation.v.x,
+							                                               gfxPrg->sklAnimationState[animBone].orientation.v.y,
+							                                               gfxPrg->sklAnimationState[animBone].orientation.v.z,
+							                                               gfxPrg->sklAnimationState[animBone].orientation.w);
+							glUniform3f(gfxPrg->boneScaleArrayID[j], gfxPrg->sklAnimationState[animBone].scale.x,
+							                                         gfxPrg->sklAnimationState[animBone].scale.y,
+							                                         gfxPrg->sklAnimationState[animBone].scale.z);
+						}else{
+							// Otherwise pass in an identity bone.
+							glUniform3f(gfxPrg->bonePositionArrayID[j], identity.position.x, identity.position.y, identity.position.z);
+							glUniform4f(gfxPrg->boneOrientationArrayID[j], identity.orientation.v.x, identity.orientation.v.y, identity.orientation.v.z, identity.orientation.w);
+							glUniform3f(gfxPrg->boneScaleArrayID[j], identity.scale.x, identity.scale.y, identity.scale.z);
+						}
+						//skliGenerateBoneStateFromGlobal(&gfxPrg->sklAnimationState[0], obj->skl, obj->renderables[i].mdl->skl, &gfxPrg->sklTransformBuffer[0], j);
+						//glUniformMatrix4fv(gfxPrg->boneArrayID[j], 1, GL_FALSE, &gfxPrg->sklTransformBuffer[j].m[0][0]);
 					}
 				}else{
-					// If there is no animated skeleton, only apply the model's skeleton's default state transformations.
+					// If there is no animated skeleton, pass in some identity bones.
 					for(j = 0; j < obj->renderables[i].mdl->skl->boneNum; ++j){
-						skliGenerateDefaultState(obj->renderables[i].mdl->skl, &gfxPrg->sklTransformBuffer[0], j);
-						glUniformMatrix4fv(gfxPrg->boneArrayID[j], 1, GL_FALSE, &gfxPrg->sklTransformBuffer[j].m[0][0]);
+						glUniform3f(gfxPrg->bonePositionArrayID[j], identity.position.x, identity.position.y, identity.position.z);
+						glUniform4f(gfxPrg->boneOrientationArrayID[j], identity.orientation.v.x, identity.orientation.v.y, identity.orientation.v.z, identity.orientation.w);
+						glUniform3f(gfxPrg->boneScaleArrayID[j], identity.scale.x, identity.scale.y, identity.scale.z);
+						//skliGenerateDefaultState(obj->renderables[i].mdl->skl, &gfxPrg->sklTransformBuffer[0], j);
+						//glUniformMatrix4fv(gfxPrg->boneArrayID[j], 1, GL_FALSE, &gfxPrg->sklTransformBuffer[j].m[0][0]);
 					}
 				}
 

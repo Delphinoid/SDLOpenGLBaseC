@@ -33,15 +33,14 @@ typedef struct {
 	// Per-instance uniforms
 	GLuint mvpMatrixID;
 	GLuint textureFragmentID;
-	GLuint boneArrayID[SKL_MAX_BONE_NUM];
+	GLuint bonePositionArrayID[SKL_MAX_BONE_NUM];
+	GLuint boneOrientationArrayID[SKL_MAX_BONE_NUM];
+	GLuint boneScaleArrayID[SKL_MAX_BONE_NUM];
 	GLuint alphaID;
 
 	// Uniform buffers
 	vertex sprVertexBatchBuffer[SPR_MAX_BATCH_SIZE];  // An array of vertices used for batch rendering sprites.
-	bone sklAnimationState[SKL_MAX_BONE_NUM];  // Stores the configuration of each bone before converting it to matrix form.
-	mat4 sklTransformBuffer[SKL_MAX_BONE_NUM];  // Stores a matrix transformation for each bone before it is fed to the shader.
-	                                            // Just passing in bones would force the shader to recalculate matrices for a
-	                                            // bone every single time it's used by a vertex.
+	bone sklAnimationState[SKL_MAX_BONE_NUM];         // Stores the object's animation state.
 
 	// Texture samplers
 	GLuint textureSamplerArrayID[GFX_MAX_TEX_SAMPLER_NUM];

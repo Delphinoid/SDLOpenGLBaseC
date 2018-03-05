@@ -220,13 +220,19 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 
 		char num[LTOSTR_MAX_LENGTH];
 		const size_t numLen = ltostr(i, &num[0]);
-		char uniformString[11+LTOSTR_MAX_LENGTH];
+		char uniformString[10+LTOSTR_MAX_LENGTH+13];  // LTOSTR_MAX_LENGTH includes NULL terminator
 
-		memcpy(&uniformString[0], "boneArray[", 10);
-		memcpy(&uniformString[10], num, numLen);
-		uniformString[10+numLen] = ']';
-		uniformString[10+numLen+1] = '\0';
-		gfxPrg->boneArrayID[i] = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);
+		memcpy(&uniformString[0], "boneArray[", 10*sizeof(char));
+		memcpy(&uniformString[10], num, numLen*sizeof(char));
+
+		memcpy(&uniformString[10+numLen], "].position\0", 11*sizeof(char));
+		gfxPrg->bonePositionArrayID[i] = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);
+
+		memcpy(&uniformString[10+numLen], "].orientation\0", 14*sizeof(char));
+		gfxPrg->boneOrientationArrayID[i] = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);
+
+		memcpy(&uniformString[10+numLen], "].scale\0", 8*sizeof(char));
+		gfxPrg->boneScaleArrayID[i] = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);
 
 	}
 
@@ -235,7 +241,7 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 
 		char num[LTOSTR_MAX_LENGTH];
 		const size_t numLen = ltostr(i, &num[0]);
-		char uniformString[11+LTOSTR_MAX_LENGTH];
+		char uniformString[11+LTOSTR_MAX_LENGTH];  // LTOSTR_MAX_LENGTH includes NULL terminator
 
 		memcpy(&uniformString[0], "textureSampler[", 15);
 		memcpy(&uniformString[15], num, numLen);

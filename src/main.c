@@ -89,7 +89,7 @@ int main(int argc, char *argv[]){
 	objGetState(&gameStateManager, tempID, 0)->configuration.position.value.y = 0.5f;
 	vec3SetS(&objGetState(&gameStateManager, tempID, 0)->configuration.scale.value, 0.15f);
 	quat changeRotation;
-	quatSetEuler(&changeRotation, 45.f, 45.f, 0.f);
+	quatSetEuler(&changeRotation, 45.f*RADIAN_RATIO, 45.f*RADIAN_RATIO, 0.f);
 	quatMultQByQ2(&changeRotation, &objGetState(&gameStateManager, tempID, 0)->configuration.orientation.value);
 	objGetState(&gameStateManager, tempID, 0)->configuration.alpha.value = 0.5f;
 	objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
