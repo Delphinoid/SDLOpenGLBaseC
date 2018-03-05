@@ -24,6 +24,7 @@ typedef struct {
 	/** Not happy about storing the view matrix here. **/
 	mat4 viewMatrix;
 	mat4 projectionMatrix;
+	mat4 viewProjectionMatrix;
 	scene **targetScene;
 	unsigned char flags;
 } camera;
@@ -35,6 +36,7 @@ void camResetInterpolation(void *cam);
 void camCalculateUp(camera *cam);
 void camUpdateViewMatrix(camera *cam, const float interpT);
 void camUpdateProjectionMatrix(camera *cam, const unsigned char aspectRatioX, const unsigned char aspectRatioY, const float interpT);
+void camUpdateViewProjectionMatrix(camera *cam);
 void camDelete(void *cam);
 
 /**void camMoveX(camera *cam, const float x);

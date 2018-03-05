@@ -15,12 +15,12 @@ typedef struct {
 
 	char *name;
 	/** Store model matrix here, update only when changed? **/
-	rndrConfig configuration;  // The object's global space configuration.
+	rndrConfig tempRndrConfig;  // The object's global space configuration.
 
 	skeleton *skl;              // The object's animation skeleton.
 	sklInstance animationData;  // An array of skeletal animations.
 
-	bone *customState;       // Array of custom bone transformations.
+	bone *configuration;     // Array of custom bone transformations.
 	bone *skeletonState[2];  // The local skeleton states from the previous and last updates.
 
 	/** Make part of renderables? **/
@@ -44,7 +44,8 @@ signed char objInitSkeleton(object *obj, skeleton *skl);
 signed char objNewRenderable(object *obj);
 signed char objDeleteRenderable(object *obj, size_t id);
 
-void objUpdate(object *obj, const float elapsedTime);
+void objUpdate(object *obj, const camera *cam, const float elapsedTime);
 signed char objRenderMethod(object *obj, const float interpT);
+void objGenerateSprite(const object *obj, const size_t rndr, const float interpT, const float *texFrag, vertex *vertices);
 
 #endif

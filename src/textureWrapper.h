@@ -10,6 +10,7 @@ typedef struct {
 	float x, y, w, h;
 } twBounds;
 
+/** Optimize subframes. **/
 // Contains details describing a single image
 typedef struct {
 	texture *baseTexture;     // The actual image

@@ -18,7 +18,7 @@ layout(location = 3) in ivec4 vertexBoneIDs;
 layout(location = 4) in vec4  vertexBoneWeights;
 
 // Per-instance data (same as per-call for now since we're not using instancing).
-uniform mat4 mvpMatrix;
+uniform mat4 vpMatrix;
 uniform vec4 textureFragment;
 uniform bone boneArray[SKL_MAX_BONE_NUM];
 
@@ -64,45 +64,39 @@ void main(){
 	// Apply each bone transformation (array indices must be const, so no for loops).
 	if(vertexBoneIDs[0] >= 0 && vertexBoneIDs[0] < SKL_MAX_BONE_NUM && vertexBoneWeights[0] != 0){
 		// These should be weighted!
+		vertex *= boneArray[vertexBoneIDs[0]].scale;
 		quatRotateVec3(boneArray[vertexBoneIDs[0]].orientation, vertex);
 		vertex += boneArray[vertexBoneIDs[0]].position;
-		vertex *= boneArray[vertexBoneIDs[0]].scale;
 	}
 	if(vertexBoneIDs[1] >= 0 && vertexBoneIDs[1] < SKL_MAX_BONE_NUM && vertexBoneWeights[1] != 0){
 		// These should be weighted!
+		vertex *= boneArray[vertexBoneIDs[1]].scale;
 		quatRotateVec3(boneArray[vertexBoneIDs[1]].orientation, vertex);
 		vertex += boneArray[vertexBoneIDs[1]].position;
-		vertex *= boneArray[vertexBoneIDs[1]].scale;
 	}
 	if(vertexBoneIDs[2] >= 0 && vertexBoneIDs[2] < SKL_MAX_BONE_NUM && vertexBoneWeights[2] != 0){
 		// These should be weighted!
+		vertex *= boneArray[vertexBoneIDs[2]].scale;
 		quatRotateVec3(boneArray[vertexBoneIDs[2]].orientation, vertex);
 		vertex += boneArray[vertexBoneIDs[2]].position;
-		vertex *= boneArray[vertexBoneIDs[2]].scale;
 	}
 	if(vertexBoneIDs[3] >= 0 && vertexBoneIDs[3] < SKL_MAX_BONE_NUM && vertexBoneWeights[3] != 0){
 		// These should be weighted!
+		vertex *= boneArray[vertexBoneIDs[3]].scale;
 		quatRotateVec3(boneArray[vertexBoneIDs[3]].orientation, vertex);
 		vertex += boneArray[vertexBoneIDs[3]].position;
-		vertex *= boneArray[vertexBoneIDs[3]].scale;
 	}
 	
 	// Finally, apply it all to the vertex position.
-	gl_Position = mvpMatrix * vec4(vertex, 1.0);
+	gl_Position = vpMatrix * vec4(vertex, 1.0);
 	
 	// Get the width and height of the texture.
 	ivec2 textureDimensions = textureSize(textureSampler0, 0);
 	
 	// Calculate UVs for the current vertex based on the texture dimensions.
-	if(textureFragment[0] != 0.0 || textureFragment[1] != 0.0 ||
-	                                textureFragment[2] != textureDimensions.x ||
-	                                textureFragment[3] != textureDimensions.y){
-
-		// You can remove this if statement and just keep the following two
-		// lines, but it may be slightly slower in very specific situations.
-		UV.x = ((vertexUV.x * textureFragment[2]) + textureFragment[0]) / textureDimensions.x;
-		UV.y = ((vertexUV.y * textureFragment[3]) + textureFragment[1]) / textureDimensions.y;  // Flip the y dimension so the image isn't upside down.
-
+	if(textureFragment[0] != 0.0 || textureFragment[1] != 0.0 || textureFragment[2] != 1.0 || textureFragment[3] != 1.0){
+		UV.x = vertexUV.x * textureFragment[2] + textureFragment[0];
+		UV.y = vertexUV.y * textureFragment[3] + textureFragment[1];
 	}else{
 		// Mostly used for sprites, since the offset calculations are done on the CPU.
 		UV.x = vertexUV.x;

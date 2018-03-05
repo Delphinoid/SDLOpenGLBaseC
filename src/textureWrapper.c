@@ -29,7 +29,12 @@ static signed char twfAddSubframe(twFrame *twf, const twBounds *sf, size_t *subf
 			return 0;
 		}
 	}
-	twf->subframes[twf->subframeNum++] = *sf;
+	// Divide each property by the texture width / height to save doing it later on.
+	twf->subframes[twf->subframeNum].x = sf->x / twf->baseTexture->width;
+	twf->subframes[twf->subframeNum].y = sf->y / twf->baseTexture->height;
+	twf->subframes[twf->subframeNum].w = sf->w / twf->baseTexture->width;
+	twf->subframes[twf->subframeNum].h = sf->h / twf->baseTexture->height;
+	++twf->subframeNum;
 	return 1;
 }
 
@@ -43,8 +48,8 @@ static signed char twfAddDefaultSubframe(twFrame *twf, const size_t subframeCapa
 	}
 	twf->subframes[twf->subframeNum].x = 0.f;
 	twf->subframes[twf->subframeNum].y = 0.f;
-	twf->subframes[twf->subframeNum].w = twf->baseTexture->width;
-	twf->subframes[twf->subframeNum].h = twf->baseTexture->height;
+	twf->subframes[twf->subframeNum].w = 1.f;
+	twf->subframes[twf->subframeNum].h = 1.f;
 	++twf->subframeNum;
 	return 1;
 }

@@ -28,7 +28,7 @@ typedef struct {
 	interpQuat targetOrientation;  // Target orientation, used for target billboards.
 	interpVec3 scale;              // Scale of the object.
 	interpFloat alpha;             // A value to multiply against the alpha values of the pixels.
-	/** Sprite should not be necessary anymore. **/
+	/** Sprite should not be necessary anymore. Maybe check the model's name? **/
 	unsigned char sprite;
 	unsigned char flags;
 } rndrConfig;

@@ -2,7 +2,7 @@
 
 signed char objInit(void *obj){
 	((object *)obj)->skl = NULL;
-	((object *)obj)->customState = NULL;
+	((object *)obj)->configuration = NULL;
 	((object *)obj)->skeletonState[0] = NULL;
 	((object *)obj)->skeletonState[1] = NULL;
 	((object *)obj)->physicsSimulate = 0;
@@ -16,7 +16,7 @@ signed char objInit(void *obj){
 
 signed char objNew(void *obj){
 	((object *)obj)->name = NULL;
-	rndrConfigInit(&((object *)obj)->configuration);
+	rndrConfigInit(&((object *)obj)->tempRndrConfig);
 	return objInit(obj);
 }
 
@@ -24,7 +24,7 @@ signed char objNew(void *obj){
 signed char objStateCopy(void *o, void *c){
 
 	/* Copy configuration. */
-	rndrConfigStateCopy(&((object *)o)->configuration, &((object *)c)->configuration);
+	rndrConfigStateCopy(&((object *)o)->tempRndrConfig, &((object *)c)->tempRndrConfig);
 
 	/* Resize the skeleton state arrays, if necessary, and copy everything over. */
 	if(((object *)o)->skl != NULL){
@@ -34,25 +34,28 @@ signed char objStateCopy(void *o, void *c){
 		if(((object *)c)->skl == NULL || ((object *)c)->skl->boneNum != ((object *)o)->skl->boneNum){
 			// We need to allocate more or less memory so that
 			// the memory allocated for both custom states match.
+			physRigidBody *tempBuffer4;
+			bone *tempBuffer3;
+			bone *tempBuffer2;
 			bone *tempBuffer1 = malloc(arraySizeS);
 			if(tempBuffer1 == NULL){
 				/** Memory allocation failure. **/
 				return 0;
 			}
-			bone *tempBuffer2 = malloc(arraySizeS);
+			tempBuffer2 = malloc(arraySizeS);
 			if(tempBuffer2 == NULL){
 				/** Memory allocation failure. **/
 				free(tempBuffer1);
 				return 0;
 			}
-			bone *tempBuffer3 = malloc(arraySizeS);
+			tempBuffer3 = malloc(arraySizeS);
 			if(tempBuffer3 == NULL){
 				/** Memory allocation failure. **/
 				free(tempBuffer2);
 				free(tempBuffer1);
 				return 0;
 			}
-			physRigidBody *tempBuffer4 = malloc(arraySizeP);
+			tempBuffer4 = malloc(arraySizeP);
 			if(tempBuffer4 == NULL){
 				/** Memory allocation failure. **/
 				free(tempBuffer3);
@@ -60,8 +63,8 @@ signed char objStateCopy(void *o, void *c){
 				free(tempBuffer1);
 				return 0;
 			}
-			if(((object *)c)->customState != NULL){
-				free(((object *)c)->customState);
+			if(((object *)c)->configuration != NULL){
+				free(((object *)c)->configuration);
 			}
 			if(((object *)c)->skeletonState[0] != NULL){
 				free(((object *)c)->skeletonState[0]);
@@ -72,17 +75,17 @@ signed char objStateCopy(void *o, void *c){
 			if(((object *)c)->physicsState != NULL){
 				free(((object *)c)->physicsState);
 			}
-			((object *)c)->customState      = tempBuffer1;
+			((object *)c)->configuration      = tempBuffer1;
 			((object *)c)->skeletonState[0] = tempBuffer2;
 			((object *)c)->skeletonState[1] = tempBuffer3;
 			((object *)c)->physicsState     = tempBuffer4;
 		}
-		memcpy(((object *)c)->customState,      ((object *)o)->customState,      arraySizeS);
+		memcpy(((object *)c)->configuration,      ((object *)o)->configuration,      arraySizeS);
 		memcpy(((object *)c)->skeletonState[0], ((object *)o)->skeletonState[0], arraySizeS);
 		memcpy(((object *)c)->skeletonState[1], ((object *)o)->skeletonState[1], arraySizeS);
 		memcpy(((object *)c)->physicsState,     ((object *)o)->physicsState,     arraySizeP);
 	}else{
-		((object *)c)->customState      = NULL;
+		((object *)c)->configuration      = NULL;
 		((object *)c)->skeletonState[0] = NULL;
 		((object *)c)->skeletonState[1] = NULL;
 		((object *)c)->physicsState     = NULL;
@@ -111,15 +114,15 @@ signed char objStateCopy(void *o, void *c){
 }
 
 void objResetInterpolation(void *obj){
-	rndrConfigResetInterpolation(&((object *)obj)->configuration);
+	rndrConfigResetInterpolation(&((object *)obj)->tempRndrConfig);
 }
 
 void objDelete(void *obj){
 	if(((object *)obj)->name != NULL){
 		free(((object *)obj)->name);
 	}
-	if(((object *)obj)->customState != NULL){
-		free(((object *)obj)->customState);
+	if(((object *)obj)->configuration != NULL){
+		free(((object *)obj)->configuration);
 	}
 	if(((object *)obj)->skeletonState[0] != NULL){
 		free(((object *)obj)->skeletonState[0]);
@@ -187,25 +190,28 @@ signed char objInitSkeleton(object *obj, skeleton *skl){
 			size_t i;
 			size_t arraySizeS = skl->boneNum*sizeof(bone);
 			size_t arraySizeP = skl->boneNum*sizeof(physRigidBody);
+			physRigidBody *tempBuffer4;
+			bone *tempBuffer3;
+			bone *tempBuffer2;
 			bone *tempBuffer1 = malloc(arraySizeS);
 			if(tempBuffer1 == NULL){
 				/** Memory allocation failure. **/
 				return 0;
 			}
-			bone *tempBuffer2 = malloc(arraySizeS);
+			tempBuffer2 = malloc(arraySizeS);
 			if(tempBuffer2 == NULL){
 				/** Memory allocation failure. **/
 				free(tempBuffer1);
 				return 0;
 			}
-			bone *tempBuffer3 = malloc(arraySizeS);
+			tempBuffer3 = malloc(arraySizeS);
 			if(tempBuffer3 == NULL){
 				/** Memory allocation failure. **/
 				free(tempBuffer2);
 				free(tempBuffer1);
 				return 0;
 			}
-			physRigidBody *tempBuffer4 = malloc(arraySizeP);
+			tempBuffer4 = malloc(arraySizeP);
 			if(tempBuffer3 == NULL){
 				/** Memory allocation failure. **/
 				free(tempBuffer3);
@@ -214,12 +220,12 @@ signed char objInitSkeleton(object *obj, skeleton *skl){
 				return 0;
 			}
 			obj->skl = skl;
-			obj->customState      = tempBuffer1;
+			obj->configuration      = tempBuffer1;
 			obj->skeletonState[0] = tempBuffer2;
 			obj->skeletonState[1] = tempBuffer3;
 			obj->physicsState     = tempBuffer4;
 			for(i = 0; i < skl->boneNum; ++i){
-				boneInit(&obj->customState[i]);
+				boneInit(&obj->configuration[i]);
 			}
 		}else{
 			/** Reallocate everything for the new skeleton. **/
@@ -228,7 +234,7 @@ signed char objInitSkeleton(object *obj, skeleton *skl){
 	return 1;
 }
 
-void objUpdate(object *obj, const float elapsedTime){
+void objUpdate(object *obj, const camera *cam, const float elapsedTime){
 
 	size_t i;
 
@@ -244,13 +250,13 @@ void objUpdate(object *obj, const float elapsedTime){
 	// Instead of initializing the bone states to unit vectors / quaternions,
 	// we can set them to their accompanied custom states to save doing it later.
 	for(i = 0; i < obj->skl->boneNum; ++i){
-		obj->skeletonState[0][i] = obj->customState[i];
+		obj->skeletonState[0][i] = obj->configuration[i];
 	}
 
 	// Using each animation, generate a new state for each bone.
 	for(i = 0; i < obj->animationData.animationNum; ++i){
 		sklaiAnimate(&obj->animationData.animations[i], elapsedTimeMod);
-		sklaiGenerateAnimState(&obj->animationData.animations[i], obj->skeletonState[0], obj->skl->boneNum, 1.f);
+		sklaiGenerateAnimState(&obj->animationData.animations[i], obj->skeletonState[0], obj->configuration, obj->skl->boneNum, 1.f);
 	}
 
 
@@ -262,12 +268,77 @@ void objUpdate(object *obj, const float elapsedTime){
 		*** merging bones and physics bodies or something weird like that.
 		**/
 		// Transform bones from local to global space.
-		boneTransformAppend(&obj->skl->bones[i].defaultState, &obj->skeletonState[0][i], &obj->skeletonState[0][i]);
 		//vec3AddVToV(&obj->skeletonState[0][i].position, &obj->skl->bones[i].defaultState.position);
+		boneTransformAppend(&obj->skl->bones[i].defaultState, &obj->skeletonState[0][i], &obj->skeletonState[0][i]);
 		vec3SubVFromV1(&obj->skeletonState[0][i].position, &obj->renderables[0].mdl->skl->bones[i].defaultState.position);
+
 		if(i != obj->skl->bones[i].parent){
 			boneTransformAppend(&obj->skeletonState[0][obj->skl->bones[i].parent], &obj->skeletonState[0][i], &obj->skeletonState[0][i]);
+
+		// Apply billboarding to root bones if necessary.
+		}else if((obj->tempRndrConfig.flags & (RNDR_BILLBOARD_X | RNDR_BILLBOARD_Y | RNDR_BILLBOARD_Z)) > 0){
+            //
 		}
+
+			// If any of the flags apart from RNDR_BILLBOARD_TARGET are set, continue.
+			/**mat4 billboardRotation;
+			if((rc->flags & RNDR_BILLBOARD_SPRITE) > 0){
+				// Use a less accurate but faster method for billboarding.
+				vec3 right, up, forward;
+				// Use the camera's X, Y and Z axes for cheap sprite billboarding.
+				vec3Set(&right,   cam->viewMatrix.m[0][0], cam->viewMatrix.m[0][1], cam->viewMatrix.m[0][2]);
+				vec3Set(&up,      cam->viewMatrix.m[1][0], cam->viewMatrix.m[1][1], cam->viewMatrix.m[1][2]);
+				vec3Set(&forward, cam->viewMatrix.m[2][0], cam->viewMatrix.m[2][1], cam->viewMatrix.m[2][2]);
+				// Lock certain axes if needed.
+				if((rc->flags & RNDR_BILLBOARD_X) == 0){
+					right.y   = 0.f;
+					up.y      = 1.f;
+					forward.y = 0.f;
+				}
+				if((rc->flags & RNDR_BILLBOARD_Y) == 0){
+					right.x   = 1.f;
+					up.x      = 0.f;
+					forward.x = 0.f;
+				}
+				if((rc->flags & RNDR_BILLBOARD_Z) == 0){
+					right.z   = 0.f;
+					up.z      = 0.f;
+					forward.z = 1.f;
+				}
+				billboardRotation.m[0][0] = right.x; billboardRotation.m[0][1] = up.x; billboardRotation.m[0][2] = forward.x; billboardRotation.m[0][3] = 0.f;
+				billboardRotation.m[1][0] = right.y; billboardRotation.m[1][1] = up.y; billboardRotation.m[1][2] = forward.y; billboardRotation.m[1][3] = 0.f;
+				billboardRotation.m[2][0] = right.z; billboardRotation.m[2][1] = up.z; billboardRotation.m[2][2] = forward.z; billboardRotation.m[2][3] = 0.f;
+				billboardRotation.m[3][0] = 0.f;     billboardRotation.m[3][1] = 0.f;  billboardRotation.m[3][2] = 0.f;       billboardRotation.m[3][3] = 1.f;
+			}else{
+				vec3 eye, target, up;
+				if((rc->flags & RNDR_BILLBOARD_TARGET) > 0){
+					eye = rc->targetPosition.render;
+					target = rc->position.render;
+					vec3Set(&up, 0.f, 1.f, 0.f);
+					quatRotateVec3(&rc->targetOrientation.render, &up);
+				}else if((rc->flags & RNDR_BILLBOARD_TARGET_CAMERA) > 0){
+					eye = cam->position.render;
+					target = rc->position.render;
+					up = cam->up.render;
+				}else{
+					eye = cam->position.render;
+					target = cam->targetPosition.render;
+					up = cam->up.render;
+				}
+				// Lock certain axes if needed.
+				if((rc->flags & RNDR_BILLBOARD_X) == 0){
+					target.y = eye.y;
+				}
+				if((rc->flags & RNDR_BILLBOARD_Y) == 0){
+					target.x = eye.x;
+				}
+				if((rc->flags & RNDR_BILLBOARD_Z) == 0){
+					vec3Set(&up, 0.f, 1.f, 0.f);
+				}
+				mat4RotateToFace(&billboardRotation, &eye, &target, &up);
+			}
+			mat4MultMByM2(&billboardRotation, transformMatrix);  // Apply billboard rotation
+		}**/
 
 		// Only bodies that are not being simulated are affected by skeletal animations.
 		if(obj->physicsSimulate && (obj->physicsState[i].flags & PHYSICS_BODY_SIMULATE) == 0){
@@ -279,24 +350,6 @@ void objUpdate(object *obj, const float elapsedTime){
 
 	}
 
-			/*// Apply the bone's change in position to the physics object.
-			obj->physicsData.bodies[i].position.x += obj->skeletonState[0][i].position.x - obj->skeletonState[1][i].position.x;
-			obj->physicsData.bodies[i].position.y += obj->skeletonState[0][i].position.y - obj->skeletonState[1][i].position.y;
-			obj->physicsData.bodies[i].position.z += obj->skeletonState[0][i].position.z - obj->skeletonState[1][i].position.z;
-			// Apply the bone's change in orientation to the physics object.
-			quatDifference(&obj->skeletonState[1][i].orientation, &obj->skeletonState[0][i].orientation, &obj->physicsData.bodies[i].orientation);*/
-
-			/*// Apply the bone's change in position to the physics object.
-			vec3SubVFromVR(&obj->skeletonState[0][i].position, &obj->skeletonState[1][i].position, &tempVec3);
-			physBodyAddLinearVelocity(&obj->physicsData.bodies[i], &tempVec3);
-			// Apply the bone's change in orientation to the physics object.
-			quatDifference(&obj->skeletonState[1][i].orientation, &obj->skeletonState[0][i].orientation, &tempQuat);
-			quatAxisAngleFast(&tempQuat, &tempFloat, &tempVec3.x, &tempVec3.y, &tempVec3.z);
-			physBodyAddAngularVelocity(&obj->physicsData.bodies[i], tempFloat, tempVec3.x, tempVec3.y, tempVec3.z);*/
-		//}
-
-	//}
-
 
 	/* Update each of the object's texture wrappers. */
 	for(i = 0; i < obj->renderableNum; ++i){
@@ -307,11 +360,11 @@ void objUpdate(object *obj, const float elapsedTime){
 
 signed char objRenderMethod(object *obj, const float interpT){
 	// Update alpha.
-	iFloatUpdate(&obj->configuration.alpha, interpT);
-	if(obj->configuration.alpha.render > 0.f){
+	iFloatUpdate(&obj->tempRndrConfig.alpha, interpT);
+	if(obj->tempRndrConfig.alpha.render > 0.f){
 		size_t i;
 		for(i = 0; i < obj->renderableNum; ++i){
-			if(obj->configuration.alpha.render < 1.f || twiContainsTranslucency(&obj->renderables[i].twi)){
+			if(obj->tempRndrConfig.alpha.render < 1.f || twiContainsTranslucency(&obj->renderables[i].twi)){
 				// The model contains translucency.
 				return 1;
 			}
@@ -322,4 +375,109 @@ signed char objRenderMethod(object *obj, const float interpT){
 	}
 	// The model is fully transparent.
 	return 2;
+}
+
+void objGenerateSprite(const object *obj, const size_t rndr, const float interpT, const float *texFrag, vertex *vertices){
+
+	/* Generate the base sprite. */
+	const float left   = -0.5f - obj->tempRndrConfig.pivot.render.x;
+	const float top    = -0.5f - obj->tempRndrConfig.pivot.render.y;
+	const float right  = 0.5f - obj->tempRndrConfig.pivot.render.x;
+	const float bottom = 0.5f - obj->tempRndrConfig.pivot.render.y;
+	const float z      = -obj->tempRndrConfig.pivot.render.z;
+	bone transform;
+
+	// Create the top left vertex.
+	vertices[0].position.x = left;
+	vertices[0].position.y = top;
+	vertices[0].position.z = z;
+	vertices[0].u = 0.f;
+	vertices[0].v = 0.f;
+	vertices[0].normal.x = 0.f;
+	vertices[0].normal.y = 0.f;
+	vertices[0].normal.z = 0.f;
+	vertices[0].bIDs[0] = -1;
+	vertices[0].bIDs[1] = -1;
+	vertices[0].bIDs[2] = -1;
+	vertices[0].bIDs[3] = -1;
+	vertices[0].bWeights[0] = 0.f;
+	vertices[0].bWeights[1] = 0.f;
+	vertices[0].bWeights[2] = 0.f;
+	vertices[0].bWeights[3] = 0.f;
+
+	// Create the top right vertex.
+	vertices[1].position.x = right;
+	vertices[1].position.y = top;
+	vertices[1].position.z = z;
+	vertices[1].u = 1.f;
+	vertices[1].v = 0.f;
+	vertices[1].normal.x = 0.f;
+	vertices[1].normal.y = 0.f;
+	vertices[1].normal.z = 0.f;
+	vertices[1].bIDs[0] = -1;
+	vertices[1].bIDs[1] = -1;
+	vertices[1].bIDs[2] = -1;
+	vertices[1].bIDs[3] = -1;
+	vertices[1].bWeights[0] = 0.f;
+	vertices[1].bWeights[1] = 0.f;
+	vertices[1].bWeights[2] = 0.f;
+	vertices[1].bWeights[3] = 0.f;
+
+	// Create the bottom left vertex.
+	vertices[2].position.x = left;
+	vertices[2].position.y = bottom;
+	vertices[2].position.z = z;
+	vertices[2].u = 0.f;
+	vertices[2].v = -1.f;  // Flip the y dimension so the image isn't upside down.
+	vertices[2].normal.x = 0.f;
+	vertices[2].normal.y = 0.f;
+	vertices[2].normal.z = 0.f;
+	vertices[2].bIDs[0] = -1;
+	vertices[2].bIDs[1] = -1;
+	vertices[2].bIDs[2] = -1;
+	vertices[2].bIDs[3] = -1;
+	vertices[2].bWeights[0] = 0.f;
+	vertices[2].bWeights[1] = 0.f;
+	vertices[2].bWeights[2] = 0.f;
+	vertices[2].bWeights[3] = 0.f;
+
+	// Create the bottom right vertex.
+	vertices[3].position.x = right;
+	vertices[3].position.y = bottom;
+	vertices[3].position.z = z;
+	vertices[3].u = 1.f;
+	vertices[3].v = -1.f;  // Flip the y dimension so the image isn't upside down.
+	vertices[3].normal.x = 0.f;
+	vertices[3].normal.y = 0.f;
+	vertices[3].normal.z = 0.f;
+	vertices[3].bIDs[0] = -1;
+	vertices[3].bIDs[1] = -1;
+	vertices[3].bIDs[2] = -1;
+	vertices[3].bIDs[3] = -1;
+	vertices[3].bWeights[0] = 0.f;
+	vertices[3].bWeights[1] = 0.f;
+	vertices[3].bWeights[2] = 0.f;
+	vertices[3].bWeights[3] = 0.f;
+
+	/* Generate a transformation for the sprite and transform each vertex. */
+	/** Optimize? **/
+	boneInterpolate(&obj->skeletonState[1][0], &obj->skeletonState[0][0], interpT, &transform);
+	transform.scale.x *= twiGetFrameWidth(&obj->renderables[rndr].twi) * twiGetTexWidth(&obj->renderables[rndr].twi);
+	transform.scale.y *= twiGetFrameHeight(&obj->renderables[rndr].twi) * twiGetTexHeight(&obj->renderables[rndr].twi);
+	vertTransform(&vertices[0], &transform.position, &transform.orientation, &transform.scale);
+	vertTransform(&vertices[1], &transform.position, &transform.orientation, &transform.scale);
+	vertTransform(&vertices[2], &transform.position, &transform.orientation, &transform.scale);
+	vertTransform(&vertices[3], &transform.position, &transform.orientation, &transform.scale);
+
+	// We can't pass unique textureFragment values for each individual sprite when batching. Therefore,
+	// we have to do the offset calculations for each vertex UV here instead of in the shader.
+	vertices[0].u = vertices[0].u * texFrag[2] + texFrag[0];
+	vertices[0].v = vertices[0].v * texFrag[3] + texFrag[1];
+	vertices[1].u = vertices[1].u * texFrag[2] + texFrag[0];
+	vertices[1].v = vertices[1].v * texFrag[3] + texFrag[1];
+	vertices[2].u = vertices[2].u * texFrag[2] + texFrag[0];
+	vertices[2].v = vertices[2].v * texFrag[3] + texFrag[1];
+	vertices[3].u = vertices[3].u * texFrag[2] + texFrag[0];
+	vertices[3].v = vertices[3].v * texFrag[3] + texFrag[1];
+
 }

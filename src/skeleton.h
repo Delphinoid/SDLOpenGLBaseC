@@ -92,6 +92,7 @@ typedef struct {
 
 void sklInit(skeleton *skl);
 signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath);
+signed char sklCopy(const skeleton *oskl, skeleton *cskl);
 signed char sklDefault(skeleton *skl);
 size_t sklFindBone(const skeleton *skl, const char *name);
 void sklDelete(skeleton *skl);
@@ -102,7 +103,7 @@ void sklaDelete(sklAnim *skla);
 
 void sklaiAnimate(sklAnimInstance *sklai, const float elapsedTime);
 signed char sklaiChangeAnim(sklAnimInstance *sklai, const skeleton *skl, sklAnim *anim, const size_t frame, const float blendTime);
-void sklaiGenerateAnimState(sklAnimInstance *sklai, bone *skeletonState, const size_t boneNum, const float interpT);
+void sklaiGenerateAnimState(sklAnimInstance *sklai, bone *skeletonState, const bone *baseState, const size_t boneNum, const float interpT);
 
 signed char skliInit(sklInstance *skli, const size_t animationCapacity);
 signed char skliLoad(sklInstance *skli, const char *prgPath, const char *filePath);

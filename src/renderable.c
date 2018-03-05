@@ -149,7 +149,7 @@ void rndrConfigGenerateSprite(const rndrConfig *rc, const twInstance *twi, verte
 	const float top    = -rc->pivot.render.y * (twiGetFrameHeight(twi) - 1.f);
 	const float right  = left + twiGetFrameWidth(twi);
 	const float bottom = top  + twiGetFrameHeight(twi);
-	const float z      = -rc->pivot.render.z;
+	const float z = -rc->pivot.render.z;
 
 	// Create the top left vertex
 	vertices[0].position.x = left;

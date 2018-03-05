@@ -213,6 +213,67 @@ signed char sklDefault(skeleton *skl){
 	skl->bones[0].parent = 0;
 	return 1;
 }
+static signed char sklNodeCopy(const sklNode *onode, sklNode *cnode){
+	if(onode->name != NULL){
+		size_t length = strlen(onode->name);
+		cnode->name = malloc(length*sizeof(char));
+		if(cnode->name == NULL){
+			/** Memory allocation failure. **/
+			return 0;
+		}
+		strncpy(cnode->name, onode->name, length);
+	}else{
+		cnode->name = NULL;
+	}
+	cnode->defaultState = onode->defaultState;
+	cnode->parent = onode->parent;
+	return 1;
+}
+signed char sklCopy(const skeleton *oskl, skeleton *cskl){
+	size_t i;
+	cskl->bones = malloc(oskl->boneNum*sizeof(sklNode));
+	if(cskl->bones == NULL){
+		/** Memory allocation failure. **/
+		return 0;
+	}
+	if(oskl->name != NULL){
+		i = strlen(oskl->name);
+		cskl->name = malloc(i*sizeof(char));
+		if(cskl->name == NULL){
+			/** Memory allocation failure. **/
+			free(cskl->bones);
+			return 0;
+		}
+		strncpy(cskl->name, oskl->name, i);
+	}else{
+		cskl->name = NULL;
+	}
+	for(i = 0; i < oskl->boneNum; ++i){
+		if(!sklNodeCopy(&oskl->bones[i], &cskl->bones[i])){
+			/** Memory allocation failure. **/
+			break;
+		}
+	}
+	if(i != oskl->boneNum){
+		// Free the copied names after a memory allocation failure.
+		while(i > 0){
+			if(cskl->bones[i].name != NULL){
+				free(cskl->bones[i].name);
+			}
+		}
+		if(cskl->bones[0].name != NULL){
+			free(cskl->bones[0].name);
+		}
+		// Free the other skeleton data.
+		if(cskl->name != NULL){
+			free(cskl->name);
+		}
+		free(cskl->bones);
+		return 0;
+	}
+	cskl->boneNum = oskl->boneNum;
+	return 1;
+}
 size_t sklFindBone(const skeleton *skl, const char *name){
 	size_t i;
 	for(i = 0; i < skl->boneNum; ++i){
@@ -424,7 +485,7 @@ void sklaiAnimate(sklAnimInstance *sklai, const float elapsedTime){
 	}
 
 }
-void sklaiGenerateAnimState(sklAnimInstance *sklai, bone *skeletonState, const size_t boneNum, const float interpT){
+void sklaiGenerateAnimState(sklAnimInstance *sklai, bone *skeletonState, const bone *baseState, const size_t boneNum, const float interpT){
 
 	size_t i;
 	size_t fragmentID = 0;
@@ -465,8 +526,11 @@ void sklaiGenerateAnimState(sklAnimInstance *sklai, bone *skeletonState, const s
 						                    &lastState[sklai->animFrags[fragmentID].animBoneLookup[i]],
 						                    &skeletonState[sklai->animFrags[fragmentID].animBoneLookup[i]]);
 					}else{
-						// Set if the animation is not additive.
-						skeletonState[sklai->animFrags[fragmentID].animBoneLookup[i]] = lastState[sklai->animFrags[fragmentID].animBoneLookup[i]];
+						// Set if the animation is not additive. Start from the
+						// base state so custom transformations aren't lost.
+						boneTransformAppend(&baseState[sklai->animFrags[fragmentID].animBoneLookup[i]],
+						                    &lastState[sklai->animFrags[fragmentID].animBoneLookup[i]],
+						                    &skeletonState[sklai->animFrags[fragmentID].animBoneLookup[i]]);
 					}
 
 				}
@@ -537,6 +601,7 @@ signed char skliLoad(sklInstance *skli, const char *prgPath, const char *filePat
 	sklAnim *skla = malloc(sizeof(sklAnim));
 	skla->name = malloc(5*sizeof(char));
 	memcpy(skla->name, "test\0", 5);
+	//skla->additive = 1;
 	skla->animData.desiredLoops = -1;
 	skla->boneNum = 2;
 	skla->bones = malloc(skla->boneNum*sizeof(char*));

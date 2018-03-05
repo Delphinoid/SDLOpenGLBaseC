@@ -210,7 +210,7 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 
 
 	/* Link the uniform variables */
-	gfxPrg->mvpMatrixID       = glGetUniformLocation(gfxPrg->shaderProgramID, "mvpMatrix");
+	gfxPrg->vpMatrixID        = glGetUniformLocation(gfxPrg->shaderProgramID, "vpMatrix");
 	gfxPrg->textureFragmentID = glGetUniformLocation(gfxPrg->shaderProgramID, "textureFragment");
 	gfxPrg->alphaID           = glGetUniformLocation(gfxPrg->shaderProgramID, "alpha");
 

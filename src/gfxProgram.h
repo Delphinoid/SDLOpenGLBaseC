@@ -31,7 +31,7 @@ typedef struct {
 	GLuint shaderProgramID;
 
 	// Per-instance uniforms
-	GLuint mvpMatrixID;
+	GLuint vpMatrixID;
 	GLuint textureFragmentID;
 	GLuint bonePositionArrayID[SKL_MAX_BONE_NUM];
 	GLuint boneOrientationArrayID[SKL_MAX_BONE_NUM];

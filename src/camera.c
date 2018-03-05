@@ -18,6 +18,7 @@ signed char camNew(void *cam){
 	iFloatInit(&((camera *)cam)->fovy, 90.f);
 	mat4Identity(&((camera *)cam)->viewMatrix);
 	mat4Identity(&((camera *)cam)->projectionMatrix);
+	mat4Identity(&((camera *)cam)->viewProjectionMatrix);
 	((camera *)cam)->targetScene = NULL;
 	((camera *)cam)->flags = CAM_UPDATE_VIEW | CAM_UPDATE_PROJECTION;
 	return 1;
@@ -38,6 +39,7 @@ signed char camStateCopy(void *o, void *c){
 		*/
 		((camera *)c)->viewMatrix = ((camera *)o)->viewMatrix;
 		((camera *)c)->projectionMatrix = ((camera *)o)->projectionMatrix;
+		((camera *)c)->viewProjectionMatrix = ((camera *)o)->viewProjectionMatrix;
 	}
 	((camera *)c)->targetScene = ((camera *)o)->targetScene;
 	((camera *)c)->flags = ((camera *)o)->flags;
@@ -159,6 +161,10 @@ void camUpdateProjectionMatrix(camera *cam, const unsigned char aspectRatioX, co
 
 	}
 
+}
+
+inline void camUpdateViewProjectionMatrix(camera *cam){
+	mat4MultMByMR(&cam->viewMatrix, &cam->projectionMatrix, &cam->viewProjectionMatrix);
 }
 
 void camDelete(void *cam){

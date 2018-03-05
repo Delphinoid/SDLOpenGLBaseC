@@ -424,7 +424,7 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 						tempVert.bIDs[2] = tempBoneIDs[pos+2];
 						tempVert.bIDs[3] = tempBoneIDs[pos+3];
 					}else{
-						tempVert.bIDs[0] = -1;
+						tempVert.bIDs[0] = 0;
 						tempVert.bIDs[1] = -1;
 						tempVert.bIDs[2] = -1;
 						tempVert.bIDs[3] = -1;
@@ -437,7 +437,7 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 						tempVert.bWeights[2] = tempBoneWeights[pos+2];
 						tempVert.bWeights[3] = tempBoneWeights[pos+3];
 					}else{
-						tempVert.bWeights[0] = 0.f;
+						tempVert.bWeights[0] = 1.f;
 						tempVert.bWeights[1] = 0.f;
 						tempVert.bWeights[2] = 0.f;
 						tempVert.bWeights[3] = 0.f;

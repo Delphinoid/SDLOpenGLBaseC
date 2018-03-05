@@ -26,10 +26,11 @@ typedef struct {
 } model;
 
 void vertInit(vertex *v);
+void vertTransform(vertex *v, const vec3 *position, const quat *orientation, const vec3 *scale);
 void mdlInit(model *mdl);
 /** I don't like allSkeletons being passed in here either. **/
 signed char mdlLoad(model *mdl, const char *prgPath, const char *filePath, cVector *allSkeletons);
-signed char mdlCreateSprite(model *mdl, const char *name, cVector *allSkeletons);
+signed char mdlCreateSprite(model *mdl, cVector *allSkeletons);
 void mdlDelete(model *mdl);
 
 #endif
