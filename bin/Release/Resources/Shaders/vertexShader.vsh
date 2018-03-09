@@ -49,7 +49,7 @@ void quatRotateVec3(in vec4 q, inout vec3 v){
 	v.y += m * q.y;
 	v.z += m * q.z;
 
-	m = 2.0 * -q.w;
+	m = 2.0 * q.w;
 	v.x += m * crossQV.x;
 	v.y += m * crossQV.y;
 	v.z += m * crossQV.z;

@@ -75,16 +75,15 @@ void renderModel(object *obj, const camera *cam, const float interpT, gfxProgram
 							                &obj->renderables[i].physicsState[j].configurationLast,
 							                interpT, &modelSpace);
 						}else{
-
-							// Translate the bone from global object space to global model space.
-							boneTransformAppendPositionVec(&gfxPrg->sklAnimationState[rndrBone],
-							                               -obj->renderables[i].mdl->skl->bones[j].defaultState.position.x,
-							                               -obj->renderables[i].mdl->skl->bones[j].defaultState.position.y,
-							                               -obj->renderables[i].mdl->skl->bones[j].defaultState.position.z,
-							                               &modelSpace.position);
-							modelSpace.orientation = gfxPrg->sklAnimationState[rndrBone].orientation;
-							modelSpace.scale = gfxPrg->sklAnimationState[rndrBone].scale;
+							modelSpace = gfxPrg->sklAnimationState[rndrBone];
 						}
+
+						// Translate the bone from global object space to global model space.
+						boneTransformAppendPositionVec(&modelSpace,
+						                               -obj->renderables[i].mdl->skl->bones[j].defaultState.position.x,
+						                               -obj->renderables[i].mdl->skl->bones[j].defaultState.position.y,
+						                               -obj->renderables[i].mdl->skl->bones[j].defaultState.position.z,
+						                               &modelSpace.position);
 
 						// Feed the bone configuration to the shader.
 						glUniform3f(gfxPrg->bonePositionArrayID[j], modelSpace.position.x,
@@ -101,7 +100,7 @@ void renderModel(object *obj, const camera *cam, const float interpT, gfxProgram
 					}else{
 						// Otherwise pass in an identity bone.
 						glUniform3f(gfxPrg->bonePositionArrayID[j], 0.f, 0.f, 0.f);
-						glUniform4f(gfxPrg->boneOrientationArrayID[j], 1.f, 0.f, 0.f, 1.f);
+						glUniform4f(gfxPrg->boneOrientationArrayID[j], 0.f, 0.f, 0.f, 1.f);
 						glUniform3f(gfxPrg->boneScaleArrayID[j], 1.f, 1.f, 1.f);
 					}
 

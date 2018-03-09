@@ -5,8 +5,8 @@
 
 /** Merge hbMeshWavefrontObjLoad() with mdlLoad(). **/
 
-#define MESH_VERTEX_START_CAPACITY 1
-#define MESH_INDEX_START_CAPACITY 1
+#define HITBOX_VERTEX_START_CAPACITY 1
+#define HITBOX_INDEX_START_CAPACITY 1
 
 /** Remove printf()s **/
 
@@ -17,14 +17,14 @@
 
 signed char hbMeshWavefrontObjLoad(hbMesh *hbm, const char *filePath){
 
-	size_t vertexCapacity = MESH_VERTEX_START_CAPACITY;
+	size_t vertexCapacity = HITBOX_VERTEX_START_CAPACITY;
 	hbm->vertices = malloc(vertexCapacity*sizeof(vec3));
 	if(hbm->vertices == NULL){
 		/** Memory allocation failure. **/
 		return 0;
 	}
 
-	size_t indexCapacity = MESH_INDEX_START_CAPACITY;
+	size_t indexCapacity = HITBOX_INDEX_START_CAPACITY;
 	hbm->indices = malloc(indexCapacity*sizeof(size_t));
 	if(hbm->indices == NULL){
 		/** Memory allocation failure. **/
@@ -41,7 +41,7 @@ signed char hbMeshWavefrontObjLoad(hbMesh *hbm, const char *filePath){
 
 	// Temporarily holds vertex positions before they are pushed into vertices
 	size_t tempPositionsSize = 0;
-	size_t tempPositionsCapacity = 1*MESH_VERTEX_START_CAPACITY;
+	size_t tempPositionsCapacity = 1*HITBOX_VERTEX_START_CAPACITY;
 	float *tempPositions = malloc(tempPositionsCapacity*sizeof(float));
 	if(tempPositions == NULL){
 		/** Memory allocation failure. **/

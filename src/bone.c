@@ -52,29 +52,25 @@ void boneInterpolate(const bone *b1, const bone *b2, const float t, bone *r){
 void boneTransformAppendPosition(const bone *b1, const bone *b2, bone *r){
 	// Calculate total translation.
 	vec3 tempVec3;
-	quat tempQuat;
-	quatNegateR(&b1->orientation, &tempQuat);  /** Is this right? **/
 	vec3MultVByVR(&b2->position, &b1->scale, &tempVec3);   // Scale
-	quatRotateVec3(&tempQuat, &tempVec3);                  // Rotate
+	quatRotateVec3(&b1->orientation, &tempVec3);           // Rotate
 	vec3AddVToVR(&tempVec3, &b1->position, &r->position);  // Translate
 }
 
 void boneTransformAppendPositionVec(bone *b, const float x, const float y, const float z, vec3 *r){
 	// Calculate total translation.
 	vec3 tempVec3;
-	quat tempQuat;
-	quatNegateR(&b->orientation, &tempQuat);  /** Is this right? **/
-	tempVec3.x = x * b->scale.x;
+	tempVec3.x = x * b->scale.x;                 // Scale
 	tempVec3.y = y * b->scale.y;
 	tempVec3.z = z * b->scale.z;
-	quatRotateVec3(&tempQuat, &tempVec3);
-	vec3AddVToVR(&tempVec3, &b->position, r);
+	quatRotateVec3(&b->orientation, &tempVec3);  // Rotate
+	vec3AddVToVR(&tempVec3, &b->position, r);    // Translate
 }
 
 void boneTransformAppendOrientation(const bone *b1, const bone *b2, bone *r){
 	// Calculate total orientation.
 	quat tempQuat;
-	quatMultQByQR(&b2->orientation, &b1->orientation, &tempQuat);
+	quatMultQByQR(&b1->orientation, &b2->orientation, &tempQuat);
 	r->orientation = tempQuat;
 }
 
@@ -91,12 +87,11 @@ void boneTransformAppend(const bone *b1, const bone *b2, bone *r){
 	// Calculate total translation.
 	vec3 tempVec3;
 	quat tempQuat;
-	quatNegateR(&b1->orientation, &tempQuat);  /** Is this right? **/
 	vec3MultVByVR(&b2->position, &b1->scale, &tempVec3);   // Scale
-	quatRotateVec3(&tempQuat, &tempVec3);                  // Rotate
+	quatRotateVec3(&b1->orientation, &tempVec3);           // Rotate
 	vec3AddVToVR(&tempVec3, &b1->position, &r->position);  // Translate
 	// Calculate total orientation.
-	quatMultQByQR(&b2->orientation, &b1->orientation, &tempQuat);
+	quatMultQByQR(&b1->orientation, &b2->orientation, &tempQuat);
 	r->orientation = tempQuat;
 	// Calculate total scale.
 	vec3MultVByVR(&b2->scale, &b1->scale, &r->scale);

@@ -625,7 +625,7 @@ signed char skliLoad(sklInstance *skli, const char *prgPath, const char *filePat
 	skla->animData.frameDelays[0] = 1000.f;
 
 	skla->frames[1] = malloc(skla->boneNum*sizeof(bone));
-	tempBoneRoot.orientation = quatNewEuler(90.f*RADIAN_RATIO, 0.f, 0.f);
+	tempBoneRoot.orientation = quatNewEuler(-90.f*RADIAN_RATIO, 0.f, 0.f);
 	skla->frames[1][0] = tempBoneRoot;
 	tempBoneTop.position.y = 0.5f;
 	skla->frames[1][1] = tempBoneTop;
@@ -635,7 +635,7 @@ signed char skliLoad(sklInstance *skli, const char *prgPath, const char *filePat
 	tempBoneRoot.position.y = 0.5f;
 	skla->frames[2][0] = tempBoneRoot;
 	tempBoneTop.position.y = 0.f;
-	tempBoneTop.orientation = quatNewEuler(0.f, 90.f*RADIAN_RATIO, 0.f);
+	tempBoneTop.orientation = quatNewEuler(0.f, -90.f*RADIAN_RATIO, 0.f);
 	skla->frames[2][1] = tempBoneTop;
 	skla->animData.frameDelays[2] = 3000.f;
 
