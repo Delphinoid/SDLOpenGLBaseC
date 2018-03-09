@@ -1,19 +1,19 @@
 name GuyMulti
 
-texture "Resources\Images\Guy\Guy0.png"
-texture "Resources\Images\Guy\Guy1.png"
-texture "Resources\Images\Guy\Guy2.png"
-texture "Resources\Images\Guy\Guy3.png"
-texture "Resources\Images\Guy\Guy4.png"
-texture "Resources\Images\Guy\Guy5.png"
-texture "Resources\Images\Guy\Guy6.png"
-texture "Resources\Images\Guy\Guy7.png"
-texture "Resources\Images\Guy\Guy8.png"
-texture "Resources\Images\Guy\Guy9.png"
-texture "Resources\Images\Guy\Guy10.png"
-texture "Resources\Images\Guy\Guy11.png"
-texture "Resources\Images\Guy\Guy12.png"
-texture "Resources\Images\Guy\Guy13.png"
+image "Resources\Images\Guy\Guy0.png"
+image "Resources\Images\Guy\Guy1.png"
+image "Resources\Images\Guy\Guy2.png"
+image "Resources\Images\Guy\Guy3.png"
+image "Resources\Images\Guy\Guy4.png"
+image "Resources\Images\Guy\Guy5.png"
+image "Resources\Images\Guy\Guy6.png"
+image "Resources\Images\Guy\Guy7.png"
+image "Resources\Images\Guy\Guy8.png"
+image "Resources\Images\Guy\Guy9.png"
+image "Resources\Images\Guy\Guy10.png"
+image "Resources\Images\Guy\Guy11.png"
+image "Resources\Images\Guy\Guy12.png"
+image "Resources\Images\Guy\Guy13.png"
 
 animation {
 	loop -1

@@ -11,8 +11,4 @@ typedef struct {
 	                                  // May be affected by translation, rotation and scaling, depending on the type.
 } hitbox;
 
-typedef struct {
-	hitbox **hitboxes;
-} hbArray;
-
 #endif

@@ -5,8 +5,6 @@ signed char objInit(void *obj){
 	((object *)obj)->configuration = NULL;
 	((object *)obj)->skeletonState[0] = NULL;
 	((object *)obj)->skeletonState[1] = NULL;
-	((object *)obj)->physicsSimulate = 0;
-	((object *)obj)->physicsState = NULL;
 	((object *)obj)->renderableNum = 0;
 	((object *)obj)->renderables = NULL;
 	return skliInit(&((object *)obj)->animationData, 0)/** &&
@@ -30,11 +28,9 @@ signed char objStateCopy(void *o, void *c){
 	if(((object *)o)->skl != NULL){
 		// Check if the skeleton state arrays need to be resized.
 		size_t arraySizeS = ((object *)o)->skl->boneNum*sizeof(bone);
-		size_t arraySizeP = ((object *)o)->skl->boneNum*sizeof(physRigidBody);
 		if(((object *)c)->skl == NULL || ((object *)c)->skl->boneNum != ((object *)o)->skl->boneNum){
 			// We need to allocate more or less memory so that
 			// the memory allocated for both custom states match.
-			physRigidBody *tempBuffer4;
 			bone *tempBuffer3;
 			bone *tempBuffer2;
 			bone *tempBuffer1 = malloc(arraySizeS);
@@ -55,14 +51,6 @@ signed char objStateCopy(void *o, void *c){
 				free(tempBuffer1);
 				return 0;
 			}
-			tempBuffer4 = malloc(arraySizeP);
-			if(tempBuffer4 == NULL){
-				/** Memory allocation failure. **/
-				free(tempBuffer3);
-				free(tempBuffer2);
-				free(tempBuffer1);
-				return 0;
-			}
 			if(((object *)c)->configuration != NULL){
 				free(((object *)c)->configuration);
 			}
@@ -72,23 +60,17 @@ signed char objStateCopy(void *o, void *c){
 			if(((object *)c)->skeletonState[1] != NULL){
 				free(((object *)c)->skeletonState[1]);
 			}
-			if(((object *)c)->physicsState != NULL){
-				free(((object *)c)->physicsState);
-			}
-			((object *)c)->configuration      = tempBuffer1;
+			((object *)c)->configuration    = tempBuffer1;
 			((object *)c)->skeletonState[0] = tempBuffer2;
 			((object *)c)->skeletonState[1] = tempBuffer3;
-			((object *)c)->physicsState     = tempBuffer4;
 		}
-		memcpy(((object *)c)->configuration,      ((object *)o)->configuration,      arraySizeS);
+		memcpy(((object *)c)->configuration,    ((object *)o)->configuration,    arraySizeS);
 		memcpy(((object *)c)->skeletonState[0], ((object *)o)->skeletonState[0], arraySizeS);
 		memcpy(((object *)c)->skeletonState[1], ((object *)o)->skeletonState[1], arraySizeS);
-		memcpy(((object *)c)->physicsState,     ((object *)o)->physicsState,     arraySizeP);
 	}else{
-		((object *)c)->configuration      = NULL;
+		((object *)c)->configuration    = NULL;
 		((object *)c)->skeletonState[0] = NULL;
 		((object *)c)->skeletonState[1] = NULL;
-		((object *)c)->physicsState     = NULL;
 	}
 	((object *)c)->skl = ((object *)o)->skl;
 
@@ -118,6 +100,7 @@ void objResetInterpolation(void *obj){
 }
 
 void objDelete(void *obj){
+	size_t i;
 	if(((object *)obj)->name != NULL){
 		free(((object *)obj)->name);
 	}
@@ -130,13 +113,10 @@ void objDelete(void *obj){
 	if(((object *)obj)->skeletonState[1] != NULL){
 		free(((object *)obj)->skeletonState[1]);
 	}
-	if(((object *)obj)->physicsState != NULL){
-		size_t i;
-		for(i = 0; i < ((object *)obj)->skl->boneNum; ++i){
-			physRigidBodyDelete(&((object *)obj)->physicsState[i]);
-		}
-	}
 	if(((object *)obj)->renderables != NULL){
+		for(i = 0; i < ((object *)obj)->renderableNum; ++i){
+			rndrDelete(&((object *)obj)->renderables[i]);
+		}
 		free(((object *)obj)->renderables);
 	}
 	skliDelete(&((object *)obj)->animationData);
@@ -152,8 +132,7 @@ signed char objNewRenderable(object *obj){
 		return 0;
 	}
 	obj->renderables = tempBuffer;
-	obj->renderables[obj->renderableNum].mdl = NULL;
-	twiInit(&obj->renderables[obj->renderableNum].twi, NULL);
+	rndrInit(&obj->renderables[obj->renderableNum]);
 	++obj->renderableNum;
 	return 1;
 }
@@ -189,8 +168,6 @@ signed char objInitSkeleton(object *obj, skeleton *skl){
 		if(obj->skl == NULL){
 			size_t i;
 			size_t arraySizeS = skl->boneNum*sizeof(bone);
-			size_t arraySizeP = skl->boneNum*sizeof(physRigidBody);
-			physRigidBody *tempBuffer4;
 			bone *tempBuffer3;
 			bone *tempBuffer2;
 			bone *tempBuffer1 = malloc(arraySizeS);
@@ -211,19 +188,10 @@ signed char objInitSkeleton(object *obj, skeleton *skl){
 				free(tempBuffer1);
 				return 0;
 			}
-			tempBuffer4 = malloc(arraySizeP);
-			if(tempBuffer3 == NULL){
-				/** Memory allocation failure. **/
-				free(tempBuffer3);
-				free(tempBuffer2);
-				free(tempBuffer1);
-				return 0;
-			}
 			obj->skl = skl;
-			obj->configuration      = tempBuffer1;
+			obj->configuration    = tempBuffer1;
 			obj->skeletonState[0] = tempBuffer2;
 			obj->skeletonState[1] = tempBuffer3;
-			obj->physicsState     = tempBuffer4;
 			for(i = 0; i < skl->boneNum; ++i){
 				boneInit(&obj->configuration[i]);
 			}
@@ -236,7 +204,9 @@ signed char objInitSkeleton(object *obj, skeleton *skl){
 
 void objUpdate(object *obj, const camera *cam, const float elapsedTime){
 
-	size_t i;
+	size_t i, j;
+	size_t rndrBone;
+	bone transformBone;
 
 	/* Update the object's skeletal animations and skeleton. */
 	const float elapsedTimeMod = elapsedTime * obj->animationData.timeMod;
@@ -267,17 +237,38 @@ void objUpdate(object *obj, const camera *cam, const float elapsedTime){
 		*** This is pretty bad, but I'm not sure if I have a choice short of
 		*** merging bones and physics bodies or something weird like that.
 		**/
-		// Transform bones from local to global space.
-		//vec3AddVToV(&obj->skeletonState[0][i].position, &obj->skl->bones[i].defaultState.position);
-		boneTransformAppend(&obj->skl->bones[i].defaultState, &obj->skeletonState[0][i], &obj->skeletonState[0][i]);
-		vec3SubVFromV1(&obj->skeletonState[0][i].position, &obj->renderables[0].mdl->skl->bones[i].defaultState.position);
+		// Transform bones from global to local space.
+		boneTransformAppendPosition(&obj->skl->bones[i].defaultState, &obj->skeletonState[0][i], &obj->skeletonState[0][i]);
 
-		if(i != obj->skl->bones[i].parent){
-			boneTransformAppend(&obj->skeletonState[0][obj->skl->bones[i].parent], &obj->skeletonState[0][i], &obj->skeletonState[0][i]);
+		if(obj->skl->bones[i].parent < obj->skl->boneNum && i != obj->skl->bones[i].parent){
+			// Transform parent back into global space before applying transformations here.
+			boneInvert(&obj->skl->bones[obj->skl->bones[i].parent].defaultState, &transformBone);
+			boneTransformAppend(&obj->skeletonState[0][obj->skl->bones[i].parent], &transformBone, &transformBone);
+			// Apply parent transformations.
+			boneTransformAppend(&transformBone, &obj->skeletonState[0][i], &obj->skeletonState[0][i]);
 
 		// Apply billboarding to root bones if necessary.
 		}else if((obj->tempRndrConfig.flags & (RNDR_BILLBOARD_X | RNDR_BILLBOARD_Y | RNDR_BILLBOARD_Z)) > 0){
             //
+		}
+
+		// Update the positions of each rigid body connected to this bone.
+		for(j = 0; j < obj->renderableNum; ++j){
+
+			// Only bodies that are not being simulated are affected by skeletal animations.
+			/** Use a lookup, same in renderScene.c. **/
+			rndrBone = sklFindBone(obj->renderables[j].mdl->skl, obj->skl->bones[i].name);
+			if(rndrBone < obj->renderables[j].mdl->skl->boneNum &&
+			   obj->renderables[j].physicsState != NULL && !obj->renderables[j].physicsSimulate &&
+			   (obj->renderables[j].physicsState[rndrBone].flags & PHYSICS_BODY_SIMULATE) == 0){
+
+			   	// Translate the bone into global space for the physics object.
+			   	boneInvert(&obj->skl->bones[obj->skl->bones[i].parent].defaultState, &transformBone);
+			   	boneTransformAppend(&obj->skeletonState[0][i], &transformBone,
+				                    &obj->renderables[j].physicsState[rndrBone].configuration);
+
+			}
+
 		}
 
 			// If any of the flags apart from RNDR_BILLBOARD_TARGET are set, continue.
@@ -341,12 +332,12 @@ void objUpdate(object *obj, const camera *cam, const float elapsedTime){
 		}**/
 
 		// Only bodies that are not being simulated are affected by skeletal animations.
-		if(obj->physicsSimulate && (obj->physicsState[i].flags & PHYSICS_BODY_SIMULATE) == 0){
+		/*if(obj->physicsSimulate && (obj->physicsState[i].flags & PHYSICS_BODY_SIMULATE) == 0){
 			// Apply the bone's change in position to the physics object.
 			obj->physicsState[i].position = obj->skeletonState[0][i].position;
 			// Apply the bone's change in orientation to the physics object.
 			obj->physicsState[i].orientation = obj->skeletonState[0][i].orientation;
-		}
+		}*/
 
 	}
 

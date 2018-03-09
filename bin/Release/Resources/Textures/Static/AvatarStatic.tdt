@@ -1,2 +1,2 @@
 name AvatarStatic
-texture "Resources\Images\Misc\Avatar.png"
+image "Resources\Images\Misc\Avatar.png"

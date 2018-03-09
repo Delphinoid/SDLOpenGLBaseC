@@ -6,6 +6,17 @@ void boneInit(bone *b){
 	vec3SetS(&b->scale, 1.f);
 }
 
+void boneInvert(const bone *b, bone *r){
+    r->position.x = -b->position.x;
+    r->position.y = -b->position.y;
+    r->position.z = -b->position.z;
+    r->orientation.w = -b->orientation.w;
+    r->orientation.v = b->orientation.v;
+    r->scale.x = 1.f/b->scale.x;
+    r->scale.y = 1.f/b->scale.y;
+    r->scale.z = 1.f/b->scale.z;
+}
+
 void boneInterpolate(const bone *b1, const bone *b2, const float t, bone *r){
 
 	/* Calculate the interpolated delta transform for the bone. */
@@ -48,6 +59,18 @@ void boneTransformAppendPosition(const bone *b1, const bone *b2, bone *r){
 	vec3AddVToVR(&tempVec3, &b1->position, &r->position);  // Translate
 }
 
+void boneTransformAppendPositionVec(bone *b, const float x, const float y, const float z, vec3 *r){
+	// Calculate total translation.
+	vec3 tempVec3;
+	quat tempQuat;
+	quatNegateR(&b->orientation, &tempQuat);  /** Is this right? **/
+	tempVec3.x = x * b->scale.x;
+	tempVec3.y = y * b->scale.y;
+	tempVec3.z = z * b->scale.z;
+	quatRotateVec3(&tempQuat, &tempVec3);
+	vec3AddVToVR(&tempVec3, &b->position, r);
+}
+
 void boneTransformAppendOrientation(const bone *b1, const bone *b2, bone *r){
 	// Calculate total orientation.
 	quat tempQuat;
@@ -77,11 +100,4 @@ void boneTransformAppend(const bone *b1, const bone *b2, bone *r){
 	r->orientation = tempQuat;
 	// Calculate total scale.
 	vec3MultVByVR(&b2->scale, &b1->scale, &r->scale);
-}
-
-void boneTransformDifference(const bone *b1, const bone *b2, bone *r){
-	/*
-	** Finds the difference in translation, orientation and scale between two bones.
-	*/
-
 }

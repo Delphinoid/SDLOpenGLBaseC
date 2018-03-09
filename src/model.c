@@ -8,28 +8,18 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 static void mdlVertexAttributes();
 static void mdlGenBufferObjects(model *mdl, const size_t vertexNum, const vertex *vertices, const size_t indexNum, const size_t *indices);
 
-void vertInit(vertex *v){
-	vec3SetS(&v->position, 0.f);
-	v->u  = 0.f; v->v  = 0.f;
-	vec3SetS(&v->normal, 0.f);
-	v->bIDs[0]     = 0;   v->bIDs[1]     = -1;  v->bIDs[2]     = -1;  v->bIDs[3]     = -1;
-	v->bWeights[0] = 1.f; v->bWeights[1] = 0.f; v->bWeights[2] = 0.f; v->bWeights[3] = 0.f;
-}
-
-void vertTransform(vertex *v, const vec3 *position, const quat *orientation, const vec3 *scale){
-	vec3MultVByV(&v->position, scale);
-	quatRotateVec3(orientation, &v->position);
-	vec3AddVToV(&v->position, position);
-}
-
 void mdlInit(model *mdl){
 	mdl->name = NULL;
-	mdl->skl = NULL;
 	mdl->vertexNum = 0;
 	mdl->indexNum = 0;
 	mdl->vaoID = 0;
 	mdl->vboID = 0;
 	mdl->iboID = 0;
+	/**mdl->boneNum = 0;
+	mdl->boneNames = NULL;**/
+	mdl->skl = NULL;
+	mdl->bodies = NULL;
+	mdl->hitboxes = NULL;
 }
 
 signed char mdlLoad(model *mdl, const char *prgPath, const char *filePath, cVector *allSkeletons){
@@ -210,6 +200,10 @@ static void mdlGenBufferObjects(model *mdl, const size_t vertexNum, const vertex
 }
 
 void mdlDelete(model *mdl){
+	size_t i;
+	if(mdl->name != NULL){
+		free(mdl->name);
+	}
 	if(mdl->vaoID != 0){
 		glDeleteBuffers(1, &mdl->vaoID);
 	}
@@ -219,4 +213,22 @@ void mdlDelete(model *mdl){
 	if(mdl->iboID != 0){
 		glDeleteBuffers(1, &mdl->iboID);
 	}
+	/**if(mdl->bones != NULL){
+		for(i = 0; i < mdl->boneNum; ++i){
+			free(mdl->boneNames[i]);
+		}
+		free(mdl->boneNames);
+	}
+	if(mdl->bodies != NULL){
+		for(i = 0; i < mdl->boneNum; ++i){
+			physRigidBodyDelete(&mdl->bodies[i]);
+		}
+		free(mdl->bodies);
+	}
+	if(mdl->hitboxes != NULL){
+		for(i = 0; i < mdl->boneNum; ++i){
+			free(mdl->hitboxes[i]);
+		}
+		free(mdl->hitboxes);
+	}**/
 }

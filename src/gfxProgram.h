@@ -4,7 +4,8 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
-#include "model.h"
+#include "vertex.h"
+#include "skeleton.h"
 
 #define DEFAULT_GL_VERSION_MAJOR 3
 #define DEFAULT_GL_VERSION_MINOR 3

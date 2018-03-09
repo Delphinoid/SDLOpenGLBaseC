@@ -7,7 +7,6 @@
 signed char camInit(void *cam){
 	return 1;
 }
-
 signed char camNew(void *cam){
 	iVec3Init(&((camera *)cam)->position, 0.f, 0.f, 0.f);
 	iQuatInit(&((camera *)cam)->orientation);
@@ -23,7 +22,6 @@ signed char camNew(void *cam){
 	((camera *)cam)->flags = CAM_UPDATE_VIEW | CAM_UPDATE_PROJECTION;
 	return 1;
 }
-
 signed char camStateCopy(void *o, void *c){
 	((camera *)c)->position = ((camera *)o)->position;
 	((camera *)c)->orientation = ((camera *)o)->orientation;
@@ -45,7 +43,6 @@ signed char camStateCopy(void *o, void *c){
 	((camera *)c)->flags = ((camera *)o)->flags;
 	return 1;
 }
-
 void camResetInterpolation(void *cam){
 	iVec3ResetInterp(&((camera *)cam)->position);
 	iQuatResetInterp(&((camera *)cam)->orientation);
@@ -53,6 +50,7 @@ void camResetInterpolation(void *cam){
 	iVec3ResetInterp(&((camera *)cam)->up);
 	iFloatResetInterp(&((camera *)cam)->fovy);
 }
+
 void camCalculateUp(camera *cam){  /** Probably not entirely necessary **/
 
 	/*
@@ -162,9 +160,20 @@ void camUpdateProjectionMatrix(camera *cam, const unsigned char aspectRatioX, co
 	}
 
 }
-
-inline void camUpdateViewProjectionMatrix(camera *cam){
+void camUpdateViewProjectionMatrix(camera *cam, const signed char windowChanged, const unsigned char aspectRatioX, const unsigned char aspectRatioY, const float interpT){
+	camUpdateViewMatrix(cam, interpT);
+	if(windowChanged){
+		// If the window size changed, update the camera projection matrices as well.
+		cam->flags |= CAM_UPDATE_PROJECTION;
+	}
+	camUpdateProjectionMatrix(cam, aspectRatioX, aspectRatioY, interpT);
 	mat4MultMByMR(&cam->viewMatrix, &cam->projectionMatrix, &cam->viewProjectionMatrix);
+}
+
+float camDistance(const camera *cam, const vec3 *target){
+	return sqrt(fabsf((target->x - cam->position.render.x) * (target->x - cam->position.render.x) +
+	                  (target->y - cam->position.render.y) * (target->y - cam->position.render.y) +
+	                  (target->z - cam->position.render.z) * (target->z - cam->position.render.z)));
 }
 
 void camDelete(void *cam){

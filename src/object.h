@@ -21,13 +21,8 @@ typedef struct {
 	sklInstance animationData;  // An array of skeletal animations.
 
 	bone *configuration;     // Array of custom bone transformations.
-	bone *skeletonState[2];  // The local skeleton states from the previous and last updates.
-
-	/** Make part of renderables? **/
-	signed char physicsSimulate;  // Whether or not to simulate physics on the object's skeleton.
-	physRigidBody *physicsState;  // An array of physics bodies, one for each bone in skl.
-
-	hitbox **hitboxData;  // An array of hitbox arrays, one for each bone in skl.
+	/** Split these into three arrays for position, orientation and scale? **/
+	bone *skeletonState[2];  // The global skeleton states from the previous and last updates.
 
 	size_t renderableNum;
 	renderable *renderables;

@@ -355,7 +355,7 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 
 
 			// New texture frame
-			}else if(lineLength >= 9 && strncmp(line, "texture ", 8) == 0){
+			}else if(lineLength >= 7 && strncmp(line, "image ", 6) == 0){
 
 				// A multiline command is already in progress; try to close it and continue
 				if(currentCommand != -1){
@@ -421,9 +421,10 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 				if(firstQuote != NULL && lastQuote > firstQuote){
 					pathBegin = firstQuote-line+1;
 					pathLength = lastQuote-line-pathBegin;
-				}else{  // If the texture identifier wasn't surrounded by quotes, don't give up:
-					pathBegin = 8;
-					pathLength = lineLength-8;
+				}else{
+					// If the texture identifier wasn't surrounded by quotes, don't give up:
+					pathBegin = 6;
+					pathLength = lineLength-6;
 				}
 				char *texPath = malloc((pathLength+1) * sizeof(char));
 				strncpy(texPath, line+pathBegin, pathLength);

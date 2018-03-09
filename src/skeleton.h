@@ -94,6 +94,7 @@ void sklInit(skeleton *skl);
 signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath);
 signed char sklCopy(const skeleton *oskl, skeleton *cskl);
 signed char sklDefault(skeleton *skl);
+signed char sklGenerateLookup(const skeleton *skl1, const skeleton *skl2, size_t **lookup);
 size_t sklFindBone(const skeleton *skl, const char *name);
 void sklDelete(skeleton *skl);
 

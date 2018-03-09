@@ -6,6 +6,90 @@
 
 #define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians
 
+void rndrInit(renderable *rndr){
+	rndr->mdl = NULL;
+	twiInit(&rndr->twi, NULL);
+	rndr->parentBoneLookup = NULL;
+	rndr->physicsSimulate = 0;
+	rndr->physicsState = NULL;
+	//rndr->hitboxState = NULL;
+}
+
+/*signed char rndrCreate(renderable *rndr, model *mdl, textureWrapper *tw, const skl *oskl){
+
+	size_t arraySizeS = mdl->skl->boneNum*sizeof(size_t);
+	size_t arraySizeB = mdl->skl->boneNum*sizeof(bone);
+	size_t arraySizeP = mdl->skl->boneNum*sizeof(prbInstance);
+	//size_t arraySizeH = mdl->skl->boneNum*sizeof(hitbox *);
+
+	* Allocate memory for various arrays. *
+    rndr->skeletonState[0] = malloc(arraySizeB);
+	if(rndr->skeletonState[0] == NULL){
+		** Memory allocation failure. **
+		return 0;
+	}
+	rndr->skeletonState[1] = malloc(arraySizeB);
+	if(rndr->skeletonState[1] == NULL){
+		** Memory allocation failure. **
+		free(rndr->skeletonState[0]);
+		return 0;
+	}
+	rndr->physicsState = malloc(arraySizeP);
+	if(rndr->physicsState == NULL){
+		** Memory allocation failure. **
+		free(rndr->skeletonState[1]);
+		free(rndr->skeletonState[0]);
+		return 0;
+	}
+
+	** Create bone lookup with respect to oskl. **
+	** Construct prbInstance array with constraints and collisions. **
+	** Add references in physics island. **
+
+	rndr->mdl = mdl;
+	twiInit(&rndr->twi, tw);
+	return 1;
+
+}
+
+signed char rndrCopy(renderable *o, renderable *c){
+
+	if(o->skeletonState[0] == NULL){
+		if(c->skeletonState[0] != NULL){
+            free(c->skeletonState[0]);
+		}
+		c->skeletonState[0] = NULL;
+	}else if( NULL){
+	}
+
+	c->mdl = o->mdl;
+	c->twi = o->twi;
+
+}*/
+
+void rndrDelete(renderable *rndr){
+	size_t i;
+	if(rndr->parentBoneLookup != NULL){
+		free(rndr->parentBoneLookup);
+	}
+	if(rndr->physicsState != NULL){
+		for(i = 0; i < rndr->mdl->skl->boneNum; ++i){
+			prbiDelete(&rndr->physicsState[i]);
+		}
+		free(rndr->physicsState);
+	}
+	/*if(rndr->hitboxState != NULL){
+		for(i = 0; i < rndr->mdl->skl->boneNum; ++i){
+			if(rndr->hitboxState[i] != NULL){
+				free(rndr->hitboxState[i]);
+			}
+		}
+		free(rndr->hitboxState);
+	}*/
+}
+
+
+
 void rndrConfigInit(rndrConfig *rc){
 	iVec3Init(&rc->position, 0.f, 0.f, 0.f);
 	iQuatInit(&rc->orientation);
@@ -66,10 +150,10 @@ void rndrConfigGenerateTransform(const rndrConfig *rc, const camera *cam, mat4 *
 
 	/* Billboarding */
 	// If any of the flags apart from RNDR_BILLBOARD_TARGET are set, continue
-	if((rc->flags & (RNDR_BILLBOARD_X | RNDR_BILLBOARD_Y | RNDR_BILLBOARD_Z)) > 0){
+	/*if((rc->flags & (RNDR_BILLBOARD_X | RNDR_BILLBOARD_Y | RNDR_BILLBOARD_Z)) > 0){
 		mat4 billboardRotation;
 		if((rc->flags & RNDR_BILLBOARD_SPRITE) > 0){
-			/* Sprites use a special, faster method for billboarding. */
+			* Sprites use a special, faster method for billboarding. *
 			vec3 right, up, forward;
 			// Use the camera's X, Y and Z axes for cheap sprite billboarding
 			vec3Set(&right,   cam->viewMatrix.m[0][0], cam->viewMatrix.m[0][1], cam->viewMatrix.m[0][2]);
@@ -124,7 +208,7 @@ void rndrConfigGenerateTransform(const rndrConfig *rc, const camera *cam, mat4 *
 			mat4RotateToFace(&billboardRotation, &eye, &target, &up);
 		}
 		mat4MultMByM2(&billboardRotation, transformMatrix);  // Apply billboard rotation
-	}
+	}*/
 
 	/* Rotate the model */
 	mat4Rotate(transformMatrix, &rc->orientation.render);

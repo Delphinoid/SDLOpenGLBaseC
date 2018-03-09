@@ -4,6 +4,8 @@
 //#include "gfxProgram.h"
 #include "model.h"
 #include "textureWrapper.h"
+//#include "physicsRigidBody.h"
+//#include "hitbox.h"
 #include "interpState.h"
 #include "camera.h"
 
@@ -15,8 +17,21 @@
 #define RNDR_BILLBOARD_TARGET_CAMERA 0x20  // Billboard towards the camera's position.
 
 typedef struct {
+
 	model *mdl;         // A pointer to the bodygroup's associated model.
 	twInstance twi;     // The bodygroup's associated texture wrapper.
+
+	size_t *parentBoneLookup;  // Which bone in the parent's skeleton each bone in mdl corresponds
+	                           // to. If the root (first) bone in mdl is named "blah" and the second
+	                           // bone in the parent's skeleton is named "blah", the array will start
+	                           // with parentBoneLookup[0] == 1. If the bone does not exist, its entry
+	                           // will be (size_t)-1.
+	//bone *skeletonState[2];  // The global skeleton states from the previous and last updates.
+
+	signed char physicsSimulate;  // Whether or not to simulate physics on the model's skeleton.
+	prbInstance *physicsState;    // An array of physics bodies, one for each bone in mdl.skl.
+	//hitbox **hitboxState;
+
 } renderable;
 
 /** Move to particle / sprite files? **/
@@ -32,6 +47,9 @@ typedef struct {
 	unsigned char sprite;
 	unsigned char flags;
 } rndrConfig;
+
+void rndrInit(renderable *rndr);
+void rndrDelete(renderable *rndr);
 
 void rndrConfigInit(rndrConfig *rc);
 void rndrConfigStateCopy(rndrConfig *o, rndrConfig *c);

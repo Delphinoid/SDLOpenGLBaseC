@@ -353,25 +353,6 @@ vec3 quatGetRotatedVec3(const quat *q, const vec3 *v){
 
 	vec3 r;
 
-	/*const float dot = vec3Dot(&q->v, v);
-	vec3 cross;
-	vec3Cross(&q->v, v, &cross);
-
-	float m = q->w*q->w-dot;
-	r.x = m*v->x;
-	r.y = m*v->y;
-	r.z = m*v->z;
-
-	m = 2.f*dot;
-	r.x += m*q->v.x;
-	r.y += m*q->v.y;
-	r.z += m*q->v.z;
-
-	m = 2.f*q->w;
-	r.x += m*cross.x;
-	r.y += m*cross.y;
-	r.z += m*cross.z;*/
-
 	const float dotQV = vec3Dot(&q->v, v);
 	const float dotQQ = vec3Dot(&q->v, &q->v);
 	float m = q->w*q->w - dotQQ;
@@ -396,25 +377,6 @@ vec3 quatGetRotatedVec3(const quat *q, const vec3 *v){
 
 }
 void quatRotateVec3(const quat *q, vec3 *v){
-
-	/*const float dot = vec3Dot(&q->v, v);
-	vec3 cross;
-	vec3Cross(&q->v, v, &cross);
-
-	float m = q->w*q->w-dot;
-	v->x *= m;
-	v->y *= m;
-	v->z *= m;
-
-	m = 2.f*dot;
-	v->x += m*q->v.x;
-	v->y += m*q->v.y;
-	v->z += m*q->v.z;
-
-	m = 2.f*q->w;
-	v->x += m*cross.x;
-	v->y += m*cross.y;
-	v->z += m*cross.z;*/
 
 	const float dotQV = vec3Dot(&q->v, v);
 	const float dotQQ = vec3Dot(&q->v, &q->v);
@@ -447,13 +409,13 @@ quat quatLookingAt(const vec3 *eye, const vec3 *target, const vec3 *up){
 	if(fabsf(dot + 1.f) < FLT_EPSILON){
 
 		// Eye and target point in opposite directions,
-		// 180 degree rotation around up vector
+		// 180 degree rotation around up vector.
 		r.w = M_PI;
 		r.v = *up;
 
 	}else if(fabsf(dot - 1.f) < FLT_EPSILON){
 
-		// Eye and target are pointing in the same direction
+		// Eye and target are pointing in the same direction.
 		quatSetIdentity(&r);
 
 	}else{
@@ -475,13 +437,13 @@ void quatLookAt(quat *q, const vec3 *eye, const vec3 *target, const vec3 *up){
 	if(fabsf(dot + 1.f) < FLT_EPSILON){
 
 		// Eye and target point in opposite directions,
-		// 180 degree rotation around up vector
+		// 180 degree rotation around up vector.
 		q->w = M_PI;
 		q->v = *up;
 
 	}else if(fabsf(dot - 1.f) < FLT_EPSILON){
 
-		// Eye and target are pointing in the same direction
+		// Eye and target are pointing in the same direction.
 		quatSetIdentity(q);
 
 	}else{

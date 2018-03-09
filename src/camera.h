@@ -33,10 +33,14 @@ signed char camInit(void *cam);
 signed char camNew(void *cam);
 signed char camStateCopy(void *o, void *c);
 void camResetInterpolation(void *cam);
+
 void camCalculateUp(camera *cam);
 void camUpdateViewMatrix(camera *cam, const float interpT);
 void camUpdateProjectionMatrix(camera *cam, const unsigned char aspectRatioX, const unsigned char aspectRatioY, const float interpT);
-void camUpdateViewProjectionMatrix(camera *cam);
+void camUpdateViewProjectionMatrix(camera *cam, const signed char windowChanged, const unsigned char aspectRatioX, const unsigned char aspectRatioY, const float interpT);
+
+float camDistance(const camera *cam, const vec3 *target);
+
 void camDelete(void *cam);
 
 /**void camMoveX(camera *cam, const float x);

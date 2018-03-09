@@ -114,7 +114,7 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 				}
 
 			// New bone
-			}else if(lineLength >= 18 && strncmp(line, "bone ", 5) == 0){
+			}else if(lineLength >= 24 && strncmp(line, "bone ", 5) == 0){
 
 				char *token = strtok(line+5, " ");
 
@@ -273,6 +273,9 @@ signed char sklCopy(const skeleton *oskl, skeleton *cskl){
 	}
 	cskl->boneNum = oskl->boneNum;
 	return 1;
+}
+signed char sklGenerateLookup(const skeleton *skl1, const skeleton *skl2, size_t **lookup){
+	/** **/
 }
 size_t sklFindBone(const skeleton *skl, const char *name){
 	size_t i;

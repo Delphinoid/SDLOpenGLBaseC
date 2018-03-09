@@ -22,12 +22,12 @@ void renderModel(object *obj, const camera *cam, const float interpT, gfxProgram
 	/* Interpolate between the previous and last skeleton states. */
 	for(i = 0; i < obj->skl->boneNum; ++i){
 		// If the bone has been simulated, use its position and orientation.
-		if((obj->physicsState[i].flags & PHYSICS_BODY_SIMULATE) > 0){
+		//if((obj->physicsState[i].flags & PHYSICS_BODY_SIMULATE) > 0){
 			/**
 			obj->skeletonState[0][i].position    = obj->physicsState[i].position;
 			obj->skeletonState[0][i].orientation = obj->physicsState[i].orientation;
 			**/
-		}
+		//}
 		boneInterpolate(&obj->skeletonState[1][i], &obj->skeletonState[0][i], interpT, &gfxPrg->sklAnimationState[i]);
 	}
 
@@ -54,29 +54,59 @@ void renderModel(object *obj, const camera *cam, const float interpT, gfxProgram
 
 			/* Generate the renderable configuration based off the animated skeleton, if possible. */
 			if(obj->renderables[i].mdl->skl != NULL){
+
 				size_t j;
+				size_t rndrBone;
+				bone modelSpace;
+
 				// If there is a valid animated skeleton, apply animation transformations.
 				for(j = 0; j < obj->renderables[i].mdl->skl->boneNum; ++j){
-					size_t animBone = sklFindBone(obj->skl, obj->renderables[i].mdl->skl->bones[j].name);
-					if(animBone < obj->skl->boneNum){
-						// If the animated bone is in the model, pass in its animation transforms.
-						glUniform3f(gfxPrg->bonePositionArrayID[j], gfxPrg->sklAnimationState[animBone].position.x,
-																	gfxPrg->sklAnimationState[animBone].position.y,
-																	gfxPrg->sklAnimationState[animBone].position.z);
-						glUniform4f(gfxPrg->boneOrientationArrayID[j], gfxPrg->sklAnimationState[animBone].orientation.v.x,
-																	   gfxPrg->sklAnimationState[animBone].orientation.v.y,
-																	   gfxPrg->sklAnimationState[animBone].orientation.v.z,
-																	   gfxPrg->sklAnimationState[animBone].orientation.w);
-						glUniform3f(gfxPrg->boneScaleArrayID[j], gfxPrg->sklAnimationState[animBone].scale.x,
-																 gfxPrg->sklAnimationState[animBone].scale.y,
-																 gfxPrg->sklAnimationState[animBone].scale.z);
+
+					// If the animated bone is in the model, pass in its animation transforms.
+					/** Use a lookup, same in object.c. **/
+					rndrBone = sklFindBone(obj->skl, obj->renderables[i].mdl->skl->bones[j].name);
+					if(rndrBone < obj->skl->boneNum){
+
+						// Check if the current bone has an associated rigid body that is currently active.
+						// If it does, interpolate its configuration and use that for rendering.
+						if(obj->renderables[i].physicsSimulate && (obj->renderables[i].physicsState[j].flags & PHYSICS_BODY_SIMULATE) > 0){
+							// Interpolate bone's rigid body's configuration.
+							boneInterpolate(&obj->renderables[i].physicsState[j].configuration,
+							                &obj->renderables[i].physicsState[j].configurationLast,
+							                interpT, &modelSpace);
+						}else{
+
+							// Translate the bone from global object space to global model space.
+							boneTransformAppendPositionVec(&gfxPrg->sklAnimationState[rndrBone],
+							                               -obj->renderables[i].mdl->skl->bones[j].defaultState.position.x,
+							                               -obj->renderables[i].mdl->skl->bones[j].defaultState.position.y,
+							                               -obj->renderables[i].mdl->skl->bones[j].defaultState.position.z,
+							                               &modelSpace.position);
+							modelSpace.orientation = gfxPrg->sklAnimationState[rndrBone].orientation;
+							modelSpace.scale = gfxPrg->sklAnimationState[rndrBone].scale;
+						}
+
+						// Feed the bone configuration to the shader.
+						glUniform3f(gfxPrg->bonePositionArrayID[j], modelSpace.position.x,
+							                                        modelSpace.position.y,
+							                                        modelSpace.position.z);
+						glUniform4f(gfxPrg->boneOrientationArrayID[j], modelSpace.orientation.v.x,
+						                                               modelSpace.orientation.v.y,
+						                                               modelSpace.orientation.v.z,
+						                                               modelSpace.orientation.w);
+						glUniform3f(gfxPrg->boneScaleArrayID[j], modelSpace.scale.x,
+						                                         modelSpace.scale.y,
+						                                         modelSpace.scale.z);
+
 					}else{
 						// Otherwise pass in an identity bone.
 						glUniform3f(gfxPrg->bonePositionArrayID[j], 0.f, 0.f, 0.f);
 						glUniform4f(gfxPrg->boneOrientationArrayID[j], 1.f, 0.f, 0.f, 1.f);
 						glUniform3f(gfxPrg->boneScaleArrayID[j], 1.f, 1.f, 1.f);
 					}
+
 				}
+
 			}
 
 			/* Render the model. */
@@ -99,7 +129,6 @@ void batchRenderSprites(cVector *allSprites, const camera *cam, const float inte
 	object *curSpr;
 	size_t i;
 	size_t j = 0;
-	mat4 mvMatrix;
 	float texFrag[4];
 	GLuint currentTexID;
 	GLuint vboID;
@@ -206,9 +235,7 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *c
 			cvPush(mdlRenderList, (void *)&curMdl, sizeof(object *));
 		}else if(currentRenderMethod == 1){  // If the model contains translucency, it'll need to be depth sorted
 			cvPush(&translucentModels, (void *)&curMdl, sizeof(object *));
-			float tempDistance = (sqrt(abs((curMdl->tempRndrConfig.position.render.x - cam->position.render.x) * (curMdl->tempRndrConfig.position.render.x - cam->position.render.x) +
-			                               (curMdl->tempRndrConfig.position.render.y - cam->position.render.y) * (curMdl->tempRndrConfig.position.render.y - cam->position.render.y) +
-			                               (curMdl->tempRndrConfig.position.render.z - cam->position.render.z) * (curMdl->tempRndrConfig.position.render.z - cam->position.render.z))));
+			float tempDistance = camDistance(cam, &curMdl->tempRndrConfig.position.render);
 			cvPush(&distances, (void *)&tempDistance, sizeof(float));
 		}
 
@@ -293,13 +320,11 @@ void renderScene(stateManager *gameStateManager, const size_t stateID, const flo
 	size_t i;
 	for(i = 0; i < gameStateManager->objectType[SM_TYPE_CAMERA].capacity; ++i){
 		if(camGetState(gameStateManager, i, stateID) != NULL){
-			camUpdateViewMatrix(camGetState(gameStateManager, i, stateID), interpT);
-			if(gfxPrg->windowChanged){
-				// If the window size changed, update the camera projection matrices as well.
-				camGetState(gameStateManager, i, stateID)->flags |= CAM_UPDATE_PROJECTION;
-			}
-			camUpdateProjectionMatrix(camGetState(gameStateManager, i, stateID), gfxPrg->aspectRatioX, gfxPrg->aspectRatioY, interpT);
-			camUpdateViewProjectionMatrix(camGetState(gameStateManager, i, stateID));
+			camUpdateViewProjectionMatrix(camGetState(gameStateManager, i, stateID),
+			                              gfxPrg->windowChanged,
+			                              gfxPrg->aspectRatioX,
+			                              gfxPrg->aspectRatioY,
+			                              interpT);
 		}
 	}
 

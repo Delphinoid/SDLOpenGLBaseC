@@ -11,64 +11,91 @@ void physColliderGenerateMassProperties(physCollider *collider, const float mass
 	float doubleVolume = 0.f;
 	size_t i;
 
-	vec3SetS(&collider->localCentroid, 0.f);
+	vec3SetS(&collider->centroid, 0.f);
 	inertiaTensor->m[0][0] = 0.f; inertiaTensor->m[0][1] = 0.f; inertiaTensor->m[0][2] = 0.f;
 	inertiaTensor->m[1][0] = 0.f; inertiaTensor->m[1][1] = 0.f; inertiaTensor->m[1][2] = 0.f;
 	inertiaTensor->m[2][0] = 0.f; inertiaTensor->m[2][1] = 0.f; inertiaTensor->m[2][2] = 0.f;
 
-	if(collider->localHull.vertexNum > 0){
+	if(collider->hull.vertexNum > 0){
 
 		/** Pass in an array of vertex masses? Probably dumb. **/
-		const float avgVertexMass = mass / collider->localHull.vertexNum;
+		const float avgVertexMass = mass / collider->hull.vertexNum;
 
 		// Recursively calculate the center of mass.
-		for(i = 0; i < collider->localHull.vertexNum; ++i){
+		for(i = 0; i < collider->hull.vertexNum; ++i){
 
-			v0 = &collider->localHull.vertices[i-1];
-			v1 = &collider->localHull.vertices[i];
+			v0 = &collider->hull.vertices[i-1];
+			v1 = &collider->hull.vertices[i];
 			temp = v0->x * v1->y - v0->y * v1->x;
-			collider->localCentroid.x += (v0->x + v1->x) * temp;
-			collider->localCentroid.y += (v0->y + v1->y) * temp;
-			collider->localCentroid.z += (v0->z + v1->z) * temp;
+			collider->centroid.x += (v0->x + v1->x) * temp;
+			collider->centroid.y += (v0->y + v1->y) * temp;
+			collider->centroid.z += (v0->z + v1->z) * temp;
 			doubleVolume += temp;
 		}
 
 		// Final iteration with the last and first vertices.
-		v0 = &collider->localHull.vertices[collider->localHull.vertexNum-1];
-		v1 = &collider->localHull.vertices[0];
+		v0 = &collider->hull.vertices[collider->hull.vertexNum-1];
+		v1 = &collider->hull.vertices[0];
 		temp = v0->x * v1->y - v0->y * v1->x;
-		collider->localCentroid.x += (v0->x + v1->x) * temp;
-		collider->localCentroid.y += (v0->y + v1->y) * temp;
-		collider->localCentroid.z += (v0->z + v1->z) * temp;
+		collider->centroid.x += (v0->x + v1->x) * temp;
+		collider->centroid.y += (v0->y + v1->y) * temp;
+		collider->centroid.z += (v0->z + v1->z) * temp;
 		doubleVolume += temp;
 
 		// Calculate the mesh's final center of mass.
 		temp = 1.f / (3.f * doubleVolume);
-		collider->localCentroid.x *= temp;
-		collider->localCentroid.y *= temp;
-		collider->localCentroid.z *= temp;
+		collider->centroid.x *= temp;
+		collider->centroid.y *= temp;
+		collider->centroid.z *= temp;
 
-		// Calculate the moment of inertia tensor.
-		for(i = 0; i < collider->localHull.vertexNum; ++i){
+		// Initialize the AABB to the first vertex.
+		collider->aabb.left = collider->hull.vertices[0].x;
+		collider->aabb.right = collider->hull.vertices[0].x;
+		collider->aabb.top = collider->hull.vertices[0].y;
+		collider->aabb.bottom = collider->hull.vertices[0].y;
+		collider->aabb.front = collider->hull.vertices[0].z;
+		collider->aabb.back = collider->hull.vertices[0].z;
 
-			const float x = collider->localHull.vertices[i].x - collider->localCentroid.x;  /** Is this correct? **/
-			const float y = collider->localHull.vertices[i].y - collider->localCentroid.y;
-			const float z = collider->localHull.vertices[i].z - collider->localCentroid.z;
+		// Calculate the moment of inertia tensor and the AABB.
+		for(i = 0; i < collider->hull.vertexNum; ++i){
+
+			const float x = collider->hull.vertices[i].x - collider->centroid.x;  /** Is this correct? **/
+			const float y = collider->hull.vertices[i].y - collider->centroid.y;
+			const float z = collider->hull.vertices[i].z - collider->centroid.z;
 			const float sqrX = x*x;
 			const float sqrY = y*y;
 			const float sqrZ = z*z;
 			// xx
-			inertiaTensor->m[0][0] += (sqrY + sqrZ);// * collider->localHull.vertices[i].mass;
+			inertiaTensor->m[0][0] += (sqrY + sqrZ);// * collider->hull.vertices[i].mass;
 			// yy
-			inertiaTensor->m[1][1] += (sqrX + sqrZ);// * collider->localHull.vertices[i].mass;
+			inertiaTensor->m[1][1] += (sqrX + sqrZ);// * collider->hull.vertices[i].mass;
 			// zz
-			inertiaTensor->m[2][2] += (sqrX + sqrY);// * collider->localHull.vertices[i].mass;
+			inertiaTensor->m[2][2] += (sqrX + sqrY);// * collider->hull.vertices[i].mass;
 			// xy yx
-			inertiaTensor->m[0][1] -= x * y;// * collider->localHull.vertices[i].mass;
+			inertiaTensor->m[0][1] -= x * y;// * collider->hull.vertices[i].mass;
 			// xz zx
-			inertiaTensor->m[0][2] -= x * z;// * collider->localHull.vertices[i].mass;
+			inertiaTensor->m[0][2] -= x * z;// * collider->hull.vertices[i].mass;
 			// yz zy
-			inertiaTensor->m[1][2] -= y * z;// * collider->localHull.vertices[i].mass;
+			inertiaTensor->m[1][2] -= y * z;// * collider->hull.vertices[i].mass;
+
+			// Update aabb.left and aabb.right.
+			if(collider->hull.vertices[i].x <= collider->aabb.left){
+				collider->aabb.left = collider->hull.vertices[i].x;
+			}else if(collider->hull.vertices[i].x > collider->aabb.right){
+				collider->aabb.right = collider->hull.vertices[i].x;
+			}
+			// Update aabb.top and aabb.bottom.
+			if(collider->hull.vertices[i].y >= collider->aabb.top){
+				collider->aabb.top = collider->hull.vertices[i].y;
+			}else if(collider->hull.vertices[i].y < collider->aabb.bottom){
+				collider->aabb.bottom = collider->hull.vertices[i].y;
+			}
+			// Update aabb.front and aabb.back.
+			if(collider->hull.vertices[i].z >= collider->aabb.front){
+				collider->aabb.front = collider->hull.vertices[i].z;
+			}else if(collider->hull.vertices[i].z < collider->aabb.back){
+				collider->aabb.back = collider->hull.vertices[i].z;
+			}
 
 		}
 
@@ -89,50 +116,63 @@ void physColliderGenerateMassProperties(physCollider *collider, const float mass
 
 }
 
+void physColliderDelete(physCollider *collider){
+	if(collider->hull.vertices != NULL){
+		free(collider->hull.vertices);
+	}
+	if(collider->hull.indices != NULL){
+		free(collider->hull.indices);
+	}
+}
+
 void physRigidBodyGenerateMassProperties(physRigidBody *body, const float *mass, const mat3 *inertiaTensor){
 
 	size_t i;
 
-	vec3SetS(&body->localCentroid, 0.f);
+	vec3SetS(&body->centroid, 0.f);
 	body->mass = 0.f;
 
 	// Calculate the total, weighted centroid of the body.
 	for(i = 0; i < body->colliderNum; ++i){
 
-		body->localCentroid.x += body->colliders[i].localCentroid.x * mass[i];
-		body->localCentroid.y += body->colliders[i].localCentroid.y * mass[i];
-		body->localCentroid.z += body->colliders[i].localCentroid.z * mass[i];
+		body->centroid.x += body->colliders[i].centroid.x * mass[i];
+		body->centroid.y += body->colliders[i].centroid.y * mass[i];
+		body->centroid.z += body->colliders[i].centroid.z * mass[i];
 		body->mass += mass[i];
 
 	}
 
 	body->inverseMass = 1.f / body->mass;
-	body->localCentroid.x *= body->inverseMass;
-	body->localCentroid.y *= body->inverseMass;
-	body->localCentroid.z *= body->inverseMass;
+	body->centroid.x *= body->inverseMass;
+	body->centroid.y *= body->inverseMass;
+	body->centroid.z *= body->inverseMass;
 
 
 	// Calculate the body's moment of inertia tensor as the sum of its colliders' moments.
-	body->localInertiaTensor.m[0][0] = 0.f; body->localInertiaTensor.m[0][1] = 0.f; body->localInertiaTensor.m[0][2] = 0.f;
-	body->localInertiaTensor.m[1][0] = 0.f; body->localInertiaTensor.m[1][1] = 0.f; body->localInertiaTensor.m[1][2] = 0.f;
-	body->localInertiaTensor.m[2][0] = 0.f; body->localInertiaTensor.m[2][1] = 0.f; body->localInertiaTensor.m[2][2] = 0.f;
+	body->inertiaTensor.m[0][0] = 0.f; body->inertiaTensor.m[0][1] = 0.f; body->inertiaTensor.m[0][2] = 0.f;
+	body->inertiaTensor.m[1][0] = 0.f; body->inertiaTensor.m[1][1] = 0.f; body->inertiaTensor.m[1][2] = 0.f;
+	body->inertiaTensor.m[2][0] = 0.f; body->inertiaTensor.m[2][1] = 0.f; body->inertiaTensor.m[2][2] = 0.f;
 
 	for(i = 0; i < body->colliderNum; ++i){
 
-		body->localInertiaTensor.m[0][0] += inertiaTensor[i].m[0][0];
-		body->localInertiaTensor.m[0][1] += inertiaTensor[i].m[0][1];
-		body->localInertiaTensor.m[0][2] += inertiaTensor[i].m[0][2];
-		body->localInertiaTensor.m[1][0] += inertiaTensor[i].m[1][0];
-		body->localInertiaTensor.m[1][1] += inertiaTensor[i].m[1][1];
-		body->localInertiaTensor.m[1][2] += inertiaTensor[i].m[1][2];
-		body->localInertiaTensor.m[2][0] += inertiaTensor[i].m[2][0];
-		body->localInertiaTensor.m[2][1] += inertiaTensor[i].m[2][1];
-		body->localInertiaTensor.m[2][2] += inertiaTensor[i].m[2][2];
+		body->inertiaTensor.m[0][0] += inertiaTensor[i].m[0][0];
+		body->inertiaTensor.m[0][1] += inertiaTensor[i].m[0][1];
+		body->inertiaTensor.m[0][2] += inertiaTensor[i].m[0][2];
+		body->inertiaTensor.m[1][0] += inertiaTensor[i].m[1][0];
+		body->inertiaTensor.m[1][1] += inertiaTensor[i].m[1][1];
+		body->inertiaTensor.m[1][2] += inertiaTensor[i].m[1][2];
+		body->inertiaTensor.m[2][0] += inertiaTensor[i].m[2][0];
+		body->inertiaTensor.m[2][1] += inertiaTensor[i].m[2][1];
+		body->inertiaTensor.m[2][2] += inertiaTensor[i].m[2][2];
 
 	}
 
 	//mat3Invert(&body->localInverseInertiaTensor);
 
+}
+
+void physRigidBodyDelete(physRigidBody *body){
+	//
 }
 
 /*void physRigidBodyGenerateMassProperties(physRigidBody *body){
@@ -221,117 +261,117 @@ void physRigidBodyGenerateMassProperties(physRigidBody *body, const float *mass,
 
 }*/
 
-static void physRigidBodyCentroidFromPosition(physRigidBody *body){
-	body->globalCentroid = body->localCentroid;
-	quatGetRotatedVec3(&body->orientation, &body->globalCentroid);
-	vec3AddVToV(&body->globalCentroid, &body->position);
+static void prbiCentroidFromPosition(prbInstance *prbi){
+	prbi->centroid = prbi->local->centroid;
+	quatGetRotatedVec3(&prbi->configuration.orientation, &prbi->centroid);
+	vec3AddVToV(&prbi->centroid, &prbi->configuration.position);
 }
 
-static void physRigidBodyPositionFromCentroid(physRigidBody *body){
-	body->position.x = -body->localCentroid.x;
-	body->position.y = -body->localCentroid.y;
-	body->position.z = -body->localCentroid.z;
-	quatGetRotatedVec3(&body->orientation, &body->position);
-	vec3AddVToV(&body->position, &body->globalCentroid);
+static void prbiPositionFromCentroid(prbInstance *prbi){
+	prbi->configuration.position.x = -prbi->local->centroid.x;
+	prbi->configuration.position.y = -prbi->local->centroid.y;
+	prbi->configuration.position.z = -prbi->local->centroid.z;
+	quatGetRotatedVec3(&prbi->configuration.orientation, &prbi->configuration.position);
+	vec3AddVToV(&prbi->configuration.position, &prbi->centroid);
 }
 
-static void physRigidBodyGenerateGlobalInertia(physRigidBody *body){
+static void prbiGenerateGlobalInertia(prbInstance *prbi){
 
 	mat3 orientationMatrix, inverseOrientationMatrix;
 
 	// Generate 3x3 matrices for the orientation and the inverse orientation.
-	mat3Quat(&orientationMatrix, &body->orientation);
+	mat3Quat(&orientationMatrix, &prbi->configuration.orientation);
 	mat3TransposeR(&orientationMatrix, &inverseOrientationMatrix);
 
 	// Multiply them against the local inertia tensor to get the global inverse moment of inertia.
-	mat3MultMByMR(&orientationMatrix, &body->localInertiaTensor, &body->globalInverseInertiaTensor);
-	mat3MultMByM1(&body->globalInverseInertiaTensor, &inverseOrientationMatrix);
+	mat3MultMByMR(&orientationMatrix, &prbi->local->inertiaTensor, &prbi->inverseInertiaTensor);
+	mat3MultMByM1(&prbi->inverseInertiaTensor, &inverseOrientationMatrix);
 
 }
 
-void physRigidBodyUpdateCollisionMesh(physRigidBody *body){
+void prbiUpdateCollisionMesh(prbInstance *prbi){
 
 	/*
 	** Transform the vertices of each body into global space.
 	*/
 
 	size_t i, j;
-	for(i = 0; i < body->colliderNum; ++i){
+	for(i = 0; i < prbi->local->colliderNum; ++i){
 
 		// Update the collider's global centroid.
-		body->colliders[i].globalCentroid.x = body->colliders[i].localCentroid.x + body->position.x;
-		body->colliders[i].globalCentroid.y = body->colliders[i].localCentroid.y + body->position.y;
-		body->colliders[i].globalCentroid.z = body->colliders[i].localCentroid.z + body->position.z;
+		prbi->colliders[i].centroid.x = prbi->local->colliders[i].centroid.x + prbi->configuration.position.x;
+		prbi->colliders[i].centroid.y = prbi->local->colliders[i].centroid.y + prbi->configuration.position.y;
+		prbi->colliders[i].centroid.z = prbi->local->colliders[i].centroid.z + prbi->configuration.position.z;
 
-		for(j = 0; j < body->colliders[i].localHull.vertexNum; ++j){
+		for(j = 0; j < prbi->colliders[i].hull.vertexNum; ++j){
 
 			// Transform the vertex.
 			// Subtract the local centroid from the vertex.
-            vec3SubVFromVR(&body->colliders[i].localHull.vertices[j], &body->colliders[i].localCentroid, &body->colliders[i].globalHull.vertices[j]);
+			vec3SubVFromVR(&prbi->local->colliders[i].hull.vertices[j], &prbi->local->colliders[i].centroid, &prbi->colliders[i].hull.vertices[j]);
 			// Rotate the new vertex around (0, 0, 0).
-            quatRotateVec3(&body->orientation, &body->colliders[i].globalHull.vertices[j]);
-            // Translate it by the global centroid.
-            vec3AddVToV(&body->colliders[i].globalHull.vertices[j], &body->colliders[i].globalCentroid);
+			quatRotateVec3(&prbi->configuration.orientation, &prbi->colliders[i].hull.vertices[j]);
+			// Translate it by the global centroid.
+			vec3AddVToV(&prbi->colliders[i].hull.vertices[j], &prbi->colliders[i].centroid);
 
 			// Update mesh minima and maxima.
-            if(j == 0){
+			if(j == 0){
 				// Initialize them to the first vertex.
-				body->colliders[i].aabb.left = body->colliders[i].globalHull.vertices[j].x;
-				body->colliders[i].aabb.right = body->colliders[i].globalHull.vertices[j].x;
-				body->colliders[i].aabb.top = body->colliders[i].globalHull.vertices[j].y;
-				body->colliders[i].aabb.bottom = body->colliders[i].globalHull.vertices[j].y;
-				body->colliders[i].aabb.front = body->colliders[i].globalHull.vertices[j].z;
-				body->colliders[i].aabb.back = body->colliders[i].globalHull.vertices[j].z;
-            }else{
-            	// Update aabb.left and aabb.right.
-				if(body->colliders[i].globalHull.vertices[j].x <= body->colliders[i].aabb.left){
-					body->colliders[i].aabb.left = body->colliders[i].globalHull.vertices[j].x;
-				}else if(body->colliders[i].globalHull.vertices[j].x > body->colliders[i].aabb.right){
-					body->colliders[i].aabb.right = body->colliders[i].globalHull.vertices[j].x;
+				prbi->colliders[i].aabb.left = prbi->colliders[i].hull.vertices[j].x;
+				prbi->colliders[i].aabb.right = prbi->colliders[i].hull.vertices[j].x;
+				prbi->colliders[i].aabb.top = prbi->colliders[i].hull.vertices[j].y;
+				prbi->colliders[i].aabb.bottom = prbi->colliders[i].hull.vertices[j].y;
+				prbi->colliders[i].aabb.front = prbi->colliders[i].hull.vertices[j].z;
+				prbi->colliders[i].aabb.back = prbi->colliders[i].hull.vertices[j].z;
+			}else{
+				// Update aabb.left and aabb.right.
+				if(prbi->colliders[i].hull.vertices[j].x <= prbi->colliders[i].aabb.left){
+					prbi->colliders[i].aabb.left = prbi->colliders[i].hull.vertices[j].x;
+				}else if(prbi->colliders[i].hull.vertices[j].x > prbi->colliders[i].aabb.right){
+					prbi->colliders[i].aabb.right = prbi->colliders[i].hull.vertices[j].x;
 				}
-            	// Update aabb.top and aabb.bottom.
-				if(body->colliders[i].globalHull.vertices[j].y >= body->colliders[i].aabb.top){
-					body->colliders[i].aabb.top = body->colliders[i].globalHull.vertices[j].y;
-				}else if(body->colliders[i].globalHull.vertices[j].y < body->colliders[i].aabb.bottom){
-					body->colliders[i].aabb.bottom = body->colliders[i].globalHull.vertices[j].y;
+				// Update aabb.top and aabb.bottom.
+				if(prbi->colliders[i].hull.vertices[j].y >= prbi->colliders[i].aabb.top){
+					prbi->colliders[i].aabb.top = prbi->colliders[i].hull.vertices[j].y;
+				}else if(prbi->colliders[i].hull.vertices[j].y < prbi->colliders[i].aabb.bottom){
+					prbi->colliders[i].aabb.bottom = prbi->colliders[i].hull.vertices[j].y;
 				}
-            	// Update aabb.front and aabb.back.
-				if(body->colliders[i].globalHull.vertices[j].z >= body->colliders[i].aabb.front){
-					body->colliders[i].aabb.front = body->colliders[i].globalHull.vertices[j].z;
-				}else if(body->colliders[i].globalHull.vertices[j].z < body->colliders[i].aabb.back){
-					body->colliders[i].aabb.back = body->colliders[i].globalHull.vertices[j].z;
+				// Update aabb.front and aabb.back.
+				if(prbi->colliders[i].hull.vertices[j].z >= prbi->colliders[i].aabb.front){
+					prbi->colliders[i].aabb.front = prbi->colliders[i].hull.vertices[j].z;
+				}else if(prbi->colliders[i].hull.vertices[j].z < prbi->colliders[i].aabb.back){
+					prbi->colliders[i].aabb.back = prbi->colliders[i].hull.vertices[j].z;
 				}
-            }
+			}
 
 		}
 
 		// Update body minima and maxima.
 		if(i == 0){
 			// Initialize them to the first collider's bounding box.
-			body->aabb.left = body->colliders[i].aabb.left;
-			body->aabb.right = body->colliders[i].aabb.right;
-			body->aabb.top = body->colliders[i].aabb.top;
-			body->aabb.bottom = body->colliders[i].aabb.bottom;
-			body->aabb.front = body->colliders[i].aabb.front;
-			body->aabb.back = body->colliders[i].aabb.back;
+			prbi->aabb.left = prbi->colliders[i].aabb.left;
+			prbi->aabb.right = prbi->colliders[i].aabb.right;
+			prbi->aabb.top = prbi->colliders[i].aabb.top;
+			prbi->aabb.bottom = prbi->colliders[i].aabb.bottom;
+			prbi->aabb.front = prbi->colliders[i].aabb.front;
+			prbi->aabb.back = prbi->colliders[i].aabb.back;
 		}else{
 			// Update aabb.left and aabb.right.
-			if(body->colliders[i].aabb.left <= body->aabb.left){
-				body->aabb.left = body->colliders[i].aabb.left;
-			}else if(body->colliders[i].aabb.right > body->aabb.right){
-				body->aabb.right = body->colliders[i].aabb.right;
+			if(prbi->colliders[i].aabb.left <= prbi->aabb.left){
+				prbi->aabb.left = prbi->colliders[i].aabb.left;
+			}else if(prbi->colliders[i].aabb.right > prbi->aabb.right){
+				prbi->aabb.right = prbi->colliders[i].aabb.right;
 			}
 			// Update aabb.top and aabb.bottom.
-			if(body->colliders[i].aabb.top >= body->aabb.top){
-				body->aabb.top = body->colliders[i].aabb.top;
-			}else if(body->colliders[i].aabb.bottom < body->aabb.bottom){
-				body->aabb.bottom = body->colliders[i].aabb.bottom;
+			if(prbi->colliders[i].aabb.top >= prbi->aabb.top){
+				prbi->aabb.top = prbi->colliders[i].aabb.top;
+			}else if(prbi->colliders[i].aabb.bottom < prbi->aabb.bottom){
+				prbi->aabb.bottom = prbi->colliders[i].aabb.bottom;
 			}
 			// Update aabb.front and aabb.back.
-			if(body->colliders[i].aabb.front >= body->aabb.front){
-				body->aabb.front = body->colliders[i].aabb.front;
-			}else if(body->colliders[i].aabb.back < body->aabb.back){
-				body->aabb.back = body->colliders[i].aabb.back;
+			if(prbi->colliders[i].aabb.front >= prbi->aabb.front){
+				prbi->aabb.front = prbi->colliders[i].aabb.front;
+			}else if(prbi->colliders[i].aabb.back < prbi->aabb.back){
+				prbi->aabb.back = prbi->colliders[i].aabb.back;
 			}
 		}
 
@@ -339,7 +379,7 @@ void physRigidBodyUpdateCollisionMesh(physRigidBody *body){
 
 }
 
-void physRigidBodyApplyForceAtGlobalPoint(physRigidBody *body, const vec3 *F, const vec3 *r){
+void prbiApplyForceAtGlobalPoint(prbInstance *prbi, const vec3 *F, const vec3 *r){
 
 	/*
 	** Accumulate the net force and torque.
@@ -349,50 +389,50 @@ void physRigidBodyApplyForceAtGlobalPoint(physRigidBody *body, const vec3 *F, co
 	/* Accumulate torque. */
 	// T = r x F
 	vec3 rsR, rxF;
-	vec3SubVFromVR(r, &body->globalCentroid, &rsR);
+	vec3SubVFromVR(r, &prbi->centroid, &rsR);
 	vec3Cross(&rsR, F, &rxF);
-	vec3AddVToV(&body->netTorque, &rxF);
+	vec3AddVToV(&prbi->netTorque, &rxF);
 
 	/* Accumulate force. */
-	vec3AddVToV(&body->netForce, F);
+	vec3AddVToV(&prbi->netForce, F);
 
 }
 
-void physRigidBodyAddLinearVelocity(physRigidBody *body, const vec3 *impulse){
+void prbiAddLinearVelocity(prbInstance *prbi, const vec3 *impulse){
 	/* Add to the linear velocity. */
-	body->linearVelocity.x += impulse->x;
-	body->linearVelocity.y += impulse->y;
-	body->linearVelocity.z += impulse->z;
+	prbi->linearVelocity.x += impulse->x;
+	prbi->linearVelocity.y += impulse->y;
+	prbi->linearVelocity.z += impulse->z;
 }
 
-void physRigidBodyApplyLinearImpulse(physRigidBody *body, const vec3 *impulse){
+void prbiApplyLinearImpulse(prbInstance *prbi, const vec3 *impulse){
 	/* Apply a linear impulse. */
-	body->linearVelocity.x += impulse->x * body->inverseMass;
-	body->linearVelocity.y += impulse->y * body->inverseMass;
-	body->linearVelocity.z += impulse->z * body->inverseMass;
+	prbi->linearVelocity.x += impulse->x * prbi->local->inverseMass;
+	prbi->linearVelocity.y += impulse->y * prbi->local->inverseMass;
+	prbi->linearVelocity.z += impulse->z * prbi->local->inverseMass;
 }
 
-void physRigidBodyAddAngularVelocity(physRigidBody *body, const float angle, const float x, const float y, const float z){
+void prbiAddAngularVelocity(prbInstance *prbi, const float angle, const float x, const float y, const float z){
 	/* Add to the angular velocity. */
 	/** This is most definitely naive and incorrect. **/
-	body->angularVelocity.x += x * angle;
-	body->angularVelocity.y += y * angle;
-	body->angularVelocity.z += z * angle;
+	prbi->angularVelocity.x += x * angle;
+	prbi->angularVelocity.y += y * angle;
+	prbi->angularVelocity.z += z * angle;
 }
 
-static void physRigidBodyResetForceAccumulator(physRigidBody *body){
-	body->netForce.x = 0.f;
-	body->netForce.y = 0.f;
-	body->netForce.z = 0.f;
+static void prbiResetForceAccumulator(prbInstance *prbi){
+	prbi->netForce.x = 0.f;
+	prbi->netForce.y = 0.f;
+	prbi->netForce.z = 0.f;
 }
 
-static void physRigidBodyResetTorqueAccumulator(physRigidBody *body){
-	body->netTorque.x = 0.f;
-	body->netTorque.y = 0.f;
-	body->netTorque.z = 0.f;
+static void prbiResetTorqueAccumulator(prbInstance *prbi){
+	prbi->netTorque.x = 0.f;
+	prbi->netTorque.y = 0.f;
+	prbi->netTorque.z = 0.f;
 }
 
-void physRigidBodyIntegrateEuler(physRigidBody *body, const float dt){
+void prbiIntegrateEuler(prbInstance *prbi, const float dt){
 
 	/* Euler integration scheme. */
 	const unsigned int steps = PHYS_INTEGRATION_STEPS_EULER;
@@ -403,62 +443,62 @@ void physRigidBodyIntegrateEuler(physRigidBody *body, const float dt){
 	size_t i;
 
 	/* Update moment of inertia. */
-	physRigidBodyGenerateGlobalInertia(body);
+	prbiGenerateGlobalInertia(prbi);
 
 	for(i = 0; i < steps; ++i){
 
 		/* Calculate linear velocity. */
 		// a = F/m
 		// dv = a * dt
-		body->linearVelocity.x += body->netForce.x * body->inverseMass * dtStep;
-		body->linearVelocity.y += body->netForce.y * body->inverseMass * dtStep;
-		body->linearVelocity.z += body->netForce.z * body->inverseMass * dtStep;
+		prbi->linearVelocity.x += prbi->netForce.x * prbi->local->inverseMass * dtStep;
+		prbi->linearVelocity.y += prbi->netForce.y * prbi->local->inverseMass * dtStep;
+		prbi->linearVelocity.z += prbi->netForce.z * prbi->local->inverseMass * dtStep;
 
 		/* Update position. */
-		body->position.x += body->linearVelocity.x * dtStep;
-		body->position.y += body->linearVelocity.y * dtStep;
-		body->position.z += body->linearVelocity.z * dtStep;
+		prbi->configuration.position.x += prbi->linearVelocity.x * dtStep;
+		prbi->configuration.position.y += prbi->linearVelocity.y * dtStep;
+		prbi->configuration.position.z += prbi->linearVelocity.z * dtStep;
 
 		/* Calculate angular velocity. */
-		tempVec3.x = body->netTorque.x * dtStep;
-		tempVec3.y = body->netTorque.y * dtStep;
-		tempVec3.z = body->netTorque.z * dtStep;
-		mat3MultMByV(&body->globalInverseInertiaTensor, &tempVec3);
-		body->angularVelocity.x += tempVec3.x;
-		body->angularVelocity.y += tempVec3.y;
-		body->angularVelocity.z += tempVec3.z;
+		tempVec3.x = prbi->netTorque.x * dtStep;
+		tempVec3.y = prbi->netTorque.y * dtStep;
+		tempVec3.z = prbi->netTorque.z * dtStep;
+		mat3MultMByV(&prbi->inverseInertiaTensor, &tempVec3);
+		prbi->angularVelocity.x += tempVec3.x;
+		prbi->angularVelocity.y += tempVec3.y;
+		prbi->angularVelocity.z += tempVec3.z;
 
 		/* Update orientation. */
 		// Angle
-		tempFloat = vec3GetMagnitude(&body->angularVelocity) * dtStep;
+		tempFloat = vec3GetMagnitude(&prbi->angularVelocity) * dtStep;
 		// Axis
-		tempVec3 = body->angularVelocity;
+		tempVec3 = prbi->angularVelocity;
 		vec3NormalizeFast(&tempVec3);
 		// Convert axis-angle rotation to a quaternion.
 		quatSetAxisAngle(&tempQuat, tempFloat, tempVec3.x, tempVec3.y, tempVec3.z);
-		quatMultQByQ2(&tempQuat, &body->orientation);
+		quatMultQByQ2(&tempQuat, &prbi->configuration.orientation);
 		// Normalize the orientation.
-		quatNormalizeFast(&body->orientation);
+		quatNormalizeFast(&prbi->configuration.orientation);
 
 	}
 
 	/* Update global centroid. */
-	physRigidBodyCentroidFromPosition(body);
+	prbiCentroidFromPosition(prbi);
 
 	/* Update constraints. */
 	//
 
 	/* Reset force and torque accumulators. */
-	body->netForce.x = 0.f;
-	body->netForce.y = 0.f;
-	body->netForce.z = 0.f;
-	body->netTorque.x = 0.f;
-	body->netTorque.y = 0.f;
-	body->netTorque.z = 0.f;
+	prbi->netForce.x = 0.f;
+	prbi->netForce.y = 0.f;
+	prbi->netForce.z = 0.f;
+	prbi->netTorque.x = 0.f;
+	prbi->netTorque.y = 0.f;
+	prbi->netTorque.z = 0.f;
 
 }
 
-void physRigidBodyIntegrateLeapfrog(physRigidBody *body, const float dt){
+void prbiIntegrateLeapfrog(prbInstance *prbi, const float dt){
 
 	/* Velocity Verlet integration scheme. */
 	vec3 tempVec3;
@@ -467,90 +507,78 @@ void physRigidBodyIntegrateLeapfrog(physRigidBody *body, const float dt){
 
 	/* Integrate position and linear velocity. */
 	tempFloat = 0.5f * dt;
-	body->linearVelocity.x += body->netForce.x * body->inverseMass * tempFloat;
-	body->linearVelocity.y += body->netForce.y * body->inverseMass * tempFloat;
-	body->linearVelocity.z += body->netForce.z * body->inverseMass * tempFloat;
+	prbi->linearVelocity.x += prbi->netForce.x * prbi->local->inverseMass * tempFloat;
+	prbi->linearVelocity.y += prbi->netForce.y * prbi->local->inverseMass * tempFloat;
+	prbi->linearVelocity.z += prbi->netForce.z * prbi->local->inverseMass * tempFloat;
 	// Kinematic equation for displacement.
 	// x(t+1) = x(t) + (v(t) * dt) + ((0.5 * a(t)) * dt * dt)
-	body->position.x += body->linearVelocity.x * dt;
-	body->position.y += body->linearVelocity.y * dt;
-	body->position.z += body->linearVelocity.z * dt;
+	prbi->configuration.position.x += prbi->linearVelocity.x * dt;
+	prbi->configuration.position.y += prbi->linearVelocity.y * dt;
+	prbi->configuration.position.z += prbi->linearVelocity.z * dt;
 	/**polygonResetForce(polygon);**/
 	// Kinematic equation for velocity.
 	// v(t+1) = v(t) + (a(t+1) * dt)
 	// v(t+1) = v(t) + (((a(t) + a(t+1)) / 2) * dt)
-	body->linearVelocity.x += body->netForce.x * body->inverseMass * tempFloat;
-	body->linearVelocity.y += body->netForce.y * body->inverseMass * tempFloat;
-	body->linearVelocity.z += body->netForce.z * body->inverseMass * tempFloat;
+	prbi->linearVelocity.x += prbi->netForce.x * prbi->local->inverseMass * tempFloat;
+	prbi->linearVelocity.y += prbi->netForce.y * prbi->local->inverseMass * tempFloat;
+	prbi->linearVelocity.z += prbi->netForce.z * prbi->local->inverseMass * tempFloat;
 
 	/* Update centroid. */
-	physRigidBodyCentroidFromPosition(body);
+	prbiCentroidFromPosition(prbi);
 
 	/* Update moment of inertia. */
-	physRigidBodyGenerateGlobalInertia(body);
+	prbiGenerateGlobalInertia(prbi);
 
 	/* Calculate angular velocity. */
-	tempVec3.x = body->netTorque.x * dt;
-	tempVec3.y = body->netTorque.y * dt;
-	tempVec3.z = body->netTorque.z * dt;
-	mat3MultMByV(&body->globalInverseInertiaTensor, &tempVec3);
-	body->angularVelocity.x += tempVec3.x;
-	body->angularVelocity.y += tempVec3.y;
-	body->angularVelocity.z += tempVec3.z;
+	tempVec3.x = prbi->netTorque.x * dt;
+	tempVec3.y = prbi->netTorque.y * dt;
+	tempVec3.z = prbi->netTorque.z * dt;
+	mat3MultMByV(&prbi->inverseInertiaTensor, &tempVec3);
+	prbi->angularVelocity.x += tempVec3.x;
+	prbi->angularVelocity.y += tempVec3.y;
+	prbi->angularVelocity.z += tempVec3.z;
 
 	/* Update orientation. */
 	// Axis
-	tempVec3 = body->angularVelocity;
+	tempVec3 = prbi->angularVelocity;
 	vec3NormalizeFast(&tempVec3);
 	// Angle
-	tempFloat = vec3GetMagnitude(&body->angularVelocity) * dt;
+	tempFloat = vec3GetMagnitude(&prbi->angularVelocity) * dt;
 	// Convert axis-angle rotation to a quaternion.
 	quatSetAxisAngle(&tempQuat, tempFloat, tempVec3.x, tempVec3.y, tempVec3.z);
-	quatMultQByQ2(&tempQuat, &body->orientation);
+	quatMultQByQ2(&tempQuat, &prbi->configuration.orientation);
 	// Normalize the orientation.
-	quatNormalizeFast(&body->orientation);
+	quatNormalizeFast(&prbi->configuration.orientation);
 
 	/* Update constraints. */
 	//
 
 	/* Reset force and torque accumulators. */
-	physRigidBodyResetForceAccumulator(body);
-	physRigidBodyResetTorqueAccumulator(body);
+	prbiResetForceAccumulator(prbi);
+	prbiResetTorqueAccumulator(prbi);
 
 }
 
-static void physRigidBodyIntegrateRungeKutta(physRigidBody *body, const float dt){
+static void prbiIntegrateRungeKutta(prbInstance *prbi, const float dt){
 	/* RK4 integration scheme. */
 
 }
 
-void physRigidBodyUpdate(physRigidBody *body, const float dt){
+void prbiUpdate(prbInstance *prbi, const float dt){
 
 	//
 
 }
 
-void physColliderDelete(physCollider *collider){
-	if(collider->localHull.vertices != NULL){
-		free(collider->localHull.vertices);
-	}
-	if(collider->globalHull.vertices != NULL){
-		free(collider->globalHull.vertices);
-	}
-	if(collider->localHull.indices != NULL){
-		free(collider->localHull.indices);
-	}
-}
-
-void physRigidBodyDelete(physRigidBody *body){
-	/**if(body->colliders != NULL){
-		size_t i;
-		for(i = 0; i < body->colliderNum; ++i){
-			physColliderDelete(&body->colliders[i]);
+void prbiDelete(prbInstance *prbi){
+	size_t i;
+	if(prbi->colliders != NULL){
+		for(i = 0; i < prbi->local->colliderNum; ++i){
+			// Only free vertices, as we re-use indices from the local collider's hull.
+			free(prbi->colliders[i].hull.vertices);
 		}
-		free(body->colliders);
 	}
-	if(body->constraints != NULL){
-		free(body->constraints);
-	}**/
+	if(prbi->constraints != NULL){
+		free(prbi->constraints);
+	}
 }
