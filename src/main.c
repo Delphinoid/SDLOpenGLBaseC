@@ -361,7 +361,7 @@ int main(int argc, char *argv[]){
 	/** Special deletion code **/
 	sklaDelete(objGetState(&gameStateManager, 0, 0)->animationData.animations[0].animFrags[0].currentAnim);
 
-	cleanup(&gfxPrg, &gameStateManager, &allTextures, &allTexWrappers, &allModels, &allSkeletons, &allSklAnimations);
+	cleanup(&gfxPrg, &gameStateManager, &allTextures, &allSkeletons, &allTexWrappers, &allModels, &allSklAnimations);
 	return 0;
 
 }

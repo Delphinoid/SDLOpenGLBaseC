@@ -145,59 +145,29 @@ void mat3TransposeR(const mat3 *m, mat3 *r){
 
 signed char mat3Invert(mat3 *m){
 
-	/* Find the inverse using Gauss-Jordan elimination. */
-	if(m->m[0][0] != 0.f){
+	const float f0 = m->m[1][1] * m->m[2][2] - m->m[2][1] * m->m[1][2];
+	const float f1 = m->m[1][2] * m->m[2][0] - m->m[1][0] * m->m[2][2];
+	const float f2 = m->m[1][0] * m->m[2][1] - m->m[1][1] * m->m[2][0];
+	float invDet = m->m[0][0] * f0 +
+	               m->m[0][1] * f1 +
+	               m->m[0][2] * f2;
 
-		float t;
-		mat3 temp;
+	if(invDet != 0.f){
 
-		m->m[0][0] = 1.f / m->m[0][0];
-		temp.m[0][1] = m->m[0][1] * m->m[0][0];
-		temp.m[0][2] = m->m[0][2] * m->m[0][0];
+		const mat3 temp = *m;
+		invDet = 1.f / invDet;
 
-		t = m->m[1][0];
-		m->m[1][0] = -t * m->m[0][0];
-		temp.m[1][1] = m->m[1][1] - t * temp.m[0][1];
-		temp.m[1][2] = m->m[1][2] - t * temp.m[0][2];
+		m->m[0][0] = f0 * invDet;
+		m->m[0][1] = (temp.m[0][2] * temp.m[2][1] - temp.m[0][1] * temp.m[2][2]) * invDet;
+		m->m[0][2] = (temp.m[0][1] * temp.m[1][2] - temp.m[0][2] * temp.m[1][1]) * invDet;
+		m->m[1][0] = f1 * invDet;
+		m->m[1][1] = (temp.m[0][0] * temp.m[2][2] - temp.m[0][2] * temp.m[2][0]) * invDet;
+		m->m[1][2] = (temp.m[1][0] * temp.m[0][2] - temp.m[0][0] * temp.m[1][2]) * invDet;
+		m->m[2][0] = f2 * invDet;
+		m->m[2][1] = (temp.m[2][0] * temp.m[0][1] - temp.m[0][0] * temp.m[2][1]) * invDet;
+		m->m[2][2] = (temp.m[0][0] * temp.m[1][1] - temp.m[1][0] * temp.m[0][1]) * invDet;
 
-		t = m->m[2][0];
-		m->m[2][0] = -t * m->m[0][0];
-		temp.m[2][1] = m->m[2][1] - t * temp.m[0][1];
-		temp.m[2][2] = m->m[2][2] - t * temp.m[0][2];
-
-		if(temp.m[1][1] != 0.f){
-
-			m->m[1][1] = 1.f / temp.m[1][1];
-			m->m[1][0] *= m->m[1][1];
-			temp.m[1][2] *= m->m[1][1];
-
-			temp.m[0][2] = temp.m[0][2] - temp.m[0][1] * temp.m[1][2];
-			m->m[0][0] -= temp.m[0][1] * m->m[1][0];
-			m->m[0][1] = -temp.m[0][1] * m->m[1][1];
-
-			temp.m[2][2] = temp.m[2][2] - temp.m[2][1] * temp.m[1][2];
-			m->m[2][0] -= temp.m[2][1] * m->m[1][0];
-			m->m[2][1] = -temp.m[2][1] * m->m[1][1];
-
-			if(temp.m[2][2] != 0.f){
-
-				m->m[2][2] = 1.f / temp.m[2][2];
-				m->m[2][0] *= m->m[2][2];
-				m->m[2][1] *= m->m[2][2];
-
-				m->m[0][0] -= temp.m[0][2] * m->m[2][0];
-				m->m[0][1] -= temp.m[0][2] * m->m[2][1];
-				m->m[0][2] = -temp.m[0][2] * m->m[2][2];
-
-				m->m[1][0] -= temp.m[1][2] * m->m[2][0];
-				m->m[1][1] -= temp.m[1][2] * m->m[2][1];
-				m->m[1][2] = -temp.m[1][2] * m->m[2][2];
-
-				return 1;
-
-			}
-
-		}
+		return 1;
 
 	}
 
@@ -206,56 +176,29 @@ signed char mat3Invert(mat3 *m){
 }
 signed char mat3InvertR(const mat3 *m, mat3 *r){
 
-	/* Find the inverse using Gauss-Jordan elimination. */
-	if(m->m[0][0] != 0.f){
+	const float f0 = m->m[1][1] * m->m[2][2] - m->m[2][1] * m->m[1][2];
+	const float f1 = m->m[1][2] * m->m[2][0] - m->m[1][0] * m->m[2][2];
+	const float f2 = m->m[1][0] * m->m[2][1] - m->m[1][1] * m->m[2][0];
+	float invDet = m->m[0][0] * f0 +
+	               m->m[0][1] * f1 +
+	               m->m[0][2] * f2;
 
-		mat3 temp;
+	if(invDet != 0.f){
 
-		r->m[0][0] = 1.f / m->m[0][0];
-		temp.m[0][1] = m->m[0][1] * r->m[0][0];
-		temp.m[0][2] = m->m[0][2] * r->m[0][0];
+		const mat3 temp = *m;
+		invDet = 1.f / invDet;
 
-		r->m[1][0] = -m->m[1][0] * r->m[0][0];
-		temp.m[1][1] = m->m[1][1] - m->m[1][0] * temp.m[0][1];
-		temp.m[1][2] = m->m[1][2] - m->m[1][0] * temp.m[0][2];
+		r->m[0][0] = f0 * invDet;
+		r->m[0][1] = (temp.m[0][2] * temp.m[2][1] - temp.m[0][1] * temp.m[2][2]) * invDet;
+		r->m[0][2] = (temp.m[0][1] * temp.m[1][2] - temp.m[0][2] * temp.m[1][1]) * invDet;
+		r->m[1][0] = f1 * invDet;
+		r->m[1][1] = (temp.m[0][0] * temp.m[2][2] - temp.m[0][2] * temp.m[2][0]) * invDet;
+		r->m[1][2] = (temp.m[1][0] * temp.m[0][2] - temp.m[0][0] * temp.m[1][2]) * invDet;
+		r->m[2][0] = f2 * invDet;
+		r->m[2][1] = (temp.m[2][0] * temp.m[0][1] - temp.m[0][0] * temp.m[2][1]) * invDet;
+		r->m[2][2] = (temp.m[0][0] * temp.m[1][1] - temp.m[1][0] * temp.m[0][1]) * invDet;
 
-		r->m[2][0] = -m->m[2][0] * r->m[0][0];
-		temp.m[2][1] = m->m[2][1] - m->m[2][0] * temp.m[0][1];
-		temp.m[2][2] = m->m[2][2] - m->m[2][0] * temp.m[0][2];
-
-		if(temp.m[1][1] != 0.f){
-
-			r->m[1][1] = 1.f / temp.m[1][1];
-			r->m[1][0] *= r->m[1][1];
-			temp.m[1][2] *= r->m[1][1];
-
-			temp.m[0][2] = temp.m[0][2] - temp.m[0][1] * temp.m[1][2];
-			r->m[0][0] -= temp.m[0][1] * r->m[1][0];
-			r->m[0][1] = -temp.m[0][1] * r->m[1][1];
-
-			temp.m[2][2] = temp.m[2][2] - temp.m[2][1] * temp.m[1][2];
-			r->m[2][0] -= temp.m[2][1] * r->m[1][0];
-			r->m[2][1] = -temp.m[2][1] * r->m[1][1];
-
-			if(temp.m[2][2] != 0.f){
-
-				r->m[2][2] = 1.f / temp.m[2][2];
-				r->m[2][0] *= r->m[2][2];
-				r->m[2][1] *= r->m[2][2];
-
-				r->m[0][0] -= temp.m[0][2] * r->m[2][0];
-				r->m[0][1] -= temp.m[0][2] * r->m[2][1];
-				r->m[0][2] = -temp.m[0][2] * r->m[2][2];
-
-				r->m[1][0] -= temp.m[1][2] * r->m[2][0];
-				r->m[1][1] -= temp.m[1][2] * r->m[2][1];
-				r->m[1][2] = -temp.m[1][2] * r->m[2][2];
-
-				return 1;
-
-			}
-
-		}
+		return 1;
 
 	}
 
