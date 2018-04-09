@@ -9,9 +9,9 @@
 void rndrInit(renderable *rndr){
 	rndr->mdl = NULL;
 	twiInit(&rndr->twi, NULL);
-	rndr->parentBoneLookup = NULL;
-	rndr->physicsSimulate = 0;
-	rndr->physicsState = NULL;
+	//rndr->parentBoneLookup = NULL;
+	//rndr->physicsSimulate = 0;
+	//rndr->physicsState = NULL;
 	//rndr->hitboxState = NULL;
 }
 
@@ -68,7 +68,7 @@ signed char rndrCopy(renderable *o, renderable *c){
 }*/
 
 void rndrDelete(renderable *rndr){
-	size_t i;
+	/*size_t i;
 	if(rndr->parentBoneLookup != NULL){
 		free(rndr->parentBoneLookup);
 	}
@@ -77,7 +77,7 @@ void rndrDelete(renderable *rndr){
 			prbiDelete(&rndr->physicsState[i]);
 		}
 		free(rndr->physicsState);
-	}
+	}*/
 	/*if(rndr->hitboxState != NULL){
 		for(i = 0; i < rndr->mdl->skl->boneNum; ++i){
 			if(rndr->hitboxState[i] != NULL){

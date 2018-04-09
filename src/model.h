@@ -23,8 +23,8 @@ typedef struct {
 	/**size_t boneNum;
 	char **boneNames;       // An array of bone names.**/
 	skeleton *skl;
-	physRigidBody *bodies;  // An array of physics body descriptors, one for each bone.
-	hitbox **hitboxes;      // An array of hitbox arrays, one for each bone.
+	/**physRigidBody *bodies;  // An array of physics body descriptors, one for each bone.
+	hitbox **hitboxes;      // An array of hitbox arrays, one for each bone.**/
 
 } model;
 

@@ -24,6 +24,10 @@ typedef struct {
 	/** Split these into three arrays for position, orientation and scale? **/
 	bone *skeletonState[2];  // The global skeleton states from the previous and last updates.
 
+	signed char physicsSimulate;  // Whether or not to simulate physics on the model's skeleton.
+	prbInstance *physicsState;    // An array of physics bodies, one for each bone in mdl.skl.
+	hitbox **hitboxState;
+
 	size_t renderableNum;
 	renderable *renderables;
 

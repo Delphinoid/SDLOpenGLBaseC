@@ -69,10 +69,10 @@ void renderModel(object *obj, const camera *cam, const float interpT, gfxProgram
 
 						// Check if the current bone has an associated rigid body that is currently active.
 						// If it does, interpolate its configuration and use that for rendering.
-						if(obj->renderables[i].physicsSimulate && (obj->renderables[i].physicsState[j].flags & PHYSICS_BODY_SIMULATE) > 0){
+						if(obj->physicsSimulate && (obj->physicsState[rndrBone].flags & PHYSICS_BODY_SIMULATE) > 0){
 							// Interpolate bone's rigid body's configuration.
-							boneInterpolate(&obj->renderables[i].physicsState[j].configuration,
-							                &obj->renderables[i].physicsState[j].configurationLast,
+							boneInterpolate(&obj->physicsState[rndrBone].configuration,
+							                &obj->physicsState[rndrBone].configurationLast,
 							                interpT, &modelSpace);
 						}else{
 							modelSpace = gfxPrg->sklAnimationState[rndrBone];

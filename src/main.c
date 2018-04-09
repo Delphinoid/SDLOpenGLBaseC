@@ -28,10 +28,10 @@ int main(int argc, char *argv[]){
 
 	/** Most of the code below this comment will be removed eventually **/
 	stateManager gameStateManager;
-	smInit(&gameStateManager, 2);
-	smObjectTypeNew(&gameStateManager, &scnInit, &scnInit, &scnStateCopy, &scnResetInterpolation, &scnDelete, sizeof(scene),  2);
-	smObjectTypeNew(&gameStateManager, &camInit, &camNew,  &camStateCopy, &camResetInterpolation, &camDelete, sizeof(camera), 2);
-	smObjectTypeNew(&gameStateManager, &objInit, &objNew,  &objStateCopy, &objResetInterpolation, &objDelete, sizeof(object), 6);
+	smInit(&gameStateManager);
+	smObjectTypeNew(&gameStateManager, &scnInit, &scnInit, &scnStateCopy, &scnResetInterpolation, &scnDelete, sizeof(scene),  2, 2);
+	smObjectTypeNew(&gameStateManager, &camInit, &camNew,  &camStateCopy, &camResetInterpolation, &camDelete, sizeof(camera), 2, 2);
+	smObjectTypeNew(&gameStateManager, &objInit, &objNew,  &objStateCopy, &objResetInterpolation, &objDelete, sizeof(object), 6, 2);
 
 	cVector allTextures; cvInit(&allTextures, 1);            // Holds textures
 	cVector allTexWrappers; cvInit(&allTexWrappers, 1);      // Holds textureWrappers

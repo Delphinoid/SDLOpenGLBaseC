@@ -21,15 +21,15 @@ typedef struct {
 	model *mdl;         // A pointer to the bodygroup's associated model.
 	twInstance twi;     // The bodygroup's associated texture wrapper.
 
-	size_t *parentBoneLookup;  // Which bone in the parent's skeleton each bone in mdl corresponds
+	//size_t *parentBoneLookup;  // Which bone in the parent's skeleton each bone in mdl corresponds
 	                           // to. If the root (first) bone in mdl is named "blah" and the second
 	                           // bone in the parent's skeleton is named "blah", the array will start
 	                           // with parentBoneLookup[0] == 1. If the bone does not exist, its entry
 	                           // will be (size_t)-1.
 	//bone *skeletonState[2];  // The global skeleton states from the previous and last updates.
 
-	signed char physicsSimulate;  // Whether or not to simulate physics on the model's skeleton.
-	prbInstance *physicsState;    // An array of physics bodies, one for each bone in mdl.skl.
+	//signed char physicsSimulate;  // Whether or not to simulate physics on the model's skeleton.
+	//prbInstance *physicsState;    // An array of physics bodies, one for each bone in mdl.skl.
 	//hitbox **hitboxState;
 
 } renderable;

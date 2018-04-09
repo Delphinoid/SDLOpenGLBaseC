@@ -18,8 +18,8 @@ void mdlInit(model *mdl){
 	/**mdl->boneNum = 0;
 	mdl->boneNames = NULL;**/
 	mdl->skl = NULL;
-	mdl->bodies = NULL;
-	mdl->hitboxes = NULL;
+	/**mdl->bodies = NULL;
+	mdl->hitboxes = NULL;**/
 }
 
 signed char mdlLoad(model *mdl, const char *prgPath, const char *filePath, cVector *allSkeletons){

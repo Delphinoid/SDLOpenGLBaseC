@@ -7,6 +7,8 @@ signed char objInit(void *obj){
 	((object *)obj)->skeletonState[1] = NULL;
 	((object *)obj)->renderableNum = 0;
 	((object *)obj)->renderables = NULL;
+	((object *)obj)->physicsSimulate = 0;
+	((object *)obj)->physicsState = NULL;
 	return skliInit(&((object *)obj)->animationData, 0)/** &&
 	       kcInit(  &((object *)obj)->animationData, 0) &&
 	       hbInit(  &((object *)obj)->animationData, 0)**/;
@@ -204,8 +206,7 @@ signed char objInitSkeleton(object *obj, skeleton *skl){
 
 void objUpdate(object *obj, const camera *cam, const float elapsedTime){
 
-	size_t i, j;
-	size_t rndrBone;
+	size_t i;
 	bone transformBone;
 
 	/* Update the object's skeletal animations and skeleton. */
@@ -237,11 +238,11 @@ void objUpdate(object *obj, const camera *cam, const float elapsedTime){
 		*** This is pretty bad, but I'm not sure if I have a choice short of
 		*** merging bones and physics bodies or something weird like that.
 		**/
-		// Transform bones from global to local space.
+		// Transform bones from local to global space.
 		boneTransformAppendPosition(&obj->skl->bones[i].defaultState, &obj->skeletonState[0][i], &obj->skeletonState[0][i]);
 
 		if(obj->skl->bones[i].parent < obj->skl->boneNum && i != obj->skl->bones[i].parent){
-			// Transform parent back into global space before applying transformations here.
+			// Transform parent into local space before applying transformations here.
 			boneInvert(&obj->skl->bones[obj->skl->bones[i].parent].defaultState, &transformBone);
 			boneTransformAppend(&obj->skeletonState[0][obj->skl->bones[i].parent], &transformBone, &transformBone);
 			// Apply parent transformations.
@@ -253,11 +254,22 @@ void objUpdate(object *obj, const camera *cam, const float elapsedTime){
 		}
 
 		// Update the positions of each rigid body connected to this bone.
-		for(j = 0; j < obj->renderableNum; ++j){
+		if(obj->physicsState != NULL && !obj->physicsSimulate &&
+		   (obj->physicsState[i].flags & PHYSICS_BODY_SIMULATE) == 0){
+
+			// Translate the bone into global space for the physics object.
+			boneInvert(&obj->skl->bones[obj->skl->bones[i].parent].defaultState, &transformBone);
+			boneTransformAppend(&obj->skeletonState[0][i], &transformBone,
+			                    &obj->physicsState[i].configuration);
+
+		}
+
+		// Update the positions of each rigid body connected to this bone.
+		//for(j = 0; j < obj->renderableNum; ++j){
 
 			// Only bodies that are not being simulated are affected by skeletal animations.
 			/** Use a lookup, same in renderScene.c. **/
-			rndrBone = sklFindBone(obj->renderables[j].mdl->skl, obj->skl->bones[i].name);
+			/*rndrBone = sklFindBone(obj->renderables[j].mdl->skl, obj->skl->bones[i].name);
 			if(rndrBone < obj->renderables[j].mdl->skl->boneNum &&
 			   obj->renderables[j].physicsState != NULL && !obj->renderables[j].physicsSimulate &&
 			   (obj->renderables[j].physicsState[rndrBone].flags & PHYSICS_BODY_SIMULATE) == 0){
@@ -267,9 +279,9 @@ void objUpdate(object *obj, const camera *cam, const float elapsedTime){
 			   	boneTransformAppend(&obj->skeletonState[0][i], &transformBone,
 				                    &obj->renderables[j].physicsState[rndrBone].configuration);
 
-			}
+			}*/
 
-		}
+		//}
 
 			// If any of the flags apart from RNDR_BILLBOARD_TARGET are set, continue.
 			/**mat4 billboardRotation;
