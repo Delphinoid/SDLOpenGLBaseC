@@ -143,24 +143,52 @@ void vec4MultVByS(vec4 *v, const float s){
 }
 
 vec4 vec4VDivV(const vec4 *v1, const vec4 *v2){
-	if(v2->x != 0.f && v2->y != 0.f && v2->z != 0.f && v2->w != 0.f){
-		vec4 r = {.x = v1->x / v2->x,
-		          .y = v1->y / v2->y,
-		          .z = v1->z / v2->z,
-		          .w = v1->w / v2->w};
-		return r;
+	vec4 r;
+	if(v2->x != 0.f){
+		r.x = v1->x / v2->x;
+	}else{
+		r.x = 0.f;
 	}
-	return *v1;
+	if(v2->y != 0.f){
+		r.y = v1->y / v2->y;
+	}else{
+		r.y = 0.f;
+	}
+	if(v2->z != 0.f){
+		r.z = v1->z / v2->z;
+	}else{
+		r.z = 0.f;
+	}
+	if(v2->w != 0.f){
+		r.w = v1->w / v2->w;
+	}else{
+		r.w = 0.f;
+	}
+	return r;
 }
 vec4 vec4VDivN(const vec4 *v, const float x, const float y, const float z, const float w){
-	if(x != 0.f && y != 0.f && z != 0.f && w != 0.f){
-		vec4 r = {.x = v->x / x,
-		          .y = v->y / y,
-		          .z = v->z / z,
-		          .w = v->w / w};
-		return r;
+	vec4 r;
+	if(x != 0.f){
+		r.x = v->x / x;
+	}else{
+		r.x = 0.f;
 	}
-	return *v;
+	if(y != 0.f){
+		r.y = v->y / y;
+	}else{
+		r.y = 0.f;
+	}
+	if(z != 0.f){
+		r.z = v->z / z;
+	}else{
+		r.z = 0.f;
+	}
+	if(w != 0.f){
+		r.w = v->w / w;
+	}else{
+		r.w = 0.f;
+	}
+	return r;
 }
 vec4 vec4VDivS(const vec4 *v, const float s){
 	if(s != 0.f){
@@ -170,46 +198,134 @@ vec4 vec4VDivS(const vec4 *v, const float s){
 		          .w = v->w / s};
 		return r;
 	}
-	return *v;
+	return vec4NewS(0.f);
 }
 vec4 vec4NDivV(const float x, const float y, const float z, const float w, const vec4 *v){
-	if(v->x != 0.f && v->y != 0.f && v->z != 0.f && v->w != 0.f){
-		vec4 r = {.x = x / v->x,
-		          .y = y / v->y,
-		          .z = z / v->z,
-		          .w = w / v->w};
-		return r;
+	vec4 r;
+	if(v->x != 0.f){
+		r.x = x / v->x;
+	}else{
+		r.x = x;
 	}
-	return *v;
+	if(v->y != 0.f){
+		r.y = y / v->y;
+	}else{
+		r.y = y;
+	}
+	if(v->z != 0.f){
+		r.z = z / v->z;
+	}else{
+		r.z = z;
+	}
+	if(v->w != 0.f){
+		r.w = w / v->w;
+	}else{
+		r.w = w;
+	}
+	return r;
 }
 vec4 vec4SDivV(const float s, const vec4 *v){
-	if(v->x != 0.f && v->y != 0.f && v->z != 0.f && v->w != 0.f){
-		vec4 r = {.x = s / v->x,
-		          .y = s / v->y,
-		          .z = s / v->z,
-		          .w = s / v->w};
-		return r;
+	vec4 r;
+	if(v->x != 0.f){
+		r.x = s / v->x;
+	}else{
+		r.x = s;
 	}
-	return *v;
+	if(v->y != 0.f){
+		r.y = s / v->y;
+	}else{
+		r.y = s;
+	}
+	if(v->z != 0.f){
+		r.z = s / v->z;
+	}else{
+		r.z = s;
+	}
+	if(v->w != 0.f){
+		r.w = s / v->w;
+	}else{
+		r.w = s;
+	}
+	return r;
 }
 void vec4DivVByV1(vec4 *v1, const vec4 *v2){
-	if(v2->x != 0.f && v2->y != 0.f && v2->z != 0.f && v2->w != 0.f){
-		v1->x /= v2->x; v1->y /= v2->y; v1->z /= v2->z; v1->w /= v2->w;
+	if(v2->x != 0.f){
+		v1->x /= v2->x;
+	}else{
+		v1->x = 0.f;
+	}
+	if(v2->y != 0.f){
+		v1->y /= v2->y;
+	}else{
+		v1->y = 0.f;
+	}
+	if(v2->z != 0.f){
+		v1->z /= v2->z;
+	}else{
+		v1->z = 0.f;
+	}
+	if(v2->w != 0.f){
+		v1->w /= v2->w;
+	}else{
+		v1->w = 0.f;
 	}
 }
 void vec4DivVByV2(const vec4 *v1, vec4 *v2){
-	if(v2->x != 0.f && v2->y != 0.f && v2->z != 0.f && v2->w != 0.f){
-		v2->x = v1->x / v2->x; v2->y = v1->y / v2->y; v2->z = v1->z / v2->z; v2->w = v1->w / v2->w;
+	if(v2->x != 0.f){
+		v2->x = v1->x / v2->x;
+	}
+	if(v2->y != 0.f){
+		v2->y = v1->y / v2->y;
+	}
+	if(v2->z != 0.f){
+		v2->z = v1->z / v2->z;
+	}
+	if(v2->w != 0.f){
+		v2->w = v1->w / v2->w;
 	}
 }
 void vec4DivVByVR(const vec4 *v1, const vec4 *v2, vec4 *r){
-	if(v2->x != 0.f && v2->y != 0.f && v2->z != 0.f && v2->w != 0.f){
-		r->x = v1->x / v2->x; r->y = v1->y / v2->y; r->z = v1->z / v2->z; r->w = v1->w / v2->w;
+	if(v2->x != 0.f){
+		r->x = v1->x / v2->x;
+	}else{
+		r->x = 0.f;
+	}
+	if(v2->y != 0.f){
+		r->y = v1->y / v2->y;
+	}else{
+		r->y = 0.f;
+	}
+	if(v2->z != 0.f){
+		r->z = v1->z / v2->z;
+	}else{
+		r->z = 0.f;
+	}
+	if(v2->w != 0.f){
+		r->w = v1->w / v2->w;
+	}else{
+		r->w = 0.f;
 	}
 }
 void vec4DivVByN(vec4 *v, const float x, const float y, const float z, const float w){
-	if(x != 0.f && y != 0.f && z != 0.f && w != 0.f){
-		v->x /= x; v->y /= y; v->z /= z; v->w /= w;
+	if(x != 0.f){
+		v->x /= x;
+	}else{
+		v->x = 0.f;
+	}
+	if(y != 0.f){
+		v->y /= y;
+	}else{
+		v->y = 0.f;
+	}
+	if(z != 0.f){
+		v->z /= z;
+	}else{
+		v->z = 0.f;
+	}
+	if(w != 0.f){
+		v->w /= w;
+	}else{
+		v->w = 0.f;
 	}
 }
 void vec4DivVByS(vec4 *v, const float s){
@@ -218,13 +334,31 @@ void vec4DivVByS(vec4 *v, const float s){
 	}
 }
 void vec4DivNByV(const float x, const float y, const float z, const float w, vec4 *v){
-	if(v->x != 0.f && v->y != 0.f && v->z != 0.f && v->w != 0.f){
-		v->x = x / v->x; v->y = y / v->y; v->z = z / v->z; v->w = w / v->w;
+	if(v->x != 0.f){
+		v->x = x / v->x;
+	}
+	if(v->y != 0.f){
+		v->y = y / v->y;
+	}
+	if(v->z != 0.f){
+		v->z = z / v->z;
+	}
+	if(v->w != 0.f){
+		v->w = w / v->w;
 	}
 }
 void vec4DivSByV(const float s, vec4 *v){
-	if(v->x != 0.f && v->y != 0.f && v->z != 0.f && v->w != 0.f){
-		v->x = s / v->x; v->y = s / v->y; v->z = s / v->z; v->w = s / v->w;
+	if(v->x != 0.f){
+		v->x = s / v->x;
+	}
+	if(v->y != 0.f){
+		v->y = s / v->y;
+	}
+	if(v->z != 0.f){
+		v->z = s / v->z;
+	}
+	if(v->w != 0.f){
+		v->w = s / v->w;
 	}
 }
 

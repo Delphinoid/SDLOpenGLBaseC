@@ -53,18 +53,18 @@ void boneTransformAppendPosition(const bone *b1, const bone *b2, bone *r){
 	// Calculate total translation.
 	vec3 tempVec3;
 	vec3MultVByVR(&b2->position, &b1->scale, &tempVec3);   // Scale
-	quatRotateVec3(&b1->orientation, &tempVec3);           // Rotate
+	quatRotateVec3Fast(&b1->orientation, &tempVec3);       // Rotate
 	vec3AddVToVR(&tempVec3, &b1->position, &r->position);  // Translate
 }
 
 void boneTransformAppendPositionVec(bone *b, const float x, const float y, const float z, vec3 *r){
 	// Calculate total translation.
 	vec3 tempVec3;
-	tempVec3.x = x * b->scale.x;                 // Scale
+	tempVec3.x = x * b->scale.x;                     // Scale
 	tempVec3.y = y * b->scale.y;
 	tempVec3.z = z * b->scale.z;
-	quatRotateVec3(&b->orientation, &tempVec3);  // Rotate
-	vec3AddVToVR(&tempVec3, &b->position, r);    // Translate
+	quatRotateVec3Fast(&b->orientation, &tempVec3);  // Rotate
+	vec3AddVToVR(&tempVec3, &b->position, r);        // Translate
 }
 
 void boneTransformAppendOrientation(const bone *b1, const bone *b2, bone *r){
@@ -72,6 +72,8 @@ void boneTransformAppendOrientation(const bone *b1, const bone *b2, bone *r){
 	quat tempQuat;
 	quatMultQByQR(&b1->orientation, &b2->orientation, &tempQuat);
 	r->orientation = tempQuat;
+	// Normalize the new orientation to prevent error build-ups.
+	quatNormalizeFast(&r->orientation);
 }
 
 void boneTransformAppendScale(const bone *b1, const bone *b2, bone *r){
@@ -88,11 +90,29 @@ void boneTransformAppend(const bone *b1, const bone *b2, bone *r){
 	vec3 tempVec3;
 	quat tempQuat;
 	vec3MultVByVR(&b2->position, &b1->scale, &tempVec3);   // Scale
-	quatRotateVec3(&b1->orientation, &tempVec3);           // Rotate
+	quatRotateVec3Fast(&b1->orientation, &tempVec3);       // Rotate
 	vec3AddVToVR(&tempVec3, &b1->position, &r->position);  // Translate
 	// Calculate total orientation.
 	quatMultQByQR(&b1->orientation, &b2->orientation, &tempQuat);
 	r->orientation = tempQuat;
+	// Normalize the new orientation to prevent error build-ups.
+	quatNormalizeFast(&r->orientation);
 	// Calculate total scale.
 	vec3MultVByVR(&b2->scale, &b1->scale, &r->scale);
+}
+
+//Invert a bone's state!
+void boneStateInvert(const bone *b, bone *out){
+	//Invert the bone's rotation!
+	quatConjugateFastR(&b->orientation, &out->orientation);
+
+	//Invert its position with respect to the new rotation!
+	quatRotateVec3FastR(&b->orientation, &b->position, &out->position);
+	out->position.x = -out->position.x;
+	out->position.y = -out->position.y;
+	out->position.z = -out->position.z;
+
+	//Invert its scale by storing the reciprocal of each value!
+	out->scale = b->scale;
+	vec3DivSByV(1.f, &out->scale);
 }

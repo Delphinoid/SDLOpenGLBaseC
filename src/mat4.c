@@ -132,29 +132,13 @@ void mat4MultMByMR(const mat4 *m1, const mat4 *m2, mat4 *r){
 }
 vec4 mat4VMultM(vec4 v, const mat4 *m){
 	vec4 r;
-	r.x = v.x * m->m[0][0] + v.y * m->m[0][1] + v.z * m->m[0][2] + v.w * m->m[0][3];
-	r.y = v.x * m->m[1][0] + v.y * m->m[1][1] + v.z * m->m[1][2] + v.w * m->m[1][3];
-	r.z = v.x * m->m[2][0] + v.y * m->m[2][1] + v.z * m->m[2][2] + v.w * m->m[2][3];
-	r.w = v.x * m->m[3][0] + v.y * m->m[3][1] + v.z * m->m[3][2] + v.w * m->m[3][3];
-	return r;
-}
-void mat4MultVByM(vec4 *v, const mat4 *m){
-	vec4 r;
-	r.x = v->x * m->m[0][0] + v->y * m->m[0][1] + v->z * m->m[0][2] + v->w * m->m[0][3];
-	r.y = v->x * m->m[1][0] + v->y * m->m[1][1] + v->z * m->m[1][2] + v->w * m->m[1][3];
-	r.z = v->x * m->m[2][0] + v->y * m->m[2][1] + v->z * m->m[2][2] + v->w * m->m[2][3];
-	r.w = v->x * m->m[3][0] + v->y * m->m[3][1] + v->z * m->m[3][2] + v->w * m->m[3][3];
-	v->x = r.x; v->y = r.y; v->z = r.z; v->w = r.w;
-}
-vec4 mat4MMultV(const mat4 *m, vec4 v){
-	vec4 r;
 	r.x = v.x * m->m[0][0] + v.y * m->m[1][0] + v.z * m->m[2][0] + v.w * m->m[3][0];
 	r.y = v.x * m->m[0][1] + v.y * m->m[1][1] + v.z * m->m[2][1] + v.w * m->m[3][1];
 	r.z = v.x * m->m[0][2] + v.y * m->m[1][2] + v.z * m->m[2][2] + v.w * m->m[3][2];
 	r.w = v.x * m->m[0][3] + v.y * m->m[1][3] + v.z * m->m[2][3] + v.w * m->m[3][3];
 	return r;
 }
-void mat4MultMByV(const mat4 *m, vec4 *v){
+void mat4MultVByM(vec4 *v, const mat4 *m){
 	vec4 r;
 	r.x = v->x * m->m[0][0] + v->y * m->m[1][0] + v->z * m->m[2][0] + v->w * m->m[3][0];
 	r.y = v->x * m->m[0][1] + v->y * m->m[1][1] + v->z * m->m[2][1] + v->w * m->m[3][1];
@@ -162,20 +146,48 @@ void mat4MultMByV(const mat4 *m, vec4 *v){
 	r.w = v->x * m->m[0][3] + v->y * m->m[1][3] + v->z * m->m[2][3] + v->w * m->m[3][3];
 	v->x = r.x; v->y = r.y; v->z = r.z; v->w = r.w;
 }
+void mat4MultNByM(const float x, const float y, const float z, const float w, const mat4 *m, vec4 *r){
+	r->x = x * m->m[0][0] + y * m->m[1][0] + z * m->m[2][0] + w * m->m[3][0];
+	r->y = x * m->m[0][1] + y * m->m[1][1] + z * m->m[2][1] + w * m->m[3][1];
+	r->z = x * m->m[0][2] + y * m->m[1][2] + z * m->m[2][2] + w * m->m[3][2];
+	r->w = x * m->m[0][3] + y * m->m[1][3] + z * m->m[2][3] + w * m->m[3][3];
+}
+vec4 mat4MMultV(const mat4 *m, vec4 v){
+	vec4 r;
+	r.x = v.x * m->m[0][0] + v.y * m->m[0][1] + v.z * m->m[0][2] + v.w * m->m[0][3];
+	r.y = v.x * m->m[1][0] + v.y * m->m[1][1] + v.z * m->m[1][2] + v.w * m->m[1][3];
+	r.z = v.x * m->m[2][0] + v.y * m->m[2][1] + v.z * m->m[2][2] + v.w * m->m[2][3];
+	r.w = v.x * m->m[3][0] + v.y * m->m[3][1] + v.z * m->m[3][2] + v.w * m->m[3][3];
+	return r;
+}
+void mat4MultMByV(const mat4 *m, vec4 *v){
+	vec4 r;
+	r.x = v->x * m->m[0][0] + v->y * m->m[0][1] + v->z * m->m[0][2] + v->w * m->m[0][3];
+	r.y = v->x * m->m[1][0] + v->y * m->m[1][1] + v->z * m->m[1][2] + v->w * m->m[1][3];
+	r.z = v->x * m->m[2][0] + v->y * m->m[2][1] + v->z * m->m[2][2] + v->w * m->m[2][3];
+	r.w = v->x * m->m[3][0] + v->y * m->m[3][1] + v->z * m->m[3][2] + v->w * m->m[3][3];
+	v->x = r.x; v->y = r.y; v->z = r.z; v->w = r.w;
+}
+void mat4MultMByN(const mat4 *m, const float x, const float y, const float z, const float w, vec4 *r){
+	r->x = x * m->m[0][0] + y * m->m[0][1] + z * m->m[0][2] + w * m->m[0][3];
+	r->y = x * m->m[1][0] + y * m->m[1][1] + z * m->m[1][2] + w * m->m[1][3];
+	r->z = x * m->m[2][0] + y * m->m[2][1] + z * m->m[2][2] + w * m->m[2][3];
+	r->w = x * m->m[3][0] + y * m->m[3][1] + z * m->m[3][2] + w * m->m[3][3];
+}
 
 float mat4Determinant(const mat4 *m){
-	return m->m[0][0] * (m->m[1][1] * (m->m[2][2]*m->m[3][3] - m->m[2][3]*m->m[3][2]) -
-	                     m->m[1][2] * (m->m[2][1]*m->m[3][3] - m->m[2][3]*m->m[3][1]) +
-	                     m->m[1][3] * (m->m[2][1]*m->m[3][2] - m->m[2][2]*m->m[3][1])) -
-	       m->m[0][1] * (m->m[1][0] * (m->m[2][2]*m->m[3][3] - m->m[2][3]*m->m[3][2]) -
-	                     m->m[1][2] * (m->m[2][0]*m->m[3][3] - m->m[2][3]*m->m[3][0]) +
-	                     m->m[1][3] * (m->m[2][0]*m->m[3][2] - m->m[2][2]*m->m[3][0])) +
-	       m->m[0][2] * (m->m[1][0] * (m->m[2][1]*m->m[3][3] - m->m[2][3]*m->m[3][1]) -
-	                     m->m[1][1] * (m->m[2][0]*m->m[3][3] - m->m[2][3]*m->m[3][0]) +
-	                     m->m[1][3] * (m->m[2][0]*m->m[3][1] - m->m[2][1]*m->m[3][0])) -
-	       m->m[0][3] * (m->m[1][0] * (m->m[2][1]*m->m[3][2] - m->m[2][2]*m->m[3][1]) -
-	                     m->m[1][1] * (m->m[2][0]*m->m[3][2] - m->m[2][2]*m->m[3][0]) +
-	                     m->m[1][2] * (m->m[2][0]*m->m[3][1] - m->m[2][1]*m->m[3][0]));
+	return m->m[0][0] * (m->m[1][1] * (m->m[2][2]*m->m[3][3] - m->m[3][3]*m->m[2][3]) -
+	                     m->m[2][1] * (m->m[1][2]*m->m[3][3] - m->m[3][3]*m->m[1][3]) +
+	                     m->m[3][1] * (m->m[1][2]*m->m[2][3] - m->m[2][3]*m->m[1][3])) -
+	       m->m[1][0] * (m->m[0][1] * (m->m[2][2]*m->m[3][3] - m->m[3][3]*m->m[2][3]) -
+	                     m->m[2][1] * (m->m[0][2]*m->m[3][3] - m->m[3][3]*m->m[0][3]) +
+	                     m->m[3][1] * (m->m[0][2]*m->m[2][3] - m->m[2][3]*m->m[0][3])) +
+	       m->m[2][0] * (m->m[0][1] * (m->m[1][2]*m->m[3][3] - m->m[3][3]*m->m[1][3]) -
+	                     m->m[1][1] * (m->m[0][2]*m->m[3][3] - m->m[3][3]*m->m[0][3]) +
+	                     m->m[3][1] * (m->m[0][2]*m->m[1][3] - m->m[1][3]*m->m[0][3])) -
+	       m->m[3][0] * (m->m[0][1] * (m->m[1][2]*m->m[2][3] - m->m[2][3]*m->m[1][3]) -
+	                     m->m[1][1] * (m->m[0][2]*m->m[2][3] - m->m[2][3]*m->m[0][3]) +
+	                     m->m[2][1] * (m->m[0][2]*m->m[1][3] - m->m[1][3]*m->m[0][3]));
 }
 
 mat4 mat4GetTranspose(const mat4 *m){
@@ -290,6 +302,15 @@ void mat4Translate(mat4 *m, const float x, const float y, const float z){
 	m->m[3][2] = m->m[0][2] * x + m->m[1][2] * y + m->m[2][2] * z + m->m[3][2];
 	m->m[3][3] = m->m[0][3] * x + m->m[1][3] * y + m->m[2][3] * z + m->m[3][3];
 }
+void mat4TranslateR(const mat4 *m, const float x, const float y, const float z, mat4 *r){
+	r->m[0][0] = m->m[0][0]; r->m[0][1] = m->m[0][1]; r->m[0][2] = m->m[0][2]; r->m[0][3] = m->m[0][3];
+	r->m[1][0] = m->m[1][0]; r->m[1][1] = m->m[1][1]; r->m[1][2] = m->m[1][2]; r->m[1][3] = m->m[1][3];
+	r->m[2][0] = m->m[2][0]; r->m[2][1] = m->m[2][1]; r->m[2][2] = m->m[2][2]; r->m[2][3] = m->m[2][3];
+	r->m[3][0] = m->m[0][0] * x + m->m[1][0] * y + m->m[2][0] * z + m->m[3][0];
+	r->m[3][1] = m->m[0][1] * x + m->m[1][1] * y + m->m[2][1] * z + m->m[3][1];
+	r->m[3][2] = m->m[0][2] * x + m->m[1][2] * y + m->m[2][2] * z + m->m[3][2];
+	r->m[3][3] = m->m[0][3] * x + m->m[1][3] * y + m->m[2][3] * z + m->m[3][3];
+}
 void mat4SetTranslationMatrix(mat4 *m, const float x, const float y, const float z){
 	m->m[0][0] = 1.f; m->m[0][1] = 0.f; m->m[0][2] = 0.f; m->m[0][3] = 0.f;
 	m->m[1][0] = 0.f; m->m[1][1] = 1.f; m->m[1][2] = 0.f; m->m[1][3] = 0.f;
@@ -307,6 +328,10 @@ void mat4Rotate(mat4 *m, const quat *q){
 	mat4 r; mat4Quat(&r, q);
 	mat4MultMByM2(&r, m);
 }
+void mat4RotateR(const mat4 *m, const quat *q, mat4 *r){
+	mat4Quat(r, q);
+	mat4MultMByM1(r, m);
+}
 void mat4SetRotationMatrix(mat4 *m, const quat *q){
 	mat4Quat(m, q);
 }
@@ -318,6 +343,11 @@ void mat4Scale(mat4 *m, const float x, const float y, const float z){
 	m->m[0][0] *= x; m->m[0][1] *= x; m->m[0][2] *= x; m->m[0][3] *= x;
 	m->m[1][0] *= y; m->m[1][1] *= y; m->m[1][2] *= y; m->m[1][3] *= y;
 	m->m[2][0] *= z; m->m[2][1] *= z; m->m[2][2] *= z; m->m[2][3] *= z;
+}
+void mat4ScaleR(const mat4 *m, const float x, const float y, const float z, mat4 *r){
+	r->m[0][0] = m->m[0][0] * x; r->m[0][1] = m->m[0][1] * x; r->m[0][2] = m->m[0][2] * x; r->m[0][3] = m->m[0][3] * x;
+	r->m[1][0] = m->m[1][0] * y; r->m[1][1] = m->m[1][1] * y; r->m[1][2] = m->m[1][2] * y; r->m[1][3] = m->m[1][3] * y;
+	r->m[2][0] = m->m[2][0] * z; r->m[2][1] = m->m[2][1] * z; r->m[2][2] = m->m[2][2] * z; r->m[2][3] = m->m[2][3] * z;
 }
 void mat4SetScaleMatrix(mat4 *m, const float x, const float y, const float z){
 	m->m[0][0] = x;   m->m[0][1] = 0.f; m->m[0][2] = 0.f; m->m[0][3] = 0.f;
@@ -343,8 +373,8 @@ void mat4Quat(mat4 *m, const quat *q){
 	const float yz = q->v.y*q->v.z;
 	const float yw = q->v.y*q->w;
 	const float zw = q->v.z*q->w;
-	m->m[0][0] = 1.f-2.f*(yy+zz); m->m[0][1] = 2.f*(xy-zw);     m->m[0][2] = 2.f*(xz+yw);     m->m[0][3] = 0.f;
-	m->m[1][0] = 2.f*(xy+zw);     m->m[1][1] = 1.f-2.f*(xx+zz); m->m[1][2] = 2.f*(yz-xw);     m->m[1][3] = 0.f;
-	m->m[2][0] = 2.f*(xz-yw);     m->m[2][1] = 2.f*(yz+xw);     m->m[2][2] = 1.f-2.f*(xx+yy); m->m[2][3] = 0.f;
+	m->m[0][0] = 1.f-2.f*(yy+zz); m->m[0][1] = 2.f*(xy+zw);     m->m[0][2] = 2.f*(xz-yw);     m->m[0][3] = 0.f;
+	m->m[1][0] = 2.f*(xy-zw);     m->m[1][1] = 1.f-2.f*(xx+zz); m->m[1][2] = 2.f*(yz+xw);     m->m[1][3] = 0.f;
+	m->m[2][0] = 2.f*(xz+yw);     m->m[2][1] = 2.f*(yz-xw);     m->m[2][2] = 1.f-2.f*(xx+yy); m->m[2][3] = 0.f;
 	m->m[3][0] = 0.f;             m->m[3][1] = 0.f;             m->m[3][2] = 0.f;             m->m[3][3] = 1.f;
 }

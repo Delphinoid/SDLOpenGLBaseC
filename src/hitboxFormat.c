@@ -60,41 +60,9 @@ signed char hbMeshWavefrontObjLoad(hbMesh *hbm, const char *filePath){
 	size_t lineLength;
 
 	if(hbmInfo != NULL){
-		while(fgets(lineFeed, sizeof(lineFeed), hbmInfo)){
+		while(fileParseNextLine(hbmInfo, lineFeed, sizeof(lineFeed), &line, &lineLength)){
 
-			line = lineFeed;
-			lineLength = strlen(line);
-
-			// Remove new line and carriage return
-			if(line[lineLength-1] == '\n'){
-				line[--lineLength] = '\0';
-			}
-			if(line[lineLength-1] == '\r'){
-				line[--lineLength] = '\0';
-			}
-			// Remove any comments from the line
-			char *commentPos = strstr(line, "//");
-			if(commentPos != NULL){
-				lineLength -= commentPos-line;
-				*commentPos = '\0';
-			}
-			// Remove any indentations from the line, as well as any trailing spaces and tabs
-			unsigned char doneFront = 0, doneEnd = 0;
-			size_t newOffset = 0;
 			size_t i;
-			for(i = 0; (i < lineLength && !doneFront && !doneEnd); ++i){
-				if(!doneFront && line[i] != '\t' && line[i] != ' '){
-					newOffset = i;
-					doneFront = 1;
-				}
-				if(!doneEnd && i > 1 && i < lineLength && line[lineLength-i] != '\t' && line[lineLength-i] != ' '){
-					lineLength -= i-1;
-					line[lineLength] = '\0';
-					doneEnd = 1;
-				}
-			}
-			line += newOffset;
-			lineLength -= newOffset;
 
 			// Vertex data
 			if(lineLength >= 7 && strncmp(line, "v ", 2) == 0){

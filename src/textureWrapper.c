@@ -1,4 +1,5 @@
 #include "textureWrapper.h"
+#include "helpersMisc.h"
 #include <SDL2/SDL.h>
 #include <stdlib.h>
 #include <string.h>
@@ -254,42 +255,10 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 	size_t lineLength;
 
 	if(texInfo != NULL){
-		while(fgets(lineFeed, sizeof(lineFeed), texInfo)){
+		while(fileParseNextLine(texInfo, lineFeed, sizeof(lineFeed), &line, &lineLength)){
 
-			line = lineFeed;
-			++currentLine;
-			lineLength = strlen(line);
-
-			// Remove new line and carriage return
-			if(line[lineLength-1] == '\n'){
-				line[--lineLength] = '\0';
-			}
-			if(line[lineLength-1] == '\r'){
-				line[--lineLength] = '\0';
-			}
-			// Remove any comments from the line
-			char *commentPos = strstr(line, "//");
-			if(commentPos != NULL){
-				lineLength -= commentPos-line;
-				*commentPos = '\0';
-			}
-			// Remove any indentations from the line, as well as any trailing spaces and tabs
-			unsigned char doneFront = 0, doneEnd = 0;
-			size_t newOffset = 0;
 			size_t i;
-			for(i = 0; (i < lineLength && !doneFront && !doneEnd); ++i){
-				if(!doneFront && line[i] != '\t' && line[i] != ' '){
-					newOffset = i;
-					doneFront = 1;
-				}
-				if(!doneEnd && i > 1 && i < lineLength && line[lineLength-i] != '\t' && line[lineLength-i] != ' '){
-					lineLength -= i-1;
-					line[lineLength] = '\0';
-					doneEnd = 1;
-				}
-			}
-			line += newOffset;
-			lineLength -= newOffset;
+			++currentLine;
 
 			// Name
 			if(lineLength >= 6 && strncmp(line, "name ", 5) == 0){
@@ -769,8 +738,11 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 		}
 	}
 
-	// If no name was given, generate one based off the file name
+	// If no name was given, generate one based off the file path.
 	if(tw->name == NULL || tw->name[0] == '\0'){
+		if(tw->name != NULL){
+			free(tw->name);
+		}
 		tw->name = malloc((fileLen+1)*sizeof(char));
 		if(tw->name == NULL){
 			/** Memory allocation failure. **/

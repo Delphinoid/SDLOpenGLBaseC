@@ -3,12 +3,16 @@
 
 #include "quat.h"
 
+// WARNING: Changing this currently does not work,
+//          as the shader still expects 4 values.
+#define VERTEX_MAX_BONES 4
+
 typedef struct {
 	vec3  position;
 	float u, v;
 	vec3 normal;
-	int   bIDs[4];
-	float bWeights[4];
+	int   bIDs[VERTEX_MAX_BONES];
+	float bWeights[VERTEX_MAX_BONES];
 } vertex;
 
 void vertInit(vertex *v);

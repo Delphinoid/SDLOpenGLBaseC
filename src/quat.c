@@ -249,11 +249,22 @@ float quatGetMagnitude(const quat *q){
 quat quatGetConjugate(const quat *q){
 	return quatNew(q->w, -q->v.x, -q->v.y, -q->v.z);
 }
+quat quatGetConjugateFast(const quat *q){
+	return quatNew(-q->w, q->v.x, q->v.y, q->v.z);
+}
 void quatConjugate(quat *q){
-	quatSet(q, q->w, -q->v.x, -q->v.y, -q->v.z);
+	q->v.x = -q->v.x;
+	q->v.y = -q->v.y;
+	q->v.z = -q->v.z;
+}
+void quatConjugateFast(quat *q){
+	q->w = -q->w;
 }
 void quatConjugateR(const quat *q, quat *r){
 	quatSet(r, q->w, -q->v.x, -q->v.y, -q->v.z);
+}
+void quatConjugateFastR(const quat *q, quat *r){
+	quatSet(r, -q->w, q->v.x, q->v.y, q->v.z);
 }
 
 quat quatGetNegative(const quat *q){
@@ -268,16 +279,16 @@ void quatNegateR(const quat *q, quat *r){
 
 quat quatGetInverse(const quat *q){
 	quat c;
-	quatConjugateR(q, &c);
+	quatConjugateFastR(q, &c);
 	return quatQMultQ(q, &c);
 }
 void quatInvert(quat *q){
 	quat c;
-	quatConjugateR(q, &c);
+	quatConjugateFastR(q, &c);
 	quatMultQByQ1(q, &c);
 }
 void quatInvertR(const quat *q, quat *r){
-	quatConjugateR(q, r);
+	quatConjugateFastR(q, r);
 	quatMultQByQ2(q, r);
 }
 
@@ -376,6 +387,22 @@ vec3 quatGetRotatedVec3(const quat *q, const vec3 *v){
 	return r;
 
 }
+vec3 quatGetRotatedVec3Fast(const quat *q, const vec3 *v){
+
+	vec3 r;
+	vec3 crossQV, crossQQV;
+	vec3Cross(&q->v, v, &crossQV);
+	crossQV.x += q->w * v->x;
+	crossQV.y += q->w * v->y;
+	crossQV.z += q->w * v->z;
+	vec3Cross(&q->v, &crossQV, &crossQQV);
+
+	r.x = crossQQV.x + crossQQV.x + v->x;
+	r.y = crossQQV.y + crossQQV.y + v->y;
+	r.z = crossQQV.z + crossQQV.z + v->z;
+	return r;
+
+}
 void quatRotateVec3(const quat *q, vec3 *v){
 
 	const float dotQV = vec3Dot(&q->v, v);
@@ -397,6 +424,57 @@ void quatRotateVec3(const quat *q, vec3 *v){
 	v->x += m * crossQV.x;
 	v->y += m * crossQV.y;
 	v->z += m * crossQV.z;
+
+}
+void quatRotateVec3R(const quat *q, const vec3 *v, vec3 *r){
+
+	const float dotQV = vec3Dot(&q->v, v);
+	const float dotQQ = vec3Dot(&q->v, &q->v);
+	float m = q->w*q->w - dotQQ;
+	vec3 crossQV;
+	vec3Cross(&q->v, v, &crossQV);
+
+	r->x = v->x * m;
+	r->y = v->y * m;
+	r->z = v->z * m;
+
+	m = 2.f * dotQV;
+	r->x += m * q->v.x;
+	r->y += m * q->v.y;
+	r->z += m * q->v.z;
+
+	m = 2.f * q->w;
+	r->x += m * crossQV.x;
+	r->y += m * crossQV.y;
+	r->z += m * crossQV.z;
+
+}
+void quatRotateVec3Fast(const quat *q, vec3 *v){
+
+	vec3 crossQV, crossQQV;
+	vec3Cross(&q->v, v, &crossQV);
+	crossQV.x += q->w * v->x;
+	crossQV.y += q->w * v->y;
+	crossQV.z += q->w * v->z;
+	vec3Cross(&q->v, &crossQV, &crossQQV);
+
+	v->x = crossQQV.x + crossQQV.x + v->x;
+	v->y = crossQQV.y + crossQQV.y + v->y;
+	v->z = crossQQV.z + crossQQV.z + v->z;
+
+}
+void quatRotateVec3FastR(const quat *q, const vec3 *v, vec3 *r){
+
+	vec3 crossQV, crossQQV;
+	vec3Cross(&q->v, v, &crossQV);
+	crossQV.x += q->w * v->x;
+	crossQV.y += q->w * v->y;
+	crossQV.z += q->w * v->z;
+	vec3Cross(&q->v, &crossQV, &crossQQV);
+
+	r->x = crossQQV.x + crossQQV.x + v->x;
+	r->y = crossQQV.y + crossQQV.y + v->y;
+	r->z = crossQQV.z + crossQQV.z + v->z;
 
 }
 

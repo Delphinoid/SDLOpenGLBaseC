@@ -100,6 +100,7 @@ void sklDelete(skeleton *skl);
 
 void sklaInit(sklAnim *skla);
 signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath);
+signed char sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, const char *filePath);
 void sklaDelete(sklAnim *skla);
 
 void sklaiAnimate(sklAnimInstance *sklai, const float elapsedTime);
@@ -108,6 +109,8 @@ void sklaiGenerateAnimState(sklAnimInstance *sklai, bone *skeletonState, const b
 
 signed char skliInit(sklInstance *skli, const size_t animationCapacity);
 signed char skliLoad(sklInstance *skli, const char *prgPath, const char *filePath);
+signed char skliSetAnimation(sklInstance *skli, const size_t slot, sklAnim *anim);
+signed char skliClearAnimation(sklInstance *skli, const size_t slot);
 signed char skliStateCopy(sklInstance *o, sklInstance *c);
 void skliGenerateDefaultState(const skeleton *skl, mat4 *state, const size_t boneID);
 void skliGenerateBoneStateFromLocal(const bone *skeletonState, const skeleton *oskl, const skeleton *mskl, mat4 *state, const size_t boneID);

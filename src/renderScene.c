@@ -15,20 +15,28 @@
 void renderModel(object *obj, const camera *cam, const float interpT, gfxProgram *gfxPrg){
 
 	size_t i;
+	bone interpBone;
 
 	/* Update the object's configuration for rendering. */
 	rndrConfigRenderUpdate(&obj->tempRndrConfig, interpT);  /** Only line that requires non-const object. **/
 
 	/* Interpolate between the previous and last skeleton states. */
 	for(i = 0; i < obj->skl->boneNum; ++i){
-		// If the bone has been simulated, use its position and orientation.
-		//if((obj->physicsState[i].flags & PHYSICS_BODY_SIMULATE) > 0){
-			/**
-			obj->skeletonState[0][i].position    = obj->physicsState[i].position;
-			obj->skeletonState[0][i].orientation = obj->physicsState[i].orientation;
-			**/
-		//}
-		boneInterpolate(&obj->skeletonState[1][i], &obj->skeletonState[0][i], interpT, &gfxPrg->sklAnimationState[i]);
+
+		// Interpolate between bone states.
+		boneInterpolate(&obj->skeletonState[1][i], &obj->skeletonState[0][i], interpT, &interpBone);
+
+		// Convert the bone to a matrix.
+		//mat4SetScaleMatrix(&gfxPrg->sklTransformState[i], gfxPrg->sklAnimationState[i].scale.x, gfxPrg->sklAnimationState[i].scale.y, gfxPrg->sklAnimationState[i].scale.z);
+		//mat4SetTranslationMatrix(&gfxPrg->sklTransformState[i], gfxPrg->sklAnimationState[i].position.x, gfxPrg->sklAnimationState[i].position.y, gfxPrg->sklAnimationState[i].position.z);
+		mat4SetRotationMatrix(&gfxPrg->sklTransformState[i], &interpBone.orientation);
+		//mat4Rotate(&gfxPrg->sklTransformState[i], &gfxPrg->sklAnimationState[i].orientation);
+		//mat4Translate(&gfxPrg->sklTransformState[i], gfxPrg->sklAnimationState[i].position.x, gfxPrg->sklAnimationState[i].position.y, gfxPrg->sklAnimationState[i].position.z);
+		mat4Scale(&gfxPrg->sklTransformState[i], interpBone.scale.x, interpBone.scale.y, interpBone.scale.z);
+		gfxPrg->sklTransformState[i].m[3][0] = interpBone.position.x;
+		gfxPrg->sklTransformState[i].m[3][1] = interpBone.position.y;
+		gfxPrg->sklTransformState[i].m[3][2] = interpBone.position.z;
+
 	}
 
 	/* Feed the translucency multiplier to the shader */
@@ -38,6 +46,7 @@ void renderModel(object *obj, const camera *cam, const float interpT, gfxProgram
 	for(i = 0; i < obj->renderableNum; ++i){
 
 		if(obj->renderables[i].mdl != NULL){  /** Remove? **/
+
 
 			/* Get texture information for rendering and feed it to the shader. */
 			float texFrag[4];  // The x, y, width and height of the fragment of the texture being rendered.
@@ -52,61 +61,70 @@ void renderModel(object *obj, const camera *cam, const float interpT, gfxProgram
 			// Feed the texture coordinates to the shader.
 			glUniform4fv(gfxPrg->textureFragmentID, 1, texFrag);
 
-			/* Generate the renderable configuration based off the animated skeleton, if possible. */
+
+			/*
+			** Generate the renderable configuration based off the animated skeleton, if possible.
+			** The loop converts the global skeleton state in gfxPrg->sklTransformState to local
+			** model space for rendering.
+			*/
 			if(obj->renderables[i].mdl->skl != NULL){
 
 				size_t j;
 				size_t rndrBone;
-				bone modelSpace;
+				vec4 translation;
+				mat4 transform;
 
 				// If there is a valid animated skeleton, apply animation transformations.
 				for(j = 0; j < obj->renderables[i].mdl->skl->boneNum; ++j){
+
+					// Accumulate the bind positions. We need to use global bone offsets
+					if(obj->renderables[i].mdl->skl->bones[j].parent < obj->renderables[i].mdl->skl->boneNum &&
+					   j != obj->renderables[i].mdl->skl->bones[j].parent){
+						// Apply the parent's bind offsets.
+						gfxPrg->sklBindAccumulator[j].x = gfxPrg->sklBindAccumulator[obj->renderables[i].mdl->skl->bones[j].parent].x;
+						gfxPrg->sklBindAccumulator[j].y = gfxPrg->sklBindAccumulator[obj->renderables[i].mdl->skl->bones[j].parent].y;
+						gfxPrg->sklBindAccumulator[j].z = gfxPrg->sklBindAccumulator[obj->renderables[i].mdl->skl->bones[j].parent].z;
+					}else{
+						gfxPrg->sklBindAccumulator[j].x = 0.f;
+						gfxPrg->sklBindAccumulator[j].y = 0.f;
+						gfxPrg->sklBindAccumulator[j].z = 0.f;
+					}
 
 					// If the animated bone is in the model, pass in its animation transforms.
 					/** Use a lookup, same in object.c. **/
 					rndrBone = sklFindBone(obj->skl, obj->renderables[i].mdl->skl->bones[j].name);
 					if(rndrBone < obj->skl->boneNum){
 
-						// Check if the current bone has an associated rigid body that is currently active.
-						// If it does, interpolate its configuration and use that for rendering.
-						if(obj->physicsSimulate && (obj->physicsState[rndrBone].flags & PHYSICS_BODY_SIMULATE) > 0){
-							// Interpolate bone's rigid body's configuration.
-							boneInterpolate(&obj->physicsState[rndrBone].configuration,
-							                &obj->physicsState[rndrBone].configurationLast,
-							                interpT, &modelSpace);
-						}else{
-							modelSpace = gfxPrg->sklAnimationState[rndrBone];
-						}
+						// Rotate the bind pose position by the current bone's orientation
+						// and add this offset to the bind pose accumulator.
+						mat4MultNByM(obj->renderables[i].mdl->skl->bones[j].defaultState.position.x,
+						             obj->renderables[i].mdl->skl->bones[j].defaultState.position.y,
+						             obj->renderables[i].mdl->skl->bones[j].defaultState.position.z,
+						             0.f,
+						             &gfxPrg->sklTransformState[rndrBone],
+						             &translation);
+						gfxPrg->sklBindAccumulator[j].x += translation.x;
+						gfxPrg->sklBindAccumulator[j].y += translation.y;
+						gfxPrg->sklBindAccumulator[j].z += translation.z;
 
-						// Translate the bone from global object space to global model space.
-						boneTransformAppendPositionVec(&modelSpace,
-						                               -obj->renderables[i].mdl->skl->bones[j].defaultState.position.x,
-						                               -obj->renderables[i].mdl->skl->bones[j].defaultState.position.y,
-						                               -obj->renderables[i].mdl->skl->bones[j].defaultState.position.z,
-						                               &modelSpace.position);
+						// Translate the bone by the inverse of the accumulated bind translations.
+						transform = gfxPrg->sklTransformState[rndrBone];
+						transform.m[3][0] -= gfxPrg->sklBindAccumulator[j].x;
+						transform.m[3][1] -= gfxPrg->sklBindAccumulator[j].y;
+						transform.m[3][2] -= gfxPrg->sklBindAccumulator[j].z;
 
 						// Feed the bone configuration to the shader.
-						glUniform3f(gfxPrg->bonePositionArrayID[j], modelSpace.position.x,
-							                                        modelSpace.position.y,
-							                                        modelSpace.position.z);
-						glUniform4f(gfxPrg->boneOrientationArrayID[j], modelSpace.orientation.v.x,
-						                                               modelSpace.orientation.v.y,
-						                                               modelSpace.orientation.v.z,
-						                                               modelSpace.orientation.w);
-						glUniform3f(gfxPrg->boneScaleArrayID[j], modelSpace.scale.x,
-						                                         modelSpace.scale.y,
-						                                         modelSpace.scale.z);
+						glUniformMatrix4fv(gfxPrg->boneArrayID[j], 1, GL_FALSE, &transform.m[0][0]);
 
 					}else{
 						// Otherwise pass in an identity bone.
-						glUniform3f(gfxPrg->bonePositionArrayID[j], 0.f, 0.f, 0.f);
-						glUniform4f(gfxPrg->boneOrientationArrayID[j], 0.f, 0.f, 0.f, 1.f);
-						glUniform3f(gfxPrg->boneScaleArrayID[j], 1.f, 1.f, 1.f);
+						glUniformMatrix4fv(gfxPrg->boneArrayID[j], 1, GL_FALSE, &gfxPrg->identityMatrix.m[0][0]);
 					}
 
 				}
 
 			}
+
 
 			/* Render the model. */
 			glBindVertexArray(obj->renderables[i].mdl->vaoID);
@@ -115,6 +133,7 @@ void renderModel(object *obj, const camera *cam, const float interpT, gfxProgram
 			}else{
 				glDrawArrays(GL_TRIANGLES, 0, obj->renderables[i].mdl->vertexNum);
 			}
+
 
 		}
 
@@ -136,9 +155,10 @@ void batchRenderSprites(cVector *allSprites, const camera *cam, const float inte
 	// Reset the texture fragment.
 	glUniform4f(gfxPrg->textureFragmentID, 0.f, 0.f, 1.f, 1.f);
 	// Reset the root bone.
-	glUniform3f(gfxPrg->bonePositionArrayID[j], 0.f, 0.f, 0.f);
-	glUniform4f(gfxPrg->boneOrientationArrayID[j], 1.f, 0.f, 0.f, 1.f);
-	glUniform3f(gfxPrg->boneScaleArrayID[j], 1.f, 1.f, 1.f);
+	glUniformMatrix4fv(gfxPrg->boneArrayID[0], 1, GL_FALSE, &gfxPrg->identityMatrix.m[0][0]);
+	/*glUniform3f(gfxPrg->bonePositionArrayID[0], 0.f, 0.f, 0.f);
+	glUniform4f(gfxPrg->boneOrientationArrayID[0], 1.f, 0.f, 0.f, 1.f);
+	glUniform3f(gfxPrg->boneScaleArrayID[0], 1.f, 1.f, 1.f);*/
 	// Reset the translucency value.
 	glUniform1f(gfxPrg->alphaID, 1.f);
 

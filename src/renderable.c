@@ -185,7 +185,7 @@ void rndrConfigGenerateTransform(const rndrConfig *rc, const camera *cam, mat4 *
 				eye = rc->targetPosition.render;
 				target = rc->position.render;
 				vec3Set(&up, 0.f, 1.f, 0.f);
-				quatRotateVec3(&rc->targetOrientation.render, &up);
+				quatRotateVec3Fast(&rc->targetOrientation.render, &up);
 			}else if((rc->flags & RNDR_BILLBOARD_TARGET_CAMERA) > 0){
 				eye = cam->position.render;
 				target = rc->position.render;

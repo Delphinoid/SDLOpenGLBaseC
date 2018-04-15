@@ -51,8 +51,11 @@ void quatDivQByS(quat *q, const float s);
 float quatGetMagnitude(const quat *q);
 
 quat quatGetConjugate(const quat *q);
+quat quatGetConjugateFast(const quat *q);
 void quatConjugate(quat *q);
+void quatConjugateFast(quat *q);
 void quatConjugateR(const quat *q, quat *r);
+void quatConjugateFastR(const quat *q, quat *r);
 
 quat quatGetNegative(const quat *q);
 void quatNegate(quat *q);
@@ -79,7 +82,11 @@ void quatAxisAngleFast(const quat *q, float *angle, float *axisX, float *axisY, 
 float quatDot(const quat *q1, const quat *q2);
 
 vec3 quatGetRotatedVec3(const quat *q, const vec3 *v);
+vec3 quatGetRotatedVec3Fast(const quat *q, const vec3 *v);
 void quatRotateVec3(const quat *q, vec3 *v);
+void quatRotateVec3R(const quat *q, const vec3 *v, vec3 *r);
+void quatRotateVec3Fast(const quat *q, vec3 *v);
+void quatRotateVec3FastR(const quat *q, const vec3 *v, vec3 *r);
 
 quat quatLookingAt(const vec3 *eye, const vec3 *target, const vec3 *up);
 void quatLookAt(quat *q, const vec3 *eye, const vec3 *target, const vec3 *up);

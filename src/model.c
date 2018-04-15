@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex **vertices, size_t *indexNum, size_t **indices, char **name, char **sklPath);
+signed char mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, size_t *indexNum, size_t **indices, char **name, cVector *allSkeletons);
 
 static void mdlVertexAttributes();
 static void mdlGenBufferObjects(model *mdl, const size_t vertexNum, const vertex *vertices, const size_t indexNum, const size_t *indices);
@@ -46,12 +47,14 @@ signed char mdlLoad(model *mdl, const char *prgPath, const char *filePath, cVect
 	char *sklPath = NULL;
 	/** Replace and move the loading function here. **/
 	if(!mdlWavefrontObjLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, &mdl->name, &sklPath)){
+	//if(!mdlSMDLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, &mdl->name, allSkeletons)){
 		free(fullPath);
 		return 0;
 	}
 	if(sklPath == NULL){
 		// Use the default skeleton.
         mdl->skl = (skeleton *)cvGet(allSkeletons, 0);
+		//mdl->skl = (skeleton *)cvGet(allSkeletons, allSkeletons->size-1);
 	}else{
 		/** Check if the skeleton already exists. If not, load it. **/
 		skeleton tempSkl;
@@ -67,8 +70,11 @@ signed char mdlLoad(model *mdl, const char *prgPath, const char *filePath, cVect
 	free(vertices);
 	free(indices);
 
-	// If no name was given, generate one based off the file name
+	// If no name was given, generate one based off the file path.
 	if(mdl->name == NULL || mdl->name[0] == '\0'){
+		if(mdl->name != NULL){
+			free(mdl->name);
+		}
 		mdl->name = malloc((fileLen+1)*sizeof(char));
 		if(mdl->name == NULL){
 			/** Memory allocation failure. **/
@@ -143,10 +149,10 @@ static void mdlVertexAttributes(){
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, normal));
 	glEnableVertexAttribArray(2);
 	// Bone index offset
-	glVertexAttribIPointer(3, 4, GL_INT, sizeof(vertex), (GLvoid*)offsetof(vertex, bIDs));
+	glVertexAttribIPointer(3, VERTEX_MAX_BONES, GL_INT, sizeof(vertex), (GLvoid*)offsetof(vertex, bIDs));
 	glEnableVertexAttribArray(3);
 	// Bone weight offset
-	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, bWeights));
+	glVertexAttribPointer(4, VERTEX_MAX_BONES, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, bWeights));
 	glEnableVertexAttribArray(4);
 }
 
@@ -200,7 +206,6 @@ static void mdlGenBufferObjects(model *mdl, const size_t vertexNum, const vertex
 }
 
 void mdlDelete(model *mdl){
-	size_t i;
 	if(mdl->name != NULL){
 		free(mdl->name);
 	}

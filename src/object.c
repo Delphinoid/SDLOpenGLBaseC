@@ -207,7 +207,6 @@ signed char objInitSkeleton(object *obj, skeleton *skl){
 void objUpdate(object *obj, const camera *cam, const float elapsedTime){
 
 	size_t i;
-	bone transformBone;
 
 	/* Update the object's skeletal animations and skeleton. */
 	const float elapsedTimeMod = elapsedTime * obj->animationData.timeMod;
@@ -230,61 +229,30 @@ void objUpdate(object *obj, const camera *cam, const float elapsedTime){
 		sklaiGenerateAnimState(&obj->animationData.animations[i], obj->skeletonState[0], obj->configuration, obj->skl->boneNum, 1.f);
 	}
 
-
 	/* Transform the bones to global space and update the object's physics skeleton. */
 	for(i = 0; i < obj->skl->boneNum; ++i){
 
-		/**
-		*** This is pretty bad, but I'm not sure if I have a choice short of
-		*** merging bones and physics bodies or something weird like that.
-		**/
-		// Transform bones from local to global space.
-		boneTransformAppendPosition(&obj->skl->bones[i].defaultState, &obj->skeletonState[0][i], &obj->skeletonState[0][i]);
+		// Apply the object skeleton's bind offsets.
+		/*obj->skeletonState[0][i].position.x += obj->skl->bones[i].defaultState.position.x;
+		obj->skeletonState[0][i].position.y += obj->skl->bones[i].defaultState.position.y;
+		obj->skeletonState[0][i].position.z += obj->skl->bones[i].defaultState.position.z;*/
 
+		// Apply the object skeleton's bind offsets.
+		boneTransformAppendPositionVec(&obj->skeletonState[0][i],
+		                               obj->skl->bones[i].defaultState.position.x,
+		                               obj->skl->bones[i].defaultState.position.y,
+		                               obj->skl->bones[i].defaultState.position.z,
+		                               &obj->skeletonState[0][i]);
+
+		// Apply the parent's transformations to each bone.
 		if(obj->skl->bones[i].parent < obj->skl->boneNum && i != obj->skl->bones[i].parent){
-			// Transform parent into local space before applying transformations here.
-			boneInvert(&obj->skl->bones[obj->skl->bones[i].parent].defaultState, &transformBone);
-			boneTransformAppend(&obj->skeletonState[0][obj->skl->bones[i].parent], &transformBone, &transformBone);
-			// Apply parent transformations.
-			boneTransformAppend(&transformBone, &obj->skeletonState[0][i], &obj->skeletonState[0][i]);
+			boneTransformAppend(&obj->skeletonState[0][obj->skl->bones[i].parent], &obj->skeletonState[0][i], &obj->skeletonState[0][i]);
 
 		// Apply billboarding to root bones if necessary.
 		}else if((obj->tempRndrConfig.flags & (RNDR_BILLBOARD_X | RNDR_BILLBOARD_Y | RNDR_BILLBOARD_Z)) > 0){
-            //
-		}
-
-		// Update the positions of each rigid body connected to this bone.
-		if(obj->physicsState != NULL && !obj->physicsSimulate &&
-		   (obj->physicsState[i].flags & PHYSICS_BODY_SIMULATE) == 0){
-
-			// Translate the bone into global space for the physics object.
-			boneInvert(&obj->skl->bones[obj->skl->bones[i].parent].defaultState, &transformBone);
-			boneTransformAppend(&obj->skeletonState[0][i], &transformBone,
-			                    &obj->physicsState[i].configuration);
-
-		}
-
-		// Update the positions of each rigid body connected to this bone.
-		//for(j = 0; j < obj->renderableNum; ++j){
-
-			// Only bodies that are not being simulated are affected by skeletal animations.
-			/** Use a lookup, same in renderScene.c. **/
-			/*rndrBone = sklFindBone(obj->renderables[j].mdl->skl, obj->skl->bones[i].name);
-			if(rndrBone < obj->renderables[j].mdl->skl->boneNum &&
-			   obj->renderables[j].physicsState != NULL && !obj->renderables[j].physicsSimulate &&
-			   (obj->renderables[j].physicsState[rndrBone].flags & PHYSICS_BODY_SIMULATE) == 0){
-
-			   	// Translate the bone into global space for the physics object.
-			   	boneInvert(&obj->skl->bones[obj->skl->bones[i].parent].defaultState, &transformBone);
-			   	boneTransformAppend(&obj->skeletonState[0][i], &transformBone,
-				                    &obj->renderables[j].physicsState[rndrBone].configuration);
-
-			}*/
-
-		//}
-
 			// If any of the flags apart from RNDR_BILLBOARD_TARGET are set, continue.
-			/**mat4 billboardRotation;
+			/**
+			mat4 billboardRotation;
 			if((rc->flags & RNDR_BILLBOARD_SPRITE) > 0){
 				// Use a less accurate but faster method for billboarding.
 				vec3 right, up, forward;
@@ -341,17 +309,157 @@ void objUpdate(object *obj, const camera *cam, const float elapsedTime){
 				mat4RotateToFace(&billboardRotation, &eye, &target, &up);
 			}
 			mat4MultMByM2(&billboardRotation, transformMatrix);  // Apply billboard rotation
-		}**/
+			**/
+
+		}
+
+		// Update the positions of each rigid body connected to this bone.
+		if(obj->physicsState != NULL && !obj->physicsSimulate &&
+		   (obj->physicsState[i].flags & PHYSICS_BODY_SIMULATE) == 0){
+			obj->physicsState[i].configuration = obj->skeletonState[0][i];
+		}
+
+	}
+
+	for(i = 0; i < obj->skl->boneNum; ++i){
+
+		// Apply the object skeleton's bind offsets.
+		/*obj->skeletonState[0][i].position.x += obj->skl->bones[i].defaultState.position.x;
+		obj->skeletonState[0][i].position.y += obj->skl->bones[i].defaultState.position.y;
+		obj->skeletonState[0][i].position.z += obj->skl->bones[i].defaultState.position.z;*/
+
+		/*bone thing = obj->skl->bones[i].defaultState;
+		boneStateInvert(&thing, &thing);
+		boneTransformAppend(&obj->skeletonState[0][i], &thing, &obj->skeletonState[0][i]);*/
+
+		// Apply the object skeleton's bind offsets.
+		/*boneTransformAppendPositionVec(&obj->skeletonState[0][i],
+		                               -obj->skl->bones[i].defaultState.position.x,
+		                               -obj->skl->bones[i].defaultState.position.y,
+		                               -obj->skl->bones[i].defaultState.position.z,
+		                               &obj->skeletonState[0][i]);*/
+	}
+	/* Transform the bones to global space and update the object's physics skeleton. */
+	/*for(i = 0; i < obj->skl->boneNum; ++i){
+
+		**
+		*** This is pretty bad, but I'm not sure if I have a choice short of
+		*** merging bones and physics bodies or something weird like that.
+		**
+		// Transform bones from local to global space.
+		boneTransformAppendPosition(&obj->skl->bones[i].defaultState, &obj->skeletonState[0][i], &obj->skeletonState[0][i]);
+
+		if(obj->skl->bones[i].parent < obj->skl->boneNum && i != obj->skl->bones[i].parent){
+			// Transform parent into local space before applying transformations here.
+			boneInvert(&obj->skl->bones[obj->skl->bones[i].parent].defaultState, &transformBone);
+			boneTransformAppend(&obj->skeletonState[0][obj->skl->bones[i].parent], &transformBone, &transformBone);
+			// Apply parent transformations.
+			boneTransformAppend(&transformBone, &obj->skeletonState[0][i], &obj->skeletonState[0][i]);
+
+		// Apply billboarding to root bones if necessary.
+		}else if((obj->tempRndrConfig.flags & (RNDR_BILLBOARD_X | RNDR_BILLBOARD_Y | RNDR_BILLBOARD_Z)) > 0){
+            //
+		}
+
+		// Update the positions of each rigid body connected to this bone.
+		if(obj->physicsState != NULL && !obj->physicsSimulate &&
+		   (obj->physicsState[i].flags & PHYSICS_BODY_SIMULATE) == 0){
+
+			// Translate the bone into global space for the physics object.
+			boneInvert(&obj->skl->bones[obj->skl->bones[i].parent].defaultState, &transformBone);
+			boneTransformAppend(&obj->skeletonState[0][i], &transformBone,
+			                    &obj->physicsState[i].configuration);
+
+		}
+
+		// Update the positions of each rigid body connected to this bone.
+		//for(j = 0; j < obj->renderableNum; ++j){
+
+			// Only bodies that are not being simulated are affected by skeletal animations.
+			** Use a lookup, same in renderScene.c. **
+			*rndrBone = sklFindBone(obj->renderables[j].mdl->skl, obj->skl->bones[i].name);
+			if(rndrBone < obj->renderables[j].mdl->skl->boneNum &&
+			   obj->renderables[j].physicsState != NULL && !obj->renderables[j].physicsSimulate &&
+			   (obj->renderables[j].physicsState[rndrBone].flags & PHYSICS_BODY_SIMULATE) == 0){
+
+			   	// Translate the bone into global space for the physics object.
+			   	boneInvert(&obj->skl->bones[obj->skl->bones[i].parent].defaultState, &transformBone);
+			   	boneTransformAppend(&obj->skeletonState[0][i], &transformBone,
+				                    &obj->renderables[j].physicsState[rndrBone].configuration);
+
+			}*
+
+		//}
+
+			// If any of the flags apart from RNDR_BILLBOARD_TARGET are set, continue.
+			**mat4 billboardRotation;
+			if((rc->flags & RNDR_BILLBOARD_SPRITE) > 0){
+				// Use a less accurate but faster method for billboarding.
+				vec3 right, up, forward;
+				// Use the camera's X, Y and Z axes for cheap sprite billboarding.
+				vec3Set(&right,   cam->viewMatrix.m[0][0], cam->viewMatrix.m[0][1], cam->viewMatrix.m[0][2]);
+				vec3Set(&up,      cam->viewMatrix.m[1][0], cam->viewMatrix.m[1][1], cam->viewMatrix.m[1][2]);
+				vec3Set(&forward, cam->viewMatrix.m[2][0], cam->viewMatrix.m[2][1], cam->viewMatrix.m[2][2]);
+				// Lock certain axes if needed.
+				if((rc->flags & RNDR_BILLBOARD_X) == 0){
+					right.y   = 0.f;
+					up.y      = 1.f;
+					forward.y = 0.f;
+				}
+				if((rc->flags & RNDR_BILLBOARD_Y) == 0){
+					right.x   = 1.f;
+					up.x      = 0.f;
+					forward.x = 0.f;
+				}
+				if((rc->flags & RNDR_BILLBOARD_Z) == 0){
+					right.z   = 0.f;
+					up.z      = 0.f;
+					forward.z = 1.f;
+				}
+				billboardRotation.m[0][0] = right.x; billboardRotation.m[0][1] = up.x; billboardRotation.m[0][2] = forward.x; billboardRotation.m[0][3] = 0.f;
+				billboardRotation.m[1][0] = right.y; billboardRotation.m[1][1] = up.y; billboardRotation.m[1][2] = forward.y; billboardRotation.m[1][3] = 0.f;
+				billboardRotation.m[2][0] = right.z; billboardRotation.m[2][1] = up.z; billboardRotation.m[2][2] = forward.z; billboardRotation.m[2][3] = 0.f;
+				billboardRotation.m[3][0] = 0.f;     billboardRotation.m[3][1] = 0.f;  billboardRotation.m[3][2] = 0.f;       billboardRotation.m[3][3] = 1.f;
+			}else{
+				vec3 eye, target, up;
+				if((rc->flags & RNDR_BILLBOARD_TARGET) > 0){
+					eye = rc->targetPosition.render;
+					target = rc->position.render;
+					vec3Set(&up, 0.f, 1.f, 0.f);
+					quatRotateVec3(&rc->targetOrientation.render, &up);
+				}else if((rc->flags & RNDR_BILLBOARD_TARGET_CAMERA) > 0){
+					eye = cam->position.render;
+					target = rc->position.render;
+					up = cam->up.render;
+				}else{
+					eye = cam->position.render;
+					target = cam->targetPosition.render;
+					up = cam->up.render;
+				}
+				// Lock certain axes if needed.
+				if((rc->flags & RNDR_BILLBOARD_X) == 0){
+					target.y = eye.y;
+				}
+				if((rc->flags & RNDR_BILLBOARD_Y) == 0){
+					target.x = eye.x;
+				}
+				if((rc->flags & RNDR_BILLBOARD_Z) == 0){
+					vec3Set(&up, 0.f, 1.f, 0.f);
+				}
+				mat4RotateToFace(&billboardRotation, &eye, &target, &up);
+			}
+			mat4MultMByM2(&billboardRotation, transformMatrix);  // Apply billboard rotation
+		}**
 
 		// Only bodies that are not being simulated are affected by skeletal animations.
-		/*if(obj->physicsSimulate && (obj->physicsState[i].flags & PHYSICS_BODY_SIMULATE) == 0){
+		*if(obj->physicsSimulate && (obj->physicsState[i].flags & PHYSICS_BODY_SIMULATE) == 0){
 			// Apply the bone's change in position to the physics object.
 			obj->physicsState[i].position = obj->skeletonState[0][i].position;
 			// Apply the bone's change in orientation to the physics object.
 			obj->physicsState[i].orientation = obj->skeletonState[0][i].orientation;
-		}*/
+		}*
 
-	}
+	}*/
 
 
 	/* Update each of the object's texture wrappers. */

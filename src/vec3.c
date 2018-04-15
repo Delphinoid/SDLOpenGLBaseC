@@ -131,22 +131,42 @@ void vec3MultVByS(vec3 *v, const float s){
 }
 
 vec3 vec3VDivV(const vec3 *v1, const vec3 *v2){
-	if(v2->x != 0.f && v2->y != 0.f && v2->z != 0.f){
-		vec3 r = {.x = v1->x / v2->x,
-		          .y = v1->y / v2->y,
-		          .z = v1->z / v2->z};
-		return r;
+	vec3 r;
+	if(v2->x != 0.f){
+		r.x = v1->x / v2->x;
+	}else{
+		r.x = 0.f;
 	}
-	return *v1;
+	if(v2->y != 0.f){
+		r.y = v1->y / v2->y;
+	}else{
+		r.y = 0.f;
+	}
+	if(v2->z != 0.f){
+		r.z = v1->z / v2->z;
+	}else{
+		r.z = 0.f;
+	}
+	return r;
 }
 vec3 vec3VDivN(const vec3 *v, const float x, const float y, const float z){
-	if(x != 0.f && y != 0.f && z != 0.f){
-		vec3 r = {.x = v->x / x,
-		          .y = v->y / y,
-		          .z = v->z / z};
-		return r;
+	vec3 r;
+	if(x != 0.f){
+		r.x = v->x / x;
+	}else{
+		r.x = 0.f;
 	}
-	return *v;
+	if(y != 0.f){
+		r.y = v->y / y;
+	}else{
+		r.y = 0.f;
+	}
+	if(z != 0.f){
+		r.z = v->z / z;
+	}else{
+		r.z = 0.f;
+	}
+	return r;
 }
 vec3 vec3VDivS(const vec3 *v, const float s){
 	if(s != 0.f){
@@ -155,44 +175,106 @@ vec3 vec3VDivS(const vec3 *v, const float s){
 		          .z = v->z / s};
 		return r;
 	}
-	return *v;
+	return vec3NewS(0.f);
 }
 vec3 vec3NDivV(const float x, const float y, const float z, const vec3 *v){
-	if(v->x != 0.f && v->y != 0.f && v->z != 0.f){
-		vec3 r = {.x = x / v->x,
-		          .y = y / v->y,
-		          .z = z / v->z};
-		return r;
+	vec3 r;
+	if(v->x != 0.f){
+		r.x = x / v->x;
+	}else{
+		r.x = x;
 	}
-	return *v;
+	if(v->y != 0.f){
+		r.y = y / v->y;
+	}else{
+		r.y = y;
+	}
+	if(v->z != 0.f){
+		r.z = z / v->z;
+	}else{
+		r.z = z;
+	}
+	return r;
 }
 vec3 vec3SDivV(const float s, const vec3 *v){
-	if(v->x != 0.f && v->y != 0.f && v->z != 0.f){
-		vec3 r = {.x = s / v->x,
-		          .y = s / v->y,
-		          .z = s / v->z};
-		return r;
+	vec3 r;
+	if(v->x != 0.f){
+		r.x = s / v->x;
+	}else{
+		r.x = s;
 	}
-	return *v;
+	if(v->y != 0.f){
+		r.y = s / v->y;
+	}else{
+		r.y = s;
+	}
+	if(v->z != 0.f){
+		r.z = s / v->z;
+	}else{
+		r.z = s;
+	}
+	return r;
 }
 void vec3DivVByV1(vec3 *v1, const vec3 *v2){
-	if(v2->x != 0.f && v2->y != 0.f && v2->z != 0.f){
-		v1->x /= v2->x; v1->y /= v2->y; v1->z /= v2->z;
+	if(v2->x != 0.f){
+		v1->x /= v2->x;
+	}else{
+		v1->x = 0.f;
+	}
+	if(v2->y != 0.f){
+		v1->y /= v2->y;
+	}else{
+		v1->y = 0.f;
+	}
+	if(v2->z != 0.f){
+		v1->z /= v2->z;
+	}else{
+		v1->z = 0.f;
 	}
 }
 void vec3DivVByV2(const vec3 *v1, vec3 *v2){
-	if(v2->x != 0.f && v2->y != 0.f && v2->z != 0.f){
-		v2->x = v1->x / v2->x; v2->y = v1->y / v2->y; v2->z = v1->z / v2->z;
+	if(v2->x != 0.f){
+		v2->x = v1->x / v2->x;
+	}
+	if(v2->y != 0.f){
+		v2->y = v1->y / v2->y;
+	}
+	if(v2->z != 0.f){
+		v2->z = v1->z / v2->z;
 	}
 }
 void vec3DivVByVR(const vec3 *v1, const vec3 *v2, vec3 *r){
-	if(v2->x != 0.f && v2->y != 0.f && v2->z != 0.f){
-		r->x = v1->x / v2->x; r->y = v1->y / v2->y; r->z = v1->z / v2->z;
+	if(v2->x != 0.f){
+		r->x = v1->x / v2->x;
+	}else{
+		r->x = 0.f;
+	}
+	if(v2->y != 0.f){
+		r->y = v1->y / v2->y;
+	}else{
+		r->y = 0.f;
+	}
+	if(v2->z != 0.f){
+		r->z = v1->z / v2->z;
+	}else{
+		r->z = 0.f;
 	}
 }
 void vec3DivVByN(vec3 *v, const float x, const float y, const float z){
-	if(x != 0.f && y != 0.f && z != 0.f){
-		v->x /= x; v->y /= y; v->z /= z;
+	if(x != 0.f){
+		v->x /= x;
+	}else{
+		v->x = 0.f;
+	}
+	if(y != 0.f){
+		v->y /= y;
+	}else{
+		v->y = 0.f;
+	}
+	if(z != 0.f){
+		v->z /= z;
+	}else{
+		v->z = 0.f;
 	}
 }
 void vec3DivVByS(vec3 *v, const float s){
@@ -201,13 +283,25 @@ void vec3DivVByS(vec3 *v, const float s){
 	}
 }
 void vec3DivNByV(const float x, const float y, const float z, vec3 *v){
-	if(v->x != 0.f && v->y != 0.f && v->z != 0.f){
-		v->x = x / v->x; v->y = y / v->y; v->z = z / v->z;
+	if(v->x != 0.f){
+		v->x = x / v->x;
+	}
+	if(v->y != 0.f){
+		v->y = y / v->y;
+	}
+	if(v->z != 0.f){
+		v->z = z / v->z;
 	}
 }
 void vec3DivSByV(const float s, vec3 *v){
-	if(v->x != 0.f && v->y != 0.f && v->z != 0.f){
-		v->x = s / v->x; v->y = s / v->y; v->z = s / v->z;
+	if(v->x != 0.f){
+		v->x = s / v->x;
+	}
+	if(v->y != 0.f){
+		v->y = s / v->y;
+	}
+	if(v->z != 0.f){
+		v->z = s / v->z;
 	}
 }
 

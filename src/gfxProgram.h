@@ -22,38 +22,43 @@
 
 typedef struct {
 
-	// OpenGL / SDL window and context
+	// OpenGL / SDL window and context.
 	SDL_Window *window;
 	SDL_GLContext context;
 
-	// Shaders
+	// Shaders.
 	GLuint vertexShaderID;
 	GLuint fragmentShaderID;
 	GLuint shaderProgramID;
 
-	// Per-instance uniforms
+	// Per-instance uniforms.
 	GLuint vpMatrixID;
 	GLuint textureFragmentID;
-	GLuint bonePositionArrayID[SKL_MAX_BONE_NUM];
+	GLuint boneArrayID[SKL_MAX_BONE_NUM];
+	/*GLuint bonePositionArrayID[SKL_MAX_BONE_NUM];
 	GLuint boneOrientationArrayID[SKL_MAX_BONE_NUM];
-	GLuint boneScaleArrayID[SKL_MAX_BONE_NUM];
+	GLuint boneScaleArrayID[SKL_MAX_BONE_NUM];*/
 	GLuint alphaID;
 
-	// Uniform buffers
+	// Uniform buffers.
 	vertex sprVertexBatchBuffer[SPR_MAX_BATCH_SIZE];  // An array of vertices used for batch rendering sprites.
-	bone sklAnimationState[SKL_MAX_BONE_NUM];         // Stores the object's animation state.
+	vec3 sklBindAccumulator[SKL_MAX_BONE_NUM];        // Accumulates bind states for bones before rendering.
+	mat4 sklTransformState[SKL_MAX_BONE_NUM];         // Stores the renderable's transform state before rendering.
 
-	// Texture samplers
+	// Texture samplers.
 	GLuint textureSamplerArrayID[GFX_MAX_TEX_SAMPLER_NUM];
 
-	// Previously bound texture ID for more efficient binding
+	// Previously bound texture ID for more efficient binding.
 	GLuint lastTexID;
 
-	// VAO and VBO for rendering sprites
+	// VAO and VBO for rendering sprites.
 	GLuint spriteVaoID;
 	GLuint spriteVboID;
 
-	// Window sizes (should be stored elsewhere)
+	// Identity matrix.
+	mat4 identityMatrix;
+
+	// Window sizes (should be stored elsewhere).
 	int windowWidth;
 	int windowHeight;
 	unsigned char aspectRatioX;

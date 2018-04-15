@@ -10,6 +10,6 @@ void vertInit(vertex *v){
 
 void vertTransform(vertex *v, const vec3 *position, const quat *orientation, const vec3 *scale){
 	vec3MultVByV(&v->position, scale);
-	quatRotateVec3(orientation, &v->position);
+	quatRotateVec3Fast(orientation, &v->position);
 	vec3AddVToV(&v->position, position);
 }
