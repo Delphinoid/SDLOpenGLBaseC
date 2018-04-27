@@ -3,7 +3,7 @@
 #include <math.h>
 #include <float.h>
 
-#define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians
+#define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians.
 #define QUAT_LERP_ANGLE cos(RADIAN_RATIO)
 
 quat quatNew(const float w, const float x, const float y, const float z){

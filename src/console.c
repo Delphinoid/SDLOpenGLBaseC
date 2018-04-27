@@ -55,13 +55,14 @@ signed char trieAddNode(cmdTrieNode **node, char c){
 	// Append node to the end.
 	++(*node)->childNum;
 	cmdTrieNode *tempBuffer = realloc((*node)->children, (*node)->childNum * sizeof(cmdTrieNode));
-	if(tempBuffer != NULL){
-		(*node)->children = tempBuffer;
-		trieInit(&((*node)->children[index]), c);
-		*node = &(*node)->children[index];
-		return 1;
+	if(tempBuffer == NULL){
+		/** Memory allocation failure. **/
+		return -1;
 	}
-	return 0;
+	(*node)->children = tempBuffer;
+	trieInit(&((*node)->children[index]), c);
+	*node = &(*node)->children[index];
+	return 1;
 }
 
 signed char cmdValid(char *name, command cmd){
@@ -104,12 +105,11 @@ signed char conAddCommand(console *con, char *name, signed char (*func)(const cm
 		// Go through each character in name, adding
 		// a node when we don't have a match.
 		while(name[index] != '\0'){
-			if(trieAddNode(&node, name[index])){
-				++index;
-			}else{
+			if(trieAddNode(&node, name[index]) == -1){
 				/** Memory allocation failure. **/
-				return 0;
+				return -1;
 			}
+			++index;
 		}
 		// We've reached the final node at the end of the command's name.
 		if(node->cmd == NULL){

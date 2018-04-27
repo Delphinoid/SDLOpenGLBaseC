@@ -3,9 +3,12 @@
 #include <string.h>
 #include <stdio.h>
 
-#define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians
+#define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians.
 
-#define ANIM_FRAGMENT_START_CAPACITY 1
+#define SKL_ANIM_BONE_START_CAPACITY 1
+#define SKL_ANIM_FRAME_START_CAPACITY 1
+
+#define SKL_ANIM_FRAGMENT_START_CAPACITY 1
 
 static signed char sklResizeToFit(skeleton *skl){
 	bone *tempBuffer = realloc(skl->bones, skl->boneNum*sizeof(sklNode));
@@ -25,22 +28,28 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 
 	sklInit(skl);
 
-	skl->bones = malloc(SKL_MAX_BONE_NUM*sizeof(sklNode));
-	if(skl->bones == NULL){
-		/** Memory allocation failure. **/
-		return 0;
-	}
-
-	size_t parent = 0;
-	int currentCommand = -1;       // The current multiline command type (-1 = none, >-1 = bone)
-	unsigned int currentLine = 0;  // Current file line being read
-
 	size_t pathLen = strlen(prgPath);
 	size_t fileLen = strlen(filePath);
 	char *fullPath = malloc((pathLen+fileLen+1)*sizeof(char));
+	if(fullPath == NULL){
+		/** Memory allocation failure. **/
+		return -1;
+	}
 	memcpy(fullPath, prgPath, pathLen);
 	memcpy(fullPath+pathLen, filePath, fileLen);
 	fullPath[pathLen+fileLen] = '\0';
+
+	skl->bones = malloc(SKL_MAX_BONE_NUM*sizeof(sklNode));
+	if(skl->bones == NULL){
+		/** Memory allocation failure. **/
+		free(fullPath);
+		return -1;
+	}
+
+	size_t parent = 0;
+	int currentCommand = -1;       // The current multiline command type (-1 = none, >-1 = bone).
+	unsigned int currentLine = 0;  // Current file line being read.
+
 	FILE *sklInfo = fopen(fullPath, "r");
 	char lineFeed[1024];
 	char *line;
@@ -54,18 +63,22 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 			// Name
 			if(lineLength >= 6 && strncmp(line, "name ", 5) == 0){
 				if(currentCommand == -1){
+					if(line[5] == '"' && line[lineLength-1] == '"'){
+						++line;
+						lineLength -= 2;
+					}
 					skl->name = malloc((lineLength-4) * sizeof(char));
 					if(skl->name == NULL){
 						/** Memory allocation failure. **/
 						sklDelete(skl);
 						free(fullPath);
 						fclose(sklInfo);
-						return 0;
+						return -1;
 					}
 					strncpy(skl->name, line+5, lineLength-5);
 					skl->name[lineLength-5] = '\0';
 				}else{
-					printf("Error loading skeleton: Name command at line %u does not belong inside a multiline command.\n", currentLine);
+					printf("Error loading skeleton \"%s\": Name command at line %u does not belong inside a multiline command.\n", fullPath, currentLine);
 				}
 
 			// Close current multiline command
@@ -78,7 +91,7 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 					}
 					--currentCommand;
 				}else{
-					printf("Error loading skeleton: Invalid closing brace at line %u.\n", currentLine);
+					printf("Error loading skeleton \"%s\": Invalid closing brace at line %u.\n", fullPath, currentLine);
 				}
 
 			// New bone
@@ -95,7 +108,7 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 						sklDelete(skl);
 						free(fullPath);
 						fclose(sklInfo);
-						return 0;
+						return -1;
 					}
 					memcpy(skl->bones[skl->boneNum].name, token, nameLen);
 					skl->bones[skl->boneNum].name[nameLen] = '\0';
@@ -127,7 +140,7 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 					++skl->boneNum;
 
 				}else{
-					printf("Error loading skeleton: Bone command at line %u does not specify a name for the bone.\n", currentLine);
+					printf("Error loading skeleton \"%s\": Bone command at line %u does not specify a name for the bone.\n", fullPath, currentLine);
 				}
 
 			}
@@ -138,7 +151,7 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 		free(fullPath);
 
 	}else{
-		printf("Error loading texture wrapper: Couldn't open %s\n", fullPath);
+		printf("Error loading skeleton \"%s\": Could not open file.\n", fullPath);
 		free(fullPath);
 		return 0;
 	}
@@ -152,7 +165,7 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 		if(skl->name == NULL){
 			/** Memory allocation failure. **/
 			sklDelete(skl);
-			return 0;
+			return -1;
 		}
 		memcpy(skl->name, filePath, fileLen);
 		skl->name[fileLen] = '\0';
@@ -162,18 +175,32 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 
 }
 signed char sklDefault(skeleton *skl){
+	skl->name = malloc(8*sizeof(char));
+	if(skl->name == NULL){
+		/** Memory allocation failure. **/
+		return -1;
+	}
 	skl->bones = malloc(sizeof(sklNode));
 	if(skl->bones == NULL){
 		/** Memory allocation failure. **/
-		return 0;
+		free(skl->name);
+		return -1;
 	}
 	skl->bones[0].name = malloc(5*sizeof(char));
 	if(skl->bones[0].name == NULL){
 		/** Memory allocation failure. **/
 		free(skl->bones);
-		return 0;
+		free(skl->name);
+		return -1;
 	}
-	skl->name = NULL;
+	skl->name[0] = 'd';
+	skl->name[1] = 'e';
+	skl->name[2] = 'f';
+	skl->name[3] = 'a';
+	skl->name[4] = 'u';
+	skl->name[5] = 'l';
+	skl->name[6] = 't';
+	skl->name[7] = '\0';
 	skl->boneNum = 1;
 	skl->bones[0].name[0] = 'r';
 	skl->bones[0].name[1] = 'o';
@@ -190,7 +217,7 @@ static signed char sklNodeCopy(const sklNode *onode, sklNode *cnode){
 		cnode->name = malloc(length*sizeof(char));
 		if(cnode->name == NULL){
 			/** Memory allocation failure. **/
-			return 0;
+			return -1;
 		}
 		strncpy(cnode->name, onode->name, length);
 	}else{
@@ -205,7 +232,7 @@ signed char sklCopy(const skeleton *oskl, skeleton *cskl){
 	cskl->bones = malloc(oskl->boneNum*sizeof(sklNode));
 	if(cskl->bones == NULL){
 		/** Memory allocation failure. **/
-		return 0;
+		return -1;
 	}
 	if(oskl->name != NULL){
 		i = strlen(oskl->name);
@@ -213,19 +240,20 @@ signed char sklCopy(const skeleton *oskl, skeleton *cskl){
 		if(cskl->name == NULL){
 			/** Memory allocation failure. **/
 			free(cskl->bones);
-			return 0;
+			return -1;
 		}
 		strncpy(cskl->name, oskl->name, i);
 	}else{
 		cskl->name = NULL;
 	}
 	for(i = 0; i < oskl->boneNum; ++i){
-		if(!sklNodeCopy(&oskl->bones[i], &cskl->bones[i])){
+		if(sklNodeCopy(&oskl->bones[i], &cskl->bones[i]) == -1){
 			/** Memory allocation failure. **/
 			break;
 		}
 	}
-	if(i != oskl->boneNum){
+	if(i < oskl->boneNum){
+		/** Memory allocation failure. **/
 		// Free the copied names after a memory allocation failure.
 		while(i > 0){
 			if(cskl->bones[i].name != NULL){
@@ -240,7 +268,7 @@ signed char sklCopy(const skeleton *oskl, skeleton *cskl){
 			free(cskl->name);
 		}
 		free(cskl->bones);
-		return 0;
+		return -1;
 	}
 	cskl->boneNum = oskl->boneNum;
 	return 1;
@@ -274,19 +302,299 @@ void sklDelete(skeleton *skl){
 
 void sklaInit(sklAnim *skla){
 	skla->name = NULL;
-	skla->additive = 0;
+	//skla->additive = 0;
 	animDataInit(&skla->animData);
 	skla->boneNum = 0;
 	skla->bones = NULL;
 	skla->frames = NULL;
 }
+static signed char sklaResizeToFit(sklAnim *skla, const size_t boneCapacity, const size_t frameCapacity){
+	if(skla->boneNum != boneCapacity){
+		skla->bones = realloc(skla->bones, skla->boneNum*sizeof(bone *));
+		if(skla->bones == NULL){
+			/** Memory allocation failure. **/
+			sklaDelete(skla);
+			return -1;
+		}
+	}
+	if(skla->animData.frameNum != frameCapacity){
+		skla->frames = realloc(skla->frames, skla->animData.frameNum*sizeof(char *));
+		if(skla->frames == NULL){
+			/** Memory allocation failure. **/
+			sklaDelete(skla);
+			return -1;
+		}
+		skla->animData.frameDelays = realloc(skla->animData.frameDelays, skla->animData.frameNum*sizeof(char *));
+		if(skla->animData.frameDelays == NULL){
+			/** Memory allocation failure. **/
+			sklaDelete(skla);
+			return -1;
+		}
+	}
+	return 1;
+}
 signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 
 	sklaInit(skla);
 
-	//
+	size_t boneCapacity = SKL_ANIM_BONE_START_CAPACITY;
+	skla->bones = malloc(SKL_ANIM_BONE_START_CAPACITY*sizeof(char *));
+	if(skla->bones == NULL){
+		/** Memory allocation failure. **/
+		return -1;
+	}
 
-	return 1;
+	size_t frameCapacity = SKL_ANIM_FRAME_START_CAPACITY;
+	skla->frames = malloc(SKL_ANIM_FRAME_START_CAPACITY*sizeof(bone *));
+	if(skla->frames == NULL){
+		/** Memory allocation failure. **/
+		free(skla->bones);
+		return -1;
+	}
+	skla->animData.frameDelays = malloc(SKL_ANIM_FRAME_START_CAPACITY*sizeof(float));
+	if(skla->animData.frameDelays == NULL){
+		/** Memory allocation failure. **/
+		free(skla->animData.frameDelays);
+		free(skla->bones);
+		return -1;
+	}
+
+	signed char currentCommand = 0;  // The current multiline command type (-1 = none, 0 = bones, 1 = frame).
+	unsigned int currentLine = 0;    // Current file line being read.
+
+
+	const size_t pathLen = strlen(prgPath);
+	const size_t fileLen = strlen(filePath);
+	char *fullPath = malloc((pathLen+fileLen+1) * sizeof(char));
+	if(fullPath == NULL){
+		/** Memory allocation failure. **/
+		free(skla->frames);
+		free(skla->bones);
+		return -1;
+	}
+	memcpy(fullPath, prgPath, pathLen);
+	memcpy(fullPath+pathLen, filePath, fileLen);
+	fullPath[pathLen+fileLen] = '\0';
+	FILE *sklaInfo = fopen(fullPath, "r");
+	char lineFeed[1024];
+	char *line;
+	size_t lineLength;
+
+	if(sklaInfo != NULL){
+		while(fileParseNextLine(sklaInfo, lineFeed, sizeof(lineFeed), &line, &lineLength)){
+
+			++currentLine;
+
+			// Name
+			if(lineLength >= 6 && strncmp(line, "name ", 5) == 0){
+				if(line[5] == '"' && line[lineLength-1] == '"'){
+					++line;
+					lineLength -= 2;
+				}
+				skla->name = malloc((lineLength-4) * sizeof(char));
+				if(skla->name == NULL){
+					/** Memory allocation failure. **/
+					sklaDelete(skla);
+					free(fullPath);
+					fclose(sklaInfo);
+					return -1;
+				}
+				strncpy(skla->name, line+5, lineLength-5);
+				skla->name[lineLength-5] = '\0';
+
+
+			// Bone
+			}else if(lineLength >= 6 && strncmp(line, "bone ", 5) == 0){
+				if(currentCommand == 0){
+					// Resize the bone name array if necessary.
+					if(skla->boneNum == boneCapacity){
+						boneCapacity *= 2;
+						char **tempBuffer = realloc(skla->bones, boneCapacity*sizeof(char *));
+						if(tempBuffer == NULL){
+							/** Memory allocation failure. **/
+							sklaDelete(skla);
+							free(fullPath);
+							fclose(sklaInfo);
+							return -1;
+						}
+						skla->bones = tempBuffer;
+					}
+					// Add the new bone name.
+					if(line[5] == '"' && line[lineLength-1] == '"'){
+						++line;
+						lineLength -= 2;
+					}
+					skla->bones[skla->boneNum] = malloc((lineLength-5)*sizeof(char));
+					if(skla->bones[skla->boneNum] == NULL){
+						/** Memory allocation failure. **/
+						sklaDelete(skla);
+						free(fullPath);
+						fclose(sklaInfo);
+						return -1;
+					}
+					strncpy(skla->bones[skla->boneNum], line+5, lineLength-5);
+					skla->bones[skla->boneNum][lineLength-5] = '\0';
+					++skla->boneNum;
+				}else{
+					printf("Error loading skeletal animation \"%s\": Bone at line %u must be specified before any frames.\n", fullPath, currentLine);
+				}
+
+
+			// Make the current animation loop.
+			}else if(lineLength >= 6 && strncmp(line, "loop ", 5) == 0){
+				skla->animData.desiredLoops = strtol(line+5, NULL, 0);
+
+
+			// New frame
+			}else if(lineLength >= 6 && strncmp(line, "frame", 5) == 0){
+				if(strchr(line+5, '{')){
+					size_t i;
+					if(currentCommand == 0){
+						// Make sure at least one bone has been loaded.
+						if(skla->boneNum == 0){
+							printf("Error loading skeletal animation \"%s\": Attempting to load frames when no bones have been specified. Aborting.\n", fullPath);
+							sklaDelete(skla);
+							free(fullPath);
+							fclose(sklaInfo);
+							return 0;
+						}
+					}else if(currentCommand == 1){
+						printf("Error loading skeletal animation \"%s\": Trying to start a multiline command at line %u while another is already in progress. "
+						       "Closing the current command.\n", fullPath, currentLine);
+					}
+					// Resize the bone name array if necessary.
+					if(skla->animData.frameNum == frameCapacity){
+						frameCapacity *= 2;
+						bone **tempBuffer1 = realloc(skla->frames, frameCapacity*sizeof(bone *));
+						if(tempBuffer1 == NULL){
+							/** Memory allocation failure. **/
+							sklaDelete(skla);
+							free(fullPath);
+							fclose(sklaInfo);
+							return -1;
+						}
+						skla->frames = tempBuffer1;
+						float *tempBuffer2 = realloc(skla->animData.frameDelays, frameCapacity*sizeof(float));
+						if(tempBuffer2 == NULL){
+							/** Memory allocation failure. **/
+							sklaDelete(skla);
+							free(fullPath);
+							fclose(sklaInfo);
+							return -1;
+						}
+						skla->animData.frameDelays = tempBuffer2;
+					}
+					// Allocate bones for the new frame.
+					bone *tempBuffer = malloc(skla->boneNum*sizeof(bone));
+					if(tempBuffer == NULL){
+						/** Memory allocation failure. **/
+						sklaDelete(skla);
+						free(fullPath);
+						fclose(sklaInfo);
+						return -1;
+					}
+					skla->frames[skla->animData.frameNum] = tempBuffer;
+					// Initialize each bone.
+					if(skla->animData.frameNum == 0){
+						for(i = 0; i < skla->boneNum; ++i){
+							boneInit(&skla->frames[skla->animData.frameNum][i]);
+						}
+					}else{
+						for(i = 0; i < skla->boneNum; ++i){
+							skla->frames[skla->animData.frameNum][i] = skla->frames[skla->animData.frameNum-1][i];
+						}
+					}
+					++skla->animData.frameNum;
+					currentCommand = 1;
+				}else{
+					// Worth it?
+					printf("Error loading skeletal animation \"%s\": Frame command at line %u does not contain a brace.\n", fullPath, currentLine);
+				}
+
+
+			// Frame duration
+			}else if(lineLength >= 8 && strncmp(line, "length ", 7) == 0){
+				if(currentCommand == 1){
+					skla->animData.frameDelays[skla->animData.frameNum-1] = strtof(line+7, NULL);
+					if(skla->animData.frameNum > 1){
+						skla->animData.frameDelays[skla->animData.frameNum-1] += skla->animData.frameDelays[skla->animData.frameNum-2];
+					}
+				}else{
+					printf("Error loading skeletal animation \"%s\": Frame sub-command \"length\" invoked on line %u without specifying a frame.\n", fullPath, currentLine);
+				}
+
+
+			// Bone transform
+			}else if(lineLength >= 29 && strncmp(line, "transform ", 10) == 0){
+				if(currentCommand == 1){
+
+					char *token = strtok(line+10, " ");
+
+					if(token != NULL){
+
+						size_t boneID = strtoul(token, NULL, 0);
+
+						float data[3][3];  // Position, orientation (in Eulers) and scale
+						size_t i, j;
+						for(i = 0; i < 3; ++i){
+							for(j = 0; j < 3; ++j){
+								token = strtok(NULL, "/");
+								data[i][j] = strtod(token, NULL);
+							}
+						}
+
+						vec3Set(&skla->frames[skla->animData.frameNum-1][boneID].position, data[0][0], data[0][1], data[0][2]);
+						quatSetEuler(&skla->frames[skla->animData.frameNum-1][boneID].orientation, data[1][0]*RADIAN_RATIO, data[1][1]*RADIAN_RATIO, data[1][2]*RADIAN_RATIO);
+						vec3Set(&skla->frames[skla->animData.frameNum-1][boneID].scale, data[2][0], data[2][1], data[2][2]);
+
+					}else{
+						printf("Error loading skeletal animation \"%s\": Frame sub-command \"transform\" at line %u does not specify a bone ID.\n", fullPath, currentLine);
+					}
+
+				}else{
+					printf("Error loading skeletal animation \"%s\": Frame sub-command \"transform\" invoked on line %u without specifying a frame.\n", fullPath, currentLine);
+				}
+
+
+			}
+
+			if(lineLength > 0 && line[lineLength-1] == '}'){
+				if(currentCommand == 1){
+					currentCommand = -1;
+				}else{
+					printf("Error loading skeletal animation \"%s\": Stray brace on line %u.\n", fullPath, currentLine);
+				}
+			}
+
+		}
+
+		fclose(sklaInfo);
+		free(fullPath);
+
+	}else{
+		printf("Error loading skeletal animation \"%s\": Could not open file.\n", fullPath);
+		free(fullPath);
+		free(skla->frames);
+		free(skla->bones);
+		return 0;
+	}
+
+	// If no name was given, generate one based off the file path.
+	if(skla->name == NULL || skla->name[0] == '\0'){
+		if(skla->name != NULL){
+			free(skla->name);
+		}
+		skla->name = malloc((fileLen+1)*sizeof(char));
+		if(skla->name == NULL){
+			/** Memory allocation failure. **/
+			sklaDelete(skla);
+			return -1;
+		}
+		memcpy(skla->name, filePath, fileLen);
+		skla->name[fileLen] = '\0';
+	}
+
+	return sklaResizeToFit(skla, boneCapacity, frameCapacity);
 
 }
 /** TEMPORARY **/
@@ -301,6 +609,10 @@ signed char sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath,
 	size_t pathLen = strlen(prgPath);
 	size_t fileLen = strlen(filePath);
 	char *fullPath = malloc((pathLen+fileLen+1)*sizeof(char));
+	if(fullPath == NULL){
+		/** Memory allocation failure. **/
+		return -1;
+	}
 	memcpy(fullPath, prgPath, pathLen);
 	memcpy(fullPath+pathLen, filePath, fileLen);
 	fullPath[pathLen+fileLen] = '\0';
@@ -517,7 +829,7 @@ signed char sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath,
 		if(skla->name == NULL){
 			/** Memory allocation failure. **/
 			sklaDelete(skla);
-			return 0;
+			return -1;
 		}
 		memcpy(skla->name, filePath, fileLen);
 		skla->name[fileLen] = '\0';
@@ -530,11 +842,6 @@ signed char sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath,
 
 
 	return 1;
-}
-void sklaApplySkeleton(sklAnim *skla, skeleton *skl){
-
-	//
-
 }
 void sklaDelete(sklAnim *skla){
 	if(skla->name != NULL){
@@ -561,23 +868,45 @@ void sklaDelete(sklAnim *skla){
 	animDataDelete(&skla->animData);
 }
 
-static signed char sklafInit(sklAnimFragment *sklaf, sklAnim *anim){
+static signed char sklafInit(sklAnimFragment *sklaf, sklAnim *anim, const size_t frame){
+
+	size_t i;
+
 	sklaf->animBoneLookup = malloc(anim->boneNum * sizeof(size_t));
 	if(sklaf->animBoneLookup == NULL){
 		/** Memory allocation failure. **/
-		return 0;
+		return -1;
 	}
-	/* Initialize animBoneLookup. */
-	size_t i;
+
+	// Initialize animBoneLookup.
 	for(i = 0; i < anim->boneNum; ++i){
 		/** Create a proper lookup below. **/
 		sklaf->animBoneLookup[i] = i;
 	}
-	sklaf->currentAnim = anim;
-	animInstInit(&sklaf->animator);
+
+	sklaf->animStartFrame = 0;
+	sklaf->animEndFrame = 0;
+	sklaf->animInterpT = 0.f;
 	sklaf->animBlendTime = -1.f;
 	sklaf->animBlendProgress = -1.f;
+	sklaf->currentAnim = anim;
+	animInstInit(&sklaf->animator);
+
+	// Set the fragment to the current frame.
+	if(frame < anim->animData.frameNum){
+		sklaf->animator.currentFrame = frame;
+		if(frame > 0){
+			sklaf->animator.totalElapsedTime = anim->animData.frameDelays[frame-1];
+		}
+		if(frame == anim->animData.frameNum-1){
+			sklaf->animator.nextFrame = 0;
+		}else{
+			sklaf->animator.nextFrame = frame+1;
+		}
+	}
+
 	return 1;
+
 }
 
 static void sklafDelete(sklAnimFragment *sklaf){
@@ -588,26 +917,10 @@ static void sklafDelete(sklAnimFragment *sklaf){
 
 static void sklaiInit(sklAnimInstance *sklai){
 	sklai->timeMod = 1.f;
+	sklai->additive = 0;
 	sklai->animFragNum = 0;
 	sklai->animFragCapacity = 0;
 	sklai->animFrags = NULL;
-}
-static signed char sklaiCreate(sklAnimInstance *sklai, sklAnim *anim){
-	sklai->animFrags = malloc(ANIM_FRAGMENT_START_CAPACITY * sizeof(sklAnimFragment));
-	if(sklai->animFrags == NULL){
-		/** Memory allocation failure. **/
-		return 0;
-	}
-	if(!sklafInit(&sklai->animFrags[0], anim)){
-		/** Memory allocation failure. **/
-		free(sklai->animFrags);
-		return 0;
-	}
-	sklai->timeMod = 1.f;
-	sklai->animFragNum = 1;
-	sklai->animFragCapacity = ANIM_FRAGMENT_START_CAPACITY;
-	//sklai->additive = 1;
-	return 1;
 }
 static void sklaiDelete(sklAnimInstance *sklai){
 	if(sklai->animFrags != NULL){
@@ -619,7 +932,7 @@ static void sklaiDelete(sklAnimInstance *sklai){
 		free(sklai->animFrags);
 	}
 }
-static signed char sklaiStateCopy(sklAnimInstance *osklai, sklAnimInstance *csklai){
+static inline signed char sklaiStateCopy(sklAnimInstance *osklai, sklAnimInstance *csklai){
 
 	while(csklai->animFragNum > osklai->animFragNum){
 		--csklai->animFragNum;
@@ -631,7 +944,7 @@ static signed char sklaiStateCopy(sklAnimInstance *osklai, sklAnimInstance *cskl
 		sklAnimFragment *tempBuffer = malloc(osklai->animFragCapacity * sizeof(sklAnimFragment));
 		if(tempBuffer == NULL){
 			/** Memory allocation failure. **/
-			return 0;
+			return -1;
 		}
 		for(i = 0; i < csklai->animFragCapacity; ++i){
 			tempBuffer[i] = csklai->animFrags[i];
@@ -672,16 +985,16 @@ static signed char sklaiStateCopy(sklAnimInstance *osklai, sklAnimInstance *cskl
 			--fragmentID;
 			sklafDelete(&csklai->animFrags[fragmentID]);
 		}
-		return 0;
+		return -1;
 	}
 	csklai->animFragNum = osklai->animFragNum;
 
 	csklai->timeMod = osklai->timeMod;
-	//csklai->additive = osklai->additive;
+	csklai->additive = osklai->additive;
 	return 1;
 
 }
-void sklaiAnimate(sklAnimInstance *sklai, const float elapsedTime){
+static inline void sklaiUpdateFragments(sklAnimInstance *sklai, const float elapsedTime, const float interpT){
 
 	const float elapsedTimeMod = elapsedTime * sklai->timeMod;
 
@@ -702,6 +1015,54 @@ void sklaiAnimate(sklAnimInstance *sklai, const float elapsedTime){
 					sklai->animFrags[tempID-1] = sklai->animFrags[tempID];
 					++tempID;
 				}
+				--sklai->animFragNum;
+				--fragmentID;
+			}else{
+				// Advance animator, update the blend and go to the next fragment.
+				animAdvance(&sklai->animFrags[fragmentID].animator, &sklai->animFrags[fragmentID].currentAnim->animData, elapsedTimeMod);
+				animGetRenderData(&sklai->animFrags[fragmentID].animator, &sklai->animFrags[fragmentID].currentAnim->animData, interpT,
+				                  &sklai->animFrags[fragmentID].animStartFrame,
+				                  &sklai->animFrags[fragmentID].animEndFrame,
+				                  &sklai->animFrags[fragmentID].animInterpT);
+				sklai->animFrags[fragmentID].animBlendProgress += elapsedTimeMod;
+				++fragmentID;
+			}
+		}else{
+			// Advance animator and exit.
+			animAdvance(&sklai->animFrags[fragmentID].animator, &sklai->animFrags[fragmentID].currentAnim->animData, elapsedTimeMod);
+			animGetRenderData(&sklai->animFrags[fragmentID].animator, &sklai->animFrags[fragmentID].currentAnim->animData, interpT,
+			                  &sklai->animFrags[fragmentID].animStartFrame,
+			                  &sklai->animFrags[fragmentID].animEndFrame,
+			                  &sklai->animFrags[fragmentID].animInterpT);
+			break;
+		}
+
+	}
+
+}
+/*void sklaiAnimate(sklAnimInstance *sklai, const float elapsedTime){
+
+	const float elapsedTimeMod = elapsedTime * sklai->timeMod;
+
+	* Loop through each sklAnimFragment, updating them. *
+	size_t fragmentID = 0;
+	while(fragmentID < sklai->animFragNum){
+
+		// Check if the fragment is blending into another.
+		if(fragmentID+1 < sklai->animFragNum){
+			** **
+			// Check if the animation has finished blending on its oldest state.
+			if(sklai->animFrags[fragmentID].animBlendProgress >= sklai->animFrags[fragmentID].animBlendTime){
+				// Since it's no longer being used in any state, it can be safely freed.
+				sklafDelete(&sklai->animFrags[fragmentID]);
+				// Shift all the following fragments over.
+				size_t tempID = fragmentID+1;
+				while(tempID < sklai->animFragNum){
+					sklai->animFrags[tempID-1] = sklai->animFrags[tempID];
+					++tempID;
+				}
+				--sklai->animFragNum;
+				--fragmentID;
 			}else{
 				// Advance animator, update the blend and go to the next fragment.
 				animAdvance(&sklai->animFrags[fragmentID].animator, &sklai->animFrags[fragmentID].currentAnim->animData, elapsedTimeMod);
@@ -722,85 +1083,103 @@ void sklaiGenerateAnimState(sklAnimInstance *sklai, bone *skeletonState, const b
 	size_t i;
 	size_t fragmentID = 0;
 	float animInterpTBlend = 1.f;
-	bone lastState[SKL_MAX_BONE_NUM];  // Temporarily holds states of bones from previous animation fragments.
+	bone lastState[SKL_MAX_BONE_NUM];  // Temporarily holds the states of bones from previous animation fragments.
 
-	/* Loop through each animation fragment in order, blending between them and generating bone states. */
+	* Loop through each animation fragment in order, blending between them and generating bone states. *
 	while(fragmentID < sklai->animFragNum){
-		/** **/
-		// If the animation exists in the current state, generate render data for it.
-		if(fragmentID+1 >= sklai->animFragNum ||
-		   sklai->animFrags[fragmentID].animBlendProgress < sklai->animFrags[fragmentID].animBlendTime){
 
-			size_t startFrame;
-			size_t endFrame;
-			float animInterpT;
-			animGetRenderData(&sklai->animFrags[fragmentID].animator, &sklai->animFrags[fragmentID].currentAnim->animData, interpT,
-			                  &startFrame, &endFrame, &animInterpT);
+		size_t startFrame;
+		size_t endFrame;
+		float animInterpT;
+		animGetRenderData(&sklai->animFrags[fragmentID].animator, &sklai->animFrags[fragmentID].currentAnim->animData, interpT,
+		                  &startFrame, &endFrame, &animInterpT);
 
-			/* Loop through each bone in the current animation fragment, running interpolation and writing to skeletonState. */
-			for(i = 0; i < sklai->animFrags[fragmentID].currentAnim->boneNum; ++i){
-				// Only continue if the current bone exists in the skeleton.
-				if(sklai->animFrags[fragmentID].animBoneLookup[i] != (size_t)-1){
+		* Loop through each bone in the current animation fragment, running interpolation and writing to skeletonState. *
+		for(i = 0; i < sklai->animFrags[fragmentID].currentAnim->boneNum; ++i){
+			// Only continue if the current bone exists in the skeleton.
+			if(sklai->animFrags[fragmentID].animBoneLookup[i] != (size_t)-1){
 
-					// Interpolate between startFrame and endFrame, storing the result in interpBoneEnd.
-					bone interpBoneEnd;
-					boneInterpolate(&sklai->animFrags[fragmentID].currentAnim->frames[startFrame][i],
-					                &sklai->animFrags[fragmentID].currentAnim->frames[endFrame][i],
-					                animInterpT, &interpBoneEnd);
+				// Interpolate between startFrame and endFrame, storing the result in interpBoneEnd.
+				bone interpBoneEnd;
+				boneInterpolate(&sklai->animFrags[fragmentID].currentAnim->frames[startFrame][i],
+				                &sklai->animFrags[fragmentID].currentAnim->frames[endFrame][i],
+				                animInterpT, &interpBoneEnd);
 
+				if(fragmentID > 0){
 					// Blend from the previous animation fragment. animInterpTBlend is always 1.f for the first animation fragment.
-					boneInterpolate(&lastState[sklai->animFrags[fragmentID].animBoneLookup[i]], &interpBoneEnd, animInterpTBlend,
+					boneInterpolate(&lastState[sklai->animFrags[fragmentID-1].animBoneLookup[i]], &interpBoneEnd, animInterpTBlend,
 					                &lastState[sklai->animFrags[fragmentID].animBoneLookup[i]]);
-
-					if(sklai->animFrags[fragmentID].currentAnim->additive){
-						// Add the changes in lastState to skeletonState if the animation is additive.
-						boneTransformAppend(&skeletonState[sklai->animFrags[fragmentID].animBoneLookup[i]],
-						                    &lastState[sklai->animFrags[fragmentID].animBoneLookup[i]],
-						                    &skeletonState[sklai->animFrags[fragmentID].animBoneLookup[i]]);
-					}else{
-						// Set if the animation is not additive. Start from the
-						// base state so custom transformations aren't lost.
-						boneTransformAppend(&baseState[sklai->animFrags[fragmentID].animBoneLookup[i]],
-						                    &lastState[sklai->animFrags[fragmentID].animBoneLookup[i]],
-						                    &skeletonState[sklai->animFrags[fragmentID].animBoneLookup[i]]);
-					}
-
+					//printf("%f %f %f %f\n", interpBoneEnd.orientation.w, interpBoneEnd.orientation.v.x, interpBoneEnd.orientation.v.y, interpBoneEnd.orientation.v.z);
+				}else{
+					lastState[sklai->animFrags[fragmentID].animBoneLookup[i]] = interpBoneEnd;
 				}
-			}
 
-			if(fragmentID+1 < sklai->animFragNum){
-				// If this fragment marks the beginning of a valid blend, set animInterpTBlend for later.
-				animInterpTBlend = sklai->animFrags[fragmentID].animBlendProgress / sklai->animFrags[fragmentID].animBlendTime;
-			}
+				if(sklai->animFrags[fragmentID].currentAnim->additive){
+					// Add the changes in lastState to skeletonState if the animation is additive.
+					boneTransformAppend(&skeletonState[sklai->animFrags[fragmentID].animBoneLookup[i]],
+					                    &lastState[sklai->animFrags[fragmentID].animBoneLookup[i]],
+					                    &skeletonState[sklai->animFrags[fragmentID].animBoneLookup[i]]);
+				}else{
+					// Set if the animation is not additive. Start from the
+					// base state so custom transformations aren't lost.
+					boneTransformAppend(&baseState[sklai->animFrags[fragmentID].animBoneLookup[i]],
+					                    &lastState[sklai->animFrags[fragmentID].animBoneLookup[i]],
+					                    &skeletonState[sklai->animFrags[fragmentID].animBoneLookup[i]]);
+				}
 
+			}
+		}
+
+		if(fragmentID+1 < sklai->animFragNum){
+			// If this fragment marks the beginning of a valid blend, set animInterpTBlend for later.
+			animInterpTBlend = sklai->animFrags[fragmentID].animBlendProgress / sklai->animFrags[fragmentID].animBlendTime;
 		}
 
 		++fragmentID;
 
 	}
 
-}
-signed char sklaiChangeAnim(sklAnimInstance *sklai, const skeleton *skl, sklAnim *anim, const size_t frame, const float blendTime){
-	if(blendTime <= 0.f){
-		sklafDelete(&sklai->animFrags[sklai->animFragNum-1]);
-		return sklafInit(&sklai->animFrags[sklai->animFragNum-1], anim);
-	}
-	if(sklai->animFragNum >= sklai->animFragCapacity){
-		size_t tempCapacity = sklai->animFragCapacity * 2;
-		sklAnimFragment *tempBuffer = realloc(sklai->animFrags, tempCapacity);
-		if(tempBuffer == NULL){
-			/** Memory allocation failure. **/
-			return 0;
+}*/
+static inline signed char sklaiChangeAnimation(sklAnimInstance *sklai, const skeleton *skl, sklAnim *anim, const size_t frame, const float blendTime){
+
+	// Resize the animation fragment array if needed.
+	if(blendTime > 0.f || sklai->animFragCapacity == 0){
+		if(sklai->animFragNum == sklai->animFragCapacity){
+			size_t tempCapacity;
+			if(sklai->animFragCapacity == 0){
+				tempCapacity = SKL_ANIM_FRAGMENT_START_CAPACITY;
+			}else{
+				tempCapacity = sklai->animFragCapacity*2;
+			}
+			sklAnimFragment *tempBuffer = realloc(sklai->animFrags, tempCapacity*sizeof(sklAnimFragment));
+			if(tempBuffer == NULL){
+				/** Memory allocation failure. **/
+				return -1;
+			}
+			sklai->animFragCapacity = tempCapacity;
+			sklai->animFrags = tempBuffer;
 		}
-		sklai->animFragCapacity = tempCapacity;
-		sklai->animFrags = tempBuffer;
 	}
-	if(!sklafInit(&sklai->animFrags[sklai->animFragNum], anim)){
+
+	// If the animation isn't blending, replace the last fragment.
+	if(sklai->animFragNum > 0){
+		if(blendTime <= 0.f){
+			--sklai->animFragNum;
+			sklafDelete(&sklai->animFrags[sklai->animFragNum]);
+		}else{
+			sklai->animFrags[sklai->animFragNum-1].animBlendTime = blendTime;
+			sklai->animFrags[sklai->animFragNum-1].animBlendProgress = 0.f;
+		}
+	}
+
+	// Initialize the new animation fragment.
+	if(sklafInit(&sklai->animFrags[sklai->animFragNum], anim, frame) == -1){
 		/** Memory allocation failure. **/
-		return 0;
+		return -1;
 	}
 	++sklai->animFragNum;
 	return 1;
+
 }
 
 signed char skliInit(sklInstance *skli, const size_t animationCapacity){
@@ -809,12 +1188,10 @@ signed char skliInit(sklInstance *skli, const size_t animationCapacity){
 		skli->animations = malloc(animationCapacity*sizeof(sklAnimInstance));
 		if(skli->animations == NULL){
 			/** Memory allocation failure. **/
-			return 0;
+			return -1;
 		}
 		for(i = 0; i < animationCapacity; ++i){
-			skli->animations[i].animFragNum = 0;
-			skli->animations[i].animFragCapacity = 0;
-			skli->animations[i].animFrags = NULL;
+			sklaiInit(&skli->animations[i]);
 		}
 	}else{
 		skli->animations = NULL;
@@ -859,7 +1236,7 @@ signed char skliLoad(sklInstance *skli, const char *prgPath, const char *filePat
 	skla->animData.frameDelays[0] = 1000.f;
 
 	skla->frames[1] = malloc(skla->boneNum*sizeof(bone));
-	//tempBoneRoot.orientation = quatNewEuler(-90.f*RADIAN_RATIO, 0.f, 0.f);
+	tempBoneRoot.orientation = quatNewEuler(-90.f*RADIAN_RATIO, 0.f, 0.f);
 	skla->frames[1][0] = tempBoneRoot;
 	//tempBoneTop.position.y += 6.f;
 	skla->frames[1][1] = tempBoneTop;
@@ -928,7 +1305,7 @@ signed char skliLoad(sklInstance *skli, const char *prgPath, const char *filePat
 	skla->frames[2][1] = tempBoneTop;
 	skla->animData.frameDelays[2] = 3000.f;
 
-	sklaiCreate(&skli->animations[0], skla);
+	//sklaiCreate(&skli->animations[0], skla, 0);
 	skli->animations[0].animFrags[0].animBoneLookup[0] = 0;
 	skli->animations[0].animFrags[0].animBoneLookup[1] = 1;
 	++skli->animationNum;
@@ -936,12 +1313,119 @@ signed char skliLoad(sklInstance *skli, const char *prgPath, const char *filePat
 	return 1;
 
 }
-signed char skliSetAnimation(sklInstance *skli, const size_t slot, sklAnim *anim){
+void skliUpdateAnimations(sklInstance *skli, const float elapsedTime, const float interpT){
+	const float elapsedTimeMod = elapsedTime * skli->timeMod;
+	size_t i;
+	for(i = 0; i < skli->animationNum; ++i){
+		sklaiUpdateFragments(&skli->animations[i], elapsedTimeMod, interpT);
+	}
+}
+void skliGenerateBoneState(sklInstance *skli, bone *boneState, const size_t boneID){
+
+	size_t i, j;
+	float animInterpTBlend = 1.f;
+	bone baseState = *boneState;
+	bone animationState;
+	bone fragmentState;
+
+	// Loop through each animation.
+	for(i = 0; i < skli->animationNum; ++i){
+
+		boneInit(&animationState);
+
+		// Loop through each animation fragment, blending between them and generating an animation state.
+		for(j = 0; j < skli->animations[i].animFragNum; ++j){
+
+			// If the bone exists in the current animation fragment, generate a fragment state and add it to the animation state.
+			if(skli->animations[i].animFrags[j].animBoneLookup[boneID] != (size_t)-1){
+
+				// Interpolate between startFrame and endFrame, storing the result in fragmentState.
+				boneInterpolate(&skli->animations[i].animFrags[j].currentAnim->frames[skli->animations[i].animFrags[j].animStartFrame][boneID],
+				                &skli->animations[i].animFrags[j].currentAnim->frames[skli->animations[i].animFrags[j].animEndFrame][boneID],
+				                skli->animations[i].animFrags[j].animInterpT, &fragmentState);
+
+				// Blend from the previous animation fragment. animInterpTBlend is always 1.f for the first animation fragment.
+				boneInterpolate(&animationState, &fragmentState, animInterpTBlend, &animationState);
+
+			}else{
+				boneInit(&fragmentState);
+			}
+
+			if(j+1 < skli->animations[i].animFragNum){
+				// If this fragment marks the beginning of a valid blend, set animInterpTBlend for later.
+				animInterpTBlend = skli->animations[i].animFrags[j].animBlendProgress / skli->animations[i].animFrags[j].animBlendTime;
+			}else{
+				break;
+			}
+
+		}
+
+		if(skli->animations[i].additive){
+			// Add the changes in lastState to skeletonState if the animation is additive.
+			boneTransformCombine(boneState, &animationState, boneState);
+		}else{
+			// Set if the animation is not additive. Start from the
+			// base state so custom transformations aren't lost.
+			boneTransformCombine(&baseState, &animationState, boneState);
+		}
+
+	}
+
+}
+void skliSetAnimationType(sklInstance *skli, const size_t slot, const signed char additive){
+	if(slot < skli->animationCapacity){
+		skli->animations[slot].additive = additive;
+	}
+}
+signed char skliChangeAnimation(sklInstance *skli, const skeleton *skl, const size_t slot, sklAnim *anim, const size_t frame, const float blendTime){
+	signed char r;
+	size_t newAnimationNum = skli->animationNum;
 	if(slot >= skli->animationCapacity){
+		/** Should you be able to change animationCapacity? **/
 		sklAnimInstance *tempBuffer = realloc(skli->animations, (slot+1)*sizeof(sklAnimInstance));
 		if(tempBuffer == NULL){
 			/** Memory allocation failure. **/
-			return 0;
+			return -1;
+		}
+		skli->animations = tempBuffer;
+		while(skli->animationCapacity <= slot){
+			sklaiInit(&skli->animations[skli->animationCapacity]);
+			++skli->animationCapacity;
+		}
+	}
+	// Check whether a new animation or just a new fragment is being added.
+	if(skli->animations[slot].animFragNum == 0){
+		// If it's a new animation, increase animationNum.
+		++newAnimationNum;
+	}
+	r = sklaiChangeAnimation(&skli->animations[slot], skl, anim, frame, blendTime);
+	if(r > 0){
+		// Only increase animationNum if a new animation was added.
+		skli->animationNum = newAnimationNum;
+	}
+	return r;
+}
+void skliClearAnimation(sklInstance *skli, const size_t slot){
+	if(slot < skli->animationCapacity){
+		if(skli->animations[slot].animFrags != NULL && skli->animations[slot].animFragNum > 0){
+			/* Loop through each sklAnimFragment, deleting them. */
+			do {
+				--skli->animations[slot].animFragNum;
+				sklafDelete(&skli->animations[slot].animFrags[skli->animations[slot].animFragNum]);
+			} while(skli->animations[slot].animFragNum > 0);
+			--skli->animationNum;
+		}
+		sklaiInit(&skli->animations[slot]);
+	}
+}
+/*signed char skliSetAnimation(sklInstance *skli, const size_t slot, sklAnim *anim){
+	signed char r = -1;
+	if(slot >= skli->animationCapacity){
+		** Should you be able to change animationCapacity? **
+		sklAnimInstance *tempBuffer = realloc(skli->animations, (slot+1)*sizeof(sklAnimInstance));
+		if(tempBuffer == NULL){
+			** Memory allocation failure. **
+			return r;
 		}
 		skli->animations = tempBuffer;
 		while(skli->animationCapacity < slot){
@@ -949,11 +1433,11 @@ signed char skliSetAnimation(sklInstance *skli, const size_t slot, sklAnim *anim
 			++skli->animationCapacity;
 		}
 	}
-	if(!sklaiCreate(&skli->animations[slot], anim)){
-		return 0;
+	r = sklaiCreate(&skli->animations[slot], anim);
+	if(r > 0){
+		++skli->animationNum;
 	}
-	++skli->animationNum;
-	return 1;
+	return r;
 }
 signed char skliClearAnimation(sklInstance *skli, const size_t slot){
 	if(slot >= skli->animationCapacity){
@@ -962,7 +1446,7 @@ signed char skliClearAnimation(sklInstance *skli, const size_t slot){
 	sklaiDelete(&skli->animations[slot]);
 	sklaiInit(&skli->animations[slot]);
 	return 1;
-}
+}*/
 signed char skliStateCopy(sklInstance *o, sklInstance *c){
 
 	size_t i;
@@ -975,7 +1459,7 @@ signed char skliStateCopy(sklInstance *o, sklInstance *c){
 		sklAnimInstance *tempBuffer = malloc(o->animationCapacity*sizeof(sklAnimInstance));
 		if(tempBuffer == NULL){
 			/** Memory allocation failure. **/
-			return 0;
+			return -1;
 		}
 
 		if(c->animations != NULL){
@@ -1008,7 +1492,8 @@ signed char skliStateCopy(sklInstance *o, sklInstance *c){
 
 	/* Copy each sklAnimInstance over. */
 	for(i = 0; i < o->animationNum; ++i){
-		if(!sklaiStateCopy(&o->animations[i], &c->animations[i])){
+		if(sklaiStateCopy(&o->animations[i], &c->animations[i]) == -1){
+			/** Memory allocation failure. **/
 			break;
 		}
 	}
@@ -1021,7 +1506,7 @@ signed char skliStateCopy(sklInstance *o, sklInstance *c){
 		}
 		/** Memory allocation failure. **/
 		free(c->animations);
-		return 0;
+		return -1;
 	}
 	c->animationNum = o->animationNum;
 

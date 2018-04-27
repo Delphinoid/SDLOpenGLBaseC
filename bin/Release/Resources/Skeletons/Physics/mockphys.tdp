@@ -1,0 +1,25 @@
+skeleton  // This is for a physics skeleton, expect bone names
+          // and the constraint property.
+
+rigidbody "bonename" {
+	energyratio 1
+	collider {
+		v x y z mass
+		v x y z mass
+		v x y z mass
+		v x y z mass
+		f 0/1/2
+		f 1/3/2
+	}
+	collider {
+		//
+	}
+	constraint {
+		// Parent constraint
+		collide 0
+		offsetMin x y z
+		offsetMax x y z
+		rotationMin x y z
+		rotationMax x y z
+	}
+}

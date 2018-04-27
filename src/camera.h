@@ -30,7 +30,6 @@ typedef struct {
 } camera;
 
 signed char camInit(void *cam);
-signed char camNew(void *cam);
 signed char camStateCopy(void *o, void *c);
 void camResetInterpolation(void *cam);
 

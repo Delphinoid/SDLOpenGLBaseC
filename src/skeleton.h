@@ -24,7 +24,6 @@ typedef struct {
 // A full animation, containing a vector of keyframes.
 typedef struct {
 	char *name;
-	signed char additive;  // Whether the animation adds to previous animation instances or overwrites them.
 	animationData animData;
 	size_t boneNum;  // The total number of unique bones in the animation.
 	char **bones;    // Array of names for each bone.
@@ -60,6 +59,7 @@ typedef struct {
 
 // Animation fragment, containing an animation pointer, an animator, a bone lookup and a blend.
 typedef struct {
+
 	sklAnim *currentAnim;
 	animationInstance animator;
 	/** Really need to move animBoneLookup. **/
@@ -68,13 +68,20 @@ typedef struct {
 	                         // second bone in animState is named "blah", the array will start
 	                         // with animBoneLookup[0] == 1. If the bone does not exist, its entry
 	                         // will be (size_t)-1.
+
+	size_t animStartFrame;  // The frame to interpolate from when updating.
+	size_t animEndFrame;    // The frame to interpolate to when updating.
+	float animInterpT;      // How much to interpolate between animStartFrame and animEndFrame.
+
 	float animBlendTime;      // How long to blend between this and the next animation for. A value of -1 means there is currently no blend.
 	float animBlendProgress;  // How long the animation has been blending for. A value of -1 means there is currently no blend.
+
 } sklAnimFragment;
 
 // Skeletal animation instance.
 typedef struct {
 	float timeMod;
+	signed char additive;
 	size_t animFragNum;
 	size_t animFragCapacity;
 	sklAnimFragment *animFrags;
@@ -103,18 +110,14 @@ signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath);
 signed char sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, const char *filePath);
 void sklaDelete(sklAnim *skla);
 
-void sklaiAnimate(sklAnimInstance *sklai, const float elapsedTime);
-signed char sklaiChangeAnim(sklAnimInstance *sklai, const skeleton *skl, sklAnim *anim, const size_t frame, const float blendTime);
-void sklaiGenerateAnimState(sklAnimInstance *sklai, bone *skeletonState, const bone *baseState, const size_t boneNum, const float interpT);
-
 signed char skliInit(sklInstance *skli, const size_t animationCapacity);
 signed char skliLoad(sklInstance *skli, const char *prgPath, const char *filePath);
-signed char skliSetAnimation(sklInstance *skli, const size_t slot, sklAnim *anim);
-signed char skliClearAnimation(sklInstance *skli, const size_t slot);
+void skliUpdateAnimations(sklInstance *skli, const float elapsedTime, const float interpT);
+void skliGenerateBoneState(sklInstance *skli, bone *boneState, const size_t boneID);
+void skliSetAnimationType(sklInstance *skli, const size_t slot, const signed char additive);
+signed char skliChangeAnimation(sklInstance *skli, const skeleton *skl, const size_t slot, sklAnim *anim, const size_t frame, const float blendTime);
+void skliClearAnimation(sklInstance *skli, const size_t slot);
 signed char skliStateCopy(sklInstance *o, sklInstance *c);
-void skliGenerateDefaultState(const skeleton *skl, mat4 *state, const size_t boneID);
-void skliGenerateBoneStateFromLocal(const bone *skeletonState, const skeleton *oskl, const skeleton *mskl, mat4 *state, const size_t boneID);
-void skliGenerateBoneStateFromGlobal(const bone *skeletonState, const skeleton *oskl, const skeleton *mskl, mat4 *state, const size_t boneID);
 void skliDelete(sklInstance *skli);
 
 #endif

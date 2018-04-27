@@ -12,6 +12,9 @@ typedef struct {
 
 	char *name;
 
+	/* Skeleton associated with the model. */
+	skeleton *skl;
+
 	/* Model data for rendering. */
 	size_t vertexNum;
 	size_t indexNum;
@@ -22,14 +25,15 @@ typedef struct {
 	/* Animation and collision data. */
 	/**size_t boneNum;
 	char **boneNames;       // An array of bone names.**/
-	skeleton *skl;
 	/**physRigidBody *bodies;  // An array of physics body descriptors, one for each bone.
 	hitbox **hitboxes;      // An array of hitbox arrays, one for each bone.**/
 
 } model;
 
 void mdlInit(model *mdl);
+/** I don't like the cVector being passed in here at all. **/
 signed char mdlLoad(model *mdl, const char *prgPath, const char *filePath, cVector *allSkeletons);
+signed char mdlDefault(model *mdl, cVector *allSkeletons);
 signed char mdlCreateSprite(model *mdl, cVector *allSkeletons);
 void mdlDelete(model *mdl);
 

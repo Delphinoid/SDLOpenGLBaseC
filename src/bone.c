@@ -83,7 +83,7 @@ void boneTransformAppendScale(const bone *b1, const bone *b2, bone *r){
 
 void boneTransformAppend(const bone *b1, const bone *b2, bone *r){
 	/*
-	** Adds the transformations for b2 to b1 and store the result in r.
+	** Adds the transformations for b2 to b1 and stores the result in r.
 	** Used for getting the total sum of all transformations of a bone.
 	*/
 	// Calculate total translation.
@@ -99,6 +99,23 @@ void boneTransformAppend(const bone *b1, const bone *b2, bone *r){
 	quatNormalizeFast(&r->orientation);
 	// Calculate total scale.
 	vec3MultVByVR(&b2->scale, &b1->scale, &r->scale);
+}
+
+void boneTransformCombine(const bone *b1, const bone *b2, bone *r){
+	/*
+	** Combines the transformations for b2 with b1 and stores the result in r.
+	** Used for getting the total sum of all transformations of a bone.
+	*/
+	quat tempQuat;
+	// Calculate total translation.
+	vec3AddVToVR(&b1->position, &b2->position, &r->position);
+	// Calculate total orientation.
+	quatMultQByQR(&b1->orientation, &b2->orientation, &tempQuat);
+	r->orientation = tempQuat;
+	// Normalize the new orientation to prevent error build-ups.
+	quatNormalizeFast(&r->orientation);
+	// Calculate total scale.
+	vec3MultVByVR(&b1->scale, &b2->scale, &r->scale);
 }
 
 //Invert a bone's state!

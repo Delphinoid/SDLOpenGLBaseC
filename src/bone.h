@@ -18,6 +18,7 @@ void boneTransformAppendPositionVec(bone *b, const float x, const float y, const
 void boneTransformAppendOrientation(const bone *b1, const bone *b2, bone *r);
 void boneTransformAppendScale(const bone *b1, const bone *b2, bone *r);
 void boneTransformAppend(const bone *b1, const bone *b2, bone *r);
+void boneTransformCombine(const bone *b1, const bone *b2, bone *r);
 
 void boneStateInvert(const bone *b, bone *out);
 #endif

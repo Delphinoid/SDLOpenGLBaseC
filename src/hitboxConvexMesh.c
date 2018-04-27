@@ -16,6 +16,7 @@ void hbMeshInit(hbMesh *hbm){
 
 signed char hbMeshLoad(hbMesh *hbm, const char *prgPath, const char *filePath){
 
+	signed char r;
 	hbMeshInit(hbm);
 
 	size_t pathLen = strlen(prgPath);
@@ -23,16 +24,17 @@ signed char hbMeshLoad(hbMesh *hbm, const char *prgPath, const char *filePath){
 	char *fullPath = malloc((pathLen+fileLen+1)*sizeof(char));
 	if(fullPath == NULL){
 		/** Memory allocation failure. **/
-		return 0;
+		return -1;
 	}
 	memcpy(fullPath, prgPath, pathLen);
 	memcpy(fullPath+pathLen, filePath, fileLen);
 	fullPath[pathLen+fileLen] = '\0';
 
 	/** Replace and move the loading function here. **/
-	if(!hbMeshWavefrontObjLoad(hbm, fullPath)){
+	r = hbMeshWavefrontObjLoad(hbm, fullPath);
+	if(r <= 0){
 		free(fullPath);
-		return 0;
+		return r;
 	}
 	free(fullPath);
 
@@ -430,7 +432,7 @@ signed char hbMeshCollisionEPA(const hbMesh *c1, const hbMesh *c2, const hbSuppo
 	hbSupportVertex *vertices = malloc(vertexCapacity*sizeof(hbSupportVertex));
 	if(vertices == NULL){
 		/** Memory allocation failure. **/
-		return 0;
+		return -1;
 	}
 	size_t indexNum = 12;
 	size_t indexCapacity = 48;
@@ -438,7 +440,7 @@ signed char hbMeshCollisionEPA(const hbMesh *c1, const hbMesh *c2, const hbSuppo
 	if(indices == NULL){
 		/** Memory allocation failure. **/
 		free(vertices);
-		return 0;
+		return -1;
 	}
 
 	// Ensure the vertex winding order of the simplex is CCW.
@@ -522,7 +524,7 @@ signed char hbMeshCollisionEPA(const hbMesh *c1, const hbMesh *c2, const hbSuppo
 					/** Memory allocation failure. **/
 					free(indices);
 					free(vertices);
-					return 0;
+					return -1;
 				}
 				vertices = tempBuffer;
 			}
@@ -630,7 +632,7 @@ signed char hbMeshCollisionEPA(const hbMesh *c1, const hbMesh *c2, const hbSuppo
 									/** Memory allocation failure. **/
 									free(indices);
 									free(vertices);
-									return 0;
+									return -1;
 								}
 								indices = tempBuffer;
 							}

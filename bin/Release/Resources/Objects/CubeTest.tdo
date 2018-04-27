@@ -1,0 +1,10 @@
+name CubeTest
+
+skeleton "Resources\Skeletons\CubeTestSkeleton2.tds"
+//skeletonPhysics "path\to\rigidbodies"
+//skeletonHitboxes "path\to\hitboxes"
+
+animation "Resources\Skeletons\Animations\CubeTestAnimation.tda"
+animationCapacity 1
+
+renderable "Resources\Models\CubeTest.obj" "Resources\Textures\Animated\GuySpr.tdt"

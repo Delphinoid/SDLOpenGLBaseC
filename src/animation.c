@@ -37,13 +37,15 @@ void animAdvance(animationInstance *animInst, const animationData *animData, con
 				if(animInst->totalElapsedTime > animationLength){
 					// Iteratively reset totalElapsedTime so it is once again within the bounds of 0 and animationLength.
 					do {
+						animInst->currentFrame -= animData->frameNum;
+						animInst->nextFrame = animInst->currentFrame;
 						animInst->totalElapsedTime -= animationLength;
 						++animInst->currentLoops;
 					} while(animInst->totalElapsedTime > animationLength);
 					// Check if we've looped too far.
 					if(animInst->currentLoops > animData->desiredLoops){
 						animInst->currentLoops = animData->desiredLoops;
-						if(animData->desiredLoops != -1){
+						if(animData->desiredLoops >= 0){
 							// We're not looping infinitely, so place the animation at the end and return.
 							animInst->currentFrame = animData->frameNum-1;
 							animInst->nextFrame = animInst->currentFrame;
@@ -73,13 +75,15 @@ void animAdvance(animationInstance *animInst, const animationData *animData, con
 					signed char prevLoops = animInst->currentLoops;
 					// Iteratively reset totalElapsedTime so it is once again within the bounds of 0 and animationLength.
 					do {
+						animInst->currentFrame += animData->frameNum;
+						animInst->nextFrame = animInst->currentFrame;
 						animInst->totalElapsedTime += animationLength;
 						--animInst->currentLoops;
 					} while(animInst->totalElapsedTime < 0.f);
 					// Check if we've looped too far and currentLoops has reset (as it is unsigned).
 					if(animInst->currentLoops > prevLoops){
 						animInst->currentLoops = 0;
-						if(animData->desiredLoops != -1){
+						if(animData->desiredLoops >= 0){
 							// We're not looping infinitely, so place the animation at the beginning and return.
 							animInst->currentFrame = 0;
 							animInst->nextFrame = 0;

@@ -12,6 +12,8 @@ static signed char gfxCreateBuffers(gfxProgram *gfxPrg);
 
 signed char gfxInitProgram(gfxProgram *gfxPrg, const char *prgPath){
 
+	signed char r;
+
 	mat4Identity(&gfxPrg->identityMatrix);
 	gfxPrg->windowWidth = DEFAULT_WIDTH;
 	gfxPrg->windowHeight = DEFAULT_HEIGHT;
@@ -21,7 +23,20 @@ signed char gfxInitProgram(gfxProgram *gfxPrg, const char *prgPath){
 	gfxPrg->lastWindowHeight = 0;
 	gfxPrg->stretchToFit = 0;
 	gfxPrg->windowChanged = 1;
-	return (gfxInitSDL(gfxPrg) && gfxInitOGL(gfxPrg) && gfxLoadShaders(gfxPrg, prgPath) && gfxCreateBuffers(gfxPrg));
+
+	r = gfxInitSDL(gfxPrg);
+	if(r <= 0){
+		return r;
+	}
+	r = gfxInitOGL(gfxPrg);
+	if(r <= 0){
+		return r;
+	}
+	r = gfxLoadShaders(gfxPrg, prgPath);
+	if(r <= 0){
+		return r;
+	}
+	return gfxCreateBuffers(gfxPrg);
 
 }
 
@@ -105,7 +120,7 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 	char *vertexShaderPath = malloc((pathLen+vsExtraLen+1)*sizeof(char));
 	if(vertexShaderPath == NULL){
 		/** Memory allocation failure. **/
-		return 0;
+		return -1;
 	}
 	memcpy(vertexShaderPath, prgPath, pathLen);
 	memcpy(vertexShaderPath+pathLen, vertexShaderExtra, vsExtraLen);
@@ -120,7 +135,7 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 	if(vertexShaderCode == NULL){
 		/** Memory allocation failure. **/
 		free(vertexShaderPath);
-		return 0;
+		return -1;
 	}
 	fread(vertexShaderCode, sizeof(char), size, vertexShaderFile);
 	vertexShaderCode[size] = '\0';
@@ -141,6 +156,10 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
  	glGetShaderiv(gfxPrg->vertexShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
  	if(infoLogLength > 1){
 		char *vertexShaderError = malloc((infoLogLength+1)*sizeof(char));
+		if(vertexShaderError == NULL){
+			/** Memory allocation failure. **/
+			return -1;
+		}
  		glGetShaderInfoLog(gfxPrg->vertexShaderID, infoLogLength, NULL, &vertexShaderError[0]);
  		printf("Error validating vertex shader: %s", &vertexShaderError[0]);
  		free(vertexShaderError);
@@ -154,7 +173,7 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 	char *fragmentShaderPath = malloc((pathLen+fsExtraLen+1)*sizeof(char));
 	if(fragmentShaderPath == NULL){
 		/** Memory allocation failure. **/
-		return 0;
+		return -1;
 	}
 	memcpy(fragmentShaderPath, prgPath, pathLen);
 	memcpy(fragmentShaderPath+pathLen, fragmentShaderExtra, fsExtraLen);
@@ -169,7 +188,7 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 	if(fragmentShaderCode == NULL){
 		/** Memory allocation failure. **/
 		free(fragmentShaderPath);
-		return 0;
+		return -1;
 	}
 	fread(fragmentShaderCode, sizeof(char), size, fragmentShaderFile);
 	fragmentShaderCode[size] = '\0';
@@ -188,6 +207,10 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
  	glGetShaderiv(gfxPrg->fragmentShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
  	if(infoLogLength > 1){
 		char *fragmentShaderError = malloc((infoLogLength+1)*sizeof(char));
+		if(fragmentShaderError == NULL){
+			/** Memory allocation failure. **/
+			return -1;
+		}
  		glGetShaderInfoLog(gfxPrg->fragmentShaderID, infoLogLength, NULL, &fragmentShaderError[0]);
  		printf("Error validating fragment shader: %s", &fragmentShaderError[0]);
  		free(fragmentShaderError);

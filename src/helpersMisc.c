@@ -32,13 +32,17 @@
 signed char pushDynamicArray(void **vector, const void *element, const size_t bytes, size_t *size, size_t *capacity){
 	/* Push an element into a dynamic array. */
 	if(*size == *capacity){
-		*capacity *= 2;
-		void *tempBuffer = realloc(*vector, (*capacity)*bytes);
-		if(tempBuffer != NULL){
-			*vector = tempBuffer;
+		if(*capacity == 0){
+			*capacity = 1;
 		}else{
-			return 0;
+			*capacity *= 2;
 		}
+		void *tempBuffer = realloc(*vector, (*capacity)*bytes);
+		if(tempBuffer == NULL){
+			/** Memory allocation failure. **/
+			return -1;
+		}
+		*vector = tempBuffer;
 	}
 	memcpy(((char *)(*vector))+(*size)*bytes, element, bytes);
 	++(*size);

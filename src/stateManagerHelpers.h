@@ -10,6 +10,6 @@
 
 scene *scnGetState(const stateManager *sm, const size_t objectID, const size_t stateID);
 camera *camGetState(const stateManager *sm, const size_t objectID, const size_t stateID);
-object *objGetState(const stateManager *sm, const size_t objectID, const size_t stateID);
+objInstance *objGetState(const stateManager *sm, const size_t objectID, const size_t stateID);
 
 #endif

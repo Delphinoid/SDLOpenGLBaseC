@@ -5,7 +5,7 @@ signed char cvInit(cVector *vec, const size_t capacity){
 	vec->size = 0;
 	void **tempBuffer = malloc(sizeof(void *) * capacity);
 	if(capacity > 0 && tempBuffer == NULL){
-		return 0;
+		return -1;
 	}
 	vec->buffer = tempBuffer;
 	vec->capacity = capacity;
@@ -16,7 +16,7 @@ signed char cvResize(cVector *vec, const size_t capacity){
 	if(vec->capacity != capacity){
 		void **tempBuffer = realloc(vec->buffer, sizeof(void *) * capacity);
 		if(tempBuffer == NULL){
-			return 0;
+			return -1;
 		}
 		vec->buffer = tempBuffer;
 		vec->capacity = capacity;
@@ -27,11 +27,11 @@ signed char cvResize(cVector *vec, const size_t capacity){
 signed char cvPush(cVector *vec, const void *data, const size_t bytes){
 	void *tempPointer = malloc(bytes);
 	if(tempPointer == NULL){
-		return 0;
+		return -1;
 	}
 	if(vec->size == vec->capacity){
 		if(!cvResize(vec, vec->capacity << 1)){
-			return 0;
+			return -1;
 		}
 	}
 	vec->buffer[vec->size] = tempPointer;

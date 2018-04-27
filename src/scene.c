@@ -19,7 +19,7 @@ signed char scnStateCopy(void *o, void *c){
 		size_t *tempBuffer = malloc(((scene *)o)->objectCapacity*sizeof(size_t));
 		if(tempBuffer == NULL){
 			/** Memory allocation failure. **/
-			return 0;
+			return -1;
 		}
 		free(((scene *)c)->objectIDs);
 		((scene *)c)->objectIDs = tempBuffer;
@@ -45,11 +45,18 @@ signed char scnRenderableAdd(scene *scn, const size_t objectID){
 		/**if(scn->objectCapacity == 0){
 			scn->objectCapacity = SCENE_START_CAPACITY;
 		}**/
-		size_t tempCapacity = scn->objectCapacity*2;
-		size_t *tempBuffer = realloc(scn->objectIDs, tempCapacity*sizeof(size_t));
+		size_t tempCapacity;
+		size_t *tempBuffer;
+		if(scn->objectCapacity == 0){
+			tempCapacity = 1;
+			tempBuffer = malloc(tempCapacity*sizeof(size_t));
+		}else{
+			tempCapacity = scn->objectCapacity*2;
+			tempBuffer = realloc(scn->objectIDs, tempCapacity*sizeof(size_t));
+		}
 		if(tempBuffer == NULL){
 			/** Memory allocation failure. **/
-			return 0;
+			return -1;
 		}
 		scn->objectCapacity = tempCapacity;
 		scn->objectIDs = tempBuffer;

@@ -12,22 +12,33 @@
 
 /** Remove printf()s **/
 
-static signed char twfInit(twFrame *twf, const size_t subframeCapacity){
+static void twfInit(twFrame *twf){
+	twf->baseTexture = NULL;
+	twf->normalTexture = NULL;
+	twf->subframeNum = 0;
+	twf->subframes = NULL;
+}
+
+static signed char twfNew(twFrame *twf, const size_t subframeCapacity){
 	twf->subframes = malloc(subframeCapacity*sizeof(twBounds));
 	if(twf->subframes == NULL){
 		/** Memory allocation failure. **/
-		return 0;
+		return -1;
 	}
 	return 1;
 }
 
 static signed char twfAddSubframe(twFrame *twf, const twBounds *sf, size_t *subframeCapacity){
 	if(twf->subframeNum == *subframeCapacity){
-		*subframeCapacity *= 2;
+		if(*subframeCapacity > 0){
+			*subframeCapacity *= 2;
+		}else{
+			*subframeCapacity = 1;
+		}
 		twf->subframes = realloc(twf->subframes, *subframeCapacity*sizeof(twBounds));
 		if(twf->subframes == NULL){
 			/** Memory allocation failure. **/
-			return 0;
+			return -1;
 		}
 	}
 	// Divide each property by the texture width / height to save doing it later on.
@@ -44,7 +55,7 @@ static signed char twfAddDefaultSubframe(twFrame *twf, const size_t subframeCapa
 		twf->subframes = realloc(twf->subframes, (twf->subframeNum+1)*sizeof(twBounds));
 		if(twf->subframes == NULL){
 			/** Memory allocation failure. **/
-			return 0;
+			return -1;
 		}
 	}
 	twf->subframes[twf->subframeNum].x = 0.f;
@@ -60,7 +71,7 @@ static signed char twfResizeToFit(twFrame *twf, const size_t subframeCapacity){
 		twf->subframes = realloc(twf->subframes, twf->subframeNum*sizeof(twBounds));
 		if(twf->subframes == NULL){
 			/** Memory allocation failure. **/
-			return 0;
+			return -1;
 		}
 	}
 	return 1;
@@ -72,49 +83,58 @@ static void twfDelete(twFrame *twf){
 	}
 }
 
-static signed char twaInit(twAnim *twa, const size_t animframeCapacity){
+static void twaInit(twAnim *twa){
+	twa->frameIDs = NULL;
+	twa->subframeIDs = NULL;
+	animDataInit(&twa->animData);
+}
+
+static signed char twaNew(twAnim *twa, const size_t animframeCapacity){
 	twa->frameIDs = malloc(animframeCapacity*sizeof(size_t));
 	if(twa->frameIDs == NULL){
 		/** Memory allocation failure. **/
-		return 0;
+		return -1;
 	}
 	twa->subframeIDs = malloc(animframeCapacity*sizeof(size_t));
 	if(twa->subframeIDs == NULL){
 		/** Memory allocation failure. **/
 		free(twa->frameIDs);
-		return 0;
+		return -1;
 	}
-	animDataInit(&twa->animData);
 	twa->animData.frameDelays = malloc(animframeCapacity*sizeof(float));
 	if(twa->animData.frameDelays == NULL){
 		/** Memory allocation failure. **/
 		free(twa->frameIDs);
 		free(twa->subframeIDs);
-		return 0;
+		return -1;
 	}
 	return 1;
 }
 
 static signed char twaAddFrame(twAnim *twa, const size_t f, const size_t sf, const float d, size_t *animframeCapacity){
 	if(twa->animData.frameNum == *animframeCapacity){
-		*animframeCapacity *= 2;
+		if(*animframeCapacity > 0){
+			*animframeCapacity *= 2;
+		}else{
+			*animframeCapacity = 1;
+		}
 		twa->frameIDs = realloc(twa->frameIDs, *animframeCapacity*sizeof(size_t));
 		if(twa->frameIDs == NULL){
 			/** Memory allocation failure. **/
-			return 0;
+			return -1;
 		}
 		twa->subframeIDs = realloc(twa->subframeIDs, *animframeCapacity*sizeof(size_t));
 		if(twa->subframeIDs == NULL){
 			/** Memory allocation failure. **/
 			free(twa->frameIDs);
-			return 0;
+			return -1;
 		}
 		twa->animData.frameDelays = realloc(twa->animData.frameDelays, *animframeCapacity*sizeof(float));
 		if(twa->animData.frameDelays == NULL){
 			/** Memory allocation failure. **/
 			free(twa->frameIDs);
 			free(twa->subframeIDs);
-			return 0;
+			return -1;
 		}
 	}
 	twa->frameIDs[twa->animData.frameNum] = f;
@@ -129,20 +149,20 @@ static signed char twaResizeToFit(twAnim *twa, const size_t animframeCapacity){
 		twa->frameIDs = realloc(twa->frameIDs, twa->animData.frameNum*sizeof(size_t));
 		if(twa->frameIDs == NULL){
 			/** Memory allocation failure. **/
-			return 0;
+			return -1;
 		}
 		twa->subframeIDs = realloc(twa->subframeIDs, twa->animData.frameNum*sizeof(size_t));
 		if(twa->subframeIDs == NULL){
 			/** Memory allocation failure. **/
 			free(twa->frameIDs);
-			return 0;
+			return -1;
 		}
 		twa->animData.frameDelays = realloc(twa->animData.frameDelays, twa->animData.frameNum*sizeof(float));
 		if(twa->animData.frameDelays == NULL){
 			/** Memory allocation failure. **/
 			free(twa->frameIDs);
 			free(twa->subframeIDs);
-			return 0;
+			return -1;
 		}
 	}
 	return 1;
@@ -160,12 +180,16 @@ static void twaDelete(twAnim *twa){
 
 static signed char twAddFrame(textureWrapper *tw, const twFrame *f, size_t *frameCapacity){
 	if(tw->frameNum == *frameCapacity){
-		*frameCapacity *= 2;
+		if(*frameCapacity > 0){
+			*frameCapacity *= 2;
+		}else{
+			*frameCapacity = 1;
+		}
 		tw->frames = realloc(tw->frames, *frameCapacity*sizeof(twFrame));
 		if(tw->frames == NULL){
 			/** Memory allocation failure. **/
 			free(tw->animations);
-			return 0;
+			return -1;
 		}
 	}
 	tw->frames[tw->frameNum++] = *f;
@@ -174,12 +198,16 @@ static signed char twAddFrame(textureWrapper *tw, const twFrame *f, size_t *fram
 
 static signed char twAddAnim(textureWrapper *tw, const twAnim *a, size_t *animCapacity){
 	if(tw->animationNum == *animCapacity){
-		*animCapacity *= 2;
+		if(*animCapacity > 0){
+			*animCapacity *= 2;
+		}else{
+			*animCapacity = 1;
+		}
 		tw->animations = realloc(tw->animations, *animCapacity*sizeof(twAnim));
 		if(tw->animations == NULL){
 			/** Memory allocation failure. **/
 			free(tw->frames);
-			return 0;
+			return -1;
 		}
 	}
 	tw->animations[tw->animationNum++] = *a;
@@ -191,15 +219,16 @@ static signed char twResizeToFit(textureWrapper *tw, const size_t frameCapacity,
 		tw->frames = realloc(tw->frames, tw->frameNum*sizeof(twFrame));
 		if(tw->frames == NULL){
 			/** Memory allocation failure. **/
-			return 0;
+			twDelete(tw);
+			return -1;
 		}
 	}
 	if(tw->animationNum != animCapacity){
 		tw->animations = realloc(tw->animations, tw->animationNum*sizeof(twAnim));
 		if(tw->animations == NULL){
 			/** Memory allocation failure. **/
-			free(tw->frames);
-			return 0;
+			twDelete(tw);
+			return -1;
 		}
 	}
 	return 1;
@@ -221,7 +250,7 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 	tw->frames = malloc(frameCapacity*sizeof(twFrame));
 	if(tw->frames == NULL){
 		/** Memory allocation failure. **/
-		return 0;
+		return -1;
 	}
 
 	size_t animCapacity = ANIM_START_CAPACITY;
@@ -229,23 +258,26 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 	if(tw->animations == NULL){
 		/** Memory allocation failure. **/
 		free(tw->frames);
-		return 0;
+		return -1;
 	}
 
 	twAnim tempAnim;
-	tempAnim.animData.desiredLoops = -1;
-	tempAnim.animData.frameNum = 0;
+	twaInit(&tempAnim);
 
 	size_t animframeCapacity = 0;
 	size_t subframeCapacity = 0;
 
-	int currentCommand = -1;       // The current multiline command type (-1 = none, 0 = texture, 1 = animation)
-	unsigned int currentLine = 0;  // Current file line being read
+	signed char currentCommand = -1;  // The current multiline command type (-1 = none, 0 = texture, 1 = animation).
+	unsigned int currentLine = 0;     // Current file line being read.
 
 
 	const size_t pathLen = strlen(prgPath);
 	const size_t fileLen = strlen(filePath);
 	char *fullPath = malloc((pathLen+fileLen+1) * sizeof(char));
+	if(fullPath == NULL){
+		/** Memory allocation failure. **/
+		return -1;
+	}
 	memcpy(fullPath, prgPath, pathLen);
 	memcpy(fullPath+pathLen, filePath, fileLen);
 	fullPath[pathLen+fileLen] = '\0';
@@ -262,6 +294,10 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 
 			// Name
 			if(lineLength >= 6 && strncmp(line, "name ", 5) == 0){
+				if(line[5] == '"' && line[lineLength-1] == '"'){
+					++line;
+					lineLength -= 2;
+				}
 				if(currentCommand == -1){
 					tw->name = malloc((lineLength-4) * sizeof(char));
 					if(tw->name == NULL){
@@ -270,104 +306,64 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 						twDelete(tw);
 						free(fullPath);
 						fclose(texInfo);
-						return 0;
+						return -1;
 					}
 					strncpy(tw->name, line+5, lineLength-5);
 					tw->name[lineLength-5] = '\0';
 				}else{
-					printf("Error loading texture wrapper: Name command at line %u does not belong inside a multiline command.\n", currentLine);
+					printf("Error loading texture wrapper \"%s\": Name command at line %u does not belong inside a multiline command.\n", fullPath, currentLine);
 				}
-
-
-			// Close current multiline command
-			}else if(lineLength > 0 && line[0] == '}'){
-				if(currentCommand == 0){
-					// If a textureFrame was being worked on and has no subframes, add the default one
-					if(tw->frames[tw->frameNum-1].subframeNum == 0){
-						if(!twfAddDefaultSubframe(&tw->frames[tw->frameNum-1], subframeCapacity)){
-							twaDelete(&tempAnim);
-							twDelete(tw);
-							free(fullPath);
-							fclose(texInfo);
-							return 0;
-						}
-					}else{
-						// twfAddDefaultSubframe() automatically resizes to fit
-						if(!twfResizeToFit(&tw->frames[tw->frameNum-1], subframeCapacity)){
-							twaDelete(&tempAnim);
-							twDelete(tw);
-							free(fullPath);
-							fclose(texInfo);
-							return 0;
-						}
-					}
-
-				}else if(currentCommand == 1){
-					// If a valid animation was being worked on, save it and continue
-					if(tempAnim.animData.frameNum > 0){
-						if(!twaResizeToFit(&tempAnim, animframeCapacity)){
-							twDelete(tw);
-							free(fullPath);
-							fclose(texInfo);
-							return 0;
-						}
-						if(!twAddAnim(tw, &tempAnim, &animCapacity)){
-							twaDelete(&tempAnim);
-							free(fullPath);
-							fclose(texInfo);
-							return 0;
-						}
-					}
-				}
-
-				currentCommand = -1;
 
 
 			// New texture frame
 			}else if(lineLength >= 7 && strncmp(line, "image ", 6) == 0){
 
-				// A multiline command is already in progress; try to close it and continue
+				// A multiline command is already in progress; try to close it and continue.
 				if(currentCommand != -1){
 
-					printf("Error loading texture wrapper: Trying to start a multiline command at line %u while another is already in progress; "
-						   "I will attempt to close the current command.\n", currentLine);
+					printf("Error loading texture wrapper \"%s\": Trying to start a multiline command at line %u while another is already in progress. "
+						   "Closing the current command.\n", fullPath, currentLine);
 
 					// If the multiline command is a texture...
 					if(currentCommand == 0){
-						// If a textureFrame was being worked on and has no subframes, add the default one
+						// If a textureFrame was being worked on and has no subframes, add the default one.
 						if(tw->frames[tw->frameNum-1].subframeNum == 0){
-							if(!twfAddDefaultSubframe(&tw->frames[tw->frameNum-1], subframeCapacity)){
+							if(twfAddDefaultSubframe(&tw->frames[tw->frameNum-1], subframeCapacity) == -1){
+								/** Memory allocation failure. **/
 								twaDelete(&tempAnim);
 								twDelete(tw);
 								free(fullPath);
 								fclose(texInfo);
-								return 0;
+								return -1;
 							}
 						}else{
-							// twfAddDefaultSubframe() automatically resizes to fit
-							if(!twfResizeToFit(&tw->frames[tw->frameNum-1], subframeCapacity)){
+							// twfAddDefaultSubframe() automatically resizes to fit.
+							if(twfResizeToFit(&tw->frames[tw->frameNum-1], subframeCapacity) == -1){
+								/** Memory allocation failure. **/
 								twaDelete(&tempAnim);
 								twDelete(tw);
 								free(fullPath);
 								fclose(texInfo);
-								return 0;
+								return -1;
 							}
 						}
 
 					}else if(currentCommand == 1){
-						// If a valid animation is being worked on, save it and continue
+						// If a valid animation is being worked on, save it and continue.
 						if(tempAnim.animData.frameNum > 0){
-							if(!twaResizeToFit(&tempAnim, animframeCapacity)){
+							if(twaResizeToFit(&tempAnim, animframeCapacity) == -1){
+								/** Memory allocation failure. **/
 								twDelete(tw);
 								free(fullPath);
 								fclose(texInfo);
-								return 0;
+								return -1;
 							}
-							if(!twAddAnim(tw, &tempAnim, &animCapacity)){
+							if(twAddAnim(tw, &tempAnim, &animCapacity) == -1){
+								/** Memory allocation failure. **/
 								twaDelete(&tempAnim);
 								free(fullPath);
 								fclose(texInfo);
-								return 0;
+								return -1;
 							}
 						}
 					}
@@ -376,85 +372,103 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 
 				}
 
-				// Create a new texture frame
+				// Create a new texture frame.
 				twFrame tempFrame;
-				tempFrame.baseTexture = NULL;
-				tempFrame.normalTexture = NULL;
-				tempFrame.subframeNum = 0;
+				twfInit(&tempFrame);
 
-				const char *firstQuote = strchr(line, '"');
-				const char *lastQuote = strrchr(line, '"');
+				signed char skipLoad = 0;
 				size_t pathBegin;
 				size_t pathLength;
-				signed char skipLoad = 0;
-				if(firstQuote != NULL && lastQuote > firstQuote){
-					pathBegin = firstQuote-line+1;
-					pathLength = lastQuote-line-pathBegin;
+				const char *firstQuote = strchr(line+6, '"');
+				const char *secondQuote = NULL;
+				if(firstQuote != NULL){
+					++firstQuote;
+					pathBegin = firstQuote-line;
+					secondQuote = strrchr(firstQuote, '"');
+				}
+				if(secondQuote > firstQuote){
+					pathLength = secondQuote-firstQuote;
 				}else{
-					// If the texture identifier wasn't surrounded by quotes, don't give up:
 					pathBegin = 6;
-					pathLength = lineLength-6;
+					pathLength = lineLength-pathBegin;
 				}
 				char *texPath = malloc((pathLength+1) * sizeof(char));
+				if(texPath == NULL){
+					/** Memory allocation failure. **/
+					twaDelete(&tempAnim);
+					free(fullPath);
+					fclose(texInfo);
+					return -1;
+				}
 				strncpy(texPath, line+pathBegin, pathLength);
 				texPath[pathLength] = '\0';
 
 				/** Should the allTextures vector be used? It's not as nice or as modular
-				but if the assetHandler system is decided on it'll probably be better **/
-				// Look for texture name in allTextures
+				but if the assetHandler system is decided on it'll probably be better. **/
+				// Look for texture name in allTextures.
 				for(i = 0; i < allTextures->size; ++i){
 					texture *tempTex = (texture *)cvGet(allTextures, i);
 					if(strcmp(texPath, tempTex->name) == 0){
 						tempFrame.baseTexture = (texture *)cvGet(allTextures, i);
 						skipLoad = 1;
-						i = allTextures->size;
+						break;
 					}
 				}
-				// If the texture path is surrounded by quotes, try and load it
+				// If the texture path is surrounded by quotes, try and load it.
 				if(!skipLoad){
 					texture tempTex;
-					if(tLoad(&tempTex, prgPath, texPath)){
-						cvPush(allTextures, (void *)&tempTex, sizeof(tempTex));  // Add it to allTextures
+					signed char r = tLoad(&tempTex, prgPath, texPath);
+					if(r == -1){
+						/** Memory allocation failure. **/
+						free(texPath);
+						twaDelete(&tempAnim);
+						free(fullPath);
+						fclose(texInfo);
+						return -1;
+					}else if(r > 0){
+						cvPush(allTextures, (void *)&tempTex, sizeof(tempTex));  // Add it to allTextures.
 						tempFrame.baseTexture = (texture *)cvGet(allTextures, allTextures->size-1);
 						//tempFrame.baseTexture = &tempTex;
 					}
 				}
 
-				// If the texture was loaded successfully:
-				if(tempFrame.baseTexture != NULL){
-					// Check if the command spans multiple lines (it contains an opening brace at the end)
-					if(strrchr(line, '{') > line+pathBegin+1+pathLength){
-						subframeCapacity = SUBFRAME_START_CAPACITY;
-						twfInit(&tempFrame, subframeCapacity);
-						currentCommand = 0;
+				// Use the default texture if no texture was loaded.
+				if(tempFrame.baseTexture == NULL){
+					printf("Error loading texture wrapper \"%s\": Image \"%s\" does not exist.\n", fullPath, texPath);
+					tempFrame.baseTexture = (texture *)cvGet(allTextures, 0);
+				}
+				free(texPath);
 
-					// If it doesn't, add the default subframe
-					}else{
-						subframeCapacity = 1;
-						twfInit(&tempFrame, subframeCapacity);
-						if(!twfAddDefaultSubframe(&tempFrame, subframeCapacity)){
-							free(texPath);
-							twfDelete(&tempFrame);
-							twaDelete(&tempAnim);
-							twDelete(tw);
-							free(fullPath);
-							fclose(texInfo);
-							return 0;
-						}
+				// Check if the command spans multiple lines (it contains an opening brace at the end).
+				if(strrchr(line, '{') > line+pathBegin+1+pathLength){
+					subframeCapacity = SUBFRAME_START_CAPACITY;
+					twfNew(&tempFrame, subframeCapacity);
+					currentCommand = 0;
 
-					}
-					// Add the frame to tw->frames
-					if(!twAddFrame(tw, &tempFrame, &frameCapacity)){
-						free(texPath);
+				// If it doesn't, add the default subframe.
+				}else{
+					subframeCapacity = 1;
+					twfNew(&tempFrame, subframeCapacity);
+					if(twfAddDefaultSubframe(&tempFrame, subframeCapacity) == -1){
+						/** Memory allocation failure. **/
 						twfDelete(&tempFrame);
 						twaDelete(&tempAnim);
+						twDelete(tw);
 						free(fullPath);
 						fclose(texInfo);
-						return 0;
+						return -1;
 					}
-				}
 
-				free(texPath);
+				}
+				// Add the frame to tw->frames.
+				if(twAddFrame(tw, &tempFrame, &frameCapacity) == -1){
+					/** Memory allocation failure. **/
+					twfDelete(&tempFrame);
+					twaDelete(&tempAnim);
+					free(fullPath);
+					fclose(texInfo);
+					return -1;
+				}
 
 
 			// Subframe macro
@@ -462,7 +476,7 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 
 				if(currentCommand == 0){
 
-					// Loads number of subframes to create, main dimension to loop in (x or y) and the subframe dimensions
+					// Loads number of subframes to create, main dimension to loop in (x or y) and the subframe dimensions.
 					size_t numberOfFrames = 0;
 					char macroDirection = ' ';
 					float dimensions[4];
@@ -484,16 +498,17 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 					const unsigned int currentTexW = tw->frames[tw->frameNum-1].baseTexture->width;
 					const unsigned int currentTexH = tw->frames[tw->frameNum-1].baseTexture->height;
 
-					// Automatically generate subframes for a sprite sheet
+					// Automatically generate subframes for a sprite sheet.
 					for(i = 1; i <= numberOfFrames; ++i){
 						if(dimensions[0] + dimensions[2] <= currentTexW && dimensions[1] + dimensions[3] <= currentTexH){
 							twBounds baseSubframe = {.x = dimensions[0], .y = dimensions[1], .w = dimensions[2], .h = dimensions[3]};
-							if(!twfAddSubframe(&tw->frames[tw->frameNum-1], &baseSubframe, &subframeCapacity)){
+							if(twfAddSubframe(&tw->frames[tw->frameNum-1], &baseSubframe, &subframeCapacity) == -1){
+								/** Memory allocation failure. **/
 								twaDelete(&tempAnim);
 								twDelete(tw);
 								free(fullPath);
 								fclose(texInfo);
-								return 0;
+								return -1;
 							}
 							if(macroDirection == 'x'){  // Adds frames from left to right before resetting and moving down
 								dimensions[0] = (unsigned int)(i * dimensions[2]) % currentTexW;
@@ -502,17 +517,17 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 								dimensions[0] = (unsigned int)(i * dimensions[3]) / currentTexH * dimensions[2];
 								dimensions[1] = (unsigned int)(i * dimensions[3]) % currentTexH;
 							}else{
-								printf("Error loading texture wrapper: sMacro command at line %u has an invalid direction. Only one frame could be loaded.\n", currentLine);
-								i = numberOfFrames+1;
+								printf("Error loading texture wrapper \"%s\": sMacro command at line %u has an invalid direction. Only one frame could be loaded.\n", fullPath, currentLine);
+								break;
 							}
 						}else{
-							printf("Error loading texture wrapper: sMacro command at line %u could not load %u frame(s).\n", currentLine, numberOfFrames-i+1);
-							i = numberOfFrames+1;
+							printf("Error loading texture wrapper \"%s\": sMacro command at line %u could not load %u frame(s).\n", fullPath, currentLine, numberOfFrames-i+1);
+							break;
 						}
 					}
 
 				}else{
-					printf("Error loading texture wrapper: Texture sub-command \"sMacro\" invoked on line %u without specifying a multiline texture.\n", currentLine);
+					printf("Error loading texture wrapper \"%s\": Texture sub-command \"sMacro\" invoked on line %u without specifying a multiline texture.\n", fullPath, currentLine);
 				}
 
 
@@ -521,7 +536,7 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 
 				if(currentCommand == 0){
 
-					// Create a new subframe and add it to the current texture frame
+					// Create a new subframe and add it to the current texture frame.
 					float dimensions[4];
 					char *token = strtok(line+9, "/");
 					for(i = 0; i < 4; ++i){
@@ -529,16 +544,17 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 						token = strtok(NULL, "/");
 					}
 					twBounds baseSubframe = {.x = dimensions[0], .y = dimensions[1], .w = dimensions[2], .h = dimensions[3]};
-					if(!twfAddSubframe(&tw->frames[tw->frameNum-1], &baseSubframe, &subframeCapacity)){
+					if(twfAddSubframe(&tw->frames[tw->frameNum-1], &baseSubframe, &subframeCapacity) == -1){
+						/** Memory allocation failure. **/
 						twaDelete(&tempAnim);
 						twDelete(tw);
 						free(fullPath);
 						fclose(texInfo);
-						return 0;
+						return -1;
 					}
 
 				}else{
-					printf("Error loading texture wrapper: Texture sub-command \"subframe\" invoked on line %u without specifying a multiline texture.\n", currentLine);
+					printf("Error loading texture wrapper \"%s\": Texture sub-command \"subframe\" invoked on line %u without specifying a multiline texture.\n", fullPath, currentLine);
 				}
 
 
@@ -549,36 +565,38 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 					strcpy(texPath, line+7);
 					tLoad(((twFrame *)cvGet(&tw->frames, tw->frames.size-1))->normalTexture, prgPath, texPath);
 					free(texPath);*/
-					printf("Error loading texture wrapper: Texture sub-command \"normal\" is awaiting implementation.\n");
+					printf("Error loading texture wrapper \"%s\": Texture sub-command \"normal\" is awaiting implementation.\n", fullPath);
 				}else{
-					printf("Error loading texture wrapper: Texture sub-command \"normal\" invoked on line %u without specifying a multiline texture.\n", currentLine);
+					printf("Error loading texture wrapper \"%s\": Texture sub-command \"normal\" invoked on line %u without specifying a multiline texture.\n", fullPath, currentLine);
 				}
 
 
 			// New texture animation
 			}else if(lineLength >= 9 && strncmp(line, "animation", 9) == 0){
-				// Reset tempAnim
+				// Reset tempAnim.
 				if(strrchr(line+9, '{')){
+					twaInit(&tempAnim);
 					animframeCapacity = ANIMFRAME_START_CAPACITY;
-					if(!twaInit(&tempAnim, animframeCapacity)){
+					if(twaNew(&tempAnim, animframeCapacity) == -1){
+						/** Memory allocation failure. **/
 						twDelete(tw);
 						free(fullPath);
 						fclose(texInfo);
-						return 0;
+						return -1;
 					}
 					currentCommand = 1;
 				}else{
 					// Worth it?
-					printf("Error loading texture wrapper: Animation command at line %u does not contain a brace.\n", currentLine);
+					printf("Error loading texture wrapper \"%s\": Animation command at line %u does not contain a brace.\n", fullPath, currentLine);
 				}
 
 
-			// Make the current animation loop
+			// Make the current animation loop.
 			}else if(lineLength >= 6 && strncmp(line, "loop ", 5) == 0){
 				if(currentCommand == 1){
-					tempAnim.animData.desiredLoops = strtoul(line+5, NULL, 0);
+					tempAnim.animData.desiredLoops = strtol(line+5, NULL, 0);
 				}else{
-					printf("Error loading texture wrapper: Animation sub-command \"loop\" invoked on line %u without specifying an animation.\n", currentLine);
+					printf("Error loading texture wrapper \"%s\": Animation sub-command \"loop\" invoked on line %u without specifying an animation.\n", fullPath, currentLine);
 				}
 
 
@@ -587,7 +605,7 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 
 				if(currentCommand == 1){
 
-					// Loads start and end textures, start and end subframes and the frame delays
+					// Loads start and end textures, start and end subframes and the frame delays.
 					size_t textures[2];
 					size_t subframes[2];
 					float frameDelay = 0.f;
@@ -609,29 +627,30 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 							if(i < tw->frameNum){
 								for(j = subframes[0]; j <= subframes[1]; ++j){
 									if(j < tw->frames[tw->frameNum-1].subframeNum){
-										// Convert frameDelay to frameEnd
+										// Convert frameDelay to frameEnd.
 										float frameEnd = frameDelay;
 										if(tempAnim.animData.frameNum > 0){
 											frameEnd += tempAnim.animData.frameDelays[tempAnim.animData.frameNum-1];
 										}
-										if(!twaAddFrame(&tempAnim, i, j, frameEnd, &animframeCapacity)){
+										if(twaAddFrame(&tempAnim, i, j, frameEnd, &animframeCapacity) == -1){
+											/** Memory allocation failure. **/
 											twDelete(tw);
 											free(fullPath);
 											fclose(texInfo);
-											return 0;
+											return -1;
 										}
 									}else{
-										j = subframes[1]+1;
+										break;
 									}
 								}
 							}else{
-								i = textures[1]+1;
+								break;
 							}
 						}
 					}
 
 				}else{
-					printf("Error loading texture wrapper: Animation sub-command \"fMacro\" invoked on line %u without specifying an animation.\n", currentLine);
+					printf("Error loading texture wrapper \"%s\": Animation sub-command \"fMacro\" invoked on line %u without specifying an animation.\n", fullPath, currentLine);
 				}
 
 
@@ -640,7 +659,7 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 
 				if(currentCommand == 1){
 
-					// Parse frame information
+					// Parse frame information.
 					size_t frameID = 0, subframeID = 0;
 					float frameDelay = 0.f;
 					char *token = strtok(line+6, "/");
@@ -658,24 +677,73 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 						token = strtok(NULL, "/");
 					}
 
-					// Validate the frame information
+					// Validate the frame information.
 					if(frameDelay > 0 && frameID < tw->frameNum && subframeID < tw->frames[tw->frameNum-1].subframeNum){
-						// Convert frameDelay to frameEnd
+						// Convert frameDelay to frameEnd.
 						if(tempAnim.animData.frameNum > 0){
 							frameDelay += tempAnim.animData.frameDelays[tempAnim.animData.frameNum-1];
 						}
-						if(!twaAddFrame(&tempAnim, frameID, subframeID, frameDelay, &animframeCapacity)){
+						if(twaAddFrame(&tempAnim, frameID, subframeID, frameDelay, &animframeCapacity) == -1){
+							/** Memory allocation failure. **/
 							twDelete(tw);
 							free(fullPath);
 							fclose(texInfo);
-							return 0;
+							return -1;
 						}
 					}
 
 				}else{
-					printf("Error loading texture wrapper: Animation sub-command \"frame\" invoked on line %u without specifying an animation.\n", currentLine);
+					printf("Error loading texture wrapper \"%s\": Animation sub-command \"frame\" invoked on line %u without specifying an animation.\n", fullPath, currentLine);
 				}
 
+			}
+
+			// Close the current multiline command
+			if(lineLength > 0 && line[lineLength-1] == '}'){
+				if(currentCommand == 0){
+					// If a textureFrame was being worked on and has no subframes, add the default one.
+					if(tw->frames[tw->frameNum-1].subframeNum == 0){
+						if(twfAddDefaultSubframe(&tw->frames[tw->frameNum-1], subframeCapacity) == -1){
+							/** Memory allocation failure. **/
+							twaDelete(&tempAnim);
+							twDelete(tw);
+							free(fullPath);
+							fclose(texInfo);
+							return -1;
+						}
+					}else{
+						// twfAddDefaultSubframe() automatically resizes to fit.
+						if(twfResizeToFit(&tw->frames[tw->frameNum-1], subframeCapacity) == -1){
+							/** Memory allocation failure. **/
+							twaDelete(&tempAnim);
+							twDelete(tw);
+							free(fullPath);
+							fclose(texInfo);
+							return -1;
+						}
+					}
+				}else if(currentCommand == 1){
+					// If a valid animation was being worked on, save it and continue.
+					if(tempAnim.animData.frameNum > 0){
+						if(twaResizeToFit(&tempAnim, animframeCapacity) == -1){
+							/** Memory allocation failure. **/
+							twDelete(tw);
+							free(fullPath);
+							fclose(texInfo);
+							return -1;
+						}
+						if(twAddAnim(tw, &tempAnim, &animCapacity) == -1){
+							/** Memory allocation failure. **/
+							twaDelete(&tempAnim);
+							free(fullPath);
+							fclose(texInfo);
+							return -1;
+						}
+					}
+				}else{
+					printf("Error loading texture wrapper \"%s\": Stray brace on line %u.\n", fullPath, currentLine);
+				}
+				currentCommand = -1;
 			}
 
 		}
@@ -684,7 +752,7 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 		free(fullPath);
 
 	}else{
-		printf("Error loading texture wrapper: Couldn't open %s\n", fullPath);
+		printf("Error loading texture wrapper \"%s\": Could not open file.\n", fullPath);
 		twaDelete(&tempAnim);
 		free(tw->frames);
 		free(tw->animations);
@@ -693,49 +761,72 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 	}
 
 
-	// Check if any animations were loaded
+	// Check if any textures were loaded.
+	if(tw->frameNum == 0){
+
+		// Otherwise build the default frame.
+		twFrame tempFrame;
+		twfInit(&tempFrame);
+		subframeCapacity = 1;
+		printf("Error loading texture wrapper \"%s\": No textures were loaded.\n", fullPath);
+
+		if(twfNew(&tempFrame, subframeCapacity) == -1 || twfAddDefaultSubframe(&tempFrame, subframeCapacity) == -1 ||
+		   twAddFrame(tw, &tempFrame, &frameCapacity) == -1){
+			/** Memory allocation failure. **/
+			twfDelete(&tempFrame);
+			twDelete(tw);
+			return -1;
+		}
+
+		tw->frames[0].baseTexture = (texture *)cvGet(allTextures, 0);
+
+	// If they were, check if the last texture added has any subframes. If it doesn't, add the default one.
+	}else if(tw->frames[tw->frameNum-1].subframeNum == 0){
+		if(twfAddDefaultSubframe(&tw->frames[tw->frameNum-1], subframeCapacity) == -1){
+			/** Memory allocation failure. **/
+			twDelete(tw);
+			return -1;
+		}
+	// If the last texture added has subframes, shrink the subframe vector to fit the amount of elements in it.
+	}else{
+		if(twfResizeToFit(&tw->frames[tw->frameNum-1], subframeCapacity) == -1){
+			/** Memory allocation failure. **/
+			twDelete(tw);
+			return -1;
+		}
+	}
+
+	// Check if any animations were loaded.
 	if(tw->animationNum == 0){
 		if(tempAnim.animData.frameNum > 0){
-			// If an animation was being worked on, just resize it before adding it
-			if(!twaResizeToFit(&tempAnim, animframeCapacity)){
+			// If an animation was being worked on, just resize it before adding it.
+			if(twaResizeToFit(&tempAnim, animframeCapacity) == -1){
+				/** Memory allocation failure. **/
+				twaDelete(&tempAnim);
 				twDelete(tw);
-				return 0;
+				return -1;
 			}
 		}else{
-			// Otherwise build the default animation
+			// Otherwise build the default animation.
 			animframeCapacity = 1;
-			if(!twaInit(&tempAnim, animframeCapacity) || !twaAddFrame(&tempAnim, 0, 0, 0.f, &animframeCapacity)){
+			if(twaNew(&tempAnim, animframeCapacity) == -1 || twaAddFrame(&tempAnim, 0, 0, 0.f, &animframeCapacity) == -1){
+				/** Memory allocation failure. **/
+				twaDelete(&tempAnim);
 				twDelete(tw);
-				return 0;
+				return -1;
 			}
 		}
-		// Add the new tempAnim to tw->animations
-		if(!twAddAnim(tw, &tempAnim, &animCapacity)){
+		// Add the new tempAnim to tw->animations.
+		if(twAddAnim(tw, &tempAnim, &animCapacity) == -1){
+			/** Memory allocation failure. **/
 			twaDelete(&tempAnim);
-			return 0;
+			twDelete(tw);
+			return -1;
 		}
 	}
 
 	if(tempAnim.animData.frameNum == 0){
 		twaDelete(&tempAnim);
-	}
-
-	// Check if any textures were loaded
-	if(tw->frameNum == 0){
-		printf("Error loading texture wrapper: No textures were loaded.\n");
-		return 0;
-	// If they were, check if the last texture added has any subframes. If it doesn't, add the default one
-	}else if(tw->frames[tw->frameNum-1].subframeNum == 0){
-		if(!twfAddDefaultSubframe(&tw->frames[tw->frameNum-1], subframeCapacity)){
-			twDelete(tw);
-			return 0;
-		}
-	// If the last texture added has subframes, shrink the subframe vector to fit the amount of elements in it
-	}else{
-		if(!twfResizeToFit(&tw->frames[tw->frameNum-1], subframeCapacity)){
-			twDelete(tw);
-			return 0;
-		}
 	}
 
 	// If no name was given, generate one based off the file path.
@@ -747,13 +838,74 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 		if(tw->name == NULL){
 			/** Memory allocation failure. **/
 			twDelete(tw);
-			return 0;
+			return -1;
 		}
 		memcpy(tw->name, filePath, fileLen);
 		tw->name[fileLen] = '\0';
 	}
 
 	return twResizeToFit(tw, frameCapacity, animCapacity);
+
+}
+
+signed char twDefault(textureWrapper *tw, cVector *allTextures){
+
+	twFrame tempFrame;
+	twAnim tempAnim;
+	size_t capacity = 1;
+
+	twInit(tw);
+
+	tw->name = malloc(8*sizeof(char));
+	if(tw->name == NULL){
+		/** Memory allocation failure. **/
+		return -1;
+	}
+
+	tw->frames = malloc(capacity*sizeof(twFrame));
+	if(tw->frames == NULL){
+		/** Memory allocation failure. **/
+		free(tw->name);
+		return -1;
+	}
+
+	tw->animations = malloc(capacity*sizeof(twAnim));
+	if(tw->animations == NULL){
+		/** Memory allocation failure. **/
+		free(tw->frames);
+		free(tw->name);
+		return -1;
+	}
+
+	twfInit(&tempFrame);
+	twaInit(&tempAnim);
+
+	if(twfNew(&tempFrame, 1) == -1 || twfAddDefaultSubframe(&tempFrame, 1) == -1 ||
+	   twAddFrame(tw, &tempFrame, &capacity) == -1){
+		/** Memory allocation failure. **/
+		twfDelete(&tempFrame);
+		twDelete(tw);
+		return -1;
+	}
+
+	if(twaNew(&tempAnim, 1) == -1 || twaAddFrame(&tempAnim, 0, 0, 0.f, &capacity) == -1 ||
+	   twAddAnim(tw, &tempAnim, &capacity) == -1){
+		/** Memory allocation failure. **/
+		twaDelete(&tempAnim);
+		twDelete(tw);
+		return -1;
+	}
+
+	tw->name[0] = 'd';
+	tw->name[1] = 'e';
+	tw->name[2] = 'f';
+	tw->name[3] = 'a';
+	tw->name[4] = 'u';
+	tw->name[5] = 'l';
+	tw->name[6] = 't';
+	tw->name[7] = '\0';
+	tw->frames[0].baseTexture = (texture *)cvGet(allTextures, 0);
+	return 1;
 
 }
 

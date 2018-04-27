@@ -2,12 +2,9 @@
 #include "mat4.h"
 #include <math.h>
 
-#define RADIAN_RATIO 0.017453292  /* = PI / 180, used for converting degrees to radians */
+#define RADIAN_RATIO 0.017453292  /* = PI / 180, used for converting degrees to radians. */
 
 signed char camInit(void *cam){
-	return 1;
-}
-signed char camNew(void *cam){
 	iVec3Init(&((camera *)cam)->position, 0.f, 0.f, 0.f);
 	iQuatInit(&((camera *)cam)->orientation);
 	vec3Set(&((camera *)cam)->rotation, 0.f, 0.f, 0.f);

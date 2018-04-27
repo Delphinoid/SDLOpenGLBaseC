@@ -7,9 +7,9 @@
 /** stateManager should be const. **/
 void renderScene(stateManager *gameStateManager, const size_t stateID, const float interpT, gfxProgram *gfxPrg);
 void cleanup(gfxProgram *gfxPrg, stateManager *gameStateManager,
-             cVector *allTextures, cVector *allSkeletons,
-             cVector *allTexWrappers, cVector *allModels,
-             cVector *allSklAnimations);
+             cVector *allTextures, cVector *allTexWrappers,
+             cVector *allSkeletons, cVector *allSklAnimations,
+             cVector *allModels, cVector *allObjects);
 
 /** Remember to do regular searches for these important comments when possible **/
 int main(int argc, char *argv[]){
@@ -29,19 +29,20 @@ int main(int argc, char *argv[]){
 	/** Most of the code below this comment will be removed eventually **/
 	stateManager gameStateManager;
 	smInit(&gameStateManager);
-	smObjectTypeNew(&gameStateManager, &scnInit, &scnInit, &scnStateCopy, &scnResetInterpolation, &scnDelete, sizeof(scene),  2, 2);
-	smObjectTypeNew(&gameStateManager, &camInit, &camNew,  &camStateCopy, &camResetInterpolation, &camDelete, sizeof(camera), 2, 2);
-	smObjectTypeNew(&gameStateManager, &objInit, &objNew,  &objStateCopy, &objResetInterpolation, &objDelete, sizeof(object), 6, 2);
+	smObjectTypeNew(&gameStateManager, &scnInit,  &scnStateCopy,  &scnResetInterpolation,  &scnDelete,  sizeof(scene),  2, 1);
+	smObjectTypeNew(&gameStateManager, &camInit,  &camStateCopy,  &camResetInterpolation,  &camDelete,  sizeof(camera), 2, 1);
+	smObjectTypeNew(&gameStateManager, &objiInit, &objiStateCopy, &objiResetInterpolation, &objiDelete, sizeof(objInstance), 8, 1);
 
-	cVector allTextures; cvInit(&allTextures, 1);            // Holds textures
-	cVector allTexWrappers; cvInit(&allTexWrappers, 1);      // Holds textureWrappers
-	cVector allSkeletons; cvInit(&allSkeletons, 1);          // Holds skeletons
-	cVector allModels; cvInit(&allModels, 1);                // Holds models
-	cVector allSklAnimations; cvInit(&allSklAnimations, 1);  // Holds sklAnims
+	cVector allTextures; cvInit(&allTextures, 1);            // Holds textures.
+	cVector allTexWrappers; cvInit(&allTexWrappers, 1);      // Holds textureWrappers.
+	cVector allSkeletons; cvInit(&allSkeletons, 1);          // Holds skeletons.
+	cVector allSklAnimations; cvInit(&allSklAnimations, 1);  // Holds sklAnims.
+	cVector allModels; cvInit(&allModels, 1);                // Holds models.
+	cVector allObjects; cvInit(&allObjects, 1);              // Holds objects.
 
 	/* Textures */
 	texture tempTex;
-	tLoad(&tempTex, prgPath, "Resources\\Images\\Guy\\Guy.png");
+	tDefault(&tempTex);
 	cvPush(&allTextures, (void *)&tempTex, sizeof(tempTex));
 	tLoad(&tempTex, prgPath, "Resources\\Images\\Misc\\Kobold.png");
 	cvPush(&allTextures, (void *)&tempTex, sizeof(tempTex));
@@ -52,40 +53,45 @@ int main(int argc, char *argv[]){
 	skeleton tempSkl;
 	sklDefault(&tempSkl);
 	cvPush(&allSkeletons, (void *)&tempSkl, sizeof(tempSkl));
-	sklLoad(&tempSkl, prgPath, "Resources\\Skeletons\\CubeTestSkeleton2.tds");
-	cvPush(&allSkeletons, (void *)&tempSkl, sizeof(tempSkl));
 
 	/* Texture Wrappers */
 	textureWrapper tempTexWrap;
+	twDefault(&tempTexWrap, &allTextures);
+	cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));
 	twLoad(&tempTexWrap, prgPath, "Resources\\Textures\\Static\\AvatarStatic.tdt", &allTextures);
-	cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));
-	twLoad(&tempTexWrap, prgPath, "Resources\\Textures\\Animated\\GuySpr.tdt", &allTextures);
-	cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));
-	twLoad(&tempTexWrap, prgPath, "Resources\\Textures\\Animated\\GuyMulti.tdt", &allTextures);
 	cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));
 	twLoad(&tempTexWrap, prgPath, "Resources\\Textures\\Static\\KoboldStatic.tdt", &allTextures);
 	cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));
 
 	/* Models */
 	model tempMdl;
-	mdlCreateSprite(&tempMdl, &allSkeletons);
+	mdlDefault(&tempMdl, &allSkeletons);
 	cvPush(&allModels, (void *)&tempMdl, sizeof(tempMdl));
-	mdlLoad(&tempMdl, prgPath, "Resources\\Models\\CubeTest.obj", &allSkeletons);
+	mdlCreateSprite(&tempMdl, &allSkeletons);
 	cvPush(&allModels, (void *)&tempMdl, sizeof(tempMdl));
 
 	/* Objects */
+	object tempObj;
+	objLoad(&tempObj, prgPath, "Resources\\Objects\\CubeTest.tdo", &allTextures, &allTexWrappers, &allSkeletons, &allSklAnimations, &allModels);
+	cvPush(&allObjects, (void *)&tempObj, sizeof(tempObj));
+
+	/* Object Instances */
 	size_t tempID;
 	smObjectNew(&gameStateManager, SM_TYPE_OBJECT, &tempID);
-	objNewRenderable(objGetState(&gameStateManager, tempID, 0));
-	objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
-	objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 1);
-	objInitSkeleton(objGetState(&gameStateManager, tempID, 0), (skeleton *)cvGet(&allSkeletons, 1));
+	objiInstantiate(objGetState(&gameStateManager, tempID, 0), (object *)cvGet(&allObjects, 0));
+	objiChangeAnimation(objGetState(&gameStateManager, tempID, 0), 0, objGetState(&gameStateManager, tempID, 0)->base->animations[0], 0, 0.f);
+	//objNewRenderable(objGetState(&gameStateManager, tempID, 0));
+	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
+	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 1);
+	//objInitSkeleton(objGetState(&gameStateManager, tempID, 0), (skeleton *)cvGet(&allSkeletons, 1));
 	//
 	smObjectNew(&gameStateManager, SM_TYPE_OBJECT, &tempID);
-	objNewRenderable(objGetState(&gameStateManager, tempID, 0));
-	objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
-	objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 2);
-	objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
+	objiInstantiate(objGetState(&gameStateManager, tempID, 0), (object *)cvGet(&allObjects, 0));
+	//objiChangeAnimation(objGetState(&gameStateManager, tempID, 0), 0, objGetState(&gameStateManager, tempID, 0)->base->animations[0], 0, 0.f);
+	//objNewRenderable(objGetState(&gameStateManager, tempID, 0));
+	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
+	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 2);
+	//objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
 	objGetState(&gameStateManager, tempID, 0)->configuration[0].position.x = 0.5f;
 	objGetState(&gameStateManager, tempID, 0)->configuration[0].position.y = 0.5f;
 	vec3SetS(&objGetState(&gameStateManager, tempID, 0)->configuration[0].scale, 0.15f);
@@ -94,22 +100,18 @@ int main(int argc, char *argv[]){
 	quatMultQByQ2(&changeRotation, &objGetState(&gameStateManager, tempID, 0)->configuration[0].orientation);
 	objGetState(&gameStateManager, tempID, 0)->tempRndrConfig.alpha.value = 0.5f;
 
-	/* Sprite Objects */
+	/* Sprite Object Instances */
 	smObjectNew(&gameStateManager, SM_TYPE_OBJECT, &tempID);
-	objNewRenderable(objGetState(&gameStateManager, tempID, 0));
+	objiNewRenderable(objGetState(&gameStateManager, tempID, 0), (model *)cvGet(&allModels, 1), (textureWrapper *)cvGet(&allTexWrappers, 1));
+	objiInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
 	objGetState(&gameStateManager, tempID, 0)->tempRndrConfig.sprite = 1;
-	objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 0);
-	objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
-	objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
 	objGetState(&gameStateManager, tempID, 0)->configuration[0].scale.x = 0.026f;
 	objGetState(&gameStateManager, tempID, 0)->configuration[0].scale.y = 0.026f;
 	//
 	smObjectNew(&gameStateManager, SM_TYPE_OBJECT, &tempID);
-	objNewRenderable(objGetState(&gameStateManager, tempID, 0));
+	objiNewRenderable(objGetState(&gameStateManager, tempID, 0), (model *)cvGet(&allModels, 1), (textureWrapper *)cvGet(&allTexWrappers, 1));
+	objiInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
 	objGetState(&gameStateManager, tempID, 0)->tempRndrConfig.sprite = 1;
-	objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 0);
-	objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
-	objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
 	objGetState(&gameStateManager, tempID, 0)->configuration[0].position.y = 1.f;
 	objGetState(&gameStateManager, tempID, 0)->tempRndrConfig.pivot.value.x = -0.5f;
 	objGetState(&gameStateManager, tempID, 0)->tempRndrConfig.pivot.value.y = 0.5f;
@@ -117,11 +119,9 @@ int main(int argc, char *argv[]){
 	objGetState(&gameStateManager, tempID, 0)->configuration[0].scale.y = 0.0026f;
 	//
 	smObjectNew(&gameStateManager, SM_TYPE_OBJECT, &tempID);
-	objNewRenderable(objGetState(&gameStateManager, tempID, 0));
+	objiNewRenderable(objGetState(&gameStateManager, tempID, 0), (model *)cvGet(&allModels, 1), (textureWrapper *)cvGet(&allTexWrappers, 1));
+	objiInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
 	objGetState(&gameStateManager, tempID, 0)->tempRndrConfig.sprite = 1;
-	objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 0);
-	objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
-	objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
 	objGetState(&gameStateManager, tempID, 0)->configuration[0].position.x = 4.f;
 	objGetState(&gameStateManager, tempID, 0)->configuration[0].position.z = -3.f;
 	objGetState(&gameStateManager, tempID, 0)->configuration[0].scale.x = 0.026f;
@@ -129,11 +129,9 @@ int main(int argc, char *argv[]){
 	objGetState(&gameStateManager, tempID, 0)->tempRndrConfig.flags |= RNDR_BILLBOARD_TARGET | RNDR_BILLBOARD_Y;
 	//
 	smObjectNew(&gameStateManager, SM_TYPE_OBJECT, &tempID);
-	objNewRenderable(objGetState(&gameStateManager, tempID, 0));
+	objiNewRenderable(objGetState(&gameStateManager, tempID, 0), (model *)cvGet(&allModels, 1), (textureWrapper *)cvGet(&allTexWrappers, 2));
+	objiInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
 	objGetState(&gameStateManager, tempID, 0)->tempRndrConfig.sprite = 1;
-	objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 0);
-	objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 3);
-	objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
 	objGetState(&gameStateManager, tempID, 0)->configuration[0].position.x = -3.f;
 	objGetState(&gameStateManager, tempID, 0)->configuration[0].position.y = -2.f;
 	objGetState(&gameStateManager, tempID, 0)->configuration[0].position.z = -3.f;
@@ -165,9 +163,6 @@ int main(int argc, char *argv[]){
 	smObjectNew(&gameStateManager, SM_TYPE_CAMERA, &tempID);
 	camGetState(&gameStateManager, tempID, 0)->flags |= CAM_PROJECTION_ORTHO;
 	camGetState(&gameStateManager, tempID, 0)->targetScene = (scene **)&gameStateManager.objectType[SM_TYPE_SCENE].instance[1].state[0];
-
-	/** Remove the special deletion code below the main loop as well. **/
-	skliLoad(&objGetState(&gameStateManager, 0, 0)->animationData, prgPath, "");
 
 
 	signed char prgRunning = 1;
@@ -302,7 +297,7 @@ int main(int argc, char *argv[]){
 			for(i = 0; i < gameStateManager.objectType[SM_TYPE_OBJECT].capacity; ++i){
 				/* Update the renderable for rendering */
 				if(objGetState(&gameStateManager, i, 0) != NULL){
-					objUpdate(objGetState(&gameStateManager, i, 0), camGetState(&gameStateManager, 0, 0), tickrate*globalTimeMod);
+					objiUpdate(objGetState(&gameStateManager, i, 0), camGetState(&gameStateManager, 0, 0), tickrate*globalTimeMod, tickratio);
 				}
 			}
 
@@ -351,25 +346,15 @@ int main(int argc, char *argv[]){
     }
 
 
-
-
-
-
-
-
-
-	/** Special deletion code **/
-	sklaDelete(objGetState(&gameStateManager, 0, 0)->animationData.animations[0].animFrags[0].currentAnim);
-
-	cleanup(&gfxPrg, &gameStateManager, &allTextures, &allSkeletons, &allTexWrappers, &allModels, &allSklAnimations);
+	cleanup(&gfxPrg, &gameStateManager, &allTextures, &allTexWrappers, &allSkeletons, &allSklAnimations, &allModels, &allObjects);
 	return 0;
 
 }
 
 void cleanup(gfxProgram *gfxPrg, stateManager *gameStateManager,
-             cVector *allTextures, cVector *allSkeletons,
-             cVector *allTexWrappers, cVector *allModels,
-             cVector *allSklAnimations){
+             cVector *allTextures, cVector *allTexWrappers,
+             cVector *allSkeletons, cVector *allSklAnimations,
+             cVector *allModels, cVector *allObjects){
 
 	size_t i;
 	for(i = 0; i < allTextures->size; ++i){
@@ -377,25 +362,30 @@ void cleanup(gfxProgram *gfxPrg, stateManager *gameStateManager,
 	}
 	cvClear(allTextures);
 
+	for(i = 0; i < allTexWrappers->size; ++i){
+		twDelete((textureWrapper *)cvGet(allTexWrappers, i));
+	}
+	cvClear(allTexWrappers);
+
 	for(i = 0; i < allSkeletons->size; ++i){
 		sklDelete((skeleton *)cvGet(allSkeletons, i));
 	}
 	cvClear(allSkeletons);
 
-	for(i = 0; i < allTexWrappers->size; ++i){
-		twDelete((textureWrapper *)cvGet(allTexWrappers, i));
+	for(i = 0; i < allSklAnimations->size; ++i){
+		sklaDelete((sklAnim *)cvGet(allSklAnimations, i));
 	}
-	cvClear(allTexWrappers);
+	cvClear(allSklAnimations);
 
 	for(i = 0; i < allModels->size; ++i){
 		mdlDelete((model *)cvGet(allModels, i));
 	}
 	cvClear(allModels);
 
-	for(i = 0; i < allSklAnimations->size; ++i){
-		sklaDelete((sklAnim *)cvGet(allSklAnimations, i));
+	for(i = 0; i < allObjects->size; ++i){
+		objDelete((object *)cvGet(allObjects, i));
 	}
-	cvClear(allSklAnimations);
+	cvClear(allObjects);
 
 	smDelete(gameStateManager);
 	gfxDestroyProgram(gfxPrg);

@@ -25,7 +25,7 @@ signed char tLoad(texture *tex, const char *prgPath, const char *filePath){
 	if(fullPath == NULL){
 		/** Remove printf()s **/
 		/** Memory allocation failure. **/
-		return 0;
+		return -1;
 	}
 	memcpy(fullPath, prgPath, pathLen);
 	memcpy(fullPath+pathLen, filePath, fileLen);
@@ -34,7 +34,7 @@ signed char tLoad(texture *tex, const char *prgPath, const char *filePath){
 	/* Load image with SDL_Image */
 	SDL_Surface *SDLimage = IMG_Load(fullPath);
 	if(SDLimage == NULL){
-		printf("Error generating SDL_Surface for texture at %s: %s\n", fullPath, SDL_GetError());
+		printf("Error generating SDL_Surface for texture \"%s\": %s\n", fullPath, SDL_GetError());
 		free(fullPath);
 		return 0;
 	}
@@ -57,12 +57,13 @@ signed char tLoad(texture *tex, const char *prgPath, const char *filePath){
 	glBindTexture(GL_TEXTURE_2D, tex->id);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, pixelFormat, SDLimage->w, SDLimage->h, 0, pixelFormat, GL_UNSIGNED_BYTE, SDLimage->pixels);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, TEXTURE_DEFAULT_FILTER_MODE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, TEXTURE_DEFAULT_FILTER_MODE);
 
 	GLenum glError = glGetError();
 	if(glError != GL_NO_ERROR){
-		printf("Error generating OpenGL texture at %s: %u\n", fullPath, glError);
+		printf("Error generating OpenGL texture \"%s\": %u\n", fullPath, glError);
+		tDelete(tex);
 		free(fullPath);
 		return 0;
 	}
@@ -91,7 +92,7 @@ signed char tLoad(texture *tex, const char *prgPath, const char *filePath){
 	if(tex->name == NULL){
 		/** Memory allocation failure. **/
 		tDelete(tex);
-		return 0;
+		return -1;
 	}
 	memcpy(tex->name, filePath, fileLen);
 	tex->name[fileLen] = '\0';
@@ -101,7 +102,62 @@ signed char tLoad(texture *tex, const char *prgPath, const char *filePath){
 }
 
 signed char tDefault(texture *tex){
-	/** **/
+
+	GLenum glError;
+	unsigned int pixels[32*32];
+	size_t h, w;
+
+	tInit(tex);
+	tex->name = malloc(8*sizeof(char));
+	if(tex->name == NULL){
+		/** Memory allocation failure. **/
+		return -1;
+	}
+	tex->name[0] = 'd';
+	tex->name[1] = 'e';
+	tex->name[2] = 'f';
+	tex->name[3] = 'a';
+	tex->name[4] = 'u';
+	tex->name[5] = 'l';
+	tex->name[6] = 't';
+	tex->name[7] = '\0';
+	tex->width = 32;
+	tex->height = 32;
+
+	for(h = 0; h < tex->height; ++h){
+		for(w = 0; w < tex->width; ++w){
+			if((w / 4) % 2){
+				if((h / 4) % 2){
+					pixels[(h * tex->width) + w] = 0xFFFF00DC;
+				}else{
+					pixels[(h * tex->width) + w] = 0xFF000000;
+				}
+			}else{
+				if((h / 4) % 2){
+					pixels[(h * tex->width) + w] = 0xFF000000;
+				}else{
+					pixels[(h * tex->width) + w] = 0xFFFF00DC;
+				}
+			}
+		}
+	}
+
+	glGenTextures(1, &tex->id);
+	glBindTexture(GL_TEXTURE_2D, tex->id);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->width, tex->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, TEXTURE_DEFAULT_FILTER_MODE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, TEXTURE_DEFAULT_FILTER_MODE);
+
+	glError = glGetError();
+	if(glError != GL_NO_ERROR){
+		printf("Error generating default texture.\n");
+		tDelete(tex);
+		return 0;
+	}
+
+	return 1;
+
 }
 
 void tDelete(texture *tex){

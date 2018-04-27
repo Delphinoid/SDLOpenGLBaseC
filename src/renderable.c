@@ -4,15 +4,25 @@
 #include <SDL2/SDL_image.h>
 #include "vec4.h"
 
-#define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians
+#define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians.
 
 void rndrInit(renderable *rndr){
 	rndr->mdl = NULL;
-	twiInit(&rndr->twi, NULL);
+	rndr->tw = NULL;
+}
+
+void rndriInit(rndrInstance *rndri){
+	rndri->mdl = NULL;
+	twiInit(&rndri->twi, NULL);
 	//rndr->parentBoneLookup = NULL;
 	//rndr->physicsSimulate = 0;
 	//rndr->physicsState = NULL;
 	//rndr->hitboxState = NULL;
+}
+
+void rndriCreate(rndrInstance *rndri, renderable *base){
+	rndri->mdl = base->mdl;
+	twiInit(&rndri->twi, base->tw);
 }
 
 /*signed char rndrCreate(renderable *rndr, model *mdl, textureWrapper *tw, const skl *oskl){
@@ -67,7 +77,7 @@ signed char rndrCopy(renderable *o, renderable *c){
 
 }*/
 
-void rndrDelete(renderable *rndr){
+void rndriDelete(rndrInstance *rndri){
 	/*size_t i;
 	if(rndr->parentBoneLookup != NULL){
 		free(rndr->parentBoneLookup);

@@ -48,7 +48,7 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 	*vertices = malloc(vertexCapacity*sizeof(vertex));
 	if(*vertices == NULL){
 		/** Memory allocation failure. **/
-		return 0;
+		return -1;
 	}
 
 	size_t indexCapacity = MDL_INDEX_START_CAPACITY;
@@ -56,7 +56,7 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 	if(*indices == NULL){
 		/** Memory allocation failure. **/
 		free(*vertices);
-		return 0;
+		return -1;
 	}
 
 	/**const signed char generatePhysProperties = (mass != NULL && area != NULL && centroid != NULL);
@@ -76,7 +76,7 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 		/** Memory allocation failure. **/
 		free(*vertices);
 		free(*indices);
-		return 0;
+		return -1;
 	}
 	// Temporarily holds vertex UVs they are pushed into vertices
 	size_t tempTexCoordsSize = 0;
@@ -87,7 +87,7 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 		free(*vertices);
 		free(*indices);
 		free(tempPositions);
-		return 0;
+		return -1;
 	}
 	// Temporarily holds vertex normals before they are pushed into vertices
 	size_t tempNormalsSize = 0;
@@ -99,7 +99,7 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 		free(*indices);
 		free(tempPositions);
 		free(tempTexCoords);
-		return 0;
+		return -1;
 	}
 	// Temporarily holds bone IDs before they are pushed into vertices
 	size_t tempBoneIDsSize = 0;
@@ -112,7 +112,7 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 		free(tempPositions);
 		free(tempTexCoords);
 		free(tempNormals);
-		return 0;
+		return -1;
 	}
 	// Temporarily holds bone weights before they are pushed into vertices
 	size_t tempBoneWeightsSize = 0;
@@ -126,7 +126,7 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 		free(tempTexCoords);
 		free(tempNormals);
 		free(tempBoneIDs);
-		return 0;
+		return -1;
 	}
 
 	vertex tempVert;          // Holds a vertex before pushing it into the triangle array
@@ -147,29 +147,37 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 
 			// Name
 			if(name != NULL && *name == NULL && lineLength >= 6 && strncmp(line, "name ", 5) == 0){
+				if(line[5] == '"' && line[lineLength-1] == '"'){
+					++line;
+					lineLength -= 2;
+				}
 				*name = malloc((lineLength-4) * sizeof(char));
 				if(*name == NULL){
 					/** Memory allocation failure. **/
 					mdlWavefrontObjFreeHelpers();
 					mdlWavefrontObjFreeReturns();
 					fclose(mdlInfo);
-					return 0;
+					return -1;
 				}
 				strncpy(*name, line+5, lineLength-5);
 				(*name)[lineLength-5] = '\0';
 
 			// Skeleton
 			}else if(sklPath != NULL && *sklPath == NULL && lineLength > 9 && strncmp(line, "skeleton ", 9) == 0){
-				const char *firstQuote = strchr(line, '"');
-				const char *lastQuote = strrchr(line, '"');
 				size_t pathBegin;
 				size_t pathLength;
-				if(firstQuote != NULL && lastQuote > firstQuote){
-					pathBegin = firstQuote-line+1;
-					pathLength = lastQuote-line-pathBegin;
-				}else{  // If the skeleton path wasn't surrounded by quotes, don't give up:
+				const char *firstQuote = strchr(line+9, '"');
+				const char *secondQuote = NULL;
+				if(firstQuote != NULL){
+					++firstQuote;
+					pathBegin = firstQuote-line;
+					secondQuote = strrchr(firstQuote, '"');
+				}
+				if(secondQuote > firstQuote){
+					pathLength = secondQuote-firstQuote;
+				}else{
 					pathBegin = 9;
-					pathLength = lineLength-9;
+					pathLength = lineLength-pathBegin;
 				}
 				*sklPath = malloc((pathLength+1) * sizeof(char));
 				if(*sklPath == NULL){
@@ -177,7 +185,7 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 					mdlWavefrontObjFreeHelpers();
 					mdlWavefrontObjFreeReturns();
 					fclose(mdlInfo);
-					return 0;
+					return -1;
 				}
 				strncpy(*sklPath, line+pathBegin, pathLength);
 				(*sklPath)[pathLength] = '\0';
@@ -186,105 +194,105 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 			}else if(lineLength >= 7 && strncmp(line, "v ", 2) == 0){
 				char *token = strtok(line+2, " ");
 				float curVal = strtod(token, NULL);
-				if(!pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity)){
+				if(pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity) == -1){
 					/** Memory allocation failure. **/
 					mdlWavefrontObjFreeHelpers();
 					mdlWavefrontObjFreeReturns();
 					fclose(mdlInfo);
-					return 0;
+					return -1;
 				}
 				token = strtok(NULL, " ");
 				curVal = strtod(token, NULL);
-				if(!pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity)){
+				if(pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity) == -1){
 					/** Memory allocation failure. **/
 					mdlWavefrontObjFreeHelpers();
 					mdlWavefrontObjFreeReturns();
 					fclose(mdlInfo);
-					return 0;
+					return -1;
 				}
 				token = strtok(NULL, " ");
 				curVal = strtod(token, NULL);
-				if(!pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity)){
+				if(pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity) == -1){
 					/** Memory allocation failure. **/
 					mdlWavefrontObjFreeHelpers();
 					mdlWavefrontObjFreeReturns();
 					fclose(mdlInfo);
-					return 0;
+					return -1;
 				}
 				/****/
 				token = strtok(NULL, " ");
 				if(token != NULL){
 					int curBoneID = strtoul(token, NULL, 0);
-					if(!pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity)){
+					if(pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity) == -1){
 						/** Memory allocation failure. **/
 						mdlWavefrontObjFreeHelpers();
 						mdlWavefrontObjFreeReturns();
 						fclose(mdlInfo);
-						return 0;
+						return -1;
 					}
 					token = strtok(NULL, " ");
 					curBoneID = strtoul(token, NULL, 0);
-					if(!pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity)){
+					if(pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity) == -1){
 						/** Memory allocation failure. **/
 						mdlWavefrontObjFreeHelpers();
 						mdlWavefrontObjFreeReturns();
 						fclose(mdlInfo);
-						return 0;
+						return -1;
 					}
 					token = strtok(NULL, " ");
 					curBoneID = strtoul(token, NULL, 0);
-					if(!pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity)){
+					if(pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity) == -1){
 						/** Memory allocation failure. **/
 						mdlWavefrontObjFreeHelpers();
 						mdlWavefrontObjFreeReturns();
 						fclose(mdlInfo);
-						return 0;
+						return -1;
 					}
 					token = strtok(NULL, " ");
 					curBoneID = strtoul(token, NULL, 0);
-					if(!pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity)){
+					if(pushDynamicArray((void **)&tempBoneIDs, &curBoneID, sizeof(curBoneID), &tempBoneIDsSize, &tempBoneIDsCapacity) == -1){
 						/** Memory allocation failure. **/
 						mdlWavefrontObjFreeHelpers();
 						mdlWavefrontObjFreeReturns();
 						fclose(mdlInfo);
-						return 0;
+						return -1;
 					}
 					token = strtok(NULL, " ");
 					if(token != NULL){
 						curVal = strtod(token, NULL);
-						if(!pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity)){
+						if(pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity) == -1){
 							/** Memory allocation failure. **/
 							mdlWavefrontObjFreeHelpers();
 							mdlWavefrontObjFreeReturns();
 							fclose(mdlInfo);
-							return 0;
+							return -1;
 						}
 						token = strtok(NULL, " ");
 						curVal = strtod(token, NULL);
-						if(!pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity)){
+						if(pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity) == -1){
 							/** Memory allocation failure. **/
 							mdlWavefrontObjFreeHelpers();
 							mdlWavefrontObjFreeReturns();
 							fclose(mdlInfo);
-							return 0;
+							return -1;
 						}
 						token = strtok(NULL, " ");
 						curVal = strtod(token, NULL);
-						if(!pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity)){
+						if(pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity) == -1){
 							/** Memory allocation failure. **/
 							mdlWavefrontObjFreeHelpers();
 							mdlWavefrontObjFreeReturns();
 							fclose(mdlInfo);
-							return 0;
+							return -1;
 						}
 						token = strtok(NULL, " ");
 						curVal = strtod(token, NULL);
-						if(!pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity)){
+						if(pushDynamicArray((void **)&tempBoneWeights, &curVal, sizeof(curVal), &tempBoneWeightsSize, &tempBoneWeightsCapacity) == -1){
 							/** Memory allocation failure. **/
 							mdlWavefrontObjFreeHelpers();
 							mdlWavefrontObjFreeReturns();
 							fclose(mdlInfo);
-							return 0;
+							return -1;
 						}
 					}
 				}
@@ -293,51 +301,51 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 			}else if(lineLength >= 6 && strncmp(line, "vt ", 3) == 0){
 				char *token = strtok(line+3, " ");
 				float curVal = strtod(token, NULL);
-				if(!pushDynamicArray((void **)&tempTexCoords, &curVal, sizeof(curVal), &tempTexCoordsSize, &tempTexCoordsCapacity)){
+				if(pushDynamicArray((void **)&tempTexCoords, &curVal, sizeof(curVal), &tempTexCoordsSize, &tempTexCoordsCapacity) == -1){
 					/** Memory allocation failure. **/
 					mdlWavefrontObjFreeHelpers();
 					mdlWavefrontObjFreeReturns();
 					fclose(mdlInfo);
-					return 0;
+					return -1;
 				}
 				token = strtok(NULL, " ");
 				curVal = strtod(token, NULL);
-				if(!pushDynamicArray((void **)&tempTexCoords, &curVal, sizeof(curVal), &tempTexCoordsSize, &tempTexCoordsCapacity)){
+				if(pushDynamicArray((void **)&tempTexCoords, &curVal, sizeof(curVal), &tempTexCoordsSize, &tempTexCoordsCapacity) == -1){
 					/** Memory allocation failure. **/
 					mdlWavefrontObjFreeHelpers();
 					mdlWavefrontObjFreeReturns();
 					fclose(mdlInfo);
-					return 0;
+					return -1;
 				}
 
 			// Normal data
 			}else if(lineLength >= 8 && strncmp(line, "vn ", 3) == 0){
 				char *token = strtok(line+3, " ");
 				float curVal = strtod(token, NULL);
-				if(!pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity)){
+				if(pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity) == -1){
 					/** Memory allocation failure. **/
 					mdlWavefrontObjFreeHelpers();
 					mdlWavefrontObjFreeReturns();
 					fclose(mdlInfo);
-					return 0;
+					return -1;
 				}
 				token = strtok(NULL, " ");
 				curVal = strtod(token, NULL);
-				if(!pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity)){
+				if(pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity) == -1){
 					/** Memory allocation failure. **/
 					mdlWavefrontObjFreeHelpers();
 					mdlWavefrontObjFreeReturns();
 					fclose(mdlInfo);
-					return 0;
+					return -1;
 				}
 				token = strtok(NULL, " ");
 				curVal = strtod(token, NULL);
-				if(!pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity)){
+				if(pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity) == -1){
 					/** Memory allocation failure. **/
 					mdlWavefrontObjFreeHelpers();
 					mdlWavefrontObjFreeReturns();
 					fclose(mdlInfo);
-					return 0;
+					return -1;
 				}
 
 			// Face data
@@ -420,12 +428,12 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 						/** CHECK BONE DATA HERE **/
 						if(memcmp(checkVert, &tempVert, sizeof(vertex)) == 0){
 							// Resize indices if there's not enough room
-							if(!pushDynamicArray((void **)indices, &j, sizeof(j), indexNum, &indexCapacity)){
+							if(pushDynamicArray((void **)indices, &j, sizeof(j), indexNum, &indexCapacity) == -1){
 								/** Memory allocation failure. **/
 								mdlWavefrontObjFreeHelpers();
 								mdlWavefrontObjFreeReturns();
 								fclose(mdlInfo);
-								return 0;
+								return -1;
 							}
 							foundVertex = 1;
 							break;
@@ -435,13 +443,13 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 					// If the vertex has not yet been loaded, add it to both the vertex vector and the index vector
 					if(!foundVertex){
 						// Resize indices if there's not enough room
-						if(!pushDynamicArray((void **)indices, vertexNum, sizeof(*vertexNum), indexNum, &indexCapacity) ||
-						   !pushDynamicArray((void **)vertices, &tempVert, sizeof(tempVert), vertexNum, &vertexCapacity)){
+						if(pushDynamicArray((void **)indices, vertexNum, sizeof(*vertexNum), indexNum, &indexCapacity)  == -1 ||
+						   pushDynamicArray((void **)vertices, &tempVert, sizeof(tempVert), vertexNum, &vertexCapacity) == -1){
 							/** Memory allocation failure. **/
 							mdlWavefrontObjFreeHelpers();
 							mdlWavefrontObjFreeReturns();
 							fclose(mdlInfo);
-							return 0;
+							return -1;
 						}
 						// Generate physics properties if necessary
 						/**if(generatePhysProperties && *vertexNum > 1){
@@ -465,7 +473,7 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 		mdlWavefrontObjFreeHelpers();
 
 	}else{
-		printf("Error loading model: Couldn't open %s\n", filePath);
+		printf("Error loading model \"%s\": Could not open file.\n", filePath);
 		mdlWavefrontObjFreeHelpers();
 		mdlWavefrontObjFreeReturns();
 		return 0;
@@ -841,7 +849,7 @@ signed char mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertice
 			/** Memory allocation failure. **/
 			mdlSMDFreeReturns();
 			mdlSMDFreeHelpers();
-			return 0;
+			return -1;
 		}
 		memcpy(tempSkl.name, filePath, fileLen);
 		tempSkl.name[fileLen] = '\0';

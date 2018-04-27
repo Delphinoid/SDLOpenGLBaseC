@@ -1,6 +1,8 @@
 #ifndef HITBOX_H
 #define HITBOX_H
 
+#include <stdlib.h>
+
 // The size of the largest collider type.
 // In this case, it tied between the mesh and capsule at 28 bytes.
 #define HB_MAX_COLLIDER_SIZE 28
@@ -10,5 +12,12 @@ typedef struct {
 	char hull[HB_MAX_COLLIDER_SIZE];  // Stores a collider of the type specified by "type". Needs to be casted.
 	                                  // May be affected by translation, rotation and scaling, depending on the type.
 } hitbox;
+
+typedef struct {
+	size_t hitboxNum;
+	hitbox *hitboxes;
+} hbArray;
+
+void hbArrayDelete(hbArray *hba);
 
 #endif

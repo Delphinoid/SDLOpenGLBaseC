@@ -33,6 +33,7 @@ typedef struct {
 	//unsigned int displayDataEnd;  // The element displayData ends on.
 } console;
 
+/** Fixed-length names? **/
 void conInit(console *con);
 signed char conAddCommand(console *con, char *name, signed char (*func)(const cmdVariables *cmdv, const cmdInput *cmdi));
 signed char conRemoveCommand(console *con, char *name);

@@ -21,7 +21,7 @@ signed char hbMeshWavefrontObjLoad(hbMesh *hbm, const char *filePath){
 	hbm->vertices = malloc(vertexCapacity*sizeof(vec3));
 	if(hbm->vertices == NULL){
 		/** Memory allocation failure. **/
-		return 0;
+		return -1;
 	}
 
 	size_t indexCapacity = HITBOX_INDEX_START_CAPACITY;
@@ -29,7 +29,7 @@ signed char hbMeshWavefrontObjLoad(hbMesh *hbm, const char *filePath){
 	if(hbm->indices == NULL){
 		/** Memory allocation failure. **/
 		free(hbm->vertices);
-		return 0;
+		return -1;
 	}
 
 	/**const signed char generatePhysProperties = (mass != NULL && area != NULL && centroid != NULL);
@@ -47,7 +47,7 @@ signed char hbMeshWavefrontObjLoad(hbMesh *hbm, const char *filePath){
 		/** Memory allocation failure. **/
 		free(hbm->vertices);
 		free(hbm->indices);
-		return 0;
+		return -1;
 	}
 
 	vec3 tempVert;            // Holds a vertex before pushing it into the triangle array
@@ -68,30 +68,30 @@ signed char hbMeshWavefrontObjLoad(hbMesh *hbm, const char *filePath){
 			if(lineLength >= 7 && strncmp(line, "v ", 2) == 0){
 				char *token = strtok(line+2, " ");
 				float curVal = strtod(token, NULL);
-				if(!pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity)){
+				if(pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity) == -1){
 					/** Memory allocation failure. **/
 					hbMeshWavefrontObjFreeHelpers();
 					hbMeshDelete(hbm);
 					fclose(hbmInfo);
-					return 0;
+					return -1;
 				}
 				token = strtok(NULL, " ");
 				curVal = strtod(token, NULL);
-				if(!pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity)){
+				if(pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity) == -1){
 					/** Memory allocation failure. **/
 					hbMeshWavefrontObjFreeHelpers();
 					hbMeshDelete(hbm);
 					fclose(hbmInfo);
-					return 0;
+					return -1;
 				}
 				token = strtok(NULL, " ");
 				curVal = strtod(token, NULL);
-				if(!pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity)){
+				if(pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity) == -1){
 					/** Memory allocation failure. **/
 					hbMeshWavefrontObjFreeHelpers();
 					hbMeshDelete(hbm);
 					fclose(hbmInfo);
-					return 0;
+					return -1;
 				}
 
 			// Face data
@@ -123,12 +123,12 @@ signed char hbMeshWavefrontObjLoad(hbMesh *hbm, const char *filePath){
 						vec3 *checkVert = &hbm->vertices[j];
 						if(memcmp(checkVert, &tempVert, sizeof(vec3)) == 0){
 							// Resize indices if there's not enough room
-							if(!pushDynamicArray((void **)&hbm->indices, &j, sizeof(j), &hbm->indexNum, &indexCapacity)){
+							if(pushDynamicArray((void **)&hbm->indices, &j, sizeof(j), &hbm->indexNum, &indexCapacity) == -1){
 								/** Memory allocation failure. **/
 								hbMeshWavefrontObjFreeHelpers();
 								hbMeshDelete(hbm);
 								fclose(hbmInfo);
-								return 0;
+								return -1;
 							}
 							foundVertex = 1;
 							break;
@@ -138,13 +138,13 @@ signed char hbMeshWavefrontObjLoad(hbMesh *hbm, const char *filePath){
 					// If the vertex has not yet been loaded, add it to both the vertex vector and the index vector
 					if(!foundVertex){
 						// Resize indices if there's not enough room
-						if(!pushDynamicArray((void **)&hbm->indices, &hbm->vertexNum, sizeof(hbm->vertexNum), &hbm->indexNum, &indexCapacity) ||
-						   !pushDynamicArray((void **)&hbm->vertices, &tempVert, sizeof(tempVert), &hbm->vertexNum, &vertexCapacity)){
+						if(pushDynamicArray((void **)&hbm->indices, &hbm->vertexNum, sizeof(hbm->vertexNum), &hbm->indexNum, &indexCapacity) == -1 ||
+						   pushDynamicArray((void **)&hbm->vertices, &tempVert, sizeof(tempVert), &hbm->vertexNum, &vertexCapacity) == -1){
 							/** Memory allocation failure. **/
 							hbMeshWavefrontObjFreeHelpers();
 							hbMeshDelete(hbm);
 							fclose(hbmInfo);
-							return 0;
+							return -1;
 						}
 						/**if(generatePhysProperties && hbm->vertexNum > 1){
 							// Generate physics properties if necessary

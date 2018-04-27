@@ -1,8 +1,8 @@
 #include "stateManager.h"
 #include <string.h>
 
-signed char stateObjectTypeInit(stateObjectType *objType, signed char (*stateInit)(void*),
-                                signed char (*stateNew)(void*), signed char (*stateCopy)(void*, void*),
+signed char stateObjectTypeInit(stateObjectType *objType,
+                                signed char (*stateInit)(void*), signed char (*stateCopy)(void*, void*),
                                 void (*stateResetInterpolation)(void*), void (*stateDelete)(void*),
                                 const size_t size, const size_t capacity, const size_t stateNum){
 
@@ -12,7 +12,7 @@ signed char stateObjectTypeInit(stateObjectType *objType, signed char (*stateIni
 	objType->instance = malloc(capacity * sizeof(stateObject));
 	if(objType->instance == NULL){
 		/** Memory allocation failure. **/
-		return 0;
+		return -1;
 	}
 
 	/* Allocate memory for each object's states and initialize their pointers to NULL. */
@@ -20,6 +20,7 @@ signed char stateObjectTypeInit(stateObjectType *objType, signed char (*stateIni
 		objType->instance[i].active = 0;
 		objType->instance[i].state = malloc(stateNum * sizeof(void *));
 		if(objType->instance[i].state == NULL){
+			/** Memory allocation failure. **/
 			break;
 		}
 		for(j = 0; j < stateNum; ++j){
@@ -34,12 +35,11 @@ signed char stateObjectTypeInit(stateObjectType *objType, signed char (*stateIni
 			free(objType->instance[i].state);
 		}
 		free(objType->instance);
-		return 0;
+		return -1;
 	}
 
 	/* Set various variables. */
 	objType->stateInit = stateInit;
-	objType->stateNew = stateNew;
 	objType->stateCopy = stateCopy;
 	objType->stateResetInterpolation = stateResetInterpolation;
 	objType->stateDelete = stateDelete;
@@ -83,19 +83,22 @@ signed char stateObjectTypeUpdate(stateObjectType *objType){
 						objType->instance[i].state[0] = malloc(objType->size);
 						if(objType->instance[i].state[0] == NULL){
 							/** Memory allocation failure. **/
-							return 0;
+							return -1;
 						}
 						/**/
 						/* Prevents crashing in stateCopy() due to uninitialized variables. */
-						(*objType->stateInit)(objType->instance[i].state[0]);
+						if((*objType->stateInit)(objType->instance[i].state[0]) == -1){
+							/** Memory allocation failure. **/
+							return -1;
+						}
 						/**/
 					}else{
 						objType->instance[i].state[0] = lastState;
 					}
 
-					if(!(*objType->stateCopy)(objType->instance[i].state[1], objType->instance[i].state[0])){
+					if((*objType->stateCopy)(objType->instance[i].state[1], objType->instance[i].state[0]) == -1){
 						/** Memory allocation failure. **/
-						return 0;
+						return -1;
 					}
 
 					// Done once again below.
@@ -144,8 +147,8 @@ void stateObjectTypeDelete(stateObjectType *objType){
 	free(objType->instance);
 }
 
-signed char smObjectTypeNew(stateManager *sm, signed char (*stateInit)(void*),
-                            signed char (*stateNew)(void*), signed char (*stateCopy)(void*, void*),
+signed char smObjectTypeNew(stateManager *sm,
+                            signed char (*stateInit)(void*), signed char (*stateCopy)(void*, void*),
                             void (*stateResetInterpolation)(void*), void (*stateDelete)(void*),
                             const size_t size, const size_t capacity, const size_t stateNum){
 
@@ -153,16 +156,16 @@ signed char smObjectTypeNew(stateManager *sm, signed char (*stateInit)(void*),
 	stateObjectType *tempBuffer = malloc((sm->objectTypeNum+1) * sizeof(stateObjectType));
 	if(tempBuffer == NULL){
 		/** Memory allocation failure. **/
-		return 0;
+		return -1;
 	}
 
 	/* Initialize the new object type. */
-	if(!stateObjectTypeInit(&tempBuffer[sm->objectTypeNum],
-	                        stateInit, stateNew, stateCopy,
-	                        stateResetInterpolation, stateDelete,
-	                        size, capacity, stateNum)){
+	if(stateObjectTypeInit(&tempBuffer[sm->objectTypeNum],
+	                       stateInit, stateCopy,
+	                       stateResetInterpolation, stateDelete,
+	                       size, capacity, stateNum) == -1){
 		free(tempBuffer);
-		return 0;
+		return -1;
 	}
 
 	/* Copy the old objectTypes over. */
@@ -190,16 +193,21 @@ signed char smObjectNew(stateManager *sm, const size_t objectTypeID, size_t *obj
 		stateObject *tempBuffer = realloc(sm->objectType[objectTypeID].instance, sm->objectType[objectTypeID].capacity * sizeof(stateObject *));
 		if(tempBuffer == NULL){
 			/** Memory allocation failure. **/
-			return 0;
+			return -1;
 		}
 		sm->objectType[objectTypeID].instance = tempBuffer;
 	}
 	sm->objectType[objectTypeID].instance[i].state[0] = malloc(sm->objectType[objectTypeID].size);
 	if(sm->objectType[objectTypeID].instance[i].state[0] == NULL){
 		/** Memory allocation failure. **/
-		return 0;
+		return -1;
 	}
-	(*sm->objectType[objectTypeID].stateNew)(sm->objectType[objectTypeID].instance[i].state[0]);
+	if((*sm->objectType[objectTypeID].stateInit)(sm->objectType[objectTypeID].instance[i].state[0]) == -1){
+		/** Memory allocation failure. **/
+		free(sm->objectType[objectTypeID].instance[i].state[0]);
+		sm->objectType[objectTypeID].instance[i].state[0] = NULL;
+		return -1;
+	}
 	sm->objectType[objectTypeID].instance[i].active = 1;
 	*objectID = i;
 	return 1;
@@ -219,8 +227,8 @@ signed char smPrepareNextState(stateManager *sm){
 	size_t i;
 	++sm->currentStateID;
 	for(i = 0; i < sm->objectTypeNum; ++i){
-		if(!stateObjectTypeUpdate(&sm->objectType[i])){
-			return 0;
+		if(stateObjectTypeUpdate(&sm->objectType[i]) == -1){
+			return -1;
 		}
 	}
 	return 1;

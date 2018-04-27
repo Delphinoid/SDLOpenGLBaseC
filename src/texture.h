@@ -3,6 +3,8 @@
 
 #include <SDL2/SDL_opengl.h>
 
+#define TEXTURE_DEFAULT_FILTER_MODE GL_LINEAR
+
 typedef struct {
 
 	char *name;
