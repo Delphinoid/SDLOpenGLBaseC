@@ -20,7 +20,7 @@ void rndriInit(rndrInstance *rndri){
 	//rndr->hitboxState = NULL;
 }
 
-void rndriCreate(rndrInstance *rndri, renderable *base){
+void rndriInstantiate(rndrInstance *rndri, renderable *base){
 	rndri->mdl = base->mdl;
 	twiInit(&rndri->twi, base->tw);
 }

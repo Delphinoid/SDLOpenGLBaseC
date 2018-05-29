@@ -47,8 +47,8 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 	}
 
 	size_t parent = 0;
-	int currentCommand = -1;       // The current multiline command type (-1 = none, >-1 = bone).
-	unsigned int currentLine = 0;  // Current file line being read.
+	signed char currentCommand = -1;  // The current multiline command type (-1 = none, >-1 = bone).
+	unsigned int currentLine = 0;     // Current file line being read.
 
 	FILE *sklInfo = fopen(fullPath, "r");
 	char lineFeed[1024];
@@ -63,6 +63,10 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 			// Name
 			if(lineLength >= 6 && strncmp(line, "name ", 5) == 0){
 				if(currentCommand == -1){
+					while(line[5] == ' ' || line[5] == '\t'){
+						++line;
+						--lineLength;
+					}
 					if(line[5] == '"' && line[lineLength-1] == '"'){
 						++line;
 						lineLength -= 2;
@@ -359,8 +363,8 @@ signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 		return -1;
 	}
 
-	signed char currentCommand = 0;  // The current multiline command type (-1 = none, 0 = bones, 1 = frame).
-	unsigned int currentLine = 0;    // Current file line being read.
+	signed char currentCommand = -1;  // The current multiline command type (-1 = none, 0 = bones, 1 = frame).
+	unsigned int currentLine = 0;     // Current file line being read.
 
 
 	const size_t pathLen = strlen(prgPath);
@@ -387,25 +391,33 @@ signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 
 			// Name
 			if(lineLength >= 6 && strncmp(line, "name ", 5) == 0){
-				if(line[5] == '"' && line[lineLength-1] == '"'){
-					++line;
-					lineLength -= 2;
+				if(currentCommand != 1){
+					while(line[5] == ' ' || line[5] == '\t'){
+						++line;
+						--lineLength;
+					}
+					if(line[5] == '"' && line[lineLength-1] == '"'){
+						++line;
+						lineLength -= 2;
+					}
+					skla->name = malloc((lineLength-4) * sizeof(char));
+					if(skla->name == NULL){
+						/** Memory allocation failure. **/
+						sklaDelete(skla);
+						free(fullPath);
+						fclose(sklaInfo);
+						return -1;
+					}
+					strncpy(skla->name, line+5, lineLength-5);
+					skla->name[lineLength-5] = '\0';
+				}else{
+					printf("Error loading skeletal animation \"%s\": Name command at line %u does not belong inside a multiline command.\n", fullPath, currentLine);
 				}
-				skla->name = malloc((lineLength-4) * sizeof(char));
-				if(skla->name == NULL){
-					/** Memory allocation failure. **/
-					sklaDelete(skla);
-					free(fullPath);
-					fclose(sklaInfo);
-					return -1;
-				}
-				strncpy(skla->name, line+5, lineLength-5);
-				skla->name[lineLength-5] = '\0';
 
 
 			// Bone
 			}else if(lineLength >= 6 && strncmp(line, "bone ", 5) == 0){
-				if(currentCommand == 0){
+				if(currentCommand != 1){
 					// Resize the bone name array if necessary.
 					if(skla->boneNum == boneCapacity){
 						boneCapacity *= 2;
@@ -435,6 +447,7 @@ signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 					strncpy(skla->bones[skla->boneNum], line+5, lineLength-5);
 					skla->bones[skla->boneNum][lineLength-5] = '\0';
 					++skla->boneNum;
+					currentCommand = 0;
 				}else{
 					printf("Error loading skeletal animation \"%s\": Bone at line %u must be specified before any frames.\n", fullPath, currentLine);
 				}
@@ -442,7 +455,11 @@ signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 
 			// Make the current animation loop.
 			}else if(lineLength >= 6 && strncmp(line, "loop ", 5) == 0){
-				skla->animData.desiredLoops = strtol(line+5, NULL, 0);
+				if(currentCommand != 1){
+					skla->animData.desiredLoops = strtol(line+5, NULL, 0);
+				}else{
+					printf("Error loading skeletal animation \"%s\": Loop command at line %u does not belong inside a multiline command.\n", fullPath, currentLine);
+				}
 
 
 			// New frame

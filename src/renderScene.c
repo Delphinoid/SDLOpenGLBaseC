@@ -310,8 +310,8 @@ void sortElements(stateManager *gameStateManager, const size_t stateID,
 	size_t i, j;
 	for(i = 0; i < gameStateManager->objectType[SM_TYPE_CAMERA].capacity; ++i){
 		if(camGetState(gameStateManager, i, stateID) != NULL){
-			for(j = 0; j < (*camGetState(gameStateManager, i, stateID)->targetScene)->objectNum; ++j){
-				objInstance *curObj = objGetState(gameStateManager, (*camGetState(gameStateManager, i, stateID)->targetScene)->objectIDs[j], stateID);
+			for(j = 0; j < camGetState(gameStateManager, i, stateID)->targetScene->objectNum; ++j){
+				objInstance *curObj = objGetState(gameStateManager, camGetState(gameStateManager, i, stateID)->targetScene->objectIDs[j], stateID);
 				if(curObj != NULL){
 					if(!curObj->tempRndrConfig.sprite){
 						if(i == 0){

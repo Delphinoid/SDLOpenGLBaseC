@@ -308,6 +308,10 @@ void vec3DivSByV(const float s, vec3 *v){
 float vec3GetMagnitude(const vec3 *v){
 	return sqrtf(v->x*v->x + v->y*v->y + v->z*v->z);
 }
+float vec3GetInverseMagnitude(const vec3 *v){
+	const float magnitudeSquared = v->x*v->x + v->y*v->y + v->z*v->z;
+	return fastInvSqrt(magnitudeSquared);
+}
 
 vec3 vec3GetUnit(const vec3 *v){
 	const float magnitude = vec3GetMagnitude(v);
@@ -355,4 +359,14 @@ void vec3Lerp(const vec3 *v1, const vec3 *v2, const float t, vec3 *r){
 	r->x = v1->x + (v2->x - v1->x) * t;
 	r->y = v1->y + (v2->y - v1->y) * t;
 	r->z = v1->z + (v2->z - v1->z) * t;
+}
+
+void vec3CombineLinear(const vec3 *v1, const vec3 *v2, const vec3 *v3,
+                       const float a, const float b, const float c, vec3 *r){
+	/*
+	** Linearly combine the vectors v1, v2 and v3 using the constants a, b and c.
+	*/
+	r->x = v1->x * a + v2->x * b + v3->x * c;
+	r->y = v1->y * a + v2->y * b + v3->y * c;
+	r->z = v1->z * a + v2->z * b + v3->z * c;
 }

@@ -2,18 +2,24 @@
 #define PHYSICSRIGIDBODY_H
 
 #include "physCollider.h"
-#include "bone.h"
+#include "hitboxCollision.h"
+#include "skeleton.h"
+#include "mat3.h"
 #include <stdlib.h>
 
+/** Remove PHYSICS_BODY_INITIALIZE? **/
 #define PHYSICS_BODY_INITIALIZE 0x01  // Whether or not the simulation has just begun on this frame.
 #define PHYSICS_BODY_SIMULATE   0x02  // Whether or not the body is active. Still listens for collisions.
 #define PHYSICS_BODY_COLLIDE    0x04  // Whether or not the body will listen for collisions.
 #define PHYSICS_BODY_DELETE     0x08  // Set by an object's deletion function so the body can be freed by the physics handler.
 
+#define PHYSICS_CONSTRAINT_TYPE_1 0x01
+#define PHYSICS_CONSTRAINT_TYPE_2 0x02
+#define PHYSICS_CONSTRAINT_COLLIDE 0x04
+
 typedef struct {
-	signed char collide;          // Whether or not the bodies being constrained will collide.
-	vec3 *constraintPosition;     // Pointer to the position that the body is constrained to.
-	quat *constraintOrientation;  // Pointer to the orientation that the body is constrained to.
+	unsigned char flags;
+	size_t constraintID;  // An identifier for the other body being constrained.
 	vec3 constraintOffsetMin;
 	vec3 constraintOffsetMax;
 	vec3 constraintRotationMin;
@@ -41,7 +47,7 @@ typedef struct {
 typedef struct {
 
 	/* Various flags for the rigid body. */
-	signed char flags;
+	unsigned char flags;
 
 	/* The rigid body this instance is derived from, in local space. */
 	physRigidBody *local;
@@ -61,32 +67,41 @@ typedef struct {
 	vec3 angularVelocity;    // Current angular velocity.
 	vec3 netForce;           // Force accumulator.
 	vec3 netTorque;          // Torque accumulator.
-
+signed char blah; /****/
 	/* Physical constraints. */
 	size_t constraintNum;
 	physConstraint *constraints;  // An array of constraints for the kinematics chain.
 
 } physRBInstance;
 
+/* Physics constraint functions. */
+void physConstraintInit(physConstraint *constraint);
+
 /* Physics rigid body functions. */
+void physRigidBodyInit(physRigidBody *body);
 void physRigidBodyGenerateMassProperties(physRigidBody *body, float **vertexMassArrays);
+signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_t *constraintNum, physConstraint **constraints,
+                              const skeleton *skl, const char *prgPath, const char *filePath);
 void physRigidBodyDelete(physRigidBody *body);
 
 /* Physics rigid body instance functions. */
 void physRBIInit(physRBInstance *prbi);
-signed char physRBICreate(physRBInstance *prbi, physRigidBody *body);
+signed char physRBIInstantiate(physRBInstance *prbi, physRigidBody *body);
 signed char physRBIStateCopy(physRBInstance *o, physRBInstance *c);
 signed char physRBIAddConstraint(physRBInstance *prbi, const physConstraint *c);
 
 void physRBIUpdateCollisionMesh(physRBInstance *prbi);
 
-void physRBIApplyForceAtGlobalPoint(physRBInstance *prbi, const vec3 *F, const vec3 *r);
-void physRBIAddLinearVelocity(physRBInstance *prbi, const vec3 *impulse);
-void physRBIApplyLinearImpulse(physRBInstance *prbi, const vec3 *impulse);
-void physRBIAddAngularVelocity(physRBInstance *prbi, const float angle, const float x, const float y, const float z);
+void physRBIApplyLinearForce(physRBInstance *prbi, const vec3 *F);
+void physRBIApplyAngularForceGlobal(physRBInstance *prbi, const vec3 *F, const vec3 *r);
+void physRBIApplyForceGlobal(physRBInstance *prbi, const vec3 *F, const vec3 *r);
+
+void physRBIBeginSimulation(physRBInstance *prbi);
 
 void physRBIIntegrateEuler(physRBInstance *prbi, const float dt);
 void physRBIIntegrateLeapfrog(physRBInstance *prbi, const float dt);
+
+void physRBIResolveCollision(physRBInstance *body1, physRBInstance *body2, const hbCollisionData *cd);
 
 void physRBIDelete(physRBInstance *prbi);
 

@@ -294,11 +294,15 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 
 			// Name
 			if(lineLength >= 6 && strncmp(line, "name ", 5) == 0){
-				if(line[5] == '"' && line[lineLength-1] == '"'){
-					++line;
-					lineLength -= 2;
-				}
 				if(currentCommand == -1){
+					while(line[5] == ' ' || line[5] == '\t'){
+						++line;
+						--lineLength;
+					}
+					if(line[5] == '"' && line[lineLength-1] == '"'){
+						++line;
+						lineLength -= 2;
+					}
 					tw->name = malloc((lineLength-4) * sizeof(char));
 					if(tw->name == NULL){
 						/** Memory allocation failure. **/

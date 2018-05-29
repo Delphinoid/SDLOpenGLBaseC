@@ -43,7 +43,7 @@ typedef struct {
 void rndrInit(renderable *rndr);
 
 void rndriInit(rndrInstance *rndr);
-void rndriCreate(rndrInstance *rndr, renderable *base);
+void rndriInstantiate(rndrInstance *rndr, renderable *base);
 void rndriDelete(rndrInstance *rndr);
 
 void rndrConfigInit(rndrConfig *rc);

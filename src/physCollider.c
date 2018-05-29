@@ -1,89 +1,281 @@
 #include "physCollider.h"
+#include "mat3.h"
 
-float physColliderGenerateMassProperties(physCollider *collider, float *vertexMassArray){
+#define PHYSICS_COLLIDER_DEFAULT_VERTEX_MASS 1
 
-	/*
-	** Calculates the collider's center of mass
-	** and default AABB. Returns the total mass.
-	*/
+static float physColliderGenerateMassMesh(physCollider *collider, float *vertexMassArray){
+
+	hbMesh *cHull = (hbMesh *)&collider->hb.hull;
 
 	float totalMass = 0.f;
 
-	if(collider->hull.vertexNum > 0){
+	if(cHull->vertexNum > 0){
 
 		size_t i;
-		vec3 *v0;
-		vec3 *v1;
-		float temp;
-		float doubleVolume = 0.f;
+		float inverseTotalMass;
+		float vertexMass;
 
 		// Initialize the AABB to the first vertex.
-		collider->aabb.left = collider->hull.vertices[0].x;
-		collider->aabb.right = collider->hull.vertices[0].x;
-		collider->aabb.top = collider->hull.vertices[0].y;
-		collider->aabb.bottom = collider->hull.vertices[0].y;
-		collider->aabb.front = collider->hull.vertices[0].z;
-		collider->aabb.back = collider->hull.vertices[0].z;
+		collider->aabb.left = cHull->vertices[0].x;
+		collider->aabb.right = cHull->vertices[0].x;
+		collider->aabb.top = cHull->vertices[0].y;
+		collider->aabb.bottom = cHull->vertices[0].y;
+		collider->aabb.front = cHull->vertices[0].z;
+		collider->aabb.back = cHull->vertices[0].z;
+
+		collider->centroid.x = 0.f;
+		collider->centroid.y = 0.f;
+		collider->centroid.z = 0.f;
 
 		// Recursively calculate the center of mass and the AABB.
-		for(i = 0; i < collider->hull.vertexNum; ++i){
+		for(i = 0; i < cHull->vertexNum; ++i){
 
-			v0 = &collider->hull.vertices[i-1];
-			v1 = &collider->hull.vertices[i];
-			temp = v0->x * v1->y - v0->y * v1->x * vertexMassArray[i];
-			collider->centroid.x += (v0->x + v1->x) * temp;
-			collider->centroid.y += (v0->y + v1->y) * temp;
-			collider->centroid.z += (v0->z + v1->z) * temp;
-			doubleVolume += temp;
-			totalMass += vertexMassArray[i];
+			if(vertexMassArray != NULL){
+				vertexMass = vertexMassArray[i];
+			}else{
+				vertexMass = PHYSICS_COLLIDER_DEFAULT_VERTEX_MASS;
+			}
+			collider->centroid.x += cHull->vertices[i].x * vertexMass;
+			collider->centroid.y += cHull->vertices[i].y * vertexMass;
+			collider->centroid.z += cHull->vertices[i].z * vertexMass;
+			totalMass += vertexMass;
 
 			// Update aabb.left and aabb.right.
-			if(collider->hull.vertices[i].x <= collider->aabb.left){
-				collider->aabb.left = collider->hull.vertices[i].x;
-			}else if(collider->hull.vertices[i].x > collider->aabb.right){
-				collider->aabb.right = collider->hull.vertices[i].x;
+			if(cHull->vertices[i].x <= collider->aabb.left){
+				collider->aabb.left = cHull->vertices[i].x;
+			}else if(cHull->vertices[i].x > collider->aabb.right){
+				collider->aabb.right = cHull->vertices[i].x;
 			}
 			// Update aabb.top and aabb.bottom.
-			if(collider->hull.vertices[i].y >= collider->aabb.top){
-				collider->aabb.top = collider->hull.vertices[i].y;
-			}else if(collider->hull.vertices[i].y < collider->aabb.bottom){
-				collider->aabb.bottom = collider->hull.vertices[i].y;
+			if(cHull->vertices[i].y >= collider->aabb.top){
+				collider->aabb.top = cHull->vertices[i].y;
+			}else if(cHull->vertices[i].y < collider->aabb.bottom){
+				collider->aabb.bottom = cHull->vertices[i].y;
 			}
 			// Update aabb.front and aabb.back.
-			if(collider->hull.vertices[i].z >= collider->aabb.front){
-				collider->aabb.front = collider->hull.vertices[i].z;
-			}else if(collider->hull.vertices[i].z < collider->aabb.back){
-				collider->aabb.back = collider->hull.vertices[i].z;
+			if(cHull->vertices[i].z >= collider->aabb.front){
+				collider->aabb.front = cHull->vertices[i].z;
+			}else if(cHull->vertices[i].z < collider->aabb.back){
+				collider->aabb.back = cHull->vertices[i].z;
 			}
 
 		}
 
-		// Final iteration with the last and first vertices.
-		v0 = &collider->hull.vertices[collider->hull.vertexNum-1];
-		v1 = &collider->hull.vertices[0];
-		temp = v0->x * v1->y - v0->y * v1->x * vertexMassArray[i];
-		collider->centroid.x += (v0->x + v1->x) * temp;
-		collider->centroid.y += (v0->y + v1->y) * temp;
-		collider->centroid.z += (v0->z + v1->z) * temp;
-		doubleVolume += temp;
-
 		// Calculate the mesh's final center of mass.
-		temp = 1.f / (3.f * doubleVolume * totalMass);
-		collider->centroid.x *= temp;
-		collider->centroid.y *= temp;
-		collider->centroid.z *= temp;
+		if(totalMass > 0.f){
+			inverseTotalMass = 1.f / totalMass;
+			collider->centroid.x *= inverseTotalMass;
+			collider->centroid.y *= inverseTotalMass;
+			collider->centroid.z *= inverseTotalMass;
+		}
 
 	}
 
 	return totalMass;
 
 }
+static void physColliderGenerateMomentMesh(const physCollider *collider, const vec3 *centroid, const float *vertexMassArray, float *inertiaTensor){
+
+	const hbMesh *cHull = (const hbMesh *)&collider->hb.hull;
+
+	size_t i;
+	inertiaTensor[0] = 0.f; inertiaTensor[1] = 0.f; inertiaTensor[2] = 0.f;
+	inertiaTensor[3] = 0.f; inertiaTensor[4] = 0.f; inertiaTensor[5] = 0.f;
+
+	for(i = 0; i < cHull->vertexNum; ++i){
+
+		const float x = cHull->vertices[i].x - centroid->x;  /** Is this correct? **/
+		const float y = cHull->vertices[i].y - centroid->y;
+		const float z = cHull->vertices[i].z - centroid->z;
+		const float sqrX = x*x;
+		const float sqrY = y*y;
+		const float sqrZ = z*z;
+		float vertexMass;
+		if(vertexMassArray != NULL){
+			vertexMass = vertexMassArray[i];
+		}else{
+			vertexMass = PHYSICS_COLLIDER_DEFAULT_VERTEX_MASS;
+		}
+		// xx
+		inertiaTensor[0] += (sqrY + sqrZ) * vertexMass;
+		// yy
+		inertiaTensor[1] += (sqrX + sqrZ) * vertexMass;
+		// zz
+		inertiaTensor[2] += (sqrX + sqrY) * vertexMass;
+		// xy yx
+		inertiaTensor[3] -= x * y * vertexMass;
+		// xz zx
+		inertiaTensor[4] -= x * z * vertexMass;
+		// yz zy
+		inertiaTensor[5] -= y * z * vertexMass;
+
+	}
+
+}
+static void physColliderUpdateMesh(physCollider *collider, const physCollider *local, const bone *configuration){
+
+	hbMesh *cGlobal = (hbMesh *)&collider->hb.hull;
+	const hbMesh *cLocal = (const hbMesh *)&local->hb.hull;
+
+	size_t i;
+
+	// Update the collider's global centroid.
+	collider->centroid.x = local->centroid.x + configuration->position.x;
+	collider->centroid.y = local->centroid.y + configuration->position.y;
+	collider->centroid.z = local->centroid.z + configuration->position.z;
+
+	for(i = 0; i < cGlobal->vertexNum; ++i){
+
+		// Transform the vertex.
+		// Subtract the local centroid from the vertex.
+		vec3SubVFromVR(&cLocal->vertices[i], &local->centroid, &cGlobal->vertices[i]);
+		// Rotate the new vertex around (0, 0, 0).
+		quatRotateVec3Fast(&configuration->orientation, &cGlobal->vertices[i]);
+		// Scale the vertex.
+		vec3MultVByV(&cGlobal->vertices[i], &configuration->scale);
+		// Translate it by the global centroid.
+		vec3AddVToV(&cGlobal->vertices[i], &collider->centroid);
+
+		// Update mesh minima and maxima.
+		if(i == 0){
+			// Initialize them to the first vertex.
+			collider->aabb.left = cGlobal->vertices[i].x;
+			collider->aabb.right = cGlobal->vertices[i].x;
+			collider->aabb.top = cGlobal->vertices[i].y;
+			collider->aabb.bottom = cGlobal->vertices[i].y;
+			collider->aabb.front = cGlobal->vertices[i].z;
+			collider->aabb.back = cGlobal->vertices[i].z;
+		}else{
+			// Update aabb.left and aabb.right.
+			if(cGlobal->vertices[i].x <= collider->aabb.left){
+				collider->aabb.left = cGlobal->vertices[i].x;
+			}else if(cGlobal->vertices[i].x > collider->aabb.right){
+				collider->aabb.right = cGlobal->vertices[i].x;
+			}
+			// Update aabb.top and aabb.bottom.
+			if(cGlobal->vertices[i].y >= collider->aabb.top){
+				collider->aabb.top = cGlobal->vertices[i].y;
+			}else if(cGlobal->vertices[i].y < collider->aabb.bottom){
+				collider->aabb.bottom = cGlobal->vertices[i].y;
+			}
+			// Update aabb.front and aabb.back.
+			if(cGlobal->vertices[i].z >= collider->aabb.front){
+				collider->aabb.front = cGlobal->vertices[i].z;
+			}else if(cGlobal->vertices[i].z < collider->aabb.back){
+				collider->aabb.back = cGlobal->vertices[i].z;
+			}
+		}
+
+	}
+
+}
+
+static float physColliderGenerateMassCapsule(physCollider *collider, float *vertexMassArray){
+
+	//
+
+}
+static void physColliderGenerateMomentCapsule(const physCollider *collider, const vec3 *centroid, const float *vertexMassArray, float *inertiaTensor){
+
+	//
+
+}
+static void physColliderUpdateCapsule(physCollider *collider, const physCollider *local, const bone *configuration){
+
+	//
+
+}
+
+static float physColliderGenerateMassSphere(physCollider *collider, float *vertexMassArray){
+
+	//
+
+}
+static void physColliderGenerateMomentSphere(const physCollider *collider, const vec3 *centroid, const float *vertexMassArray, float *inertiaTensor){
+
+	//
+
+}
+static void physColliderUpdateSphere(physCollider *collider, const physCollider *local, const bone *configuration){
+
+	//
+
+}
+
+static float physColliderGenerateMassAABB(physCollider *collider, float *vertexMassArray){
+
+	//
+
+}
+static void physColliderGenerateMomentAABB(const physCollider *collider, const vec3 *centroid, const float *vertexMassArray, float *inertiaTensor){
+
+	//
+
+}
+static void physColliderUpdateAABB(physCollider *collider, const physCollider *local, const bone *configuration){
+
+	//
+
+}
+
+
+typedef float (*physColliderGenerateMassPrototype)(physCollider*, float*);
+float physColliderGenerateMass(physCollider *collider, float *vertexMassArray){
+
+	/*
+	** Calculates the collider's center of mass
+	** and default AABB. Returns the total mass.
+	*/
+
+	physColliderGenerateMassPrototype physColliderJumpTable[4] = {
+		physColliderGenerateMassMesh,
+		physColliderGenerateMassCapsule,
+		physColliderGenerateMassSphere,
+		physColliderGenerateMassAABB
+	};
+
+	return physColliderJumpTable[collider->hb.type](collider, vertexMassArray);
+
+}
+
+typedef void (*physColliderGenerateMomentPrototype)(const physCollider*, const vec3*, const float*, float*);
+void physColliderGenerateMoment(const physCollider *collider, const vec3 *centroid, const float *vertexMassArray, float *inertiaTensor){
+
+	/*
+	** Calculates the collider's moment of inertia tensor.
+	*/
+
+	physColliderGenerateMomentPrototype physColliderJumpTable[4] = {
+		physColliderGenerateMomentMesh,
+		physColliderGenerateMomentCapsule,
+		physColliderGenerateMomentSphere,
+		physColliderGenerateMomentAABB
+	};
+
+	physColliderJumpTable[collider->hb.type](collider, centroid, vertexMassArray, inertiaTensor);
+
+}
+
+typedef void (*physColliderUpdatePrototype)(physCollider*, const physCollider*, const bone*);
+void physColliderUpdate(physCollider *collider, const physCollider *local, const bone *configuration){
+
+	/*
+	** Updates the collider for collision detection.
+	** Finds the new global AABB and updates the
+	** collider's global position.
+	*/
+
+	physColliderUpdatePrototype physColliderJumpTable[4] = {
+		physColliderUpdateMesh,
+		physColliderUpdateCapsule,
+		physColliderUpdateSphere,
+		physColliderUpdateAABB
+	};
+
+	physColliderJumpTable[collider->hb.type](collider, local, configuration);
+
+}
 
 void physColliderDelete(physCollider *collider){
-	if(collider->hull.vertices != NULL){
-		free(collider->hull.vertices);
-	}
-	if(collider->hull.indices != NULL){
-		free(collider->hull.indices);
-	}
+	hbDelete(&collider->hb);
 }

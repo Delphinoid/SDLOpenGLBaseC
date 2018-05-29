@@ -1,7 +1,7 @@
 #ifndef HITBOXSPHERE_H
 #define HITBOXSPHERE_H
 
-#include "vec3.h"
+//#include "vec3.h"
 
 typedef struct {
 	//vec3 centroid;

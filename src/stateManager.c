@@ -100,6 +100,10 @@ signed char stateObjectTypeUpdate(stateObjectType *objType){
 						/** Memory allocation failure. **/
 						return -1;
 					}
+					// Swap states 0 and 1 so that the pointer to 0 stays the same.
+					lastState = objType->instance[i].state[0];
+					objType->instance[i].state[0] = objType->instance[i].state[1];
+					objType->instance[i].state[1] = lastState;
 
 					// Done once again below.
 					(*objType->stateResetInterpolation)(objType->instance[i].state[0]);

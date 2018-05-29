@@ -1,7 +1,9 @@
 An extremely condensed version of the OpenGL / SDL application framework I'm currently working on, but written in C. The code is very messy and a few things have been modified before being dumped on GitHub. The updates I push to GitHub may be few and far between.
 
 List of features to be implemented:
+* Collision functions between various types of colliders.
 * Implement a skeletal-based physics system. Include bone restraints, restraint strengths and movement velocities from skeletal animations. Inertia can possibly be set to the floating point INFINITY value to skip physics simulations on objects?
+* Finish thread pool / tasking system.
 * (?) Add an entity struct that contains groups of renderables.
 * Render code should aim at rendering camera views.
 * Sprites should use index buffer objects like models.
@@ -10,6 +12,8 @@ List of features to be implemented:
 * Models should be able to use multiple textures.
 
 List of queued tweaks:
+* Merge RADIAN_RATIO.
+* Merge physIsland and scenes.
 * Quaternions need to be tweaked, as they give different results at different update rates.
 * Replace strtok() with a better function.
 * Tidy up and unify file parsing functionality. Each file parsing function pretty much needs a major rework. Maybe put them in separate files as well (e.g. textureWrapperIO.c).

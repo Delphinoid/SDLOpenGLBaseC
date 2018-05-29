@@ -53,6 +53,7 @@ void vec3DivNByV(const float x, const float y, const float z, vec3 *v);
 void vec3DivSByV(const float s, vec3 *v);
 
 float vec3GetMagnitude(const vec3 *v);
+float vec3GetInverseMagnitude(const vec3 *v);
 
 vec3 vec3GetUnit(const vec3 *v);
 vec3 vec3GetUnitFast(const vec3 *v);
@@ -64,5 +65,8 @@ vec3 vec3GetCross(const vec3 *v1, const vec3 *v2);
 void vec3Cross(const vec3 *v1, const vec3 *v2, vec3 *r);
 
 void vec3Lerp(const vec3 *v1, const vec3 *v2, const float t, vec3 *r);
+
+void vec3CombineLinear(const vec3 *v1, const vec3 *v2, const vec3 *v3,
+                       const float a, const float b, const float c, vec3 *r);
 
 #endif

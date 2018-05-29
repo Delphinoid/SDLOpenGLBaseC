@@ -10,6 +10,7 @@ void objInit(object *obj){
 	obj->animationCapacity = 0;
 	obj->skeletonBodies = NULL;
 	obj->skeletonBodyFlags = NULL;
+	obj->skeletonConstraintNum = NULL;
 	obj->skeletonConstraints = NULL;
 	obj->skeletonHitboxes = NULL;
 	obj->renderableNum = 0;
@@ -48,6 +49,10 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 
 			// Name
 			if(lineLength >= 6 && strncmp(line, "name ", 5) == 0){
+				while(line[5] == ' ' || line[5] == '\t'){
+					++line;
+					--lineLength;
+				}
 				if(line[5] == '"' && line[lineLength-1] == '"'){
 					++line;
 					lineLength -= 2;
@@ -67,6 +72,7 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 			// Skeleton
 			}else if(lineLength >= 10 && strncmp(line, "skeleton ", 9) == 0){
 
+				char *sklPath;
 				signed char skipLoad = 0;
 				size_t pathBegin;
 				size_t pathLength;
@@ -83,7 +89,7 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 					pathBegin = 9;
 					pathLength = lineLength-pathBegin;
 				}
-				char *sklPath = malloc((pathLength+1) * sizeof(char));
+				sklPath = malloc((pathLength+1) * sizeof(char));
 				if(sklPath == NULL){
 					/** Memory allocation failure. **/
 					objDelete(obj);
@@ -132,10 +138,104 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 			// Physics
 			}else if(lineLength >= 17 && strncmp(line, "skeletonPhysics ", 16) == 0){
 				if(obj->skl != NULL){
-					/** Load physics. **/
+
+					signed char r;
+					char *physPath;
+					physRigidBody *tempBuffer1;
+					unsigned char *tempBuffer2;
+					size_t *tempBuffer3;
+					physConstraint **tempBuffer4;
+					size_t pathBegin;
+					size_t pathLength;
+					const char *firstQuote = strchr(line+9, '"');
+					const char *secondQuote = NULL;
+					if(firstQuote != NULL){
+						++firstQuote;
+						pathBegin = firstQuote-line;
+						secondQuote = strrchr(firstQuote, '"');
+					}
+					if(secondQuote > firstQuote){
+						pathLength = secondQuote-firstQuote;
+					}else{
+						pathBegin = 9;
+						pathLength = lineLength-pathBegin;
+					}
+
+					physPath = malloc((pathLength+1) * sizeof(char));
+					if(physPath == NULL){
+						/** Memory allocation failure. **/
+						objDelete(obj);
+						free(fullPath);
+						fclose(objInfo);
+						return -1;
+					}
+					strncpy(physPath, line+pathBegin, pathLength);
+					physPath[pathLength] = '\0';
+
+					tempBuffer1 = realloc(obj->skeletonBodies, obj->skl->boneNum*sizeof(physRigidBody));
+					if(tempBuffer1 == NULL){
+						/** Memory allocation failure. **/
+						free(physPath);
+						objDelete(obj);
+						free(fullPath);
+						fclose(objInfo);
+						return -1;
+					}
+					obj->skeletonBodies = tempBuffer1;
+					tempBuffer2 = realloc(obj->skeletonBodyFlags, obj->skl->boneNum*sizeof(unsigned char));
+					if(tempBuffer2 == NULL){
+						/** Memory allocation failure. **/
+						free(physPath);
+						objDelete(obj);
+						free(fullPath);
+						fclose(objInfo);
+						return -1;
+					}
+					obj->skeletonBodyFlags = tempBuffer2;
+					tempBuffer3 = realloc(obj->skeletonConstraintNum, obj->skl->boneNum*sizeof(size_t));
+					if(tempBuffer2 == NULL){
+						/** Memory allocation failure. **/
+						free(physPath);
+						objDelete(obj);
+						free(fullPath);
+						fclose(objInfo);
+						return -1;
+					}
+					obj->skeletonConstraintNum = tempBuffer3;
+					tempBuffer4 = realloc(obj->skeletonConstraints, obj->skl->boneNum*sizeof(physConstraint *));
+					if(tempBuffer2 == NULL){
+						/** Memory allocation failure. **/
+						free(physPath);
+						objDelete(obj);
+						free(fullPath);
+						fclose(objInfo);
+						return -1;
+					}
+					obj->skeletonConstraints = tempBuffer4;
+
+					r = physRigidBodyLoad(obj->skeletonBodies, obj->skeletonBodyFlags,
+					                      obj->skeletonConstraintNum, obj->skeletonConstraints,
+					                      obj->skl, prgPath, physPath);
+					free(physPath);
+					if(r == -1){
+						/** Memory allocation failure. **/
+						objDelete(obj);
+						free(fullPath);
+						fclose(objInfo);
+						return -1;
+					}else if(r == 0){
+						free(obj->skeletonBodies);
+						free(obj->skeletonBodyFlags);
+						free(obj->skeletonConstraintNum);
+						free(obj->skeletonConstraints);
+						obj->skeletonBodies = NULL;
+						obj->skeletonBodyFlags = NULL;
+						obj->skeletonConstraintNum = NULL;
+						obj->skeletonConstraints = NULL;
+					}
 
 				}else{
-					printf("Error loading object \"%s\": Cannot load kinematics chain at line %u when no skeleton has been specified.\n", fullPath, currentLine);
+					printf("Error loading object \"%s\": Cannot load rigid bodies at line %u when no skeleton has been specified.\n", fullPath, currentLine);
 				}
 
 
@@ -152,6 +252,7 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 			// Animation
 			}else if(lineLength >= 11 && strncmp(line, "animation ", 10) == 0){
 
+				char *animPath;
 				sklAnim *sklaPointer = NULL;
 				signed char skipLoad = 0;
 				size_t pathBegin;
@@ -169,7 +270,7 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 					pathBegin = 9;
 					pathLength = lineLength-pathBegin;
 				}
-				char *animPath = malloc((pathLength+1) * sizeof(char));
+				animPath = malloc((pathLength+1) * sizeof(char));
 				if(animPath == NULL){
 					/** Memory allocation failure. **/
 					objDelete(obj);
@@ -468,7 +569,13 @@ void objDelete(object *obj){
 		if(obj->skeletonBodyFlags != NULL){
 			free(obj->skeletonBodyFlags);
 		}
+		if(obj->skeletonConstraintNum != NULL){
+			free(obj->skeletonConstraintNum);
+		}
 		if(obj->skeletonConstraints != NULL){
+			for(i = 0; i < obj->skl->boneNum; ++i){
+				free(obj->skeletonConstraints[i]);
+			}
 			free(obj->skeletonConstraints);
 		}
 		if(obj->skeletonHitboxes != NULL){
@@ -490,7 +597,6 @@ signed char objiInit(void *obji){
 	((objInstance *)obji)->configuration = NULL;
 	((objInstance *)obji)->skeletonState[0] = NULL;
 	((objInstance *)obji)->skeletonState[1] = NULL;
-	((objInstance *)obji)->physicsSimulate = 0;
 	((objInstance *)obji)->skeletonPhysics = NULL;
 	((objInstance *)obji)->skeletonHitboxes = NULL;
 	((objInstance *)obji)->renderableNum = 0;
@@ -609,11 +715,9 @@ signed char objiStateCopy(void *o, void *c){
 			}
 			return -1;
 		}
-		((objInstance *)c)->physicsSimulate = ((objInstance *)o)->physicsSimulate;
 
 	}else{
 		// Skeleton is NULL, free and reset everything.
-		((objInstance *)c)->physicsSimulate = 0;
 		if(((objInstance *)c)->configuration != NULL){
 			free(((objInstance *)c)->configuration);
 			((objInstance *)c)->configuration = NULL;
@@ -918,7 +1022,6 @@ signed char objiInstantiate(objInstance *obji, object *base){
 		}
 
 		/* Allocate memory for and initialize the rigid bodies if necessary. */
-		obji->physicsSimulate = 0;
 		if(base->skeletonBodies != NULL){
 
 			obji->skeletonPhysics = malloc(base->skl->boneNum * sizeof(physRBInstance));
@@ -934,15 +1037,14 @@ signed char objiInstantiate(objInstance *obji, object *base){
 
 			for(i = 0; i < base->skl->boneNum; ++i){
 				boneInit(&obji->configuration[i]);
-				if(physRBICreate(&obji->skeletonPhysics[i], &base->skeletonBodies[i]) == -1){
+				if(physRBIInstantiate(&obji->skeletonPhysics[i], &base->skeletonBodies[i]) == -1){
 					/** Memory allocation failure. **/
 					break;
 				}
 				/** Figure out constraint loading. **/
 				obji->skeletonPhysics[i].flags = base->skeletonBodyFlags[i];
-				if((obji->skeletonPhysics[i].flags & (PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_SIMULATE)) > 0){
-					++obji->physicsSimulate;
-				}
+				obji->skeletonPhysics[i].constraintNum = base->skeletonConstraintNum[i];
+				obji->skeletonPhysics[i].constraints = base->skeletonConstraints[i];
 			}
 			if(i < base->skl->boneNum){
 				/** Memory allocation failure. **/
@@ -975,7 +1077,7 @@ signed char objiInstantiate(objInstance *obji, object *base){
 	}
 
 	for(i = 0; i < base->renderableNum; ++i){
-		rndriCreate(&obji->renderables[i], &base->renderables[i]);
+		rndriInstantiate(&obji->renderables[i], &base->renderables[i]);
 	}
 
 	/** Remove the following line. **/
@@ -1009,7 +1111,7 @@ signed char objiNewRenderableFromBase(objInstance *obji, renderable *rndr){
 		return -1;
 	}
 	obji->renderables = tempBuffer;
-	rndriCreate(&obji->renderables[obji->renderableNum], rndr);
+	rndriInstantiate(&obji->renderables[obji->renderableNum], rndr);
 	++obji->renderableNum;
 	return 1;
 }
@@ -1123,9 +1225,6 @@ void objiBoneSetPhysicsFlags(objInstance *obji, size_t boneID, unsigned char fla
 		if((flags & (PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_SIMULATE)) > 0){
 			obji->skeletonPhysics[boneID].configuration[0] = obji->skeletonState[0][boneID];
 			obji->skeletonPhysics[boneID].configuration[1] = obji->skeletonState[1][boneID];
-			++obji->physicsSimulate;
-		}else if((obji->skeletonPhysics[boneID].flags & (PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_SIMULATE)) > 0){
-			--obji->physicsSimulate;
 		}
 		obji->skeletonPhysics[boneID].flags = flags;
 	}
@@ -1164,6 +1263,31 @@ void objiClearAnimation(objInstance *obji, const size_t slot){
 	skliClearAnimation(&obji->animationData, slot);
 }
 
+void objiApplyLinearForce(objInstance *obji, const size_t boneID, const vec3 *F){
+	physRBIApplyLinearForce(&obji->skeletonPhysics[boneID], F);
+}
+
+void objiApplyAngularForceGlobal(objInstance *obji, const size_t boneID, const vec3 *F, const vec3 *r){
+	physRBIApplyAngularForceGlobal(&obji->skeletonPhysics[boneID], F, r);
+}
+
+void objiApplyForceGlobal(objInstance *obji, const size_t boneID, const vec3 *F, const vec3 *r){
+	physRBIApplyForceGlobal(&obji->skeletonPhysics[boneID], F, r);
+}
+
+/*void objiApplyForceAtGlobalPoint(objInstance *obji, const size_t boneID, const vec3 *F, const vec3 *r){
+	physRBIApplyForceAtGlobalPoint(&obji->skeletonPhysics[boneID], F, r);
+}
+void objiAddLinearVelocity(objInstance *obji, const size_t boneID, const float x, const float y, const float z){
+	physRBIAddLinearVelocity(&obji->skeletonPhysics[boneID], x, y, z);
+}
+void objiApplyLinearImpulse(objInstance *obji, const size_t boneID, const float x, const float y, const float z){
+	physRBIApplyLinearImpulse(&obji->skeletonPhysics[boneID], x, y, z);
+}
+void objiAddAngularVelocity(objInstance *obji, const size_t boneID, const float angle, const float x, const float y, const float z){
+	physRBIAddAngularVelocity(&obji->skeletonPhysics[boneID], angle, x, y, z);
+}*/
+
 void objiUpdate(objInstance *obji, const camera *cam, const float elapsedTime, const float dt){
 
 	size_t i;
@@ -1181,20 +1305,43 @@ void objiUpdate(objInstance *obji, const camera *cam, const float elapsedTime, c
 	/* Update the object's skeleton. */
 	for(i = 0; i < obji->skl->boneNum; ++i){
 
+		signed char isRoot = i == obji->skl->bones[i].parent || obji->skl->bones[i].parent >= obji->skl->boneNum;
 		obji->skeletonState[0][i] = obji->configuration[i];
 		skliGenerateBoneState(&obji->animationData, &obji->skeletonState[0][i], i);
 
-		if(obji->physicsSimulate && obji->skeletonPhysics != NULL &&
-		   (obji->skeletonPhysics[i].flags & PHYSICS_BODY_SIMULATE)){
+		if(obji->skeletonPhysics != NULL){
 
 			/*
 			** Simulate the body attached to the bone.
 			*/
 
-			// Integrate the body and solve constraints if desired.
-			physRBIIntegrateEuler(&obji->skeletonPhysics[i], dt);
+			// Set the body's state to that of its bone when the bone starts being simulated.
+			/** This should be removed eventually. **/
+			if((obji->skeletonPhysics[i].flags & PHYSICS_BODY_INITIALIZE) > 0){
+				obji->skeletonPhysics[i].flags &= ~PHYSICS_BODY_INITIALIZE;
+				obji->skeletonPhysics[i].flags |= PHYSICS_BODY_SIMULATE;
+				obji->skeletonPhysics[i].configuration[0] = obji->skeletonState[0][i];
+				obji->skeletonPhysics[i].configuration[1] = obji->skeletonState[1][i];
+			}
 
-		}else{
+			if((obji->skeletonPhysics[i].flags & PHYSICS_BODY_SIMULATE)){
+
+				/** TEMPORARILY ADD GRAVITY. **/
+				if(!obji->skeletonPhysics[i].blah){
+				vec3 force; vec3Set(&force, 0.f, -98.0665f, 0.f);
+				objiApplyLinearForce(obji, 0, &force);
+				}
+				// Integrate the body and solve constraints if desired.
+				physRBIIntegrateEuler(&obji->skeletonPhysics[i], dt);
+
+				/** TEMPORARILY SET THE BONE STATE. **/
+				obji->skeletonState[0][i] = obji->skeletonPhysics[i].configuration[0];
+
+			}
+
+		}
+
+		if(obji->skeletonPhysics == NULL || !(obji->skeletonPhysics[i].flags & PHYSICS_BODY_SIMULATE)){
 
 			/*
 			** Apply animation transformations.
@@ -1213,167 +1360,18 @@ void objiUpdate(objInstance *obji, const camera *cam, const float elapsedTime, c
 			                               &obji->skeletonState[0][i].position);
 
 			// Apply the parent's transformations to each bone.
-			if(obji->skl->bones[i].parent < obji->skl->boneNum && i != obji->skl->bones[i].parent){
+			if(!isRoot){
 				boneTransformAppend(&obji->skeletonState[0][obji->skl->bones[i].parent], &obji->skeletonState[0][i], &obji->skeletonState[0][i]);
-
-			// Apply billboarding to root bones if necessary.
-			}else if((obji->tempRndrConfig.flags & (RNDR_BILLBOARD_X | RNDR_BILLBOARD_Y | RNDR_BILLBOARD_Z)) > 0){
-				// If any of the flags apart from RNDR_BILLBOARD_TARGET are set, continue.
-				/**
-				mat4 billboardRotation;
-				if((rc->flags & RNDR_BILLBOARD_SPRITE) > 0){
-					// Use a less accurate but faster method for billboarding.
-					vec3 right, up, forward;
-					// Use the camera's X, Y and Z axes for cheap sprite billboarding.
-					vec3Set(&right,   cam->viewMatrix.m[0][0], cam->viewMatrix.m[0][1], cam->viewMatrix.m[0][2]);
-					vec3Set(&up,      cam->viewMatrix.m[1][0], cam->viewMatrix.m[1][1], cam->viewMatrix.m[1][2]);
-					vec3Set(&forward, cam->viewMatrix.m[2][0], cam->viewMatrix.m[2][1], cam->viewMatrix.m[2][2]);
-					// Lock certain axes if needed.
-					if((rc->flags & RNDR_BILLBOARD_X) == 0){
-						right.y   = 0.f;
-						up.y      = 1.f;
-						forward.y = 0.f;
-					}
-					if((rc->flags & RNDR_BILLBOARD_Y) == 0){
-						right.x   = 1.f;
-						up.x      = 0.f;
-						forward.x = 0.f;
-					}
-					if((rc->flags & RNDR_BILLBOARD_Z) == 0){
-						right.z   = 0.f;
-						up.z      = 0.f;
-						forward.z = 1.f;
-					}
-					billboardRotation.m[0][0] = right.x; billboardRotation.m[0][1] = up.x; billboardRotation.m[0][2] = forward.x; billboardRotation.m[0][3] = 0.f;
-					billboardRotation.m[1][0] = right.y; billboardRotation.m[1][1] = up.y; billboardRotation.m[1][2] = forward.y; billboardRotation.m[1][3] = 0.f;
-					billboardRotation.m[2][0] = right.z; billboardRotation.m[2][1] = up.z; billboardRotation.m[2][2] = forward.z; billboardRotation.m[2][3] = 0.f;
-					billboardRotation.m[3][0] = 0.f;     billboardRotation.m[3][1] = 0.f;  billboardRotation.m[3][2] = 0.f;       billboardRotation.m[3][3] = 1.f;
-				}else{
-					vec3 eye, target, up;
-					if((rc->flags & RNDR_BILLBOARD_TARGET) > 0){
-						eye = rc->targetPosition.render;
-						target = rc->position.render;
-						vec3Set(&up, 0.f, 1.f, 0.f);
-						quatRotateVec3(&rc->targetOrientation.render, &up);
-					}else if((rc->flags & RNDR_BILLBOARD_TARGET_CAMERA) > 0){
-						eye = cam->position.render;
-						target = rc->position.render;
-						up = cam->up.render;
-					}else{
-						eye = cam->position.render;
-						target = cam->targetPosition.render;
-						up = cam->up.render;
-					}
-					// Lock certain axes if needed.
-					if((rc->flags & RNDR_BILLBOARD_X) == 0){
-						target.y = eye.y;
-					}
-					if((rc->flags & RNDR_BILLBOARD_Y) == 0){
-						target.x = eye.x;
-					}
-					if((rc->flags & RNDR_BILLBOARD_Z) == 0){
-						vec3Set(&up, 0.f, 1.f, 0.f);
-					}
-					mat4RotateToFace(&billboardRotation, &eye, &target, &up);
-				}
-				mat4MultMByM2(&billboardRotation, transformMatrix);  // Apply billboard rotation
-				**/
-
-			}
-
-			// Update the positions of each rigid body connected to this bone.
-			if(obji->skeletonPhysics != NULL){
-				obji->skeletonPhysics[i].configuration[0] = obji->skeletonState[0][i];
-				obji->skeletonPhysics[i].configuration[1] = obji->skeletonState[1][i];
 			}
 
 		}
 
-		// If the body can collide, update its collision mesh.
-		if(obji->physicsSimulate && obji->skeletonPhysics != NULL){
-			if((obji->skeletonPhysics[i].flags & PHYSICS_BODY_INITIALIZE) > 0){
-				obji->skeletonPhysics[i].flags &= ~PHYSICS_BODY_INITIALIZE;
-				obji->skeletonPhysics[i].flags |= PHYSICS_BODY_SIMULATE;
-			}
-			if((obji->skeletonPhysics[i].flags & PHYSICS_BODY_COLLIDE) > 0){
-				physRBIUpdateCollisionMesh(&obji->skeletonPhysics[i]);
-			}
-		}
-
-	}
-
-	for(i = 0; i < obji->skl->boneNum; ++i){
-
-		// Apply the object skeleton's bind offsets.
-		/*obji->skeletonState[0][i].position.x += obji->skl->bones[i].defaultState.position.x;
-		obji->skeletonState[0][i].position.y += obji->skl->bones[i].defaultState.position.y;
-		obji->skeletonState[0][i].position.z += obji->skl->bones[i].defaultState.position.z;*/
-
-		/*bone thing = obji->skl->bones[i].defaultState;
-		boneStateInvert(&thing, &thing);
-		boneTransformAppend(&obji->skeletonState[0][i], &thing, &obji->skeletonState[0][i]);*/
-
-		// Apply the object skeleton's bind offsets.
-		/*boneTransformAppendPositionVec(&obji->skeletonState[0][i],
-		                               -obji->skl->bones[i].defaultState.position.x,
-		                               -obji->skl->bones[i].defaultState.position.y,
-		                               -obji->skl->bones[i].defaultState.position.z,
-		                               &obji->skeletonState[0][i]);*/
-	}
-	/* Transform the bones to global space and update the object's physics skeleton. */
-	/*for(i = 0; i < obji->skl->boneNum; ++i){
-
-		**
-		*** This is pretty bad, but I'm not sure if I have a choice short of
-		*** merging bones and physics bodies or something weird like that.
-		**
-		// Transform bones from local to global space.
-		boneTransformAppendPosition(&obji->skl->bones[i].defaultState, &obji->skeletonState[0][i], &obji->skeletonState[0][i]);
-
-		if(obji->skl->bones[i].parent < obji->skl->boneNum && i != obji->skl->bones[i].parent){
-			// Transform parent into local space before applying transformations here.
-			boneInvert(&obji->skl->bones[obji->skl->bones[i].parent].defaultState, &transformBone);
-			boneTransformAppend(&obji->skeletonState[0][obji->skl->bones[i].parent], &transformBone, &transformBone);
-			// Apply parent transformations.
-			boneTransformAppend(&transformBone, &obji->skeletonState[0][i], &obji->skeletonState[0][i]);
-
-		// Apply billboarding to root bones if necessary.
-		}else if((obji->tempRndrConfig.flags & (RNDR_BILLBOARD_X | RNDR_BILLBOARD_Y | RNDR_BILLBOARD_Z)) > 0){
-            //
-		}
-
-		// Update the positions of each rigid body connected to this bone.
-		if(obji->physicsState != NULL && !obji->physicsSimulate &&
-		   (obji->physicsState[i].flags & PHYSICS_BODY_SIMULATE) == 0){
-
-			// Translate the bone into global space for the physics object.
-			boneInvert(&obji->skl->bones[obji->skl->bones[i].parent].defaultState, &transformBone);
-			boneTransformAppend(&obji->skeletonState[0][i], &transformBone,
-			                    &obji->physicsState[i].configuration);
-
-		}
-
-		// Update the positions of each rigid body connected to this bone.
-		//for(j = 0; j < obji->renderableNum; ++j){
-
-			// Only bodies that are not being simulated are affected by skeletal animations.
-			** Use a lookup, same in renderScene.c. **
-			*rndrBone = sklFindBone(obji->renderables[j].mdl->skl, obji->skl->bones[i].name);
-			if(rndrBone < obji->renderables[j].mdl->skl->boneNum &&
-			   obji->renderables[j].physicsState != NULL && !obji->renderables[j].physicsSimulate &&
-			   (obji->renderables[j].physicsState[rndrBone].flags & PHYSICS_BODY_SIMULATE) == 0){
-
-			   	// Translate the bone into global space for the physics object.
-			   	boneInvert(&obji->skl->bones[obji->skl->bones[i].parent].defaultState, &transformBone);
-			   	boneTransformAppend(&obji->skeletonState[0][i], &transformBone,
-				                    &obji->renderables[j].physicsState[rndrBone].configuration);
-
-			}*
-
-		//}
-
+		// Apply billboarding to the root bone if necessary.
+		if(isRoot && (obji->tempRndrConfig.flags & (RNDR_BILLBOARD_X | RNDR_BILLBOARD_Y | RNDR_BILLBOARD_Z)) > 0){
+			/** Should work with physics objects? **/
+			/**
 			// If any of the flags apart from RNDR_BILLBOARD_TARGET are set, continue.
-			**mat4 billboardRotation;
+			mat4 billboardRotation;
 			if((rc->flags & RNDR_BILLBOARD_SPRITE) > 0){
 				// Use a less accurate but faster method for billboarding.
 				vec3 right, up, forward;
@@ -1430,18 +1428,17 @@ void objiUpdate(objInstance *obji, const camera *cam, const float elapsedTime, c
 				mat4RotateToFace(&billboardRotation, &eye, &target, &up);
 			}
 			mat4MultMByM2(&billboardRotation, transformMatrix);  // Apply billboard rotation
-		}**
+			**/
+		}
 
-		// Only bodies that are not being simulated are affected by skeletal animations.
-		*if(obji->physicsSimulate && (obji->physicsState[i].flags & PHYSICS_BODY_SIMULATE) == 0){
-			// Apply the bone's change in position to the physics object.
-			obji->physicsState[i].position = obji->skeletonState[0][i].position;
-			// Apply the bone's change in orientation to the physics object.
-			obji->physicsState[i].orientation = obji->skeletonState[0][i].orientation;
-		}*
+		if(obji->skeletonPhysics != NULL && (obji->skeletonPhysics[i].flags & PHYSICS_BODY_COLLIDE) > 0){
+			/*
+			** Update the body's collision mesh.
+			*/
+			physRBIUpdateCollisionMesh(&obji->skeletonPhysics[i]);
+		}
 
-	}*/
-
+	}
 
 	/* Update each of the object's texture wrappers. */
 	for(i = 0; i < obji->renderableNum; ++i){

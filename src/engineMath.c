@@ -58,10 +58,14 @@ void faceNormal(const vec3 *a, const vec3 *b, const vec3 *c, vec3 *r){
 }
 
 vec3 getBarycentric(const vec3 *a, const vec3 *b, const vec3 *c, const vec3 *p){
+	/*
+	** Calculate the barycentric coordinates of
+	** point p in triangle abc.
+	*/
 	vec3 r, v1, v2, v3;
 	vec3SubVFromVR(b, a, &v1);
-	vec3SubVFromVR(c, a, &v1);
-	vec3SubVFromVR(p, a, &v1);
+	vec3SubVFromVR(c, a, &v2);
+	vec3SubVFromVR(p, a, &v3);
 	const float d11 = vec3Dot(&v1, &v1);
 	const float d12 = vec3Dot(&v1, &v2);
 	const float d22 = vec3Dot(&v2, &v2);
@@ -74,16 +78,21 @@ vec3 getBarycentric(const vec3 *a, const vec3 *b, const vec3 *c, const vec3 *p){
 	return r;
 }
 void barycentric(const vec3 *a, const vec3 *b, const vec3 *c, const vec3 *p, vec3 *r){
+	/*
+	** Calculate the barycentric coordinates of
+	** point p in triangle abc.
+	*/
 	vec3 v1, v2, v3;
 	vec3SubVFromVR(b, a, &v1);
-	vec3SubVFromVR(c, a, &v1);
-	vec3SubVFromVR(p, a, &v1);
+	vec3SubVFromVR(c, a, &v2);
+	vec3SubVFromVR(p, a, &v3);
 	const float d11 = vec3Dot(&v1, &v1);
 	const float d12 = vec3Dot(&v1, &v2);
 	const float d22 = vec3Dot(&v2, &v2);
 	const float d31 = vec3Dot(&v3, &v1);
 	const float d32 = vec3Dot(&v3, &v2);
-	const float denomInv = 1.f / (d11 * d22 - d12 * d12);
+	const float denom = d11 * d22 - d12 * d12;
+	const float denomInv = denom == 0.f ? 0.f : 1.f / denom;
 	r->y = (d22 * d31 - d12 * d32) * denomInv;
 	r->z = (d11 * d32 - d12 * d31) * denomInv;
 	r->x = 1.f - r->y - r->z;

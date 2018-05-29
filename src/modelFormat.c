@@ -147,6 +147,10 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 
 			// Name
 			if(name != NULL && *name == NULL && lineLength >= 6 && strncmp(line, "name ", 5) == 0){
+				while(line[5] == ' ' || line[5] == '\t'){
+					++line;
+					--lineLength;
+				}
 				if(line[5] == '"' && line[lineLength-1] == '"'){
 					++line;
 					lineLength -= 2;
@@ -354,16 +358,16 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 				for(i = 0; i < 3; ++i){
 
 					// Load face data
-					positionIndex[i] = strtoul(token, NULL, 0);
+					positionIndex[i] = strtoul(token, NULL, 0)-1;
 					token = strtok(NULL, " /");
-					uvIndex[i] = strtoul(token, NULL, 0);
+					uvIndex[i] = strtoul(token, NULL, 0)-1;
 					token = strtok(NULL, " /");
-					normalIndex[i] = strtoul(token, NULL, 0);
+					normalIndex[i] = strtoul(token, NULL, 0)-1;
 					token = strtok(NULL, " /");
 
 					// Create a vertex from the given data
 					// Vertex positional data
-					size_t pos = (positionIndex[i]-1)*3;
+					size_t pos = positionIndex[i]*3;
 					if(pos+2 < tempPositionsSize){
 						tempVert.position.x = tempPositions[pos];
 						tempVert.position.y = tempPositions[pos+1];
@@ -374,7 +378,7 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 						tempVert.position.z = 0.f;
 					}
 					// Vertex UV data
-					pos = (uvIndex[i]-1)<<1;
+					pos = uvIndex[i]<<1;
 					if(pos+1 < tempTexCoordsSize){
 						tempVert.u = tempTexCoords[pos];
 						tempVert.v = -tempTexCoords[pos+1];
@@ -383,7 +387,7 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 						tempVert.v = 0.f;
 					}
 					// Vertex normal data
-					pos = (normalIndex[i]-1)*3;
+					pos = normalIndex[i]*3;
 					if(pos+2 < tempNormalsSize){
 						tempVert.normal.x = tempNormals[pos];
 						tempVert.normal.y = tempNormals[pos+1];
@@ -394,7 +398,7 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 						tempVert.normal.z = 0.f;
 					}
 					/****/
-					pos = (positionIndex[i]-1)*4;
+					pos = positionIndex[i]*4;
 					if(pos+3 < tempBoneIDsSize){
 						tempVert.bIDs[0] = tempBoneIDs[pos];
 						tempVert.bIDs[1] = tempBoneIDs[pos+1];
@@ -407,7 +411,7 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 						tempVert.bIDs[3] = -1;
 					}
 					/****/
-					pos = (positionIndex[i]-1)*4;
+					pos = positionIndex[i]*4;
 					if(pos+3 < tempBoneWeightsSize){
 						tempVert.bWeights[0] = tempBoneWeights[pos];
 						tempVert.bWeights[1] = tempBoneWeights[pos+1];

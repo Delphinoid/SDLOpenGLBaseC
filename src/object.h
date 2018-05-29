@@ -21,10 +21,11 @@ typedef struct {
 	sklAnim **animations;      // Array of pointers to animations associated with the object.
 	size_t animationCapacity;  // The maximum number of animations that the object can play at once.
 
-	physRigidBody *skeletonBodies;        // Rigid bodies for each bone.
-	signed char *skeletonBodyFlags;       // Default flags for each rigid body.
-	physConstraint *skeletonConstraints;  // Default constraints for each bone.
-	hbArray *skeletonHitboxes;            // Hitboxes for each bone.
+	physRigidBody *skeletonBodies;         // Rigid bodies for each bone.
+	unsigned char *skeletonBodyFlags;      // Default flags for each rigid body.
+	size_t *skeletonConstraintNum;         // Number of default constraints for each bone.
+	physConstraint **skeletonConstraints;  // Default constraints for each bone.
+	hbArray *skeletonHitboxes;             // Hitboxes for each bone.
 
 	size_t renderableNum;     // Default number of attached renderables.
 	renderable *renderables;  // Default renderable array.
@@ -47,10 +48,7 @@ typedef struct {
 	/** Split these into three arrays for position, orientation and scale? **/
 	bone *skeletonState[2];  // The global skeleton states from the current and previous updates.
 
-	size_t physicsSimulate;  // Whether or not to simulate physics on the skeleton.
-	                         // Equal to the number of bones being simulated.
 	physRBInstance *skeletonPhysics;  // Array of physics bodies, one for each bone in skl.
-
 	hbArray *skeletonHitboxes;  // Array of hitbox arrays, one for each bone in skl.
 
 	size_t renderableNum;       // Current number of attached renderables.
@@ -85,6 +83,15 @@ sklAnim *objiFindAnimation(objInstance *obji, const char *name);
 void objiSetAnimationType(objInstance *obji, const size_t slot, const signed char additive);
 signed char objiChangeAnimation(objInstance *obji, const size_t slot, sklAnim *anim, const size_t frame, const float blendTime);
 void objiClearAnimation(objInstance *obji, const size_t slot);
+
+void objiApplyLinearForce(objInstance *obji, const size_t boneID, const vec3 *F);
+void objiApplyAngularForceGlobal(objInstance *obji, const size_t boneID, const vec3 *F, const vec3 *r);
+void objiApplyForceGlobal(objInstance *obji, const size_t boneID, const vec3 *F, const vec3 *r);
+
+/*void objiApplyForceAtGlobalPoint(objInstance *obji, const size_t boneID, const vec3 *F, const vec3 *r);
+void objiAddLinearVelocity(objInstance *obji, const size_t boneID, const float x, const float y, const float z);
+void objiApplyLinearImpulse(objInstance *obji, const size_t boneID, const float x, const float y, const float z);
+void objiAddAngularVelocity(objInstance *obji, const size_t boneID, const float angle, const float x, const float y, const float z);*/
 
 void objiUpdate(objInstance *obj, const camera *cam, const float elapsedTime, const float dt);
 signed char objiRenderMethod(objInstance *obji, const float interpT);

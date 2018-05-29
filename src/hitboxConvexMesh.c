@@ -1,9 +1,12 @@
 #include "hitboxConvexMesh.h"
+#include "hitboxCollision.h"
 #include "engineMath.h"
-#include <math.h>
 #include <string.h>
+#include <math.h>
 
-#define COLLISION_DISTANCE_THRESHOLD 0.0001f
+#define COLLISION_MAX_ITERATIONS 64
+#define COLLISION_MAX_FACE_NUM_EPA 64
+#define COLLISION_MAX_EDGE_NUM_EPA 32
 
 signed char hbMeshWavefrontObjLoad(hbMesh *hbm, const char *filePath);
 
@@ -14,41 +17,12 @@ void hbMeshInit(hbMesh *hbm){
 	hbm->indices = NULL;
 }
 
-signed char hbMeshLoad(hbMesh *hbm, const char *prgPath, const char *filePath){
-
-	signed char r;
-	hbMeshInit(hbm);
-
-	size_t pathLen = strlen(prgPath);
-	size_t fileLen = strlen(filePath);
-	char *fullPath = malloc((pathLen+fileLen+1)*sizeof(char));
-	if(fullPath == NULL){
-		/** Memory allocation failure. **/
-		return -1;
-	}
-	memcpy(fullPath, prgPath, pathLen);
-	memcpy(fullPath+pathLen, filePath, fileLen);
-	fullPath[pathLen+fileLen] = '\0';
-
-	/** Replace and move the loading function here. **/
-	r = hbMeshWavefrontObjLoad(hbm, fullPath);
-	if(r <= 0){
-		free(fullPath);
-		return r;
-	}
-	free(fullPath);
-
-	return 1;
-
-}
-
 static size_t hbMeshCollisionGetFarthestVertexIndex(const hbMesh *c, const vec3 *axis){
 	/*
-	** Finds the vertex in mesh that is farthest in
+	** Finds the vertex in c that is farthest in
 	** the direction of axis by projecting each
-	** vertex onto the axis.
+	** vertex onto axis.
 	*/
-	/** Generate a world state for each vertex? Not here actually, that makes no sense. **/
 	size_t r = 0;
 	float max = vec3Dot(&c->vertices[0], axis);
 	for(size_t i = 1; i < c->vertexNum; ++i){
@@ -61,7 +35,7 @@ static size_t hbMeshCollisionGetFarthestVertexIndex(const hbMesh *c, const vec3 
 	return r;
 }
 
-static void hbMeshCollisionMinkowskiSupport(const hbMesh *c1, const hbMesh *c2, const vec3 *axis, hbSupportVertex *r){
+static void hbMeshCollisionMinkowskiSupport(const hbMesh *c1, const hbMesh *c2, const vec3 *axis, hbMeshSupportVertex *r){
 	/*
 	** Returns a point in Minkowski space on the edge of
 	** the polygons' "Minkowski difference".
@@ -81,7 +55,7 @@ static void hbMeshCollisionMinkowskiSupport(const hbMesh *c1, const hbMesh *c2, 
 	vec3SubVFromVR(&c1->vertices[r->i1], &c2->vertices[r->i2], &r->v);
 }
 
-static inline void hbMeshCollisionGJKTriangle(unsigned char *simplexVertices, hbSupportVertex simplex[4], vec3 *axis){
+static inline void hbMeshCollisionGJKTriangle(unsigned char *simplexVertices, hbMeshSupportVertex simplex[4], vec3 *axis){
 
 	const vec3 AO = {.x = -simplex[0].v.x,
 	                 .y = -simplex[0].v.y,
@@ -146,7 +120,7 @@ static inline void hbMeshCollisionGJKTriangle(unsigned char *simplexVertices, hb
 
 }
 
-static inline signed char hbMeshCollisionGJKTetrahedron(unsigned char *simplexVertices, hbSupportVertex *simplex, vec3 *axis){
+static inline signed char hbMeshCollisionGJKTetrahedron(unsigned char *simplexVertices, hbMeshSupportVertex *simplex, vec3 *axis){
 
 	// Check if the normal of ABC is crossing the origin.
 	const vec3 AO = {.x = -simplex[0].v.x,
@@ -193,12 +167,14 @@ static inline signed char hbMeshCollisionGJKTetrahedron(unsigned char *simplexVe
 
 }
 
-signed char hbMeshCollisionGJK(const hbMesh *c1, const vec3 *c1c, const hbMesh *c2, const vec3 *c2c, hbSupportVertex *simplex){
+signed char hbMeshCollisionGJK(const hbMesh *c1, const vec3 *c1c, const hbMesh *c2, const vec3 *c2c, hbMeshSupportVertex *simplex){
 
 	/*
 	** Implementation of the Gilbert-Johnson-Keerthi distance algorithm,
 	** which is only compatible with convex polytopes.
 	*/
+
+	size_t i;
 
 	// Set the current number of vertices of our simplex. We will be
 	// creating a line segment with vertices B and C before the main
@@ -222,7 +198,7 @@ signed char hbMeshCollisionGJK(const hbMesh *c1, const vec3 *c1c, const hbMesh *
 	// If the origin was not crossed, the Minkowski space is
 	// entirely on one side of the origin, so the two
 	// polygons cannot be overlapping.
-	if(vec3Dot(&simplex[1].v, &axis) <= 0.f){
+	if(vec3Dot(&simplex[1].v, &axis) < 0.f){
 		return 0;
 	}else{
 		const vec3 BO = {.x = -simplex[1].v.x,
@@ -247,7 +223,7 @@ signed char hbMeshCollisionGJK(const hbMesh *c1, const vec3 *c1c, const hbMesh *
 		}
 	}
 
-	while(1){
+	for(i = 0; i < COLLISION_MAX_ITERATIONS; ++i){
 
 		// Add a new vertex to our simplex.
 		hbMeshCollisionMinkowskiSupport(c1, c2, &axis, &simplex[0]);
@@ -271,9 +247,11 @@ signed char hbMeshCollisionGJK(const hbMesh *c1, const vec3 *c1c, const hbMesh *
 
 	}
 
+	return 0;
+
 }
 
-signed char hbMeshCollisionMPR(const hbMesh *c1, const vec3 *c1c, const hbMesh *c2, const vec3 *c2c, hbSupportVertex *simplex){
+signed char hbMeshCollisionMPR(const hbMesh *c1, const vec3 *c1c, const hbMesh *c2, const vec3 *c2c, hbMeshSupportVertex *simplex){
 
 	/*
 	** Implementation of the Minkowski Portal Refinement algorithm,
@@ -283,9 +261,10 @@ signed char hbMeshCollisionMPR(const hbMesh *c1, const vec3 *c1c, const hbMesh *
 	** http://xenocollide.snethen.com/mpr2d.html
 	*/
 
+	size_t i;
 	vec3 originRay, axis;
 	vec3 vecSubVec1, vecSubVec2;
-	hbSupportVertex tempVertex;
+	hbMeshSupportVertex tempVertex;
 
 	/*
 	** Phase 1: Portal Discovery.
@@ -342,7 +321,7 @@ signed char hbMeshCollisionMPR(const hbMesh *c1, const vec3 *c1c, const hbMesh *
 		// If the origin is on the other side of the portal plane
 		// containing v0, v1 and v2, search in the opposite direction.
 		if(vec3Dot(&axis, &originRay) < 0.f){
-			const hbSupportVertex temp = simplex[1];
+			const hbMeshSupportVertex temp = simplex[1];
 			simplex[1] = simplex[2];
 			simplex[2] = temp;
 		}else{
@@ -365,11 +344,10 @@ signed char hbMeshCollisionMPR(const hbMesh *c1, const vec3 *c1c, const hbMesh *
 
 	}
 
-
 	/*
 	** Phase 2: Portal Refinement.
 	*/
-	while(1){
+	for(i = 0; i < COLLISION_MAX_ITERATIONS; ++i){
 
 		// If the origin is on the same side of the portal plane
 		// as the interior point v0, we have found our simplex.
@@ -416,9 +394,37 @@ signed char hbMeshCollisionMPR(const hbMesh *c1, const vec3 *c1c, const hbMesh *
 
 	}
 
+	return 0;
+
 }
 
-signed char hbMeshCollisionEPA(const hbMesh *c1, const hbMesh *c2, const hbSupportVertex *simplex, hbMeshCollisionData *cd){
+typedef struct {
+	// Three vertices and a normal.
+	hbMeshSupportVertex vertex[3];
+	vec3 normal;
+} hbMeshEPAFaceHelper;
+
+static inline void hbMeshEPAFaceInit(hbMeshEPAFaceHelper *face, const hbMeshSupportVertex *v0, const hbMeshSupportVertex *v1, const hbMeshSupportVertex *v2){
+	// Create a new face.
+	face->vertex[0] = *v0;
+	face->vertex[1] = *v1;
+	face->vertex[2] = *v2;
+	faceNormal(&v0->v, &v1->v, &v2->v, &face->normal);
+	vec3NormalizeFast(&face->normal);
+}
+
+typedef struct {
+	// An edge that will be removed.
+	hbMeshSupportVertex vertex[2];
+} hbMeshEPAEdgeHelper;
+
+static inline void hbMeshEPAEdgeInit(hbMeshEPAEdgeHelper *edge, const hbMeshSupportVertex *v0, const hbMeshSupportVertex *v1){
+	// Create a new face.
+	edge->vertex[0] = *v0;
+	edge->vertex[1] = *v1;
+}
+
+void hbMeshCollisionEPA(const hbMesh *c1, const hbMesh *c2, hbMeshSupportVertex *simplex, hbCollisionData *cd){
 
 	/*
 	** Implementation of the expanding polytope algorithm. Extrapolates
@@ -426,22 +432,16 @@ signed char hbMeshCollisionEPA(const hbMesh *c1, const hbMesh *c2, const hbSuppo
 	** simplex generated by the Gilbert-Johnson-Keerthi algorithm.
 	*/
 
-	// Create dynamic arrays for the polytope.
-	size_t vertexNum = 4;
-	size_t vertexCapacity = 8;
-	hbSupportVertex *vertices = malloc(vertexCapacity*sizeof(hbSupportVertex));
-	if(vertices == NULL){
-		/** Memory allocation failure. **/
-		return -1;
-	}
-	size_t indexNum = 12;
-	size_t indexCapacity = 48;
-	size_t *indices = malloc(indexCapacity*sizeof(size_t));
-	if(indices == NULL){
-		/** Memory allocation failure. **/
-		free(vertices);
-		return -1;
-	}
+	size_t i, j, k, l;
+	size_t closestFace;
+	float distance;
+	hbMeshSupportVertex point;
+
+	// Create the face and edge arrays.
+	size_t faceNum = 4;
+	hbMeshEPAFaceHelper faces[COLLISION_MAX_FACE_NUM_EPA];
+	size_t edgeNum = 0;
+	hbMeshEPAEdgeHelper edges[COLLISION_MAX_EDGE_NUM_EPA];
 
 	// Ensure the vertex winding order of the simplex is CCW.
 	vec3 temp1, temp2, temp3;
@@ -449,284 +449,180 @@ signed char hbMeshCollisionEPA(const hbMesh *c1, const hbMesh *c2, const hbSuppo
 	vec3SubVFromVR(&simplex[2].v, &simplex[3].v, &temp2);
 	vec3Cross(&temp1, &temp2, &temp3);
 	vec3SubVFromVR(&simplex[0].v, &simplex[3].v, &temp1);
-	if(vec3Dot(&temp1, &temp3) > 0.f){
+	if(vec3Dot(&temp1, &temp3) < 0.f){
 		// If it's not, swap two vertices.
-		vertices[0] = simplex[1];
-		vertices[1] = simplex[0];
-	}else{
-		vertices[0] = simplex[0];
-		vertices[1] = simplex[1];
+		hbMeshSupportVertex swap = simplex[0];
+		simplex[0] = simplex[1];
+		simplex[1] = swap;
 	}
 
-	// Start with the given tetrahedron.
-	vertices[2] = simplex[2];
-	vertices[3] = simplex[3];
-	indices[0] = 0; indices[1]  = 1; indices[2]  = 2;  // Face 1
-	indices[3] = 0; indices[4]  = 1; indices[5]  = 3;  // Face 2
-	indices[6] = 0; indices[7]  = 2; indices[8]  = 3;  // Face 3
-	indices[9] = 1; indices[10] = 2; indices[11] = 3;  // Face 4
+	// Generate a starting tetrahedron from the given vertices.
+	hbMeshEPAFaceInit(&faces[0], &simplex[0], &simplex[1], &simplex[2]);  // Face 1 - ABC
+	hbMeshEPAFaceInit(&faces[1], &simplex[0], &simplex[2], &simplex[3]);  // Face 2 - ACD
+	hbMeshEPAFaceInit(&faces[2], &simplex[0], &simplex[3], &simplex[1]);  // Face 3 - ADB
+	hbMeshEPAFaceInit(&faces[3], &simplex[1], &simplex[3], &simplex[2]);  // Face 4 - BDC
 
-	size_t face = 0;
-	vec3 normal;
-	float distance = 0.f;
-
-	while(1){
-
-		float newDistance = 1.f/0.f;  // INFINITY
+	/*
+	** Find the edge on the Minkowski difference closest to the origin.
+	*/
+	for(i = 0; i < COLLISION_MAX_ITERATIONS; ++i){
 
 		/*
 		** Find the closest face to the origin.
 		*/
-		size_t i;
-		for(i = 0; i < indexNum; i+=3){
+		closestFace = 0;
+		distance = vec3Dot(&faces[0].vertex[0].v, &faces[0].normal);
+		for(j = 1; j < faceNum; ++j){
+
 			// Get the minimum distance between the current face and the origin.
 			// This is the dot product between the face's normal and one of its vertices.
-			vec3 tempNormal;
-			float tempDistance;
-			faceNormal(&vertices[indices[i]].v, &vertices[indices[i+1]].v, &vertices[indices[i+2]].v, &tempNormal);
-			vec3NormalizeFast(&tempNormal);
-			tempDistance = vec3Dot(&tempNormal, &vertices[indices[i]].v);
-			if(tempDistance < newDistance){
-				face = i;
-				normal = tempNormal;
-				newDistance = tempDistance;
-            }
+			const float tempDistance = vec3Dot(&faces[j].vertex[0].v, &faces[j].normal);
+
+			if(tempDistance < distance){
+				// New closest face found.
+				closestFace = j;
+				distance = tempDistance;
+			}
+
 		}
 
 		/*
-		** If the closest face is not much closer to the origin than the last face OR it is on
-		** the edge of the Minkowski difference (it is part of the closest face), break from
-		** the loop, otherwise remove each face that can be "seen" by this point and add new
-		** ones to patch the gap in the polytope.
+		** Search in the direction of the closest face to find
+		** a point on the edge of the Minkowski difference.
 		*/
-		if(newDistance - distance < COLLISION_DISTANCE_THRESHOLD){
+		hbMeshCollisionMinkowskiSupport(c1, c2, &faces[closestFace].normal, &point);
+		if(vec3Dot(&point.v, &faces[closestFace].normal) - distance < COLLISION_DISTANCE_THRESHOLD){
+			// The new point is not much further from the origin, break from the loop.
 			break;
-		}else{
+		}
 
-			distance = newDistance;
+		/*
+		** For each face, if it is facing the new point, remove it and
+		** create some new faces to join the new point to the simplex.
+		*/
+		for(j = 0; j < faceNum; ++j){
 
-			// Find the closest vertex of the Minkowski difference in the direction of normal.
-			hbSupportVertex point;
-			hbMeshCollisionMinkowskiSupport(c1, c2, &normal, &point);
+			// Check if the face's normal is pointing in the direction of the new point.
+			// If it is, the face can be "seen" by the new point.
+			vec3 dif;
+			vec3SubVFromVR(&point.v, &faces[j].vertex[0].v, &dif);
+			if(vec3Dot(&faces[j].normal, &dif) > 0.f){
 
-			// If the new point is part of the closest face, break from the loop.
-			if(memcmp(&point.v, &vertices[indices[face]].v,   sizeof(vec3)) == 0 ||
-			   memcmp(&point.v, &vertices[indices[face+1]].v, sizeof(vec3)) == 0 ||
-			   memcmp(&point.v, &vertices[indices[face+2]].v, sizeof(vec3)) == 0){
+				// Add each of the face's edges to the edge array,
+				// ready to be removed in the next section.
+				for(k = 0; k < 3; ++k){
+
+					signed char add = 1;
+					hbMeshEPAEdgeHelper newEdge;
+					hbMeshEPAEdgeInit(&newEdge, &faces[j].vertex[k], &faces[j].vertex[(k+1)%3]);
+
+					// Check if the new edge has already been added to the edge array.
+					// An edge should never appear more than twice, so if it has already
+					// been added both instances may be removed.
+					for(l = 0; l < edgeNum; ++l){
+
+						// Because a consistent CCW winding order is used, any additional
+						// occurrence of the edge will have reversed vertex indices.
+						if(memcmp(&newEdge.vertex[0], &edges[l].vertex[1], sizeof(vec3)) == 0 &&
+						   memcmp(&newEdge.vertex[1], &edges[l].vertex[0], sizeof(vec3)) == 0){
+
+							// Replace this edge with the last edge in the edge array
+							// in order to remove it.
+							--edgeNum;
+							edges[l] = edges[edgeNum];
+							add = 0;
+							break;
+
+						}
+					}
+
+					// If the new edge did not already exist, add it to the edge array.
+					if(add){
+						if(edgeNum >= COLLISION_MAX_EDGE_NUM_EPA){
+							break;
+						}
+						edges[edgeNum] = newEdge;
+						++edgeNum;
+					}
+				}
+
+				// Replace this face with the last face in the face array
+				// in order to remove it.
+				--faceNum;
+				faces[j] = faces[faceNum];
+				--j;
+
+			}
+
+		}
+
+		// Patch the holes in the polytope using the new point.
+		for(j = 0; j < edgeNum; ++j){
+
+			if(faceNum >= COLLISION_MAX_FACE_NUM_EPA){
 				break;
 			}
 
-			// Resize the vertex array if necessary and add the new point.
-			if(vertexNum >= vertexCapacity){
-				vertexCapacity *= 2;
-				hbSupportVertex *tempBuffer = realloc(vertices, vertexCapacity*sizeof(hbSupportVertex));
-				if(tempBuffer == NULL){
-					/** Memory allocation failure. **/
-					free(indices);
-					free(vertices);
-					return -1;
-				}
-				vertices = tempBuffer;
+			hbMeshEPAFaceInit(&faces[faceNum], &edges[j].vertex[0], &edges[j].vertex[1], &point);
+
+			// Ensure the vertex winding order of the simplex is CCW.
+			if(vec3Dot(&faces[faceNum].vertex[0].v, &faces[faceNum].normal) < 0.f){
+				// If it's not, swap two vertices.
+				hbMeshSupportVertex swap = faces[faceNum].vertex[0];
+				faces[faceNum].vertex[0] = faces[faceNum].vertex[1];
+				faces[faceNum].vertex[1] = swap;
+				// Invert the face's normal as well.
+				faces[faceNum].normal.x = -faces[faceNum].normal.x;
+				faces[faceNum].normal.y = -faces[faceNum].normal.y;
+				faces[faceNum].normal.z = -faces[faceNum].normal.z;
 			}
-			vertices[vertexNum] = point;
 
-			/*
-			** For each face, remove those that can be "seen" by the new point
-			** and patch the hole they leave using the new point.
-			*/
-			size_t oldIndexNum = indexNum;
-			for(i = 0; i < oldIndexNum; i+=3){
-				// Don't risk trying to work on a face that we've just added.
-				if(indices[i+2] != vertexNum){
+			++faceNum;
 
-					// Check if the face's normal is pointing in the direction of the new point.
-					// If it is, the face can be "seen" by the new point.
-					vec3 dif;
-					vec3SubVFromVR(&point.v, &vertices[indices[i]].v, &dif);
-					if(vec3Dot(&normal, &dif) > 0){
-
-						/*
-						** Remove the current face and construct three new faces using each edge and the new point.
-						** For point p and a CCW-winding face with vertices a, b and c, we construct the following faces:
-						** a b p
-						** b c p
-						** c a p
-						*/
-
-						size_t currentFace[3] = {indices[i], indices[i+1], indices[i+2]};
-						unsigned char remove = 0;
-						signed char firstFace = 1;
-						signed char secondFace = 1;
-						signed char thirdFace = 1;
-
-						// Loop forwards through each face, overwriting any faces that have the same indices as one
-						// of three faces we're constructing, as well as indices[face].
-						size_t j;
-						for(j = 0; j < indexNum; j+=3){
-							if(j == i){
-								// Remove indices[i].
-								oldIndexNum -= 3;
-								remove += 3;
-								continue;
-							}
-							if(indices[j+2] == vertexNum){
-								// If the last vertex is p, we know there may be a face shared.
-								// Check if the other two vertices are the same.
-								// a
-								if(indices[j] == indices[i]){
-									// a b p
-									if(indices[j+1] == indices[i+1]){
-										firstFace = 0;
-										remove += 3;
-										continue;
-									// a c p
-									}else if(indices[j+1] == indices[i+2]){
-										thirdFace = 0;
-										remove += 3;
-										continue;
-									}
-								// b
-								}else if(indices[j] == indices[i+1]){
-									// b a p
-									if(indices[j+1] == indices[i]){
-										firstFace = 0;
-										remove += 3;
-										continue;
-									// b c p
-									}else if(indices[j+1] == indices[i+2]){
-										secondFace = 0;
-										remove += 3;
-										continue;
-									}
-
-								// c
-								}else if(indices[j] == indices[i+2]){
-									// c a p
-									if(indices[j+1] == indices[i]){
-										thirdFace = 0;
-										remove += 3;
-										continue;
-									// c b p
-									}else if(indices[j+1] == indices[i+1]){
-										secondFace = 0;
-										remove += 3;
-										continue;
-									}
-								}
-							}
-							// If the current face is not to be overwritten, move it
-							// back by 'remove' elements.
-							memcpy(&indices[j-remove], &indices[j], 3*sizeof(size_t));
-						}
-						// Decrease indexNum by the number of elements we removed.
-						indexNum -= remove;
-						i -= remove;
-
-						// Only index[i] was removed, so we potentially need to resize the indices array.
-						if(remove == 3){
-							// Resize the index array if necessary.
-							if(indexNum+9 > indexCapacity){
-								indexCapacity *= 2;
-								size_t *tempBuffer = realloc(indices, indexCapacity*sizeof(size_t));
-								if(tempBuffer == NULL){
-									/** Memory allocation failure. **/
-									free(indices);
-									free(vertices);
-									return -1;
-								}
-								indices = tempBuffer;
-							}
-						}
-
-						// Add each new face.
-						if(firstFace){
-							// a b p
-							indices[indexNum] = currentFace[0];
-							++indexNum;
-							indices[indexNum] = currentFace[1];
-							++indexNum;
-							indices[indexNum] = vertexNum;
-							++indexNum;
-						}
-						if(secondFace){
-							// b c p
-							indices[indexNum] = currentFace[1];
-							++indexNum;
-							indices[indexNum] = currentFace[2];
-							++indexNum;
-							indices[indexNum] = vertexNum;
-							++indexNum;
-						}
-						if(thirdFace){
-							// c a p
-							indices[indexNum] = currentFace[2];
-							++indexNum;
-							indices[indexNum] = currentFace[0];
-							++indexNum;
-							indices[indexNum] = vertexNum;
-							++indexNum;
-						}
-
-					}
-
-				}
-
-				// Finally increase vertexNum, since we didn't do it before.
-				++vertexNum;
-			}
 		}
+		edgeNum = 0;
 
 	}
-
 
 	/*
 	** Now we can extrapolate various collision information
 	** using face, normal and distance.
 	*/
-
 	// Store the contact normal and penetration depth.
-	cd->contactNormal = normal;
+	cd->contactNormal = faces[closestFace].normal;
 	cd->penetrationDepth = distance;
 
 	// Project the origin onto the closest face.
-	vec3 contact = normal;
+	vec3 contact = cd->contactNormal;
 	vec3MultVByS(&contact, distance);
+
 	// Calculate the Barycentric coordinates of the projected origin.
-	barycentric(&vertices[indices[face]].v, &vertices[indices[face+1]].v, &vertices[indices[face+2]].v, &contact, &contact);
-	// Generate the contact point on c1.
-	cd->contactPointA.x = c1->vertices[vertices[indices[face]].i1].x   * contact.z +
-	                      c1->vertices[vertices[indices[face+1]].i1].x * contact.x +
-	                      c1->vertices[vertices[indices[face+2]].i1].x * contact.y;
-	cd->contactPointA.y = c1->vertices[vertices[indices[face]].i1].y   * contact.z +
-	                      c1->vertices[vertices[indices[face+1]].i1].y * contact.x +
-	                      c1->vertices[vertices[indices[face+2]].i1].y * contact.y;
-	cd->contactPointA.z = c1->vertices[vertices[indices[face]].i1].z   * contact.z +
-	                      c1->vertices[vertices[indices[face+1]].i1].z * contact.x +
-	                      c1->vertices[vertices[indices[face+2]].i1].z * contact.y;
-	// Generate the contact point on c2.
-	cd->contactPointB.x = c2->vertices[vertices[indices[face]].i1].x   * contact.z +
-	                      c2->vertices[vertices[indices[face+1]].i1].x * contact.x +
-	                      c2->vertices[vertices[indices[face+2]].i1].x * contact.y;
-	cd->contactPointB.y = c2->vertices[vertices[indices[face]].i1].y   * contact.z +
-	                      c2->vertices[vertices[indices[face+1]].i1].y * contact.x +
-	                      c2->vertices[vertices[indices[face+2]].i1].y * contact.y;
-	cd->contactPointB.z = c2->vertices[vertices[indices[face]].i1].z   * contact.z +
-	                      c2->vertices[vertices[indices[face+1]].i1].z * contact.x +
-	                      c2->vertices[vertices[indices[face+2]].i1].z * contact.y;
+	barycentric(&faces[closestFace].vertex[0].v, &faces[closestFace].vertex[1].v, &faces[closestFace].vertex[2].v, &contact, &contact);
+
+	// The contact point on c1 is the linear combination of the original
+	// vertices in c1 used to generate the support vertices for the
+	// closest face, using the barycentric coordinates stored in contact.
+	vec3CombineLinear(&c1->vertices[faces[closestFace].vertex[0].i1],
+	                  &c1->vertices[faces[closestFace].vertex[1].i1],
+	                  &c1->vertices[faces[closestFace].vertex[2].i1],
+	                  contact.x, contact.y, contact.z, &cd->contactPointA);
+
+	// The contact point on c2 is the linear combination of the original
+	// vertices in c2 used to generate the support vertices for the
+	// closest face, using the barycentric coordinates stored in contact.
+	vec3CombineLinear(&c2->vertices[faces[closestFace].vertex[0].i2],
+	                  &c2->vertices[faces[closestFace].vertex[1].i2],
+	                  &c2->vertices[faces[closestFace].vertex[2].i2],
+	                  contact.x, contact.y, contact.z, &cd->contactPointB);
 
 	// Generate the contact tangents, perpendicular to each other and the contact normal.
-	if(fabsf(normal.x) >= 0.57735f){
-		vec3Set(&cd->contactTangentA, normal.y, -normal.x, 0.f);
+	if(fabsf(cd->contactNormal.x) >= 0.57735f){
+		vec3Set(&cd->contactTangentA, cd->contactNormal.y, -cd->contactNormal.x, 0.f);
 	}else{
-		vec3Set(&cd->contactTangentA, 0.f, normal.z, -normal.y);
+		vec3Set(&cd->contactTangentA, 0.f, cd->contactNormal.z, -cd->contactNormal.y);
 	}
 	vec3NormalizeFast(&cd->contactTangentA);
-	vec3Cross(&normal, &cd->contactTangentA, &cd->contactTangentB);
-
-	// Free and return.
-	free(indices);
-	free(vertices);
-	return 1;
+	vec3Cross(&cd->contactNormal, &cd->contactTangentA, &cd->contactTangentB);
 
 }
 

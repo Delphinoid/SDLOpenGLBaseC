@@ -25,7 +25,7 @@ typedef struct {
 	mat4 viewMatrix;
 	mat4 projectionMatrix;
 	mat4 viewProjectionMatrix;
-	scene **targetScene;
+	scene *targetScene;
 	unsigned char flags;
 } camera;
 

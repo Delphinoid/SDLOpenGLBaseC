@@ -158,11 +158,11 @@ int main(int argc, char *argv[]){
 	/* Cameras */
 	smObjectNew(&gameStateManager, SM_TYPE_CAMERA, &tempID);
 	vec3Set(&camGetState(&gameStateManager, tempID, 0)->position.value, 0.f, 2.f, 7.f);
-	camGetState(&gameStateManager, tempID, 0)->targetScene = (scene **)&gameStateManager.objectType[SM_TYPE_SCENE].instance[0].state[0];
+	camGetState(&gameStateManager, tempID, 0)->targetScene = (scene *)gameStateManager.objectType[SM_TYPE_SCENE].instance[0].state[0];
 	//
 	smObjectNew(&gameStateManager, SM_TYPE_CAMERA, &tempID);
 	camGetState(&gameStateManager, tempID, 0)->flags |= CAM_PROJECTION_ORTHO;
-	camGetState(&gameStateManager, tempID, 0)->targetScene = (scene **)&gameStateManager.objectType[SM_TYPE_SCENE].instance[1].state[0];
+	camGetState(&gameStateManager, tempID, 0)->targetScene = (scene *)gameStateManager.objectType[SM_TYPE_SCENE].instance[1].state[0];
 
 
 	signed char prgRunning = 1;
