@@ -14,28 +14,30 @@
 /** This should not be necessary! **/
 void renderModel(objInstance *obji, const camera *cam, const float interpT, gfxProgram *gfxPrg){
 
-	size_t i;
+	renderableIndex_t i;
+	boneIndex_t j;
 	bone interpBone;
 
 	/* Update the object's configuration for rendering. */
 	rndrConfigRenderUpdate(&obji->tempRndrConfig, interpT);  /** Only line that requires non-const object. **/
 
 	/* Interpolate between the previous and last skeleton states. */
-	for(i = 0; i < obji->skl->boneNum; ++i){
+	for(j = 0; j < obji->skeletonData.skl->boneNum; ++j){
 
 		// Interpolate between bone states.
-		boneInterpolate(&obji->skeletonState[1][i], &obji->skeletonState[0][i], interpT, &interpBone);
+		//boneInterpolate(&obji->skeletonState[1][j], &obji->skeletonState[0][j], interpT, &interpBone);
+		boneInterpolate(&obji->skeletonState[j+j+1], &obji->skeletonState[j+j], interpT, &interpBone);
 
 		// Convert the bone to a matrix.
-		//mat4SetScaleMatrix(&gfxPrg->sklTransformState[i], gfxPrg->sklAnimationState[i].scale.x, gfxPrg->sklAnimationState[i].scale.y, gfxPrg->sklAnimationState[i].scale.z);
-		//mat4SetTranslationMatrix(&gfxPrg->sklTransformState[i], gfxPrg->sklAnimationState[i].position.x, gfxPrg->sklAnimationState[i].position.y, gfxPrg->sklAnimationState[i].position.z);
-		mat4SetRotationMatrix(&gfxPrg->sklTransformState[i], &interpBone.orientation);
-		//mat4Rotate(&gfxPrg->sklTransformState[i], &gfxPrg->sklAnimationState[i].orientation);
-		//mat4Translate(&gfxPrg->sklTransformState[i], gfxPrg->sklAnimationState[i].position.x, gfxPrg->sklAnimationState[i].position.y, gfxPrg->sklAnimationState[i].position.z);
-		mat4Scale(&gfxPrg->sklTransformState[i], interpBone.scale.x, interpBone.scale.y, interpBone.scale.z);
-		gfxPrg->sklTransformState[i].m[3][0] = interpBone.position.x;
-		gfxPrg->sklTransformState[i].m[3][1] = interpBone.position.y;
-		gfxPrg->sklTransformState[i].m[3][2] = interpBone.position.z;
+		//mat4SetScaleMatrix(&gfxPrg->sklTransformState[j], gfxPrg->sklAnimationState[j].scale.x, gfxPrg->sklAnimationState[j].scale.y, gfxPrg->sklAnimationState[j].scale.z);
+		//mat4SetTranslationMatrix(&gfxPrg->sklTransformState[j], gfxPrg->sklAnimationState[j].position.x, gfxPrg->sklAnimationState[j].position.y, gfxPrg->sklAnimationState[j].position.z);
+		mat4SetRotationMatrix(&gfxPrg->sklTransformState[j], &interpBone.orientation);
+		//mat4Rotate(&gfxPrg->sklTransformState[j], &gfxPrg->sklAnimationState[j].orientation);
+		//mat4Translate(&gfxPrg->sklTransformState[j], gfxPrg->sklAnimationState[j].position.x, gfxPrg->sklAnimationState[j].position.y, gfxPrg->sklAnimationState[j].position.z);
+		mat4Scale(&gfxPrg->sklTransformState[j], interpBone.scale.x, interpBone.scale.y, interpBone.scale.z);
+		gfxPrg->sklTransformState[j].m[3][0] = interpBone.position.x;
+		gfxPrg->sklTransformState[j].m[3][1] = interpBone.position.y;
+		gfxPrg->sklTransformState[j].m[3][2] = interpBone.position.z;
 
 	}
 
@@ -69,8 +71,7 @@ void renderModel(objInstance *obji, const camera *cam, const float interpT, gfxP
 			*/
 			if(obji->renderables[i].mdl->skl != NULL){
 
-				size_t j;
-				size_t rndrBone;
+				boneIndex_t rndrBone;
 				vec4 translation;
 				mat4 transform;
 
@@ -92,8 +93,8 @@ void renderModel(objInstance *obji, const camera *cam, const float interpT, gfxP
 
 					// If the animated bone is in the model, pass in its animation transforms.
 					/** Use a lookup, same in object.c. **/
-					rndrBone = sklFindBone(obji->skl, obji->renderables[i].mdl->skl->bones[j].name);
-					if(rndrBone < obji->skl->boneNum){
+					rndrBone = sklFindBone(obji->skeletonData.skl, j, obji->renderables[i].mdl->skl->bones[j].name);
+					if(rndrBone < obji->skeletonData.skl->boneNum){
 
 						// Rotate the bind pose position by the current bone's orientation
 						// and add this offset to the bind pose accumulator.
@@ -256,7 +257,7 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *c
 			cvPush(mdlRenderList, (void *)&curMdl, sizeof(objInstance *));
 		}else if(currentRenderMethod == 1){  // If the model contains translucency, it'll need to be depth sorted
 			cvPush(&translucentModels, (void *)&curMdl, sizeof(objInstance *));
-			float tempDistance = camDistance(cam, &curMdl->tempRndrConfig.position.render);
+			float tempDistance = camDistance(cam, &curMdl->skeletonState[0].position);
 			cvPush(&distances, (void *)&tempDistance, sizeof(float));
 		}
 

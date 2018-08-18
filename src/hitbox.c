@@ -1,7 +1,6 @@
 #include "hitbox.h"
-#include <string.h>
 
-void hbInit(hitbox *hb, signed char type){
+void hbInit(hitbox *hb, const hitboxType_t type){
 	hb->type = type;
 }
 void hbDelete(hitbox *hb){

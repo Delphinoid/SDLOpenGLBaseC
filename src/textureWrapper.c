@@ -14,12 +14,12 @@
 
 static void twfInit(twFrame *twf){
 	twf->baseTexture = NULL;
-	twf->normalTexture = NULL;
+	//twf->normalTexture = NULL;
 	twf->subframeNum = 0;
 	twf->subframes = NULL;
 }
 
-static signed char twfNew(twFrame *twf, const size_t subframeCapacity){
+static signed char twfNew(twFrame *twf, const frameIndex_t subframeCapacity){
 	twf->subframes = malloc(subframeCapacity*sizeof(twBounds));
 	if(twf->subframes == NULL){
 		/** Memory allocation failure. **/
@@ -28,7 +28,7 @@ static signed char twfNew(twFrame *twf, const size_t subframeCapacity){
 	return 1;
 }
 
-static signed char twfAddSubframe(twFrame *twf, const twBounds *sf, size_t *subframeCapacity){
+static signed char twfAddSubframe(twFrame *twf, const twBounds *sf, frameIndex_t *subframeCapacity){
 	if(twf->subframeNum == *subframeCapacity){
 		if(*subframeCapacity > 0){
 			*subframeCapacity *= 2;
@@ -50,7 +50,7 @@ static signed char twfAddSubframe(twFrame *twf, const twBounds *sf, size_t *subf
 	return 1;
 }
 
-static signed char twfAddDefaultSubframe(twFrame *twf, const size_t subframeCapacity){
+static signed char twfAddDefaultSubframe(twFrame *twf, const frameIndex_t subframeCapacity){
 	if(subframeCapacity != twf->subframeNum+1){
 		twf->subframes = realloc(twf->subframes, (twf->subframeNum+1)*sizeof(twBounds));
 		if(twf->subframes == NULL){
@@ -66,7 +66,7 @@ static signed char twfAddDefaultSubframe(twFrame *twf, const size_t subframeCapa
 	return 1;
 }
 
-static signed char twfResizeToFit(twFrame *twf, const size_t subframeCapacity){
+static signed char twfResizeToFit(twFrame *twf, const frameIndex_t subframeCapacity){
 	if(twf->subframeNum != subframeCapacity){
 		twf->subframes = realloc(twf->subframes, twf->subframeNum*sizeof(twBounds));
 		if(twf->subframes == NULL){
@@ -89,13 +89,13 @@ static void twaInit(twAnim *twa){
 	animDataInit(&twa->animData);
 }
 
-static signed char twaNew(twAnim *twa, const size_t animframeCapacity){
-	twa->frameIDs = malloc(animframeCapacity*sizeof(size_t));
+static signed char twaNew(twAnim *twa, const frameIndex_t animframeCapacity){
+	twa->frameIDs = malloc(animframeCapacity*sizeof(frameIndex_t));
 	if(twa->frameIDs == NULL){
 		/** Memory allocation failure. **/
 		return -1;
 	}
-	twa->subframeIDs = malloc(animframeCapacity*sizeof(size_t));
+	twa->subframeIDs = malloc(animframeCapacity*sizeof(frameIndex_t));
 	if(twa->subframeIDs == NULL){
 		/** Memory allocation failure. **/
 		free(twa->frameIDs);
@@ -111,19 +111,19 @@ static signed char twaNew(twAnim *twa, const size_t animframeCapacity){
 	return 1;
 }
 
-static signed char twaAddFrame(twAnim *twa, const size_t f, const size_t sf, const float d, size_t *animframeCapacity){
+static signed char twaAddFrame(twAnim *twa, const frameIndex_t f, const frameIndex_t sf, const float d, frameIndex_t *animframeCapacity){
 	if(twa->animData.frameNum == *animframeCapacity){
 		if(*animframeCapacity > 0){
 			*animframeCapacity *= 2;
 		}else{
 			*animframeCapacity = 1;
 		}
-		twa->frameIDs = realloc(twa->frameIDs, *animframeCapacity*sizeof(size_t));
+		twa->frameIDs = realloc(twa->frameIDs, *animframeCapacity*sizeof(frameIndex_t));
 		if(twa->frameIDs == NULL){
 			/** Memory allocation failure. **/
 			return -1;
 		}
-		twa->subframeIDs = realloc(twa->subframeIDs, *animframeCapacity*sizeof(size_t));
+		twa->subframeIDs = realloc(twa->subframeIDs, *animframeCapacity*sizeof(frameIndex_t));
 		if(twa->subframeIDs == NULL){
 			/** Memory allocation failure. **/
 			free(twa->frameIDs);
@@ -144,14 +144,14 @@ static signed char twaAddFrame(twAnim *twa, const size_t f, const size_t sf, con
 	return 1;
 }
 
-static signed char twaResizeToFit(twAnim *twa, const size_t animframeCapacity){
+static signed char twaResizeToFit(twAnim *twa, const frameIndex_t animframeCapacity){
 	if(twa->animData.frameNum != animframeCapacity){
-		twa->frameIDs = realloc(twa->frameIDs, twa->animData.frameNum*sizeof(size_t));
+		twa->frameIDs = realloc(twa->frameIDs, twa->animData.frameNum*sizeof(frameIndex_t));
 		if(twa->frameIDs == NULL){
 			/** Memory allocation failure. **/
 			return -1;
 		}
-		twa->subframeIDs = realloc(twa->subframeIDs, twa->animData.frameNum*sizeof(size_t));
+		twa->subframeIDs = realloc(twa->subframeIDs, twa->animData.frameNum*sizeof(frameIndex_t));
 		if(twa->subframeIDs == NULL){
 			/** Memory allocation failure. **/
 			free(twa->frameIDs);
@@ -178,7 +178,7 @@ static void twaDelete(twAnim *twa){
 	animDataDelete(&twa->animData);
 }
 
-static signed char twAddFrame(textureWrapper *tw, const twFrame *f, size_t *frameCapacity){
+static signed char twAddFrame(textureWrapper *tw, const twFrame *f, frameIndex_t *frameCapacity){
 	if(tw->frameNum == *frameCapacity){
 		if(*frameCapacity > 0){
 			*frameCapacity *= 2;
@@ -196,7 +196,7 @@ static signed char twAddFrame(textureWrapper *tw, const twFrame *f, size_t *fram
 	return 1;
 }
 
-static signed char twAddAnim(textureWrapper *tw, const twAnim *a, size_t *animCapacity){
+static signed char twAddAnim(textureWrapper *tw, const twAnim *a, animIndex_t *animCapacity){
 	if(tw->animationNum == *animCapacity){
 		if(*animCapacity > 0){
 			*animCapacity *= 2;
@@ -214,7 +214,7 @@ static signed char twAddAnim(textureWrapper *tw, const twAnim *a, size_t *animCa
 	return 1;
 }
 
-static signed char twResizeToFit(textureWrapper *tw, const size_t frameCapacity, const size_t animCapacity){
+static signed char twResizeToFit(textureWrapper *tw, const frameIndex_t frameCapacity, const animIndex_t animCapacity){
 	if(tw->frameNum != frameCapacity){
 		tw->frames = realloc(tw->frames, tw->frameNum*sizeof(twFrame));
 		if(tw->frames == NULL){
@@ -244,36 +244,20 @@ void twInit(textureWrapper *tw){
 
 signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath, cVector *allTextures){
 
-	twInit(tw);
-
-	size_t frameCapacity = FRAME_START_CAPACITY;
-	tw->frames = malloc(frameCapacity*sizeof(twFrame));
-	if(tw->frames == NULL){
-		/** Memory allocation failure. **/
-		return -1;
-	}
-
-	size_t animCapacity = ANIM_START_CAPACITY;
-	tw->animations = malloc(animCapacity*sizeof(twAnim));
-	if(tw->animations == NULL){
-		/** Memory allocation failure. **/
-		free(tw->frames);
-		return -1;
-	}
-
 	twAnim tempAnim;
-	twaInit(&tempAnim);
+	frameIndex_t animframeCapacity = 0;
+	frameIndex_t subframeCapacity = 0;
+	frameIndex_t frameCapacity = FRAME_START_CAPACITY;
+	animIndex_t animCapacity = ANIM_START_CAPACITY;
 
-	size_t animframeCapacity = 0;
-	size_t subframeCapacity = 0;
-
-	signed char currentCommand = -1;  // The current multiline command type (-1 = none, 0 = texture, 1 = animation).
-	unsigned int currentLine = 0;     // Current file line being read.
-
-
+	FILE *texInfo;
 	const size_t pathLen = strlen(prgPath);
 	const size_t fileLen = strlen(filePath);
-	char *fullPath = malloc((pathLen+fileLen+1) * sizeof(char));
+	char *fullPath;
+
+	twInit(tw);
+
+	fullPath = malloc((pathLen+fileLen+1) * sizeof(char));
 	if(fullPath == NULL){
 		/** Memory allocation failure. **/
 		return -1;
@@ -281,15 +265,32 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 	memcpy(fullPath, prgPath, pathLen);
 	memcpy(fullPath+pathLen, filePath, fileLen);
 	fullPath[pathLen+fileLen] = '\0';
-	FILE *texInfo = fopen(fullPath, "r");
-	char lineFeed[1024];
-	char *line;
-	size_t lineLength;
+	texInfo = fopen(fullPath, "r");
 
 	if(texInfo != NULL){
+
+		char lineFeed[1024];
+		char *line;
+		size_t lineLength;
+
+		signed char currentCommand = -1;  // The current multiline command type (-1 = none, 0 = texture, 1 = animation).
+		unsigned int currentLine = 0;     // Current file line being read.
+
+		tw->frames = malloc(frameCapacity*sizeof(twFrame));
+		if(tw->frames == NULL){
+			/** Memory allocation failure. **/
+			return -1;
+		}
+		tw->animations = malloc(animCapacity*sizeof(twAnim));
+		if(tw->animations == NULL){
+			/** Memory allocation failure. **/
+			free(tw->frames);
+			return -1;
+		}
+		twaInit(&tempAnim);
+
 		while(fileParseNextLine(texInfo, lineFeed, sizeof(lineFeed), &line, &lineLength)){
 
-			size_t i;
 			++currentLine;
 
 			// Name
@@ -380,6 +381,7 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 				twFrame tempFrame;
 				twfInit(&tempFrame);
 
+				size_t i;
 				signed char skipLoad = 0;
 				size_t pathBegin;
 				size_t pathLength;
@@ -481,7 +483,8 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 				if(currentCommand == 0){
 
 					// Loads number of subframes to create, main dimension to loop in (x or y) and the subframe dimensions.
-					size_t numberOfFrames = 0;
+					frameIndex_t i;
+					frameIndex_t numberOfFrames = 0;
 					char macroDirection = ' ';
 					float dimensions[4];
 					char *token = strtok(line+7, "/");
@@ -499,8 +502,8 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 						token = strtok(NULL, "/");
 					}
 
-					const unsigned int currentTexW = tw->frames[tw->frameNum-1].baseTexture->width;
-					const unsigned int currentTexH = tw->frames[tw->frameNum-1].baseTexture->height;
+					const GLsizei currentTexW = tw->frames[tw->frameNum-1].baseTexture->width;
+					const GLsizei currentTexH = tw->frames[tw->frameNum-1].baseTexture->height;
 
 					// Automatically generate subframes for a sprite sheet.
 					for(i = 1; i <= numberOfFrames; ++i){
@@ -515,11 +518,11 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 								return -1;
 							}
 							if(macroDirection == 'x'){  // Adds frames from left to right before resetting and moving down
-								dimensions[0] = (unsigned int)(i * dimensions[2]) % currentTexW;
-								dimensions[1] = (unsigned int)(i * dimensions[2]) / currentTexW * dimensions[3];
+								dimensions[0] = (GLsizei)(i * dimensions[2]) % currentTexW;
+								dimensions[1] = (GLsizei)(i * dimensions[2]) / currentTexW * dimensions[3];
 							}else if(macroDirection == 'y'){  // Adds frames from top to bottom before resetting and moving right
-								dimensions[0] = (unsigned int)(i * dimensions[3]) / currentTexH * dimensions[2];
-								dimensions[1] = (unsigned int)(i * dimensions[3]) % currentTexH;
+								dimensions[0] = (GLsizei)(i * dimensions[3]) / currentTexH * dimensions[2];
+								dimensions[1] = (GLsizei)(i * dimensions[3]) % currentTexH;
 							}else{
 								printf("Error loading texture wrapper \"%s\": sMacro command at line %u has an invalid direction. Only one frame could be loaded.\n", fullPath, currentLine);
 								break;
@@ -541,6 +544,7 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 				if(currentCommand == 0){
 
 					// Create a new subframe and add it to the current texture frame.
+					frameIndex_t i;
 					float dimensions[4];
 					char *token = strtok(line+9, "/");
 					for(i = 0; i < 4; ++i){
@@ -610,8 +614,9 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 				if(currentCommand == 1){
 
 					// Loads start and end textures, start and end subframes and the frame delays.
-					size_t textures[2];
-					size_t subframes[2];
+					frameIndex_t i;
+					frameIndex_t textures[2];
+					frameIndex_t subframes[2];
 					float frameDelay = 0.f;
 					char *token = strtok(line+7, "/");
 					for(i = 0; i < 5; ++i){
@@ -626,7 +631,7 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 					}
 
 					if(frameDelay > 0){
-						size_t j;
+						frameIndex_t j;
 						for(i = textures[0]; i <= textures[1]; ++i){
 							if(i < tw->frameNum){
 								for(j = subframes[0]; j <= subframes[1]; ++j){
@@ -664,6 +669,7 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 				if(currentCommand == 1){
 
 					// Parse frame information.
+					frameIndex_t i;
 					size_t frameID = 0, subframeID = 0;
 					float frameDelay = 0.f;
 					char *token = strtok(line+6, "/");
@@ -757,9 +763,6 @@ signed char twLoad(textureWrapper *tw, const char *prgPath, const char *filePath
 
 	}else{
 		printf("Error loading texture wrapper \"%s\": Could not open file.\n", fullPath);
-		twaDelete(&tempAnim);
-		free(tw->frames);
-		free(tw->animations);
 		free(fullPath);
 		return 0;
 	}
@@ -856,7 +859,8 @@ signed char twDefault(textureWrapper *tw, cVector *allTextures){
 
 	twFrame tempFrame;
 	twAnim tempAnim;
-	size_t capacity = 1;
+	frameIndex_t frameCapacity = 1;
+	animIndex_t animCapacity = 1;
 
 	twInit(tw);
 
@@ -866,14 +870,14 @@ signed char twDefault(textureWrapper *tw, cVector *allTextures){
 		return -1;
 	}
 
-	tw->frames = malloc(capacity*sizeof(twFrame));
+	tw->frames = malloc(frameCapacity*sizeof(twFrame));
 	if(tw->frames == NULL){
 		/** Memory allocation failure. **/
 		free(tw->name);
 		return -1;
 	}
 
-	tw->animations = malloc(capacity*sizeof(twAnim));
+	tw->animations = malloc(animCapacity*sizeof(twAnim));
 	if(tw->animations == NULL){
 		/** Memory allocation failure. **/
 		free(tw->frames);
@@ -885,15 +889,15 @@ signed char twDefault(textureWrapper *tw, cVector *allTextures){
 	twaInit(&tempAnim);
 
 	if(twfNew(&tempFrame, 1) == -1 || twfAddDefaultSubframe(&tempFrame, 1) == -1 ||
-	   twAddFrame(tw, &tempFrame, &capacity) == -1){
+	   twAddFrame(tw, &tempFrame, &frameCapacity) == -1){
 		/** Memory allocation failure. **/
 		twfDelete(&tempFrame);
 		twDelete(tw);
 		return -1;
 	}
 
-	if(twaNew(&tempAnim, 1) == -1 || twaAddFrame(&tempAnim, 0, 0, 0.f, &capacity) == -1 ||
-	   twAddAnim(tw, &tempAnim, &capacity) == -1){
+	if(twaNew(&tempAnim, 1) == -1 || twaAddFrame(&tempAnim, 0, 0, 0.f, &frameCapacity) == -1 ||
+	   twAddAnim(tw, &tempAnim, &animCapacity) == -1){
 		/** Memory allocation failure. **/
 		twaDelete(&tempAnim);
 		twDelete(tw);
@@ -914,13 +918,14 @@ signed char twDefault(textureWrapper *tw, cVector *allTextures){
 }
 
 void twDelete(textureWrapper *tw){
-	size_t i;
+	frameIndex_t i;
+	animIndex_t j;
 	for(i = 0; i < tw->frameNum; ++i){
 		twfDelete(&tw->frames[i]);
 	}
 	free(tw->frames);
-	for(i = 0; i < tw->animationNum; ++i){
-		twaDelete(&tw->animations[i]);
+	for(j = 0; j < tw->animationNum; ++j){
+		twaDelete(&tw->animations[j]);
 	}
 	free(tw->animations);
 	if(tw->name != NULL){
@@ -929,21 +934,21 @@ void twDelete(textureWrapper *tw){
 }
 
 
-static inline twAnim *twGetAnim(const textureWrapper *tw, const size_t anim){
+static inline twAnim *twGetAnim(const textureWrapper *tw, const animIndex_t anim){
 	return &tw->animations[anim];
 }
 
-static inline twFrame *twGetAnimFrame(const textureWrapper *tw, const size_t anim, const size_t frame){
+static inline twFrame *twGetAnimFrame(const textureWrapper *tw, const animIndex_t anim, const frameIndex_t frame){
 	/*size_t currentFrameID = *((size_t *)cvGet(&twGetAnim(tw, anim)->frameIDs, frame));*/
 	return &tw->frames[tw->animations[anim].frameIDs[frame]];
 }
 
-static inline twBounds *twGetAnimSubframe(const textureWrapper *tw, const size_t anim, const size_t frame){
+static inline twBounds *twGetAnimSubframe(const textureWrapper *tw, const animIndex_t anim, const frameIndex_t frame){
 	/*size_t currentSubframeID = *((size_t *)cvGet(&twGetAnim(tw, anim)->subframeIDs, frame));*/
 	return &tw->frames[tw->animations[anim].frameIDs[frame]].subframes[tw->animations[anim].subframeIDs[frame]];
 }
 
-static inline float *twGetAnimFrameDelay(const textureWrapper *tw, const size_t anim, const size_t frame){
+static inline float *twGetAnimFrameDelay(const textureWrapper *tw, const animIndex_t anim, const frameIndex_t frame){
 	return &tw->animations[anim].animData.frameDelays[frame];
 }
 
@@ -1114,7 +1119,7 @@ void twiGetFrameInfo(const twInstance *twi, float *x, float *y, float *w, float 
 	if(twi->currentAnim < twi->tw->animationNum &&
 	   twi->animator.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum){
 
-		size_t startFrame;
+		frameIndex_t startFrame;
 		animGetRenderData(&twi->animator, &twGetAnim(twi->tw, twi->currentAnim)->animData, interpT,
 		                  &startFrame, NULL, NULL);
 		*x = twGetAnimSubframe(twi->tw, twi->currentAnim, startFrame)->x;

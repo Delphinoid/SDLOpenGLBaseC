@@ -5,12 +5,14 @@
 #include "interpState.h"
 #include "mat4.h"
 
+#define CAM_INACTIVE            0x00
 #define CAM_PROJECTION_ORTHO    0x01
 #define CAM_UPDATE_PROJECTION   0x02
 /** Is CAM_UPDATE_VIEW still needed? What about the others? **/
 #define CAM_UPDATE_VIEW         0x04
 
 typedef struct {
+	flags_t flags;
 	/** Should be in a struct? **/
 	interpVec3 position;
 	interpQuat orientation;
@@ -26,7 +28,6 @@ typedef struct {
 	mat4 projectionMatrix;
 	mat4 viewProjectionMatrix;
 	scene *targetScene;
-	unsigned char flags;
 } camera;
 
 signed char camInit(void *cam);
@@ -35,8 +36,8 @@ void camResetInterpolation(void *cam);
 
 void camCalculateUp(camera *cam);
 void camUpdateViewMatrix(camera *cam, const float interpT);
-void camUpdateProjectionMatrix(camera *cam, const unsigned char aspectRatioX, const unsigned char aspectRatioY, const float interpT);
-void camUpdateViewProjectionMatrix(camera *cam, const signed char windowChanged, const unsigned char aspectRatioX, const unsigned char aspectRatioY, const float interpT);
+void camUpdateProjectionMatrix(camera *cam, const byte_t aspectRatioX, const byte_t aspectRatioY, const float interpT);
+void camUpdateViewProjectionMatrix(camera *cam, const signed char windowChanged, const byte_t aspectRatioX, const byte_t aspectRatioY, const float interpT);
 
 float camDistance(const camera *cam, const vec3 *target);
 

@@ -28,22 +28,22 @@ typedef struct {
 
 /** Move to particle / sprite files? **/
 typedef struct {
-	interpVec3 position;           // Position of the object relative to its parent.
-	interpQuat orientation;        // Quaternion representing orientation.
+	//interpVec3 position;           // Position of the object relative to its parent.
+	//interpQuat orientation;        // Quaternion representing orientation.
 	interpVec3 pivot;              // The point the object is rotated around (relative to its position).
-	interpVec3 targetPosition;     // Target position, used for target billboards.
-	interpQuat targetOrientation;  // Target orientation, used for target billboards.
-	interpVec3 scale;              // Scale of the object.
+	//interpVec3 targetPosition;     // Target position, used for target billboards.
+	//interpQuat targetOrientation;  // Target orientation, used for target billboards.
+	//interpVec3 scale;              // Scale of the object.
 	interpFloat alpha;             // A value to multiply against the alpha values of the pixels.
 	/** Sprite should not be necessary anymore. Maybe check the model's name? **/
-	unsigned char sprite;
-	unsigned char flags;
+	uint8_t sprite;
+	uint8_t flags;
 } rndrConfig;
 
 void rndrInit(renderable *rndr);
 
 void rndriInit(rndrInstance *rndr);
-void rndriInstantiate(rndrInstance *rndr, renderable *base);
+void rndriInstantiate(rndrInstance *rndr, const renderable *base);
 void rndriDelete(rndrInstance *rndr);
 
 void rndrConfigInit(rndrConfig *rc);

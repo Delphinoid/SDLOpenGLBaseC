@@ -9,9 +9,9 @@ typedef struct {
 
 	char *name;
 	GLuint id;
-	GLuint width;
-	GLuint height;
-	signed char translucent;  // If this is set, the texture contains translucency. Used when depth sorting before rendering
+	GLsizei width;
+	GLsizei height;
+	int8_t translucent;  // If this is set, the texture contains translucency. Used when depth sorting before rendering
 
 } texture;
 

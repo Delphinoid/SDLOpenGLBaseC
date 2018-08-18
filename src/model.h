@@ -8,6 +8,9 @@
 #include "hitbox.h"
 #include "cVector.h"
 
+typedef uint32_t vertexIndex_t;
+typedef uint32_t vertexIndexNum_t;
+
 typedef struct {
 
 	char *name;
@@ -16,8 +19,8 @@ typedef struct {
 	skeleton *skl;
 
 	/* Model data for rendering. */
-	size_t vertexNum;
-	size_t indexNum;
+	vertexIndex_t vertexNum;
+	vertexIndexNum_t indexNum;
 	GLuint vaoID;  // Vertex array object ID
 	GLuint vboID;  // Vertex buffer object ID
 	GLuint iboID;  // Index buffer object ID

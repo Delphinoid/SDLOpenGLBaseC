@@ -38,6 +38,7 @@ void vec3MultVByV(vec3 *v1, const vec3 *v2);
 void vec3MultVByVR(const vec3 *v1, const vec3 *v2, vec3 *r);
 void vec3MultVByN(vec3 *v, const float x, const float y, const float z);
 void vec3MultVByS(vec3 *v, const float s);
+void vec3MultVBySR(const vec3 *v, const float s, vec3 *r);
 
 vec3 vec3VDivV(const vec3 *v1, const vec3 *v2);
 vec3 vec3VDivN(const vec3 *v, const float x, const float y, const float z);
@@ -52,13 +53,16 @@ void vec3DivVByS(vec3 *v, const float s);
 void vec3DivNByV(const float x, const float y, const float z, vec3 *v);
 void vec3DivSByV(const float s, vec3 *v);
 
-float vec3GetMagnitude(const vec3 *v);
-float vec3GetInverseMagnitude(const vec3 *v);
+float vec3Magnitude(const vec3 *v);
+float vec3MagnitudeSquared(const vec3 *v);
+float vec3InverseMagnitude(const vec3 *v);
 
 vec3 vec3GetUnit(const vec3 *v);
 vec3 vec3GetUnitFast(const vec3 *v);
+vec3 vec3GetUnitFastAccurate(const vec3 *v);
 void vec3Normalize(vec3 *v);
 void vec3NormalizeFast(vec3 *v);
+void vec3NormalizeFastAccurate(vec3 *v);
 
 float vec3Dot(const vec3 *v1, const vec3 *v2);
 vec3 vec3GetCross(const vec3 *v1, const vec3 *v2);

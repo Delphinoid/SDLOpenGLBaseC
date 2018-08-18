@@ -1,9 +1,9 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include "texture.h"
+#include "memoryShared.h"
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 /** Maybe remove printf()s? **/
 
@@ -17,11 +17,17 @@ void tInit(texture *tex){
 
 signed char tLoad(texture *tex, const char *prgPath, const char *filePath){
 
-	tInit(tex);
-
 	const size_t pathLen = strlen(prgPath);
 	const size_t fileLen = strlen(filePath);
-	char *fullPath = malloc((pathLen+fileLen+1)*sizeof(char));
+	char *fullPath;
+
+	SDL_Surface *SDLimage;
+	GLint pixelFormat;
+	GLenum glError;
+
+	tInit(tex);
+
+	fullPath = malloc((pathLen+fileLen+1)*sizeof(char));
 	if(fullPath == NULL){
 		/** Remove printf()s **/
 		/** Memory allocation failure. **/
@@ -32,14 +38,13 @@ signed char tLoad(texture *tex, const char *prgPath, const char *filePath){
 	fullPath[pathLen+fileLen] = '\0';
 
 	/* Load image with SDL_Image */
-	SDL_Surface *SDLimage = IMG_Load(fullPath);
+	SDLimage = IMG_Load(fullPath);
 	if(SDLimage == NULL){
 		printf("Error generating SDL_Surface for texture \"%s\": %s\n", fullPath, SDL_GetError());
 		free(fullPath);
 		return 0;
 	}
 
-	GLint pixelFormat;
 	if(SDLimage->format->BytesPerPixel == 3){
 		pixelFormat = GL_RGB;  // 24 bits per pixel is most likely the RGB format
 	}else if(SDLimage->format->BytesPerPixel == 4){
@@ -56,11 +61,11 @@ signed char tLoad(texture *tex, const char *prgPath, const char *filePath){
 	glGenTextures(1, &tex->id);
 	glBindTexture(GL_TEXTURE_2D, tex->id);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, pixelFormat, SDLimage->w, SDLimage->h, 0, pixelFormat, GL_UNSIGNED_BYTE, SDLimage->pixels);
+	glTexImage2D(GL_TEXTURE_2D, 0, pixelFormat, tex->width, tex->height, 0, pixelFormat, GL_UNSIGNED_BYTE, SDLimage->pixels);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, TEXTURE_DEFAULT_FILTER_MODE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, TEXTURE_DEFAULT_FILTER_MODE);
 
-	GLenum glError = glGetError();
+	glError = glGetError();
 	if(glError != GL_NO_ERROR){
 		printf("Error generating OpenGL texture \"%s\": %u\n", fullPath, glError);
 		tDelete(tex);
@@ -71,11 +76,11 @@ signed char tLoad(texture *tex, const char *prgPath, const char *filePath){
 
 	/* Check if the texture contains translucent (not just transparent) pixels and then free the SDL surface */
 	if(pixelFormat == GL_RGBA){
-		const unsigned char *pixelData = (unsigned char *)SDLimage->pixels;
-		const size_t textureSize = tex->width * tex->height;
-		size_t i;
+		const byte_t *pixelData = (byte_t *)SDLimage->pixels;
+		const GLsizei textureSize = tex->width * tex->height;
+		GLsizei i;
 		for(i = 0; i < textureSize; ++i){
-			unsigned char alpha = pixelData[i*4+3];
+			byte_t alpha = pixelData[i*4+3];
 			if(alpha > 0 && alpha < 255){
 				tex->translucent = 1;
 				i = tex->width * tex->height;
@@ -104,7 +109,7 @@ signed char tLoad(texture *tex, const char *prgPath, const char *filePath){
 signed char tDefault(texture *tex){
 
 	GLenum glError;
-	unsigned int pixels[32*32];
+	GLsizei pixels[32*32];
 	size_t h, w;
 
 	tInit(tex);

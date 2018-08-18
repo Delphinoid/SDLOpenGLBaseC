@@ -2,7 +2,8 @@
 #define STATEMANAGERHELPERS_H
 
 #include "stateManager.h"
-#include "physicsIsland.h"
+#include "camera.h"
+#include "object.h"
 
 #define SM_TYPE_SCENE      0
 #define SM_TYPE_CAMERA     1

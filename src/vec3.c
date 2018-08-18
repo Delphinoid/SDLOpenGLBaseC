@@ -129,6 +129,9 @@ void vec3MultVByN(vec3 *v, const float x, const float y, const float z){
 void vec3MultVByS(vec3 *v, const float s){
 	v->x *= s; v->y *= s; v->z *= s;
 }
+void vec3MultVBySR(const vec3 *v, const float s, vec3 *r){
+	r->x = v->x * s; r->y = v->y * s; r->z = v->z * s;
+}
 
 vec3 vec3VDivV(const vec3 *v1, const vec3 *v2){
 	vec3 r;
@@ -170,9 +173,10 @@ vec3 vec3VDivN(const vec3 *v, const float x, const float y, const float z){
 }
 vec3 vec3VDivS(const vec3 *v, const float s){
 	if(s != 0.f){
-		vec3 r = {.x = v->x / s,
-		          .y = v->y / s,
-		          .z = v->z / s};
+		const float invS = 1.f / s;
+		vec3 r = {.x = v->x * invS,
+		          .y = v->y * invS,
+		          .z = v->z * invS};
 		return r;
 	}
 	return vec3NewS(0.f);
@@ -235,12 +239,18 @@ void vec3DivVByV1(vec3 *v1, const vec3 *v2){
 void vec3DivVByV2(const vec3 *v1, vec3 *v2){
 	if(v2->x != 0.f){
 		v2->x = v1->x / v2->x;
+	}else{
+		v2->x = 0.f;
 	}
 	if(v2->y != 0.f){
 		v2->y = v1->y / v2->y;
+	}else{
+		v2->y = 0.f;
 	}
 	if(v2->z != 0.f){
 		v2->z = v1->z / v2->z;
+	}else{
+		v2->z = 0.f;
 	}
 }
 void vec3DivVByVR(const vec3 *v1, const vec3 *v2, vec3 *r){
@@ -279,42 +289,60 @@ void vec3DivVByN(vec3 *v, const float x, const float y, const float z){
 }
 void vec3DivVByS(vec3 *v, const float s){
 	if(s != 0.f){
-		v->x /= s; v->y /= s; v->z /= s;
+		const float invS = 1.f / s;
+		v->x *= invS; v->y *= invS; v->z *= invS;
+	}else{
+		v->x = 0.f; v->y = 0.f; v->z = 0.f;
 	}
 }
 void vec3DivNByV(const float x, const float y, const float z, vec3 *v){
 	if(v->x != 0.f){
 		v->x = x / v->x;
+	}else{
+		v->x = 0.f;
 	}
 	if(v->y != 0.f){
 		v->y = y / v->y;
+	}else{
+		v->y = 0.f;
 	}
 	if(v->z != 0.f){
 		v->z = z / v->z;
+	}else{
+		v->z = 0.f;
 	}
 }
 void vec3DivSByV(const float s, vec3 *v){
 	if(v->x != 0.f){
 		v->x = s / v->x;
+	}else{
+		v->x = 0.f;
 	}
 	if(v->y != 0.f){
 		v->y = s / v->y;
+	}else{
+		v->y = 0.f;
 	}
 	if(v->z != 0.f){
 		v->z = s / v->z;
+	}else{
+		v->z = 0.f;
 	}
 }
 
-float vec3GetMagnitude(const vec3 *v){
+inline float vec3Magnitude(const vec3 *v){
 	return sqrtf(v->x*v->x + v->y*v->y + v->z*v->z);
 }
-float vec3GetInverseMagnitude(const vec3 *v){
+inline float vec3MagnitudeSquared(const vec3 *v){
+	return v->x*v->x + v->y*v->y + v->z*v->z;
+}
+inline float vec3InverseMagnitude(const vec3 *v){
 	const float magnitudeSquared = v->x*v->x + v->y*v->y + v->z*v->z;
 	return fastInvSqrt(magnitudeSquared);
 }
 
 vec3 vec3GetUnit(const vec3 *v){
-	const float magnitude = vec3GetMagnitude(v);
+	const float magnitude = vec3Magnitude(v);
 	if(magnitude != 0.f){
 		return vec3VMultS(v, 1.f/magnitude);
 	}
@@ -325,8 +353,13 @@ vec3 vec3GetUnitFast(const vec3 *v){
 	const float invSqrt = fastInvSqrt(magnitudeSquared);
 	return vec3VMultS(v, invSqrt);
 }
+vec3 vec3GetUnitFastAccurate(const vec3 *v){
+	const float magnitudeSquared = v->x*v->x + v->y*v->y + v->z*v->z;
+	const float invSqrt = fastInvSqrtAccurate(magnitudeSquared);
+	return vec3VMultS(v, invSqrt);
+}
 void vec3Normalize(vec3 *v){
-	const float magnitude = vec3GetMagnitude(v);
+	const float magnitude = vec3Magnitude(v);
 	if(magnitude != 0.f){
 		vec3MultVByS(v, 1.f/magnitude);
 	}
@@ -334,6 +367,11 @@ void vec3Normalize(vec3 *v){
 void vec3NormalizeFast(vec3 *v){
 	const float magnitudeSquared = v->x*v->x + v->y*v->y + v->z*v->z;
 	const float invSqrt = fastInvSqrt(magnitudeSquared);
+	vec3MultVByS(v, invSqrt);
+}
+void vec3NormalizeFastAccurate(vec3 *v){
+	const float magnitudeSquared = v->x*v->x + v->y*v->y + v->z*v->z;
+	const float invSqrt = fastInvSqrtAccurate(magnitudeSquared);
 	vec3MultVByS(v, invSqrt);
 }
 

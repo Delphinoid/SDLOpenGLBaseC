@@ -20,7 +20,7 @@ void rndriInit(rndrInstance *rndri){
 	//rndr->hitboxState = NULL;
 }
 
-void rndriInstantiate(rndrInstance *rndri, renderable *base){
+void rndriInstantiate(rndrInstance *rndri, const renderable *base){
 	rndri->mdl = base->mdl;
 	twiInit(&rndri->twi, base->tw);
 }
@@ -101,36 +101,36 @@ void rndriDelete(rndrInstance *rndri){
 
 
 void rndrConfigInit(rndrConfig *rc){
-	iVec3Init(&rc->position, 0.f, 0.f, 0.f);
-	iQuatInit(&rc->orientation);
+	//iVec3Init(&rc->position, 0.f, 0.f, 0.f);
+	//iQuatInit(&rc->orientation);
 	iVec3Init(&rc->pivot, 0.f, 0.f, 0.f);
-	iVec3Init(&rc->targetPosition, 0.f, 0.f, 0.f);
-	iQuatInit(&rc->targetOrientation);
-	iVec3Init(&rc->scale, 1.f, 1.f, 1.f);
+	//iVec3Init(&rc->targetPosition, 0.f, 0.f, 0.f);
+	//iQuatInit(&rc->targetOrientation);
+	//iVec3Init(&rc->scale, 1.f, 1.f, 1.f);
 	iFloatInit(&rc->alpha, 1.f);
 	rc->sprite = 0;
 	rc->flags = 0;
 }
 
 void rndrConfigStateCopy(rndrConfig *o, rndrConfig *c){
-	c->position = o->position;
-	c->orientation = o->orientation;
+	//c->position = o->position;
+	//c->orientation = o->orientation;
 	c->pivot = o->pivot;
-	c->targetPosition = o->targetPosition;
-	c->targetOrientation = o->targetOrientation;
-	c->scale = o->scale;
+	//c->targetPosition = o->targetPosition;
+	//c->targetOrientation = o->targetOrientation;
+	//c->scale = o->scale;
 	c->alpha = o->alpha;
 	c->sprite = o->sprite;
 	c->flags = o->flags;
 }
 
 void rndrConfigResetInterpolation(rndrConfig *rc){
-	iVec3ResetInterp(&rc->position);
-	iQuatResetInterp(&rc->orientation);
+	//iVec3ResetInterp(&rc->position);
+	//iQuatResetInterp(&rc->orientation);
 	iVec3ResetInterp(&rc->pivot);
-	iVec3ResetInterp(&rc->targetPosition);
-	iQuatResetInterp(&rc->targetOrientation);
-	iVec3ResetInterp(&rc->scale);
+	//iVec3ResetInterp(&rc->targetPosition);
+	//iQuatResetInterp(&rc->targetOrientation);
+	//iVec3ResetInterp(&rc->scale);
 	iFloatResetInterp(&rc->alpha);
 }
 
@@ -138,12 +138,12 @@ signed char rndrConfigRenderUpdate(rndrConfig *rc, const float interpT){
 
 	// Return whether or not anything has changed.
 	/** Remove alpha updates from here once rndrRenderMethod() is being used by everything. **/
-	return iVec3Update(&rc->position,          interpT) |
-	       iQuatUpdate(&rc->orientation,       interpT) |
+	return //iVec3Update(&rc->position,          interpT) |
+	       //iQuatUpdate(&rc->orientation,       interpT) |
 	       iVec3Update(&rc->pivot,             interpT) |
-	       iVec3Update(&rc->targetPosition,    interpT) |
-	       iQuatUpdate(&rc->targetOrientation, interpT) |
-	       iVec3Update(&rc->scale,             interpT) |
+	       //iVec3Update(&rc->targetPosition,    interpT) |
+	       //iQuatUpdate(&rc->targetOrientation, interpT) |
+	       //iVec3Update(&rc->scale,             interpT) |
 	       iFloatUpdate(&rc->alpha,            interpT);
 
 }
@@ -156,7 +156,7 @@ void rndrConfigGenerateTransform(const rndrConfig *rc, const camera *cam, mat4 *
 	** with, we can save multiplying the model matrix by the view matrix later on
 	*/
 	*transformMatrix = cam->viewMatrix;  // Start with the view matrix
-	mat4Translate(transformMatrix, rc->position.render.x, rc->position.render.y, rc->position.render.z);
+	//mat4Translate(transformMatrix, rc->position.render.x, rc->position.render.y, rc->position.render.z);
 
 	/* Billboarding */
 	// If any of the flags apart from RNDR_BILLBOARD_TARGET are set, continue
@@ -221,10 +221,10 @@ void rndrConfigGenerateTransform(const rndrConfig *rc, const camera *cam, mat4 *
 	}*/
 
 	/* Rotate the model */
-	mat4Rotate(transformMatrix, &rc->orientation.render);
+	//mat4Rotate(transformMatrix, &rc->orientation.render);
 
 	/* Scale the model */
-	mat4Scale(transformMatrix, rc->scale.render.x, rc->scale.render.y, rc->scale.render.z);
+	//mat4Scale(transformMatrix, rc->scale.render.x, rc->scale.render.y, rc->scale.render.z);
 
 	/*
 	** Translate the model by -scaledPivot. The result is the appearance of the model
@@ -235,6 +235,8 @@ void rndrConfigGenerateTransform(const rndrConfig *rc, const camera *cam, mat4 *
 }
 
 void rndrConfigGenerateSprite(const rndrConfig *rc, const twInstance *twi, vertex *vertices, const mat4 *transformMatrix){
+
+	unsigned int i;
 
 	/* Undo the initial translations in rndrGenerateTransform() and use our own */
 	/** Only way to remove this is to duplicate rndrGenerateTransform(). Is it worth it? **/
@@ -318,13 +320,8 @@ void rndrConfigGenerateSprite(const rndrConfig *rc, const twInstance *twi, verte
 	vertices[3].bWeights[3] = 0.f;
 
 	/* Apply transformations to each vertex */
-	vec4 vertexPos;
-	size_t i;
 	for(i = 0; i < 4; ++i){
-		// We need to make the vertex positions a vec4 so we can multiply them by the 4x4 modelViewProjectionMatrix
-		vec4Set(&vertexPos, vertices[i].position.x, vertices[i].position.y, vertices[i].position.z, 1.f);
-		mat4MultMByV(transformMatrix, &vertexPos);
-		vec3Set(&vertices[i].position, vertexPos.x, vertexPos.y, vertexPos.z);
+		mat4TransformV(transformMatrix, &vertices[i].position);
 	}
 
 }
@@ -332,7 +329,7 @@ void rndrConfigGenerateSprite(const rndrConfig *rc, const twInstance *twi, verte
 void rndrConfigOffsetSpriteTexture(vertex *vertices, const float texFrag[4], const float texWidth, const float texHeight){
 	// We can't pass unique textureFragment values for each individual sprite when batching. Therefore,
 	// we have to do the offset calculations for each vertex UV here instead of in the shader
-	size_t i;
+	unsigned int i;
 	for(i = 0; i < 4; ++i){
 		vertices[i].u = ((vertices[i].u * texFrag[2]) + texFrag[0]) / texWidth;
 		vertices[i].v = ((vertices[i].v * texFrag[3]) + texFrag[1]) / texHeight;

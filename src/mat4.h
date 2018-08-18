@@ -15,12 +15,13 @@ mat4 mat4MMultM(const mat4 *m1, const mat4 *m2);
 void mat4MultMByM1(mat4 *m1, const mat4 *m2);
 void mat4MultMByM2(const mat4 *m1, mat4 *m2);
 void mat4MultMByMR(const mat4 *m1, const mat4 *m2, mat4 *r);
-vec4 mat4VMultM(const vec4 v, const mat4 *m);
-void mat4MultVByM(vec4 *v, const mat4 *m);
+vec4 mat4VMultMColumn(const vec4 v, const mat4 *m);
+void mat4MultVByMColumn(vec4 *v, const mat4 *m);
 void mat4MultNByM(const float x, const float y, const float z, const float w, const mat4 *m, vec4 *r);
-vec4 mat4MMultV(const mat4 *m, const vec4 v);
-void mat4MultMByV(const mat4 *m, vec4 *v);
+vec4 mat4MMultVRow(const mat4 *m, const vec4 v);
+void mat4MultMByVRow(const mat4 *m, vec4 *v);
 void mat4MultMByN(const mat4 *m, const float x, const float y, const float z, const float w, vec4 *r);
+void mat4TransformV(const mat4 *m, vec3 *v);
 
 float mat4Determinant(const mat4 *m);
 

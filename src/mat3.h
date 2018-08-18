@@ -14,10 +14,10 @@ mat3 mat3MMultM(const mat3 *m1, const mat3 *m2);
 void mat3MultMByM1(mat3 *m1, const mat3 *m2);
 void mat3MultMByM2(const mat3 *m1, mat3 *m2);
 void mat3MultMByMR(const mat3 *m1, const mat3 *m2, mat3 *r);
-vec3 mat3VMultM(const vec3 v, const mat3 *m);
-void mat3MultVByM(vec3 *v, const mat3 *m);
-vec3 mat3MMultV(const mat3 *m, const vec3 v);
-void mat3MultMByV(const mat3 *m, vec3 *v);
+vec3 mat3VMultMColumn(const vec3 v, const mat3 *m);
+void mat3MultVByMColumn(vec3 *v, const mat3 *m);
+vec3 mat3MMultVRow(const mat3 *m, const vec3 v);
+void mat3MultMByVRow(const mat3 *m, vec3 *v);
 
 float mat3Determinant(const mat3 *m);
 

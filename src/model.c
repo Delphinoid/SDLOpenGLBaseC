@@ -3,11 +3,11 @@
 #include "model.h"
 #include <stdio.h>
 
-signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex **vertices, size_t *indexNum, size_t **indices, char **name, char **sklPath);
-signed char mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, size_t *indexNum, size_t **indices, char **name, cVector *allSkeletons);
+signed char mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndexNum_t *indexNum, vertexIndex_t **indices, char **name, char **sklPath);
+signed char mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndexNum_t *indexNum, vertexIndex_t **indices, char **name, cVector *allSkeletons);
 
 static void mdlVertexAttributes();
-static signed char mdlGenBufferObjects(model *mdl, const char *filePath, const size_t vertexNum, const vertex *vertices, const size_t indexNum, const size_t *indices);
+static signed char mdlGenBufferObjects(model *mdl, const char *filePath, const vertexIndex_t vertexNum, const vertex *vertices, const vertexIndexNum_t indexNum, const vertexIndex_t *indices);
 
 void mdlInit(model *mdl){
 	mdl->name = NULL;
@@ -40,10 +40,10 @@ signed char mdlLoad(model *mdl, const char *prgPath, const char *filePath, cVect
 	memcpy(fullPath+pathLen, filePath, fileLen);
 	fullPath[pathLen+fileLen] = '\0';
 
-	size_t vertexNum;
+	vertexIndex_t vertexNum;
 	vertex *vertices;
-	size_t indexNum;
-	size_t *indices;
+	vertexIndexNum_t indexNum;
+	vertexIndex_t *indices;
 	char *sklPath = NULL;
 	r = mdlWavefrontObjLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, &mdl->name, &sklPath);
 	//r = mdlSMDLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, &mdl->name, allSkeletons);
@@ -99,7 +99,7 @@ signed char mdlLoad(model *mdl, const char *prgPath, const char *filePath, cVect
 signed char mdlDefault(model *mdl, cVector *allSkeletons){
 
 	vertex vertices[24];
-	size_t indices[36];
+	vertexIndex_t indices[36];
 
 	mdlInit(mdl);
 	mdl->vertexNum = 24;
@@ -383,7 +383,7 @@ static void mdlVertexAttributes(){
 	glEnableVertexAttribArray(4);
 }
 
-static signed char mdlGenBufferObjects(model *mdl, const char *filePath, const size_t vertexNum, const vertex *vertices, const size_t indexNum, const size_t *indices){
+static signed char mdlGenBufferObjects(model *mdl, const char *filePath, const vertexIndex_t vertexNum, const vertex *vertices, const vertexIndexNum_t indexNum, const vertexIndex_t *indices){
 
 	if(vertexNum > 0){
 		if(indexNum > 0){
@@ -413,7 +413,7 @@ static signed char mdlGenBufferObjects(model *mdl, const char *filePath, const s
 			// Create and bind the IBO
 			glGenBuffers(1, &mdl->iboID);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mdl->iboID);
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexNum*sizeof(size_t), indices, GL_STATIC_DRAW);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexNum*sizeof(vertexIndex_t), indices, GL_STATIC_DRAW);
 			// Check for errors
 			glError = glGetError();
 			if(glError != GL_NO_ERROR){

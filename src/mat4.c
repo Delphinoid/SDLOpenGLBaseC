@@ -130,7 +130,7 @@ void mat4MultMByMR(const mat4 *m1, const mat4 *m2, mat4 *r){
 	r->m[3][3] = m1->m[3][0]*m2->m[0][3] + m1->m[3][1]*m2->m[1][3] + m1->m[3][2]*m2->m[2][3] + m1->m[3][3]*m2->m[3][3];
 
 }
-vec4 mat4VMultM(vec4 v, const mat4 *m){
+vec4 mat4VMultMColumn(vec4 v, const mat4 *m){
 	vec4 r;
 	r.x = v.x * m->m[0][0] + v.y * m->m[1][0] + v.z * m->m[2][0] + v.w * m->m[3][0];
 	r.y = v.x * m->m[0][1] + v.y * m->m[1][1] + v.z * m->m[2][1] + v.w * m->m[3][1];
@@ -138,7 +138,7 @@ vec4 mat4VMultM(vec4 v, const mat4 *m){
 	r.w = v.x * m->m[0][3] + v.y * m->m[1][3] + v.z * m->m[2][3] + v.w * m->m[3][3];
 	return r;
 }
-void mat4MultVByM(vec4 *v, const mat4 *m){
+void mat4MultVByMColumn(vec4 *v, const mat4 *m){
 	vec4 r;
 	r.x = v->x * m->m[0][0] + v->y * m->m[1][0] + v->z * m->m[2][0] + v->w * m->m[3][0];
 	r.y = v->x * m->m[0][1] + v->y * m->m[1][1] + v->z * m->m[2][1] + v->w * m->m[3][1];
@@ -152,7 +152,7 @@ void mat4MultNByM(const float x, const float y, const float z, const float w, co
 	r->z = x * m->m[0][2] + y * m->m[1][2] + z * m->m[2][2] + w * m->m[3][2];
 	r->w = x * m->m[0][3] + y * m->m[1][3] + z * m->m[2][3] + w * m->m[3][3];
 }
-vec4 mat4MMultV(const mat4 *m, vec4 v){
+vec4 mat4MMultVRow(const mat4 *m, vec4 v){
 	vec4 r;
 	r.x = v.x * m->m[0][0] + v.y * m->m[0][1] + v.z * m->m[0][2] + v.w * m->m[0][3];
 	r.y = v.x * m->m[1][0] + v.y * m->m[1][1] + v.z * m->m[1][2] + v.w * m->m[1][3];
@@ -160,7 +160,7 @@ vec4 mat4MMultV(const mat4 *m, vec4 v){
 	r.w = v.x * m->m[3][0] + v.y * m->m[3][1] + v.z * m->m[3][2] + v.w * m->m[3][3];
 	return r;
 }
-void mat4MultMByV(const mat4 *m, vec4 *v){
+void mat4MultMByVRow(const mat4 *m, vec4 *v){
 	vec4 r;
 	r.x = v->x * m->m[0][0] + v->y * m->m[0][1] + v->z * m->m[0][2] + v->w * m->m[0][3];
 	r.y = v->x * m->m[1][0] + v->y * m->m[1][1] + v->z * m->m[1][2] + v->w * m->m[1][3];
@@ -173,6 +173,13 @@ void mat4MultMByN(const mat4 *m, const float x, const float y, const float z, co
 	r->y = x * m->m[1][0] + y * m->m[1][1] + z * m->m[1][2] + w * m->m[1][3];
 	r->z = x * m->m[2][0] + y * m->m[2][1] + z * m->m[2][2] + w * m->m[2][3];
 	r->w = x * m->m[3][0] + y * m->m[3][1] + z * m->m[3][2] + w * m->m[3][3];
+}
+void mat4TransformV(const mat4 *m, vec3 *v){
+	vec3 r;
+	r.x = v->x * m->m[0][0] + v->y * m->m[0][1] + v->z * m->m[0][2] + m->m[0][3];
+	r.y = v->x * m->m[1][0] + v->y * m->m[1][1] + v->z * m->m[1][2] + m->m[1][3];
+	r.z = v->x * m->m[2][0] + v->y * m->m[2][1] + v->z * m->m[2][2] + m->m[2][3];
+	v->x = r.x; v->y = r.y; v->z = r.z;
 }
 
 float mat4Determinant(const mat4 *m){
@@ -258,7 +265,7 @@ signed char mat4Perspective(mat4 *m, const float fovy, const float aspectRatio, 
 		return 0;
 	}
 	const float scale = tanf(fovy * 0.5f);
-	// Currently right-handed for OpenGL. For left-handed, use the additive inverses of the values in the third column
+	/* Currently right-handed for OpenGL. For left-handed, use the additive inverses of the values in the third column. */
 	m->m[0][0] = 1.f/(scale*aspectRatio); m->m[0][1] = 0.f;       m->m[0][2] = 0.f;                          m->m[0][3] = 0.f;
 	m->m[1][0] = 0.f;                     m->m[1][1] = 1.f/scale; m->m[1][2] = 0.f;                          m->m[1][3] = 0.f;
 	m->m[2][0] = 0.f;                     m->m[2][1] = 0.f;       m->m[2][2] = -(zFar+zNear)/(zFar-zNear);   m->m[2][3] = -1.f;
@@ -274,7 +281,7 @@ void mat4RotateToFace(mat4 *m, const vec3 *eye, const vec3 *target, const vec3 *
 	vec3 yAxis;
 	vec3Cross(&xAxis, &zAxis, &yAxis);
 	vec3NormalizeFast(&yAxis);
-	// Currently right-handed for OpenGL. For left-handed, use the additive inverses of the values in the third row
+	/* Currently right-handed for OpenGL. For left-handed, use the additive inverses of the values in the third row. */
 	m->m[0][0] =  xAxis.x; m->m[0][1] =  xAxis.y; m->m[0][2] =  xAxis.z; m->m[0][3] = 0.f;
 	m->m[1][0] =  yAxis.x; m->m[1][1] =  yAxis.y; m->m[1][2] =  yAxis.z; m->m[1][3] = 0.f;
 	m->m[2][0] = -zAxis.x; m->m[2][1] = -zAxis.y; m->m[2][2] = -zAxis.z; m->m[2][3] = 0.f;
@@ -289,7 +296,7 @@ void mat4LookAt(mat4 *m, const vec3 *eye, const vec3 *target, const vec3 *up){
 	vec3 yAxis;
 	vec3Cross(&xAxis, &zAxis, &yAxis);
 	vec3NormalizeFast(&yAxis);
-	// Currently right-handed for OpenGL. For left-handed, use the additive inverses of the values in the third column
+	/* Currently right-handed for OpenGL. For left-handed, use the additive inverses of the values in the third column. */
 	m->m[0][0] = xAxis.x;               m->m[0][1] = yAxis.x;               m->m[0][2] = -zAxis.x;             m->m[0][3] = 0.f;
 	m->m[1][0] = xAxis.y;               m->m[1][1] = yAxis.y;               m->m[1][2] = -zAxis.y;             m->m[1][3] = 0.f;
 	m->m[2][0] = xAxis.z;               m->m[2][1] = yAxis.z;               m->m[2][2] = -zAxis.z;             m->m[2][3] = 0.f;

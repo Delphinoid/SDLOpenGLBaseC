@@ -239,7 +239,7 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 	gfxPrg->alphaID           = glGetUniformLocation(gfxPrg->shaderProgramID, "alpha");
 
 	/* Create references to each bone  */
-	size_t i;
+	boneIndex_t i;
 	for(i = 0; i < SKL_MAX_BONE_NUM; ++i){
 
 		char num[LTOSTR_MAX_LENGTH];

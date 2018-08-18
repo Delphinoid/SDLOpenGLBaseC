@@ -1,7 +1,7 @@
-#include "physCollider.h"
+#include "physicsCollider.h"
 #include "mat3.h"
 
-#define PHYSICS_COLLIDER_DEFAULT_VERTEX_MASS 1
+#define PHYS_COLLIDER_DEFAULT_VERTEX_MASS 1
 
 static float physColliderGenerateMassMesh(physCollider *collider, float *vertexMassArray){
 
@@ -33,7 +33,7 @@ static float physColliderGenerateMassMesh(physCollider *collider, float *vertexM
 			if(vertexMassArray != NULL){
 				vertexMass = vertexMassArray[i];
 			}else{
-				vertexMass = PHYSICS_COLLIDER_DEFAULT_VERTEX_MASS;
+				vertexMass = PHYS_COLLIDER_DEFAULT_VERTEX_MASS;
 			}
 			collider->centroid.x += cHull->vertices[i].x * vertexMass;
 			collider->centroid.y += cHull->vertices[i].y * vertexMass;
@@ -94,7 +94,7 @@ static void physColliderGenerateMomentMesh(const physCollider *collider, const v
 		if(vertexMassArray != NULL){
 			vertexMass = vertexMassArray[i];
 		}else{
-			vertexMass = PHYSICS_COLLIDER_DEFAULT_VERTEX_MASS;
+			vertexMass = PHYS_COLLIDER_DEFAULT_VERTEX_MASS;
 		}
 		// xx
 		inertiaTensor[0] += (sqrY + sqrZ) * vertexMass;
@@ -124,6 +124,7 @@ static void physColliderUpdateMesh(physCollider *collider, const physCollider *l
 	collider->centroid.y = local->centroid.y + configuration->position.y;
 	collider->centroid.z = local->centroid.z + configuration->position.z;
 
+	// Update each vertex.
 	for(i = 0; i < cGlobal->vertexNum; ++i){
 
 		// Transform the vertex.
@@ -166,6 +167,11 @@ static void physColliderUpdateMesh(physCollider *collider, const physCollider *l
 			}
 		}
 
+	}
+
+	// Update each normal.
+	for(i = 0; i < cGlobal->faceNum; ++i){
+		quatRotateVec3FastR(&configuration->orientation, &cLocal->normals[i], &cGlobal->normals[i]);
 	}
 
 }

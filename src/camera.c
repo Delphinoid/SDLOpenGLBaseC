@@ -2,7 +2,7 @@
 #include "mat4.h"
 #include <math.h>
 
-#define RADIAN_RATIO 0.017453292  /* = PI / 180, used for converting degrees to radians. */
+#define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians.
 
 signed char camInit(void *cam){
 	iVec3Init(&((camera *)cam)->position, 0.f, 0.f, 0.f);
@@ -133,7 +133,7 @@ void camUpdateViewMatrix(camera *cam, const float interpT){
 	}
 
 }
-void camUpdateProjectionMatrix(camera *cam, const unsigned char aspectRatioX, const unsigned char aspectRatioY, const float interpT){
+void camUpdateProjectionMatrix(camera *cam, const byte_t aspectRatioX, const byte_t aspectRatioY, const float interpT){
 
 	if(((cam->flags & CAM_PROJECTION_ORTHO) == 0 && iFloatUpdate(&cam->fovy, interpT)) || (cam->flags & CAM_UPDATE_PROJECTION) > 0){
 
@@ -157,7 +157,7 @@ void camUpdateProjectionMatrix(camera *cam, const unsigned char aspectRatioX, co
 	}
 
 }
-void camUpdateViewProjectionMatrix(camera *cam, const signed char windowChanged, const unsigned char aspectRatioX, const unsigned char aspectRatioY, const float interpT){
+void camUpdateViewProjectionMatrix(camera *cam, const signed char windowChanged, const byte_t aspectRatioX, const byte_t aspectRatioY, const float interpT){
 	camUpdateViewMatrix(cam, interpT);
 	if(windowChanged){
 		// If the window size changed, update the camera projection matrices as well.

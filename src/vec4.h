@@ -54,12 +54,16 @@ void vec4DivVByS(vec4 *v, const float s);
 void vec4DivNByV(const float x, const float y, const float z, const float w, vec4 *v);
 void vec4DivSByV(const float s, vec4 *v);
 
-float vec4GetMagnitude(const vec4 *v);
+float vec4Magnitude(const vec4 *v);
+float vec4MagnitudeSquared(const vec4 *v);
+float vec4InverseMagnitude(const vec4 *v);
 
 vec4 vec4GetUnit(const vec4 *v);
 vec4 vec4GetUnitFast(const vec4 *v);
+vec4 vec4GetUnitFastAccurate(const vec4 *v);
 void vec4Normalize(vec4 *v);
 void vec4NormalizeFast(vec4 *v);
+void vec4NormalizeFastAccurate(vec4 *v);
 
 float vec4Dot(const vec4 *v1, const vec4 *v2);
 

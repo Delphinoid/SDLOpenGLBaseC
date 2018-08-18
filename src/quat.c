@@ -16,10 +16,11 @@ quat quatNewS(const float s){
 }
 quat quatNewAxisAngle(const float angle, const float axisX, const float axisY, const float axisZ){
 	float t = sinf(angle/2.f);
-	quat r = {.w   = cosf(angle/2.f),
-	          .v.x = axisX * t,
-	          .v.y = axisY * t,
-	          .v.z = axisZ * t};
+	quat r;
+	r.w   = cosf(angle/2.f);
+	r.v.x = axisX * t;
+	r.v.y = axisY * t;
+	r.v.z = axisZ * t;
 	return r;
 }
 quat quatNewEuler(const float x, const float y, const float z){
@@ -32,10 +33,11 @@ quat quatNewEuler(const float x, const float y, const float z){
 	const float sx = sinf(hx);
 	const float sy = sinf(hy);
 	const float sz = sinf(hz);
-	quat r = {.w   = cx*cy*cz+sx*sy*sz,
-	          .v.x = sx*cy*cz-cx*sy*sz,
-	          .v.y = cx*sy*cz+sx*cy*sz,
-	          .v.z = cx*cy*sz-sx*sy*cz};
+	quat r;
+	r.w   = cx*cy*cz+sx*sy*sz;
+	r.v.x = sx*cy*cz-cx*sy*sz;
+	r.v.y = cx*sy*cz+sx*cy*sz;
+	r.v.z = cx*cy*sz-sx*sy*cz;
 	return r;
 }
 void quatSet(quat *q, const float w, const float x, const float y, const float z){
@@ -144,6 +146,9 @@ quat quatQMultQ(const quat *q1, const quat *q2){
 	vec3AddVToV(&prodV, vec3VMultS(q1.v, q2.w));
 	vec3AddVToV(&prodV, vec3Cross(q1.v, q2.v));
 	return quatNew(prodW, prodV.x, prodV.y, prodV.z);*/
+	/*
+	** Calculates the Grassmann product of two quaternions.
+	*/
 	quat r;
 	r.w   = q1->w * q2->w   - q1->v.x * q2->v.x - q1->v.y * q2->v.y - q1->v.z * q2->v.z;
 	r.v.x = q1->w * q2->v.x + q1->v.x * q2->w   + q1->v.y * q2->v.z - q1->v.z * q2->v.y;
@@ -164,6 +169,9 @@ void quatMultQByQ1(quat *q1, const quat *q2){
 	vec3AddVToV(&prodV, vec3VMultS(q1->v, q2.w));
 	vec3AddVToV(&prodV, vec3Cross(q1->v, q2.v));
 	q1->w = prodW; q1->v = prodV;*/
+	/*
+	** Calculates the Grassmann product of two quaternions.
+	*/
 	quat r;
 	r.w   = q1->w * q2->w   - q1->v.x * q2->v.x - q1->v.y * q2->v.y - q1->v.z * q2->v.z;
 	r.v.x = q1->w * q2->v.x + q1->v.x * q2->w   + q1->v.y * q2->v.z - q1->v.z * q2->v.y;
@@ -177,6 +185,9 @@ void quatMultQByQ2(const quat *q1, quat *q2){
 	vec3AddVToV(&prodV, vec3VMultS(q1.v, q2->w));
 	vec3AddVToV(&prodV, vec3Cross(q1.v, q2->v));
 	q2->w = prodW; q2->v = prodV;*/
+	/*
+	** Calculates the Grassmann product of two quaternions.
+	*/
 	quat r;
 	r.w   = q1->w * q2->w   - q1->v.x * q2->v.x - q1->v.y * q2->v.y - q1->v.z * q2->v.z;
 	r.v.x = q1->w * q2->v.x + q1->v.x * q2->w   + q1->v.y * q2->v.z - q1->v.z * q2->v.y;
@@ -185,6 +196,9 @@ void quatMultQByQ2(const quat *q1, quat *q2){
 	*q2 = r;
 }
 void quatMultQByQR(const quat *q1, const quat *q2, quat *r){
+	/*
+	** Calculates the Grassmann product of two quaternions.
+	*/
 	r->w   = q1->w * q2->w   - q1->v.x * q2->v.x - q1->v.y * q2->v.y - q1->v.z * q2->v.z;
 	r->v.x = q1->w * q2->v.x + q1->v.x * q2->w   + q1->v.y * q2->v.z - q1->v.z * q2->v.y;
 	r->v.y = q1->w * q2->v.y + q1->v.y * q2->w   + q1->v.z * q2->v.x - q1->v.x * q2->v.z;
@@ -196,18 +210,25 @@ void quatMultQByS(quat *q, const float s){
 }
 
 quat quatQDivQ(const quat *q1, const quat *q2){
-	quat r = {.w   = q1->w   / q2->w,
-	          .v.x = q1->v.x / q2->v.x,
-	          .v.y = q1->v.y / q2->v.y,
-	          .v.z = q1->v.z / q2->v.z};
-	return r;
+	if(q2->w != 0.f && q2->v.x != 0.f && q2->v.y != 0.f && q2->v.z != 0.f){
+		quat r = {.w   = q1->w   / q2->w,
+		          .v.x = q1->v.x / q2->v.x,
+		          .v.y = q1->v.y / q2->v.y,
+		          .v.z = q1->v.z / q2->v.z};
+		return r;
+	}
+	return quatNewS(0.f);
 }
 quat quatQDivS(const quat *q, const float s){
-	quat r = {.w   = q->w   / s,
-	          .v.x = q->v.x / s,
-	          .v.y = q->v.y / s,
-	          .v.z = q->v.z / s};
-	return r;
+	if(s != 0.f){
+		const float invS = 1.f / s;
+		quat r = {.w   = q->w   * invS,
+		          .v.x = q->v.x * invS,
+		          .v.y = q->v.y * invS,
+		          .v.z = q->v.z * invS};
+		return r;
+	}
+	return quatNewS(0.f);
 }
 void quatDivQByQ1(quat *q1, const quat *q2){
 	if(q2->w != 0.f && q2->v.x != 0.f && q2->v.y != 0.f && q2->v.z != 0.f){
@@ -215,6 +236,8 @@ void quatDivQByQ1(quat *q1, const quat *q2){
 		q1->v.x /= q2->v.x;
 		q1->v.y /= q2->v.y;
 		q1->v.z /= q2->v.z;
+	}else{
+		quatSetS(q1, 0.f);
 	}
 }
 void quatDivQByQ2(const quat *q1, quat *q2){
@@ -223,6 +246,8 @@ void quatDivQByQ2(const quat *q1, quat *q2){
 		q2->v.x = q1->v.x / q2->v.x;
 		q2->v.y = q1->v.y / q2->v.y;
 		q2->v.z = q1->v.z / q2->v.z;
+	}else{
+		quatSetS(q2, 0.f);
 	}
 }
 void quatDivQByQR(const quat *q1, const quat *q2, quat *r){
@@ -231,14 +256,19 @@ void quatDivQByQR(const quat *q1, const quat *q2, quat *r){
 		r->v.x = q1->v.x / q2->v.x;
 		r->v.y = q1->v.y / q2->v.y;
 		r->v.z = q1->v.z / q2->v.z;
+	}else{
+		quatSetS(r, 0.f);
 	}
 }
 void quatDivQByS(quat *q, const float s){
 	if(s != 0.f){
-		q->w   /= s;
-		q->v.x /= s;
-		q->v.y /= s;
-		q->v.z /= s;
+		const float invS = 1.f / s;
+		q->w   *= invS;
+		q->v.x *= invS;
+		q->v.y *= invS;
+		q->v.z *= invS;
+	}else{
+		quatSetS(q, 0.f);
 	}
 }
 
@@ -336,8 +366,8 @@ void quatSetIdentity(quat *q){
 }
 
 void quatAxisAngle(const quat *q, float *angle, float *axisX, float *axisY, float *axisZ){
-	float scale = sqrtf(1.f-q->w*q->w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1
-	if(scale != 0.f){  // We don't want to risk a potential divide-by-zero error
+	float scale = sqrtf(1.f-q->w*q->w);  /* Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1. */
+	if(scale != 0.f){  /* We don't want to risk a potential divide-by-zero error. */
 		scale = 1.f/scale;
 		*angle = 2.f*acosf(q->w);
 		*axisX = q->v.x*scale;
@@ -346,7 +376,7 @@ void quatAxisAngle(const quat *q, float *angle, float *axisX, float *axisY, floa
 	}
 }
 void quatAxisAngleFast(const quat *q, float *angle, float *axisX, float *axisY, float *axisZ){
-	float scale = fastInvSqrt(1.f-q->w*q->w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1
+	float scale = fastInvSqrt(1.f-q->w*q->w);  /* Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1. */
 	*angle = 2.f*acosf(q->w);
 	*axisX = q->v.x*scale;
 	*axisY = q->v.y*scale;
@@ -486,14 +516,14 @@ quat quatLookingAt(const vec3 *eye, const vec3 *target, const vec3 *up){
 
 	if(fabsf(dot + 1.f) < FLT_EPSILON){
 
-		// Eye and target point in opposite directions,
-		// 180 degree rotation around up vector.
+		/* Eye and target point in opposite directions, */
+		/* 180 degree rotation around up vector.        */
 		r.w = M_PI;
 		r.v = *up;
 
 	}else if(fabsf(dot - 1.f) < FLT_EPSILON){
 
-		// Eye and target are pointing in the same direction.
+		/* Eye and target are pointing in the same direction. */
 		quatSetIdentity(&r);
 
 	}else{
@@ -514,14 +544,14 @@ void quatLookAt(quat *q, const vec3 *eye, const vec3 *target, const vec3 *up){
 
 	if(fabsf(dot + 1.f) < FLT_EPSILON){
 
-		// Eye and target point in opposite directions,
-		// 180 degree rotation around up vector.
+		/* Eye and target point in opposite directions, */
+		/* 180 degree rotation around up vector.        */
 		q->w = M_PI;
 		q->v = *up;
 
 	}else if(fabsf(dot - 1.f) < FLT_EPSILON){
 
-		// Eye and target are pointing in the same direction.
+		/* Eye and target are pointing in the same direction. */
 		quatSetIdentity(q);
 
 	}else{
@@ -560,12 +590,12 @@ quat quatGetSlerp(const quat *q1, const quat *q2, const float t){
 
 	quat r;
 
-	// Cosine of the angle between the two quaternions.
+	/* Cosine of the angle between the two quaternions. */
 	const float cosTheta = quatDot(q1, q2);
 	const float cosThetaAbs = fabs(cosTheta);
 
 	if(cosThetaAbs > QUAT_LERP_ANGLE){
-		// If the angle is small enough, we can just use linear interpolation.
+		/* If the angle is small enough, we can just use linear interpolation. */
 		quatLerp(q1, q2, t, &r);
 	}else{
 
@@ -585,8 +615,8 @@ quat quatGetSlerp(const quat *q1, const quat *q2, const float t){
 		const float sinThetaInv = fastInvSqrt(1.f - cosThetaAbs * cosThetaAbs);
 		const float sinThetaInvT = sinf(theta * (1.f - t)) * sinThetaInv;
 
-		// If q1 and q2 are > 90 degrees apart (cosTheta < 0), negate
-		// sinThetaT so it doesn't go the long way around.
+		/* If q1 and q2 are > 90 degrees apart (cosTheta < 0), negate */
+		/* sinThetaT so it doesn't go the long way around.            */
 		float sinThetaT;
 		if(cosTheta >= 0.f){
 			sinThetaT = sinf(theta * t) * sinThetaInv;
@@ -607,12 +637,12 @@ quat quatGetSlerp(const quat *q1, const quat *q2, const float t){
 }
 void quatSlerp(const quat *q1, const quat *q2, const float t, quat *r){
 
-	// Cosine of the angle between the two quaternions.
+	/* Cosine of the angle between the two quaternions. */
 	const float cosTheta = quatDot(q1, q2);
 	const float cosThetaAbs = fabs(cosTheta);
 
 	if(cosThetaAbs > QUAT_LERP_ANGLE){
-		// If the angle is small enough, we can just use linear interpolation.
+		/* If the angle is small enough, we can just use linear interpolation. */
 		quatLerp(q1, q2, t, r);
 	}else{
 
@@ -632,8 +662,8 @@ void quatSlerp(const quat *q1, const quat *q2, const float t, quat *r){
 		const float sinThetaInv = fastInvSqrt(1.f - cosThetaAbs * cosThetaAbs);
 		const float sinThetaInvT = sinf(theta * (1.f - t)) * sinThetaInv;
 
-		// If q1 and q2 are > 90 degrees apart (cosTheta < 0), negate
-		// sinThetaT so it doesn't go the long way around.
+		/* If q1 and q2 are > 90 degrees apart (cosTheta < 0), negate */
+		/* sinThetaT so it doesn't go the long way around.            */
 		float sinThetaT;
 		if(cosTheta >= 0.f){
 			sinThetaT = sinf(theta * t) * sinThetaInv;
@@ -652,13 +682,9 @@ void quatSlerp(const quat *q1, const quat *q2, const float t, quat *r){
 
 }
 
-void quatIntegrate(const quat *q, const vec3 *v, const float t, quat *r){
-
-}
-
 void quatRotate(const quat *q1, const quat *q2, const float t, quat *r){
 	quat temp;
 	quatMultQByQR(q1, q2, &temp);
-	//*r = temp;
+	/* *r = temp; */
 	quatSlerp(q1, &temp, t, r);
 }

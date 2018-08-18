@@ -1,5 +1,5 @@
-#ifndef PHYSCOLLIDER_H
-#define PHYSCOLLIDER_H
+#ifndef PHYSICSCOLLIDER_H
+#define PHYSICSCOLLIDER_H
 
 #include "hitbox.h"
 #include "bone.h"
@@ -15,7 +15,6 @@ typedef struct {
 float physColliderGenerateMass(physCollider *collider, float *vertexMassArray);
 void physColliderGenerateMoment(const physCollider *collider, const vec3 *centroid, const float *vertexMassArray, float *inertiaTensor);
 void physColliderUpdate(physCollider *collider, const physCollider *local, const bone *configuration);
-
 void physColliderDelete(physCollider *collider);
 
 #endif

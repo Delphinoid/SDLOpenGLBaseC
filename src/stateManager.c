@@ -192,8 +192,17 @@ signed char smObjectNew(stateManager *sm, const size_t objectTypeID, size_t *obj
 		}
 	}
 	if(i == sm->objectType[objectTypeID].capacity){
-		/* The scene array is full, double its size and get a new scene. */
-		sm->objectType[objectTypeID].capacity *= 2;
+		/*
+		** The object array is full, double its size.
+		** Increasing it by 1 may be better in the
+		** long run, but would also probably lead
+		** to more fragmentation, so who knows.
+		*/
+		if(sm->objectType[objectTypeID].capacity == 0){
+			sm->objectType[objectTypeID].capacity = 1;
+		}else{
+			sm->objectType[objectTypeID].capacity *= 2;
+		}
 		stateObject *tempBuffer = realloc(sm->objectType[objectTypeID].instance, sm->objectType[objectTypeID].capacity * sizeof(stateObject *));
 		if(tempBuffer == NULL){
 			/** Memory allocation failure. **/
@@ -217,9 +226,11 @@ signed char smObjectNew(stateManager *sm, const size_t objectTypeID, size_t *obj
 	return 1;
 }
 void smObjectDelete(stateManager *sm, const size_t objectTypeID, const size_t objectID){
-	(*sm->objectType[objectTypeID].stateDelete)(sm->objectType[objectTypeID].instance[objectID].state[0]);
-	free(sm->objectType[objectTypeID].instance[objectID].state[0]);
-	sm->objectType[objectTypeID].instance[objectID].state[0] = NULL;
+	if(sm->objectType[objectTypeID].instance[objectID].state[0] != NULL){
+		(*sm->objectType[objectTypeID].stateDelete)(sm->objectType[objectTypeID].instance[objectID].state[0]);
+		free(sm->objectType[objectTypeID].instance[objectID].state[0]);
+		sm->objectType[objectTypeID].instance[objectID].state[0] = NULL;
+	}
 }
 
 void smInit(stateManager *sm){

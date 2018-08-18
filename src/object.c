@@ -21,14 +21,14 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
                     cVector *allTextures, cVector *allTexWrappers, cVector *allSkeletons,
                     cVector *allSklAnimations, cVector *allModels){
 
-	objInit(obj);
-
-	unsigned int currentLine = 0;  // Current file line being read.
-
-
+	FILE *objInfo;
 	const size_t pathLen = strlen(prgPath);
 	const size_t fileLen = strlen(filePath);
-	char *fullPath = malloc((pathLen+fileLen+1) * sizeof(char));
+	char *fullPath;
+
+	objInit(obj);
+
+	fullPath = malloc((pathLen+fileLen+1) * sizeof(char));
 	if(fullPath == NULL){
 		/** Memory allocation failure. **/
 		return -1;
@@ -36,12 +36,16 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 	memcpy(fullPath, prgPath, pathLen);
 	memcpy(fullPath+pathLen, filePath, fileLen);
 	fullPath[pathLen+fileLen] = '\0';
-	FILE *objInfo = fopen(fullPath, "r");
-	char lineFeed[1024];
-	char *line;
-	size_t lineLength;
+	objInfo = fopen(fullPath, "r");
 
 	if(objInfo != NULL){
+
+		char lineFeed[1024];
+		char *line;
+		size_t lineLength;
+
+		unsigned int currentLine = 0;  // Current file line being read.
+
 		while(fileParseNextLine(objInfo, lineFeed, sizeof(lineFeed), &line, &lineLength)){
 
 			size_t i;
@@ -113,7 +117,7 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 				}
 				if(!skipLoad){
 					skeleton tempSkl;
-					signed char r = sklLoad(&tempSkl, prgPath, sklPath);
+					const signed char r = sklLoad(&tempSkl, prgPath, sklPath);
 					if(r == -1){
 						/** Memory allocation failure. **/
 						free(sklPath);
@@ -142,8 +146,8 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 					signed char r;
 					char *physPath;
 					physRigidBody *tempBuffer1;
-					unsigned char *tempBuffer2;
-					size_t *tempBuffer3;
+					flags_t *tempBuffer2;
+					constraintIndex_t *tempBuffer3;
 					physConstraint **tempBuffer4;
 					size_t pathBegin;
 					size_t pathLength;
@@ -182,7 +186,7 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 						return -1;
 					}
 					obj->skeletonBodies = tempBuffer1;
-					tempBuffer2 = realloc(obj->skeletonBodyFlags, obj->skl->boneNum*sizeof(unsigned char));
+					tempBuffer2 = realloc(obj->skeletonBodyFlags, obj->skl->boneNum*sizeof(flags_t));
 					if(tempBuffer2 == NULL){
 						/** Memory allocation failure. **/
 						free(physPath);
@@ -192,7 +196,7 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 						return -1;
 					}
 					obj->skeletonBodyFlags = tempBuffer2;
-					tempBuffer3 = realloc(obj->skeletonConstraintNum, obj->skl->boneNum*sizeof(size_t));
+					tempBuffer3 = realloc(obj->skeletonConstraintNum, obj->skl->boneNum*sizeof(constraintIndex_t));
 					if(tempBuffer2 == NULL){
 						/** Memory allocation failure. **/
 						free(physPath);
@@ -552,7 +556,7 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 }
 
 void objDelete(object *obj){
-	size_t i;
+	boneIndex_t i;
 	if(obj->name != NULL){
 		free(obj->name);
 	}
@@ -593,15 +597,15 @@ void objDelete(object *obj){
 signed char objiInit(void *obji){
 	((objInstance *)obji)->base = NULL;
 	rndrConfigInit(&((objInstance *)obji)->tempRndrConfig);
-	((objInstance *)obji)->skl = NULL;
+	//((objInstance *)obji)->skl = NULL;
 	((objInstance *)obji)->configuration = NULL;
-	((objInstance *)obji)->skeletonState[0] = NULL;
-	((objInstance *)obji)->skeletonState[1] = NULL;
+	((objInstance *)obji)->skeletonState = NULL;
+	//((objInstance *)obji)->skeletonState[1] = NULL;
 	((objInstance *)obji)->skeletonPhysics = NULL;
 	((objInstance *)obji)->skeletonHitboxes = NULL;
 	((objInstance *)obji)->renderableNum = 0;
 	((objInstance *)obji)->renderables = NULL;
-	return skliInit(&((objInstance *)obji)->animationData, 0);
+	return skliInit(&((objInstance *)obji)->skeletonData, NULL, 0);
 
 	/*((object *)obji)->skl = NULL;
 	((object *)obji)->configuration = NULL;
@@ -619,55 +623,55 @@ signed char objiInit(void *obji){
 /** FIX FOR PHYSICS OBJECTS **/
 signed char objiStateCopy(void *o, void *c){
 
-	size_t i;
-
 	/* Resize the skeleton state arrays, if necessary, and copy everything over. */
-	if(((objInstance *)o)->skl != NULL){
+	if(((objInstance *)o)->skeletonData.skl != NULL){
+
+		boneIndex_t i;
 
 		// Check if the skeleton state arrays need to be resized.
-		if(((object *)c)->skl == NULL || ((object *)c)->skl->boneNum != ((object *)o)->skl->boneNum){
+		if(((objInstance *)c)->skeletonData.skl == NULL || ((objInstance *)c)->skeletonData.skl->boneNum != ((objInstance *)o)->skeletonData.skl->boneNum){
 
 			// We need to allocate more or less memory so that
 			// the memory allocated for both custom states match.
-			size_t arraySizeS = ((objInstance *)o)->skl->boneNum*sizeof(bone);
+			//const size_t arraySizeS = ((objInstance *)o)->skl->boneNum*sizeof(bone);
 			bone *tempBuffer1;
-			bone *tempBuffer2;
-			bone *tempBuffer3;
+			//bone *tempBuffer2;
+			//bone *tempBuffer3;
 			physRBInstance *tempBuffer4;
 			hbArray *tempBuffer5;
 
-			tempBuffer1 = malloc(arraySizeS);
+			tempBuffer1 = malloc(3*((objInstance *)o)->skeletonData.skl->boneNum*sizeof(bone));
 			if(tempBuffer1 == NULL){
 				/** Memory allocation failure. **/
 				return -1;
 			}
-			tempBuffer2 = malloc(arraySizeS);
+			/*tempBuffer2 = malloc(arraySizeS);
 			if(tempBuffer2 == NULL){
-				/** Memory allocation failure. **/
+				** Memory allocation failure. **
 				free(tempBuffer1);
 				return -1;
 			}
 			tempBuffer3 = malloc(arraySizeS);
 			if(tempBuffer3 == NULL){
-				/** Memory allocation failure. **/
+				** Memory allocation failure. **
 				free(tempBuffer2);
 				free(tempBuffer1);
 				return -1;
-			}
-			tempBuffer4 = malloc(((objInstance *)o)->skl->boneNum*sizeof(physRBInstance));
+			}*/
+			tempBuffer4 = malloc(((objInstance *)o)->skeletonData.skl->boneNum*sizeof(physRBInstance));
 			if(tempBuffer4 == NULL){
 				/** Memory allocation failure. **/
-				free(tempBuffer3);
-				free(tempBuffer2);
+				//free(tempBuffer3);
+				//free(tempBuffer2);
 				free(tempBuffer1);
 				return -1;
 			}
-			tempBuffer5 = malloc(((objInstance *)o)->skl->boneNum*sizeof(hbArray));
+			tempBuffer5 = malloc(((objInstance *)o)->skeletonData.skl->boneNum*sizeof(hbArray));
 			if(tempBuffer5 == NULL){
 				/** Memory allocation failure. **/
 				free(tempBuffer4);
-				free(tempBuffer3);
-				free(tempBuffer2);
+				//free(tempBuffer3);
+				//free(tempBuffer2);
 				free(tempBuffer1);
 				return -1;
 			}
@@ -675,12 +679,12 @@ signed char objiStateCopy(void *o, void *c){
 			if(((objInstance *)c)->configuration != NULL){
 				free(((objInstance *)c)->configuration);
 			}
-			if(((objInstance *)c)->skeletonState[0] != NULL){
+			/*if(((objInstance *)c)->skeletonState[0] != NULL){
 				free(((objInstance *)c)->skeletonState[0]);
 			}
 			if(((objInstance *)c)->skeletonState[1] != NULL){
 				free(((objInstance *)c)->skeletonState[1]);
-			}
+			}*/
 			if(((objInstance *)c)->skeletonPhysics != NULL){
 				free(((objInstance *)c)->skeletonPhysics);
 			}
@@ -689,25 +693,25 @@ signed char objiStateCopy(void *o, void *c){
 			}
 
 			((objInstance *)c)->configuration    = tempBuffer1;
-			((objInstance *)c)->skeletonState[0] = tempBuffer2;
-			((objInstance *)c)->skeletonState[1] = tempBuffer3;
+			((objInstance *)c)->skeletonState    = &tempBuffer1[((objInstance *)o)->skeletonData.skl->boneNum];
+			//((objInstance *)c)->skeletonState[1] = tempBuffer3;
 			((objInstance *)c)->skeletonPhysics  = tempBuffer4;
 			((objInstance *)c)->skeletonHitboxes = tempBuffer5;
 
 		}
 
 		// Copy each member of the arrays.
-		for(i = 0; i < ((objInstance *)o)->skl->boneNum; ++i){
+		for(i = 0; i < ((objInstance *)o)->skeletonData.skl->boneNum; ++i){
 			if(physRBIStateCopy(&((objInstance *)o)->skeletonPhysics[i], &((objInstance *)c)->skeletonPhysics[i]) == -1){
 				/** Memory allocation failure. **/
 				break;
 			}
-			((objInstance *)c)->configuration[i]    = ((objInstance *)o)->configuration[i];
-			((objInstance *)c)->skeletonState[0][i] = ((objInstance *)o)->skeletonState[0][i];
-			((objInstance *)c)->skeletonState[1][i] = ((objInstance *)o)->skeletonState[1][i];
-			((objInstance *)c)->skeletonHitboxes[i] = ((objInstance *)o)->skeletonHitboxes[i];
+			((objInstance *)c)->configuration[i]     = ((objInstance *)o)->configuration[i];
+			((objInstance *)c)->skeletonState[i+i]   = ((objInstance *)o)->skeletonState[i+i];
+			((objInstance *)c)->skeletonState[i+i+1] = ((objInstance *)o)->skeletonState[i+i+1];
+			((objInstance *)c)->skeletonHitboxes[i]  = ((objInstance *)o)->skeletonHitboxes[i];
 		}
-		if(i < ((objInstance *)o)->skl->boneNum){
+		if(i < ((objInstance *)o)->skeletonData.skl->boneNum){
 			/** Memory allocation failure. **/
 			while(i > 0){
 				--i;
@@ -722,14 +726,14 @@ signed char objiStateCopy(void *o, void *c){
 			free(((objInstance *)c)->configuration);
 			((objInstance *)c)->configuration = NULL;
 		}
-		if(((objInstance *)c)->skeletonState[0] != NULL){
-			free(((objInstance *)c)->skeletonState[0]);
-			((objInstance *)c)->skeletonState[0] = NULL;
+		if(((objInstance *)c)->skeletonState != NULL){
+			//free(((objInstance *)c)->skeletonState[0]);
+			((objInstance *)c)->skeletonState = NULL;
 		}
-		if(((objInstance *)c)->skeletonState[1] != NULL){
+		/*if(((objInstance *)c)->skeletonState[1] != NULL){
 			free(((objInstance *)c)->skeletonState[1]);
 			((objInstance *)c)->skeletonState[1] = NULL;
-		}
+		}*/
 		if(((objInstance *)c)->skeletonPhysics != NULL){
 			free(((objInstance *)c)->skeletonPhysics);
 			((objInstance *)c)->skeletonPhysics = NULL;
@@ -739,7 +743,7 @@ signed char objiStateCopy(void *o, void *c){
 			((objInstance *)c)->skeletonHitboxes = NULL;
 		}
 	}
-	((objInstance *)c)->skl = ((objInstance *)o)->skl;
+	//((objInstance *)c)->skl = ((objInstance *)o)->skl;
 
 	/* Copy the renderables array. */
 	if(((objInstance *)o)->renderableNum > 0 && ((objInstance *)o)->renderables != NULL){
@@ -778,7 +782,7 @@ signed char objiStateCopy(void *o, void *c){
 	rndrConfigStateCopy(&((objInstance *)o)->tempRndrConfig, &((objInstance *)c)->tempRndrConfig);
 
 	/* Copy the more complex data types. */
-	return skliStateCopy(&((objInstance *)o)->animationData, &((objInstance *)c)->animationData);
+	return skliStateCopy(&((objInstance *)o)->skeletonData, &((objInstance *)c)->skeletonData);
 
 	/* Copy configuration. *
 	rndrConfigStateCopy(&((object *)o)->tempRndrConfig, &((object *)c)->tempRndrConfig);
@@ -881,24 +885,24 @@ void objiResetInterpolation(void *obji){
 }
 
 void objiDelete(void *obji){
-	size_t i;
+	boneIndex_t i;
 	if(((objInstance *)obji)->configuration != NULL){
 		free(((objInstance *)obji)->configuration);
 	}
-	if(((objInstance *)obji)->skeletonState[0] != NULL){
+	/*if(((objInstance *)obji)->skeletonState[0] != NULL){
 		free(((objInstance *)obji)->skeletonState[0]);
 	}
 	if(((objInstance *)obji)->skeletonState[1] != NULL){
 		free(((objInstance *)obji)->skeletonState[1]);
-	}
+	}*/
 	if(((objInstance *)obji)->skeletonPhysics != NULL){
-		for(i = 0; i < ((objInstance *)obji)->skl->boneNum; ++i){
+		for(i = 0; i < ((objInstance *)obji)->skeletonData.skl->boneNum; ++i){
 			physRBIDelete(&((objInstance *)obji)->skeletonPhysics[i]);
 		}
 		free(((objInstance *)obji)->skeletonPhysics);
 	}
 	if(((objInstance *)obji)->skeletonHitboxes != NULL){
-		for(i = 0; i < ((objInstance *)obji)->skl->boneNum; ++i){
+		for(i = 0; i < ((objInstance *)obji)->skeletonData.skl->boneNum; ++i){
 			hbArrayDelete(&((objInstance *)obji)->skeletonHitboxes[i]);
 		}
 		free(((objInstance *)obji)->skeletonHitboxes);
@@ -906,7 +910,7 @@ void objiDelete(void *obji){
 	if(((objInstance *)obji)->renderables != NULL){
 		free(((objInstance *)obji)->renderables);
 	}
-	skliDelete(&((objInstance *)obji)->animationData);
+	skliDelete(&((objInstance *)obji)->skeletonData);
 
 	/*if(((object *)obji)->name != NULL){
 		free(((object *)obji)->name);
@@ -933,7 +937,7 @@ void objiDelete(void *obji){
 
 signed char objiInstantiate(objInstance *obji, object *base){
 
-	size_t i;
+	renderableIndex_t j;
 
 	obji->renderables = malloc(base->renderableNum * sizeof(rndrInstance));
 	if(obji->renderables == NULL){
@@ -941,7 +945,7 @@ signed char objiInstantiate(objInstance *obji, object *base){
 		return -1;
 	}
 
-	if(skliInit(&obji->animationData, base->animationCapacity) == -1){
+	if(skliInit(&obji->skeletonData, base->skl, base->animationCapacity) == -1){
 		/** Memory allocation failure. **/
 		free(obji->renderables);
 		return -1;
@@ -949,33 +953,18 @@ signed char objiInstantiate(objInstance *obji, object *base){
 
 	if(base->skl->boneNum != 0){
 
-		size_t arraySize = base->skl->boneNum * sizeof(bone);
+		boneIndex_t i;
 
 		/* Allocate memory for the object instance. */
-		obji->configuration = malloc(arraySize);
+		obji->configuration = malloc(3 * base->skl->boneNum * sizeof(bone));
 		if(obji->configuration == NULL){
 			/** Memory allocation failure. **/
-			skliDelete(&obji->animationData);
+			skliDelete(&obji->skeletonData);
 			free(obji->renderables);
 			return -1;
 		}
-		obji->skeletonState[0] = malloc(arraySize);
-		if(obji->skeletonState[0] == NULL){
-			/** Memory allocation failure. **/
-			free(obji->configuration);
-			skliDelete(&obji->animationData);
-			free(obji->renderables);
-			return -1;
-		}
-		obji->skeletonState[1] = malloc(arraySize);
-		if(obji->skeletonState[1] == NULL){
-			/** Memory allocation failure. **/
-			free(obji->skeletonState[0]);
-			free(obji->configuration);
-			skliDelete(&obji->animationData);
-			free(obji->renderables);
-			return -1;
-		}
+		obji->skeletonState = &obji->configuration[base->skl->boneNum];
+		//obji->skeletonState[1] = &obji->configuration[base->skl->boneNum*2];
 
 		/* Allocate memory for and initialize the hitboxes if necessary. */
 		if(base->skeletonHitboxes != NULL){
@@ -983,16 +972,14 @@ signed char objiInstantiate(objInstance *obji, object *base){
 			obji->skeletonHitboxes = malloc(base->skl->boneNum * sizeof(hbArray));
 			if(obji->skeletonHitboxes == NULL){
 				/** Memory allocation failure. **/
-				free(obji->skeletonState[1]);
-				free(obji->skeletonState[0]);
 				free(obji->configuration);
-				skliDelete(&obji->animationData);
+				skliDelete(&obji->skeletonData);
 				free(obji->renderables);
 				return -1;
 			}
 
 			for(i = 0; i < base->skl->boneNum; ++i){
-				arraySize = base->skeletonHitboxes[i].hitboxNum * sizeof(hitbox);
+				const size_t arraySize = base->skeletonHitboxes[i].hitboxNum * sizeof(hitbox);
 				obji->skeletonHitboxes[i].hitboxes = malloc(arraySize);
 				if(obji->skeletonHitboxes[i].hitboxes == NULL){
 					/** Memory allocation failure. **/
@@ -1009,10 +996,8 @@ signed char objiInstantiate(objInstance *obji, object *base){
 					hbArrayDelete(&obji->skeletonHitboxes[i]);
 				}
 				free(obji->skeletonHitboxes);
-				free(obji->skeletonState[1]);
-				free(obji->skeletonState[0]);
 				free(obji->configuration);
-				skliDelete(&obji->animationData);
+				skliDelete(&obji->skeletonData);
 				free(obji->renderables);
 				return -1;
 			}
@@ -1024,20 +1009,19 @@ signed char objiInstantiate(objInstance *obji, object *base){
 		/* Allocate memory for and initialize the rigid bodies if necessary. */
 		if(base->skeletonBodies != NULL){
 
+			boneIndex_t i;
+
 			obji->skeletonPhysics = malloc(base->skl->boneNum * sizeof(physRBInstance));
 			if(obji->skeletonPhysics == NULL){
 				/** Memory allocation failure. **/
-				free(obji->skeletonState[1]);
-				free(obji->skeletonState[0]);
 				free(obji->configuration);
-				skliDelete(&obji->animationData);
+				skliDelete(&obji->skeletonData);
 				free(obji->renderables);
 				return -1;
 			}
 
 			for(i = 0; i < base->skl->boneNum; ++i){
-				boneInit(&obji->configuration[i]);
-				if(physRBIInstantiate(&obji->skeletonPhysics[i], &base->skeletonBodies[i]) == -1){
+				if(physRBIInstantiate(&obji->skeletonPhysics[i],  &base->skeletonBodies[i], &obji->skeletonState[i+i]) == -1){
 					/** Memory allocation failure. **/
 					break;
 				}
@@ -1045,6 +1029,7 @@ signed char objiInstantiate(objInstance *obji, object *base){
 				obji->skeletonPhysics[i].flags = base->skeletonBodyFlags[i];
 				obji->skeletonPhysics[i].constraintNum = base->skeletonConstraintNum[i];
 				obji->skeletonPhysics[i].constraints = base->skeletonConstraints[i];
+				boneInit(&obji->configuration[i]);
 			}
 			if(i < base->skl->boneNum){
 				/** Memory allocation failure. **/
@@ -1059,10 +1044,8 @@ signed char objiInstantiate(objInstance *obji, object *base){
 					free(obji->skeletonHitboxes);
 				}
 				free(obji->skeletonPhysics);
-				free(obji->skeletonState[1]);
-				free(obji->skeletonState[0]);
 				free(obji->configuration);
-				skliDelete(&obji->animationData);
+				skliDelete(&obji->skeletonData);
 				free(obji->renderables);
 				return -1;
 			}
@@ -1076,14 +1059,14 @@ signed char objiInstantiate(objInstance *obji, object *base){
 
 	}
 
-	for(i = 0; i < base->renderableNum; ++i){
-		rndriInstantiate(&obji->renderables[i], &base->renderables[i]);
+	for(j = 0; j < base->renderableNum; ++j){
+		rndriInstantiate(&obji->renderables[j], &base->renderables[j]);
 	}
 
 	/** Remove the following line. **/
 	rndrConfigInit(&obji->tempRndrConfig);
 	obji->base = base;
-	obji->skl = base->skl;
+	//obji->skl = base->skl;
 	obji->renderableNum = base->renderableNum;
 	return 1;
 
@@ -1103,7 +1086,7 @@ signed char objiNewRenderable(objInstance *obji, model *mdl, textureWrapper *tw)
 	return 1;
 }
 
-signed char objiNewRenderableFromBase(objInstance *obji, renderable *rndr){
+signed char objiNewRenderableFromBase(objInstance *obji, const renderable *rndr){
 	/* Allocate room for a new renderable and initialize it. */
 	rndrInstance *tempBuffer = realloc(obji->renderables, (obji->renderableNum+1)*sizeof(rndrInstance));
 	if(tempBuffer == NULL){
@@ -1116,7 +1099,7 @@ signed char objiNewRenderableFromBase(objInstance *obji, renderable *rndr){
 	return 1;
 }
 
-signed char objiNewRenderableFromInstance(objInstance *obji, rndrInstance *rndr){
+signed char objiNewRenderableFromInstance(objInstance *obji, const rndrInstance *rndr){
 	/* Allocate room for a new renderable and initialize it. */
 	rndrInstance *tempBuffer = realloc(obji->renderables, (obji->renderableNum+1)*sizeof(rndrInstance));
 	if(tempBuffer == NULL){
@@ -1130,11 +1113,11 @@ signed char objiNewRenderableFromInstance(objInstance *obji, rndrInstance *rndr)
 	return 1;
 }
 
-signed char objiDeleteRenderable(objInstance *obji, size_t id){
+signed char objiDeleteRenderable(objInstance *obji, const renderableIndex_t id){
 	/* Remove a specified renderable. */
 	if(obji->renderableNum > 0){
-		size_t i, write;
-		size_t arraySize = (obji->renderableNum-1)*sizeof(rndrInstance);
+		renderableIndex_t i, write;
+		renderableIndex_t arraySize = (obji->renderableNum-1)*sizeof(rndrInstance);
 		rndrInstance *tempBuffer = malloc(arraySize);
 		if(tempBuffer == NULL){
 			/** Memory allocation failure. **/
@@ -1156,36 +1139,30 @@ signed char objiDeleteRenderable(objInstance *obji, size_t id){
 }
 
 signed char objiInitSkeleton(objInstance *obji, skeleton *skl){
-	size_t i;
-	size_t arraySizeS = skl->boneNum*sizeof(bone);
-	bone *tempBuffer3;
-	bone *tempBuffer2;
-	bone *tempBuffer1 = malloc(arraySizeS);
-	if(tempBuffer1 == NULL){
+	boneIndex_t i;
+	//size_t arraySizeS = skl->boneNum*sizeof(bone);
+	//bone *tempBuffer3;
+	//bone *tempBuffer2;
+	bone *tempBuffer = malloc(3 * skl->boneNum * sizeof(bone));
+	if(tempBuffer == NULL){
 		/** Memory allocation failure. **/
 		return -1;
 	}
-	tempBuffer2 = malloc(arraySizeS);
+	/*tempBuffer2 = malloc(arraySizeS);
 	if(tempBuffer2 == NULL){
-		/** Memory allocation failure. **/
+		** Memory allocation failure. **
 		free(tempBuffer1);
 		return -1;
 	}
 	tempBuffer3 = malloc(arraySizeS);
 	if(tempBuffer3 == NULL){
-		/** Memory allocation failure. **/
+		** Memory allocation failure. **
 		free(tempBuffer2);
 		free(tempBuffer1);
 		return -1;
-	}
+	}*/
 	if(obji->configuration != NULL){
 		free(obji->configuration);
-	}
-	if(obji->skeletonState[0] != NULL){
-		free(obji->skeletonState[0]);
-	}
-	if(obji->skeletonState[1] != NULL){
-		free(obji->skeletonState[1]);
 	}
 	if(obji->skeletonPhysics != NULL){
 		free(obji->skeletonPhysics);
@@ -1193,14 +1170,17 @@ signed char objiInitSkeleton(objInstance *obji, skeleton *skl){
 	if(obji->skeletonHitboxes != NULL){
 		free(obji->skeletonHitboxes);
 	}
-	obji->skl = skl;
-	obji->configuration    = tempBuffer1;
-	obji->skeletonState[0] = tempBuffer2;
-	obji->skeletonState[1] = tempBuffer3;
+	//obji->skl = skl;
+	obji->configuration = tempBuffer;
+	obji->skeletonState = &tempBuffer[skl->boneNum];
+	//obji->skeletonState[1] = &tempBuffer[obji->base->skl->boneNum*2];
+	//obji->skeletonState[0] = tempBuffer2;
+	//obji->skeletonState[1] = tempBuffer3;
 	for(i = 0; i < skl->boneNum; ++i){
 		boneInit(&obji->configuration[i]);
 	}
-	skliDelete(&obji->animationData);
+	skliDelete(&obji->skeletonData);
+	obji->skeletonData.skl = skl;
 	return 1;
 }
 
@@ -1220,17 +1200,25 @@ signed char objiInitSkeleton(objInstance *obji, skeleton *skl){
 	return 1;
 }*/
 
-void objiBoneSetPhysicsFlags(objInstance *obji, size_t boneID, unsigned char flags){
+void objiBoneSetPhysicsFlags(objInstance *obji, const boneIndex_t boneID, const flags_t flags){
+
 	if(obji->skeletonPhysics != NULL){
-		if((flags & (PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_SIMULATE)) > 0){
-			obji->skeletonPhysics[boneID].configuration[0] = obji->skeletonState[0][boneID];
-			obji->skeletonPhysics[boneID].configuration[1] = obji->skeletonState[1][boneID];
-		}
+
 		obji->skeletonPhysics[boneID].flags = flags;
+
+		if((flags & PHYS_BODY_SIMULATE) > 0){
+
+			// Replace PHYS_BODY_SIMULATE with PHYS_BODY_INITIALIZE.
+			obji->skeletonPhysics[boneID].flags &= ~PHYS_BODY_SIMULATE;
+			obji->skeletonPhysics[boneID].flags |= PHYS_BODY_INITIALIZE;
+
+		}
+
 	}
+
 }
 
-sklAnim *objiGetAnimation(objInstance *obji, const size_t id){
+sklAnim *objiGetAnimation(objInstance *obji, const animIndex_t id){
 	if(obji->base != NULL){
 		if(obji->base->animationNum > id){
 			return obji->base->animations[id];
@@ -1241,7 +1229,7 @@ sklAnim *objiGetAnimation(objInstance *obji, const size_t id){
 
 sklAnim *objiFindAnimation(objInstance *obji, const char *name){
 	if(obji->base != NULL){
-		size_t i;
+		animIndex_t i;
 		for(i = 0; i < obji->base->animationNum; ++i){
 			if(strcmp(obji->base->animations[i]->name, name) == 0){
 				return obji->base->animations[i];
@@ -1251,27 +1239,27 @@ sklAnim *objiFindAnimation(objInstance *obji, const char *name){
 	return NULL;
 }
 
-void objiSetAnimationType(objInstance *obji, const size_t slot, const signed char additive){
-	skliSetAnimationType(&obji->animationData, slot, additive);
+inline void objiSetAnimationType(objInstance *obji, const animIndex_t slot, const signed char additive){
+	skliSetAnimationType(&obji->skeletonData, slot, additive);
 }
 
-signed char objiChangeAnimation(objInstance *obji, const size_t slot, sklAnim *anim, const size_t frame, const float blendTime){
-	return skliChangeAnimation(&obji->animationData, obji->skl, slot, anim, frame, blendTime);
+inline signed char objiChangeAnimation(objInstance *obji, const animIndex_t slot, sklAnim *anim, const frameIndex_t frame, const float blendTime){
+	return skliChangeAnimation(&obji->skeletonData, slot, anim, frame, blendTime);
 }
 
-void objiClearAnimation(objInstance *obji, const size_t slot){
-	skliClearAnimation(&obji->animationData, slot);
+inline void objiClearAnimation(objInstance *obji, const animIndex_t slot){
+	skliClearAnimation(&obji->skeletonData, slot);
 }
 
-void objiApplyLinearForce(objInstance *obji, const size_t boneID, const vec3 *F){
+inline void objiApplyLinearForce(objInstance *obji, const boneIndex_t boneID, const vec3 *F){
 	physRBIApplyLinearForce(&obji->skeletonPhysics[boneID], F);
 }
 
-void objiApplyAngularForceGlobal(objInstance *obji, const size_t boneID, const vec3 *F, const vec3 *r){
+inline void objiApplyAngularForceGlobal(objInstance *obji, const boneIndex_t boneID, const vec3 *F, const vec3 *r){
 	physRBIApplyAngularForceGlobal(&obji->skeletonPhysics[boneID], F, r);
 }
 
-void objiApplyForceGlobal(objInstance *obji, const size_t boneID, const vec3 *F, const vec3 *r){
+inline void objiApplyForceGlobal(objInstance *obji, const boneIndex_t boneID, const vec3 *F, const vec3 *r){
 	physRBIApplyForceGlobal(&obji->skeletonPhysics[boneID], F, r);
 }
 
@@ -1288,60 +1276,69 @@ void objiAddAngularVelocity(objInstance *obji, const size_t boneID, const float 
 	physRBIAddAngularVelocity(&obji->skeletonPhysics[boneID], angle, x, y, z);
 }*/
 
-void objiUpdate(objInstance *obji, const camera *cam, const float elapsedTime, const float dt){
+void objiUpdate(objInstance *obji, physicsSolver *solver, const float elapsedTime, const float dt){
 
-	size_t i;
-
-	/* Update the object's skeletal animations. */
-	// Swap the state pointers, so the previous state is in skeletonState[1].
-	// We can reuse the old skeletonState[1] for the current state.
-	bone *lastState = obji->skeletonState[0];
-	obji->skeletonState[0] = obji->skeletonState[1];
-	obji->skeletonState[1] = lastState;
+	boneIndex_t i;
+	boneIndex_t i2 = 0;
+	renderableIndex_t j;
 
 	// Update each skeletal animation.
-	skliUpdateAnimations(&obji->animationData, elapsedTime, 1.f);
+	skliUpdateAnimations(&obji->skeletonData, elapsedTime, 1.f);
 
 	/* Update the object's skeleton. */
-	for(i = 0; i < obji->skl->boneNum; ++i){
+	for(i = 0; i < obji->skeletonData.skl->boneNum; ++i){
 
-		signed char isRoot = i == obji->skl->bones[i].parent || obji->skl->bones[i].parent >= obji->skl->boneNum;
-		obji->skeletonState[0][i] = obji->configuration[i];
-		skliGenerateBoneState(&obji->animationData, &obji->skeletonState[0][i], i);
+		const signed char isRoot = (i == obji->skeletonData.skl->bones[i].parent) ||
+		                           (obji->skeletonData.skl->bones[i].parent >= obji->skeletonData.skl->boneNum);
+		obji->skeletonState[i2+1] = obji->skeletonState[i2];
 
-		if(obji->skeletonPhysics != NULL){
+		if(obji->skeletonPhysics != NULL && (obji->skeletonPhysics[i].flags & (PHYS_BODY_INITIALIZE | PHYS_BODY_SIMULATE))){
 
 			/*
 			** Simulate the body attached to the bone.
 			*/
 
-			// Set the body's state to that of its bone when the bone starts being simulated.
-			/** This should be removed eventually. **/
-			if((obji->skeletonPhysics[i].flags & PHYSICS_BODY_INITIALIZE) > 0){
-				obji->skeletonPhysics[i].flags &= ~PHYSICS_BODY_INITIALIZE;
-				obji->skeletonPhysics[i].flags |= PHYSICS_BODY_SIMULATE;
-				obji->skeletonPhysics[i].configuration[0] = obji->skeletonState[0][i];
-				obji->skeletonPhysics[i].configuration[1] = obji->skeletonState[1][i];
-			}
+			if((obji->skeletonPhysics[i].flags & PHYS_BODY_INITIALIZE) > 0){
 
-			if((obji->skeletonPhysics[i].flags & PHYSICS_BODY_SIMULATE)){
+				// Generate a new animated bone state.
+				//obji->skeletonState[0][i] = obji->configuration[i];
+				obji->skeletonState[i2] = obji->configuration[i];
+				skliGenerateBoneState(&obji->skeletonData, i, obji->skeletonData.skl->bones[i].name, &obji->skeletonState[i2]);
+				//skliGenerateBoneState(&obji->skeletonData, &obji->skeletonState[i2], i);
+				//skliGenerateBoneState(&obji->animationData, &obji->skeletonState[0][i], i);
 
-				/** TEMPORARILY ADD GRAVITY. **/
-				if(!obji->skeletonPhysics[i].blah){
-				vec3 force; vec3Set(&force, 0.f, -98.0665f, 0.f);
-				objiApplyLinearForce(obji, 0, &force);
-				}
-				// Integrate the body and solve constraints if desired.
-				physRBIIntegrateEuler(&obji->skeletonPhysics[i], dt);
-
-				/** TEMPORARILY SET THE BONE STATE. **/
-				obji->skeletonState[0][i] = obji->skeletonPhysics[i].configuration[0];
+				// Set the body's state to that of its bone when the bone starts being simulated.
+				/** This should be removed eventually if possible. **/
+				obji->skeletonPhysics[i].flags &= ~PHYS_BODY_INITIALIZE;
+				obji->skeletonPhysics[i].flags |= PHYS_BODY_SIMULATE;
+				//obji->skeletonPhysics[i].configuration[0] = obji->skeletonState[0][i];
+				//obji->skeletonPhysics[i].configuration[1] = obji->skeletonState[1][i];
 
 			}
 
-		}
+			/** TEMPORARILY ADD GRAVITY. **/
+			vec3 force; vec3Set(&force, 0.f, -98.0665f, 0.f);
+			objiApplyLinearForce(obji, 0, &force);
 
-		if(obji->skeletonPhysics == NULL || !(obji->skeletonPhysics[i].flags & PHYSICS_BODY_SIMULATE)){
+			if((obji->skeletonPhysics[i].flags & PHYS_BODY_COLLIDE) > 0){
+				// Only update the body's collision mesh
+				// and add it to the solver if it is set
+				// to interact with other bodies.
+				/** Only update AABB? **/
+				physRBIIntegrateLeapfrogVelocity(&obji->skeletonPhysics[i], dt);
+				physRBIUpdateCollisionMesh(&obji->skeletonPhysics[i]);
+				physSolverAddBody(solver, &obji->skeletonPhysics[i]);
+			}else{
+				// If the body is not interacting with any
+				// other bodies, integrate everything
+				// instead of just the velocity.
+				physRBIIntegrateLeapfrog(&obji->skeletonPhysics[i], dt);
+			}
+
+			/** TEMPORARILY SET THE BONE STATE. **/
+			//obji->skeletonState[0][i] = obji->skeletonPhysics[i].configuration[0];
+
+		}else{
 
 			/*
 			** Apply animation transformations.
@@ -1352,16 +1349,39 @@ void objiUpdate(objInstance *obji, const camera *cam, const float elapsedTime, c
 			obji->skeletonState[0][i].position.y += obji->skl->bones[i].defaultState.position.y;
 			obji->skeletonState[0][i].position.z += obji->skl->bones[i].defaultState.position.z;*/
 
+			// Generate a new animated bone state.
+			//obji->skeletonState[0][i] = obji->configuration[i];
+			obji->skeletonState[i2] = obji->configuration[i];
+			skliGenerateBoneState(&obji->skeletonData, i, obji->skeletonData.skl->bones[i].name, &obji->skeletonState[i2]);
+			//skliGenerateBoneState(&obji->skeletonData, &obji->skeletonState[i2], i);
+			//skliGenerateBoneState(&obji->animationData, &obji->skeletonState[0][i], i);
+
 			// Apply the object skeleton's bind offsets.
-			boneTransformAppendPositionVec(&obji->skeletonState[0][i],
+			/*boneTransformAppendPositionVec(&obji->skeletonState[0][i],
 			                               obji->skl->bones[i].defaultState.position.x,
 			                               obji->skl->bones[i].defaultState.position.y,
 			                               obji->skl->bones[i].defaultState.position.z,
-			                               &obji->skeletonState[0][i].position);
+			                               &obji->skeletonState[0][i].position);*/
+			boneTransformAppendPositionVec(&obji->skeletonState[i2],
+			                               obji->skeletonData.skl->bones[i].defaultState.position.x,
+			                               obji->skeletonData.skl->bones[i].defaultState.position.y,
+			                               obji->skeletonData.skl->bones[i].defaultState.position.z,
+			                               &obji->skeletonState[i2].position);
 
 			// Apply the parent's transformations to each bone.
 			if(!isRoot){
-				boneTransformAppend(&obji->skeletonState[0][obji->skl->bones[i].parent], &obji->skeletonState[0][i], &obji->skeletonState[0][i]);
+				//boneTransformAppend(&obji->skeletonState[0][obji->skl->bones[i].parent], &obji->skeletonState[0][i], &obji->skeletonState[0][i]);
+				const boneIndex_t p = obji->skeletonData.skl->bones[i].parent;
+				boneTransformAppend(&obji->skeletonState[p+p], &obji->skeletonState[i2], &obji->skeletonState[i2]);
+			}
+
+			if(obji->skeletonPhysics != NULL && (obji->skeletonPhysics[i].flags & PHYS_BODY_COLLIDE) > 0){
+				// Only update the body's collision mesh
+				// and add it to the solver if it is set
+				// to interact with other bodies.
+				/** Only update AABB? **/
+				physRBIUpdateCollisionMesh(&obji->skeletonPhysics[i]);
+				physSolverAddBody(solver, &obji->skeletonPhysics[i]);
 			}
 
 		}
@@ -1369,6 +1389,7 @@ void objiUpdate(objInstance *obji, const camera *cam, const float elapsedTime, c
 		// Apply billboarding to the root bone if necessary.
 		if(isRoot && (obji->tempRndrConfig.flags & (RNDR_BILLBOARD_X | RNDR_BILLBOARD_Y | RNDR_BILLBOARD_Z)) > 0){
 			/** Should work with physics objects? **/
+			/** Actually, do this before rendering. **/
 			/**
 			// If any of the flags apart from RNDR_BILLBOARD_TARGET are set, continue.
 			mat4 billboardRotation;
@@ -1431,27 +1452,27 @@ void objiUpdate(objInstance *obji, const camera *cam, const float elapsedTime, c
 			**/
 		}
 
-		if(obji->skeletonPhysics != NULL && (obji->skeletonPhysics[i].flags & PHYSICS_BODY_COLLIDE) > 0){
-			/*
-			** Update the body's collision mesh.
-			*/
-			physRBIUpdateCollisionMesh(&obji->skeletonPhysics[i]);
-		}
+		// Update i2.
+		i2 += 2;
 
 	}
 
 	/* Update each of the object's texture wrappers. */
-	for(i = 0; i < obji->renderableNum; ++i){
-		twiAnimate(&obji->renderables[i].twi, elapsedTime);
+	for(j = 0; j < obji->renderableNum; ++j){
+		twiAnimate(&obji->renderables[j].twi, elapsedTime);
 	}
 
+}
+
+void objiBoneLastState(objInstance *obji, const float dt){
+	//
 }
 
 signed char objiRenderMethod(objInstance *obji, const float interpT){
 	// Update alpha.
 	iFloatUpdate(&obji->tempRndrConfig.alpha, interpT);
 	if(obji->tempRndrConfig.alpha.render > 0.f){
-		size_t i;
+		renderableIndex_t i;
 		for(i = 0; i < obji->renderableNum; ++i){
 			if(obji->tempRndrConfig.alpha.render < 1.f || twiContainsTranslucency(&obji->renderables[i].twi)){
 				// The model contains translucency.
@@ -1466,7 +1487,7 @@ signed char objiRenderMethod(objInstance *obji, const float interpT){
 	return 2;
 }
 
-void objiGenerateSprite(const objInstance *obji, const size_t rndr, const float interpT, const float *texFrag, vertex *vertices){
+void objiGenerateSprite(const objInstance *obji, const renderableIndex_t rndr, const float interpT, const float *texFrag, vertex *vertices){
 
 	/* Generate the base sprite. */
 	const float left   = -0.5f - obji->tempRndrConfig.pivot.render.x;
@@ -1550,7 +1571,8 @@ void objiGenerateSprite(const objInstance *obji, const size_t rndr, const float 
 
 	/* Generate a transformation for the sprite and transform each vertex. */
 	/** Optimize? **/
-	boneInterpolate(&obji->skeletonState[1][0], &obji->skeletonState[0][0], interpT, &transform);
+	//boneInterpolate(&obji->skeletonState[1][0], &obji->skeletonState[0][0], interpT, &transform);
+	boneInterpolate(&obji->skeletonState[1], &obji->skeletonState[0], interpT, &transform);
 	transform.scale.x *= twiGetFrameWidth(&obji->renderables[rndr].twi) * twiGetTexWidth(&obji->renderables[rndr].twi);
 	transform.scale.y *= twiGetFrameHeight(&obji->renderables[rndr].twi) * twiGetTexHeight(&obji->renderables[rndr].twi);
 	vertTransform(&vertices[0], &transform.position, &transform.orientation, &transform.scale);

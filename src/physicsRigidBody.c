@@ -4,11 +4,14 @@
 #include <string.h>
 #include <stdio.h>
 
-#define PHYS_INTEGRATION_STEPS_EULER 2
+#define PHYS_INTEGRATION_STEPS_EULER      2
 #define PHYS_INTEGRATION_STEPS_RUNGEKUTTA 4
 
+#define PHYS_RESTING_EPSILON 0.0001f
+#define PHYS_BAUMGARTE_TERM  0.0001f
+
 void physConstraintInit(physConstraint *constraint){
-	constraint->flags = PHYSICS_CONSTRAINT_TYPE_1;
+	constraint->flags = PHYS_CONSTRAINT_TYPE_1;
 	constraint->constraintID = (size_t)-1;
 	vec3SetS(&constraint->constraintOffsetMin, 0.f);
 	vec3SetS(&constraint->constraintOffsetMax, 0.f);
@@ -34,7 +37,7 @@ void physRigidBodyGenerateMassProperties(physRigidBody *body, float **vertexMass
 	** properties for each of its colliders.
 	*/
 
-	size_t i;
+	colliderIndex_t i;
 	float *colliderMassArray;
 	float tempInertiaTensor[6];
 
@@ -113,61 +116,82 @@ static signed char physColliderResizeToFit(physCollider *collider, float **verte
 			/** Memory allocation failure. **/
 			return -1;
 		}
-		cHull->vertices = tempBuffer1;
 		tempBuffer2 = realloc(*vertexMassArrays, cHull->vertexNum*sizeof(float));
 		if(tempBuffer2 == NULL){
 			/** Memory allocation failure. **/
+			free(tempBuffer1);
 			return -1;
 		}
+		cHull->vertices = tempBuffer1;
 		*vertexMassArrays = tempBuffer2;
 	}else{
 		if(cHull->vertices != NULL){
 			free(cHull->vertices);
+			cHull->vertices = NULL;
 		}
 		if(*vertexMassArrays != NULL){
 			free(*vertexMassArrays);
+			*vertexMassArrays = NULL;
 		}
 	}
 
-	if(cHull->indexNum != 0){
-		size_t *tempBuffer = realloc(cHull->indices, cHull->indexNum*sizeof(size_t));
+	if(cHull->faceNum != 0){
+		hbMeshFace *tempBuffer2;
+		vec3 *tempBuffer1 = realloc(cHull->normals, cHull->faceNum*sizeof(vec3));
+		if(tempBuffer1 == NULL){
+			/** Memory allocation failure. **/
+			return -1;
+		}
+		tempBuffer2 = realloc(cHull->faces, cHull->faceNum*sizeof(hbMeshFace));
+		if(tempBuffer2 == NULL){
+			/** Memory allocation failure. **/
+			free(tempBuffer1);
+			return -1;
+		}
+		cHull->normals = tempBuffer1;
+		cHull->faces = tempBuffer2;
+	}else{
+		if(cHull->normals != NULL){
+			free(cHull->normals);
+			cHull->normals = NULL;
+		}
+		if(cHull->faces != NULL){
+			free(cHull->faces);
+			cHull->faces = NULL;
+		}
+	}
+
+	if(cHull->edgeNum != 0){
+		hbMeshEdge *tempBuffer = realloc(cHull->edges, cHull->edgeNum*sizeof(hbMeshEdge));
 		if(tempBuffer == NULL){
 			/** Memory allocation failure. **/
 			return -1;
 		}
-		cHull->indices = tempBuffer;
-	}else if(cHull->indices != NULL){
-		free(cHull->indices);
+		cHull->edges = tempBuffer;
+	}else if(cHull->edges != NULL){
+		free(cHull->edges);
+		cHull->edges = NULL;
 	}
 
 	return 1;
 
 }
 
-signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_t *constraintNum, physConstraint **constraints,
+signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintIndex_t *constraintNum, physConstraint **constraints,
                               const skeleton *skl, const char *prgPath, const char *filePath){
 
 	/*
 	** Loads a series of rigid bodies.
 	**
-	** If skeleton is not NULL, it constraints them using
+	** If skeleton is not NULL, it constrains them using
 	** the specified bone names.
 	*/
 
-	size_t i;
-	size_t bodyNum = skl == NULL ? 1 : skl->boneNum;
-	size_t vertexCapacity = 0;
-	size_t indexCapacity = 0;
-	float **vertexMassArrays = NULL;  // Array of vertex masses for each collider.
-
-	signed char isSkeleton = -1;  // Whether or not a skeleton is being described.
-	size_t currentBone = 0;
-	signed char currentCommand = -1;  // The current multiline command type (-1 = none, 0 = rigid body, 1 = collider, 2 = constraint).
-	unsigned int currentLine = 0;     // Current file line being read.
-
+	boneIndex_t j;
+	boneIndex_t bodyNum = skl == NULL ? 1 : skl->boneNum;
 	signed char success = 0;
 
-
+	FILE *rbInfo;
 	const size_t pathLen = strlen(prgPath);
 	const size_t fileLen = strlen(filePath);
 	char *fullPath = malloc((pathLen+fileLen+1) * sizeof(char));
@@ -178,16 +202,28 @@ signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_
 	memcpy(fullPath, prgPath, pathLen);
 	memcpy(fullPath+pathLen, filePath, fileLen);
 	fullPath[pathLen+fileLen] = '\0';
-	FILE *rbInfo = fopen(fullPath, "r");
-	char lineFeed[1024];
-	char *line;
-	size_t lineLength;
+	rbInfo = fopen(fullPath, "r");
 
-	for(i = 0; i < bodyNum; ++i){
-		physRigidBodyInit(&bodies[i]);
+	for(j = 0; j < bodyNum; ++j){
+		physRigidBodyInit(&bodies[j]);
 	}
 
 	if(rbInfo != NULL){
+
+		char lineFeed[1024];
+		char *line;
+		size_t lineLength;
+
+		hbVertexIndex_t vertexCapacity = 0;
+		hbFaceIndex_t normalCapacity = 0;
+		hbEdgeIndex_t edgeCapacity = 0;
+		float **vertexMassArrays = NULL;  // Array of vertex masses for each collider.
+
+		signed char isSkeleton = -1;  // Whether or not a skeleton is being described.
+		boneIndex_t currentBone = 0;
+		signed char currentCommand = -1;  // The current multiline command type (-1 = none, 0 = rigid body, 1 = collider, 2 = constraint).
+		unsigned int currentLine = 0;     // Current file line being read.
+
 		while(fileParseNextLine(rbInfo, lineFeed, sizeof(lineFeed), &line, &lineLength)){
 
 			++currentLine;
@@ -205,7 +241,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_
 				end = strrchr(line+10, '{');
 				if(end){
 
-					size_t nextBone = 0;
+					boneIndex_t nextBone = 0;
 
 					// Check if the rigid body has a name.
 					if(end != &line[10] && skl != NULL){
@@ -231,9 +267,9 @@ signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_
 							}
 
 							// Loop through the skeleton to find a bone with the given name.
-							for(i = 0; i < skl->boneNum; ++i){
-								if(strncmp(line, skl->bones[i].name, lineLength) == 0){
-									nextBone = i;
+							for(j = 0; j < skl->boneNum; ++j){
+								if(strncmp(line, skl->bones[j].name, lineLength) == 0){
+									nextBone = j;
 									isSkeleton = 1;
 									break;
 								}
@@ -258,6 +294,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_
 								physRigidBodyGenerateMassProperties(&bodies[currentBone], vertexMassArrays);
 								// Free the collider mass arrays.
 								if(vertexMassArrays != NULL){
+									colliderIndex_t i;
 									for(i = 0; i < bodies[currentBone].colliderNum; ++i){
 										if(vertexMassArrays[i] != NULL){
 											free(vertexMassArrays[i]);
@@ -274,17 +311,18 @@ signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_
 									                       &vertexMassArrays[bodies[currentBone].colliderNum-1]) == -1){
 									/** Memory allocation failure. **/
 									if(vertexMassArrays != NULL){
-										for(i = 0; i < bodies[currentBone].colliderNum; ++i){
-											if(vertexMassArrays[i] != NULL){
-												free(vertexMassArrays[i]);
+										colliderIndex_t k;
+										for(k = 0; k < bodies[currentBone].colliderNum; ++k){
+											if(vertexMassArrays[k] != NULL){
+												free(vertexMassArrays[k]);
 											}
 										}
 										free(vertexMassArrays);
 									}
-									for(i = 0; i < bodyNum; ++i){
+									for(j = 0; j < bodyNum; ++j){
 										physRigidBodyDelete(&bodies[currentBone]);
-										if(constraints[i] != NULL){
-											free(constraints[i]);
+										if(constraints[j] != NULL){
+											free(constraints[j]);
 										}
 									}
 									free(fullPath);
@@ -294,7 +332,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_
 							}
 						}
 						currentBone = nextBone;
-						flags[currentBone] = PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE;
+						flags[currentBone] = PHYS_BODY_INITIALIZE | PHYS_BODY_COLLIDE;
 						physRigidBodyInit(&bodies[currentBone]);
 						constraintNum[currentBone] = 0;
 						constraints[currentBone] = NULL;
@@ -321,17 +359,18 @@ signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_
 									                       &vertexMassArrays[bodies[currentBone].colliderNum-1]) == -1){
 									/** Memory allocation failure. **/
 									if(vertexMassArrays != NULL){
-										for(i = 0; i < bodies[currentBone].colliderNum; ++i){
-											if(vertexMassArrays[i] != NULL){
-												free(vertexMassArrays[i]);
+										colliderIndex_t k;
+										for(k = 0; k < bodies[currentBone].colliderNum; ++k){
+											if(vertexMassArrays[k] != NULL){
+												free(vertexMassArrays[k]);
 											}
 										}
 										free(vertexMassArrays);
 									}
-									for(i = 0; i < bodyNum; ++i){
+									for(j = 0; j < bodyNum; ++j){
 										physRigidBodyDelete(&bodies[currentBone]);
-										if(constraints[i] != NULL){
-											free(constraints[i]);
+										if(constraints[j] != NULL){
+											free(constraints[j]);
 										}
 									}
 									free(fullPath);
@@ -346,17 +385,18 @@ signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_
 						if(tempBuffer1 == NULL){
 							/** Memory allocation failure. **/
 							if(vertexMassArrays != NULL){
-								for(i = 0; i < bodies[currentBone].colliderNum; ++i){
-									if(vertexMassArrays[i] != NULL){
-										free(vertexMassArrays[i]);
+								colliderIndex_t k;
+								for(k = 0; k < bodies[currentBone].colliderNum; ++k){
+									if(vertexMassArrays[k] != NULL){
+										free(vertexMassArrays[k]);
 									}
 								}
 								free(vertexMassArrays);
 							}
-							for(i = 0; i < bodyNum; ++i){
+							for(j = 0; j < bodyNum; ++j){
 								physRigidBodyDelete(&bodies[currentBone]);
-								if(constraints[i] != NULL){
-									free(constraints[i]);
+								if(constraints[j] != NULL){
+									free(constraints[j]);
 								}
 							}
 							free(fullPath);
@@ -368,17 +408,18 @@ signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_
 						if(tempBuffer2 == NULL){
 							/** Memory allocation failure. **/
 							if(vertexMassArrays != NULL){
-								for(i = 0; i < bodies[currentBone].colliderNum; ++i){
-									if(vertexMassArrays[i] != NULL){
-										free(vertexMassArrays[i]);
+								colliderIndex_t k;
+								for(k = 0; k < bodies[currentBone].colliderNum; ++k){
+									if(vertexMassArrays[k] != NULL){
+										free(vertexMassArrays[k]);
 									}
 								}
 								free(vertexMassArrays);
 							}
-							for(i = 0; i < bodyNum; ++i){
+							for(j = 0; j < bodyNum; ++j){
 								physRigidBodyDelete(&bodies[currentBone]);
-								if(constraints[i] != NULL){
-									free(constraints[i]);
+								if(constraints[j] != NULL){
+									free(constraints[j]);
 								}
 							}
 							free(fullPath);
@@ -388,7 +429,8 @@ signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_
 						vertexMassArrays = tempBuffer2;
 						vertexMassArrays[bodies[currentBone].colliderNum] = NULL;
 						vertexCapacity = 0;
-						indexCapacity = 0;
+						normalCapacity = 0;
+						edgeCapacity = 0;
 						hbInit(&bodies[currentBone].colliders[bodies[currentBone].colliderNum].hb, HB_TYPE_MESH);
 						hbMeshInit((hbMesh *)&bodies[currentBone].colliders[bodies[currentBone].colliderNum].hb.hull);
 						++bodies[currentBone].colliderNum;
@@ -425,45 +467,48 @@ signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_
 						if(tempBuffer1 == NULL){
 							/** Memory allocation failure. **/
 							if(vertexMassArrays != NULL){
-								for(i = 0; i < bodies[currentBone].colliderNum; ++i){
-									if(vertexMassArrays[i] != NULL){
-										free(vertexMassArrays[i]);
+								colliderIndex_t k;
+								for(k = 0; k < bodies[currentBone].colliderNum; ++k){
+									if(vertexMassArrays[k] != NULL){
+										free(vertexMassArrays[k]);
 									}
 								}
 								free(vertexMassArrays);
 							}
-							for(i = 0; i < bodyNum; ++i){
+							for(j = 0; j < bodyNum; ++j){
 								physRigidBodyDelete(&bodies[currentBone]);
-								if(constraints[i] != NULL){
-									free(constraints[i]);
+								if(constraints[j] != NULL){
+									free(constraints[j]);
 								}
 							}
 							free(fullPath);
 							fclose(rbInfo);
 							return -1;
 						}
-						cHull->vertices = tempBuffer1;
 						tempBuffer2 = realloc(vertexMassArrays[bodies[currentBone].colliderNum-1], vertexCapacity*sizeof(float));
 						if(tempBuffer2 == NULL){
 							/** Memory allocation failure. **/
 							if(vertexMassArrays != NULL){
-								for(i = 0; i < bodies[currentBone].colliderNum; ++i){
-									if(vertexMassArrays[i] != NULL){
-										free(vertexMassArrays[i]);
+								colliderIndex_t k;
+								for(k = 0; k < bodies[currentBone].colliderNum; ++k){
+									if(vertexMassArrays[k] != NULL){
+										free(vertexMassArrays[k]);
 									}
 								}
 								free(vertexMassArrays);
 							}
-							for(i = 0; i < bodyNum; ++i){
+							for(j = 0; j < bodyNum; ++j){
 								physRigidBodyDelete(&bodies[currentBone]);
-								if(constraints[i] != NULL){
-									free(constraints[i]);
+								if(constraints[j] != NULL){
+									free(constraints[j]);
 								}
 							}
 							free(fullPath);
 							fclose(rbInfo);
+							free(tempBuffer1);
 							return -1;
 						}
+						cHull->vertices = tempBuffer1;
 						vertexMassArrays[bodies[currentBone].colliderNum-1] = tempBuffer2;
 					}
 
@@ -487,49 +532,223 @@ signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_
 
 				if(bodies[currentBone].colliderNum > 0){
 
-					hbMesh *cHull = (hbMesh *)&bodies[currentBone].colliders[bodies[currentBone].colliderNum-1].hb.hull;
-					char *token;
+					char *token = strtok(line+2, " ");
+					if(token != NULL){
 
-					// Reallocate index array if necessary.
-					if(cHull->indexNum+3 >= indexCapacity){
-						if(indexCapacity == 0){
-							indexCapacity = 3;
-						}else{
-							indexCapacity *= 2;
-						}
-						size_t *tempBuffer = realloc(cHull->indices, indexCapacity*sizeof(size_t));
-						if(tempBuffer == NULL){
-							/** Memory allocation failure. **/
-							if(vertexMassArrays != NULL){
-								for(i = 0; i < bodies[currentBone].colliderNum; ++i){
-									if(vertexMassArrays[i] != NULL){
-										free(vertexMassArrays[i]);
+						hbMesh *cHull = (hbMesh *)&bodies[currentBone].colliders[bodies[currentBone].colliderNum-1].hb.hull;
+
+						hbEdgeIndex_t i = 0;
+
+						hbEdgeIndex_t start;
+						hbEdgeIndex_t end = strtoul(token, NULL, 0)-1;
+
+						hbEdgeIndex_t oldNum = cHull->edgeNum;
+						hbEdgeIndex_t addNum = 0;
+
+						hbEdgeIndex_t first = (hbEdgeIndex_t)-1;
+						hbEdgeIndex_t last = oldNum;
+
+						byte_t firstTwin = 0;
+						byte_t lastTwin = 0;
+
+						byte_t exit = 0;
+
+						vec3 BsA;
+						vec3 CsA;
+
+						// Recursively add the face's edges.
+						while(1){
+
+							token = strtok(NULL, " ");
+							if(token == NULL){
+								// If this was the last vertex, loop back
+								// to the first one and create an edge with it.
+								token = strtok(line+2, " ");
+								exit = 1;
+							}
+
+							// Reallocate edge array if necessary.
+							if(cHull->edgeNum == edgeCapacity){
+								if(edgeCapacity == 0){
+									edgeCapacity = 3;
+								}else{
+									edgeCapacity *= 2;
+								}
+								hbMeshEdge *tempBuffer = realloc(cHull->edges, edgeCapacity*sizeof(hbMeshEdge));
+								if(tempBuffer == NULL){
+									/** Memory allocation failure. **/
+									if(vertexMassArrays != NULL){
+										colliderIndex_t k;
+										for(k = 0; k < bodies[currentBone].colliderNum; ++k){
+											if(vertexMassArrays[k] != NULL){
+												free(vertexMassArrays[k]);
+											}
+										}
+										free(vertexMassArrays);
+									}
+									for(j = 0; j < bodyNum; ++j){
+										physRigidBodyDelete(&bodies[currentBone]);
+										if(constraints[j] != NULL){
+											free(constraints[j]);
+										}
+									}
+									free(fullPath);
+									fclose(rbInfo);
+									return -1;
+								}
+								cHull->edges = tempBuffer;
+							}
+
+							start = end;
+							end = strtoul(token, NULL, 0)-1;
+
+							// Look for a twin edge. If it is found,
+							// the current edge will be stored directly
+							// after it.
+							while(i < oldNum){
+								// Check if the current edge is the next edge or a twin.
+								if(start == cHull->edges[i].end && end == cHull->edges[i].start){
+									// If the new edge is a twin, don't add it.
+									// Instead, set the current edge's twin.
+									if(first == (hbEdgeIndex_t)-1){
+										// If this is the first vertex, set it.
+										first = i;
+										firstTwin = 1;
+									}else{
+										// Set this edge as the last edge's next.
+										if(lastTwin){
+											cHull->edges[last].twinNext = i;
+										}else{
+											cHull->edges[last].next = i;
+										}
+									}
+									cHull->edges[i].twinFace = cHull->faceNum;
+									last = i;
+									lastTwin = 1;
+									break;
+								}
+								++i;
+							}
+
+							if(i >= oldNum){
+								if(first == (hbEdgeIndex_t)-1){
+									// If this is the first vertex, set it.
+									first = cHull->edgeNum;
+									firstTwin = 0;
+								}else{
+									// Set this edge as the last edge's next.
+									if(lastTwin){
+										cHull->edges[last].twinNext = cHull->edgeNum;
+									}else{
+										cHull->edges[last].next = cHull->edgeNum;
 									}
 								}
-								free(vertexMassArrays);
+								last = cHull->edgeNum;
+								lastTwin = 0;
+								cHull->edges[last].start = start;
+								cHull->edges[last].end = end;
+								cHull->edges[last].face = cHull->faceNum;
+								cHull->edges[last].twinFace = cHull->faceNum;
+								++cHull->edgeNum;
 							}
-							for(i = 0; i < bodyNum; ++i){
-								physRigidBodyDelete(&bodies[currentBone]);
-								if(constraints[i] != NULL){
-									free(constraints[i]);
-								}
-							}
-							free(fullPath);
-							fclose(rbInfo);
-							return -1;
-						}
-						cHull->indices = tempBuffer;
-					}
 
-					token = strtok(line+2, " ");
-					cHull->indices[cHull->indexNum] = strtoul(token, NULL, 0)-1;
-					++cHull->indexNum;
-					token = strtok(NULL, " ");
-					cHull->indices[cHull->indexNum] = strtoul(token, NULL, 0)-1;
-					++cHull->indexNum;
-					token = strtok(NULL, " ");
-					cHull->indices[cHull->indexNum] = strtoul(token, NULL, 0)-1;
-					++cHull->indexNum;
+							++addNum;
+
+							if(exit){
+								if(lastTwin){
+									cHull->edges[last].twinNext = first;
+								}else{
+									cHull->edges[last].next = first;
+								}
+								break;
+							}
+
+						}
+
+						// Reallocate normal and offset arrays if necessary.
+						if(cHull->faceNum == normalCapacity){
+							if(normalCapacity == 0){
+								normalCapacity = 1;
+							}else{
+								normalCapacity *= 2;
+							}
+							vec3 *tempBuffer1 = realloc(cHull->normals, normalCapacity*sizeof(vec3));
+							if(tempBuffer1 == NULL){
+								/** Memory allocation failure. **/
+								if(vertexMassArrays != NULL){
+									colliderIndex_t k;
+									for(k = 0; k < bodies[currentBone].colliderNum; ++k){
+										if(vertexMassArrays[k] != NULL){
+											free(vertexMassArrays[k]);
+										}
+									}
+									free(vertexMassArrays);
+								}
+								for(j = 0; j < bodyNum; ++j){
+									physRigidBodyDelete(&bodies[currentBone]);
+									if(constraints[j] != NULL){
+										free(constraints[j]);
+									}
+								}
+								free(fullPath);
+								fclose(rbInfo);
+								return -1;
+							}
+							hbMeshFace *tempBuffer2 = realloc(cHull->faces, normalCapacity*sizeof(hbMeshFace));
+							if(tempBuffer2 == NULL){
+								/** Memory allocation failure. **/
+								if(vertexMassArrays != NULL){
+									colliderIndex_t k;
+									for(k = 0; k < bodies[currentBone].colliderNum; ++k){
+										if(vertexMassArrays[k] != NULL){
+											free(vertexMassArrays[k]);
+										}
+									}
+									free(vertexMassArrays);
+								}
+								for(j = 0; j < bodyNum; ++j){
+									physRigidBodyDelete(&bodies[currentBone]);
+									if(constraints[j] != NULL){
+										free(constraints[j]);
+									}
+								}
+								free(fullPath);
+								fclose(rbInfo);
+								free(tempBuffer1);
+								return -1;
+							}
+							cHull->normals = tempBuffer1;
+							cHull->faces = tempBuffer2;
+						}
+
+						// Generate a normal for the face.
+						if(firstTwin){
+							vec3SubVFromVR(&cHull->vertices[cHull->edges[first].start], &cHull->vertices[cHull->edges[first].end], &BsA);
+							if(lastTwin){
+								vec3SubVFromVR(&cHull->vertices[cHull->edges[last].end], &cHull->vertices[cHull->edges[first].end], &CsA);
+							}else{
+								vec3SubVFromVR(&cHull->vertices[cHull->edges[last].start], &cHull->vertices[cHull->edges[first].end], &CsA);
+							}
+						}else{
+							vec3SubVFromVR(&cHull->vertices[cHull->edges[first].end], &cHull->vertices[cHull->edges[first].start], &BsA);
+							if(lastTwin){
+								vec3SubVFromVR(&cHull->vertices[cHull->edges[last].end], &cHull->vertices[cHull->edges[first].start], &CsA);
+							}else{
+								vec3SubVFromVR(&cHull->vertices[cHull->edges[last].start], &cHull->vertices[cHull->edges[first].start], &CsA);
+							}
+						}
+						vec3Cross(&BsA, &CsA, &cHull->normals[cHull->faceNum]);
+						vec3NormalizeFastAccurate(&cHull->normals[cHull->faceNum]);
+
+						cHull->faces[cHull->faceNum].edgeNum = addNum;
+						cHull->faces[cHull->faceNum].edge = first;
+
+						++cHull->faceNum;
+
+					}else{
+						printf("Error loading rigid bodies \"%s\": Collider face at line %u "
+						       "must have at least three vertices.\n", fullPath, currentLine);
+					}
 
 				}
 
@@ -557,17 +776,18 @@ signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_
 									                       &vertexMassArrays[bodies[currentBone].colliderNum-1]) == -1){
 									/** Memory allocation failure. **/
 									if(vertexMassArrays != NULL){
-										for(i = 0; i < bodies[currentBone].colliderNum; ++i){
-											if(vertexMassArrays[i] != NULL){
-												free(vertexMassArrays[i]);
+										colliderIndex_t k;
+										for(k = 0; k < bodies[currentBone].colliderNum; ++k){
+											if(vertexMassArrays[k] != NULL){
+												free(vertexMassArrays[k]);
 											}
 										}
 										free(vertexMassArrays);
 									}
-									for(i = 0; i < bodyNum; ++i){
+									for(j = 0; j < bodyNum; ++j){
 										physRigidBodyDelete(&bodies[currentBone]);
-										if(constraints[i] != NULL){
-											free(constraints[i]);
+										if(constraints[j] != NULL){
+											free(constraints[j]);
 										}
 									}
 									free(fullPath);
@@ -596,28 +816,29 @@ signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_
 							}
 
 							// Loop through the skeleton to find a bone with the given name.
-							for(i = 0; i < skl->boneNum; ++i){
-								if(strncmp(line, skl->bones[i].name, lineLength) == 0){
+							for(j = 0; j < skl->boneNum; ++j){
+								if(strncmp(line, skl->bones[j].name, lineLength) == 0){
 									break;
 								}
 							}
 							// Add the new constraint if possible.
-							if(i < skl->boneNum){
+							if(j < skl->boneNum){
 								constraints[currentBone] = realloc(constraints[currentBone], (constraintNum[currentBone]+1)*sizeof(physConstraint *));
 								if(constraints[currentBone] == NULL){
 									/** Memory allocation failure. **/
 									if(vertexMassArrays != NULL){
-										for(i = 0; i < bodies[currentBone].colliderNum; ++i){
-											if(vertexMassArrays[i] != NULL){
-												free(vertexMassArrays[i]);
+										colliderIndex_t k;
+										for(k = 0; k < bodies[currentBone].colliderNum; ++k){
+											if(vertexMassArrays[k] != NULL){
+												free(vertexMassArrays[k]);
 											}
 										}
 										free(vertexMassArrays);
 									}
-									for(i = 0; i < bodyNum; ++i){
+									for(j = 0; j < bodyNum; ++j){
 										physRigidBodyDelete(&bodies[currentBone]);
-										if(constraints[i] != NULL){
-											free(constraints[i]);
+										if(constraints[j] != NULL){
+											free(constraints[j]);
 										}
 									}
 									free(fullPath);
@@ -625,7 +846,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_
 									return -1;
 								}
 								physConstraintInit(&constraints[currentBone][constraintNum[currentBone]]);
-								constraints[currentBone][constraintNum[currentBone]].constraintID = i;
+								constraints[currentBone][constraintNum[currentBone]].constraintID = j;
 								++constraintNum[currentBone];
 								currentCommand = 2;
 								success = 1;
@@ -700,15 +921,15 @@ signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_
 			}else if(lineLength >= 11 && strncmp(line, "collision ", 10) == 0){
 				if(currentCommand == 0){
 					if(strtoul(line+10, NULL, 0)){
-						flags[currentBone] |= PHYSICS_BODY_COLLIDE;
+						flags[currentBone] |= PHYS_BODY_COLLIDE;
 					}else{
-						flags[currentBone] &= ~PHYSICS_BODY_COLLIDE;
+						flags[currentBone] &= ~PHYS_BODY_COLLIDE;
 					}
 				}else if(currentCommand == 1){
 					if(strtoul(line+10, NULL, 0)){
-						constraints[currentBone][constraintNum[currentBone]-1].flags |= PHYSICS_CONSTRAINT_COLLIDE;
+						constraints[currentBone][constraintNum[currentBone]-1].flags |= PHYS_CONSTRAINT_COLLIDE;
 					}else{
-						constraints[currentBone][constraintNum[currentBone]-1].flags &= ~PHYSICS_CONSTRAINT_COLLIDE;
+						constraints[currentBone][constraintNum[currentBone]-1].flags &= ~PHYS_CONSTRAINT_COLLIDE;
 					}
 				}else if(currentCommand > 1){
 					printf("Error loading rigid bodies \"%s\": Rigid body and constraint sub-command \"collision\" at line %u does not belong "
@@ -723,9 +944,9 @@ signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_
 			}else if(lineLength >= 8 && strncmp(line, "active ", 7) == 0){
 				if(currentCommand == 0){
 					if(strtoul(line+7, NULL, 0)){
-						flags[currentBone] |= PHYSICS_BODY_INITIALIZE;
+						flags[currentBone] |= PHYS_BODY_INITIALIZE;
 					}else{
-						flags[currentBone] &= ~PHYSICS_BODY_INITIALIZE;
+						flags[currentBone] &= ~PHYS_BODY_INITIALIZE;
 					}
 				}else if(currentCommand > 0){
 					printf("Error loading rigid bodies \"%s\": Rigid body sub-command \"active\" at line %u does not belong "
@@ -746,6 +967,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_
 
 						// Free the collider mass arrays.
 						if(vertexMassArrays != NULL){
+							colliderIndex_t i;
 							for(i = 0; i < bodies[currentBone].colliderNum; ++i){
 								if(vertexMassArrays[i] != NULL){
 									free(vertexMassArrays[i]);
@@ -769,23 +991,24 @@ signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_
 
 					hbMesh *cHull = (hbMesh *)&bodies[currentBone].colliders[bodies[currentBone].colliderNum-1].hb.hull;
 
-					if(cHull->vertexNum > 0 && cHull->indexNum > 0){
+					if(cHull->vertexNum > 0 && cHull->faceNum > 0 && cHull->edgeNum > 0){
 
 						if(physColliderResizeToFit(&bodies[currentBone].colliders[bodies[currentBone].colliderNum-1],
 						                           &vertexMassArrays[bodies[currentBone].colliderNum-1]) == -1){
 							/** Memory allocation failure. **/
 							if(vertexMassArrays != NULL){
-								for(i = 0; i < bodies[currentBone].colliderNum; ++i){
-									if(vertexMassArrays[i] != NULL){
-										free(vertexMassArrays[i]);
+								colliderIndex_t k;
+								for(k = 0; k < bodies[currentBone].colliderNum; ++k){
+									if(vertexMassArrays[k] != NULL){
+										free(vertexMassArrays[k]);
 									}
 								}
 								free(vertexMassArrays);
 							}
-							for(i = 0; i < bodyNum; ++i){
+							for(j = 0; j < bodyNum; ++j){
 								physRigidBodyDelete(&bodies[currentBone]);
-								if(constraints[i] != NULL){
-									free(constraints[i]);
+								if(constraints[j] != NULL){
+									free(constraints[j]);
 								}
 							}
 							return -1;
@@ -820,6 +1043,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_
 
 				// Free the collider mass arrays.
 				if(vertexMassArrays != NULL){
+					colliderIndex_t i;
 					for(i = 0; i < bodies[currentBone].colliderNum; ++i){
 						if(vertexMassArrays[i] != NULL){
 							free(vertexMassArrays[i]);
@@ -835,23 +1059,24 @@ signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_
 
 			hbMesh *cHull = (hbMesh *)&bodies[currentBone].colliders[bodies[currentBone].colliderNum-1].hb.hull;
 
-			if(cHull->vertexNum > 0 && cHull->indexNum > 0){
+			if(cHull->vertexNum > 0 && cHull->faceNum > 0 && cHull->edgeNum > 0){
 
 				if(physColliderResizeToFit(&bodies[currentBone].colliders[bodies[currentBone].colliderNum-1],
 				                           &vertexMassArrays[bodies[currentBone].colliderNum-1]) == -1){
 					/** Memory allocation failure. **/
 					if(vertexMassArrays != NULL){
-						for(i = 0; i < bodies[currentBone].colliderNum; ++i){
-							if(vertexMassArrays[i] != NULL){
-								free(vertexMassArrays[i]);
+						colliderIndex_t k;
+						for(k = 0; k < bodies[currentBone].colliderNum; ++k){
+							if(vertexMassArrays[k] != NULL){
+								free(vertexMassArrays[k]);
 							}
 						}
 						free(vertexMassArrays);
 					}
-					for(i = 0; i < bodyNum; ++i){
+					for(j = 0; j < bodyNum; ++j){
 						physRigidBodyDelete(&bodies[currentBone]);
-						if(constraints[i] != NULL){
-							free(constraints[i]);
+						if(constraints[j] != NULL){
+							free(constraints[j]);
 						}
 					}
 					return -1;
@@ -879,7 +1104,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, unsigned char *flags, size_
 
 void physRigidBodyDelete(physRigidBody *body){
 	if(body->colliders != NULL){
-		size_t i;
+		colliderIndex_t i;
 		for(i = 0; i < body->colliderNum; ++i){
 			physColliderDelete(&body->colliders[i]);
 		}
@@ -974,26 +1199,30 @@ void physRigidBodyDelete(physRigidBody *body){
 }*/
 
 void physRBIInit(physRBInstance *prbi){
-	prbi->flags = PHYSICS_BODY_SIMULATE | PHYSICS_BODY_COLLIDE;
+	prbi->id = (physicsBodyIndex_t)-1;
+	prbi->flags = PHYS_BODY_SIMULATE | PHYS_BODY_COLLIDE;
 	prbi->local = NULL;
 	prbi->colliders = NULL;
-	boneInit(&prbi->configuration[0]);
-	boneInit(&prbi->configuration[1]);
+	prbi->configuration = NULL;
+	//prbi->configuration[1] = NULL;
 	vec3SetS(&prbi->linearVelocity, 0.f);
 	vec3SetS(&prbi->angularVelocity, 0.f);
 	vec3SetS(&prbi->netForce, 0.f);
 	vec3SetS(&prbi->netTorque, 0.f);
 	prbi->constraintNum = 0;
-	prbi->blah=0;
+	prbi->constraintCapacity = 0;
 	prbi->constraints = NULL;
+	prbi->separationNum = 0;
+	prbi->separationCapacity = 0;
+	prbi->cache = NULL;
 }
 
-signed char physRBIInstantiate(physRBInstance *prbi, physRigidBody *body){
+signed char physRBIInstantiate(physRBInstance *prbi, physRigidBody *body, bone *configuration){
 
 	hbMesh *cHull;
 	hbMesh *cTemp;
 
-	size_t i;
+	colliderIndex_t i;
 
 	// Allocate memory for each collider.
 	physCollider *tempBuffer = malloc(body->colliderNum * sizeof(physCollider));
@@ -1005,21 +1234,38 @@ signed char physRBIInstantiate(physRBInstance *prbi, physRigidBody *body){
 	// Copy each collider so we can transform it into global space.
 	for(i = 0; i < body->colliderNum; ++i){
 
-		size_t vertexArraySize;
+		hbVertexIndex_t vertexArraySize;
+		hbFaceIndex_t normalArraySize;
 
 		cHull = (hbMesh *)&body->colliders[i].hb.hull;
-		vertexArraySize = cHull->vertexNum * sizeof(vec3);
 		cTemp = (hbMesh *)&tempBuffer[i].hb.hull;
+
+		vertexArraySize = cHull->vertexNum * sizeof(vec3);
 		cTemp->vertices = malloc(vertexArraySize);
 		if(cTemp->vertices == NULL){
 			/** Memory allocation failure. **/
 			break;
 		}
+		normalArraySize = cHull->faceNum * sizeof(vec3);
+		cTemp->normals = malloc(normalArraySize);
+		if(cTemp->normals == NULL){
+			/** Memory allocation failure. **/
+			free(cTemp->vertices);
+			break;
+		}
 
 		cTemp->vertexNum = cHull->vertexNum;
+		cTemp->faceNum = cHull->faceNum;
+		cTemp->edgeNum = cHull->edgeNum;
+
 		memcpy(cTemp->vertices, cHull->vertices, vertexArraySize);
-		cTemp->indexNum = cHull->indexNum;
-		cTemp->indices = cHull->indices;  // Re-use the indices array.
+		memcpy(cTemp->normals, cHull->normals, normalArraySize);
+		// Re-use the faces and edges arrays. Vertices and
+		// normals, however, are modified each update when the
+		// collider's configuration changes.
+		cTemp->faces = cHull->faces;
+		cTemp->edges = cHull->edges;
+
 		tempBuffer[i].aabb = body->colliders[i].aabb;
 		tempBuffer[i].hb.type = body->colliders[i].hb.type;
 		tempBuffer[i].centroid = body->colliders[i].centroid;
@@ -1033,6 +1279,7 @@ signed char physRBIInstantiate(physRBInstance *prbi, physRigidBody *body){
 			--i;
 			cTemp = (hbMesh *)&tempBuffer[i].hb.hull;
 			free(cTemp->vertices);
+			free(cTemp->normals);
 		}
 		free(tempBuffer);
 		return -1;
@@ -1041,48 +1288,153 @@ signed char physRBIInstantiate(physRBInstance *prbi, physRigidBody *body){
 	physRBIInit(prbi);
 	prbi->local = body;
 	prbi->colliders = tempBuffer;
+	prbi->configuration = configuration;
 	return 1;
 
 }
 
 signed char physRBIStateCopy(physRBInstance *o, physRBInstance *c){
+	/** Finish this. **/
 	return 1;
 }
 
-signed char physRBIAddConstraint(physRBInstance *prbi, const physConstraint *c){
+signed char physRBIAddConstraint(physRBInstance *prbi, physConstraint *c){
 
-	physConstraint *tempBuffer = realloc(prbi->constraints, (prbi->constraintNum+1)*sizeof(size_t));
-	if(tempBuffer == NULL){
-		/** Memory allocation failure. **/
-		return -1;
+	/*
+	** Sort a new constraint into the body.
+	*/
+
+	constraintIndex_t i;
+	if(prbi->constraintNum >= prbi->constraintCapacity){
+
+		// Allocate room for the new constraint.
+		const constraintIndex_t tempCapacity = prbi->constraintNum+1;
+		physConstraint *tempBuffer = malloc(tempCapacity*sizeof(physConstraint));
+		if(tempBuffer == NULL){
+			/** Memory allocation failure. **/
+			return -1;
+		}
+
+		// Sort the constraints back into the array.
+		for(i = 0; i < prbi->constraintNum; ++i){
+			if(c->constraintID < prbi->constraints[i].constraintID){
+				tempBuffer[i] = *c;
+				c = &prbi->constraints[i];
+			}else{
+				tempBuffer[i] = prbi->constraints[i];
+			}
+		}
+
+		tempBuffer[i] = *c;
+		free(prbi->constraints);
+		prbi->constraints = tempBuffer;
+		prbi->constraintCapacity = tempCapacity;
+
+	}else{
+
+		// Sort the new constraint into the array.
+		i = prbi->constraintNum;
+		while(i > 0){
+			--i;
+			if(c->constraintID < prbi->constraints[i].constraintID){
+				prbi->constraints[i+1] = prbi->constraints[i];
+			}else{
+				prbi->constraints[i+1] = *c;
+				break;
+			}
+		}
+
 	}
-	prbi->constraints = tempBuffer;
-	prbi->constraints[prbi->constraintNum] = *c;
+
 	++prbi->constraintNum;
 	return 1;
 
 }
 
-static void physRBICentroidFromPosition(physRBInstance *prbi){
-	prbi->centroid = prbi->local->centroid;
-	quatGetRotatedVec3(&prbi->configuration[0].orientation, &prbi->centroid);
-	vec3AddVToV(&prbi->centroid, &prbi->configuration[0].position);
+signed char physRBICacheSeparation(physRBInstance *prbi, physCollisionInfo *c){
+
+	/*
+	** Cache a separation after a failed narrowphase collision check.
+	*/
+
+	cacheIndex_t i;
+	if(prbi->separationNum >= prbi->separationCapacity){
+
+		// Allocate room for the new constraint.
+		const cacheIndex_t tempCapacity = prbi->separationNum+1;
+		physCollisionInfo *tempBuffer = malloc(tempCapacity*sizeof(physCollisionInfo));
+		if(tempBuffer == NULL){
+			/** Memory allocation failure. **/
+			return -1;
+		}
+
+		// Sort the separations back into the array.
+		for(i = 0; i < prbi->separationNum; ++i){
+			if(c->collisionID < prbi->cache[i].collisionID){
+				tempBuffer[i] = *c;
+				c = &prbi->cache[i];
+			}else{
+				tempBuffer[i] = prbi->cache[i];
+			}
+		}
+
+		tempBuffer[i] = *c;
+		free(prbi->cache);
+		prbi->cache = tempBuffer;
+		prbi->separationCapacity = tempCapacity;
+
+	}else{
+
+		// Sort the new separation into the array.
+		i = prbi->separationNum;
+		while(i > 0){
+			--i;
+			if(c->collisionID < prbi->cache[i].collisionID){
+				prbi->cache[i+1] = prbi->cache[i];
+			}else{
+				prbi->cache[i+1] = *c;
+				break;
+			}
+		}
+
+	}
+
+	++prbi->separationNum;
+	return 1;
+
 }
 
-static void physRBIPositionFromCentroid(physRBInstance *prbi){
-	prbi->configuration[0].position.x = -prbi->local->centroid.x;
-	prbi->configuration[0].position.y = -prbi->local->centroid.y;
-	prbi->configuration[0].position.z = -prbi->local->centroid.z;
-	quatGetRotatedVec3(&prbi->configuration[0].orientation, &prbi->configuration[0].position);
-	vec3AddVToV(&prbi->configuration[0].position, &prbi->centroid);
+signed char physRBIAddCollision(physRBInstance *prbi, physCollisionInfo *c){
+
+	/*
+	** Caches the collision and creates an
+	** inequality constraint representing it.
+	*/
+
+
+
 }
+
+static void physRBICentroidFromPosition(physRBInstance *prbi){
+	prbi->centroid = prbi->local->centroid;
+	quatGetRotatedVec3(&prbi->configuration->orientation, &prbi->centroid);
+	vec3AddVToV(&prbi->centroid, &prbi->configuration->position);
+}
+
+/*static void physRBIPositionFromCentroid(physRBInstance *prbi){
+	prbi->configuration->position.x = -prbi->local->centroid.x;
+	prbi->configuration->position.y = -prbi->local->centroid.y;
+	prbi->configuration->position.z = -prbi->local->centroid.z;
+	quatGetRotatedVec3(&prbi->configuration->orientation, &prbi->configuration->position);
+	vec3AddVToV(&prbi->configuration->position, &prbi->centroid);
+}*/
 
 static void physRBIGenerateGlobalInertia(physRBInstance *prbi){
 
 	mat3 orientationMatrix, inverseOrientationMatrix;
 
 	// Generate 3x3 matrices for the orientation and the inverse orientation.
-	mat3Quat(&orientationMatrix, &prbi->configuration[0].orientation);
+	mat3Quat(&orientationMatrix, &prbi->configuration->orientation);
 	mat3TransposeR(&orientationMatrix, &inverseOrientationMatrix);
 
 	// Multiply them against the local inertia tensor to get the global inverse moment of inertia.
@@ -1099,7 +1451,7 @@ void physRBIUpdateCollisionMesh(physRBInstance *prbi){
 
 	if(prbi->local != NULL){  /** Remove? **/
 
-		size_t i;
+		colliderIndex_t i;
 		for(i = 0; i < prbi->local->colliderNum; ++i){
 
 			// Update the collider.
@@ -1172,28 +1524,28 @@ void physRBIApplyForceGlobal(physRBInstance *prbi, const vec3 *F, const vec3 *r)
 
 }
 
-void physRBIApplyLinearImpulse(physRBInstance *prbi, const float x, const float y, const float z){
-	/* Apply a linear impulse. */
-	prbi->linearVelocity.x += x * prbi->local->inverseMass;
-	prbi->linearVelocity.y += y * prbi->local->inverseMass;
-	prbi->linearVelocity.z += z * prbi->local->inverseMass;
+/*void physRBIApplyLinearImpulse(physRBInstance *prbi, const vec3 *j){
+	* Apply a linear impulse. *
+	prbi->linearVelocity.x += j->x * prbi->local->inverseMass;
+	prbi->linearVelocity.y += j->y * prbi->local->inverseMass;
+	prbi->linearVelocity.z += j->z * prbi->local->inverseMass;
 }
 
-void physRBIApplyAngularImpulse(physRBInstance *prbi, const vec3 *torque){
-	/* Apply an angular impulse. */
-	vec3 newTorque = *torque;
-	mat3MultVByM(&newTorque, &prbi->inverseInertiaTensor);
+void physRBIApplyAngularImpulse(physRBInstance *prbi, const vec3 *T){
+	* Apply an angular impulse. *
+	vec3 newTorque = *T;
+	mat3MultMByVRow(&prbi->inverseInertiaTensor, &newTorque);
 	prbi->angularVelocity.x += newTorque.x;
 	prbi->angularVelocity.y += newTorque.y;
 	prbi->angularVelocity.z += newTorque.z;
 }
 
-void physRBIApplyImpulseAtGlobalPoint(physRBInstance *prbi, const vec3 *F, const vec3 *r){
+void physRBIApplyImpulseAtGlobalPoint(physRBInstance *prbi, const float j, const vec3 *r){
 	vec3 T;
 	vec3Cross(r, F, &T);
 	physRBIApplyLinearImpulse(prbi, F->x, F->y, F->z);
 	physRBIApplyAngularImpulse(prbi, &T);
-}
+}*/
 
 static void physRBIResetForceAccumulator(physRBInstance *prbi){
 	prbi->netForce.x = 0.f;
@@ -1226,7 +1578,7 @@ void physRBIIntegrateEuler(physRBInstance *prbi, const float dt){
 			vec3 tempVec3;
 			float tempFloat;
 			quat tempQuat;
-			size_t i;
+			unsigned int i;
 
 			for(i = 0; i < PHYS_INTEGRATION_STEPS_EULER; ++i){
 
@@ -1238,30 +1590,30 @@ void physRBIIntegrateEuler(physRBInstance *prbi, const float dt){
 				prbi->linearVelocity.z += prbi->netForce.z * prbi->local->inverseMass * dtStep;
 
 				/* Update position. */
-				prbi->configuration[0].position.x += prbi->linearVelocity.x * dtStep;
-				prbi->configuration[0].position.y += prbi->linearVelocity.y * dtStep;
-				prbi->configuration[0].position.z += prbi->linearVelocity.z * dtStep;
+				prbi->configuration->position.x += prbi->linearVelocity.x * dtStep;
+				prbi->configuration->position.y += prbi->linearVelocity.y * dtStep;
+				prbi->configuration->position.z += prbi->linearVelocity.z * dtStep;
 
 				/* Calculate angular velocity. */
 				tempVec3.x = prbi->netTorque.x * dtStep;
 				tempVec3.y = prbi->netTorque.y * dtStep;
 				tempVec3.z = prbi->netTorque.z * dtStep;
-				mat3MultMByV(&prbi->inverseInertiaTensor, &tempVec3);
+				mat3MultMByVRow(&prbi->inverseInertiaTensor, &tempVec3);
 				prbi->angularVelocity.x += tempVec3.x;
 				prbi->angularVelocity.y += tempVec3.y;
 				prbi->angularVelocity.z += tempVec3.z;
 
 				/* Update orientation. */
 				// Angle
-				tempFloat = vec3GetMagnitude(&prbi->angularVelocity) * dtStep;
+				tempFloat = vec3Magnitude(&prbi->angularVelocity) * dtStep;
 				// Axis
 				tempVec3 = prbi->angularVelocity;
 				vec3NormalizeFast(&tempVec3);
 				// Convert axis-angle rotation to a quaternion.
 				quatSetAxisAngle(&tempQuat, tempFloat, tempVec3.x, tempVec3.y, tempVec3.z);
-				quatMultQByQ2(&tempQuat, &prbi->configuration[0].orientation);
+				quatMultQByQ2(&tempQuat, &prbi->configuration->orientation);
 				// Normalize the orientation.
-				quatNormalizeFast(&prbi->configuration[0].orientation);
+				quatNormalizeFast(&prbi->configuration->orientation);
 
 			}
 
@@ -1269,9 +1621,6 @@ void physRBIIntegrateEuler(physRBInstance *prbi, const float dt){
 
 		/* Update global centroid. */
 		physRBICentroidFromPosition(prbi);
-
-		/* Update constraints. */
-		//
 
 		/* Reset force and torque accumulators. */
 		physRBIResetForceAccumulator(prbi);
@@ -1283,7 +1632,7 @@ void physRBIIntegrateEuler(physRBInstance *prbi, const float dt){
 
 void physRBIIntegrateLeapfrog(physRBInstance *prbi, const float dt){
 
-	/* Velocity Verlet integration scheme. */
+	/* Leapfrog integration scheme. */
 	if(prbi->local != NULL){  /** Remove? **/
 
 		/* Update moment of inertia. */
@@ -1296,28 +1645,26 @@ void physRBIIntegrateLeapfrog(physRBInstance *prbi, const float dt){
 			quat tempQuat;
 
 			/* Integrate position and linear velocity. */
-			tempFloat = 0.5f * dt;
-			prbi->linearVelocity.x += prbi->netForce.x * prbi->local->inverseMass * tempFloat;
-			prbi->linearVelocity.y += prbi->netForce.y * prbi->local->inverseMass * tempFloat;
-			prbi->linearVelocity.z += prbi->netForce.z * prbi->local->inverseMass * tempFloat;
-			// Kinematic equation for displacement.
-			// x(t+1) = x(t) + (v(t) * dt) + ((0.5 * a(t)) * dt * dt)
-			prbi->configuration[0].position.x += prbi->linearVelocity.x * dt;
-			prbi->configuration[0].position.y += prbi->linearVelocity.y * dt;
-			prbi->configuration[0].position.z += prbi->linearVelocity.z * dt;
+			tempFloat = prbi->local->inverseMass * dt * 0.5f;
+			tempVec3.x = prbi->netForce.x * tempFloat;
+			tempVec3.y = prbi->netForce.y * tempFloat;
+			tempVec3.z = prbi->netForce.z * tempFloat;
+			prbi->linearVelocity.x += tempVec3.x;
+			prbi->linearVelocity.y += tempVec3.y;
+			prbi->linearVelocity.z += tempVec3.z;
+			prbi->configuration->position.x += prbi->linearVelocity.x * dt;
+			prbi->configuration->position.y += prbi->linearVelocity.y * dt;
+			prbi->configuration->position.z += prbi->linearVelocity.z * dt;
 			/**polygonResetForce(polygon);**/
-			// Kinematic equation for velocity.
-			// v(t+1) = v(t) + (a(t+1) * dt)
-			// v(t+1) = v(t) + (((a(t) + a(t+1)) / 2) * dt)
-			prbi->linearVelocity.x += prbi->netForce.x * prbi->local->inverseMass * tempFloat;
-			prbi->linearVelocity.y += prbi->netForce.y * prbi->local->inverseMass * tempFloat;
-			prbi->linearVelocity.z += prbi->netForce.z * prbi->local->inverseMass * tempFloat;
+			prbi->linearVelocity.x += tempVec3.x;
+			prbi->linearVelocity.y += tempVec3.y;
+			prbi->linearVelocity.z += tempVec3.z;
 
 			/* Calculate angular velocity. */
 			tempVec3.x = prbi->netTorque.x * dt;
 			tempVec3.y = prbi->netTorque.y * dt;
 			tempVec3.z = prbi->netTorque.z * dt;
-			mat3MultMByV(&prbi->inverseInertiaTensor, &tempVec3);
+			mat3MultMByVRow(&prbi->inverseInertiaTensor, &tempVec3);
 			prbi->angularVelocity.x += tempVec3.x;
 			prbi->angularVelocity.y += tempVec3.y;
 			prbi->angularVelocity.z += tempVec3.z;
@@ -1327,20 +1674,90 @@ void physRBIIntegrateLeapfrog(physRBInstance *prbi, const float dt){
 			tempVec3 = prbi->angularVelocity;
 			vec3NormalizeFast(&tempVec3);
 			// Angle
-			tempFloat = vec3GetMagnitude(&prbi->angularVelocity) * dt;
+			tempFloat = vec3Magnitude(&prbi->angularVelocity) * dt;
 			// Convert axis-angle rotation to a quaternion.
 			quatSetAxisAngle(&tempQuat, tempFloat, tempVec3.x, tempVec3.y, tempVec3.z);
-			quatMultQByQ2(&tempQuat, &prbi->configuration[0].orientation);
+			quatMultQByQ2(&tempQuat, &prbi->configuration->orientation);
 			// Normalize the orientation.
-			quatNormalizeFast(&prbi->configuration[0].orientation);
+			quatNormalizeFast(&prbi->configuration->orientation);
 
 		}
 
 		/* Update centroid. */
 		physRBICentroidFromPosition(prbi);
 
-		/* Update constraints. */
-		//
+		/* Reset force and torque accumulators. */
+		physRBIResetForceAccumulator(prbi);
+		physRBIResetTorqueAccumulator(prbi);
+
+	}
+
+}
+
+void physRBIIntegrateLeapfrogVelocity(physRBInstance *prbi, const float dt){
+
+	/* Leapfrog integration scheme. */
+	if(prbi->local != NULL && prbi->local->inverseMass > 0.f){  /** Remove? **/
+
+		/* Integrate linear velocity half-step. */
+		const float tempFloat = prbi->local->inverseMass * dt * 0.5f;
+		prbi->linearVelocity.x += prbi->netForce.x * tempFloat;
+		prbi->linearVelocity.y += prbi->netForce.y * tempFloat;
+		prbi->linearVelocity.z += prbi->netForce.z * tempFloat;
+
+	}
+
+}
+
+void physRBIIntegrateLeapfrogConstraints(physRBInstance *prbi, const float dt){
+
+	/* Leapfrog integration scheme. */
+	if(prbi->local != NULL){  /** Remove? **/
+
+		/* Update moment of inertia. */
+		physRBIGenerateGlobalInertia(prbi);
+
+		if(prbi->local->inverseMass > 0.f){
+
+			vec3 tempVec3;
+			float tempFloat;
+			quat tempQuat;
+
+			/* Integrate position and final half of linear velocity. */
+			prbi->configuration->position.x += prbi->linearVelocity.x * dt;
+			prbi->configuration->position.y += prbi->linearVelocity.y * dt;
+			prbi->configuration->position.z += prbi->linearVelocity.z * dt;
+			/**polygonResetForce(polygon);**/
+			tempFloat = prbi->local->inverseMass * dt * 0.5f;
+			prbi->linearVelocity.x += prbi->netForce.x * tempFloat;
+			prbi->linearVelocity.y += prbi->netForce.y * tempFloat;
+			prbi->linearVelocity.z += prbi->netForce.z * tempFloat;
+
+			/* Calculate angular velocity. */
+			tempVec3.x = prbi->netTorque.x * dt;
+			tempVec3.y = prbi->netTorque.y * dt;
+			tempVec3.z = prbi->netTorque.z * dt;
+			mat3MultMByVRow(&prbi->inverseInertiaTensor, &tempVec3);
+			prbi->angularVelocity.x += tempVec3.x;
+			prbi->angularVelocity.y += tempVec3.y;
+			prbi->angularVelocity.z += tempVec3.z;
+
+			/* Update orientation. */
+			// Axis
+			tempVec3 = prbi->angularVelocity;
+			vec3NormalizeFast(&tempVec3);
+			// Angle
+			tempFloat = vec3Magnitude(&prbi->angularVelocity) * dt;
+			// Convert axis-angle rotation to a quaternion.
+			quatSetAxisAngle(&tempQuat, tempFloat, tempVec3.x, tempVec3.y, tempVec3.z);
+			quatMultQByQ2(&tempQuat, &prbi->configuration->orientation);
+			// Normalize the orientation.
+			quatNormalizeFast(&prbi->configuration->orientation);
+
+		}
+
+		/* Update centroid. */
+		physRBICentroidFromPosition(prbi);
 
 		/* Reset force and torque accumulators. */
 		physRBIResetForceAccumulator(prbi);
@@ -1351,85 +1768,110 @@ void physRBIIntegrateLeapfrog(physRBInstance *prbi, const float dt){
 }
 
 void physRBIIntegrateRungeKutta(physRBInstance *prbi, const float dt){
+
 	/* RK4 integration scheme. */
+	//
 
 }
 
-void physRBIResolveCollision(physRBInstance *body1, physRBInstance *body2, const hbCollisionData *cd){
+static inline void physRBIPenetrationSlop(physRBInstance *body1, physRBInstance *body2, const hbCollisionContactManifold *cm){
 
-	vec3 localContactPointA, localContactPointB;
-	vec3 pointVelocity;
+	// Baumgarte stabilization
+
+}
+
+static inline void physRBIResolveCollisionImpulse(physRBInstance *body1, physRBInstance *body2, const hbCollisionContactManifold *cm){
+
+	/**vec3 localContactPointA, localContactPointB;
+	vec3 contactVelocityA, contactVelocityB;
 	vec3 relativeVelocity;
 	float normalVelocity;
 
 	// Convert contact point A from global space to local space.
-	vec3SubVFromVR(&cd->contactPointA, &body1->centroid, &localContactPointA);
+	vec3SubVFromVR(&cd->contacts[0].pointA, &body1->centroid, &localContactPointA);
 	// Find the velocity of contact point A.
 	// The velocity of a point is V + cross(w, r), where V is the linear velocity,
 	// w is the angular velocity and r is the local contact point.
-	vec3Cross(&body1->angularVelocity, &localContactPointA, &relativeVelocity);
-	vec3AddVToV(&relativeVelocity, &body1->linearVelocity);
+	vec3Cross(&body1->angularVelocity, &localContactPointA, &contactVelocityA);
+	vec3AddVToV(&contactVelocityA, &body1->linearVelocity);
 
 	// Convert contact point B from global space to local space.
-	vec3SubVFromVR(&cd->contactPointB, &body2->centroid, &localContactPointB);
+	vec3SubVFromVR(&cd->contacts[0].pointB, &body2->centroid, &localContactPointB);
 	// Find the velocity of contact point B.
-	vec3Cross(&body2->angularVelocity, &localContactPointB, &pointVelocity);
-	vec3AddVToV(&pointVelocity, &body2->linearVelocity);
+	vec3Cross(&body2->angularVelocity, &localContactPointB, &contactVelocityB);
+	vec3AddVToV(&contactVelocityB, &body2->linearVelocity);
 
 	// Find the velocity of point A relative to the velocity of point B.
-	vec3SubVFromV1(&relativeVelocity, &pointVelocity);
+	vec3SubVFromVR(&contactVelocityA, &contactVelocityB, &relativeVelocity);
+
 	// Find how much of relative velocity is in the direction of the contact normal.
-	normalVelocity = vec3Dot(&cd->contactNormal, &relativeVelocity);
+	normalVelocity = vec3Dot(&cd->normal, &relativeVelocity);
 
-	// If normalVelocity does not pass the threshold, there is a resting collision.
-	if(normalVelocity > COLLISION_DISTANCE_THRESHOLD){
+	// If the velocity in the direction of the contact normal does not pass the
+	// threshold, assume a resting collision.
+	if(normalVelocity > PHYS_RESTING_EPSILON){
 
-		vec3 impulse;
-		vec3 impulseMagnitudeVec;
-		float impulseMagnitudePartial;
+		vec3 angularDeltaA, angularDeltaB;
+		vec3 angularDeltaLinear, angularDeltaLinearB;
 
-		vec3 angularDelta;
-		vec3 angularDeltaLinear;
+		float impulseMagnitude;
+		float impulseMagnitudeOverMass;
 
 		// Calculate contact point A's new torque.
-		vec3Cross(&localContactPointA, &cd->contactNormal, &angularDelta);
+		vec3Cross(&localContactPointA, &cd->normal, &angularDeltaA);
 		// Calculate contact point A's new angular velocity.
-		mat3MultMByV(&body1->inverseInertiaTensor, &angularDelta);
-		vec3AddVToV(&body1->angularVelocity, &angularDelta);
+		mat3MultMByVRow(&body1->inverseInertiaTensor, &angularDeltaA);
 		// Calculate contact point A's change in linear velocity due to its rotation.
-		vec3Cross(&angularDelta, &localContactPointA, &impulseMagnitudeVec);
+		vec3Cross(&angularDeltaA, &localContactPointA, &angularDeltaLinear);
 
 		// Calculate contact point B's new torque.
-		vec3Cross(&localContactPointB, &cd->contactNormal, &angularDelta);
+		vec3Cross(&localContactPointB, &cd->normal, &angularDeltaB);
 		// Calculate contact point B's new angular velocity.
-		mat3MultMByV(&body2->inverseInertiaTensor, &angularDelta);
-		vec3AddVToV(&body2->angularVelocity, &angularDelta);
+		mat3MultMByVRow(&body2->inverseInertiaTensor, &angularDeltaB);
 		// Calculate contact point B's change in linear velocity due to its rotation.
-		vec3Cross(&angularDelta, &localContactPointB, &angularDeltaLinear);
-		vec3AddVToV(&impulseMagnitudeVec, &angularDeltaLinear);
+		vec3Cross(&angularDeltaB, &localContactPointB, &angularDeltaLinearB);
+		vec3AddVToV(&angularDeltaLinear, &angularDeltaLinearB);
 
-		impulseMagnitudePartial = vec3Dot(&relativeVelocity, &cd->contactNormal) /
-		                          (body1->local->inverseMass + body2->local->inverseMass +
-		                          vec3Dot(&impulseMagnitudeVec, &cd->contactNormal));
+		// Calculate the impulse magnitude.
+		impulseMagnitude = (-1.f - body1->local->coefficientOfRestitution * body2->local->coefficientOfRestitution) *
+		                   normalVelocity /
+		                   (body1->local->inverseMass + body2->local->inverseMass +
+		                   vec3Dot(&angularDeltaLinear, &cd->normal));
 
-		// The partial impulse, without the coefficient of restitution taken into account.
-		impulse.x = cd->contactNormal.x * impulseMagnitudePartial;
-		impulse.y = cd->contactNormal.y * impulseMagnitudePartial;
-		impulse.z = cd->contactNormal.z * impulseMagnitudePartial;
+		// Calculate body 1's new linear velocity.
+		impulseMagnitudeOverMass = impulseMagnitude * body1->local->inverseMass;
+		body1->linearVelocity.x += cd->normal.x * impulseMagnitudeOverMass;
+		body1->linearVelocity.y += cd->normal.y * impulseMagnitudeOverMass;
+		body1->linearVelocity.z += cd->normal.z * impulseMagnitudeOverMass;
+		// Calculate body 1's new angular velocity.
+		body1->angularVelocity.x += angularDeltaA.x * impulseMagnitude;
+		body1->angularVelocity.y += angularDeltaA.y * impulseMagnitude;
+		body1->angularVelocity.z += angularDeltaA.z * impulseMagnitude;
 
-		// Calculate body 1's new linear and angular velocities.
-		impulseMagnitudePartial = (1.f + body1->local->coefficientOfRestitution) * body1->local->inverseMass;
-		body1->linearVelocity.x -= impulse.x * impulseMagnitudePartial;
-		body1->linearVelocity.y -= impulse.y * impulseMagnitudePartial;
-		body1->linearVelocity.z -= impulse.z * impulseMagnitudePartial;
+		// Calculate body 2's new linear velocity.
+		impulseMagnitudeOverMass = impulseMagnitude * body2->local->inverseMass;
+		body2->linearVelocity.x -= cd->normal.x * impulseMagnitudeOverMass;
+		body2->linearVelocity.y -= cd->normal.y * impulseMagnitudeOverMass;
+		body2->linearVelocity.z -= cd->normal.z * impulseMagnitudeOverMass;
+		// Calculate body 2's new angular velocity.
+		body2->angularVelocity.x -= angularDeltaB.x * impulseMagnitude;
+		body2->angularVelocity.y -= angularDeltaB.y * impulseMagnitude;
+		body2->angularVelocity.z -= angularDeltaB.z * impulseMagnitude;
 
-		// Calculate body 2's new linear and angular velocities.
-		impulseMagnitudePartial = (1.f + body2->local->coefficientOfRestitution) * body2->local->inverseMass;
-		body2->linearVelocity.x += impulse.x * impulseMagnitudePartial;
-		body2->linearVelocity.y += impulse.y * impulseMagnitudePartial;
-		body2->linearVelocity.z += impulse.z * impulseMagnitudePartial;
+	}**/
 
-	}
+}
+
+void physRBIResolveCollisionGS(physRBInstance *body1, physRBInstance *body2, const hbCollisionContactManifold *cm){
+
+	/*
+	** Uses the Gauss-Seidel method to solve the
+	** impulse magnitude equation as a system of
+	** linear equations with multiple points of
+	** contact.
+	*/
+
+	//
 
 }
 
@@ -1440,13 +1882,14 @@ void physRBIUpdate(physRBInstance *prbi, const float dt){
 }
 
 void physRBIDelete(physRBInstance *prbi){
-	size_t i;
+	colliderIndex_t i;
 	if(prbi->colliders != NULL){
 		hbMesh *cHull;
 		for(i = 0; i < prbi->local->colliderNum; ++i){
-			// Only free vertices, as we re-use indices from the local collider's hull.
+			// Only free vertices and normals, as we re-use edges from the local collider's hull.
 			cHull = (hbMesh *)&prbi->colliders[i].hb.hull;
 			free(cHull->vertices);
+			free(cHull->normals);
 		}
 		free(prbi->colliders);
 	}

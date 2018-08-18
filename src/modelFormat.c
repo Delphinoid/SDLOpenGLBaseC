@@ -42,108 +42,117 @@
 		free(tempBoneWeights); \
 	}
 
-signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex **vertices, size_t *indexNum, size_t **indices, char **name, char **sklPath){
-
-	size_t vertexCapacity = MDL_VERTEX_START_CAPACITY;
-	*vertices = malloc(vertexCapacity*sizeof(vertex));
-	if(*vertices == NULL){
-		/** Memory allocation failure. **/
-		return -1;
-	}
-
-	size_t indexCapacity = MDL_INDEX_START_CAPACITY;
-	*indices = malloc(indexCapacity*sizeof(size_t));
-	if(*indices == NULL){
-		/** Memory allocation failure. **/
-		free(*vertices);
-		return -1;
-	}
-
-	/**const signed char generatePhysProperties = (mass != NULL && area != NULL && centroid != NULL);
-	if(generatePhysProperties){
-		*mass = 0.f;
-		*area = 0.f;
-		vec3SetS(centroid, 0.f);
-	}**/
-	*vertexNum = 0;
-	*indexNum = 0;
-
-	// Temporarily holds vertex positions before they are pushed into vertices
-	size_t tempPositionsSize = 0;
-	size_t tempPositionsCapacity = 1*MDL_VERTEX_START_CAPACITY;
-	float *tempPositions = malloc(tempPositionsCapacity*sizeof(float));
-	if(tempPositions == NULL){
-		/** Memory allocation failure. **/
-		free(*vertices);
-		free(*indices);
-		return -1;
-	}
-	// Temporarily holds vertex UVs they are pushed into vertices
-	size_t tempTexCoordsSize = 0;
-	size_t tempTexCoordsCapacity = 1*MDL_VERTEX_START_CAPACITY;
-	float *tempTexCoords = malloc(tempTexCoordsCapacity*sizeof(float));
-	if(tempTexCoords == NULL){
-		/** Memory allocation failure. **/
-		free(*vertices);
-		free(*indices);
-		free(tempPositions);
-		return -1;
-	}
-	// Temporarily holds vertex normals before they are pushed into vertices
-	size_t tempNormalsSize = 0;
-	size_t tempNormalsCapacity = 1*MDL_VERTEX_START_CAPACITY;
-	float *tempNormals = malloc(tempNormalsCapacity*sizeof(float));
-	if(tempNormals == NULL){
-		/** Memory allocation failure. **/
-		free(*vertices);
-		free(*indices);
-		free(tempPositions);
-		free(tempTexCoords);
-		return -1;
-	}
-	// Temporarily holds bone IDs before they are pushed into vertices
-	size_t tempBoneIDsSize = 0;
-	size_t tempBoneIDsCapacity = 1*MDL_VERTEX_START_CAPACITY;
-	int   *tempBoneIDs = malloc(tempBoneIDsCapacity*sizeof(int));
-	if(tempBoneIDs == NULL){
-		/** Memory allocation failure. **/
-		free(*vertices);
-		free(*indices);
-		free(tempPositions);
-		free(tempTexCoords);
-		free(tempNormals);
-		return -1;
-	}
-	// Temporarily holds bone weights before they are pushed into vertices
-	size_t tempBoneWeightsSize = 0;
-	size_t tempBoneWeightsCapacity = 1*MDL_VERTEX_START_CAPACITY;
-	float *tempBoneWeights = malloc(tempBoneWeightsCapacity*sizeof(float));
-	if(tempBoneWeights == NULL){
-		/** Memory allocation failure. **/
-		free(*vertices);
-		free(*indices);
-		free(tempPositions);
-		free(tempTexCoords);
-		free(tempNormals);
-		free(tempBoneIDs);
-		return -1;
-	}
-
-	vertex tempVert;          // Holds a vertex before pushing it into the triangle array
-	size_t positionIndex[3];  // Holds all the positional information for a face
-	size_t uvIndex[3];        // Holds all the UV information for a face
-	size_t normalIndex[3];    // Holds all the normal information for a face
-
+signed char mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndexNum_t *indexNum, vertexIndex_t **indices, char **name, char **sklPath){
 
 	FILE *mdlInfo = fopen(filePath, "r");
-	char lineFeed[1024];
-	char *line;
-	size_t lineLength;
 
 	if(mdlInfo != NULL){
-		while(fileParseNextLine(mdlInfo, lineFeed, sizeof(lineFeed), &line, &lineLength)){
 
-			size_t i;
+		unsigned int i;
+		char lineFeed[1024];
+		char *line;
+		size_t lineLength;
+
+		vertex tempVert;                 // Holds a vertex before pushing it into the triangle array
+		vertexIndex_t positionIndex[3];  // Holds all the positional information for a face
+		vertexIndex_t uvIndex[3];        // Holds all the UV information for a face
+		vertexIndex_t normalIndex[3];    // Holds all the normal information for a face
+
+		size_t vertexCapacity = MDL_VERTEX_START_CAPACITY;
+		size_t indexCapacity = MDL_INDEX_START_CAPACITY;
+
+		size_t tempPositionsSize = 0;
+		size_t tempPositionsCapacity = 1*MDL_VERTEX_START_CAPACITY;
+		float *tempPositions;
+
+		size_t tempTexCoordsSize = 0;
+		size_t tempTexCoordsCapacity = 1*MDL_VERTEX_START_CAPACITY;
+		float *tempTexCoords;
+
+		size_t tempNormalsSize = 0;
+		size_t tempNormalsCapacity = 1*MDL_VERTEX_START_CAPACITY;
+		float *tempNormals;
+
+		size_t tempBoneIDsSize = 0;
+		size_t tempBoneIDsCapacity = 1*MDL_VERTEX_START_CAPACITY;
+		int   *tempBoneIDs;
+
+		size_t tempBoneWeightsSize = 0;
+		size_t tempBoneWeightsCapacity = 1*MDL_VERTEX_START_CAPACITY;
+		float *tempBoneWeights;
+
+
+		*vertices = malloc(vertexCapacity*sizeof(vertex));
+		if(*vertices == NULL){
+			/** Memory allocation failure. **/
+			return -1;
+		}
+		*indices = malloc(indexCapacity*sizeof(vertexIndex_t));
+		if(*indices == NULL){
+			/** Memory allocation failure. **/
+			free(*vertices);
+			return -1;
+		}
+		/**const signed char generatePhysProperties = (mass != NULL && area != NULL && centroid != NULL);
+		if(generatePhysProperties){
+			*mass = 0.f;
+			*area = 0.f;
+			vec3SetS(centroid, 0.f);
+		}**/
+		*vertexNum = 0;
+		*indexNum = 0;
+		// Temporarily holds vertex positions before they are pushed into vertices
+		tempPositions = malloc(tempPositionsCapacity*sizeof(float));
+		if(tempPositions == NULL){
+			/** Memory allocation failure. **/
+			free(*vertices);
+			free(*indices);
+			return -1;
+		}
+		// Temporarily holds vertex UVs they are pushed into vertices
+		tempTexCoords = malloc(tempTexCoordsCapacity*sizeof(float));
+		if(tempTexCoords == NULL){
+			/** Memory allocation failure. **/
+			free(*vertices);
+			free(*indices);
+			free(tempPositions);
+			return -1;
+		}
+		// Temporarily holds vertex normals before they are pushed into vertices
+		tempNormals = malloc(tempNormalsCapacity*sizeof(float));
+		if(tempNormals == NULL){
+			/** Memory allocation failure. **/
+			free(*vertices);
+			free(*indices);
+			free(tempPositions);
+			free(tempTexCoords);
+			return -1;
+		}
+		// Temporarily holds bone IDs before they are pushed into vertices
+		tempBoneIDs = malloc(tempBoneIDsCapacity*sizeof(int));
+		if(tempBoneIDs == NULL){
+			/** Memory allocation failure. **/
+			free(*vertices);
+			free(*indices);
+			free(tempPositions);
+			free(tempTexCoords);
+			free(tempNormals);
+			return -1;
+		}
+		// Temporarily holds bone weights before they are pushed into vertices
+		tempBoneWeights = malloc(tempBoneWeightsCapacity*sizeof(float));
+		if(tempBoneWeights == NULL){
+			/** Memory allocation failure. **/
+			free(*vertices);
+			free(*indices);
+			free(tempPositions);
+			free(tempTexCoords);
+			free(tempNormals);
+			free(tempBoneIDs);
+			return -1;
+		}
+
+		while(fileParseNextLine(mdlInfo, lineFeed, sizeof(lineFeed), &line, &lineLength)){
 
 			// Name
 			if(name != NULL && *name == NULL && lineLength >= 6 && strncmp(line, "name ", 5) == 0){
@@ -426,7 +435,7 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 
 					// Check if the vertex has already been loaded, and if so add an index
 					signed char foundVertex = 0;
-					size_t j;
+					vertexIndex_t j;
 					for(j = 0; j < *vertexNum; ++j){
 						vertex *checkVert = &(*vertices)[j];
 						/** CHECK BONE DATA HERE **/
@@ -478,8 +487,6 @@ signed char mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex 
 
 	}else{
 		printf("Error loading model \"%s\": Could not open file.\n", filePath);
-		mdlWavefrontObjFreeHelpers();
-		mdlWavefrontObjFreeReturns();
 		return 0;
 	}
 
@@ -727,7 +734,7 @@ signed char mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertice
 										numLinks = VERTEX_MAX_BONES;
 									}
 
-									size_t parentPos = -1;
+									size_t parentPos = (size_t)-1;
 									float totalWeight = 0.f;
 									size_t i;
 									//Load all of the links!
@@ -763,7 +770,7 @@ signed char mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertice
 									//Make sure the total weight isn't less than 1!
 									if(totalWeight < 1.f){
 										//If we never loaded the parent bone, see if we can add it!
-										if(parentPos == -1){
+										if(parentPos == (size_t)-1){
 											if(i < VERTEX_MAX_BONES){
 												tempVertex.bIDs[i] = parentBoneID;
 												tempVertex.bWeights[i] = 0.f;

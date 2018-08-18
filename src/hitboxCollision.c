@@ -1,38 +1,61 @@
 #include "hitboxCollision.h"
+#include <math.h>
 
-signed char hbMeshCollisionGJK(const hbMesh *c1, const vec3 *c1c, const hbMesh *c2, const vec3 *c2c, hbMeshSupportVertex *simplex);
-signed char hbMeshCollisionMPR(const hbMesh *c1, const vec3 *c1c, const hbMesh *c2, const vec3 *c2c, hbMeshSupportVertex *simplex);
-void hbMeshCollisionEPA(const hbMesh *c1, const hbMesh *c2, hbMeshSupportVertex *simplex, hbCollisionData *cd);
+signed char hbMeshCollisionSAT(const hbMesh *c1, const hbMesh *c2, const vec3 *centroid, hbCollisionInfo *info, hbCollisionContactManifold *cm);
+//signed char hbMeshCollisionGJK(const hbMesh *c1, const vec3 *c1c, const hbMesh *c2, const vec3 *c2c, hbCollisionContactManifold *cm);
+//signed char hbMeshCollisionMPR(const hbMesh *c1, const vec3 *c1c, const hbMesh *c2, const vec3 *c2c, hbCollisionContactManifold *cm);
 
-signed char hbCollisionMesh(const char *c1h, const vec3 *c1c, const char *c2h, const vec3 *c2c, hbCollisionData *cd){
-	const hbMesh *c1 = (const hbMesh *)c1h;
-	const hbMesh *c2 = (const hbMesh *)c2h;
-	hbMeshSupportVertex simplex[4];
-	if(hbMeshCollisionGJK(c1, c1c, c2, c2c, simplex)){
-		if(cd != NULL){
-			hbMeshCollisionEPA(c1, c2, simplex, cd);
-		}
-		return 1;
-	}
-	return 0;
+signed char hbCollisionMesh(const byte_t *c1h, const vec3 *c1c, const byte_t *c2h, const vec3 *c2c, hbCollisionInfo *info, hbCollisionContactManifold *cm){
+	hbCollisionContactManifoldInit(cm);  /** Temporary? **/
+	return hbMeshCollisionSAT((const hbMesh *)c1h, (const hbMesh *)c2h, c1c, info, cm);
 }
 
 
-typedef signed char (*hbCollisionPrototype)(const char*, const vec3*, const char*, const vec3*, hbCollisionData*);
+typedef signed char (*hbCollisionPrototype)(const byte_t*, const vec3*, const byte_t*, const vec3*, hbCollisionInfo*, hbCollisionContactManifold*);
+
 /** The lines below should eventually be removed. **/
-hbCollisionPrototype                         hbCollisionMeshCapsule,   hbCollisionMeshSphere,    hbCollisionMeshAABB;
-hbCollisionPrototype hbCollisionCapsuleMesh, hbCollisionCapsule,       hbCollisionCapsuleSphere, hbCollisionCapsuleAABB;
-hbCollisionPrototype hbCollisionSphereMesh,  hbCollisionSphereCapsule, hbCollisionSphere,        hbCollisionSphereAABB;
-hbCollisionPrototype hbCollisionAABBMesh,    hbCollisionAABBCapsule,   hbCollisionAABBSphere,    hbCollisionAABB;
-signed char hbCollision(const hitbox *c1, const vec3 *c1c, const hitbox *c2, const vec3 *c2c, hbCollisionData *cd){
+#define hbCollisionMeshCapsule NULL
+#define hbCollisionMeshSphere  NULL
+#define hbCollisionMeshAABB    NULL
 
-	hbCollisionPrototype hbCollisionJumpTable[4][4] = {
-		{hbCollisionMesh,        hbCollisionMeshCapsule,   hbCollisionMeshSphere,    hbCollisionMeshAABB},
-		{hbCollisionCapsuleMesh, hbCollisionCapsule,       hbCollisionCapsuleSphere, hbCollisionCapsuleAABB},
-		{hbCollisionSphereMesh,  hbCollisionSphereCapsule, hbCollisionSphere,        hbCollisionSphereAABB},
-		{hbCollisionAABBMesh,    hbCollisionAABBCapsule,   hbCollisionAABBSphere,    hbCollisionAABB}
-	};
+#define hbCollisionCapsuleMesh   NULL
+#define hbCollisionCapsule       NULL
+#define hbCollisionCapsuleSphere NULL
+#define hbCollisionCapsuleAABB   NULL
 
-	return hbCollisionJumpTable[c1->type][c2->type](c1->hull, c1c, c2->hull, c2c, cd);
+#define hbCollisionSphereMesh    NULL
+#define hbCollisionSphereCapsule NULL
+#define hbCollisionSphere        NULL
+#define hbCollisionSphereAABB    NULL
 
+#define hbCollisionAABBMesh    NULL
+#define hbCollisionAABBCapsule NULL
+#define hbCollisionAABBSphere  NULL
+#define hbCollisionAABB        NULL
+
+static const hbCollisionPrototype hbCollisionJumpTable[4][4] = {
+	{hbCollisionMesh,        hbCollisionMeshCapsule,   hbCollisionMeshSphere,    hbCollisionMeshAABB},
+	{hbCollisionCapsuleMesh, hbCollisionCapsule,       hbCollisionCapsuleSphere, hbCollisionCapsuleAABB},
+	{hbCollisionSphereMesh,  hbCollisionSphereCapsule, hbCollisionSphere,        hbCollisionSphereAABB},
+	{hbCollisionAABBMesh,    hbCollisionAABBCapsule,   hbCollisionAABBSphere,    hbCollisionAABB}
+};
+
+signed char hbCollision(const hitbox *c1, const vec3 *c1c, const hitbox *c2, const vec3 *c2c, hbCollisionInfo *info, hbCollisionContactManifold *cm){
+	return hbCollisionJumpTable[c1->type][c2->type](c1->hull, c1c, c2->hull, c2c, info, cm);
+}
+
+void hbCollisionContactManifoldInit(hbCollisionContactManifold *cm){
+	cm->contactNum = 0;
+}
+
+void hbCollisionGenerateContactTangents(const vec3 *normal, vec3 *tangentA, vec3 *tangentB){
+	// Generate the contact tangents, perpendicular to each other and the contact normal.
+	// Used for frictional calculations.
+	if(fabsf(normal->x) >= 0.57735f){
+		vec3Set(tangentA, normal->y, -normal->x, 0.f);
+	}else{
+		vec3Set(tangentA, 0.f, normal->z, -normal->y);
+	}
+	vec3NormalizeFast(tangentA);
+	vec3Cross(normal, tangentA, tangentB);
 }

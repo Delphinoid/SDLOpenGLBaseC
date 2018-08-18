@@ -6,6 +6,7 @@
 #include <SDL2/SDL.h>
 #include "vertex.h"
 #include "skeleton.h"
+#include "memoryShared.h"
 
 #define DEFAULT_GL_VERSION_MAJOR 3
 #define DEFAULT_GL_VERSION_MINOR 3
@@ -61,8 +62,8 @@ typedef struct {
 	// Window sizes (should be stored elsewhere).
 	int windowWidth;
 	int windowHeight;
-	unsigned char aspectRatioX;
-	unsigned char aspectRatioY;
+	byte_t aspectRatioX;
+	byte_t aspectRatioY;
 	int lastWindowWidth;
 	int lastWindowHeight;
 	signed char stretchToFit;

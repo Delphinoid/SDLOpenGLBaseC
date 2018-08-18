@@ -3,17 +3,27 @@
 
 #include <stdlib.h>
 
+//#define SM_TYPE_NUM 3
+
+/**
+*** Redo parts of this later, as it should only
+*** usually be needed for netcode in very
+*** specific instances. Try and incorporate it
+*** into the general resource manager.
+**/
+
 /** Remove "active" property from state types? **/
 
+/** Don't like using an array of pointers. **/
 typedef struct {
-	signed char active;  // Whether or not this slot is free.
 	void **state;        // An array of pointers to objects. Objects that no longer exist have NULL entries.
+	signed char active;  // Whether or not this slot is free.
 } stateObject;
 
 typedef struct {
 	size_t size;            // The size of the object struct.
-	size_t capacity;        // The size of stateObjectType.instance.
 	size_t stateNum;        // The number of states being recorded.
+	size_t capacity;        // The size of stateObjectType.instance.
 	stateObject *instance;  // Each instance of this type of object.
 	signed char (*stateInit)(void*);
 	signed char (*stateCopy)(void*, void*);

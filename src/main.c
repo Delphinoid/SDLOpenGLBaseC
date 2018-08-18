@@ -168,12 +168,16 @@ int main(int argc, char *argv[]){
 	signed char prgRunning = 1;
 
 	float globalTimeMod = 1.f;
-	float framerate = 1000.f / 125.f;  // Desired renders per millisecond
-	float tickrate = 1000.f / 125.f;  // Desired updates per millisecond
+	float framerate = 1000.f / 125.f;  // Desired milliseconds per render.
+	float tickrate = 1000.f / 125.f;  // Desired milliseconds per update.
 	float tickratio = tickrate / 1000.f;  // 1 / updates per second.
+	float tickrateMod = tickrate * globalTimeMod;
+	float tickratioMod = tickratio * globalTimeMod;
 
-	float nextUpdate = 0.f;
-	float nextRender = 0.f;
+	float startUpdate;
+	float nextUpdate = (float)SDL_GetTicks();
+	float startRender;
+	float nextRender = (float)SDL_GetTicks();
 
 	uint32_t updates = 0;
 	uint32_t renders = 0;
@@ -191,7 +195,6 @@ int main(int argc, char *argv[]){
 	int mouseRelY;
 
 	size_t i;
-
     while(prgRunning){
 
 		gfxUpdateWindow(&gfxPrg);
@@ -250,8 +253,8 @@ int main(int argc, char *argv[]){
 		SDL_GetRelativeMouseState(&mouseRelX, &mouseRelY);
 
 
-		const float updateStart = (float)SDL_GetTicks();
-		while(updateStart >= nextUpdate){
+		startUpdate = (float)SDL_GetTicks();
+		while(startUpdate >= nextUpdate){
 
 			/* Prepare the next game state. */
 			smPrepareNextState(&gameStateManager);
@@ -263,7 +266,7 @@ int main(int argc, char *argv[]){
 				quatSetEuler(&changeRotation, -90.f*RADIAN_RATIO, 0.f, 0.f);
 				quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, tickratio, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
 				camGetState(&gameStateManager, 0, 0)->position.value.z += -5.f * tickratio;
-				objGetState(&gameStateManager, 4, 0)->tempRndrConfig.targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
+				//objGetState(&gameStateManager, 4, 0)->tempRndrConfig.targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
 			}
 			if(DOWN){
 				globalTimeMod = -1.f;
@@ -271,7 +274,7 @@ int main(int argc, char *argv[]){
 				quatSetEuler(&changeRotation, 90.f*RADIAN_RATIO, 0.f, 0.f);
 				quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, tickratio, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
 				camGetState(&gameStateManager, 0, 0)->position.value.z += 5.f * tickratio;
-				objGetState(&gameStateManager, 4, 0)->tempRndrConfig.targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
+				//objGetState(&gameStateManager, 4, 0)->tempRndrConfig.targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
 			}
 			if(LEFT){
 				/** changeRotation is created to initialize the second renderable. **/
@@ -280,7 +283,7 @@ int main(int argc, char *argv[]){
 				quatSetEuler(&changeRotation, 0.f, 0.f, -90.f*RADIAN_RATIO);
 				quatRotate(&objGetState(&gameStateManager, 3, 0)->configuration[0].orientation, &changeRotation, tickratio, &objGetState(&gameStateManager, 3, 0)->configuration[0].orientation);
 				camGetState(&gameStateManager, 0, 0)->position.value.x += -5.f * tickratio;
-				objGetState(&gameStateManager, 4, 0)->tempRndrConfig.targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
+				//objGetState(&gameStateManager, 4, 0)->tempRndrConfig.targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
 			}
 			if(RIGHT){
 				/** changeRotation is created to initialize the second renderable. **/
@@ -289,16 +292,13 @@ int main(int argc, char *argv[]){
 				quatSetEuler(&changeRotation, 0.f, 0.f, 90.f*RADIAN_RATIO);
 				quatRotate(&objGetState(&gameStateManager, 3, 0)->configuration[0].orientation, &changeRotation, tickratio, &objGetState(&gameStateManager, 3, 0)->configuration[0].orientation);
 				camGetState(&gameStateManager, 0, 0)->position.value.x += 5.f * tickratio;
-				objGetState(&gameStateManager, 4, 0)->tempRndrConfig.targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
+				//objGetState(&gameStateManager, 4, 0)->tempRndrConfig.targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
 			}
 
-			/* Animate */
-			/** Could be merged with the update function but animating should be done in here. **/
-			for(i = 0; i < gameStateManager.objectType[SM_TYPE_OBJECT].capacity; ++i){
-				/* Update the renderable for rendering */
-				if(objGetState(&gameStateManager, i, 0) != NULL){
-					objiUpdate(objGetState(&gameStateManager, i, 0), camGetState(&gameStateManager, 0, 0), tickrate*globalTimeMod, tickratio);
-				}
+			/* Update. */
+			for(i = 0; i < gameStateManager.objectType[SM_TYPE_SCENE].capacity; ++i){
+				// Update each scene.
+				scnUpdate(scnGetState(&gameStateManager, i, 0), &gameStateManager, tickrateMod, tickratioMod);
 			}
 
 			/* Next frame */
@@ -309,16 +309,11 @@ int main(int argc, char *argv[]){
 
 
 		/* Render the scene */
-		const float renderStart = (float)SDL_GetTicks();
-		if(renderStart >= nextRender){
+		startRender = (float)SDL_GetTicks();
+		if(startRender >= nextRender){
 
 			/* Progress between current and next frame. */
-			float interpT = (renderStart - (nextUpdate - tickrate)) / tickrate;
-			if(interpT < 0.f){
-				interpT = 0.f;
-			}else if(interpT > 1.f){
-				interpT = 1.f;
-			}
+			const float interpT = (startRender - (nextUpdate - tickrate)) / tickrate;
 
 			/* Render */
 			/** Remove later **/
@@ -329,7 +324,8 @@ int main(int argc, char *argv[]){
 			SDL_GL_SwapWindow(gfxPrg.window);
 
 			/* Next frame */
-			nextRender = renderStart + framerate;
+			//nextRender = startRender + framerate;
+			nextRender += framerate;
 			++renders;
 
 		}
