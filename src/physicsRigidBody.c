@@ -557,7 +557,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 						vec3 CsA;
 
 						// Recursively add the face's edges.
-						while(1){
+						for(;;){
 
 							token = strtok(NULL, " ");
 							if(token == NULL){
