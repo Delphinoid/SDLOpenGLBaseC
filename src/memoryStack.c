@@ -1,5 +1,12 @@
 #include "memoryStack.h"
 
+inline size_t memStackAllocationOverhead(const byte_t *start, const size_t bytes){
+	/*
+	** Returns the total allocation overhead.
+	*/
+	return 0;
+}
+
 byte_t *memStackInit(memoryStack *stack, byte_t *start, const size_t bytes){
 	stack->start = start;
 	stack->next = start;

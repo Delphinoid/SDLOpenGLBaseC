@@ -1,7 +1,7 @@
 #ifndef MEMORYPOOL_H
 #define MEMORYPOOL_H
 
-/*#include <stdlib.h>
+/**#include <stdlib.h>
 #include <stdint.h>
 
 #define MEMORY_POOL_INACTIVE 0x00
@@ -26,7 +26,7 @@ typedef struct {
 typedef struct {
 	byte_t *start;
 	MEMORY_POOL_BLOCK_TYPE next;
-} memoryList;*/
+} memoryList;**/
 
 #include "memoryShared.h"
 
@@ -36,13 +36,16 @@ typedef struct {
 ** Effectively a free-list allocator
 ** but each block has an "active"
 ** flag for iterations, stored in a
-** footer after the main block data.
+** header before the main block data.
+**
+** Free-list pointers point to the
+** data, not the beginning of the block.
 */
 
 /**
 *** Instead of using an "active" flag,
-*** we could use pointers to the next
-*** active member.
+*** could we use pointers to the next
+*** active member?
 **/
 
 #define MEMORY_POOL_INACTIVE 0
@@ -59,13 +62,20 @@ typedef struct {
 #define MEMORY_POOL_FLAG_OFFSET_FROM_DATA  -MEMORY_POOL_BLOCK_FLAG_SIZE
 #define MEMORY_POOL_BLOCK_OFFSET_FROM_DATA -MEMORY_POOL_BLOCK_HEADER_SIZE
 
+#ifdef MEMORY_POOL_LEAN
+	#define MEMORY_POOL_ALIGN(x) x
+#else
+	#define MEMORY_POOL_ALIGN(x) MEMORY_ALIGN(x)
+#endif
+
 typedef struct {
 	byte_t *start;
-	byte_t *next;    // Next free block pointer.
+	byte_t *next;  // Next free block pointer.
 	byte_t *end;
 	size_t block;  // Block size.
 } memoryPool;
 
+size_t memPoolAllocationOverhead(const byte_t *start, const size_t bytes, const size_t length);
 byte_t *memPoolInit(memoryPool *pool, byte_t *start, const size_t bytes, const size_t length);
 byte_t *memPoolAllocate(memoryPool *pool);
 void memPoolFree(memoryPool *pool, byte_t *block);

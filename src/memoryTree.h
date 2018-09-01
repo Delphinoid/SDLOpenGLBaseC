@@ -14,7 +14,7 @@
 **
 ** Activeness of each block is
 ** stored in the LSB of the
-** "previous" pointer.
+** "previous" size.
 **
 ** Colour information for each
 ** block is stored in the LSB of
@@ -62,11 +62,24 @@
 #define MEMORY_TREE_PARENT_OFFSET_FROM_DATA    MEMORY_TREE_RIGHT_OFFSET_FROM_DATA + MEMORY_TREE_BLOCK_POINTER_SIZE
 #define MEMORY_TREE_COLOUR_OFFSET_FROM_DATA    MEMORY_TREE_PARENT_OFFSET_FROM_DATA
 
-// Use 8 byte alignment for improved performance.
-#define MEMORY_TREE_ALIGNMENT 8
-// Rounds x to the nearest address that is
-// aligned with MEMORY_TREE_ALIGNMENT.
-#define MEMORY_TREE_ALIGN(x) ((x + MEMORY_TREE_ALIGNMENT - 1) & ~(MEMORY_TREE_ALIGNMENT - 1))
+#ifdef MEMORY_TREE_LEAN
+	#define MEMORY_TREE_ALIGN(x) x
+#else
+	#define MEMORY_TREE_ALIGN(x) MEMORY_ALIGN(x)
+#endif
+
+typedef struct memoryTreeNode memoryTreeNode;
+typedef struct memoryTreeNode {
+	memoryTreeNode *left;
+	memoryTreeNode *right;
+	memoryTreeNode *parent;
+} memoryTreeNode;
+
+typedef struct {
+	size_t current;
+	size_t previous;
+	memoryTreeNode node;
+} memoryTreeBlock;
 
 typedef struct {
 	byte_t *start;
@@ -78,6 +91,12 @@ typedef struct {
 	                // result in slightly slower colour checks.
 } memoryTree;
 
+/**typedef struct memoryTreeLink {
+	memoryTree tree;
+	memoryTreeLink *next;
+} memoryTreeLink;**/
+
+size_t memTreeAllocationOverhead(const byte_t *start, const size_t bytes);
 byte_t *memTreeInit(memoryTree *tree, byte_t *start, const size_t bytes);
 byte_t *memTreeAllocate(memoryTree *tree, const size_t bytes);
 void memTreeFree(memoryTree *tree, byte_t *block);

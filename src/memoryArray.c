@@ -1,5 +1,14 @@
 #include "memoryArray.h"
 
+size_t memArrayAllocationOverhead(const byte_t *start, const size_t bytes, const size_t length){
+	/*
+	** Returns the total allocation overhead.
+	*/
+	const size_t block = MEMORY_ARRAY_ALIGN((bytes > MEMORY_ARRAY_BLOCK_SIZE ? bytes : MEMORY_ARRAY_BLOCK_SIZE) + MEMORY_ARRAY_BLOCK_HEADER_SIZE) - bytes;
+	const uintptr_t offset = (uintptr_t)start;
+	return block * length + MEMORY_ARRAY_ALIGN(offset) - offset;
+}
+
 byte_t *memArrayInit(memoryArray *array, byte_t *start, const size_t bytes, const size_t length){
 
 	/*
@@ -11,9 +20,9 @@ byte_t *memArrayInit(memoryArray *array, byte_t *start, const size_t bytes, cons
 
 		// Clamp the block size upwards to
 		// match the minimum block size.
-		array->block = (bytes > MEMORY_ARRAY_BLOCK_SIZE ? bytes : MEMORY_ARRAY_BLOCK_SIZE) + MEMORY_ARRAY_BLOCK_HEADER_SIZE;
+		array->block = MEMORY_ARRAY_ALIGN((bytes > MEMORY_ARRAY_BLOCK_SIZE ? bytes : MEMORY_ARRAY_BLOCK_SIZE) + MEMORY_ARRAY_BLOCK_HEADER_SIZE);
 		array->start = start;
-		array->end = start + array->block*length;
+		array->end = (byte_t *)MEMORY_ARRAY_ALIGN((uintptr_t)start) + array->block*length;
 
 		memArrayClear(array);
 
@@ -43,7 +52,30 @@ byte_t *memArrayAllocate(memoryArray *array){
 
 }
 
-byte_t *memArrayInsert(memoryArray *array, byte_t *element){
+byte_t *memArrayInsertBefore(memoryArray *array, byte_t *element){
+
+	/*
+	** Inserts a new item before the specified element.
+	*/
+
+	byte_t *r = array->next;
+	if(r){
+		byte_t **c = (byte_t **)r;
+		byte_t **next = (byte_t **)(element + MEMORY_ARRAY_NEXT_OFFSET_FROM_DATA);
+		*(c + MEMORY_ARRAY_PREV_OFFSET_FROM_BLOCK) = element;
+		*(c + MEMORY_ARRAY_NEXT_OFFSET_FROM_BLOCK) = *next;
+		// Set current element's next pointer.
+		*next = r;
+		// Set next next element's previous pointer.
+		*((byte_t **)(*next) + MEMORY_ARRAY_PREV_OFFSET_FROM_BLOCK) = r;
+		array->next = *c;
+		r += MEMORY_ARRAY_DATA_OFFSET_FROM_BLOCK;
+	}
+	return r;
+
+}
+
+byte_t *memArrayInsertAfter(memoryArray *array, byte_t *element){
 
 	/*
 	** Inserts a new item after the specified element.

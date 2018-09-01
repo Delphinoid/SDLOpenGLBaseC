@@ -1,5 +1,12 @@
 #include "memoryList.h"
 
+inline size_t memListAllocationOverhead(const byte_t *start, const size_t bytes, const size_t length){
+	/*
+	** Returns the total allocation overhead.
+	*/
+	return (bytes > sizeof(memoryListBlock) ? 0 : sizeof(memoryListBlock)) * length;
+}
+
 byte_t *memListInit(memoryList *list, byte_t *start, const size_t bytes, const size_t length){
 
 	/*

@@ -22,6 +22,7 @@ typedef struct {
 	byte_t *end;
 } memoryStack;
 
+size_t memStackAllocationOverhead(const byte_t *start, const size_t bytes);
 byte_t *memStackInit(memoryStack *stack, byte_t *start, const size_t bytes);
 byte_t *memStackPush(memoryStack *stack, const size_t bytes);
 void memStackPop(memoryStack *stack, const size_t bytes);

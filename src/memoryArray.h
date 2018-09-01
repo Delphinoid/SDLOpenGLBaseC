@@ -37,6 +37,12 @@
 #define MEMORY_ARRAY_BLOCK_OFFSET_FROM_DATA -MEMORY_ARRAY_BLOCK_HEADER_SIZE
 #define MEMORY_ARRAY_FLAG_OFFSET_FROM_DATA  -MEMORY_ARRAY_BLOCK_FLAG_SIZE
 
+#ifdef MEMORY_ARRAY_LEAN
+	#define MEMORY_ARRAY_ALIGN(x) x
+#else
+	#define MEMORY_ARRAY_ALIGN(x) MEMORY_ALIGN(x)
+#endif
+
 typedef struct {
 	byte_t *start;
 	byte_t *next;  // Next free block pointer.
@@ -44,9 +50,10 @@ typedef struct {
 	size_t block;  // Block size.
 } memoryArray;
 
+size_t memArrayAllocationOverhead(const byte_t *start, const size_t bytes, const size_t length);
 byte_t *memArrayInit(memoryArray *array, byte_t *start, const size_t bytes, const size_t length);
 byte_t *memArrayAllocate(memoryArray *array);
-byte_t *memArrayInsert(memoryArray *array, byte_t *element);
+byte_t *memArrayInsertAfter(memoryArray *array, byte_t *element);
 void memArrayFree(memoryArray *array, byte_t *block);
 void memArrayClear(memoryArray *array);
 
