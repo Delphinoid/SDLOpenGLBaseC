@@ -16,14 +16,18 @@
 ** that will only ever be added to or cleared.
 */
 
+#define MEMORY_STACK_UNSPECIFIED_LENGTH MEMORY_UNSPECIFIED_LENGTH
+
 typedef struct {
 	byte_t *start;
 	byte_t *next;
 	byte_t *end;
 } memoryStack;
 
-size_t memStackAllocationOverhead(const byte_t *start, const size_t bytes);
-byte_t *memStackInit(memoryStack *stack, byte_t *start, const size_t bytes);
+#define memStackBlockSize(bytes) bytes
+#define memStackAllocationSize(start, bytes, length) (length > 0 ? memStackBlockSize(bytes) * length : bytes)
+
+byte_t *memStackInit(memoryStack *stack, byte_t *start, const size_t bytes, const size_t length);
 byte_t *memStackPush(memoryStack *stack, const size_t bytes);
 void memStackPop(memoryStack *stack, const size_t bytes);
 void memStackShrink(memoryStack *stack, const size_t bytes);

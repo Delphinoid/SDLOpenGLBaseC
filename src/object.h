@@ -11,9 +11,52 @@
 /** Remove rndrConfig **/
 /**                   **/
 
-#define OBJ_MAX_RENDERABLE_NUM 256
+//#define OBJ_MAX_RENDERABLE_NUM 256
 
 typedef uint8_t renderableIndex_t;
+
+/*typedef struct {
+
+	char *name;
+
+	skeleton *skl;  // The object's recommended animation skeleton.
+
+	animIndex_t animationNum;       // Number of animations.
+	animIndex_t animationCapacity;  // The maximum number of animations that the object can play at once.
+	sklAnim **animations;           // Array of pointers to animations associated with the object.
+
+	physRigidBody *skeletonBodies[SKL_BONE_NUM];
+	flags_t skeletonBodyFlags[SKL_BONE_NUM];
+	constraintIndex_t *skeletonConstraintNum;  // Number of default constraints for each bone.
+	physConstraint **skeletonConstraints;      // Default constraints for each bone.
+	hbArray *skeletonHitboxes[SKL_BONE_NUM];
+
+	renderable *renderables[OBJ_MAX_RENDERABLE_NUM];
+
+} object;
+
+typedef struct {
+
+	object *base;
+	** Access base object animations array? **
+
+	** Store model matrix here, update only when changed? **
+	** Remove rndrConfig. **
+	rndrConfig tempRndrConfig;  // The object's global space configuration.
+
+	//skeleton *skl;              // The object's animation skeleton.
+	sklInstance skeletonData;  // An array of skeletal animation instances.
+
+	bone *configuration[SKL_BONE_NUM];  // Array of custom bone transformations.
+	bone *previousState[SKL_BONE_NUM];  // The global skeleton states from the previous update.
+	bone *currentState[SKL_BONE_NUM];   // The global skeleton states from the current update.
+
+	physRBInstance *skeletonPhysics[SKL_BONE_NUM];  // Array of pointers to physics bodies, one for each bone in skl.
+	hbArray *skeletonHitboxes[SKL_BONE_NUM];        // Array of pointers to hitbox arrays, one for each bone in skl.
+
+	rndrInstance *renderables[OBJ_MAX_RENDERABLE_NUM];  // Renderable instance array.
+
+} objInstance;*/
 
 typedef struct {
 
@@ -55,7 +98,7 @@ typedef struct {
 	                      // previous configuration.
 
 	physRBInstance *skeletonPhysics;  // Array of physics bodies, one for each bone in skl.
-	hbArray *skeletonHitboxes;  // Array of hitbox arrays, one for each bone in skl.
+	hbArray *skeletonHitboxes;        // Array of hitbox arrays, one for each bone in skl.
 
 	renderableIndex_t renderableNum;  // Current number of attached renderables.
 	rndrInstance *renderables;        // Renderable instance array.

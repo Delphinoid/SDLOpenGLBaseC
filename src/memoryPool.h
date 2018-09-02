@@ -1,33 +1,6 @@
 #ifndef MEMORYPOOL_H
 #define MEMORYPOOL_H
 
-/**#include <stdlib.h>
-#include <stdint.h>
-
-#define MEMORY_POOL_INACTIVE 0x00
-#define MEMORY_POOL_ACTIVE   0x01
-
-#if INTPTR_MAX == INT64_MAX
-	#define MEMORY_POOL_MAX_BYTES 1152921504606846976
-	#define MEMORY_POOL_NEXT_BLOCK_NULL
-	#define MEMORY_POOL_BLOCK_BITS 64
-	#define MEMORY_POOL_BLOCK_TYPE uint64_t
-#elif INTPTR_MAX == INT32_MAX
-	#define MEMORY_POOL_MAX_BYTES 268435456
-	#define MEMORY_POOL_BLOCK_BITS 32
-	#define MEMORY_POOL_BLOCK_TYPE uint32_t
-#endif
-
-typedef struct {
-	MEMORY_POOL_BLOCK_TYPE active : 1;
-	MEMORY_POOL_BLOCK_TYPE next   : (MEMORY_POOL_BLOCK_BITS-1);
-} memoryListBlock;
-
-typedef struct {
-	byte_t *start;
-	MEMORY_POOL_BLOCK_TYPE next;
-} memoryList;**/
-
 #include "memoryShared.h"
 
 /*
@@ -62,6 +35,14 @@ typedef struct {
 #define MEMORY_POOL_FLAG_OFFSET_FROM_DATA  -MEMORY_POOL_BLOCK_FLAG_SIZE
 #define MEMORY_POOL_BLOCK_OFFSET_FROM_DATA -MEMORY_POOL_BLOCK_HEADER_SIZE
 
+#define memPoolBlockGetFlags(block)    *((byte_t *)(block + MEMORY_POOL_FLAG_OFFSET_FROM_BLOCK))
+#define memPoolBlockGetNextFree(block) *((byte_t **)(block + MEMORY_POOL_DATA_OFFSET_FROM_BLOCK))
+#define memPoolBlockGetData(block)      ((byte_t *)(block + MEMORY_POOL_DATA_OFFSET_FROM_BLOCK))
+
+#define memPoolDataGetFlags(data)    *((byte_t *)(data + MEMORY_POOL_FLAG_OFFSET_FROM_DATA))
+#define memPoolDataGetNextFree(data) *((byte_t **)data)
+#define memPoolDataGetBlock(data)     ((byte_t *)(data + MEMORY_POOL_BLOCK_OFFSET_FROM_DATA))
+
 #ifdef MEMORY_POOL_LEAN
 	#define MEMORY_POOL_ALIGN(x) x
 #else
@@ -75,15 +56,17 @@ typedef struct {
 	size_t block;  // Block size.
 } memoryPool;
 
-size_t memPoolAllocationOverhead(const byte_t *start, const size_t bytes, const size_t length);
+#define memPoolBlockSize(bytes) MEMORY_POOL_ALIGN((bytes > MEMORY_POOL_BLOCK_SIZE ? bytes : MEMORY_POOL_BLOCK_SIZE) + MEMORY_POOL_BLOCK_HEADER_SIZE)
+#define memPoolAllocationSize(start, bytes, length) (memPoolBlockSize(bytes) * length + MEMORY_POOL_ALIGN((uintptr_t)start) - (uintptr_t)start)
+
+#define memPoolStart(pool)        pool->start;
+#define memPoolBlockStatus(block) memPoolBlockGetFlags(block);
+#define memPoolBlockNext(pool, i) *i += pool->block;
+#define memPoolEnd(pool)          pool->end
+
 byte_t *memPoolInit(memoryPool *pool, byte_t *start, const size_t bytes, const size_t length);
 byte_t *memPoolAllocate(memoryPool *pool);
 void memPoolFree(memoryPool *pool, byte_t *block);
 void memPoolClear(memoryPool *pool);
-
-byte_t *memPoolStart(const memoryPool *pool);
-byte_t memPoolBlockStatus(const byte_t *block);
-void memPoolBlockNext(const memoryPool *pool, byte_t **i);
-byte_t *memPoolEnd(const memoryPool *pool);
 
 #endif

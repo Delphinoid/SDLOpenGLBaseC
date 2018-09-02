@@ -1,14 +1,5 @@
 #include "memoryArray.h"
 
-size_t memArrayAllocationOverhead(const byte_t *start, const size_t bytes, const size_t length){
-	/*
-	** Returns the total allocation overhead.
-	*/
-	const size_t block = MEMORY_ARRAY_ALIGN((bytes > MEMORY_ARRAY_BLOCK_SIZE ? bytes : MEMORY_ARRAY_BLOCK_SIZE) + MEMORY_ARRAY_BLOCK_HEADER_SIZE) - bytes;
-	const uintptr_t offset = (uintptr_t)start;
-	return block * length + MEMORY_ARRAY_ALIGN(offset) - offset;
-}
-
 byte_t *memArrayInit(memoryArray *array, byte_t *start, const size_t bytes, const size_t length){
 
 	/*
@@ -20,9 +11,9 @@ byte_t *memArrayInit(memoryArray *array, byte_t *start, const size_t bytes, cons
 
 		// Clamp the block size upwards to
 		// match the minimum block size.
-		array->block = MEMORY_ARRAY_ALIGN((bytes > MEMORY_ARRAY_BLOCK_SIZE ? bytes : MEMORY_ARRAY_BLOCK_SIZE) + MEMORY_ARRAY_BLOCK_HEADER_SIZE);
+		array->block = memArrayBlockSize(bytes);
 		array->start = start;
-		array->end = (byte_t *)MEMORY_ARRAY_ALIGN((uintptr_t)start) + array->block*length;
+		array->end = start + memArrayAllocationSize(start, bytes, length);
 
 		memArrayClear(array);
 
@@ -42,11 +33,9 @@ byte_t *memArrayAllocate(memoryArray *array){
 
 	byte_t *r = array->next;
 	if(r){
-		byte_t **c = (byte_t **)r;
-		*(c + MEMORY_ARRAY_PREV_OFFSET_FROM_BLOCK) = r;
-		*(c + MEMORY_ARRAY_NEXT_OFFSET_FROM_BLOCK) = r;
-		array->next = *c;
-		r += MEMORY_ARRAY_DATA_OFFSET_FROM_BLOCK;
+		memArrayDataGetNext(r) = r;
+		memArrayDataGetPrev(r) = r;
+		array->next = memArrayDataGetNextFree(r);
 	}
 	return r;
 
@@ -60,16 +49,15 @@ byte_t *memArrayInsertBefore(memoryArray *array, byte_t *element){
 
 	byte_t *r = array->next;
 	if(r){
-		byte_t **c = (byte_t **)r;
-		byte_t **next = (byte_t **)(element + MEMORY_ARRAY_NEXT_OFFSET_FROM_DATA);
-		*(c + MEMORY_ARRAY_PREV_OFFSET_FROM_BLOCK) = element;
-		*(c + MEMORY_ARRAY_NEXT_OFFSET_FROM_BLOCK) = *next;
-		// Set current element's next pointer.
-		*next = r;
-		// Set next next element's previous pointer.
-		*((byte_t **)(*next) + MEMORY_ARRAY_PREV_OFFSET_FROM_BLOCK) = r;
-		array->next = *c;
-		r += MEMORY_ARRAY_DATA_OFFSET_FROM_BLOCK;
+		byte_t **prev = memArrayDataGetPrevPointer(element);
+		// Set the previous element's next pointer.
+		memArrayDataGetNext(*prev) = r;
+		// Set the new element's pointers.
+		memArrayDataGetNext(r) = element;
+		memArrayDataGetPrev(r) = *prev;
+		// Set the old element's pointers.
+		*prev = r;
+		array->next = memArrayDataGetNextFree(r);
 	}
 	return r;
 
@@ -83,16 +71,15 @@ byte_t *memArrayInsertAfter(memoryArray *array, byte_t *element){
 
 	byte_t *r = array->next;
 	if(r){
-		byte_t **c = (byte_t **)r;
-		byte_t **next = (byte_t **)(element + MEMORY_ARRAY_NEXT_OFFSET_FROM_DATA);
-		*(c + MEMORY_ARRAY_PREV_OFFSET_FROM_BLOCK) = element;
-		*(c + MEMORY_ARRAY_NEXT_OFFSET_FROM_BLOCK) = *next;
-		// Set current element's next pointer.
+		byte_t **next = memArrayDataGetNextPointer(element);
+		// Set the following element's previous pointer.
+		memArrayDataGetPrev(*next) = r;
+		// Set the new element's pointers.
+		memArrayDataGetNext(r) = *next;
+		memArrayDataGetPrev(r) = element;
+		// Set the old element's pointers.
 		*next = r;
-		// Set next next element's previous pointer.
-		*((byte_t **)(*next) + MEMORY_ARRAY_PREV_OFFSET_FROM_BLOCK) = r;
-		array->next = *c;
-		r += MEMORY_ARRAY_DATA_OFFSET_FROM_BLOCK;
+		array->next = memArrayDataGetNextFree(r);
 	}
 	return r;
 
@@ -104,58 +91,34 @@ void memArrayFree(memoryArray *array, byte_t *block){
 	** Frees an array of elements.
 	*/
 
-	byte_t **b = (byte_t **)block;
-	*(b + MEMORY_ARRAY_PREV_OFFSET_FROM_DATA) = NULL;
-	*(b + MEMORY_ARRAY_NEXT_OFFSET_FROM_DATA) = NULL;
-	*b = array->next;
-	array->next = block + MEMORY_ARRAY_BLOCK_OFFSET_FROM_DATA;
+	memArrayDataGetNext(block) = NULL;
+	memArrayDataGetPrev(block) = NULL;
+	memArrayDataGetNextFree(block) = array->next;
+	array->next = block;
 
 }
 
 void memArrayClear(memoryArray *array){
 
-	byte_t **block = (byte_t **)array->start;
-	byte_t *next = (byte_t *)block + array->block;
+	byte_t *start = (byte_t *)MEMORY_ARRAY_ALIGN((uintptr_t)array->start);
+	byte_t *block = memArrayBlockGetData(start);
+	byte_t *next = block + array->block;
 
 	// Loop through every block, making it
 	// point to the next free block.
 	while(next < array->end){
-		*(block + MEMORY_ARRAY_PREV_OFFSET_FROM_BLOCK) = NULL;
-		*(block + MEMORY_ARRAY_NEXT_OFFSET_FROM_BLOCK) = NULL;
-		*(block + MEMORY_ARRAY_DATA_OFFSET_FROM_BLOCK) = next;
-		block = (byte_t **)next;
-		next = (byte_t *)block + array->block;
+		memArrayDataGetNext(block) = NULL;
+		memArrayDataGetPrev(block) = NULL;
+		memArrayDataGetNextFree(block) = next;
+		block = next;
+		next += array->block;
 	}
 
 	// Final block contains a null pointer.
-	*(block + MEMORY_ARRAY_PREV_OFFSET_FROM_BLOCK) = NULL;
-	*(block + MEMORY_ARRAY_NEXT_OFFSET_FROM_BLOCK) = NULL;
-	*(block + MEMORY_ARRAY_DATA_OFFSET_FROM_BLOCK) = NULL;
+	memArrayDataGetNext(block) = NULL;
+	memArrayDataGetPrev(block) = NULL;
+	memArrayDataGetNextFree(block) = NULL;
 
-	array->next = array->start;
+	array->next = memArrayBlockGetData(start);
 
-}
-
-inline byte_t *memArrayStart(const memoryArray *array){
-	return array->start;
-}
-
-inline void memArrayPrev(byte_t **i){
-	*i = *((byte_t **)(*i + MEMORY_ARRAY_PREV_OFFSET_FROM_DATA));
-}
-
-inline void memArrayNext(byte_t **i){
-	*i = *((byte_t **)(*i + MEMORY_ARRAY_NEXT_OFFSET_FROM_DATA));
-}
-
-inline byte_t memArrayBlockStatus(const byte_t *block){
-	return *((byte_t *)(block + MEMORY_ARRAY_FLAG_OFFSET_FROM_DATA));
-}
-
-inline void memArrayBlockNext(const memoryArray *array, byte_t **i){
-	*i += array->block;
-}
-
-inline byte_t *memArrayEnd(const memoryArray *array){
-	return array->end;
 }
