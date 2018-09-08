@@ -1,12 +1,11 @@
-#include "gfxProgram.h"
+#include "graphicsManager.h"
 #include "stateManagerHelpers.h"
+#include "mathConstants.h"
 #include <stdio.h>
 
-#define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians
-
 /** stateManager should be const. **/
-void renderScene(stateManager *gameStateManager, const size_t stateID, const float interpT, gfxProgram *gfxPrg);
-void cleanup(gfxProgram *gfxPrg, stateManager *gameStateManager,
+void renderScene(stateManager *gameStateManager, const size_t stateID, const float interpT, graphicsManager *gfxMngr);
+void cleanup(graphicsManager *gfxMngr, stateManager *gameStateManager,
              cVector *allTextures, cVector *allTexWrappers,
              cVector *allSkeletons, cVector *allSklAnimations,
              cVector *allModels, cVector *allObjects);
@@ -18,8 +17,8 @@ int main(int argc, char *argv[]){
 	prgPath[strrchr(prgPath, '\\') - prgPath + 1] = '\0';  // Removes program name (everything after the last backslash) from the path
 	/** prgPath can be replaced with ".\\", but it may present some problems when running directly from Code::Blocks. **/
 
-	gfxProgram gfxPrg;
-	if(!gfxInitProgram(&gfxPrg, prgPath)){
+	graphicsManager gfxMngr;
+	if(!gfxMngrInit(&gfxMngr, prgPath)){
 		return 1;
 	}
 
@@ -197,7 +196,7 @@ int main(int argc, char *argv[]){
 	size_t i;
     while(prgRunning){
 
-		gfxUpdateWindow(&gfxPrg);
+		gfxMngrUpdateWindow(&gfxMngr);
 
 
 		/* Take input */
@@ -319,9 +318,9 @@ int main(int argc, char *argv[]){
 			/** Remove later **/
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			// Render the scene
-			renderScene(&gameStateManager, 0, interpT, &gfxPrg);
+			renderScene(&gameStateManager, 0, interpT, &gfxMngr);
 			// Update the window
-			SDL_GL_SwapWindow(gfxPrg.window);
+			SDL_GL_SwapWindow(gfxMngr.window);
 
 			/* Next frame */
 			//nextRender = startRender + framerate;
@@ -342,12 +341,12 @@ int main(int argc, char *argv[]){
     }
 
 
-	cleanup(&gfxPrg, &gameStateManager, &allTextures, &allTexWrappers, &allSkeletons, &allSklAnimations, &allModels, &allObjects);
+	cleanup(&gfxMngr, &gameStateManager, &allTextures, &allTexWrappers, &allSkeletons, &allSklAnimations, &allModels, &allObjects);
 	return 0;
 
 }
 
-void cleanup(gfxProgram *gfxPrg, stateManager *gameStateManager,
+void cleanup(graphicsManager *gfxMngr, stateManager *gameStateManager,
              cVector *allTextures, cVector *allTexWrappers,
              cVector *allSkeletons, cVector *allSklAnimations,
              cVector *allModels, cVector *allObjects){
@@ -384,6 +383,6 @@ void cleanup(gfxProgram *gfxPrg, stateManager *gameStateManager,
 	cvClear(allObjects);
 
 	smDelete(gameStateManager);
-	gfxDestroyProgram(gfxPrg);
+	gfxMngrDestroyProgram(gfxMngr);
 
 }

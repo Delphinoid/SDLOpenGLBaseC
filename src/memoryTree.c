@@ -40,7 +40,7 @@ static inline void memTreeRotateTreeLeft(memoryTree *tree, byte_t *node){
 		memTreeNodeGetParent(rightleft) = node;
 	}
 
-	memTreeNodeSetParentColourless(right, parent);
+	memTreeNodeSetParentKeepColour(right, parent);
 
 	if(parent == NULL){
 		tree->root = right;
@@ -71,7 +71,7 @@ static inline void memTreeRotateTreeRight(memoryTree *tree, byte_t *node){
 		memTreeNodeGetParent(leftright) = node;
 	}
 
-	memTreeNodeSetParentColourless(left, parent);
+	memTreeNodeSetParentKeepColour(left, parent);
 
 	if(parent == NULL){
 		tree->root = left;
@@ -206,7 +206,7 @@ static inline void memTreeRepairTree(memoryTree *tree, byte_t *node){
 
 }
 
-static inline void memTreeInsert(memoryTree *tree, byte_t *block, const size_t bytes){
+void memTreeInsert(memoryTree *tree, byte_t *block, const size_t bytes){
 
 	/*
 	** Add a free block to the red-black tree.
@@ -261,7 +261,7 @@ static inline void memTreeInsert(memoryTree *tree, byte_t *block, const size_t b
 
 }
 
-static inline void memTreeRemove(memoryTree *tree, byte_t *block){
+void memTreeRemove(memoryTree *tree, byte_t *block){
 
 	/*
 	** Remove a free block from the red-black tree.
@@ -270,7 +270,7 @@ static inline void memTreeRemove(memoryTree *tree, byte_t *block){
 	byte_t *child;
 	uintptr_t childColour;
 
-	byte_t *parent = memTreeNodeGetParentColourless(block);
+	byte_t *parent = memTreeBlockGetParentColourless(block);
 	byte_t *left   = memTreeBlockGetLeft(block);
 	byte_t *right  = memTreeBlockGetRight(block);
 
@@ -295,12 +295,12 @@ static inline void memTreeRemove(memoryTree *tree, byte_t *block){
 			child = memTreeBlockGetRight(successor);
 
 			// Swap the parents.
-			memTreeNodeSetParentColourless(block, newParent);
+			memTreeNodeSetParentKeepColour(block, newParent);
 			// Set the parent's child pointer.
 			memTreeBlockGetLeft(newParent) = block;
 			if(parent != NULL){
 				byte_t **parentLeft = memTreeBlockGetLeftPointer(parent);
-				memTreeNodeSetParentColourless(successor, parent);
+				memTreeNodeSetParentKeepColour(successor, parent);
 				// Set the parent's child pointer.
 				if(*parentLeft == block){
 					*parentLeft = successor;
@@ -457,11 +457,11 @@ static inline void memTreeRemove(memoryTree *tree, byte_t *block){
 	}
 
 	// Replace the node with its original child.
-	parent = memTreeNodeGetParentColourless(block);
+	parent = memTreeBlockGetParentColourless(block);
 	if(parent == NULL){
 		tree->root = child;
 		if(child != NULL){
-			memTreeNodeGetParent(child) = NULL;
+			memTreeBlockGetParent(child) = NULL;
 		}
 	}else{
 		// Set the parent's child.
@@ -472,7 +472,7 @@ static inline void memTreeRemove(memoryTree *tree, byte_t *block){
 			memTreeBlockGetLeft(parent) = child;
 		}
 		if(child != NULL){
-			memTreeNodeSetParentColourless(child, parent);
+			memTreeBlockSetParentKeepColour(child, parent);
 		}
 	}
 
@@ -529,7 +529,11 @@ byte_t *memTreeAllocate(memoryTree *tree, const size_t bytes){
 					blockSize -= nextSize;
 					memTreeBlockGetCurrent(next) = nextSize;
 					// blockSize should always have a 0 in the LSB.
-					memTreeBlockGetPrevious(next) = blockSize;
+					// Also inherit whether or not the block was the last.
+					memTreeBlockGetPrevious(next) = blockSize | (memTreeBlockGetFlags(block) & MEMORY_TREE_BLOCK_LAST);
+					// The previous block can't be the last node anymore.
+					memTreeBlockGetFlags(block) &= MEMORY_TREE_BLOCK_LAST_MASK;
+					// Insert the new free block.
 					memTreeInsert(tree, next, nextSize);
 				}
 
@@ -566,7 +570,11 @@ byte_t *memTreeAllocate(memoryTree *tree, const size_t bytes){
 					blockSize -= nextSize;
 					memTreeBlockGetCurrent(next) = nextSize;
 					// blockSize should always have a 0 in the LSB.
-					memTreeBlockGetPrevious(next) = blockSize;
+					// Also inherit whether or not the block was the last.
+					memTreeBlockGetPrevious(next) = blockSize | (memTreeBlockGetFlags(block) & MEMORY_TREE_BLOCK_LAST);
+					// The previous block can't be the last node anymore.
+					memTreeBlockGetFlags(block) &= MEMORY_TREE_BLOCK_LAST_MASK;
+					// Insert the new free block.
 					memTreeInsert(tree, next, nextSize);
 				}
 
@@ -594,7 +602,7 @@ byte_t *memTreeAllocate(memoryTree *tree, const size_t bytes){
 	memTreeBlockGetCurrent(block) = blockSize;
 
 	// Return a pointer to the data.
-	return block + MEMORY_TREE_DATA_OFFSET_FROM_BLOCK;
+	return memTreeBlockGetData(block);
 
 }
 
@@ -618,24 +626,25 @@ void memTreeFree(memoryTree *tree, byte_t *block){
 	// Reset the active flag.
 	memTreeBlockSetInactive(cBlock);
 
-	prev = cBlock - cPrev;
+	prev = cBlock - memTreeBlockPreviousFlagless(cPrev);
 	next = cBlock + cBytes;
 
 	// Check if there is a preceding
 	// block that is inactive.
-	if(prev >= tree->start && memTreeBlockGetActiveMasked(prev) == MEMORY_TREE_BLOCK_INACTIVE){
+	if(memTreeBlockIsFirst(cPrev) == 0 && memTreeBlockGetActiveMasked(prev) == MEMORY_TREE_BLOCK_INACTIVE){
 		// Perform a merge.
 		cBlock = prev;
-		cBytes += cPrev;
-		cPrev = memTreeBlockGetPrevious(prev);
+		cBytes += memTreeBlockPreviousFlagless(cPrev);
+		memTreeBlockSetPreviousKeepLast(cPrev, memTreeBlockGetPrevious(prev));
 		// Remove the free block from the tree.
 		memTreeRemove(tree, prev);
 	}
 	// Check if there is a following
 	// block that is inactive.
-	if(next < tree->end && memTreeBlockGetActiveMasked(next) == MEMORY_TREE_BLOCK_INACTIVE){
+	if(memTreeBlockIsLast(cPrev) == 0 && memTreeBlockGetActiveMasked(next) == MEMORY_TREE_BLOCK_INACTIVE){
 		// Perform a merge.
 		cBytes += memTreeBlockGetCurrent(next);
+		memTreeBlockSetPreviousKeepFirst(cPrev, memTreeBlockGetPrevious(next));
 		// Remove the free block from the tree.
 		memTreeRemove(tree, next);
 	}
@@ -665,7 +674,7 @@ byte_t *memTreeReallocate(memoryTree *tree, byte_t *block, const size_t bytes){
 
 	byte_t *rBlock;
 
-	size_t cPrev = memTreeDataGetPrevious(block);
+	size_t cPrev = memTreeBlockGetPrevious(block);
 	size_t cBytes = memTreeDataGetCurrent(block);
 	byte_t *cBlock = memTreeDataGetBlock(block);
 
@@ -675,28 +684,30 @@ byte_t *memTreeReallocate(memoryTree *tree, byte_t *block, const size_t bytes){
 	// Reset the active flag.
 	memTreeBlockSetInactive(cBlock);
 
-	prev = cBlock - cPrev;
+	prev = cBlock - memTreeBlockPreviousFlagless(cPrev);
 	next = cBlock + cBytes;
 
 	// Check if there is a preceding
 	// block that is inactive.
-	if(prev >= tree->start && memTreeBlockGetActiveMasked(prev) == MEMORY_TREE_BLOCK_INACTIVE){
+	if(memTreeBlockIsFirst(cPrev) == 0 && memTreeBlockGetActiveMasked(prev) == MEMORY_TREE_BLOCK_INACTIVE){
 		// Perform a merge.
 		cBlock = prev;
-		cBytes += cPrev;
-		cPrev = memTreeBlockGetPrevious(prev);
+		cBytes += memTreeBlockPreviousFlagless(cPrev);
+		memTreeBlockSetPreviousKeepLast(cPrev, memTreeBlockGetPrevious(prev));
 		// Remove the free block from the tree.
 		memTreeRemove(tree, prev);
 	}
 	// Check if there is a following
 	// block that is inactive.
-	if(next < tree->end && memTreeBlockGetActiveMasked(next) == MEMORY_TREE_BLOCK_INACTIVE){
+	if(memTreeBlockIsLast(cPrev) == 0 && memTreeBlockGetActiveMasked(next) == MEMORY_TREE_BLOCK_INACTIVE){
 		// Perform a merge.
 		cBytes += memTreeBlockGetCurrent(next);
+		memTreeBlockSetPreviousKeepFirst(cPrev, memTreeBlockGetPrevious(next));
 		// Remove the free block from the tree.
 		memTreeRemove(tree, next);
 	}
 
+	#ifndef MEMORY_TREE_FORCE_MOVE_ON_REALLOC
 	// Check if we can fit the new data
 	// into this particular fragment.
 	if(totalBytes <= cBytes){
@@ -713,7 +724,8 @@ byte_t *memTreeReallocate(memoryTree *tree, byte_t *block, const size_t bytes){
 			// the allocated block.
 			cBytes -= nextSize;
 			memTreeBlockGetCurrent(cNext) = nextSize;
-			memTreeBlockGetPrevious(cNext) = cBytes;
+			memTreeBlockGetPrevious(cNext) = cBytes | (cPrev & MEMORY_TREE_BLOCK_LAST);
+			cPrev &= MEMORY_TREE_BLOCK_LAST_MASK;
 			memTreeInsert(tree, cNext, nextSize);
 		}
 
@@ -723,28 +735,45 @@ byte_t *memTreeReallocate(memoryTree *tree, byte_t *block, const size_t bytes){
 		memcpy((void *)rBlock, (void *)block, bytes);
 
 		// Set the new block's header information.
-		// The "previous" header data should already be set.
 		memTreeBlockGetCurrent(cBlock) = cBytes;
+		memTreeBlockGetPrevious(cBlock) = cPrev;
 
 	}else{
+	#endif
 
 		// We'll have to look for a new block.
 		rBlock = memTreeAllocate(tree, bytes);
 
-		// Copy the block's data over.
-		memcpy((void *)rBlock, (void *)block, bytes);
+		if(rBlock != NULL){
 
-		// Add the new free block to the tree.
-		memTreeInsert(tree, cBlock, cBytes);
+			// Copy the block's data over.
+			memcpy((void *)rBlock, (void *)block, bytes);
 
-		// Set the linked list header data.
-		memTreeBlockGetCurrent(cBlock) = cBytes;
-		memTreeBlockGetPrevious(cBlock) = cPrev;
+			// Add the new free block to the tree.
+			memTreeInsert(tree, cBlock, cBytes);
 
+			// Set the linked list header data.
+			memTreeBlockGetCurrent(cBlock) = cBytes;
+			memTreeBlockGetPrevious(cBlock) = cPrev;
+
+		}
+
+	#ifndef MEMORY_TREE_FORCE_MOVE_ON_REALLOC
 	}
+	#endif
 
 	return rBlock;
 
+}
+
+byte_t *memTreeReset(byte_t *start, const size_t bytes, const size_t length){
+	byte_t *root = (byte_t *)MEMORY_TREE_ALIGN((uintptr_t)start);
+	memTreeBlockGetCurrent(root) = start + memTreeAllocationSize(start, bytes, length) - root;
+	memTreeBlockGetPrevious(root) = 0;
+	memTreeBlockGetLeft(root) = NULL;
+	memTreeBlockGetRight(root) = NULL;
+	memTreeBlockGetParent(root) = NULL;
+	return root;
 }
 
 void memTreeClear(memoryTree *tree){

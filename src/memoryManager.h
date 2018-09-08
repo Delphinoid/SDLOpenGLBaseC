@@ -2,9 +2,10 @@
 #define MEMORYMANAGER_H
 
 #include "memoryStack.h"
-//#include "memoryList.h"
+#include "memoryList.h"
 #include "memoryPool.h"
-#include "memoryArray.h"
+#include "memorySLink.h"
+#include "memoryDLink.h"
 #include "memoryTree.h"
 
 /*
@@ -15,6 +16,19 @@
 ** Each arena is assigned to a specific
 ** module and data type, e.g. physics
 ** rigid bodies.
+**
+** When an allocation that will not fit
+** into the virtual heap is requested,
+** it will check for room in each of
+** the previously allocated heaps. If
+** none of them can accommodate the data,
+** a new virtual heap is created and
+** the memory manager's "heap" member is
+** updated.
+**
+** MEMORY_MANAGER_ENFORCE_STATIC_VIRTUAL_HEAP
+** may be defined to prevent the automatic
+** allocation of new virtual heaps.
 */
 
 #ifndef MEMORY_MANAGER_DEFAULT_VIRTUAL_HEAP_SIZE
@@ -39,36 +53,46 @@
 typedef struct {
 
 	/*
+	** The allocator used for managing
+	** all of the allocated virtual heaps.
+	*/
+	memoryTree allocator;
+
+	/*
 	** Linked list of virtual heaps.
 	**
-	** Points to the memory region used by
-	** the heap, which begins with a general
-	** purpose allocator and is followed by
-	** a pointer to the next heap.
+	** Points to the last memory region
+	** that was allocated, which begins
+	** with a pointer to the previous
+	** virtual heap followed by the
+	** virtual heap's data.
 	*/
-	memoryTree *heap;
-
-	// The size of each heap.
-	size_t heapSize;
+	byte_t *heap;
 
 } memoryManager;
 
 /*
 ** The "next" pointer is stored directly after the arena.
 */
-#define memMngrNextArenaStack(arena) *((memoryStack **)(arena + sizeof(memoryStack)))
-//#define memMngrNextArenaList(arena)  *((memoryList  **)(arena + sizeof(memoryList )))
-#define memMngrNextArenaPool(arena)  *((memoryPool  **)(arena + sizeof(memoryPool )))
-#define memMngrNextArenaArray(arena) *((memoryArray **)(arena + sizeof(memoryArray)))
-#define memMngrNextArenaTree(arena)  *((memoryTree  **)(arena + sizeof(memoryTree )))
+#define memMngrArenaNextStack(arena) *((memoryStack **)(((byte_t *)arena) + sizeof(memoryStack)))
+#define memMngrArenaNextList(arena)  *((memoryList  **)(((byte_t *)arena) + sizeof(memoryList )))
+#define memMngrArenaNextPool(arena)  *((memoryPool  **)(((byte_t *)arena) + sizeof(memoryPool )))
+#define memMngrArenaNextSLink(arena) *((memorySLink **)(((byte_t *)arena) + sizeof(memorySLink)))
+#define memMngrArenaNextDLink(arena) *((memoryDLink **)(((byte_t *)arena) + sizeof(memoryDLink)))
+#define memMngrArenaNextTree(arena)  *((memoryTree  **)(((byte_t *)arena) + sizeof(memoryTree )))
 
-byte_t *memMngrAllocateVirtualHeap(memoryTree **heap, const size_t heapSize);
-signed char memMngrInit(memoryManager *memMngr, const size_t heapSize);
-memoryStack *memMngrNewArenaStack(memoryManager *memMngr, memoryStack *last, const size_t bytes, const size_t length);
-//memoryList  *memMngrNewArenaList (memoryManager *memMngr, memoryList  *last, const size_t bytes, const size_t length);
-memoryPool  *memMngrNewArenaPool (memoryManager *memMngr, memoryPool  *last, const size_t bytes, const size_t length);
-memoryArray *memMngrNewArenaArray(memoryManager *memMngr, memoryArray *last, const size_t bytes, const size_t length);
-memoryTree  *memMngrNewArenaTree (memoryManager *memMngr, memoryTree  *last, const size_t bytes, const size_t length);
+#define memMngrAllocate(bytes)         memTreeAllocate(&memMngr->allocator, bytes)
+#define memMngrReallocate(data, bytes) memTreeReallocate(&memMngr->allocator, data, bytes)
+#define memMngrFree(data)              memTreeFree(&memMngr->allocator, data)
+
+byte_t *memMngrAllocateVirtualHeap(memoryManager *memMngr, const size_t bytes);
+signed char memMngrInit(memoryManager *memMngr, const size_t bytes, const size_t num);
+memoryStack *memMngrArenaNewStack(memoryManager *memMngr, memoryStack *last, const size_t bytes, const size_t length);
+memoryList  *memMngrArenaNewList (memoryManager *memMngr, memoryList  *last, const size_t bytes, const size_t length);
+memoryPool  *memMngrArenaNewPool (memoryManager *memMngr, memoryPool  *last, const size_t bytes, const size_t length);
+memorySLink *memMngrArenaNewSLink(memoryManager *memMngr, memorySLink *last, const size_t bytes, const size_t length);
+memoryDLink *memMngrArenaNewDLink(memoryManager *memMngr, memoryDLink *last, const size_t bytes, const size_t length);
+memoryTree  *memMngrArenaNewTree (memoryManager *memMngr, memoryTree  *last, const size_t bytes, const size_t length);
 void memMngrDelete(memoryManager *memMngr);
 
 #endif

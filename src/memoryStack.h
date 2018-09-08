@@ -19,8 +19,8 @@
 #define MEMORY_STACK_UNSPECIFIED_LENGTH MEMORY_UNSPECIFIED_LENGTH
 
 typedef struct {
-	byte_t *start;
 	byte_t *next;
+	byte_t *start;
 	byte_t *end;
 } memoryStack;
 

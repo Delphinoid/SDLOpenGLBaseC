@@ -1,9 +1,8 @@
 #include "skeleton.h"
 #include "helpersMisc.h"
+#include "mathConstants.h"
 #include <string.h>
 #include <stdio.h>
-
-#define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians.
 
 #define SKL_ANIM_BONE_START_CAPACITY 1
 #define SKL_ANIM_FRAME_START_CAPACITY 1

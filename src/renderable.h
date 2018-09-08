@@ -1,7 +1,7 @@
 #ifndef RENDERABLE_H
 #define RENDERABLE_H
 
-//#include "gfxProgram.h"
+//#include "graphicsManager.h"
 #include "model.h"
 #include "textureWrapper.h"
 //#include "physicsRigidBody.h"

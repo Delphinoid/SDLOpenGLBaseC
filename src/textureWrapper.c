@@ -1080,29 +1080,29 @@ void twiAnimate(twInstance *twi, const float elapsedTime){
 
 GLuint twiGetTexWidth(const twInstance *twi){
 	// Make sure the current animation and frame are valid (within proper bounds)
-	if(twi->currentAnim < twi->tw->animationNum &&
-	   twi->animator.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum){
+	//if(twi->currentAnim < twi->tw->animationNum &&
+	//   twi->animator.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum){
 		return twGetAnimFrame(twi->tw, twi->currentAnim, twi->animator.currentFrame)->baseTexture->width;
-	}
-	return 0;
+	//}
+	//return 0;
 }
 
 GLuint twiGetTexHeight(const twInstance *twi){
 	// Make sure the current animation and frame are valid (within proper bounds)
-	if(twi->currentAnim < twi->tw->animationNum &&
-	   twi->animator.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum){
+	//if(twi->currentAnim < twi->tw->animationNum &&
+	//   twi->animator.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum){
 		return twGetAnimFrame(twi->tw, twi->currentAnim, twi->animator.currentFrame)->baseTexture->height;
-	}
-	return 0;
+	//}
+	//return 0;
 }
 
 GLuint twiGetTexID(const twInstance *twi){
 	// Make sure the current animation and frame are valid (within proper bounds)
-	if(twi->currentAnim < twi->tw->animationNum &&
-	   twi->animator.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum){
+	//if(twi->currentAnim < twi->tw->animationNum &&
+	//   twi->animator.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum){
 		return twGetAnimFrame(twi->tw, twi->currentAnim, twi->animator.currentFrame)->baseTexture->id;
-	}
-	return 0;
+	//}
+	//return 0;
 }
 
 float twiGetFrameWidth(const twInstance *twi){
@@ -1116,8 +1116,8 @@ float twiGetFrameHeight(const twInstance *twi){
 void twiGetFrameInfo(const twInstance *twi, float *x, float *y, float *w, float *h, GLuint *frameTexID, const float interpT){
 
 	// Make sure the current animation and frame are valid (within proper bounds)
-	if(twi->currentAnim < twi->tw->animationNum &&
-	   twi->animator.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum){
+	//if(twi->currentAnim < twi->tw->animationNum &&
+	//   twi->animator.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum){
 
 		frameIndex_t startFrame;
 		animGetRenderData(&twi->animator, &twGetAnim(twi->tw, twi->currentAnim)->animData, interpT,
@@ -1128,15 +1128,15 @@ void twiGetFrameInfo(const twInstance *twi, float *x, float *y, float *w, float 
 		*h = twGetAnimSubframe(twi->tw, twi->currentAnim, startFrame)->h;
 		*frameTexID = twGetAnimFrame(twi->tw, twi->currentAnim, startFrame)->baseTexture->id;
 
-	}else{
+	//}else{
 
-		*x = 0.f;
-		*y = 0.f;
-		*w = 0.f;
-		*h = 0.f;
-		*frameTexID = 0;
+		//*x = 0.f;
+		//*y = 0.f;
+		//*w = 0.f;
+		//*h = 0.f;
+		//*frameTexID = 0;
 
-	}
+	//}
 
 }
 

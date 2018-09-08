@@ -4,8 +4,6 @@
 #include <SDL2/SDL_image.h>
 #include "vec4.h"
 
-#define RADIAN_RATIO 0.017453292  // = PI / 180, used for converting degrees to radians.
-
 void rndrInit(renderable *rndr){
 	rndr->mdl = NULL;
 	rndr->tw = NULL;

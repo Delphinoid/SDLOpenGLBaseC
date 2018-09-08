@@ -50,23 +50,26 @@
 #endif
 
 typedef struct {
-	byte_t *start;
-	byte_t *next;  // Next free block pointer.
-	byte_t *end;
 	size_t block;  // Block size.
+	byte_t *next;  // Next free block pointer.
+	byte_t *start;
+	byte_t *end;
 } memoryPool;
 
 #define memPoolBlockSize(bytes) MEMORY_POOL_ALIGN((bytes > MEMORY_POOL_BLOCK_SIZE ? bytes : MEMORY_POOL_BLOCK_SIZE) + MEMORY_POOL_BLOCK_HEADER_SIZE)
 #define memPoolAllocationSize(start, bytes, length) (memPoolBlockSize(bytes) * length + MEMORY_POOL_ALIGN((uintptr_t)start) - (uintptr_t)start)
 
-#define memPoolStart(pool)        pool->start;
-#define memPoolBlockStatus(block) memPoolBlockGetFlags(block);
-#define memPoolBlockNext(pool, i) *i += pool->block;
+#define memPoolAppend(pool, new) pool->next = new->next; new->next = NULL
+
+#define memPoolStart(pool)        ((byte_t *)MEMORY_POOL_ALIGN((uintptr_t)pool->start))
+#define memPoolBlockStatus(block) memPoolBlockGetFlags(block)
+#define memPoolBlockNext(pool, i) i += pool->block
 #define memPoolEnd(pool)          pool->end
 
 byte_t *memPoolInit(memoryPool *pool, byte_t *start, const size_t bytes, const size_t length);
 byte_t *memPoolAllocate(memoryPool *pool);
 void memPoolFree(memoryPool *pool, byte_t *block);
+byte_t *memPoolReset(byte_t *start, const size_t bytes, const size_t length);
 void memPoolClear(memoryPool *pool);
 
 #endif

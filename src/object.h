@@ -100,6 +100,7 @@ typedef struct {
 	physRBInstance *skeletonPhysics;  // Array of physics bodies, one for each bone in skl.
 	hbArray *skeletonHitboxes;        // Array of hitbox arrays, one for each bone in skl.
 
+	/** Remove renderableNum. **/
 	renderableIndex_t renderableNum;  // Current number of attached renderables.
 	rndrInstance *renderables;        // Renderable instance array.
 

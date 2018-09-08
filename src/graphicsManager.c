@@ -1,46 +1,46 @@
-#include "gfxProgram.h"
+#include "graphicsManager.h"
 #include "helpersMisc.h"
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
 #include <string.h>
 #include <stdio.h>
 
-static signed char gfxInitSDL(gfxProgram *gfxPrg);
-static signed char gfxInitOGL(gfxProgram *gfxPrg);
-static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath);
-static signed char gfxCreateBuffers(gfxProgram *gfxPrg);
+static signed char gfxMngrInitSDL(graphicsManager *gfxMngr);
+static signed char gfxMngrInitOGL(graphicsManager *gfxMngr);
+static signed char gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath);
+static signed char gfxMngrCreateBuffers(graphicsManager *gfxMngr);
 
-signed char gfxInitProgram(gfxProgram *gfxPrg, const char *prgPath){
+signed char gfxMngrInit(graphicsManager *gfxMngr, const char *prgPath){
 
 	signed char r;
 
-	mat4Identity(&gfxPrg->identityMatrix);
-	gfxPrg->windowWidth = DEFAULT_WIDTH;
-	gfxPrg->windowHeight = DEFAULT_HEIGHT;
-	gfxPrg->aspectRatioX = DEFAULT_ASPECT_RATIO_X;
-	gfxPrg->aspectRatioY = DEFAULT_ASPECT_RATIO_Y;
-	gfxPrg->lastWindowWidth = 0;
-	gfxPrg->lastWindowHeight = 0;
-	gfxPrg->stretchToFit = 0;
-	gfxPrg->windowChanged = 1;
+	mat4Identity(&gfxMngr->identityMatrix);
+	gfxMngr->windowWidth = DEFAULT_WIDTH;
+	gfxMngr->windowHeight = DEFAULT_HEIGHT;
+	gfxMngr->aspectRatioX = DEFAULT_ASPECT_RATIO_X;
+	gfxMngr->aspectRatioY = DEFAULT_ASPECT_RATIO_Y;
+	gfxMngr->lastWindowWidth = 0;
+	gfxMngr->lastWindowHeight = 0;
+	gfxMngr->stretchToFit = 0;
+	gfxMngr->windowChanged = 1;
 
-	r = gfxInitSDL(gfxPrg);
+	r = gfxMngrInitSDL(gfxMngr);
 	if(r <= 0){
 		return r;
 	}
-	r = gfxInitOGL(gfxPrg);
+	r = gfxMngrInitOGL(gfxMngr);
 	if(r <= 0){
 		return r;
 	}
-	r = gfxLoadShaders(gfxPrg, prgPath);
+	r = gfxMngrLoadShaders(gfxMngr, prgPath);
 	if(r <= 0){
 		return r;
 	}
-	return gfxCreateBuffers(gfxPrg);
+	return gfxMngrCreateBuffers(gfxMngr);
 
 }
 
-static signed char gfxInitSDL(gfxProgram *gfxPrg){
+static signed char gfxMngrInitSDL(graphicsManager *gfxMngr){
 
 	/* Initialize SDL */
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0){
@@ -56,8 +56,8 @@ static signed char gfxInitSDL(gfxProgram *gfxPrg){
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
 	// Create the window and context
-	gfxPrg->window = SDL_CreateWindow("Luna", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, DEFAULT_WIDTH, DEFAULT_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-	if(!gfxPrg->window || !(gfxPrg->context = SDL_GL_CreateContext(gfxPrg->window))){
+	gfxMngr->window = SDL_CreateWindow("Luna", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, DEFAULT_WIDTH, DEFAULT_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+	if(!gfxMngr->window || !(gfxMngr->context = SDL_GL_CreateContext(gfxMngr->window))){
 		printf("Error initializing SDL library: %s\n", SDL_GetError());
 		return 0;
 	}
@@ -79,7 +79,7 @@ static signed char gfxInitSDL(gfxProgram *gfxPrg){
 
 }
 
-static signed char gfxInitOGL(gfxProgram *gfxPrg){
+static signed char gfxMngrInitOGL(graphicsManager *gfxMngr){
 
 	/* Initialize GLEW */
 	glewExperimental = GL_TRUE;
@@ -111,7 +111,7 @@ static signed char gfxInitOGL(gfxProgram *gfxPrg){
 
 }
 
-static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
+static signed char gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath){
 
 	/* Vertex shader */
 	const char *vertexShaderExtra = "Resources\\Shaders\\vertexShader.vsh";
@@ -142,25 +142,25 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 	fclose(vertexShaderFile);
 
 	/* Compile vertex shader */
-	gfxPrg->vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+	gfxMngr->vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
 	const char *vertexShaderCodePointer = vertexShaderCode;
-	glShaderSource(gfxPrg->vertexShaderID, 1, &vertexShaderCodePointer, NULL);
-	glCompileShader(gfxPrg->vertexShaderID);
+	glShaderSource(gfxMngr->vertexShaderID, 1, &vertexShaderCodePointer, NULL);
+	glCompileShader(gfxMngr->vertexShaderID);
 	free(vertexShaderPath);
 	free(vertexShaderCode);
 
 	/* Validate vertex shader */
 	GLint compileStatus = GL_FALSE;
  	int infoLogLength;
-	glGetShaderiv(gfxPrg->vertexShaderID, GL_COMPILE_STATUS, &compileStatus);
- 	glGetShaderiv(gfxPrg->vertexShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
+	glGetShaderiv(gfxMngr->vertexShaderID, GL_COMPILE_STATUS, &compileStatus);
+ 	glGetShaderiv(gfxMngr->vertexShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
  	if(infoLogLength > 1){
 		char *vertexShaderError = malloc((infoLogLength+1)*sizeof(char));
 		if(vertexShaderError == NULL){
 			/** Memory allocation failure. **/
 			return -1;
 		}
- 		glGetShaderInfoLog(gfxPrg->vertexShaderID, infoLogLength, NULL, &vertexShaderError[0]);
+ 		glGetShaderInfoLog(gfxMngr->vertexShaderID, infoLogLength, NULL, &vertexShaderError[0]);
  		printf("Error validating vertex shader: %s", &vertexShaderError[0]);
  		free(vertexShaderError);
  		return 0;
@@ -195,23 +195,23 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 	fclose(fragmentShaderFile);
 
 	/* Compile fragment shader */
-	gfxPrg->fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+	gfxMngr->fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
 	const char *fragmentShaderCodePointer = fragmentShaderCode;
-	glShaderSource(gfxPrg->fragmentShaderID, 1, &fragmentShaderCodePointer, NULL);
-	glCompileShader(gfxPrg->fragmentShaderID);
+	glShaderSource(gfxMngr->fragmentShaderID, 1, &fragmentShaderCodePointer, NULL);
+	glCompileShader(gfxMngr->fragmentShaderID);
 	free(fragmentShaderPath);
 	free(fragmentShaderCode);
 
 	/* Validate fragment shader */
-	glGetShaderiv(gfxPrg->fragmentShaderID, GL_COMPILE_STATUS, &compileStatus);
- 	glGetShaderiv(gfxPrg->fragmentShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
+	glGetShaderiv(gfxMngr->fragmentShaderID, GL_COMPILE_STATUS, &compileStatus);
+ 	glGetShaderiv(gfxMngr->fragmentShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
  	if(infoLogLength > 1){
 		char *fragmentShaderError = malloc((infoLogLength+1)*sizeof(char));
 		if(fragmentShaderError == NULL){
 			/** Memory allocation failure. **/
 			return -1;
 		}
- 		glGetShaderInfoLog(gfxPrg->fragmentShaderID, infoLogLength, NULL, &fragmentShaderError[0]);
+ 		glGetShaderInfoLog(gfxMngr->fragmentShaderID, infoLogLength, NULL, &fragmentShaderError[0]);
  		printf("Error validating fragment shader: %s", &fragmentShaderError[0]);
  		free(fragmentShaderError);
  		return 0;
@@ -219,24 +219,24 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 
 
 	/* Link the program */
-	gfxPrg->shaderProgramID = glCreateProgram();
- 	glAttachShader(gfxPrg->shaderProgramID, gfxPrg->vertexShaderID);
- 	glAttachShader(gfxPrg->shaderProgramID, gfxPrg->fragmentShaderID);
- 	glLinkProgram(gfxPrg->shaderProgramID);
+	gfxMngr->shaderProgramID = glCreateProgram();
+ 	glAttachShader(gfxMngr->shaderProgramID, gfxMngr->vertexShaderID);
+ 	glAttachShader(gfxMngr->shaderProgramID, gfxMngr->fragmentShaderID);
+ 	glLinkProgram(gfxMngr->shaderProgramID);
 
- 	glDetachShader(gfxPrg->shaderProgramID, gfxPrg->vertexShaderID);
- 	glDetachShader(gfxPrg->shaderProgramID, gfxPrg->fragmentShaderID);
- 	glDeleteShader(gfxPrg->vertexShaderID);
- 	glDeleteShader(gfxPrg->fragmentShaderID);
+ 	glDetachShader(gfxMngr->shaderProgramID, gfxMngr->vertexShaderID);
+ 	glDetachShader(gfxMngr->shaderProgramID, gfxMngr->fragmentShaderID);
+ 	glDeleteShader(gfxMngr->vertexShaderID);
+ 	glDeleteShader(gfxMngr->fragmentShaderID);
 
 	/* Use the program */
-	glUseProgram(gfxPrg->shaderProgramID);
+	glUseProgram(gfxMngr->shaderProgramID);
 
 
 	/* Link the uniform variables */
-	gfxPrg->vpMatrixID        = glGetUniformLocation(gfxPrg->shaderProgramID, "vpMatrix");
-	gfxPrg->textureFragmentID = glGetUniformLocation(gfxPrg->shaderProgramID, "textureFragment");
-	gfxPrg->alphaID           = glGetUniformLocation(gfxPrg->shaderProgramID, "alpha");
+	gfxMngr->vpMatrixID        = glGetUniformLocation(gfxMngr->shaderProgramID, "vpMatrix");
+	gfxMngr->textureFragmentID = glGetUniformLocation(gfxMngr->shaderProgramID, "textureFragment");
+	gfxMngr->alphaID           = glGetUniformLocation(gfxMngr->shaderProgramID, "alpha");
 
 	/* Create references to each bone  */
 	boneIndex_t i;
@@ -250,16 +250,16 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 		memcpy(&uniformString[10], num, numLen*sizeof(char));
 		uniformString[10+numLen] = ']';
 		uniformString[10+numLen+1] = '\0';
-		gfxPrg->boneArrayID[i] = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);
+		gfxMngr->boneArrayID[i] = glGetUniformLocation(gfxMngr->shaderProgramID, uniformString);
 
 		/*memcpy(&uniformString[10+numLen], "].position\0", 11*sizeof(char));
-		gfxPrg->bonePositionArrayID[i] = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);
+		gfxMngr->bonePositionArrayID[i] = glGetUniformLocation(gfxMngr->shaderProgramID, uniformString);
 
 		memcpy(&uniformString[10+numLen], "].orientation\0", 14*sizeof(char));
-		gfxPrg->boneOrientationArrayID[i] = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);
+		gfxMngr->boneOrientationArrayID[i] = glGetUniformLocation(gfxMngr->shaderProgramID, uniformString);
 
 		memcpy(&uniformString[10+numLen], "].scale\0", 8*sizeof(char));
-		gfxPrg->boneScaleArrayID[i] = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);*/
+		gfxMngr->boneScaleArrayID[i] = glGetUniformLocation(gfxMngr->shaderProgramID, uniformString);*/
 
 	}
 
@@ -274,8 +274,8 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 		memcpy(&uniformString[15], num, numLen);
 		uniformString[15+numLen] = ']';
 		uniformString[15+numLen+1] = '\0';
-		gfxPrg->textureSamplerArrayID[i] = glGetUniformLocation(gfxPrg->shaderProgramID, uniformString);
-		glUniform1i(gfxPrg->textureSamplerArrayID[i], 0);
+		gfxMngr->textureSamplerArrayID[i] = glGetUniformLocation(gfxMngr->shaderProgramID, uniformString);
+		glUniform1i(gfxMngr->textureSamplerArrayID[i], 0);
 
 	}
 
@@ -289,18 +289,18 @@ static signed char gfxLoadShaders(gfxProgram *gfxPrg, const char *prgPath){
 
 }
 
-static signed char gfxCreateBuffers(gfxProgram *gfxPrg){
+static signed char gfxMngrCreateBuffers(graphicsManager *gfxMngr){
 
 	/* Set lastTexID to 0 since we haven't rendered anything yet */
-	gfxPrg->lastTexID = 0;
+	gfxMngr->lastTexID = 0;
 
 	/* VAO and VBO for rendering sprites */
 	// Create and bind the sprite VAO
-	/**glGenVertexArrays(1, &gfxPrg->spriteVaoID);
-	glBindVertexArray(gfxPrg->spriteVaoID);
+	/**glGenVertexArrays(1, &gfxMngr->spriteVaoID);
+	glBindVertexArray(gfxMngr->spriteVaoID);
 	// Create and bind the sprite VBO
-	glGenBuffers(1, &gfxPrg->spriteVboID);
-	glBindBuffer(GL_ARRAY_BUFFER, gfxPrg->spriteVboID);
+	glGenBuffers(1, &gfxMngr->spriteVboID);
+	glBindBuffer(GL_ARRAY_BUFFER, gfxMngr->spriteVboID);
 	// Position offset
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, pos));
 	glEnableVertexAttribArray(0);
@@ -322,58 +322,58 @@ static signed char gfxCreateBuffers(gfxProgram *gfxPrg){
 
 }
 
-signed char gfxUpdateWindow(gfxProgram *gfxPrg){
-	SDL_GetWindowSize(gfxPrg->window, &gfxPrg->windowWidth, &gfxPrg->windowHeight);
-	if(gfxPrg->windowWidth != gfxPrg->lastWindowWidth || gfxPrg->windowHeight != gfxPrg->lastWindowHeight){
+signed char gfxMngrUpdateWindow(graphicsManager *gfxMngr){
+	SDL_GetWindowSize(gfxMngr->window, &gfxMngr->windowWidth, &gfxMngr->windowHeight);
+	if(gfxMngr->windowWidth != gfxMngr->lastWindowWidth || gfxMngr->windowHeight != gfxMngr->lastWindowHeight){
 		GLint screenX, screenY, screenWidth, screenHeight;
-		if(gfxPrg->stretchToFit){
+		if(gfxMngr->stretchToFit){
 			screenX = 0;
 			screenY = 0;
-			screenWidth = gfxPrg->windowWidth;
-			screenHeight = gfxPrg->windowHeight;
+			screenWidth = gfxMngr->windowWidth;
+			screenHeight = gfxMngr->windowHeight;
 		}else{
-			float tempWidth  = gfxPrg->windowWidth  / gfxPrg->aspectRatioX;
-			float tempHeight = gfxPrg->windowHeight / gfxPrg->aspectRatioY;
+			float tempWidth  = gfxMngr->windowWidth  / gfxMngr->aspectRatioX;
+			float tempHeight = gfxMngr->windowHeight / gfxMngr->aspectRatioY;
 			if(tempWidth > tempHeight){
-				screenWidth  = tempHeight * gfxPrg->aspectRatioX;
-				screenHeight = gfxPrg->windowHeight;
+				screenWidth  = tempHeight * gfxMngr->aspectRatioX;
+				screenHeight = gfxMngr->windowHeight;
 			}else if(tempWidth < tempHeight){
-				screenWidth  = gfxPrg->windowWidth;
-				screenHeight = tempWidth * gfxPrg->aspectRatioY;
+				screenWidth  = gfxMngr->windowWidth;
+				screenHeight = tempWidth * gfxMngr->aspectRatioY;
 			}else{
-				screenWidth  = gfxPrg->windowWidth;
-				screenHeight = gfxPrg->windowHeight;
+				screenWidth  = gfxMngr->windowWidth;
+				screenHeight = gfxMngr->windowHeight;
 			}
-			screenX = (gfxPrg->windowWidth  - screenWidth)  >> 1;
-			screenY = (gfxPrg->windowHeight - screenHeight) >> 1;
+			screenX = (gfxMngr->windowWidth  - screenWidth)  >> 1;
+			screenY = (gfxMngr->windowHeight - screenHeight) >> 1;
 		}
 		glViewport(screenX, screenY, screenWidth, screenHeight);
-		gfxPrg->lastWindowWidth = gfxPrg->windowWidth;
-		gfxPrg->lastWindowHeight = gfxPrg->windowHeight;
-		gfxPrg->windowChanged = 1;
+		gfxMngr->lastWindowWidth = gfxMngr->windowWidth;
+		gfxMngr->lastWindowHeight = gfxMngr->windowHeight;
+		gfxMngr->windowChanged = 1;
 	}else{
-		gfxPrg->windowChanged = 0;
+		gfxMngr->windowChanged = 0;
 	}
-	return gfxPrg->windowChanged;
+	return gfxMngr->windowChanged;
 }
 
-void gfxDestroyProgram(gfxProgram *gfxPrg){
+void gfxMngrDestroyProgram(graphicsManager *gfxMngr){
 
 	IMG_Quit();
 	Mix_Quit();
 
 	SDL_QuitSubSystem(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
-	SDL_GL_DeleteContext(gfxPrg->context);
-	SDL_DestroyWindow(gfxPrg->window);
+	SDL_GL_DeleteContext(gfxMngr->context);
+	SDL_DestroyWindow(gfxMngr->window);
 	SDL_Quit();
 
-	glDeleteProgram(gfxPrg->shaderProgramID);
+	glDeleteProgram(gfxMngr->shaderProgramID);
 
-	if(gfxPrg->spriteVaoID != 0){
-		glDeleteVertexArrays(1, &gfxPrg->spriteVaoID);
+	if(gfxMngr->spriteVaoID != 0){
+		glDeleteVertexArrays(1, &gfxMngr->spriteVaoID);
 	}
-	if(gfxPrg->spriteVboID != 0){
-		glDeleteBuffers(1, &gfxPrg->spriteVboID);
+	if(gfxMngr->spriteVboID != 0){
+		glDeleteBuffers(1, &gfxMngr->spriteVboID);
 	}
 
 }

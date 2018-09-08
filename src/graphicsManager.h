@@ -69,10 +69,10 @@ typedef struct {
 	signed char stretchToFit;
 	signed char windowChanged;
 
-} gfxProgram;
+} graphicsManager;
 
-signed char gfxInitProgram(gfxProgram *gfxPrg, const char *prgPath);
-signed char gfxUpdateWindow(gfxProgram *gfxPrg);
-void gfxDestroyProgram(gfxProgram *gfxPrg);
+signed char gfxMngrInit(graphicsManager *gfxMngr, const char *prgPath);
+signed char gfxMngrUpdateWindow(graphicsManager *gfxMngr);
+void gfxMngrDestroyProgram(graphicsManager *gfxMngr);
 
 #endif

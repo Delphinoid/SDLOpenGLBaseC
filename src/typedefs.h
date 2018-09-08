@@ -10,6 +10,6 @@
 #define RETURN_VALUE_SUCCESS       1
 
 typedef int_fast8_t return_t;
-typedef uint8_t     flags_t;
+typedef int8_t      flags_t;
 
 #endif

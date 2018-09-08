@@ -6,6 +6,7 @@
 #include "cVector.h"
 
 #define TW_MAX_ANIMATION_NUM 256
+#define TW_DEFAULT_SIZE sizeof(textureWrapper) + sizeof(twAnim) + sizeof(twFrame) + sizeof(twBounds) + sizeof(frameIndex_t) + sizeof(frameIndex_t)
 
 // Simple rectangle structure for the frame boundaries when using sprite sheets
 typedef struct {
