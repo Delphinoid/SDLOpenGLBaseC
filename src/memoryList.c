@@ -58,7 +58,7 @@ byte_t *memListReset(byte_t *start, const size_t bytes, const size_t length){
 	byte_t *end;
 
 	end = start + memListAllocationSize(start, bytes, length);
-	start = memListBlockGetData(MEMORY_LIST_ALIGN((uintptr_t)start));
+	start = (byte_t *)memListAlignStart(start);
 
 	block = start;
 	next = block + blockSize;
@@ -66,13 +66,13 @@ byte_t *memListReset(byte_t *start, const size_t bytes, const size_t length){
 	// Loop through every block, making it
 	// point to the next free block.
 	while(next < end){
-		memListBlockGetNextFree(block) = next;
+		memListDataGetNextFree(block) = next;
 		block = next;
 		next += blockSize;
 	}
 
 	// Final block contains a null pointer.
-	memListBlockGetNextFree(block) = NULL;
+	memListDataGetNextFree(block) = NULL;
 
 	return start;
 
@@ -80,7 +80,7 @@ byte_t *memListReset(byte_t *start, const size_t bytes, const size_t length){
 
 void memListClear(memoryList *list){
 
-	byte_t *block = memListBlockGetData(MEMORY_LIST_ALIGN((uintptr_t)list->start));
+	byte_t *block = (byte_t *)memListAlignStart(list->start);
 	byte_t *next = block + list->block;
 
 	list->next = block;
@@ -88,12 +88,12 @@ void memListClear(memoryList *list){
 	// Loop through every block, making it
 	// point to the next free block.
 	while(next < list->end){
-		memListBlockGetNextFree(block) = next;
+		memListDataGetNextFree(block) = next;
 		block = next;
 		next += list->block;
 	}
 
 	// Final block contains a null pointer.
-	memListBlockGetNextFree(block) = NULL;
+	memListDataGetNextFree(block) = NULL;
 
 }

@@ -57,7 +57,10 @@ typedef struct {
 } memoryPool;
 
 #define memPoolBlockSize(bytes) MEMORY_POOL_ALIGN((bytes > MEMORY_POOL_BLOCK_SIZE ? bytes : MEMORY_POOL_BLOCK_SIZE) + MEMORY_POOL_BLOCK_HEADER_SIZE)
-#define memPoolAllocationSize(start, bytes, length) (memPoolBlockSize(bytes) * length + MEMORY_POOL_ALIGN((uintptr_t)start) - (uintptr_t)start)
+#define memPoolBlockSizeUnaligned(bytes)         ((bytes > MEMORY_POOL_BLOCK_SIZE ? bytes : MEMORY_POOL_BLOCK_SIZE) + MEMORY_POOL_BLOCK_HEADER_SIZE)
+#define memPoolAlignStart(start) MEMORY_POOL_ALIGN((uintptr_t)start + MEMORY_POOL_BLOCK_HEADER_SIZE)
+#define memPoolAllocationSize(start, bytes, length) \
+	(memPoolBlockSize(bytes) * (length - 1) + memPoolBlockSizeUnaligned(bytes) + memPoolAlignStart(start) - (uintptr_t)start)
 
 #define memPoolAppend(pool, new) pool->next = new->next; new->next = NULL
 

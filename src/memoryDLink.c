@@ -112,7 +112,7 @@ byte_t *memDLinkReset(byte_t *start, const size_t bytes, const size_t length){
 	byte_t *end;
 
 	end = start + memDLinkAllocationSize(start, bytes, length);
-	start = memDLinkBlockGetData(MEMORY_DLINK_ALIGN((uintptr_t)start));
+	start = (byte_t *)memDLinkAlignStart(start);
 
 	block = start;
 	next = block + blockSize;
@@ -138,7 +138,7 @@ byte_t *memDLinkReset(byte_t *start, const size_t bytes, const size_t length){
 
 void memDLinkClear(memoryDLink *array){
 
-	byte_t *block = memDLinkBlockGetData((byte_t *)MEMORY_DLINK_ALIGN((uintptr_t)array->start));
+	byte_t *block = (byte_t *)memDLinkAlignStart(array->start);
 	byte_t *next = block + array->block;
 
 	array->next = block;

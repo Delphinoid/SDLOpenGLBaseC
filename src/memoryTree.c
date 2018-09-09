@@ -516,7 +516,7 @@ byte_t *memTreeAllocate(memoryTree *tree, const size_t bytes){
 				// Settle on a bigger block and
 				// attempt to split it.
 				size_t nextSize;
-				next = block + MEMORY_TREE_ALIGN(totalBytes);
+				next = (byte_t *)memTreeAlignStart((block + totalBytes));
 				nextSize = block + blockSize - next;
 
 				// Remove the block from the red-black tree.
@@ -557,7 +557,7 @@ byte_t *memTreeAllocate(memoryTree *tree, const size_t bytes){
 				// big enough to accommodate the
 				// data, so we can prepare that.
 				size_t nextSize;
-				next = block + MEMORY_TREE_ALIGN(totalBytes);
+				next = (byte_t *)memTreeAlignStart((block + totalBytes));
 				nextSize = block + blockSize - next;
 
 				// Remove the block from the red-black tree.
@@ -710,12 +710,12 @@ byte_t *memTreeReallocate(memoryTree *tree, byte_t *block, const size_t bytes){
 	#ifndef MEMORY_TREE_FORCE_MOVE_ON_REALLOC
 	// Check if we can fit the new data
 	// into this particular fragment.
-	if(totalBytes <= cBytes){
+	if(totalBytes + MEMORY_TREE_BLOCK_HEADER_SIZE <= cBytes){
 
 		// We can coalesce the previous and / or
 		// next blocks to create enough room for
 		// the new data.
-		byte_t *cNext = cBlock + MEMORY_TREE_ALIGN(totalBytes);
+		byte_t *cNext = (byte_t *)memTreeAlignStart((cBlock + totalBytes));
 		size_t nextSize = cBlock + cBytes - cNext;
 
 		if(nextSize >= MEMORY_TREE_BLOCK_TOTAL_SIZE){
@@ -767,7 +767,7 @@ byte_t *memTreeReallocate(memoryTree *tree, byte_t *block, const size_t bytes){
 }
 
 byte_t *memTreeReset(byte_t *start, const size_t bytes, const size_t length){
-	byte_t *root = (byte_t *)MEMORY_TREE_ALIGN((uintptr_t)start);
+	byte_t *root = memTreeDataGetBlock((byte_t *)memTreeAlignStart(start));
 	memTreeBlockGetCurrent(root) = start + memTreeAllocationSize(start, bytes, length) - root;
 	memTreeBlockGetPrevious(root) = 0;
 	memTreeBlockGetLeft(root) = NULL;
@@ -777,7 +777,7 @@ byte_t *memTreeReset(byte_t *start, const size_t bytes, const size_t length){
 }
 
 void memTreeClear(memoryTree *tree){
-	tree->root = (byte_t *)MEMORY_TREE_ALIGN((uintptr_t)tree->start);
+	tree->root = memTreeDataGetBlock((byte_t *)memTreeAlignStart(tree->start));
 	memTreeBlockGetCurrent(tree->root) = tree->end - tree->root;
 	memTreeBlockGetPrevious(tree->root) = 0;
 	memTreeBlockGetLeft(tree->root) = NULL;

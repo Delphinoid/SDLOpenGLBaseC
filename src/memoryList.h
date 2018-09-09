@@ -8,7 +8,8 @@
 */
 
 #define MEMORY_LIST_BLOCK_POINTER_SIZE sizeof(byte_t *)
-#define MEMORY_LIST_BLOCK_SIZE         MEMORY_LIST_BLOCK_POINTER_SIZE
+#define MEMORY_LIST_BLOCK_HEADER_SIZE  0
+#define MEMORY_LIST_BLOCK_SIZE         MEMORY_LIST_BLOCK_HEADER_SIZE + MEMORY_LIST_BLOCK_POINTER_SIZE
 
 #define memListBlockGetNextFree(block) *((byte_t **)block)
 #define memListBlockGetData(block)      ((byte_t *)block)
@@ -30,7 +31,10 @@ typedef struct {
 } memoryList;
 
 #define memListBlockSize(bytes) MEMORY_LIST_ALIGN((bytes > MEMORY_LIST_BLOCK_SIZE ? bytes : MEMORY_LIST_BLOCK_SIZE))
-#define memListAllocationSize(start, bytes, length) (memListBlockSize(bytes) * length + MEMORY_LIST_ALIGN((uintptr_t)start) - (uintptr_t)start)
+#define memListBlockSizeUnaligned(bytes)         ((bytes > MEMORY_LIST_BLOCK_SIZE ? bytes : MEMORY_LIST_BLOCK_SIZE))
+#define memListAlignStart(start) MEMORY_LIST_ALIGN((uintptr_t)start + MEMORY_LIST_BLOCK_HEADER_SIZE)
+#define memListAllocationSize(start, bytes, length) \
+	(memListBlockSize(bytes) * (length - 1) + memListBlockSizeUnaligned(bytes) + memListAlignStart(start) - (uintptr_t)start)
 
 #define memListAppend(list, new) list->next = new->next; new->next = NULL
 

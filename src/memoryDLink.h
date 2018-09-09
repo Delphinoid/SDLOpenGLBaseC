@@ -65,7 +65,10 @@ typedef struct {
 } memoryDLink;
 
 #define memDLinkBlockSize(bytes) MEMORY_DLINK_ALIGN((bytes > MEMORY_DLINK_BLOCK_SIZE ? bytes : MEMORY_DLINK_BLOCK_SIZE) + MEMORY_DLINK_BLOCK_HEADER_SIZE)
-#define memDLinkAllocationSize(start, bytes, length) (memDLinkBlockSize(bytes) * length + MEMORY_DLINK_ALIGN((uintptr_t)start) - (uintptr_t)start)
+#define memDLinkBlockSizeUnaligned(bytes)          ((bytes > MEMORY_DLINK_BLOCK_SIZE ? bytes : MEMORY_DLINK_BLOCK_SIZE) + MEMORY_DLINK_BLOCK_HEADER_SIZE)
+#define memDLinkAlignStart(start) MEMORY_DLINK_ALIGN((uintptr_t)start + MEMORY_DLINK_BLOCK_HEADER_SIZE)
+#define memDLinkAllocationSize(start, bytes, length) \
+	(memDLinkBlockSize(bytes) * (length - 1) + memDLinkBlockSizeUnaligned(bytes) + memDLinkAlignStart(start) - (uintptr_t)start)
 
 #define memDLinkAppend(array, new) array->next = new->next; new->next = NULL
 

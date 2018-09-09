@@ -189,7 +189,10 @@ typedef struct {
 } memoryTree;
 
 #define memTreeBlockSize(bytes) MEMORY_TREE_ALIGN(((bytes > MEMORY_TREE_BLOCK_SIZE ? bytes : MEMORY_TREE_BLOCK_SIZE) + MEMORY_TREE_BLOCK_HEADER_SIZE))
-#define memTreeAllocationSize(start, bytes, length) ((length > 0 ? memTreeBlockSize(bytes) * length : bytes) + MEMORY_TREE_ALIGN((uintptr_t)start) - (uintptr_t)start)
+#define memTreeBlockSizeUnaligned(bytes)         (((bytes > MEMORY_TREE_BLOCK_SIZE ? bytes : MEMORY_TREE_BLOCK_SIZE) + MEMORY_TREE_BLOCK_HEADER_SIZE))
+#define memTreeAlignStart(start) MEMORY_TREE_ALIGN((uintptr_t)start + MEMORY_TREE_BLOCK_HEADER_SIZE)
+#define memTreeAllocationSize(start, bytes, length) \
+	((length > 0 ? memTreeBlockSize(bytes) * length : bytes) + memTreeAlignStart(start) - (uintptr_t)start)
 
 #define memTreeAppend(tree, new) memTreeInsert(tree, new->root, memTreeBlockGetCurrent(new->root)); new->root = NULL
 
