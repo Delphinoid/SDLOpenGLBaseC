@@ -27,8 +27,8 @@ typedef struct {
 #define memStackBlockSize(bytes) bytes
 #define memStackAllocationSize(start, bytes, length) (length > 0 ? memStackBlockSize(bytes) * length : bytes)
 
-byte_t *memStackInit(memoryStack *stack, byte_t *start, const size_t bytes, const size_t length);
-byte_t *memStackPush(memoryStack *stack, const size_t bytes);
+void *memStackInit(memoryStack *stack, void *start, const size_t bytes, const size_t length);
+void *memStackPush(memoryStack *stack, const size_t bytes);
 void memStackPop(memoryStack *stack, const size_t bytes);
 void memStackShrink(memoryStack *stack, const size_t bytes);
 void memStackClear(memoryStack *stack);

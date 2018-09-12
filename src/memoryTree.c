@@ -1,7 +1,7 @@
 #include "memoryTree.h"
 #include <string.h>
 
-byte_t *memTreeInit(memoryTree *tree, byte_t *start, const size_t bytes, const size_t length){
+void *memTreeInit(memoryTree *tree, void *start, const size_t bytes, const size_t length){
 
 	/*
 	** Initialize a general purpose memory allocator.
@@ -14,7 +14,7 @@ byte_t *memTreeInit(memoryTree *tree, byte_t *start, const size_t bytes, const s
 	if(start){
 
 		tree->start = start;
-		tree->end = start + memTreeAllocationSize(start, bytes, length);
+		tree->end = (byte_t *)start + memTreeAllocationSize(start, bytes, length);
 
 		memTreeClear(tree);
 
@@ -37,7 +37,7 @@ static inline void memTreeRotateTreeLeft(memoryTree *tree, byte_t *node){
 	memTreeNodeGetRight(node) = rightleft;
 
 	if(rightleft != NULL){
-		memTreeNodeGetParent(rightleft) = node;
+		memTreeNodeSetParentKeepColour(rightleft, node);
 	}
 
 	memTreeNodeSetParentKeepColour(right, parent);
@@ -51,7 +51,7 @@ static inline void memTreeRotateTreeLeft(memoryTree *tree, byte_t *node){
 	}
 
 	memTreeNodeGetLeft(right) = node;
-	memTreeNodeGetParent(node) = right;
+	memTreeNodeSetParentKeepColour(node, right);
 
 }
 
@@ -68,7 +68,7 @@ static inline void memTreeRotateTreeRight(memoryTree *tree, byte_t *node){
 	memTreeNodeGetLeft(node) = leftright;
 
 	if(leftright != NULL){
-		memTreeNodeGetParent(leftright) = node;
+		memTreeNodeSetParentKeepColour(leftright, node);
 	}
 
 	memTreeNodeSetParentKeepColour(left, parent);
@@ -82,7 +82,7 @@ static inline void memTreeRotateTreeRight(memoryTree *tree, byte_t *node){
 	}
 
 	memTreeNodeGetRight(left) = node;
-	memTreeNodeGetParent(node) = left;
+	memTreeNodeSetParentKeepColour(node, left);
 
 }
 
@@ -98,7 +98,11 @@ static inline void memTreeRepairTree(memoryTree *tree, byte_t *node){
 	// Continue looping while the current node
 	// and its parent are both red. If the root
 	// node is reached, the loop will terminate.
-	while(memTreeNodeGetColourMasked(parent) != MEMORY_TREE_NODE_COLOUR_BLACK){
+	while(
+		node != tree->root &&
+		memTreeNodeGetColourMasked(node)   != MEMORY_TREE_NODE_COLOUR_BLACK &&
+		memTreeNodeGetColourMasked(parent) != MEMORY_TREE_NODE_COLOUR_BLACK
+	){
 
 		byte_t *grandparent = memTreeNodeGetParentColourless(parent);
 		byte_t *uncle = memTreeNodeGetLeft(grandparent);
@@ -108,7 +112,7 @@ static inline void memTreeRepairTree(memoryTree *tree, byte_t *node){
 			// The uncle is to the right of the grandparent.
 			uncle = memTreeNodeGetRight(grandparent);
 
-			if(memTreeNodeGetColourMasked(uncle) != MEMORY_TREE_NODE_COLOUR_BLACK){
+			if(uncle != NULL && memTreeNodeGetColourMasked(uncle) != MEMORY_TREE_NODE_COLOUR_BLACK){
 
 				// The uncle is red, all we need to
 				// do is some recolouring.
@@ -121,8 +125,6 @@ static inline void memTreeRepairTree(memoryTree *tree, byte_t *node){
 
 			}else{
 
-				uintptr_t *parentColourBit;
-				uintptr_t *grandparentColourBit;
 				uintptr_t tempParentColour;
 
 				if(node == memTreeNodeGetRight(parent)){
@@ -135,16 +137,13 @@ static inline void memTreeRepairTree(memoryTree *tree, byte_t *node){
 
 				}
 
-				parentColourBit      = memTreeNodeGetColourPointer(parent);
-				grandparentColourBit = memTreeNodeGetColourPointer(grandparent);
-
 				// Rotate the tree to the right.
 				memTreeRotateTreeRight(tree, grandparent);
 
 				// Swap the parent and grandparent's colours.
-				tempParentColour = *parentColourBit | MEMORY_TREE_NODE_COLOURLESS_MASK;
-				*parentColourBit &= *grandparentColourBit | MEMORY_TREE_NODE_COLOURLESS_MASK;
-				*grandparentColourBit &= tempParentColour;
+				tempParentColour = memTreeNodeGetColour(parent);
+				memTreeNodeSetColourKeepParent(parent, memTreeNodeGetColour(grandparent));
+				memTreeNodeSetColourKeepParent(grandparent, tempParentColour);
 
 				// Continue climbing the tree.
 				node = parent;
@@ -154,7 +153,7 @@ static inline void memTreeRepairTree(memoryTree *tree, byte_t *node){
 		}else{
 
 			// The uncle is to the left of the grandparent.
-			if(memTreeNodeGetColourMasked(uncle) != MEMORY_TREE_NODE_COLOUR_BLACK){
+			if(uncle != NULL && memTreeNodeGetColourMasked(uncle) != MEMORY_TREE_NODE_COLOUR_BLACK){
 
 				// The uncle is red, all we need to
 				// do is some recolouring.
@@ -167,8 +166,6 @@ static inline void memTreeRepairTree(memoryTree *tree, byte_t *node){
 
 			}else{
 
-				uintptr_t *parentColourBit;
-				uintptr_t *grandparentColourBit;
 				uintptr_t tempParentColour;
 
 				if(node == memTreeNodeGetLeft(parent)){
@@ -181,16 +178,13 @@ static inline void memTreeRepairTree(memoryTree *tree, byte_t *node){
 
 				}
 
-				parentColourBit      = memTreeNodeGetColourPointer(parent);
-				grandparentColourBit = memTreeNodeGetColourPointer(grandparent);
-
 				// Rotate the tree to the left.
 				memTreeRotateTreeLeft(tree, grandparent);
 
 				// Swap the parent and grandparent's colours.
-				tempParentColour = *parentColourBit | MEMORY_TREE_NODE_COLOURLESS_MASK;
-				*parentColourBit &= *grandparentColourBit | MEMORY_TREE_NODE_COLOURLESS_MASK;
-				*grandparentColourBit &= tempParentColour;
+				tempParentColour = memTreeNodeGetColour(parent);
+				memTreeNodeSetColourKeepParent(parent, memTreeNodeGetColour(grandparent));
+				memTreeNodeSetColourKeepParent(grandparent, tempParentColour);
 
 				// Continue climbing the tree.
 				node = parent;
@@ -204,75 +198,81 @@ static inline void memTreeRepairTree(memoryTree *tree, byte_t *node){
 
 	}
 
+	memTreeNodeSetColourBlack(tree->root);
+
 }
 
-void memTreeInsert(memoryTree *tree, byte_t *block, const size_t bytes){
+void memTreeInsert(memoryTree *tree, void *block, const size_t bytes){
 
 	/*
 	** Add a free block to the red-black tree.
 	*/
 
-	byte_t **address = &tree->root;
-	uintptr_t current = *((uintptr_t *)address);
+	byte_t *node = memTreeBlockGetData(block);
+
+	byte_t **address;
+	uintptr_t parent;
 
 	// Reset the active flag.
 	memTreeBlockSetInactive(block);
 
 	// Set the children to NULL.
-	memTreeBlockGetLeft(block) = NULL;
-	memTreeBlockGetRight(block) = NULL;
+	memTreeNodeGetLeft(node) = NULL;
+	memTreeNodeGetRight(node) = NULL;
 
 	// If the root node is free, we can exit early.
-	if(current == 0){
-		*address = block;
-		memTreeBlockGetParent(block) = NULL;
+	if(tree->root == NULL){
+		tree->root = node;
+		memTreeNodeGetParent(node) = NULL;
 		return;
 	}
+
+	address = &tree->root;
 
 	// Begin by performing a BST insertion.
 	do {
 
-		const size_t currentSize = memTreeBlockGetCurrent(current);
+		parent = *((uintptr_t *)address);
 
-		if(bytes <= currentSize){
+		if(bytes <= memTreeNodeGetCurrent(parent)){
 
 			// The new block is smaller than
 			// the current block. Go to its left.
-			address = memTreeBlockGetLeftPointer(current);
+			address = memTreeNodeGetLeftPointer(parent);
 
 		}else{
 
 			// The new block is larger than
 			// the current block. Go to its right.
-			address = memTreeBlockGetRightPointer(current);
+			address = memTreeNodeGetRightPointer(parent);
 
 		}
 
-		current = *((uintptr_t *)address);
-
-	} while(current != 0);
+	} while(*address != NULL);
 
 	// Insert the free block.
-	*address = block;
-	memTreeBlockGetColour(block) = current | MEMORY_TREE_NODE_COLOUR_RED_MASK;
+	*address = node;
+	memTreeNodeGetColour(node) = parent | MEMORY_TREE_NODE_COLOUR_RED_MASK;
 
 	// Fix red-black tree rule violations.
-	memTreeRepairTree(tree, memTreeBlockGetNode(block));
+	memTreeRepairTree(tree, node);
 
 }
 
-void memTreeRemove(memoryTree *tree, byte_t *block){
+void memTreeRemove(memoryTree *tree, void *block){
 
 	/*
 	** Remove a free block from the red-black tree.
 	*/
 
+	byte_t *node = memTreeBlockGetNode(block);
+
 	byte_t *child;
 	uintptr_t childColour;
 
-	byte_t *parent = memTreeBlockGetParentColourless(block);
-	byte_t *left   = memTreeBlockGetLeft(block);
-	byte_t *right  = memTreeBlockGetRight(block);
+	byte_t *parent = memTreeNodeGetParentColourless(node);
+	byte_t *left   = memTreeNodeGetLeft(node);
+	byte_t *right  = memTreeNodeGetRight(node);
 
 	// Set the active flag.
 	memTreeBlockSetActive(block);
@@ -283,74 +283,84 @@ void memTreeRemove(memoryTree *tree, byte_t *block){
 			// The node has two children.
 			// Swap it with its in-order successor.
 			byte_t *newParent;
-			byte_t *next = memTreeBlockGetLeft(right);
+			byte_t *next = memTreeNodeGetLeft(right);
 			byte_t *successor = right;
 
 			// Find the in-order successor.
 			while(next != NULL){
 				successor = next;
-				next = memTreeBlockGetLeft(successor);
+				next = memTreeNodeGetLeft(successor);
 			}
 			newParent = memTreeNodeGetParentColourless(successor);
-			child = memTreeBlockGetRight(successor);
+			child = memTreeNodeGetRight(successor);
 
 			// Swap the parents.
-			memTreeNodeSetParentKeepColour(block, newParent);
+			if(newParent == node){
+				// If the successor is a direct child
+				// of the node, set the new parent to
+				// the successor.
+				newParent = successor;
+				// Also swap the right child.
+				right = node;
+			}
+			memTreeNodeSetParentKeepColour(node, newParent);
 			// Set the parent's child pointer.
-			memTreeBlockGetLeft(newParent) = block;
+			memTreeNodeGetLeft(newParent) = node;
 			if(parent != NULL){
-				byte_t **parentLeft = memTreeBlockGetLeftPointer(parent);
+				byte_t **parentLeft = memTreeNodeGetLeftPointer(parent);
 				memTreeNodeSetParentKeepColour(successor, parent);
 				// Set the parent's child pointer.
-				if(*parentLeft == block){
+				if(*parentLeft == node){
 					*parentLeft = successor;
 				}else{
-					memTreeBlockGetRight(parent) = successor;
+					memTreeNodeGetRight(parent) = successor;
 				}
 			}else{
 				// Set the parent to NULL but keep its colour.
-				memTreeBlockGetColour(successor) &= MEMORY_TREE_NODE_COLOUR_MASK;
+				memTreeNodeGetColour(successor) &= MEMORY_TREE_NODE_COLOUR_MASK;
 				tree->root = successor;
 			}
 
 			// Swap the left children.
-			memTreeBlockGetLeft(block) = NULL;
-			memTreeBlockGetLeft(successor) = left;
+			memTreeNodeGetLeft(node) = NULL;
+			memTreeNodeGetLeft(successor) = left;
 
 			// Swap the right children.
 			if(child != NULL){
-				memTreeBlockGetRight(block) = child;
-				childColour = memTreeBlockGetColourMasked(child);
+				memTreeNodeGetRight(node) = child;
+				childColour = memTreeNodeGetColourMasked(child);
 			}else{
-				memTreeBlockGetRight(block) = NULL;
-				childColour = 0;
+				memTreeNodeGetRight(node) = NULL;
+				childColour = MEMORY_TREE_NODE_COLOUR_BLACK;
 			}
-			memTreeBlockGetRight(successor) = right;
+			memTreeNodeGetRight(successor) = right;
 
 			parent = newParent;
 			left = next;
 			right = child;
 
-			block = successor;
+			//block = successor;
 
 		}else{
 			child = left;
-			childColour = memTreeBlockGetColourMasked(left);
+			childColour = memTreeNodeGetColourMasked(left);
 		}
 	}else if(right != NULL){
 		child = right;
-		childColour = memTreeBlockGetColourMasked(right);
+		childColour = memTreeNodeGetColourMasked(right);
 	}else{
 		child = NULL;
-		childColour = 0;
+		childColour = MEMORY_TREE_NODE_COLOUR_BLACK;
 	}
 
 	// The node should now have one or zero children.
-	if(memTreeBlockGetColourMasked(block) == MEMORY_TREE_NODE_COLOUR_BLACK){
+	if(memTreeNodeGetColourMasked(node) == MEMORY_TREE_NODE_COLOUR_BLACK){
+
+		byte_t *current = node;
 
 		// If the node is black, have it
 		// assume the colour of its child.
-		memTreeBlockGetColour(block) |= childColour;
+		memTreeNodeGetColour(node) |= childColour;
 
 		while(parent != NULL){
 
@@ -362,94 +372,162 @@ void memTreeRemove(memoryTree *tree, byte_t *block){
 			byte_t *sibling;
 			byte_t *siblingLeft;
 			byte_t *siblingRight;
-			byte_t *parentLeft = memTreeBlockGetLeft(parent);
+			byte_t *parentLeft = memTreeNodeGetLeft(parent);
 
-			if(parentLeft == block){
-				sibling = memTreeBlockGetRight(parent);
+			if(parentLeft == current){
+				sibling = memTreeNodeGetRight(parent);
 			}else{
 				sibling = parentLeft;
 			}
 
-			// If the node's sibling is red, do
-			// some recolours and a rotation.
-			siblingColour = memTreeBlockGetColourMasked(sibling);
-			if(siblingColour != MEMORY_TREE_NODE_COLOUR_BLACK){
+			if(sibling != NULL){
 
-				memTreeBlockSetColourRed(parent);
-				memTreeBlockSetColourBlack(sibling);
+				// If the node's sibling is red, do
+				// some recolours and a rotation.
+				siblingColour = memTreeNodeGetColourMasked(sibling);
+				if(siblingColour != MEMORY_TREE_NODE_COLOUR_BLACK){
 
-				if(block == parentLeft){
-					memTreeRotateTreeLeft(tree, parent);
-				}else{
-					memTreeRotateTreeRight(tree, parent);
-				}
+					memTreeNodeSetColourRed(parent);
+					memTreeNodeSetColourBlack(sibling);
 
-				// Update variables.
-				sibling = memTreeBlockGetLeft(parent);
-				if(sibling == block){
-					sibling = memTreeBlockGetRight(parent);
-				}
-				parent        = memTreeNodeGetParentColourless(block);
-				parentLeft    = memTreeBlockGetLeft(parent);
-				siblingColour = memTreeBlockGetColourMasked(sibling);
-
-			}
-
-			siblingLeft        = memTreeBlockGetLeft(sibling);
-			siblingRight       = memTreeBlockGetRight(sibling);
-			parentColour       = memTreeBlockGetColourMasked(parent);
-			siblingLeftColour  = memTreeBlockGetColourMasked(siblingLeft);
-			siblingRightColour = memTreeBlockGetColourMasked(siblingRight);
-
-			if(siblingColour      == MEMORY_TREE_NODE_COLOUR_BLACK &&
-			   siblingLeftColour  == MEMORY_TREE_NODE_COLOUR_BLACK &&
-			   siblingRightColour == MEMORY_TREE_NODE_COLOUR_BLACK){
-
-				memTreeBlockSetColourRed(sibling);
-
-				if(parentColour != MEMORY_TREE_NODE_COLOUR_BLACK){
-					memTreeBlockSetColourBlack(parent);
-					break;
-				}
-
-			}else{
-
-				if(block == parentLeft &&
-				   siblingColour      == MEMORY_TREE_NODE_COLOUR_BLACK &&
-				   siblingLeftColour  != MEMORY_TREE_NODE_COLOUR_BLACK &&
-				   siblingRightColour == MEMORY_TREE_NODE_COLOUR_BLACK){
-
-					memTreeBlockSetColourRed(sibling);
-					memTreeBlockSetColourBlack(siblingLeft);
-					memTreeRotateTreeRight(tree, sibling);
-
-				}else if(block != parentLeft &&
-				   siblingColour      == MEMORY_TREE_NODE_COLOUR_BLACK &&
-				   siblingLeftColour  == MEMORY_TREE_NODE_COLOUR_BLACK &&
-				   siblingRightColour != MEMORY_TREE_NODE_COLOUR_BLACK){
-
-					memTreeBlockSetColourRed(sibling);
-					memTreeBlockSetColourBlack(siblingRight);
-					memTreeRotateTreeRight(tree, sibling);
-
-				}else{
-
-					// Set the sibling to the parent's colour.
-					memTreeBlockGetColour(sibling) &= (uintptr_t)parent | MEMORY_TREE_NODE_COLOURLESS_MASK;
-					memTreeBlockSetColourBlack(parent);
-
-					if(block == parentLeft){
-						memTreeBlockSetColourBlack(siblingRight);
-						memTreeRotateTreeRight(tree, parent);
+					if(current == parentLeft){
+						memTreeRotateTreeLeft(tree, parent);
 					}else{
-						memTreeBlockSetColourBlack(siblingLeft);
 						memTreeRotateTreeRight(tree, parent);
 					}
 
+					// Update variables.
+					sibling = memTreeNodeGetLeft(parent);
+					if(sibling == current){
+						sibling = memTreeNodeGetRight(parent);
+					}
+					if(sibling == NULL){
+						goto NULL_SIBLING;
+					}
+					parent        = memTreeNodeGetParentColourless(current);
+					parentLeft    = memTreeNodeGetLeft(parent);
+					siblingColour = memTreeNodeGetColourMasked(sibling);
+
 				}
 
-				break;
+				siblingLeft = memTreeNodeGetLeft(sibling);
+				if(siblingLeft == NULL){
+					siblingLeftColour = MEMORY_TREE_NODE_COLOUR_BLACK;
+				}else{
+					siblingLeftColour  = memTreeNodeGetColourMasked(siblingLeft);
+				}
 
+				siblingRight = memTreeNodeGetRight(sibling);
+				if(siblingRight == NULL){
+					siblingRightColour = MEMORY_TREE_NODE_COLOUR_BLACK;
+				}else{
+					siblingRightColour = memTreeNodeGetColourMasked(siblingRight);
+				}
+
+				parentColour = memTreeNodeGetColourMasked(parent);
+
+				if(siblingColour      == MEMORY_TREE_NODE_COLOUR_BLACK &&
+				   siblingLeftColour  == MEMORY_TREE_NODE_COLOUR_BLACK &&
+				   siblingRightColour == MEMORY_TREE_NODE_COLOUR_BLACK){
+
+					memTreeNodeSetColourRed(sibling);
+
+					if(parentColour != MEMORY_TREE_NODE_COLOUR_BLACK){
+						memTreeNodeSetColourBlack(parent);
+						break;
+					}else{
+						current = parent;
+						parent = memTreeNodeGetParentColourless(current);
+					}
+
+				}else{
+
+					if(current == parentLeft &&
+					   siblingColour      == MEMORY_TREE_NODE_COLOUR_BLACK &&
+					   siblingLeftColour  != MEMORY_TREE_NODE_COLOUR_BLACK &&
+					   siblingRightColour == MEMORY_TREE_NODE_COLOUR_BLACK){
+
+						memTreeNodeSetColourRed(sibling);
+						memTreeNodeSetColourBlack(siblingLeft);
+						memTreeRotateTreeRight(tree, sibling);
+
+						// Update variables.
+						sibling = memTreeNodeGetLeft(parent);
+						if(sibling == current){
+							sibling = memTreeNodeGetRight(parent);
+						}
+						parent     = memTreeNodeGetParentColourless(current);
+						parentLeft = memTreeNodeGetLeft(parent);
+						if(sibling == NULL){
+							siblingLeft  = NULL;
+							siblingRight = NULL;
+						}else{
+							siblingLeft  = memTreeNodeGetLeft(sibling);
+							siblingRight = memTreeNodeGetRight(sibling);
+						}
+
+					}else if(current != parentLeft &&
+					         siblingColour      == MEMORY_TREE_NODE_COLOUR_BLACK &&
+					         siblingLeftColour  == MEMORY_TREE_NODE_COLOUR_BLACK &&
+					         siblingRightColour != MEMORY_TREE_NODE_COLOUR_BLACK){
+
+						memTreeNodeSetColourRed(sibling);
+						memTreeNodeSetColourBlack(siblingRight);
+						memTreeRotateTreeLeft(tree, sibling);
+
+						// Update variables.
+						sibling = memTreeNodeGetLeft(parent);
+						if(sibling == current){
+							sibling = memTreeNodeGetRight(parent);
+						}
+						parent     = memTreeNodeGetParentColourless(current);
+						parentLeft = memTreeNodeGetLeft(parent);
+						if(sibling == NULL){
+							siblingLeft  = NULL;
+							siblingRight = NULL;
+						}else{
+							siblingLeft  = memTreeNodeGetLeft(sibling);
+							siblingRight = memTreeNodeGetRight(sibling);
+						}
+
+						siblingRight = memTreeNodeGetRight(sibling);
+						if(siblingRight == NULL){
+							siblingRightColour = MEMORY_TREE_NODE_COLOUR_BLACK;
+						}else{
+							siblingRightColour = memTreeNodeGetColourMasked(siblingRight);
+						}
+
+					}
+
+					// Set the sibling to the parent's colour.
+					memTreeNodeSetColourKeepParent(sibling, (uintptr_t)parent);
+					memTreeNodeSetColourBlack(parent);
+
+					if(current == parentLeft){
+						if(siblingRight != NULL){
+							memTreeNodeSetColourBlack(siblingRight);
+						}
+						memTreeRotateTreeLeft(tree, parent);
+					}else{
+						if(siblingLeft != NULL){
+							memTreeNodeSetColourBlack(siblingLeft);
+						}
+						memTreeRotateTreeRight(tree, parent);
+					}
+
+					break;
+
+				}
+
+			}else{
+				NULL_SIBLING:
+				if(memTreeNodeGetColourMasked(parent) != MEMORY_TREE_NODE_COLOUR_BLACK){
+					memTreeNodeSetColourBlack(parent);
+					break;
+				}else{
+					current = parent;
+					parent = memTreeNodeGetParentColourless(current);
+				}
 			}
 
 		}
@@ -457,156 +535,178 @@ void memTreeRemove(memoryTree *tree, byte_t *block){
 	}
 
 	// Replace the node with its original child.
-	parent = memTreeBlockGetParentColourless(block);
+	parent = memTreeNodeGetParentColourless(node);
 	if(parent == NULL){
 		tree->root = child;
 		if(child != NULL){
-			memTreeBlockGetParent(child) = NULL;
+			memTreeNodeGetParent(child) = NULL;
 		}
 	}else{
 		// Set the parent's child.
-		byte_t **parentLeft = memTreeBlockGetLeftPointer(parent);
-		if(block == *parentLeft){
+		byte_t **parentLeft = memTreeNodeGetLeftPointer(parent);
+		if(node == *parentLeft){
 			*parentLeft = child;
 		}else{
-			memTreeBlockGetLeft(parent) = child;
+			memTreeNodeGetRight(parent) = child;
 		}
 		if(child != NULL){
-			memTreeBlockSetParentKeepColour(child, parent);
+			memTreeNodeSetParentKeepColour(child, parent);
 		}
 	}
 
 }
 
-byte_t *memTreeAllocate(memoryTree *tree, const size_t bytes){
+void *memTreeAllocate(memoryTree *tree, const size_t bytes){
 
 	/*
 	** Retrieves a new block of memory from the general
 	** purpose allocator and updates the "next" pointer.
 	*/
 
-	const size_t totalBytes = MEMORY_TREE_BLOCK_HEADER_SIZE +
-	                          (bytes <= MEMORY_TREE_BLOCK_SIZE ? MEMORY_TREE_BLOCK_SIZE : bytes);
+	if(tree->root == NULL){
+		return NULL;
+	}else{
 
-	size_t blockSize = 0;
-	byte_t *block = NULL;
+		const size_t totalBytes = MEMORY_TREE_BLOCK_HEADER_SIZE +
+								  (bytes <= MEMORY_TREE_BLOCK_SIZE ? MEMORY_TREE_BLOCK_SIZE : bytes);
 
-	// Loop through the red-black tree and retrieve
-	// the best-fitting free block.
-	byte_t *current = tree->root;
-	for(;;){
+		size_t blockSize = 0;
+		byte_t *block = NULL;
 
-		const size_t currentSize = memTreeBlockGetCurrent(current);
+		// Loop through the red-black tree and retrieve
+		// the best-fitting free block.
+		byte_t *current = memTreeNodeGetBlock(tree->root);
+		for(;;){
 
-		if(totalBytes < currentSize){
+			const size_t currentSize = memTreeBlockGetCurrent(current);
 
-			// The block is too big,
-			// go to the left.
-			byte_t *next = memTreeBlockGetLeft(current);
+			if(totalBytes < currentSize){
 
-			// Set the new best fit.
-			blockSize = currentSize;
-			block = current;
+				// The block is too big,
+				// go to the left.
+				byte_t *next = memTreeBlockGetLeft(current);
 
-			if(next != NULL){
-				current = next;
-			}else{
+				// Set the new best fit.
+				blockSize = currentSize;
+				block = current;
 
-				// There is no node to the left.
-				// Settle on a bigger block and
-				// attempt to split it.
-				size_t nextSize;
-				next = (byte_t *)memTreeAlignStart((block + totalBytes));
-				nextSize = block + blockSize - next;
+				if(next != NULL){
+					current = memTreeNodeGetBlock(next);
+				}else{
 
-				// Remove the block from the red-black tree.
-				memTreeRemove(tree, block);
+					// There is no node to the left.
+					// Settle on a bigger block and
+					// attempt to split it.
+					size_t nextSize;
+					next = memTreeAlignStart((block + totalBytes));
+					nextSize = block + blockSize - next;
 
-				if(nextSize >= MEMORY_TREE_BLOCK_TOTAL_SIZE){
-					// There's enough room for a split.
-					// Include the alignment padding in
-					// the allocated block.
-					blockSize -= nextSize;
-					memTreeBlockGetCurrent(next) = nextSize;
-					// blockSize should always have a 0 in the LSB.
-					// Also inherit whether or not the block was the last.
-					memTreeBlockGetPrevious(next) = blockSize | (memTreeBlockGetFlags(block) & MEMORY_TREE_BLOCK_LAST);
-					// The previous block can't be the last node anymore.
-					memTreeBlockGetFlags(block) &= MEMORY_TREE_BLOCK_LAST_MASK;
-					// Insert the new free block.
-					memTreeInsert(tree, next, nextSize);
+					// Remove the block from the red-black tree.
+					memTreeRemove(tree, block);
+
+					if(nextSize >= MEMORY_TREE_BLOCK_TOTAL_SIZE){
+						// There's enough room for a split.
+						// Include the alignment padding in
+						// the allocated block.
+						blockSize -= nextSize;
+						memTreeBlockGetCurrent(next) = nextSize;
+						if(memTreeBlockIsLast(memTreeBlockGetFlags(block)) == 0){
+							// blockSize should always have a 0 in the LSB.
+							// Also inherit whether or not the block was the last.
+							memTreeBlockGetPrevious(next) = blockSize;
+							// Set the next block's "previous" property.
+							memTreeBlockSetPreviousKeepFlags((next + nextSize), nextSize);
+						}else{
+							// blockSize should always have a 0 in the LSB.
+							// Also inherit whether or not the block was the last.
+							memTreeBlockGetPrevious(next) = blockSize | MEMORY_TREE_BLOCK_LAST;
+							// The previous block can't be the last node anymore.
+							memTreeBlockGetFlags(block) &= MEMORY_TREE_BLOCK_LAST_MASK;
+						}
+						// Insert the new free block.
+						memTreeInsert(tree, next, nextSize);
+					}
+
+					break;
+
 				}
 
-				break;
 
-			}
+			}else if(totalBytes > currentSize){
 
+				// The block is too small,
+				// go to the right.
+				byte_t *next = memTreeBlockGetRight(current);
 
-		}else if(totalBytes > currentSize){
+				if(next != NULL){
+					current = memTreeNodeGetBlock(next);
+				}else if(block != NULL){
 
-			// The block is too small,
-			// go to the right.
-			byte_t *next = memTreeBlockGetRight(current);
+					// There is no node to the right,
+					// but we do know a node that is
+					// big enough to accommodate the
+					// data, so we can prepare that.
+					size_t nextSize;
+					next = memTreeAlignStart((block + totalBytes));
+					nextSize = block + blockSize - next;
 
-			if(next != NULL){
-				current = next;
-			}else if(block != NULL){
+					// Remove the block from the red-black tree.
+					memTreeRemove(tree, block);
 
-				// There is no node to the right,
-				// but we do know a node that is
-				// big enough to accommodate the
-				// data, so we can prepare that.
-				size_t nextSize;
-				next = (byte_t *)memTreeAlignStart((block + totalBytes));
-				nextSize = block + blockSize - next;
+					if(nextSize >= MEMORY_TREE_BLOCK_TOTAL_SIZE){
+						// There's enough room for a split.
+						// Include the alignment padding in
+						// the allocated block.
+						blockSize -= nextSize;
+						memTreeBlockGetCurrent(next) = nextSize;
+						if(memTreeBlockIsLast(memTreeBlockGetFlags(block)) == 0){
+							// blockSize should always have a 0 in the LSB.
+							// Also inherit whether or not the block was the last.
+							memTreeBlockGetPrevious(next) = blockSize;
+							// Set the next block's "previous" property.
+							memTreeBlockSetPreviousKeepFlags((next + nextSize), nextSize);
+						}else{
+							// blockSize should always have a 0 in the LSB.
+							// Also inherit whether or not the block was the last.
+							memTreeBlockGetPrevious(next) = blockSize | MEMORY_TREE_BLOCK_LAST;
+							// The previous block can't be the last node anymore.
+							memTreeBlockGetFlags(block) &= MEMORY_TREE_BLOCK_LAST_MASK;
+						}
+						// Insert the new free block.
+						memTreeInsert(tree, next, nextSize);
+					}
 
-				// Remove the block from the red-black tree.
-				memTreeRemove(tree, block);
+					break;
 
-				if(nextSize >= MEMORY_TREE_BLOCK_TOTAL_SIZE){
-					// There's enough room for a split.
-					// Include the alignment padding in
-					// the allocated block.
-					blockSize -= nextSize;
-					memTreeBlockGetCurrent(next) = nextSize;
-					// blockSize should always have a 0 in the LSB.
-					// Also inherit whether or not the block was the last.
-					memTreeBlockGetPrevious(next) = blockSize | (memTreeBlockGetFlags(block) & MEMORY_TREE_BLOCK_LAST);
-					// The previous block can't be the last node anymore.
-					memTreeBlockGetFlags(block) &= MEMORY_TREE_BLOCK_LAST_MASK;
-					// Insert the new free block.
-					memTreeInsert(tree, next, nextSize);
+				}else{
+					// There is no block big enough
+					// to accommodate the data.
+					// Return NULL.
+					return NULL;
 				}
 
-				break;
-
 			}else{
-				// There is no block big enough
-				// to accommodate the data.
-				// Return NULL.
-				return NULL;
+				// We've somehow found a block
+				// that fits perfectly.
+				// Remove the block from the red-black tree.
+				memTreeRemove(tree, block);
+				break;
 			}
 
-		}else{
-			// We've somehow found a block
-			// that fits perfectly.
-			// Remove the block from the red-black tree.
-			memTreeRemove(tree, block);
-			break;
 		}
+
+		// Set the new block's header information.
+		// The "previous" header data should already be set.
+		memTreeBlockGetCurrent(block) = blockSize;
+
+		// Return a pointer to the data.
+		return memTreeBlockGetData(block);
 
 	}
 
-	// Set the new block's header information.
-	// The "previous" header data should already be set.
-	memTreeBlockGetCurrent(block) = blockSize;
-
-	// Return a pointer to the data.
-	return memTreeBlockGetData(block);
-
 }
 
-void memTreeFree(memoryTree *tree, byte_t *block){
+void memTreeFree(memoryTree *tree, void *block){
 
 	/*
 	** Frees a block of memory from the general
@@ -616,15 +716,12 @@ void memTreeFree(memoryTree *tree, byte_t *block){
 	** if they are free.
 	*/
 
-	size_t cPrev = memTreeDataGetPrevious(block);
-	size_t cBytes = memTreeDataGetCurrent(block);
 	byte_t *cBlock = memTreeDataGetBlock(block);
+	size_t cBytes = memTreeBlockGetCurrent(cBlock);
+	size_t cPrev = memTreeBlockGetPrevious(cBlock);
 
 	byte_t *prev;
 	byte_t *next;
-
-	// Reset the active flag.
-	memTreeBlockSetInactive(cBlock);
 
 	prev = cBlock - memTreeBlockPreviousFlagless(cPrev);
 	next = cBlock + cBytes;
@@ -634,31 +731,41 @@ void memTreeFree(memoryTree *tree, byte_t *block){
 	if(memTreeBlockIsFirst(cPrev) == 0 && memTreeBlockGetActiveMasked(prev) == MEMORY_TREE_BLOCK_INACTIVE){
 		// Perform a merge.
 		cBlock = prev;
-		cBytes += memTreeBlockPreviousFlagless(cPrev);
+		cBytes += memTreeBlockGetCurrent(prev);
 		memTreeBlockSetPreviousKeepLast(cPrev, memTreeBlockGetPrevious(prev));
 		// Remove the free block from the tree.
 		memTreeRemove(tree, prev);
 	}
 	// Check if there is a following
 	// block that is inactive.
-	if(memTreeBlockIsLast(cPrev) == 0 && memTreeBlockGetActiveMasked(next) == MEMORY_TREE_BLOCK_INACTIVE){
-		// Perform a merge.
-		cBytes += memTreeBlockGetCurrent(next);
-		memTreeBlockSetPreviousKeepFirst(cPrev, memTreeBlockGetPrevious(next));
-		// Remove the free block from the tree.
-		memTreeRemove(tree, next);
+	if(memTreeBlockIsLast(cPrev) == 0){
+		if(memTreeBlockGetActiveMasked(next) == MEMORY_TREE_BLOCK_INACTIVE){
+			const size_t nextSize = memTreeBlockGetCurrent(next);
+			// Perform a merge.
+			cBytes += nextSize;
+			// Remove the free block from the tree.
+			memTreeRemove(tree, next);
+			if(memTreeBlockIsLast(memTreeBlockGetPrevious(next)) == 0){
+				next += nextSize;
+				// Set the next block's "previous" property.
+				memTreeBlockGetPrevious(next) = (memTreeBlockGetPrevious(next) & MEMORY_TREE_BLOCK_FLAGS_MASK) | cBytes;
+			}
+		}else{
+			// Set the next block's "previous" property.
+			memTreeBlockGetPrevious(next) = (memTreeBlockGetPrevious(next) & MEMORY_TREE_BLOCK_FLAGS_MASK) | cBytes;
+		}
 	}
+
+	// Set the linked list header data.
+	memTreeBlockGetCurrent(cBlock) = cBytes;
+	memTreeBlockGetPrevious(cBlock) = cPrev & MEMORY_TREE_BLOCK_INACTIVE_MASK;
 
 	// Add the new free block to the tree.
 	memTreeInsert(tree, cBlock, cBytes);
 
-	// Set the linked list header data.
-	memTreeBlockGetCurrent(cBlock) = cBytes;
-	memTreeBlockGetPrevious(cBlock) = cPrev;
-
 }
 
-byte_t *memTreeReallocate(memoryTree *tree, byte_t *block, const size_t bytes){
+void *memTreeReallocate(memoryTree *tree, void *block, const size_t bytes){
 
 	/*
 	** Reallocates a block of memory. Can potentially
@@ -669,20 +776,22 @@ byte_t *memTreeReallocate(memoryTree *tree, byte_t *block, const size_t bytes){
 	** is effectively the same as an alloc + copy + free.
 	*/
 
+	byte_t *rBlock = memTreeDataGetBlock(block);
+
+	byte_t *cBlock = rBlock;
+	size_t cBytes = memTreeBlockGetCurrent(cBlock);
+	size_t cPrev = memTreeBlockGetPrevious(cBlock);
+
 	const size_t totalBytes = MEMORY_TREE_BLOCK_HEADER_SIZE +
 	                          (bytes <= MEMORY_TREE_BLOCK_SIZE ? MEMORY_TREE_BLOCK_SIZE : bytes);
-
-	byte_t *rBlock;
-
-	size_t cPrev = memTreeBlockGetPrevious(block);
-	size_t cBytes = memTreeDataGetCurrent(block);
-	byte_t *cBlock = memTreeDataGetBlock(block);
 
 	byte_t *prev;
 	byte_t *next;
 
-	// Reset the active flag.
-	memTreeBlockSetInactive(cBlock);
+	// If the block is inactive, allocate a new one.
+	if(block == NULL || memTreeDataGetActiveMasked(block) == MEMORY_TREE_BLOCK_INACTIVE){
+		return memTreeAllocate(tree, bytes);
+	}
 
 	prev = cBlock - memTreeBlockPreviousFlagless(cPrev);
 	next = cBlock + cBytes;
@@ -692,30 +801,40 @@ byte_t *memTreeReallocate(memoryTree *tree, byte_t *block, const size_t bytes){
 	if(memTreeBlockIsFirst(cPrev) == 0 && memTreeBlockGetActiveMasked(prev) == MEMORY_TREE_BLOCK_INACTIVE){
 		// Perform a merge.
 		cBlock = prev;
-		cBytes += memTreeBlockPreviousFlagless(cPrev);
-		memTreeBlockSetPreviousKeepLast(cPrev, memTreeBlockGetPrevious(prev));
+		cBytes += memTreeBlockGetCurrent(prev);
+		memTreeBlockSetPreviousKeepLastAndActive(cPrev, memTreeBlockGetPrevious(prev));
 		// Remove the free block from the tree.
 		memTreeRemove(tree, prev);
 	}
 	// Check if there is a following
 	// block that is inactive.
-	if(memTreeBlockIsLast(cPrev) == 0 && memTreeBlockGetActiveMasked(next) == MEMORY_TREE_BLOCK_INACTIVE){
-		// Perform a merge.
-		cBytes += memTreeBlockGetCurrent(next);
-		memTreeBlockSetPreviousKeepFirst(cPrev, memTreeBlockGetPrevious(next));
-		// Remove the free block from the tree.
-		memTreeRemove(tree, next);
+	if(memTreeBlockIsLast(cPrev) == 0){
+		if(memTreeBlockGetActiveMasked(next) == MEMORY_TREE_BLOCK_INACTIVE){
+			const size_t nextSize = memTreeBlockGetCurrent(next);
+			// Perform a merge.
+			cBytes += nextSize;
+			// Remove the free block from the tree.
+			memTreeRemove(tree, next);
+			if(memTreeBlockIsLast(memTreeBlockGetPrevious(next)) == 0){
+				next += nextSize;
+				// Set the next block's "previous" property.
+				memTreeBlockGetPrevious(next) = (memTreeBlockGetPrevious(next) & MEMORY_TREE_BLOCK_FLAGS_MASK) | cBytes;
+			}
+		}else{
+			// Set the next block's "previous" property.
+			memTreeBlockGetPrevious(next) = (memTreeBlockGetPrevious(next) & MEMORY_TREE_BLOCK_FLAGS_MASK) | cBytes;
+		}
 	}
 
 	#ifndef MEMORY_TREE_FORCE_MOVE_ON_REALLOC
 	// Check if we can fit the new data
 	// into this particular fragment.
-	if(totalBytes + MEMORY_TREE_BLOCK_HEADER_SIZE <= cBytes){
+	if(totalBytes < cBytes){
 
 		// We can coalesce the previous and / or
 		// next blocks to create enough room for
 		// the new data.
-		byte_t *cNext = (byte_t *)memTreeAlignStart((cBlock + totalBytes));
+		byte_t *cNext = memTreeAlignStart((cBlock + totalBytes));
 		size_t nextSize = cBlock + cBytes - cNext;
 
 		if(nextSize >= MEMORY_TREE_BLOCK_TOTAL_SIZE){
@@ -724,22 +843,35 @@ byte_t *memTreeReallocate(memoryTree *tree, byte_t *block, const size_t bytes){
 			// the allocated block.
 			cBytes -= nextSize;
 			memTreeBlockGetCurrent(cNext) = nextSize;
-			memTreeBlockGetPrevious(cNext) = cBytes | (cPrev & MEMORY_TREE_BLOCK_LAST);
-			cPrev &= MEMORY_TREE_BLOCK_LAST_MASK;
+			if(memTreeBlockIsLast(cPrev) == 0){
+				// cBytes should always have a 0 in the LSB.
+				// Also inherit whether or not the block was the last.
+				memTreeBlockGetPrevious(cNext) = cBytes;
+				// Set the next block's "previous" property.
+				memTreeBlockSetPreviousKeepFlags((cNext + nextSize), nextSize);
+			}else{
+				// cBytes should always have a 0 in the LSB.
+				// Also inherit whether or not the block was the last.
+				memTreeBlockGetPrevious(cNext) = cBytes | MEMORY_TREE_BLOCK_LAST;
+				// The previous block can't be the last node anymore.
+				cPrev &= MEMORY_TREE_BLOCK_LAST_MASK;
+			}
+			// Insert the new free block.
 			memTreeInsert(tree, cNext, nextSize);
 		}
 
 		rBlock = memTreeBlockGetData(cBlock);
 
 		// Copy the block's data over.
-		memcpy((void *)rBlock, (void *)block, bytes);
+		memcpy((void *)rBlock, (void *)block, cBytes < bytes ? cBytes : bytes);
 
 		// Set the new block's header information.
 		memTreeBlockGetCurrent(cBlock) = cBytes;
 		memTreeBlockGetPrevious(cBlock) = cPrev;
 
-	}else{
+	}else
 	#endif
+	if(totalBytes != cBytes){
 
 		// We'll have to look for a new block.
 		rBlock = memTreeAllocate(tree, bytes);
@@ -747,40 +879,110 @@ byte_t *memTreeReallocate(memoryTree *tree, byte_t *block, const size_t bytes){
 		if(rBlock != NULL){
 
 			// Copy the block's data over.
-			memcpy((void *)rBlock, (void *)block, bytes);
-
-			// Add the new free block to the tree.
-			memTreeInsert(tree, cBlock, cBytes);
+			memcpy((void *)rBlock, (void *)block, cBytes < bytes ? cBytes : bytes);
 
 			// Set the linked list header data.
 			memTreeBlockGetCurrent(cBlock) = cBytes;
 			memTreeBlockGetPrevious(cBlock) = cPrev;
 
+			// Add the new free block to the tree.
+			memTreeInsert(tree, cBlock, cBytes);
+
 		}
 
-	#ifndef MEMORY_TREE_FORCE_MOVE_ON_REALLOC
 	}
-	#endif
 
 	return rBlock;
 
 }
 
-byte_t *memTreeReset(byte_t *start, const size_t bytes, const size_t length){
-	byte_t *root = memTreeDataGetBlock((byte_t *)memTreeAlignStart(start));
-	memTreeBlockGetCurrent(root) = start + memTreeAllocationSize(start, bytes, length) - root;
-	memTreeBlockGetPrevious(root) = 0;
-	memTreeBlockGetLeft(root) = NULL;
-	memTreeBlockGetRight(root) = NULL;
-	memTreeBlockGetParent(root) = NULL;
-	return root;
+void *memTreeReset(void *start, const size_t bytes, const size_t length){
+	byte_t *block = memTreeAlignStart(start);
+	byte_t *root = memTreeBlockGetNode(block);
+	memTreeBlockGetCurrent(block) = (byte_t *)start + memTreeAllocationSize(start, bytes, length) - block;
+	memTreeBlockGetPrevious(block) = MEMORY_TREE_BLOCK_FIRST | MEMORY_TREE_BLOCK_LAST;
+	memTreeNodeGetLeft(root) = NULL;
+	memTreeNodeGetRight(root) = NULL;
+	memTreeNodeGetParent(root) = NULL;
+	return block;
 }
 
 void memTreeClear(memoryTree *tree){
-	tree->root = memTreeDataGetBlock((byte_t *)memTreeAlignStart(tree->start));
-	memTreeBlockGetCurrent(tree->root) = tree->end - tree->root;
-	memTreeBlockGetPrevious(tree->root) = 0;
-	memTreeBlockGetLeft(tree->root) = NULL;
-	memTreeBlockGetRight(tree->root) = NULL;
-	memTreeBlockGetParent(tree->root) = NULL;
+	byte_t *block = memTreeAlignStart(tree->start);
+	tree->root = memTreeBlockGetNode(block);
+	memTreeBlockGetCurrent(block) = tree->end - block;
+	memTreeBlockGetPrevious(block) = MEMORY_TREE_BLOCK_FIRST | MEMORY_TREE_BLOCK_LAST;
+	memTreeNodeGetLeft(tree->root) = NULL;
+	memTreeNodeGetRight(tree->root) = NULL;
+	memTreeNodeGetParent(tree->root) = NULL;
 }
+
+#ifdef MEMORY_DEBUG
+
+#include <stdio.h>
+
+void memTreePrintFreeBlocks(memoryTree *tree, const unsigned int recursions){
+
+	/*
+	** Tree debug function by 8426THMY.
+	** In-order tree traversal where
+	** each node's size is printed.
+	*/
+
+	printf("Free blocks:\n");
+
+	byte_t doneLeft = 0;
+	byte_t *node = tree->root;
+	byte_t *nodeLeft;
+	byte_t *nodeRight;
+	byte_t *nodeParent;
+	unsigned int i = 0;
+
+	while(node != NULL){
+
+		++i;
+
+		//If we still need to traverse the left
+		//subtree, find the left-most node.
+		if(!doneLeft){
+			while(nodeLeft = memTreeNodeGetLeft(node), nodeLeft != NULL){
+				node = nodeLeft;
+			}
+		}
+
+		//Now we can print the current node!
+		printf("Address:%p Parent:%p Left:%p Right:%p Size:%u %u %s\n", node, memTreeNodeGetParentColourless(node), memTreeNodeGetLeft(node), memTreeNodeGetRight(node), memTreeNodeGetCurrent(node),
+				memTreeNodeGetPreviousFlagless(node), memTreeNodeGetColourMasked(node) == 0 ? "B" : "R");
+
+		nodeRight = memTreeNodeGetRight(node);
+		//If there's a subtree to the right, follow it!
+		if(nodeRight != NULL){
+			node = nodeRight;
+			doneLeft = 0;
+
+		//Otherwise, move up the tree until we get to a
+		//node whose right subtree hasn't been traversed.
+		}else{
+			while(nodeParent = memTreeNodeGetParentColourless(node), (nodeParent != NULL && node == memTreeNodeGetRight(nodeParent))){
+				node = nodeParent;
+			}
+			if(nodeParent == NULL){
+				break;
+			}
+
+			node = nodeParent;
+			doneLeft = 1;
+		}
+
+		if(i == recursions){
+			exit(0);
+			break;
+		}
+
+	}
+
+	printf("\n");
+
+}
+
+#endif

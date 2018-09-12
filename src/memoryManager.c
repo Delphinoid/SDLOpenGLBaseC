@@ -44,6 +44,8 @@ byte_t *memMngrAllocateVirtualHeap(memoryManager *memMngr, const size_t bytes){
 
 		}
 
+		//memMngr->heap = data;
+
 	}
 
 	return data;

@@ -27,8 +27,9 @@
 ** updated.
 **
 ** MEMORY_MANAGER_ENFORCE_STATIC_VIRTUAL_HEAP
-** may be defined to prevent the automatic
-** allocation of new virtual heaps.
+** may be defined in memorySettings.h to
+** prevent the automatic allocation of new
+** virtual heaps.
 */
 
 #ifndef MEMORY_MANAGER_DEFAULT_VIRTUAL_HEAP_SIZE
@@ -74,12 +75,12 @@ typedef struct {
 /*
 ** The "next" pointer is stored directly after the arena.
 */
-#define memMngrArenaNextStack(arena) *((memoryStack **)(((byte_t *)arena) + sizeof(memoryStack)))
-#define memMngrArenaNextList(arena)  *((memoryList  **)(((byte_t *)arena) + sizeof(memoryList )))
-#define memMngrArenaNextPool(arena)  *((memoryPool  **)(((byte_t *)arena) + sizeof(memoryPool )))
-#define memMngrArenaNextSLink(arena) *((memorySLink **)(((byte_t *)arena) + sizeof(memorySLink)))
-#define memMngrArenaNextDLink(arena) *((memoryDLink **)(((byte_t *)arena) + sizeof(memoryDLink)))
-#define memMngrArenaNextTree(arena)  *((memoryTree  **)(((byte_t *)arena) + sizeof(memoryTree )))
+#define memMngrArenaNextStack(arena) *((memoryStack **)((byte_t *)arena + sizeof(memoryStack)))
+#define memMngrArenaNextList(arena)  *((memoryList  **)((byte_t *)arena + sizeof(memoryList )))
+#define memMngrArenaNextPool(arena)  *((memoryPool  **)((byte_t *)arena + sizeof(memoryPool )))
+#define memMngrArenaNextSLink(arena) *((memorySLink **)((byte_t *)arena + sizeof(memorySLink)))
+#define memMngrArenaNextDLink(arena) *((memoryDLink **)((byte_t *)arena + sizeof(memoryDLink)))
+#define memMngrArenaNextTree(arena)  *((memoryTree  **)((byte_t *)arena + sizeof(memoryTree )))
 
 #define memMngrAllocate(bytes)         memTreeAllocate(&memMngr->allocator, bytes)
 #define memMngrReallocate(data, bytes) memTreeReallocate(&memMngr->allocator, data, bytes)

@@ -1,6 +1,6 @@
 #include "memoryPool.h"
 
-byte_t *memPoolInit(memoryPool *pool, byte_t *start, const size_t bytes, const size_t length){
+void *memPoolInit(memoryPool *pool, void *start, const size_t bytes, const size_t length){
 
 	/*
 	** Initialize a memory pool with "length"-many
@@ -13,7 +13,7 @@ byte_t *memPoolInit(memoryPool *pool, byte_t *start, const size_t bytes, const s
 		// match the minimum block size.
 		pool->block = memPoolBlockSize(bytes);
 		pool->start = start;
-		pool->end = start + memPoolAllocationSize(start, bytes, length);
+		pool->end = (byte_t *)start + memPoolAllocationSize(start, bytes, length);
 
 		memPoolClear(pool);
 
@@ -23,7 +23,7 @@ byte_t *memPoolInit(memoryPool *pool, byte_t *start, const size_t bytes, const s
 
 }
 
-byte_t *memPoolAllocate(memoryPool *pool){
+void *memPoolAllocate(memoryPool *pool){
 
 	/*
 	** Retrieves a new block of memory from the pool
@@ -40,7 +40,7 @@ byte_t *memPoolAllocate(memoryPool *pool){
 
 }
 
-void memPoolFree(memoryPool *pool, byte_t *block){
+void memPoolFree(memoryPool *pool, void *block){
 
 	/*
 	** Frees a block of memory from the pool.
@@ -52,15 +52,15 @@ void memPoolFree(memoryPool *pool, byte_t *block){
 
 }
 
-byte_t *memPoolReset(byte_t *start, const size_t bytes, const size_t length){
+void *memPoolReset(void *start, const size_t bytes, const size_t length){
 
 	const size_t blockSize = memPoolBlockSize(bytes);
 	byte_t *block;
 	byte_t *next;
 	byte_t *end;
 
-	end = start + memPoolAllocationSize(start, bytes, length);
-	start = (byte_t *)memPoolAlignStart(start);
+	end = (byte_t *)start + memPoolAllocationSize(start, bytes, length);
+	start = memPoolBlockGetData(memPoolAlignStart(start));
 
 	block = start;
 	next = block + blockSize;
@@ -84,7 +84,7 @@ byte_t *memPoolReset(byte_t *start, const size_t bytes, const size_t length){
 
 void memPoolClear(memoryPool *pool){
 
-	byte_t *block = (byte_t *)memPoolAlignStart(pool->start);
+	byte_t *block = memPoolBlockGetData(memPoolAlignStart(pool->start));
 	byte_t *next = block + pool->block;
 
 	pool->next = block;

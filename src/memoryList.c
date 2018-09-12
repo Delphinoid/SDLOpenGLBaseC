@@ -1,6 +1,6 @@
 #include "memoryList.h"
 
-byte_t *memListInit(memoryList *list, byte_t *start, const size_t bytes, const size_t length){
+void *memListInit(memoryList *list, void *start, const size_t bytes, const size_t length){
 
 	/*
 	** Initialize a memory list with "length"-many
@@ -13,7 +13,7 @@ byte_t *memListInit(memoryList *list, byte_t *start, const size_t bytes, const s
 		// match the minimum block size.
 		list->block = memListBlockSize(bytes);
 		list->start = start;
-		list->end = start + memListAllocationSize(start, bytes, length);
+		list->end = (byte_t *)start + memListAllocationSize(start, bytes, length);
 
 		memListClear(list);
 
@@ -23,7 +23,7 @@ byte_t *memListInit(memoryList *list, byte_t *start, const size_t bytes, const s
 
 }
 
-byte_t *memListAllocate(memoryList *list){
+void *memListAllocate(memoryList *list){
 
 	/*
 	** Retrieves a new block of memory from the list
@@ -39,7 +39,7 @@ byte_t *memListAllocate(memoryList *list){
 
 }
 
-void memListFree(memoryList *list, byte_t *block){
+void memListFree(memoryList *list, void *block){
 
 	/*
 	** Frees a block of memory from the list.
@@ -50,15 +50,15 @@ void memListFree(memoryList *list, byte_t *block){
 
 }
 
-byte_t *memListReset(byte_t *start, const size_t bytes, const size_t length){
+void *memListReset(void *start, const size_t bytes, const size_t length){
 
 	const size_t blockSize = memListBlockSize(bytes);
 	byte_t *block;
 	byte_t *next;
 	byte_t *end;
 
-	end = start + memListAllocationSize(start, bytes, length);
-	start = (byte_t *)memListAlignStart(start);
+	end = (byte_t *)start + memListAllocationSize(start, bytes, length);
+	start = memListBlockGetData(memListAlignStart(start));
 
 	block = start;
 	next = block + blockSize;
@@ -80,7 +80,7 @@ byte_t *memListReset(byte_t *start, const size_t bytes, const size_t length){
 
 void memListClear(memoryList *list){
 
-	byte_t *block = (byte_t *)memListAlignStart(list->start);
+	byte_t *block = memListBlockGetData(memListAlignStart(list->start));
 	byte_t *next = block + list->block;
 
 	list->next = block;

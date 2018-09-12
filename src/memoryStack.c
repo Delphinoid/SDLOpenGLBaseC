@@ -1,13 +1,13 @@
 #include "memoryStack.h"
 
-byte_t *memStackInit(memoryStack *stack, byte_t *start, const size_t bytes, const size_t length){
+void *memStackInit(memoryStack *stack, void *start, const size_t bytes, const size_t length){
 	stack->start = start;
 	stack->next = start;
-	stack->end = start + memStackAllocationSize(start, bytes, length);
+	stack->end = (byte_t *)start + memStackAllocationSize(start, bytes, length);
 	return start;
 }
 
-byte_t *memStackPush(memoryStack *stack, const size_t bytes){
+void *memStackPush(memoryStack *stack, const size_t bytes){
 	byte_t *r = stack->next;
 	stack->next += bytes;
 	if(stack->next > stack->end){

@@ -1,6 +1,6 @@
 #include "memoryDLink.h"
 
-byte_t *memDLinkInit(memoryDLink *array, byte_t *start, const size_t bytes, const size_t length){
+void *memDLinkInit(memoryDLink *array, void *start, const size_t bytes, const size_t length){
 
 	/*
 	** Initialize an array allocator with "length"-many
@@ -13,7 +13,7 @@ byte_t *memDLinkInit(memoryDLink *array, byte_t *start, const size_t bytes, cons
 		// match the minimum block size.
 		array->block = memDLinkBlockSize(bytes);
 		array->start = start;
-		array->end = start + memDLinkAllocationSize(start, bytes, length);
+		array->end = (byte_t *)start + memDLinkAllocationSize(start, bytes, length);
 
 		memDLinkClear(array);
 
@@ -23,7 +23,7 @@ byte_t *memDLinkInit(memoryDLink *array, byte_t *start, const size_t bytes, cons
 
 }
 
-byte_t *memDLinkAllocate(memoryDLink *array){
+void *memDLinkAllocate(memoryDLink *array){
 
 	/*
 	** Retrieves a new block of memory from the array
@@ -41,7 +41,7 @@ byte_t *memDLinkAllocate(memoryDLink *array){
 
 }
 
-byte_t *memDLinkInsertBefore(memoryDLink *array, byte_t *element){
+void *memDLinkInsertBefore(memoryDLink *array, void *element){
 
 	/*
 	** Inserts a new item before the specified element.
@@ -63,7 +63,7 @@ byte_t *memDLinkInsertBefore(memoryDLink *array, byte_t *element){
 
 }
 
-byte_t *memDLinkInsertAfter(memoryDLink *array, byte_t *element){
+void *memDLinkInsertAfter(memoryDLink *array, void *element){
 
 	/*
 	** Inserts a new item after the specified element.
@@ -85,7 +85,7 @@ byte_t *memDLinkInsertAfter(memoryDLink *array, byte_t *element){
 
 }
 
-void memDLinkFree(memoryDLink *array, byte_t *element){
+void memDLinkFree(memoryDLink *array, void *element){
 
 	/*
 	** Removes an element from an array
@@ -104,15 +104,15 @@ void memDLinkFree(memoryDLink *array, byte_t *element){
 
 }
 
-byte_t *memDLinkReset(byte_t *start, const size_t bytes, const size_t length){
+void *memDLinkReset(void *start, const size_t bytes, const size_t length){
 
 	const size_t blockSize = memDLinkBlockSize(bytes);
 	byte_t *block;
 	byte_t *next;
 	byte_t *end;
 
-	end = start + memDLinkAllocationSize(start, bytes, length);
-	start = (byte_t *)memDLinkAlignStart(start);
+	end = (byte_t *)start + memDLinkAllocationSize(start, bytes, length);
+	start = memDLinkBlockGetData(memDLinkAlignStart(start));
 
 	block = start;
 	next = block + blockSize;
@@ -138,7 +138,7 @@ byte_t *memDLinkReset(byte_t *start, const size_t bytes, const size_t length){
 
 void memDLinkClear(memoryDLink *array){
 
-	byte_t *block = (byte_t *)memDLinkAlignStart(array->start);
+	byte_t *block = memDLinkBlockGetData(memDLinkAlignStart(array->start));
 	byte_t *next = block + array->block;
 
 	array->next = block;

@@ -1,6 +1,7 @@
 #ifndef MEMORYSHARED_H
 #define MEMORYSHARED_H
 
+#include "memorySettings.h"
 #include <stdlib.h>
 #include <stdint.h>
 
