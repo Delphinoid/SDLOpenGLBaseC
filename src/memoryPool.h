@@ -58,13 +58,16 @@ typedef struct {
 
 #define memPoolBlockSize(bytes) MEMORY_POOL_ALIGN((bytes > MEMORY_POOL_BLOCK_SIZE ? bytes : MEMORY_POOL_BLOCK_SIZE) + MEMORY_POOL_BLOCK_HEADER_SIZE)
 #define memPoolBlockSizeUnaligned(bytes)         ((bytes > MEMORY_POOL_BLOCK_SIZE ? bytes : MEMORY_POOL_BLOCK_SIZE) + MEMORY_POOL_BLOCK_HEADER_SIZE)
-#define memPoolAlignStart(start) ((byte_t *)MEMORY_POOL_ALIGN((uintptr_t)start + MEMORY_POOL_BLOCK_HEADER_SIZE) - MEMORY_POOL_BLOCK_HEADER_SIZE)
+#define memPoolAlignStartBlock(start) ((byte_t *)MEMORY_POOL_ALIGN((uintptr_t)start + MEMORY_POOL_BLOCK_HEADER_SIZE) - MEMORY_POOL_BLOCK_HEADER_SIZE)
+#define memPoolAlignStartData(start)  ((byte_t *)MEMORY_POOL_ALIGN((uintptr_t)start + MEMORY_POOL_BLOCK_HEADER_SIZE))
 #define memPoolAllocationSize(start, bytes, length) \
-	(memPoolBlockSize(bytes) * (length - 1) + memPoolBlockSizeUnaligned(bytes) + (uintptr_t)memPoolAlignStart(start) - (uintptr_t)start)
+	(memPoolBlockSize(bytes) * length + (uintptr_t)memPoolAlignStartBlock(start) - (uintptr_t)start)
+	// The following can save small amounts of memory but can't be predicted as easily:
+	//(memPoolBlockSize(bytes) * (length - 1) + memPoolBlockSizeUnaligned(bytes) + (uintptr_t)memPoolAlignStartBlock(start) - (uintptr_t)start)
 
 #define memPoolAppend(pool, new) pool->next = new->next; new->next = NULL
 
-#define memPoolFirst(pool)        ((void *)memPoolAlignStart(pool->start))
+#define memPoolFirst(pool)        ((void *)memPoolAlignStartBlock(pool->start))
 #define memPoolBlockStatus(block) memPoolBlockGetFlags(block)
 #define memPoolBlockNext(pool, i) i += pool->block
 #define memPoolEnd(pool)          pool->end

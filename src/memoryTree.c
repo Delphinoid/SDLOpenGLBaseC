@@ -45,9 +45,9 @@ static inline void memTreeRotateTreeLeft(memoryTree *tree, byte_t *node){
 	if(parent == NULL){
 		tree->root = right;
 	}else if(node == memTreeNodeGetLeft(parent)){
-		 memTreeNodeGetLeft(parent) = right;
+		memTreeNodeGetLeft(parent) = right;
 	}else{
-		 memTreeNodeGetRight(parent) = right;
+		memTreeNodeGetRight(parent) = right;
 	}
 
 	memTreeNodeGetLeft(right) = node;
@@ -324,6 +324,9 @@ void memTreeRemove(memoryTree *tree, void *block){
 			// Swap the left children.
 			memTreeNodeGetLeft(node) = NULL;
 			memTreeNodeGetLeft(successor) = left;
+			if(left != NULL){
+				memTreeNodeSetParentKeepColour(left, successor);
+			}
 
 			// Swap the right children.
 			if(child != NULL){
@@ -334,12 +337,13 @@ void memTreeRemove(memoryTree *tree, void *block){
 				childColour = MEMORY_TREE_NODE_COLOUR_BLACK;
 			}
 			memTreeNodeGetRight(successor) = right;
+			if(right != NULL){
+				memTreeNodeSetParentKeepColour(right, successor);
+			}
 
 			parent = newParent;
 			left = next;
 			right = child;
-
-			//block = successor;
 
 		}else{
 			child = left;
@@ -598,11 +602,11 @@ void *memTreeAllocate(memoryTree *tree, const size_t bytes){
 					// Settle on a bigger block and
 					// attempt to split it.
 					size_t nextSize;
-					next = memTreeAlignStart((block + totalBytes));
+					next = memTreeAlignStartBlock((block + totalBytes));
 					nextSize = block + blockSize - next;
 
 					// Remove the block from the red-black tree.
-					memTreeRemove(tree, block);
+					//memTreeRemove(tree, block);
 
 					if(nextSize >= MEMORY_TREE_BLOCK_TOTAL_SIZE){
 						// There's enough room for a split.
@@ -647,11 +651,11 @@ void *memTreeAllocate(memoryTree *tree, const size_t bytes){
 					// big enough to accommodate the
 					// data, so we can prepare that.
 					size_t nextSize;
-					next = memTreeAlignStart((block + totalBytes));
+					next = memTreeAlignStartBlock((block + totalBytes));
 					nextSize = block + blockSize - next;
 
 					// Remove the block from the red-black tree.
-					memTreeRemove(tree, block);
+					//memTreeRemove(tree, block);
 
 					if(nextSize >= MEMORY_TREE_BLOCK_TOTAL_SIZE){
 						// There's enough room for a split.
@@ -688,12 +692,17 @@ void *memTreeAllocate(memoryTree *tree, const size_t bytes){
 			}else{
 				// We've somehow found a block
 				// that fits perfectly.
+				block = current;
+				blockSize = currentSize;
 				// Remove the block from the red-black tree.
-				memTreeRemove(tree, block);
+				//memTreeRemove(tree, block);
 				break;
 			}
 
 		}
+
+		// Remove the block from the red-black tree.
+		memTreeRemove(tree, block);
 
 		// Set the new block's header information.
 		// The "previous" header data should already be set.
@@ -732,7 +741,7 @@ void memTreeFree(memoryTree *tree, void *block){
 		// Perform a merge.
 		cBlock = prev;
 		cBytes += memTreeBlockGetCurrent(prev);
-		memTreeBlockSetPreviousKeepLast(cPrev, memTreeBlockGetPrevious(prev));
+		memTreeBlockSetPreviousKeepLastAndActive(cPrev, memTreeBlockGetPrevious(prev));
 		// Remove the free block from the tree.
 		memTreeRemove(tree, prev);
 	}
@@ -776,12 +785,13 @@ void *memTreeReallocate(memoryTree *tree, void *block, const size_t bytes){
 	** is effectively the same as an alloc + copy + free.
 	*/
 
-	byte_t *rBlock = memTreeDataGetBlock(block);
+	byte_t *rBlock = block;
 
-	byte_t *cBlock = rBlock;
+	byte_t *cBlock = memTreeDataGetBlock(rBlock);
 	size_t cBytes = memTreeBlockGetCurrent(cBlock);
 	size_t cPrev = memTreeBlockGetPrevious(cBlock);
 
+	const size_t copyBytes = cBytes < bytes ? cBytes : bytes;
 	const size_t totalBytes = MEMORY_TREE_BLOCK_HEADER_SIZE +
 	                          (bytes <= MEMORY_TREE_BLOCK_SIZE ? MEMORY_TREE_BLOCK_SIZE : bytes);
 
@@ -818,31 +828,34 @@ void *memTreeReallocate(memoryTree *tree, void *block, const size_t bytes){
 			if(memTreeBlockIsLast(memTreeBlockGetPrevious(next)) == 0){
 				next += nextSize;
 				// Set the next block's "previous" property.
-				memTreeBlockGetPrevious(next) = (memTreeBlockGetPrevious(next) & MEMORY_TREE_BLOCK_FLAGS_MASK) | cBytes;
+				memTreeBlockGetPrevious(next) &= MEMORY_TREE_BLOCK_FLAGS_MASK;
+				memTreeBlockGetPrevious(next) |= cBytes;
 			}
 		}else{
 			// Set the next block's "previous" property.
-			memTreeBlockGetPrevious(next) = (memTreeBlockGetPrevious(next) & MEMORY_TREE_BLOCK_FLAGS_MASK) | cBytes;
+			memTreeBlockGetPrevious(next) &= MEMORY_TREE_BLOCK_FLAGS_MASK;
+			memTreeBlockGetPrevious(next) |= cBytes;
 		}
 	}
 
-	#ifndef MEMORY_TREE_FORCE_MOVE_ON_REALLOC
 	// Check if we can fit the new data
 	// into this particular fragment.
-	if(totalBytes < cBytes){
+	if(totalBytes <= cBytes){
 
 		// We can coalesce the previous and / or
 		// next blocks to create enough room for
 		// the new data.
-		byte_t *cNext = memTreeAlignStart((cBlock + totalBytes));
+		byte_t *cNext = memTreeAlignStartBlock((cBlock + totalBytes));
 		size_t nextSize = cBlock + cBytes - cNext;
 
 		if(nextSize >= MEMORY_TREE_BLOCK_TOTAL_SIZE){
+
 			// There's enough room for a split.
 			// Include the alignment padding in
 			// the allocated block.
 			cBytes -= nextSize;
 			memTreeBlockGetCurrent(cNext) = nextSize;
+
 			if(memTreeBlockIsLast(cPrev) == 0){
 				// cBytes should always have a 0 in the LSB.
 				// Also inherit whether or not the block was the last.
@@ -856,22 +869,22 @@ void *memTreeReallocate(memoryTree *tree, void *block, const size_t bytes){
 				// The previous block can't be the last node anymore.
 				cPrev &= MEMORY_TREE_BLOCK_LAST_MASK;
 			}
+
 			// Insert the new free block.
 			memTreeInsert(tree, cNext, nextSize);
+
 		}
 
 		rBlock = memTreeBlockGetData(cBlock);
 
 		// Copy the block's data over.
-		memcpy((void *)rBlock, (void *)block, cBytes < bytes ? cBytes : bytes);
+		memcpy((void *)rBlock, (void *)block, copyBytes);
 
 		// Set the new block's header information.
 		memTreeBlockGetCurrent(cBlock) = cBytes;
 		memTreeBlockGetPrevious(cBlock) = cPrev;
 
-	}else
-	#endif
-	if(totalBytes != cBytes){
+	}else{
 
 		// We'll have to look for a new block.
 		rBlock = memTreeAllocate(tree, bytes);
@@ -879,7 +892,7 @@ void *memTreeReallocate(memoryTree *tree, void *block, const size_t bytes){
 		if(rBlock != NULL){
 
 			// Copy the block's data over.
-			memcpy((void *)rBlock, (void *)block, cBytes < bytes ? cBytes : bytes);
+			memcpy((void *)rBlock, (void *)block, copyBytes);
 
 			// Set the linked list header data.
 			memTreeBlockGetCurrent(cBlock) = cBytes;
@@ -897,8 +910,8 @@ void *memTreeReallocate(memoryTree *tree, void *block, const size_t bytes){
 }
 
 void *memTreeReset(void *start, const size_t bytes, const size_t length){
-	byte_t *block = memTreeAlignStart(start);
-	byte_t *root = memTreeBlockGetNode(block);
+	byte_t *root = memTreeAlignStartData(start);
+	byte_t *block = memTreeNodeGetBlock(root);
 	memTreeBlockGetCurrent(block) = (byte_t *)start + memTreeAllocationSize(start, bytes, length) - block;
 	memTreeBlockGetPrevious(block) = MEMORY_TREE_BLOCK_FIRST | MEMORY_TREE_BLOCK_LAST;
 	memTreeNodeGetLeft(root) = NULL;
@@ -908,8 +921,9 @@ void *memTreeReset(void *start, const size_t bytes, const size_t length){
 }
 
 void memTreeClear(memoryTree *tree){
-	byte_t *block = memTreeAlignStart(tree->start);
-	tree->root = memTreeBlockGetNode(block);
+	byte_t *block;
+	tree->root = memTreeAlignStartData(tree->start);
+	block = memTreeNodeGetBlock(tree->root);
 	memTreeBlockGetCurrent(block) = tree->end - block;
 	memTreeBlockGetPrevious(block) = MEMORY_TREE_BLOCK_FIRST | MEMORY_TREE_BLOCK_LAST;
 	memTreeNodeGetLeft(tree->root) = NULL;
@@ -924,65 +938,87 @@ void memTreeClear(memoryTree *tree){
 void memTreePrintFreeBlocks(memoryTree *tree, const unsigned int recursions){
 
 	/*
-	** Tree debug function by 8426THMY.
 	** In-order tree traversal where
 	** each node's size is printed.
 	*/
 
-	printf("Free blocks:\n");
-
-	byte_t doneLeft = 0;
 	byte_t *node = tree->root;
 	byte_t *nodeLeft;
 	byte_t *nodeRight;
 	byte_t *nodeParent;
 	unsigned int i = 0;
 
-	while(node != NULL){
+	printf("Free blocks:\n");
 
-		++i;
+	if(node != NULL){
 
-		//If we still need to traverse the left
-		//subtree, find the left-most node.
-		if(!doneLeft){
-			while(nodeLeft = memTreeNodeGetLeft(node), nodeLeft != NULL){
-				node = nodeLeft;
-			}
+		// Start on the left-most node.
+		while((nodeLeft = memTreeNodeGetLeft(node)) != NULL){
+			node = nodeLeft;
 		}
 
-		//Now we can print the current node!
-		printf("Address:%p Parent:%p Left:%p Right:%p Size:%u %u %s\n", node, memTreeNodeGetParentColourless(node), memTreeNodeGetLeft(node), memTreeNodeGetRight(node), memTreeNodeGetCurrent(node),
-				memTreeNodeGetPreviousFlagless(node), memTreeNodeGetColourMasked(node) == 0 ? "B" : "R");
+		do {
 
-		nodeRight = memTreeNodeGetRight(node);
-		//If there's a subtree to the right, follow it!
-		if(nodeRight != NULL){
-			node = nodeRight;
-			doneLeft = 0;
+			++i;
 
-		//Otherwise, move up the tree until we get to a
-		//node whose right subtree hasn't been traversed.
-		}else{
-			while(nodeParent = memTreeNodeGetParentColourless(node), (nodeParent != NULL && node == memTreeNodeGetRight(nodeParent))){
+			printf(
+				   "Address:%p Parent:%p Left:%p Right:%p Size:%u %u %s\n",
+				   node,
+				   memTreeNodeGetParentColourless(node),
+				   memTreeNodeGetLeft(node),
+				   memTreeNodeGetRight(node),
+				   memTreeNodeGetCurrent(node),
+				   memTreeNodeGetPreviousFlagless(node),
+				   memTreeNodeGetColourMasked(node) == 0 ? "B" : "R"
+			);
+
+			nodeRight = memTreeNodeGetRight(node);
+			if(nodeRight != NULL){
+				// If we can go right, go right and
+				// then try to go left again.
+				node = nodeRight;
+				while((nodeLeft = memTreeNodeGetLeft(node)) != NULL){
+					node = nodeLeft;
+				}
+			}else{
+				// A leaf node was reached.
+				// If the leaf node is to the right of its
+				// parent, keep going up until this is no
+				// longer the case.
+				while(
+					(nodeParent = memTreeNodeGetParentColourless(node)) != NULL &&
+					node == memTreeNodeGetRight(nodeParent)
+				){
+					node = nodeParent;
+				}
+				// Go up one final time for the left node.
 				node = nodeParent;
 			}
-			if(nodeParent == NULL){
+
+			if(i == recursions){
 				break;
 			}
 
-			node = nodeParent;
-			doneLeft = 1;
-		}
-
-		if(i == recursions){
-			exit(0);
-			break;
-		}
+		} while(node != NULL);
 
 	}
 
 	printf("\n");
 
+}
+
+void memTreePrintAllBlocks(memoryTree *tree){
+	byte_t *block = memTreeAlignStartBlock(tree->start);
+	printf("Blocks:\n");
+	while(block < tree->end){
+		const size_t size =  memTreeBlockGetCurrent(block);
+		printf("Address:%p Size:%u\n", memTreeBlockGetNode(block), memTreeBlockGetCurrent(block));
+		if(size == 0){
+			return;
+		}
+		block += memTreeBlockGetCurrent(block);
+	}
+	printf("\n");
 }
 
 #endif

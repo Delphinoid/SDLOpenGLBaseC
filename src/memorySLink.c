@@ -103,7 +103,7 @@ void *memSLinkReset(void *start, const size_t bytes, const size_t length){
 	byte_t *end;
 
 	end = (byte_t *)start + memSLinkAllocationSize(start, bytes, length);
-	start = memSLinkBlockGetData(memSLinkAlignStart(start));
+	start = memSLinkAlignStartData(start);
 
 	block = start;
 	next = block + blockSize;
@@ -127,7 +127,7 @@ void *memSLinkReset(void *start, const size_t bytes, const size_t length){
 
 void memSLinkClear(memorySLink *array){
 
-	byte_t *block = memSLinkBlockGetData(memSLinkAlignStart(array->start));
+	byte_t *block = memSLinkAlignStartData(array->start);
 	byte_t *next = block + array->block;
 
 	array->next = block;

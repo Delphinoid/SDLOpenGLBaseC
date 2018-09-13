@@ -60,7 +60,7 @@ void *memPoolReset(void *start, const size_t bytes, const size_t length){
 	byte_t *end;
 
 	end = (byte_t *)start + memPoolAllocationSize(start, bytes, length);
-	start = memPoolBlockGetData(memPoolAlignStart(start));
+	start = memPoolAlignStartData(start);
 
 	block = start;
 	next = block + blockSize;
@@ -84,7 +84,7 @@ void *memPoolReset(void *start, const size_t bytes, const size_t length){
 
 void memPoolClear(memoryPool *pool){
 
-	byte_t *block = memPoolBlockGetData(memPoolAlignStart(pool->start));
+	byte_t *block = memPoolAlignStartData(pool->start);
 	byte_t *next = block + pool->block;
 
 	pool->next = block;

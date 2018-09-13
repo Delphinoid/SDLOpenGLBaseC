@@ -66,13 +66,16 @@ typedef struct {
 
 #define memDLinkBlockSize(bytes) MEMORY_DLINK_ALIGN((bytes > MEMORY_DLINK_BLOCK_SIZE ? bytes : MEMORY_DLINK_BLOCK_SIZE) + MEMORY_DLINK_BLOCK_HEADER_SIZE)
 #define memDLinkBlockSizeUnaligned(bytes)          ((bytes > MEMORY_DLINK_BLOCK_SIZE ? bytes : MEMORY_DLINK_BLOCK_SIZE) + MEMORY_DLINK_BLOCK_HEADER_SIZE)
-#define memDLinkAlignStart(start) ((byte_t *)MEMORY_DLINK_ALIGN((uintptr_t)start + MEMORY_DLINK_BLOCK_HEADER_SIZE) - MEMORY_DLINK_BLOCK_HEADER_SIZE)
+#define memDLinkAlignStartBlock(start) ((byte_t *)MEMORY_DLINK_ALIGN((uintptr_t)start + MEMORY_DLINK_BLOCK_HEADER_SIZE) - MEMORY_DLINK_BLOCK_HEADER_SIZE)
+#define memDLinkAlignStartData(start)  ((byte_t *)MEMORY_DLINK_ALIGN((uintptr_t)start + MEMORY_DLINK_BLOCK_HEADER_SIZE))
 #define memDLinkAllocationSize(start, bytes, length) \
-	(memDLinkBlockSize(bytes) * (length - 1) + memDLinkBlockSizeUnaligned(bytes) + (uintptr_t)memDLinkAlignStart(start) - (uintptr_t)start)
+	(memDLinkBlockSize(bytes) * length + (uintptr_t)memDLinkAlignStartBlock(start) - (uintptr_t)start)
+	// The following can save small amounts of memory but can't be predicted as easily:
+	//(memDLinkBlockSize(bytes) * (length - 1) + memDLinkBlockSizeUnaligned(bytes) + (uintptr_t)memDLinkAlignStartBlock(start) - (uintptr_t)start)
 
 #define memDLinkAppend(array, new) array->next = new->next; new->next = NULL
 
-#define memDLinkFirst(array)        ((void *)memDLinkAlignStart(array->start))
+#define memDLinkFirst(array)        ((void *)memDLinkAlignStartData(array->start))
 #define memDLinkPrev(i)             i = memDLinkDataGetPrev(i)
 #define memDLinkNext(i)             i = memDLinkDataGetNext(i)
 #define memDLinkBlockStatus(block)  memDLinkDataGetFlags(block)

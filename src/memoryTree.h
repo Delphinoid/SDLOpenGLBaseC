@@ -217,13 +217,17 @@ typedef struct {
 
 #define memTreeBlockSize(bytes) MEMORY_TREE_ALIGN(((bytes > MEMORY_TREE_BLOCK_SIZE ? bytes : MEMORY_TREE_BLOCK_SIZE) + MEMORY_TREE_BLOCK_HEADER_SIZE))
 #define memTreeBlockSizeUnaligned(bytes)         (((bytes > MEMORY_TREE_BLOCK_SIZE ? bytes : MEMORY_TREE_BLOCK_SIZE) + MEMORY_TREE_BLOCK_HEADER_SIZE))
-#define memTreeAlignStart(start) ((byte_t *)MEMORY_TREE_ALIGN((uintptr_t)start + MEMORY_TREE_BLOCK_HEADER_SIZE) - MEMORY_TREE_BLOCK_HEADER_SIZE)
+#define memTreeAlignStartBlock(start) ((byte_t *)MEMORY_TREE_ALIGN((uintptr_t)start + MEMORY_TREE_BLOCK_HEADER_SIZE) - MEMORY_TREE_BLOCK_HEADER_SIZE)
+#define memTreeAlignStartData(start)  ((byte_t *)MEMORY_TREE_ALIGN((uintptr_t)start + MEMORY_TREE_BLOCK_HEADER_SIZE))
 #define memTreeAllocationSize(start, bytes, length) \
-	((length > 0 ? memTreeBlockSize(bytes) * length : bytes) + (uintptr_t)memTreeAlignStart(start) - (uintptr_t)start)
+	((length > 0 ? memTreeBlockSize(bytes) * length : bytes) + (uintptr_t)memTreeAlignStartBlock(start) - (uintptr_t)start)
 
 #define memTreeAppend(tree, new) memTreeInsert(tree, new->root, memTreeBlockGetCurrent(new->root)); new->root = NULL
 
-#define memTreeBlockNext(tree, i) ++i
+#define memTreeFirst(tree)        ((void *)memListAlignStartData(tree->start))
+#define memTreeBlockStatus(block) memTreeBlockGetActiveMasked(block)
+#define memTreeBlockNext(tree, i) i += memTreeDataGetCurrent(i);
+#define memTreeEnd(tree)          tree->end
 
 void *memTreeInit(memoryTree *tree, void *start, const size_t bytes, const size_t length);
 void memTreeInsert(memoryTree *tree, void *block, const size_t bytes);
@@ -236,6 +240,7 @@ void memTreeClear(memoryTree *tree);
 
 #ifdef MEMORY_DEBUG
 void memTreePrintFreeBlocks(memoryTree *tree, const unsigned int recursions);
+void memTreePrintAllBlocks(memoryTree *tree);
 #endif
 
 #endif

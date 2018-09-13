@@ -58,7 +58,7 @@ void *memListReset(void *start, const size_t bytes, const size_t length){
 	byte_t *end;
 
 	end = (byte_t *)start + memListAllocationSize(start, bytes, length);
-	start = memListBlockGetData(memListAlignStart(start));
+	start = memListAlignStartData(start);
 
 	block = start;
 	next = block + blockSize;
@@ -80,7 +80,7 @@ void *memListReset(void *start, const size_t bytes, const size_t length){
 
 void memListClear(memoryList *list){
 
-	byte_t *block = memListBlockGetData(memListAlignStart(list->start));
+	byte_t *block = memListAlignStartData(list->start);
 	byte_t *next = block + list->block;
 
 	list->next = block;
