@@ -19,18 +19,18 @@
 #define MEMORY_STACK_UNSPECIFIED_LENGTH MEMORY_UNSPECIFIED_LENGTH
 
 typedef struct {
-	byte_t *next;
-	byte_t *start;
-	byte_t *end;
+	byte_t *free;
+	memoryRegion *region;  // Pointer to the allocator's memory region.
 } memoryStack;
 
 #define memStackBlockSize(bytes) bytes
-#define memStackAllocationSize(start, bytes, length) (length > 0 ? memStackBlockSize(bytes) * length : bytes)
+#define memStackAllocationSize(start, bytes, length) ((length > 0 ? memStackBlockSize(bytes) * length : bytes) + sizeof(memoryRegion))
 
-void *memStackInit(memoryStack *stack, void *start, const size_t bytes, const size_t length);
+void memStackInit(memoryStack *stack);
+void *memStackCreate(memoryStack *stack, void *start, const size_t bytes, const size_t length);
 void *memStackPush(memoryStack *stack, const size_t bytes);
 void memStackPop(memoryStack *stack, const size_t bytes);
-void memStackShrink(memoryStack *stack, const size_t bytes);
+//void memStackShrink(memoryStack *stack, const size_t bytes);
 void memStackClear(memoryStack *stack);
 
 #endif

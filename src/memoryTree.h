@@ -110,11 +110,11 @@
 
 #define memTreeBlockGetPreviousFlagless(block) (memTreeBlockGetFlags(block) & MEMORY_TREE_BLOCK_PREVIOUS_MASK)
 
-#define memTreeBlockGetActive(block)        *((byte_t *)block + MEMORY_TREE_FLAGS_OFFSET_FROM_BLOCK)
-#define memTreeBlockGetActiveMasked(block) (*((byte_t *)block + MEMORY_TREE_FLAGS_OFFSET_FROM_BLOCK) & MEMORY_TREE_BLOCK_ACTIVE_MASK)
-#define memTreeBlockGetActivePointer(block)  ((byte_t *)block + MEMORY_TREE_FLAGS_OFFSET_FROM_BLOCK)
-#define memTreeBlockSetActive(block)        *((byte_t *)block + MEMORY_TREE_FLAGS_OFFSET_FROM_BLOCK) |= MEMORY_TREE_BLOCK_ACTIVE_MASK
-#define memTreeBlockSetInactive(block)      *((byte_t *)block + MEMORY_TREE_FLAGS_OFFSET_FROM_BLOCK) &= MEMORY_TREE_BLOCK_INACTIVE_MASK
+#define memTreeBlockGetActive(block)        *((size_t *)((byte_t *)block + MEMORY_TREE_FLAGS_OFFSET_FROM_BLOCK))
+#define memTreeBlockGetActiveMasked(block) (*((size_t *)((byte_t *)block + MEMORY_TREE_FLAGS_OFFSET_FROM_BLOCK)) & MEMORY_TREE_BLOCK_ACTIVE_MASK)
+#define memTreeBlockGetActivePointer(block)  ((size_t *)((byte_t *)block + MEMORY_TREE_FLAGS_OFFSET_FROM_BLOCK))
+#define memTreeBlockSetActive(block)        *((size_t *)((byte_t *)block + MEMORY_TREE_FLAGS_OFFSET_FROM_BLOCK)) |= MEMORY_TREE_BLOCK_ACTIVE_MASK
+#define memTreeBlockSetInactive(block)      *((size_t *)((byte_t *)block + MEMORY_TREE_FLAGS_OFFSET_FROM_BLOCK)) &= MEMORY_TREE_BLOCK_INACTIVE_MASK
 
 #define memTreeBlockGetColour(block)        *((uintptr_t *)((byte_t *)block + MEMORY_TREE_COLOUR_OFFSET_FROM_BLOCK))
 #define memTreeBlockGetColourMasked(block) (*((uintptr_t *)((byte_t *)block + MEMORY_TREE_COLOUR_OFFSET_FROM_BLOCK)) & MEMORY_TREE_NODE_COLOUR_MASK)
@@ -210,9 +210,8 @@
 #endif
 
 typedef struct {
-	byte_t *root;   // Pointer to the root node.
-	byte_t *start;
-	byte_t *end;
+	byte_t *root;  // Pointer to the root node.
+	memoryRegion *region;  // Pointer to the allocator's memory region.
 } memoryTree;
 
 #define memTreeBlockSize(bytes) MEMORY_TREE_ALIGN(((bytes > MEMORY_TREE_BLOCK_SIZE ? bytes : MEMORY_TREE_BLOCK_SIZE) + MEMORY_TREE_BLOCK_HEADER_SIZE))
@@ -220,23 +219,24 @@ typedef struct {
 #define memTreeAlignStartBlock(start) ((byte_t *)MEMORY_TREE_ALIGN((uintptr_t)start + MEMORY_TREE_BLOCK_HEADER_SIZE) - MEMORY_TREE_BLOCK_HEADER_SIZE)
 #define memTreeAlignStartData(start)  ((byte_t *)MEMORY_TREE_ALIGN((uintptr_t)start + MEMORY_TREE_BLOCK_HEADER_SIZE))
 #define memTreeAllocationSize(start, bytes, length) \
-	((length > 0 ? memTreeBlockSize(bytes) * length : bytes) + (uintptr_t)memTreeAlignStartBlock(start) - (uintptr_t)start)
+	((length > 0 ? memTreeBlockSize(bytes) * length : bytes) + (uintptr_t)memTreeAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 
-#define memTreeAppend(tree, new) memTreeInsert(tree, new->root, memTreeBlockGetCurrent(new->root)); new->root = NULL
-
-#define memTreeFirst(tree)        ((void *)memListAlignStartData(tree->start))
+#define memTreeFirst(tree)        ((void *)memTreeAlignStartData(tree->region->start))
 #define memTreeBlockStatus(block) memTreeBlockGetActiveMasked(block)
 #define memTreeBlockNext(tree, i) i += memTreeDataGetCurrent(i);
-#define memTreeEnd(tree)          tree->end
+#define memTreeEnd(tree)          ((byte_t *)tree->region)
+#define memTreeChunkNext(tree)    tree->region->next
 
-void *memTreeInit(memoryTree *tree, void *start, const size_t bytes, const size_t length);
+void memTreeInit(memoryTree *tree);
+void *memTreeCreate(memoryTree *tree, void *start, const size_t bytes, const size_t length);
 void memTreeInsert(memoryTree *tree, void *block, const size_t bytes);
 void memTreeRemove(memoryTree *tree, void *block);
 void *memTreeAllocate(memoryTree *tree, const size_t bytes);
 void memTreeFree(memoryTree *tree, void *block);
 void *memTreeReallocate(memoryTree *tree, void *block, const size_t bytes);
-void *memTreeReset(void *start, const size_t bytes, const size_t length);
+void *memTreeSetupMemory(void *start, const size_t bytes, const size_t length);
 void memTreeClear(memoryTree *tree);
+void *memTreeExtend(memoryTree *tree, void *start, const size_t bytes, const size_t length);
 
 #ifdef MEMORY_DEBUG
 void memTreePrintFreeBlocks(memoryTree *tree, const unsigned int recursions);

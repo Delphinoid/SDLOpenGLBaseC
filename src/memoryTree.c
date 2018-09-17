@@ -1,7 +1,12 @@
 #include "memoryTree.h"
 #include <string.h>
 
-void *memTreeInit(memoryTree *tree, void *start, const size_t bytes, const size_t length){
+void memTreeInit(memoryTree *tree){
+	tree->root = NULL;
+	tree->region = NULL;
+}
+
+void *memTreeCreate(memoryTree *tree, void *start, const size_t bytes, const size_t length){
 
 	/*
 	** Initialize a general purpose memory allocator.
@@ -11,10 +16,11 @@ void *memTreeInit(memoryTree *tree, void *start, const size_t bytes, const size_
 	** the total allocated size will be "bytes".
 	*/
 
-	if(start){
+	if(start != NULL){
 
-		tree->start = start;
-		tree->end = (byte_t *)start + memTreeAllocationSize(start, bytes, length);
+		tree->region = (memoryRegion *)((byte_t *)start + memTreeAllocationSize(start, bytes, length) - sizeof(memoryRegion));
+		tree->region->start = start;
+		tree->region->next = NULL;
 
 		memTreeClear(tree);
 
@@ -616,10 +622,7 @@ void *memTreeAllocate(memoryTree *tree, const size_t bytes){
 						memTreeBlockGetCurrent(next) = nextSize;
 						if(memTreeBlockIsLast(memTreeBlockGetFlags(block)) == 0){
 							// blockSize should always have a 0 in the LSB.
-							// Also inherit whether or not the block was the last.
 							memTreeBlockGetPrevious(next) = blockSize;
-							// Set the next block's "previous" property.
-							memTreeBlockSetPreviousKeepFlags((next + nextSize), nextSize);
 						}else{
 							// blockSize should always have a 0 in the LSB.
 							// Also inherit whether or not the block was the last.
@@ -665,10 +668,7 @@ void *memTreeAllocate(memoryTree *tree, const size_t bytes){
 						memTreeBlockGetCurrent(next) = nextSize;
 						if(memTreeBlockIsLast(memTreeBlockGetFlags(block)) == 0){
 							// blockSize should always have a 0 in the LSB.
-							// Also inherit whether or not the block was the last.
 							memTreeBlockGetPrevious(next) = blockSize;
-							// Set the next block's "previous" property.
-							memTreeBlockSetPreviousKeepFlags((next + nextSize), nextSize);
 						}else{
 							// blockSize should always have a 0 in the LSB.
 							// Also inherit whether or not the block was the last.
@@ -758,6 +758,9 @@ void memTreeFree(memoryTree *tree, void *block){
 				next += nextSize;
 				// Set the next block's "previous" property.
 				memTreeBlockGetPrevious(next) = (memTreeBlockGetPrevious(next) & MEMORY_TREE_BLOCK_FLAGS_MASK) | cBytes;
+			}else{
+				// Mark the merged block as the last.
+				cPrev |= MEMORY_TREE_BLOCK_LAST;
 			}
 		}else{
 			// Set the next block's "previous" property.
@@ -825,11 +828,14 @@ void *memTreeReallocate(memoryTree *tree, void *block, const size_t bytes){
 			cBytes += nextSize;
 			// Remove the free block from the tree.
 			memTreeRemove(tree, next);
-			if(memTreeBlockIsLast(memTreeBlockGetPrevious(next)) == 0){
+			if(memTreeBlockIsLast(memTreeBlockGetFlags(next)) == 0){
 				next += nextSize;
 				// Set the next block's "previous" property.
 				memTreeBlockGetPrevious(next) &= MEMORY_TREE_BLOCK_FLAGS_MASK;
 				memTreeBlockGetPrevious(next) |= cBytes;
+			}else{
+				// Mark the merged block as the last.
+				cPrev |= MEMORY_TREE_BLOCK_LAST;
 			}
 		}else{
 			// Set the next block's "previous" property.
@@ -858,10 +864,7 @@ void *memTreeReallocate(memoryTree *tree, void *block, const size_t bytes){
 
 			if(memTreeBlockIsLast(cPrev) == 0){
 				// cBytes should always have a 0 in the LSB.
-				// Also inherit whether or not the block was the last.
 				memTreeBlockGetPrevious(cNext) = cBytes;
-				// Set the next block's "previous" property.
-				memTreeBlockSetPreviousKeepFlags((cNext + nextSize), nextSize);
 			}else{
 				// cBytes should always have a 0 in the LSB.
 				// Also inherit whether or not the block was the last.
@@ -909,10 +912,10 @@ void *memTreeReallocate(memoryTree *tree, void *block, const size_t bytes){
 
 }
 
-void *memTreeReset(void *start, const size_t bytes, const size_t length){
+void *memTreeSetupMemory(void *start, const size_t bytes, const size_t length){
 	byte_t *root = memTreeAlignStartData(start);
 	byte_t *block = memTreeNodeGetBlock(root);
-	memTreeBlockGetCurrent(block) = (byte_t *)start + memTreeAllocationSize(start, bytes, length) - block;
+	memTreeBlockGetCurrent(block) = memTreeAllocationSize(start, bytes, length) - sizeof(memoryRegion);
 	memTreeBlockGetPrevious(block) = MEMORY_TREE_BLOCK_FIRST | MEMORY_TREE_BLOCK_LAST;
 	memTreeNodeGetLeft(root) = NULL;
 	memTreeNodeGetRight(root) = NULL;
@@ -922,13 +925,38 @@ void *memTreeReset(void *start, const size_t bytes, const size_t length){
 
 void memTreeClear(memoryTree *tree){
 	byte_t *block;
-	tree->root = memTreeAlignStartData(tree->start);
+	tree->root = memTreeAlignStartData(tree->region->start);
 	block = memTreeNodeGetBlock(tree->root);
-	memTreeBlockGetCurrent(block) = tree->end - block;
+	memTreeBlockGetCurrent(block) = (byte_t *)memTreeEnd(tree) - block;
 	memTreeBlockGetPrevious(block) = MEMORY_TREE_BLOCK_FIRST | MEMORY_TREE_BLOCK_LAST;
 	memTreeNodeGetLeft(tree->root) = NULL;
 	memTreeNodeGetRight(tree->root) = NULL;
 	memTreeNodeGetParent(tree->root) = NULL;
+}
+
+void *memTreeExtend(memoryTree *tree, void *start, const size_t bytes, const size_t length){
+
+	/*
+	** Extends the memory allocator.
+	** Its logical function is similar to a
+	** realloc, but it creates a new chunk
+	** and links it.
+	*/
+
+	if(start){
+
+		const size_t totalBytes = memTreeAllocationSize(start, bytes, length) - sizeof(memoryRegion);
+
+		memoryRegion *newRegion = (memoryRegion *)((byte_t *)start + totalBytes);
+		memRegionPrepend(&tree->region, newRegion, start);
+
+		memTreeSetupMemory(start, bytes, length);
+		memTreeInsert(tree, memTreeAlignStartData(start), totalBytes);
+
+	}
+
+	return start;
+
 }
 
 #ifdef MEMORY_DEBUG
@@ -1008,9 +1036,9 @@ void memTreePrintFreeBlocks(memoryTree *tree, const unsigned int recursions){
 }
 
 void memTreePrintAllBlocks(memoryTree *tree){
-	byte_t *block = memTreeAlignStartBlock(tree->start);
+	byte_t *block = memTreeAlignStartBlock(tree->region->start);
 	printf("Blocks:\n");
-	while(block < tree->end){
+	while(block < memTreeEnd(tree)){
 		const size_t size =  memTreeBlockGetCurrent(block);
 		printf("Address:%p Size:%u\n", memTreeBlockGetNode(block), memTreeBlockGetCurrent(block));
 		if(size == 0){

@@ -1,33 +1,37 @@
 #include "memoryStack.h"
 
-void *memStackInit(memoryStack *stack, void *start, const size_t bytes, const size_t length){
-	stack->start = start;
-	stack->next = start;
-	stack->end = (byte_t *)start + memStackAllocationSize(start, bytes, length);
+void memStackInit(memoryStack *stack){
+	stack->free = NULL;
+	stack->region = NULL;
+}
+
+void *memStackCreate(memoryStack *stack, void *start, const size_t bytes, const size_t length){
+	if(start != NULL){
+		stack->free = start;
+		stack->region = (memoryRegion *)((byte_t *)start + memStackAllocationSize(start, bytes, length) - sizeof(memoryRegion));
+		stack->region->start = start;
+		stack->region->next = NULL;
+	}
 	return start;
 }
 
 void *memStackPush(memoryStack *stack, const size_t bytes){
-	byte_t *r = stack->next;
-	stack->next += bytes;
-	if(stack->next > stack->end){
-		stack->next -= bytes;
+	byte_t *r = stack->free;
+	stack->free += bytes;
+	if(stack->free > (byte_t *)stack->region){
+		stack->free -= bytes;
 		return NULL;
 	}
 	return r;
 }
 
 void memStackPop(memoryStack *stack, const size_t bytes){
-	stack->next -= bytes;
-	if(stack->next < stack->start){
-		stack->next = stack->start;
+	stack->free -= bytes;
+	if(stack->free < stack->region->start){
+		stack->free = stack->region->start;
 	}
 }
 
-void memStackShrink(memoryStack *stack, const size_t bytes){
-	stack->end = stack->start + bytes;
-}
-
 inline void memStackClear(memoryStack *stack){
-	stack->next = stack->start;
+	stack->free = stack->region->start;
 }

@@ -59,28 +59,7 @@ typedef struct {
 	*/
 	memoryTree allocator;
 
-	/*
-	** Linked list of virtual heaps.
-	**
-	** Points to the last memory region
-	** that was allocated, which begins
-	** with a pointer to the previous
-	** virtual heap followed by the
-	** virtual heap's data.
-	*/
-	byte_t *heap;
-
 } memoryManager;
-
-/*
-** The "next" pointer is stored directly after the arena.
-*/
-#define memMngrArenaNextStack(arena) *((memoryStack **)((byte_t *)arena + sizeof(memoryStack)))
-#define memMngrArenaNextList(arena)  *((memoryList  **)((byte_t *)arena + sizeof(memoryList )))
-#define memMngrArenaNextPool(arena)  *((memoryPool  **)((byte_t *)arena + sizeof(memoryPool )))
-#define memMngrArenaNextSLink(arena) *((memorySLink **)((byte_t *)arena + sizeof(memorySLink)))
-#define memMngrArenaNextDLink(arena) *((memoryDLink **)((byte_t *)arena + sizeof(memoryDLink)))
-#define memMngrArenaNextTree(arena)  *((memoryTree  **)((byte_t *)arena + sizeof(memoryTree )))
 
 #define memMngrAllocate(bytes)         memTreeAllocate(&memMngr->allocator, bytes)
 #define memMngrReallocate(data, bytes) memTreeReallocate(&memMngr->allocator, data, bytes)

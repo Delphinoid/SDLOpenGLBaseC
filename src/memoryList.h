@@ -25,9 +25,8 @@
 
 typedef struct {
 	size_t block;  // Block size.
-	byte_t *next;  // Next free block pointer.
-	byte_t *start;
-	byte_t *end;
+	byte_t *free;  // Next free block pointer.
+	memoryRegion *region;  // Pointer to the allocator's memory region.
 } memoryList;
 
 #define memListBlockSize(bytes) MEMORY_LIST_ALIGN((bytes > MEMORY_LIST_BLOCK_SIZE ? bytes : MEMORY_LIST_BLOCK_SIZE))
@@ -35,20 +34,21 @@ typedef struct {
 #define memListAlignStartBlock(start) ((byte_t *)MEMORY_LIST_ALIGN((uintptr_t)start + MEMORY_LIST_BLOCK_HEADER_SIZE) - MEMORY_LIST_BLOCK_HEADER_SIZE)
 #define memListAlignStartData(start)  ((byte_t *)MEMORY_LIST_ALIGN((uintptr_t)start + MEMORY_LIST_BLOCK_HEADER_SIZE))
 #define memListAllocationSize(start, bytes, length) \
-	(memListBlockSize(bytes) * length + (uintptr_t)memListAlignStartBlock(start) - (uintptr_t)start)
+	(memListBlockSize(bytes) * length + (uintptr_t)memListAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 	// The following can save small amounts of memory but can't be predicted as easily:
-	//(memListBlockSize(bytes) * (length - 1) + memListBlockSizeUnaligned(bytes) + (uintptr_t)memListAlignStartBlock(start) - (uintptr_t)start)
+	//(memListBlockSize(bytes) * (length - 1) + memListBlockSizeUnaligned(bytes) + (uintptr_t)memListAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 
-#define memListAppend(list, new) list->next = new->next; new->next = NULL
-
-#define memListFirst(list)        ((void *)memListAlignStartData(list->start))
+#define memListFirst(list)        ((void *)memListAlignStartData(list->region->start))
 #define memListBlockNext(list, i) i += list->block
-#define memListEnd(list)          list->end
+#define memListEnd(list)          ((byte_t *)list->region)
+#define memListChunkNext(list)    list->region->next
 
-void *memListInit(memoryList *list, void *start, const size_t bytes, const size_t length);
+void memListInit(memoryList *list);
+void *memListCreate(memoryList *list, void *start, const size_t bytes, const size_t length);
 void *memListAllocate(memoryList *list);
 void memListFree(memoryList *list, void *block);
-void *memListReset(void *start, const size_t bytes, const size_t length);
+void *memListSetupMemory(void *start, const size_t bytes, const size_t length);
 void memListClear(memoryList *list);
+void *memListExtend(memoryList *list, void *start, const size_t bytes, const size_t length);
 
 #endif
