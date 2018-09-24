@@ -4,7 +4,7 @@
 
 #define SCENE_START_CAPACITY 1
 
-signed char scnInit(void *scn){
+return_t scnInit(void *scn){
 	((scene *)scn)->objectNum = 0;
 	((scene *)scn)->objectCapacity = 0;
 	((scene *)scn)->objectIDs = NULL;
@@ -12,7 +12,7 @@ signed char scnInit(void *scn){
 	return 1;
 }
 
-signed char scnStateCopy(void *o, void *c){
+return_t scnStateCopy(void *o, void *c){
 	if(((scene *)c)->objectCapacity != ((scene *)o)->objectCapacity){
 		/*
 		** We need to allocate more or less memory so that
@@ -38,11 +38,11 @@ void scnResetInterpolation(void *scn){
 	//
 }
 
-signed char scnLoad(scene *scn){
+return_t scnLoad(scene *scn){
 	return 1;
 }
 
-signed char scnObjectAdd(scene *scn, const objectIndex_t objectID){
+return_t scnObjectAdd(scene *scn, const objectIndex_t objectID){
 	if(scn->objectNum >= scn->objectCapacity){
 		/* Allocate room for more object IDs. */
 		/**if(scn->objectCapacity == 0){

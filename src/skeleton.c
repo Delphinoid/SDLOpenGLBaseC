@@ -1,6 +1,9 @@
 #include "skeleton.h"
-#include "helpersMisc.h"
 #include "mathConstants.h"
+#include "mat4.h"
+#include "inline.h"
+#include "helpersFileIO.h"
+#include "helpersMisc.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -9,7 +12,7 @@
 
 #define SKL_ANIM_FRAGMENT_START_CAPACITY 1
 
-static signed char sklResizeToFit(skeleton *skl){
+static return_t sklResizeToFit(skeleton *skl){
 	bone *tempBuffer = realloc(skl->bones, skl->boneNum*sizeof(sklNode));
 	if(tempBuffer == NULL){
 		/** Memory allocation failure. **/
@@ -23,24 +26,17 @@ void sklInit(skeleton *skl){
 	skl->boneNum = 0;
 	skl->bones = NULL;
 }
-signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
+return_t sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
+
+	char fullPath[FILE_MAX_PATH_LENGTH];
+	size_t fileLength = strlen(filePath);
 
 	FILE *sklInfo;
-	size_t pathLen = strlen(prgPath);
-	size_t fileLen = strlen(filePath);
-	char *fullPath;
 
 	sklInit(skl);
 
-	fullPath = malloc((pathLen+fileLen+1)*sizeof(char));
-	if(fullPath == NULL){
-		/** Memory allocation failure. **/
-		return -1;
-	}
-	memcpy(fullPath, prgPath, pathLen);
-	memcpy(fullPath+pathLen, filePath, fileLen);
-	fullPath[pathLen+fileLen] = '\0';
-	sklInfo = fopen(fullPath, "r");
+	fileGenerateFullPath(&fullPath[0], prgPath, strlen(prgPath), filePath, fileLength);
+	sklInfo = fopen(&fullPath[0], "r");
 
 	if(sklInfo != NULL){
 
@@ -49,13 +45,12 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 		size_t lineLength;
 
 		size_t parent = 0;
-		signed char currentCommand = -1;  // The current multiline command type (-1 = none, >-1 = bone).
-		unsigned int currentLine = 0;     // Current file line being read.
+		int currentCommand = -1;     // The current multiline command type (-1 = none, >-1 = bone).
+		fileLine_t currentLine = 0;  // Current file line being read.
 
 		skl->bones = malloc(SKL_MAX_BONE_NUM*sizeof(sklNode));
 		if(skl->bones == NULL){
 			/** Memory allocation failure. **/
-			free(fullPath);
 			return -1;
 		}
 
@@ -78,14 +73,13 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 					if(skl->name == NULL){
 						/** Memory allocation failure. **/
 						sklDelete(skl);
-						free(fullPath);
 						fclose(sklInfo);
 						return -1;
 					}
 					strncpy(skl->name, line+5, lineLength-5);
 					skl->name[lineLength-5] = '\0';
 				}else{
-					printf("Error loading skeleton \"%s\": Name command at line %u does not belong inside a multiline command.\n", fullPath, currentLine);
+					printf("Error loading skeleton \"%s\": Name command at line %u does not belong inside a multiline command.\n", &fullPath[0], currentLine);
 				}
 
 			// Close current multiline command
@@ -98,7 +92,7 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 					}
 					--currentCommand;
 				}else{
-					printf("Error loading skeleton \"%s\": Invalid closing brace at line %u.\n", fullPath, currentLine);
+					printf("Error loading skeleton \"%s\": Invalid closing brace at line %u.\n", &fullPath[0], currentLine);
 				}
 
 			// New bone
@@ -113,7 +107,6 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 					if(skl->bones[skl->boneNum].name == NULL){
 						/** Memory allocation failure. **/
 						sklDelete(skl);
-						free(fullPath);
 						fclose(sklInfo);
 						return -1;
 					}
@@ -147,7 +140,7 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 					++skl->boneNum;
 
 				}else{
-					printf("Error loading skeleton \"%s\": Bone command at line %u does not specify a name for the bone.\n", fullPath, currentLine);
+					printf("Error loading skeleton \"%s\": Bone command at line %u does not specify a name for the bone.\n", &fullPath[0], currentLine);
 				}
 
 			}
@@ -155,11 +148,9 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 		}
 
 		fclose(sklInfo);
-		free(fullPath);
 
 	}else{
-		printf("Error loading skeleton \"%s\": Could not open file.\n", fullPath);
-		free(fullPath);
+		printf("Error loading skeleton \"%s\": Could not open file.\n", &fullPath[0]);
 		return 0;
 	}
 
@@ -168,20 +159,20 @@ signed char sklLoad(skeleton *skl, const char *prgPath, const char *filePath){
 		if(skl->name != NULL){
 			free(skl->name);
 		}
-		skl->name = malloc((fileLen+1)*sizeof(char));
+		skl->name = malloc((fileLength+1)*sizeof(char));
 		if(skl->name == NULL){
 			/** Memory allocation failure. **/
 			sklDelete(skl);
 			return -1;
 		}
-		memcpy(skl->name, filePath, fileLen);
-		skl->name[fileLen] = '\0';
+		memcpy(skl->name, filePath, fileLength);
+		skl->name[fileLength] = '\0';
 	}
 
 	return sklResizeToFit(skl);
 
 }
-signed char sklDefault(skeleton *skl){
+return_t sklDefault(skeleton *skl){
 	skl->name = malloc(8*sizeof(char));
 	if(skl->name == NULL){
 		/** Memory allocation failure. **/
@@ -218,7 +209,7 @@ signed char sklDefault(skeleton *skl){
 	skl->bones[0].parent = 0;
 	return 1;
 }
-static signed char sklNodeCopy(const sklNode *onode, sklNode *cnode){
+static return_t sklNodeCopy(const sklNode *onode, sklNode *cnode){
 	if(onode->name != NULL){
 		size_t length = strlen(onode->name);
 		cnode->name = malloc(length*sizeof(char));
@@ -234,7 +225,7 @@ static signed char sklNodeCopy(const sklNode *onode, sklNode *cnode){
 	cnode->parent = onode->parent;
 	return 1;
 }
-signed char sklCopy(const skeleton *oskl, skeleton *cskl){
+return_t sklCopy(const skeleton *oskl, skeleton *cskl){
 	boneIndex_t i;
 	cskl->bones = malloc(oskl->boneNum*sizeof(sklNode));
 	if(cskl->bones == NULL){
@@ -337,7 +328,7 @@ void sklaInit(sklAnim *skla){
 	skla->bones = NULL;
 	skla->frames = NULL;
 }
-static signed char sklaResizeToFit(sklAnim *skla, const size_t boneCapacity, const size_t frameCapacity){
+static return_t sklaResizeToFit(sklAnim *skla, const size_t boneCapacity, const size_t frameCapacity){
 	if(skla->boneNum != boneCapacity){
 		skla->bones = realloc(skla->bones, skla->boneNum*sizeof(bone *));
 		if(skla->bones == NULL){
@@ -362,38 +353,29 @@ static signed char sklaResizeToFit(sklAnim *skla, const size_t boneCapacity, con
 	}
 	return 1;
 }
-signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
+return_t sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 
 	boneIndex_t boneCapacity = SKL_ANIM_BONE_START_CAPACITY;
 	frameIndex_t frameCapacity = SKL_ANIM_FRAME_START_CAPACITY;
 
+	char fullPath[FILE_MAX_PATH_LENGTH];
+	const size_t fileLength = strlen(filePath);
+
 	FILE *sklaInfo;
-	const size_t pathLen = strlen(prgPath);
-	const size_t fileLen = strlen(filePath);
-	char *fullPath;
 
 	sklaInit(skla);
 
-	fullPath = malloc((pathLen+fileLen+1) * sizeof(char));
-	if(fullPath == NULL){
-		/** Memory allocation failure. **/
-		free(skla->frames);
-		free(skla->bones);
-		return -1;
-	}
-	memcpy(fullPath, prgPath, pathLen);
-	memcpy(fullPath+pathLen, filePath, fileLen);
-	fullPath[pathLen+fileLen] = '\0';
-	sklaInfo = fopen(fullPath, "r");
+	fileGenerateFullPath(&fullPath[0], prgPath, strlen(prgPath), filePath, fileLength);
+	sklaInfo = fopen(&fullPath[0], "r");
 
 	if(sklaInfo != NULL){
 
-		char lineFeed[1024];
+		char lineFeed[FILE_MAX_LINE_LENGTH];
 		char *line;
 		size_t lineLength;
 
-		signed char currentCommand = -1;  // The current multiline command type (-1 = none, 0 = bones, 1 = frame).
-		unsigned int currentLine = 0;     // Current file line being read.
+		int currentCommand = -1;     // The current multiline command type (-1 = none, 0 = bones, 1 = frame).
+		fileLine_t currentLine = 0;  // Current file line being read.
 
 		skla->bones = malloc(SKL_ANIM_BONE_START_CAPACITY*sizeof(char *));
 		if(skla->bones == NULL){
@@ -433,14 +415,13 @@ signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 					if(skla->name == NULL){
 						/** Memory allocation failure. **/
 						sklaDelete(skla);
-						free(fullPath);
 						fclose(sklaInfo);
 						return -1;
 					}
 					strncpy(skla->name, line+5, lineLength-5);
 					skla->name[lineLength-5] = '\0';
 				}else{
-					printf("Error loading skeletal animation \"%s\": Name command at line %u does not belong inside a multiline command.\n", fullPath, currentLine);
+					printf("Error loading skeletal animation \"%s\": Name command at line %u does not belong inside a multiline command.\n", &fullPath[0], currentLine);
 				}
 
 
@@ -454,7 +435,6 @@ signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 						if(tempBuffer == NULL){
 							/** Memory allocation failure. **/
 							sklaDelete(skla);
-							free(fullPath);
 							fclose(sklaInfo);
 							return -1;
 						}
@@ -469,7 +449,6 @@ signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 					if(skla->bones[skla->boneNum] == NULL){
 						/** Memory allocation failure. **/
 						sklaDelete(skla);
-						free(fullPath);
 						fclose(sklaInfo);
 						return -1;
 					}
@@ -478,7 +457,7 @@ signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 					++skla->boneNum;
 					currentCommand = 0;
 				}else{
-					printf("Error loading skeletal animation \"%s\": Bone at line %u must be specified before any frames.\n", fullPath, currentLine);
+					printf("Error loading skeletal animation \"%s\": Bone at line %u must be specified before any frames.\n", &fullPath[0], currentLine);
 				}
 
 
@@ -487,7 +466,7 @@ signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 				if(currentCommand != 1){
 					skla->animData.desiredLoops = strtol(line+5, NULL, 0);
 				}else{
-					printf("Error loading skeletal animation \"%s\": Loop command at line %u does not belong inside a multiline command.\n", fullPath, currentLine);
+					printf("Error loading skeletal animation \"%s\": Loop command at line %u does not belong inside a multiline command.\n", &fullPath[0], currentLine);
 				}
 
 
@@ -498,15 +477,14 @@ signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 					if(currentCommand == 0){
 						// Make sure at least one bone has been loaded.
 						if(skla->boneNum == 0){
-							printf("Error loading skeletal animation \"%s\": Attempting to load frames when no bones have been specified. Aborting.\n", fullPath);
+							printf("Error loading skeletal animation \"%s\": Attempting to load frames when no bones have been specified. Aborting.\n", &fullPath[0]);
 							sklaDelete(skla);
-							free(fullPath);
 							fclose(sklaInfo);
 							return 0;
 						}
 					}else if(currentCommand == 1){
 						printf("Error loading skeletal animation \"%s\": Trying to start a multiline command at line %u while another is already in progress. "
-						       "Closing the current command.\n", fullPath, currentLine);
+						       "Closing the current command.\n", &fullPath[0], currentLine);
 					}
 					// Resize the bone name array if necessary.
 					if(skla->animData.frameNum == frameCapacity){
@@ -515,7 +493,6 @@ signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 						if(tempBuffer1 == NULL){
 							/** Memory allocation failure. **/
 							sklaDelete(skla);
-							free(fullPath);
 							fclose(sklaInfo);
 							return -1;
 						}
@@ -524,7 +501,6 @@ signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 						if(tempBuffer2 == NULL){
 							/** Memory allocation failure. **/
 							sklaDelete(skla);
-							free(fullPath);
 							fclose(sklaInfo);
 							return -1;
 						}
@@ -535,7 +511,6 @@ signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 					if(tempBuffer == NULL){
 						/** Memory allocation failure. **/
 						sklaDelete(skla);
-						free(fullPath);
 						fclose(sklaInfo);
 						return -1;
 					}
@@ -554,7 +529,7 @@ signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 					currentCommand = 1;
 				}else{
 					// Worth it?
-					printf("Error loading skeletal animation \"%s\": Frame command at line %u does not contain a brace.\n", fullPath, currentLine);
+					printf("Error loading skeletal animation \"%s\": Frame command at line %u does not contain a brace.\n", &fullPath[0], currentLine);
 				}
 
 
@@ -566,7 +541,7 @@ signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 						skla->animData.frameDelays[skla->animData.frameNum-1] += skla->animData.frameDelays[skla->animData.frameNum-2];
 					}
 				}else{
-					printf("Error loading skeletal animation \"%s\": Frame sub-command \"length\" invoked on line %u without specifying a frame.\n", fullPath, currentLine);
+					printf("Error loading skeletal animation \"%s\": Frame sub-command \"length\" invoked on line %u without specifying a frame.\n", &fullPath[0], currentLine);
 				}
 
 
@@ -594,11 +569,11 @@ signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 						vec3Set(&skla->frames[skla->animData.frameNum-1][boneID].scale, data[2][0], data[2][1], data[2][2]);
 
 					}else{
-						printf("Error loading skeletal animation \"%s\": Frame sub-command \"transform\" at line %u does not specify a bone ID.\n", fullPath, currentLine);
+						printf("Error loading skeletal animation \"%s\": Frame sub-command \"transform\" at line %u does not specify a bone ID.\n", &fullPath[0], currentLine);
 					}
 
 				}else{
-					printf("Error loading skeletal animation \"%s\": Frame sub-command \"transform\" invoked on line %u without specifying a frame.\n", fullPath, currentLine);
+					printf("Error loading skeletal animation \"%s\": Frame sub-command \"transform\" invoked on line %u without specifying a frame.\n", &fullPath[0], currentLine);
 				}
 
 
@@ -608,18 +583,16 @@ signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 				if(currentCommand == 1){
 					currentCommand = -1;
 				}else{
-					printf("Error loading skeletal animation \"%s\": Stray brace on line %u.\n", fullPath, currentLine);
+					printf("Error loading skeletal animation \"%s\": Stray brace on line %u.\n", &fullPath[0], currentLine);
 				}
 			}
 
 		}
 
 		fclose(sklaInfo);
-		free(fullPath);
 
 	}else{
-		printf("Error loading skeletal animation \"%s\": Could not open file.\n", fullPath);
-		free(fullPath);
+		printf("Error loading skeletal animation \"%s\": Could not open file.\n", &fullPath[0]);
 		return 0;
 	}
 
@@ -628,21 +601,21 @@ signed char sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 		if(skla->name != NULL){
 			free(skla->name);
 		}
-		skla->name = malloc((fileLen+1)*sizeof(char));
+		skla->name = malloc((fileLength+1)*sizeof(char));
 		if(skla->name == NULL){
 			/** Memory allocation failure. **/
 			sklaDelete(skla);
 			return -1;
 		}
-		memcpy(skla->name, filePath, fileLen);
-		skla->name[fileLen] = '\0';
+		memcpy(skla->name, filePath, fileLength);
+		skla->name[fileLength] = '\0';
 	}
 
 	return sklaResizeToFit(skla, boneCapacity, frameCapacity);
 
 }
 /** TEMPORARY **/
-signed char sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, const char *filePath){
+return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, const char *filePath){
 	/*
 	** Temporary function by 8426THMY.
 	*/
@@ -947,7 +920,7 @@ void sklaDelete(sklAnim *skla){
 	animDataDelete(&skla->animData);
 }
 
-static signed char sklafInit(sklAnimFragment *sklaf, sklAnim *anim, const skeleton *skl, const frameIndex_t frame){
+static return_t sklafInit(sklAnimFragment *sklaf, sklAnim *anim, const skeleton *skl, const frameIndex_t frame){
 
 	// Initialize animBoneLookup.
 	/*uint8_t i;
@@ -1003,7 +976,7 @@ static void sklaiDelete(sklAnimInstance *sklai){
 		free(sklai->animFrags);
 	}
 }
-static inline signed char sklaiStateCopy(sklAnimInstance *osklai, sklAnimInstance *csklai){
+static __FORCE_INLINE__ return_t sklaiStateCopy(sklAnimInstance *osklai, sklAnimInstance *csklai){
 
 	animIndex_t i;
 	animIndex_t fragmentID = 0;
@@ -1066,7 +1039,7 @@ static inline signed char sklaiStateCopy(sklAnimInstance *osklai, sklAnimInstanc
 	return 1;
 
 }
-static inline void sklaiUpdateFragments(sklAnimInstance *sklai, const float elapsedTime, const float interpT){
+static __FORCE_INLINE__ void sklaiUpdateFragments(sklAnimInstance *sklai, const float elapsedTime, const float interpT){
 
 	const float elapsedTimeMod = elapsedTime * sklai->timeMod;
 
@@ -1212,7 +1185,7 @@ void sklaiGenerateAnimState(sklAnimInstance *sklai, bone *skeletonState, const b
 	}
 
 }*/
-static inline signed char sklaiChangeAnimation(sklAnimInstance *sklai, const skeleton *skl, sklAnim *anim, const frameIndex_t frame, const float blendTime){
+static __FORCE_INLINE__ return_t sklaiChangeAnimation(sklAnimInstance *sklai, const skeleton *skl, sklAnim *anim, const frameIndex_t frame, const float blendTime){
 
 	// Resize the animation fragment array if needed.
 	if(blendTime > 0.f || sklai->animFragCapacity == 0){
@@ -1254,7 +1227,7 @@ static inline signed char sklaiChangeAnimation(sklAnimInstance *sklai, const ske
 
 }
 
-signed char skliInit(sklInstance *skli, skeleton *skl, const animIndex_t animationCapacity){
+return_t skliInit(sklInstance *skli, skeleton *skl, const animIndex_t animationCapacity){
 	if(animationCapacity > 0){
 		animIndex_t i;
 		skli->animations = malloc(animationCapacity*sizeof(sklAnimInstance));
@@ -1274,7 +1247,7 @@ signed char skliInit(sklInstance *skli, skeleton *skl, const animIndex_t animati
 	skli->animationCapacity = animationCapacity;
 	return 1;
 }
-signed char skliLoad(sklInstance *skli, const char *prgPath, const char *filePath, cVector *allSklAnimations){
+return_t skliLoad(sklInstance *skli, const char *prgPath, const char *filePath, cVector *allSklAnimations){
 
 	/** stateNum is temporary. **/
 
@@ -1449,13 +1422,13 @@ void skliGenerateBoneState(const sklInstance *skli, const boneIndex_t id, const 
 	}
 
 }
-void skliSetAnimationType(sklInstance *skli, const animIndex_t slot, const signed char additive){
+void skliSetAnimationType(sklInstance *skli, const animIndex_t slot, const flags_t additive){
 	if(slot < skli->animationCapacity){
 		skli->animations[slot].additive = additive;
 	}
 }
-signed char skliChangeAnimation(sklInstance *skli, const animIndex_t slot, sklAnim *anim, const frameIndex_t frame, const float blendTime){
-	signed char r;
+return_t skliChangeAnimation(sklInstance *skli, const animIndex_t slot, sklAnim *anim, const frameIndex_t frame, const float blendTime){
+	return_t r;
 	animIndex_t newAnimationNum = skli->animationNum;
 	if(slot >= skli->animationCapacity){
 		/** Should you be able to change animationCapacity? **/
@@ -1495,8 +1468,8 @@ void skliClearAnimation(sklInstance *skli, const animIndex_t slot){
 		sklaiInit(&skli->animations[slot]);
 	}
 }
-/*signed char skliSetAnimation(sklInstance *skli, const size_t slot, sklAnim *anim){
-	signed char r = -1;
+/*return_t skliSetAnimation(sklInstance *skli, const size_t slot, sklAnim *anim){
+	return_t r = -1;
 	if(slot >= skli->animationCapacity){
 		** Should you be able to change animationCapacity? **
 		sklAnimInstance *tempBuffer = realloc(skli->animations, (slot+1)*sizeof(sklAnimInstance));
@@ -1516,7 +1489,7 @@ void skliClearAnimation(sklInstance *skli, const animIndex_t slot){
 	}
 	return r;
 }
-signed char skliClearAnimation(sklInstance *skli, const size_t slot){
+return_t skliClearAnimation(sklInstance *skli, const size_t slot){
 	if(slot >= skli->animationCapacity){
 		return 0;
 	}
@@ -1524,7 +1497,7 @@ signed char skliClearAnimation(sklInstance *skli, const size_t slot){
 	sklaiInit(&skli->animations[slot]);
 	return 1;
 }*/
-signed char skliStateCopy(sklInstance *o, sklInstance *c){
+return_t skliStateCopy(sklInstance *o, sklInstance *c){
 
 	animIndex_t i;
 	if(c->animationCapacity != o->animationCapacity || c->animations == NULL){

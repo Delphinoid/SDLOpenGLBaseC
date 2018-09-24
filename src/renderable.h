@@ -1,11 +1,8 @@
 #ifndef RENDERABLE_H
 #define RENDERABLE_H
 
-//#include "graphicsManager.h"
 #include "model.h"
 #include "textureWrapper.h"
-//#include "physicsRigidBody.h"
-//#include "hitbox.h"
 #include "interpState.h"
 #include "camera.h"
 
@@ -50,7 +47,7 @@ void rndrConfigInit(rndrConfig *rc);
 void rndrConfigStateCopy(rndrConfig *o, rndrConfig *c);
 void rndrConfigResetInterpolation(rndrConfig *rc);
 
-signed char rndrConfigRenderUpdate(rndrConfig *rc, const float interpT);
+return_t rndrConfigRenderUpdate(rndrConfig *rc, const float interpT);
 
 void rndrConfigGenerateTransform(const rndrConfig *rc, const camera *cam, mat4 *transformMatrix);
 void rndrConfigGenerateSprite(const rndrConfig *rc, const twInstance *twi, vertex *vertices, const mat4 *transformMatrix);

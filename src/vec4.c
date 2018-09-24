@@ -1,5 +1,6 @@
 #include "vec4.h"
 #include "engineMath.h"
+#include "inline.h"
 #include <math.h>
 
 vec4 vec4New(const float x, const float y, const float z, const float w){
@@ -411,13 +412,13 @@ void vec4DivSByV(const float s, vec4 *v){
 	}
 }
 
-inline float vec4Magnitude(const vec4 *v){
+__FORCE_INLINE__ float vec4Magnitude(const vec4 *v){
 	return sqrtf(v->x*v->x + v->y*v->y + v->z*v->z + v->w*v->w);
 }
-inline float vec4MagnitudeSquared(const vec4 *v){
+__FORCE_INLINE__ float vec4MagnitudeSquared(const vec4 *v){
 	return v->x*v->x + v->y*v->y + v->z*v->z + v->w*v->w;
 }
-inline float vec4InverseMagnitude(const vec4 *v){
+__FORCE_INLINE__ float vec4InverseMagnitude(const vec4 *v){
 	const float magnitudeSquared = v->x*v->x + v->y*v->y + v->z*v->z + v->w*v->w;
 	return fastInvSqrt(magnitudeSquared);
 }

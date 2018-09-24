@@ -1,5 +1,6 @@
 #include "physicsRigidBody.h"
-#include "helpersMisc.h"
+#include "helpersFileIO.h"
+#include "inline.h"
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
@@ -9,15 +10,6 @@
 
 #define PHYS_RESTING_EPSILON 0.0001f
 #define PHYS_BAUMGARTE_TERM  0.0001f
-
-void physConstraintInit(physConstraint *constraint){
-	constraint->flags = PHYS_CONSTRAINT_TYPE_1;
-	constraint->constraintID = (size_t)-1;
-	vec3SetS(&constraint->constraintOffsetMin, 0.f);
-	vec3SetS(&constraint->constraintOffsetMax, 0.f);
-	vec3SetS(&constraint->constraintRotationMin, 0.f);
-	vec3SetS(&constraint->constraintRotationMax, 0.f);
-}
 
 void physRigidBodyInit(physRigidBody *body){
 	body->colliderNum = 0;
@@ -37,7 +29,7 @@ void physRigidBodyGenerateMassProperties(physRigidBody *body, float **vertexMass
 	** properties for each of its colliders.
 	*/
 
-	colliderIndex_t i;
+	physColliderIndex_t i;
 	float *colliderMassArray;
 	float tempInertiaTensor[6];
 
@@ -105,7 +97,7 @@ void physRigidBodyGenerateMassProperties(physRigidBody *body, float **vertexMass
 
 }
 
-static signed char physColliderResizeToFit(physCollider *collider, float **vertexMassArrays){
+static return_t physColliderResizeToFit(physCollider *collider, float **vertexMassArrays){
 
 	hbMesh *cHull = (hbMesh *)&collider->hb.hull;
 
@@ -177,8 +169,8 @@ static signed char physColliderResizeToFit(physCollider *collider, float **verte
 
 }
 
-signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintIndex_t *constraintNum, physConstraint **constraints,
-                              const skeleton *skl, const char *prgPath, const char *filePath){
+return_t physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, physConstraintIndex_t *constraintNum, physConstraint **constraints,
+                           const skeleton *skl, const char *prgPath, const char *filePath){
 
 	/*
 	** Loads a series of rigid bodies.
@@ -189,28 +181,23 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 
 	boneIndex_t j;
 	boneIndex_t bodyNum = skl == NULL ? 1 : skl->boneNum;
-	signed char success = 0;
+	return_t success = 0;
+
+	char fullPath[FILE_MAX_PATH_LENGTH];
+	const size_t fileLength = strlen(filePath);
 
 	FILE *rbInfo;
-	const size_t pathLen = strlen(prgPath);
-	const size_t fileLen = strlen(filePath);
-	char *fullPath = malloc((pathLen+fileLen+1) * sizeof(char));
-	if(fullPath == NULL){
-		/** Memory allocation failure. **/
-		return -1;
-	}
-	memcpy(fullPath, prgPath, pathLen);
-	memcpy(fullPath+pathLen, filePath, fileLen);
-	fullPath[pathLen+fileLen] = '\0';
-	rbInfo = fopen(fullPath, "r");
 
 	for(j = 0; j < bodyNum; ++j){
 		physRigidBodyInit(&bodies[j]);
 	}
 
+	fileGenerateFullPath(&fullPath[0], prgPath, strlen(prgPath), filePath, fileLength);
+	rbInfo = fopen(&fullPath[0], "r");
+
 	if(rbInfo != NULL){
 
-		char lineFeed[1024];
+		char lineFeed[FILE_MAX_LINE_LENGTH];
 		char *line;
 		size_t lineLength;
 
@@ -219,10 +206,10 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 		hbEdgeIndex_t edgeCapacity = 0;
 		float **vertexMassArrays = NULL;  // Array of vertex masses for each collider.
 
-		signed char isSkeleton = -1;  // Whether or not a skeleton is being described.
+		int isSkeleton = -1;  // Whether or not a skeleton is being described.
 		boneIndex_t currentBone = 0;
-		signed char currentCommand = -1;  // The current multiline command type (-1 = none, 0 = rigid body, 1 = collider, 2 = constraint).
-		unsigned int currentLine = 0;     // Current file line being read.
+		int currentCommand = -1;     // The current multiline command type (-1 = none, 0 = rigid body, 1 = collider, 2 = constraint).
+		fileLine_t currentLine = 0;  // Current file line being read.
 
 		while(fileParseNextLine(rbInfo, lineFeed, sizeof(lineFeed), &line, &lineLength)){
 
@@ -277,7 +264,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 
 						}else{
 							printf("Error loading rigid bodies \"%s\": Rigid body at line %u appears to be attached to a bone when "
-							       "a previous body was not. Ignoring.\n", fullPath, currentLine);
+							       "a previous body was not. Ignoring.\n", &fullPath[0], currentLine);
 						}
 
 					}else{
@@ -288,13 +275,13 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 						// Close any current commands.
 						if(currentCommand != -1){
 							printf("Error loading rigid bodies \"%s\": Trying to start a multiline command at line %u "
-								   "while another is already in progress. Closing the current command.\n", fullPath, currentLine);
+								   "while another is already in progress. Closing the current command.\n", &fullPath[0], currentLine);
 							if(currentCommand == 0){
 								// Generate various mass properties for the rigid body.
 								physRigidBodyGenerateMassProperties(&bodies[currentBone], vertexMassArrays);
 								// Free the collider mass arrays.
 								if(vertexMassArrays != NULL){
-									colliderIndex_t i;
+									physColliderIndex_t i;
 									for(i = 0; i < bodies[currentBone].colliderNum; ++i){
 										if(vertexMassArrays[i] != NULL){
 											free(vertexMassArrays[i]);
@@ -311,7 +298,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 									                       &vertexMassArrays[bodies[currentBone].colliderNum-1]) == -1){
 									/** Memory allocation failure. **/
 									if(vertexMassArrays != NULL){
-										colliderIndex_t k;
+										physColliderIndex_t k;
 										for(k = 0; k < bodies[currentBone].colliderNum; ++k){
 											if(vertexMassArrays[k] != NULL){
 												free(vertexMassArrays[k]);
@@ -325,7 +312,6 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 											free(constraints[j]);
 										}
 									}
-									free(fullPath);
 									fclose(rbInfo);
 									return -1;
 								}
@@ -353,13 +339,13 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 						// Close any current commands.
 						if(currentCommand > 0){
 							printf("Error loading rigid bodies \"%s\": Trying to start a multiline command at line %u "
-							       "while another is already in progress. Closing the current command.\n", fullPath, currentLine);
+							       "while another is already in progress. Closing the current command.\n", &fullPath[0], currentLine);
 							if(currentCommand == 1){
 								if(physColliderResizeToFit(&bodies[currentBone].colliders[bodies[currentBone].colliderNum-1],
 									                       &vertexMassArrays[bodies[currentBone].colliderNum-1]) == -1){
 									/** Memory allocation failure. **/
 									if(vertexMassArrays != NULL){
-										colliderIndex_t k;
+										physColliderIndex_t k;
 										for(k = 0; k < bodies[currentBone].colliderNum; ++k){
 											if(vertexMassArrays[k] != NULL){
 												free(vertexMassArrays[k]);
@@ -373,7 +359,6 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 											free(constraints[j]);
 										}
 									}
-									free(fullPath);
 									fclose(rbInfo);
 									return -1;
 								}
@@ -385,7 +370,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 						if(tempBuffer1 == NULL){
 							/** Memory allocation failure. **/
 							if(vertexMassArrays != NULL){
-								colliderIndex_t k;
+								physColliderIndex_t k;
 								for(k = 0; k < bodies[currentBone].colliderNum; ++k){
 									if(vertexMassArrays[k] != NULL){
 										free(vertexMassArrays[k]);
@@ -399,7 +384,6 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 									free(constraints[j]);
 								}
 							}
-							free(fullPath);
 							fclose(rbInfo);
 							return -1;
 						}
@@ -408,7 +392,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 						if(tempBuffer2 == NULL){
 							/** Memory allocation failure. **/
 							if(vertexMassArrays != NULL){
-								colliderIndex_t k;
+								physColliderIndex_t k;
 								for(k = 0; k < bodies[currentBone].colliderNum; ++k){
 									if(vertexMassArrays[k] != NULL){
 										free(vertexMassArrays[k]);
@@ -422,7 +406,6 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 									free(constraints[j]);
 								}
 							}
-							free(fullPath);
 							fclose(rbInfo);
 							return -1;
 						}
@@ -438,12 +421,12 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 
 					}else{
 						printf("Error loading texture wrapper \"%s\": Rigid body sub-command \"constraint\" invoked on line %u "
-						       "without specifying a rigid body.\n", fullPath, currentLine);
+						       "without specifying a rigid body.\n", &fullPath[0], currentLine);
 					}
 
 				}else{
 					printf("Error loading rigid bodies \"%s\": Rigid body sub-command \"collider\" at line %u "
-					       "does not contain a brace.\n", fullPath, currentLine);
+					       "does not contain a brace.\n", &fullPath[0], currentLine);
 				}
 
 
@@ -467,7 +450,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 						if(tempBuffer1 == NULL){
 							/** Memory allocation failure. **/
 							if(vertexMassArrays != NULL){
-								colliderIndex_t k;
+								physColliderIndex_t k;
 								for(k = 0; k < bodies[currentBone].colliderNum; ++k){
 									if(vertexMassArrays[k] != NULL){
 										free(vertexMassArrays[k]);
@@ -481,7 +464,6 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 									free(constraints[j]);
 								}
 							}
-							free(fullPath);
 							fclose(rbInfo);
 							return -1;
 						}
@@ -489,7 +471,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 						if(tempBuffer2 == NULL){
 							/** Memory allocation failure. **/
 							if(vertexMassArrays != NULL){
-								colliderIndex_t k;
+								physColliderIndex_t k;
 								for(k = 0; k < bodies[currentBone].colliderNum; ++k){
 									if(vertexMassArrays[k] != NULL){
 										free(vertexMassArrays[k]);
@@ -503,7 +485,6 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 									free(constraints[j]);
 								}
 							}
-							free(fullPath);
 							fclose(rbInfo);
 							free(tempBuffer1);
 							return -1;
@@ -578,7 +559,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 								if(tempBuffer == NULL){
 									/** Memory allocation failure. **/
 									if(vertexMassArrays != NULL){
-										colliderIndex_t k;
+										physColliderIndex_t k;
 										for(k = 0; k < bodies[currentBone].colliderNum; ++k){
 											if(vertexMassArrays[k] != NULL){
 												free(vertexMassArrays[k]);
@@ -592,7 +573,6 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 											free(constraints[j]);
 										}
 									}
-									free(fullPath);
 									fclose(rbInfo);
 									return -1;
 								}
@@ -676,7 +656,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 							if(tempBuffer1 == NULL){
 								/** Memory allocation failure. **/
 								if(vertexMassArrays != NULL){
-									colliderIndex_t k;
+									physColliderIndex_t k;
 									for(k = 0; k < bodies[currentBone].colliderNum; ++k){
 										if(vertexMassArrays[k] != NULL){
 											free(vertexMassArrays[k]);
@@ -690,7 +670,6 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 										free(constraints[j]);
 									}
 								}
-								free(fullPath);
 								fclose(rbInfo);
 								return -1;
 							}
@@ -698,7 +677,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 							if(tempBuffer2 == NULL){
 								/** Memory allocation failure. **/
 								if(vertexMassArrays != NULL){
-									colliderIndex_t k;
+									physColliderIndex_t k;
 									for(k = 0; k < bodies[currentBone].colliderNum; ++k){
 										if(vertexMassArrays[k] != NULL){
 											free(vertexMassArrays[k]);
@@ -712,7 +691,6 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 										free(constraints[j]);
 									}
 								}
-								free(fullPath);
 								fclose(rbInfo);
 								free(tempBuffer1);
 								return -1;
@@ -747,7 +725,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 
 					}else{
 						printf("Error loading rigid bodies \"%s\": Collider face at line %u "
-						       "must have at least three vertices.\n", fullPath, currentLine);
+						       "must have at least three vertices.\n", &fullPath[0], currentLine);
 					}
 
 				}
@@ -770,13 +748,13 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 						// Close any current commands.
 						if(currentCommand > 0){
 							printf("Error loading rigid bodies \"%s\": Trying to start a multiline command at line %u "
-							       "while another is already in progress. Closing the current command.\n", fullPath, currentLine);
+							       "while another is already in progress. Closing the current command.\n", &fullPath[0], currentLine);
 							if(currentCommand == 1){
 								if(physColliderResizeToFit(&bodies[currentBone].colliders[bodies[currentBone].colliderNum-1],
 									                       &vertexMassArrays[bodies[currentBone].colliderNum-1]) == -1){
 									/** Memory allocation failure. **/
 									if(vertexMassArrays != NULL){
-										colliderIndex_t k;
+										physColliderIndex_t k;
 										for(k = 0; k < bodies[currentBone].colliderNum; ++k){
 											if(vertexMassArrays[k] != NULL){
 												free(vertexMassArrays[k]);
@@ -790,7 +768,6 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 											free(constraints[j]);
 										}
 									}
-									free(fullPath);
 									fclose(rbInfo);
 									return -1;
 								}
@@ -827,7 +804,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 								if(constraints[currentBone] == NULL){
 									/** Memory allocation failure. **/
 									if(vertexMassArrays != NULL){
-										colliderIndex_t k;
+										physColliderIndex_t k;
 										for(k = 0; k < bodies[currentBone].colliderNum; ++k){
 											if(vertexMassArrays[k] != NULL){
 												free(vertexMassArrays[k]);
@@ -841,7 +818,6 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 											free(constraints[j]);
 										}
 									}
-									free(fullPath);
 									fclose(rbInfo);
 									return -1;
 								}
@@ -854,16 +830,16 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 
 						}else{
 							printf("Error loading rigid bodies \"%s\": The \"constraint\" command at like %u may only be used by. "
-							       "physics skeletons. Ignoring.\n", fullPath, currentLine);
+							       "physics skeletons. Ignoring.\n", &fullPath[0], currentLine);
 						}
 
 					}else{
 						printf("Error loading texture wrapper \"%s\": Rigid body sub-command \"constraint\" invoked on line %u "
-						       "without specifying a rigid body.\n", fullPath, currentLine);
+						       "without specifying a rigid body.\n", &fullPath[0], currentLine);
 					}
 				}else{
 					printf("Error loading rigid bodies \"%s\": Rigid body sub-command \"constraint\" at line %u "
-					       "does not contain a brace.\n", fullPath, currentLine);
+					       "does not contain a brace.\n", &fullPath[0], currentLine);
 				}
 
 
@@ -910,10 +886,10 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 					}
 				}else if(currentCommand > 0){
 					printf("Error loading rigid bodies \"%s\": Rigid body sub-command \"energyratio\" at line %u does not belong "
-					       "in any other multiline command.\n", fullPath, currentLine);
+					       "in any other multiline command.\n", &fullPath[0], currentLine);
 				}else{
 					printf("Error loading rigid bodies \"%s\": Rigid body sub-command \"energyratio\" invoked on line %u without "
-					       "specifying a rigid body.\n", fullPath, currentLine);
+					       "specifying a rigid body.\n", &fullPath[0], currentLine);
 				}
 
 
@@ -933,10 +909,10 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 					}
 				}else if(currentCommand > 1){
 					printf("Error loading rigid bodies \"%s\": Rigid body and constraint sub-command \"collision\" at line %u does not belong "
-					       "in any other multiline commands.\n", fullPath, currentLine);
+					       "in any other multiline commands.\n", &fullPath[0], currentLine);
 				}else{
 					printf("Error loading rigid bodies \"%s\": Rigid body and constraint sub-command \"collision\" invoked on line %u without "
-					       "specifying a rigid body or constraint.\n", fullPath, currentLine);
+					       "specifying a rigid body or constraint.\n", &fullPath[0], currentLine);
 				}
 
 
@@ -950,10 +926,10 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 					}
 				}else if(currentCommand > 0){
 					printf("Error loading rigid bodies \"%s\": Rigid body sub-command \"active\" at line %u does not belong "
-					       "in any other multiline command.\n", fullPath, currentLine);
+					       "in any other multiline command.\n", &fullPath[0], currentLine);
 				}else{
 					printf("Error loading rigid bodies \"%s\": Rigid body sub-command \"active\" invoked on line %u without "
-					       "specifying a rigid body.\n", fullPath, currentLine);
+					       "specifying a rigid body.\n", &fullPath[0], currentLine);
 				}
 			}
 
@@ -967,7 +943,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 
 						// Free the collider mass arrays.
 						if(vertexMassArrays != NULL){
-							colliderIndex_t i;
+							physColliderIndex_t i;
 							for(i = 0; i < bodies[currentBone].colliderNum; ++i){
 								if(vertexMassArrays[i] != NULL){
 									free(vertexMassArrays[i]);
@@ -997,7 +973,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 						                           &vertexMassArrays[bodies[currentBone].colliderNum-1]) == -1){
 							/** Memory allocation failure. **/
 							if(vertexMassArrays != NULL){
-								colliderIndex_t k;
+								physColliderIndex_t k;
 								for(k = 0; k < bodies[currentBone].colliderNum; ++k){
 									if(vertexMassArrays[k] != NULL){
 										free(vertexMassArrays[k]);
@@ -1015,7 +991,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 						}
 
 					}else{
-						printf("Error loading rigid bodies \"%s\": Collider has no vertices or faces.\n", fullPath);
+						printf("Error loading rigid bodies \"%s\": Collider has no vertices or faces.\n", &fullPath[0]);
 						--bodies[currentBone].colliderNum;
 						physColliderResizeToFit(&bodies[currentBone].colliders[bodies[currentBone].colliderNum],
 						                        &vertexMassArrays[bodies[currentBone].colliderNum]);
@@ -1025,14 +1001,13 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 				}else if(currentCommand == 2){
 					currentCommand = 0;
 				}else{
-					printf("Error loading rigid bodies \"%s\": Stray brace on line %u.\n", fullPath, currentLine);
+					printf("Error loading rigid bodies \"%s\": Stray brace on line %u.\n", &fullPath[0], currentLine);
 				}
 			}
 
 		}
 
 		fclose(rbInfo);
-		free(fullPath);
 
 		if(currentCommand == 0){
 
@@ -1043,7 +1018,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 
 				// Free the collider mass arrays.
 				if(vertexMassArrays != NULL){
-					colliderIndex_t i;
+					physColliderIndex_t i;
 					for(i = 0; i < bodies[currentBone].colliderNum; ++i){
 						if(vertexMassArrays[i] != NULL){
 							free(vertexMassArrays[i]);
@@ -1065,7 +1040,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 				                           &vertexMassArrays[bodies[currentBone].colliderNum-1]) == -1){
 					/** Memory allocation failure. **/
 					if(vertexMassArrays != NULL){
-						colliderIndex_t k;
+						physColliderIndex_t k;
 						for(k = 0; k < bodies[currentBone].colliderNum; ++k){
 							if(vertexMassArrays[k] != NULL){
 								free(vertexMassArrays[k]);
@@ -1083,7 +1058,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 				}
 
 			}else{
-				printf("Error loading rigid bodies \"%s\": Collider has no vertices or faces.\n", fullPath);
+				printf("Error loading rigid bodies \"%s\": Collider has no vertices or faces.\n", &fullPath[0]);
 				--bodies[currentBone].colliderNum;
 				physColliderResizeToFit(&bodies[currentBone].colliders[bodies[currentBone].colliderNum],
 				                        &vertexMassArrays[bodies[currentBone].colliderNum]);
@@ -1093,8 +1068,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 		}
 
 	}else{
-		printf("Error loading rigid bodies \"%s\": Could not open file.\n", fullPath);
-		free(fullPath);
+		printf("Error loading rigid bodies \"%s\": Could not open file.\n", &fullPath[0]);
 		return 0;
 	}
 
@@ -1104,7 +1078,7 @@ signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintI
 
 void physRigidBodyDelete(physRigidBody *body){
 	if(body->colliders != NULL){
-		colliderIndex_t i;
+		physColliderIndex_t i;
 		for(i = 0; i < body->colliderNum; ++i){
 			physColliderDelete(&body->colliders[i]);
 		}
@@ -1217,12 +1191,12 @@ void physRBIInit(physRBInstance *prbi){
 	prbi->cache = NULL;
 }
 
-signed char physRBIInstantiate(physRBInstance *prbi, physRigidBody *body, bone *configuration){
+return_t physRBIInstantiate(physRBInstance *prbi, physRigidBody *body, bone *configuration){
 
 	hbMesh *cHull;
 	hbMesh *cTemp;
 
-	colliderIndex_t i;
+	physColliderIndex_t i;
 
 	// Allocate memory for each collider.
 	physCollider *tempBuffer = malloc(body->colliderNum * sizeof(physCollider));
@@ -1293,22 +1267,22 @@ signed char physRBIInstantiate(physRBInstance *prbi, physRigidBody *body, bone *
 
 }
 
-signed char physRBIStateCopy(physRBInstance *o, physRBInstance *c){
+return_t physRBIStateCopy(physRBInstance *o, physRBInstance *c){
 	/** Finish this. **/
 	return 1;
 }
 
-signed char physRBIAddConstraint(physRBInstance *prbi, physConstraint *c){
+return_t physRBIAddConstraint(physRBInstance *prbi, physConstraint *c){
 
 	/*
 	** Sort a new constraint into the body.
 	*/
 
-	constraintIndex_t i;
+	physConstraintIndex_t i;
 	if(prbi->constraintNum >= prbi->constraintCapacity){
 
 		// Allocate room for the new constraint.
-		const constraintIndex_t tempCapacity = prbi->constraintNum+1;
+		const physConstraintIndex_t tempCapacity = prbi->constraintNum+1;
 		physConstraint *tempBuffer = malloc(tempCapacity*sizeof(physConstraint));
 		if(tempBuffer == NULL){
 			/** Memory allocation failure. **/
@@ -1351,17 +1325,17 @@ signed char physRBIAddConstraint(physRBInstance *prbi, physConstraint *c){
 
 }
 
-signed char physRBICacheSeparation(physRBInstance *prbi, physCollisionInfo *c){
+return_t physRBICacheSeparation(physRBInstance *prbi, physCollisionInfo *c){
 
 	/*
 	** Cache a separation after a failed narrowphase collision check.
 	*/
 
-	cacheIndex_t i;
+	physCollisionIndex_t i;
 	if(prbi->separationNum >= prbi->separationCapacity){
 
 		// Allocate room for the new constraint.
-		const cacheIndex_t tempCapacity = prbi->separationNum+1;
+		const physCollisionIndex_t tempCapacity = prbi->separationNum+1;
 		physCollisionInfo *tempBuffer = malloc(tempCapacity*sizeof(physCollisionInfo));
 		if(tempBuffer == NULL){
 			/** Memory allocation failure. **/
@@ -1404,7 +1378,7 @@ signed char physRBICacheSeparation(physRBInstance *prbi, physCollisionInfo *c){
 
 }
 
-signed char physRBIAddCollision(physRBInstance *prbi, physCollisionInfo *c){
+return_t physRBIAddCollision(physRBInstance *prbi, physCollisionInfo *c){
 
 	/*
 	** Caches the collision and creates an
@@ -1451,7 +1425,7 @@ void physRBIUpdateCollisionMesh(physRBInstance *prbi){
 
 	if(prbi->local != NULL){  /** Remove? **/
 
-		colliderIndex_t i;
+		physColliderIndex_t i;
 		for(i = 0; i < prbi->local->colliderNum; ++i){
 
 			// Update the collider.
@@ -1578,7 +1552,7 @@ void physRBIIntegrateEuler(physRBInstance *prbi, const float dt){
 			vec3 tempVec3;
 			float tempFloat;
 			quat tempQuat;
-			unsigned int i;
+			int i;
 
 			for(i = 0; i < PHYS_INTEGRATION_STEPS_EULER; ++i){
 
@@ -1774,13 +1748,13 @@ void physRBIIntegrateRungeKutta(physRBInstance *prbi, const float dt){
 
 }
 
-static inline void physRBIPenetrationSlop(physRBInstance *body1, physRBInstance *body2, const hbCollisionContactManifold *cm){
+static __FORCE_INLINE__ void physRBIPenetrationSlop(physRBInstance *body1, physRBInstance *body2, const hbCollisionContactManifold *cm){
 
-	// Baumgarte stabilization
+	// Baumgarte stabilization.
 
 }
 
-static inline void physRBIResolveCollisionImpulse(physRBInstance *body1, physRBInstance *body2, const hbCollisionContactManifold *cm){
+static __FORCE_INLINE__ void physRBIResolveCollisionImpulse(physRBInstance *body1, physRBInstance *body2, const hbCollisionContactManifold *cm){
 
 	/**vec3 localContactPointA, localContactPointB;
 	vec3 contactVelocityA, contactVelocityB;
@@ -1882,7 +1856,7 @@ void physRBIUpdate(physRBInstance *prbi, const float dt){
 }
 
 void physRBIDelete(physRBInstance *prbi){
-	colliderIndex_t i;
+	physColliderIndex_t i;
 	if(prbi->colliders != NULL){
 		hbMesh *cHull;
 		for(i = 0; i < prbi->local->colliderNum; ++i){

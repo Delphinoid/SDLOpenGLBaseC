@@ -8,7 +8,7 @@ void physIslandInit(physIsland *island){
 	island->bodies = NULL;
 }
 
-signed char physIslandAddBody(physIsland *island, physRBInstance *prbi){
+return_t physIslandAddBody(physIsland *island, physRBInstance *prbi){
 	if(prbi->local != NULL && prbi->local->colliderNum){
 		if(island->bodyNum >= island->bodyCapacity){
 			/* Allocate room for more bodies. */
@@ -39,7 +39,7 @@ signed char physIslandAddBody(physIsland *island, physRBInstance *prbi){
 	return 0;
 }
 
-/*signed char physIslandAddObject(physIsland *island, objInstance *obji){
+/*return_t physIslandAddObject(physIsland *island, objInstance *obji){
 	if(obji->skeletonPhysics != NULL){
 		size_t i;
 		for(i = 0; i < obji->skl->boneNum; ++i){
@@ -106,7 +106,7 @@ void physIslandBroadPhase(physIsland *island, const float dt, physicsBodyIndex_t
 
 }
 
-signed char physIslandSimulate(physIsland *island, const float dt){
+return_t physIslandSimulate(physIsland *island, const float dt){
 
 	//size_t pairArraySize = 0;
 	//physRigidBody **pairArray = malloc(2*sizeof(physRigidBody));

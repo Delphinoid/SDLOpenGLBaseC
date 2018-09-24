@@ -1,7 +1,7 @@
 #include "helpersMisc.h"
 #include <string.h>
 
-/*signed char nextToken(const char *str, const char *delims, size_t *tokenOffset, size_t *tokenLength){
+/*return_t nextToken(const char *str, const char *delims, size_t *tokenOffset, size_t *tokenLength){
 	* Replacement for strtok() because it's a horrible function. *
 	char *tokenStart = NULL;
 	const char *currentChar = str+(*tokenOffset);
@@ -29,7 +29,7 @@
 	return 0;
 }*/
 
-signed char pushDynamicArray(void **vector, const void *element, const size_t bytes, size_t *size, size_t *capacity){
+return_t pushDynamicArray(void **vector, const void *element, const size_t bytes, size_t *size, size_t *capacity){
 	/* Push an element into a dynamic array. */
 	if(*size == *capacity){
 		if(*capacity == 0){
@@ -82,57 +82,6 @@ size_t ltostr(long n, char *s){
 		s[l+1] = '\0';
 	}
 	return l;
-}
-
-char *fileParseNextLine(FILE *file, char *buffer, size_t bufferSize, char **line, size_t *lineLength){
-
-	char *r = fgets(buffer, bufferSize, file);
-
-	if(r){
-
-		char *commentPos;
-		unsigned char doneFront = 0, doneEnd = 0;
-		size_t newOffset = 0;
-		size_t i;
-
-		*line = buffer;
-		*lineLength = strlen(*line);
-
-		// Remove new line and carriage return.
-		if((*line)[*lineLength-1] == '\n'){
-			(*line)[--(*lineLength)] = '\0';
-		}
-		if((*line)[*lineLength-1] == '\r'){
-			(*line)[--(*lineLength)] = '\0';
-		}
-
-		// Remove any comments from the line.
-		commentPos = strstr(*line, "//");
-		if(commentPos != NULL){
-			*lineLength -= *lineLength-(size_t)(commentPos-*line);
-			*commentPos = '\0';
-		}
-
-		// Remove any indentations from the line, as well as any trailing spaces and tabs.
-		for(i = 0; i < *lineLength && (!doneFront || !doneEnd); ++i){
-			if(!doneFront && (*line)[i] != '\t' && (*line)[i] != ' '){
-				newOffset = i;
-				doneFront = 1;
-			}
-			if(!doneEnd && i > 0 && (*line)[*lineLength-i] != '\t' && (*line)[*lineLength-i] != ' '){
-				*lineLength -= i-1;
-				(*line)[*lineLength] = '\0';
-				doneEnd = 1;
-			}
-		}
-
-		*line += newOffset;
-		*lineLength -= newOffset;
-
-	}
-
-	return r;
-
 }
 
 /** TEMPORARY **/

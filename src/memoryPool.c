@@ -75,14 +75,14 @@ void *memPoolSetupMemory(void *start, const size_t bytes, const size_t length){
 	// Loop through every block, making it
 	// point to the next free block.
 	while(next < end){
-		memPoolDataGetFlags(block) = MEMORY_POOL_INACTIVE;
+		memPoolDataGetFlags(block) = MEMORY_POOL_INVALID;
 		memPoolDataGetNextFree(block) = next;
 		block = next;
 		next += blockSize;
 	}
 
 	// Final block contains a null pointer.
-	memPoolDataGetFlags(block) = MEMORY_POOL_INACTIVE;
+	memPoolDataGetFlags(block) = MEMORY_POOL_INVALID;
 	memPoolDataGetNextFree(block) = NULL;
 
 	return start;
@@ -98,15 +98,15 @@ void memPoolClear(memoryPool *pool){
 
 	// Loop through every block, making it
 	// point to the next free block.
-	while(next < memPoolEnd(pool)){
-		memPoolDataGetFlags(block) = MEMORY_POOL_INACTIVE;
+	while(next < (byte_t *)pool->region){
+		memPoolDataGetFlags(block) = MEMORY_POOL_INVALID;
 		memPoolDataGetNextFree(block) = next;
 		block = next;
 		next += pool->block;
 	}
 
 	// Final block contains a null pointer.
-	memPoolDataGetFlags(block) = MEMORY_POOL_INACTIVE;
+	memPoolDataGetFlags(block) = MEMORY_POOL_INVALID;
 	memPoolDataGetNextFree(block) = NULL;
 
 }
@@ -132,4 +132,8 @@ void *memPoolExtend(memoryPool *pool, void *start, const size_t bytes, const siz
 
 	return start;
 
+}
+
+void memPoolDelete(memoryPool *pool){
+	memRegionFree(pool->region);
 }

@@ -1,17 +1,15 @@
 #include "hitboxCollision.h"
+#include "inline.h"
 #include <math.h>
 
-signed char hbMeshCollisionSAT(const hbMesh *c1, const hbMesh *c2, const vec3 *centroid, hbCollisionInfo *info, hbCollisionContactManifold *cm);
-//signed char hbMeshCollisionGJK(const hbMesh *c1, const vec3 *c1c, const hbMesh *c2, const vec3 *c2c, hbCollisionContactManifold *cm);
-//signed char hbMeshCollisionMPR(const hbMesh *c1, const vec3 *c1c, const hbMesh *c2, const vec3 *c2c, hbCollisionContactManifold *cm);
+return_t hbMeshCollisionSAT(const hbMesh *c1, const hbMesh *c2, const vec3 *centroid, hbCollisionInfo *info, hbCollisionContactManifold *cm);
+//return_t hbMeshCollisionGJK(const hbMesh *c1, const vec3 *c1c, const hbMesh *c2, const vec3 *c2c, hbCollisionContactManifold *cm);
+//return_t hbMeshCollisionMPR(const hbMesh *c1, const vec3 *c1c, const hbMesh *c2, const vec3 *c2c, hbCollisionContactManifold *cm);
 
-signed char hbCollisionMesh(const byte_t *c1h, const vec3 *c1c, const byte_t *c2h, const vec3 *c2c, hbCollisionInfo *info, hbCollisionContactManifold *cm){
+return_t hbCollisionMesh(const byte_t *c1h, const vec3 *c1c, const byte_t *c2h, const vec3 *c2c, hbCollisionInfo *info, hbCollisionContactManifold *cm){
 	hbCollisionContactManifoldInit(cm);  /** Temporary? **/
 	return hbMeshCollisionSAT((const hbMesh *)c1h, (const hbMesh *)c2h, c1c, info, cm);
 }
-
-
-typedef signed char (*hbCollisionPrototype)(const byte_t*, const vec3*, const byte_t*, const vec3*, hbCollisionInfo*, hbCollisionContactManifold*);
 
 /** The lines below should eventually be removed. **/
 #define hbCollisionMeshCapsule NULL
@@ -33,14 +31,21 @@ typedef signed char (*hbCollisionPrototype)(const byte_t*, const vec3*, const by
 #define hbCollisionAABBSphere  NULL
 #define hbCollisionAABB        NULL
 
-static const hbCollisionPrototype hbCollisionJumpTable[4][4] = {
+// Jump table for collision functions.
+static return_t (* const hbCollisionJumpTable[4][4])(
+	const byte_t *,
+	const vec3 *,
+	const byte_t *,
+	const vec3 *,
+	hbCollisionInfo *,
+	hbCollisionContactManifold *
+) = {
 	{hbCollisionMesh,        hbCollisionMeshCapsule,   hbCollisionMeshSphere,    hbCollisionMeshAABB},
 	{hbCollisionCapsuleMesh, hbCollisionCapsule,       hbCollisionCapsuleSphere, hbCollisionCapsuleAABB},
 	{hbCollisionSphereMesh,  hbCollisionSphereCapsule, hbCollisionSphere,        hbCollisionSphereAABB},
 	{hbCollisionAABBMesh,    hbCollisionAABBCapsule,   hbCollisionAABBSphere,    hbCollisionAABB}
 };
-
-signed char hbCollision(const hitbox *c1, const vec3 *c1c, const hitbox *c2, const vec3 *c2c, hbCollisionInfo *info, hbCollisionContactManifold *cm){
+__FORCE_INLINE__ return_t hbCollision(const hitbox *c1, const vec3 *c1c, const hitbox *c2, const vec3 *c2c, hbCollisionInfo *info, hbCollisionContactManifold *cm){
 	return hbCollisionJumpTable[c1->type][c2->type](c1->hull, c1c, c2->hull, c2c, info, cm);
 }
 

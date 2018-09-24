@@ -1,13 +1,14 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include "model.h"
-#include <stdio.h>
+#include "helpersFileIO.h"
+#include "memoryManager.h"
 
-signed char mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndexNum_t *indexNum, vertexIndex_t **indices, char **name, char **sklPath);
-signed char mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndexNum_t *indexNum, vertexIndex_t **indices, char **name, cVector *allSkeletons);
+return_t mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndexNum_t *indexNum, vertexIndex_t **indices, char **name, char *sklPath);
+return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndexNum_t *indexNum, vertexIndex_t **indices, char **name, cVector *allSkeletons);
 
 static void mdlVertexAttributes();
-static signed char mdlGenBufferObjects(model *mdl, const char *filePath, const vertexIndex_t vertexNum, const vertex *vertices, const vertexIndexNum_t indexNum, const vertexIndex_t *indices);
+static return_t mdlGenBufferObjects(model *mdl, const char *filePath, const vertexIndex_t vertexNum, const vertex *vertices, const vertexIndexNum_t indexNum, const vertexIndex_t *indices);
 
 void mdlInit(model *mdl){
 	mdl->name = NULL;
@@ -23,51 +24,45 @@ void mdlInit(model *mdl){
 	mdl->hitboxes = NULL;**/
 }
 
-signed char mdlLoad(model *mdl, const char *prgPath, const char *filePath, cVector *allSkeletons){
+return_t mdlLoad(model *mdl, const char *prgPath, const char *filePath, cVector *allSkeletons){
 
 	/** Create a proper model file that loads a specified mesh, a name and a skeleton. **/
-	signed char r;
-	mdlInit(mdl);
-
-	size_t pathLen = strlen(prgPath);
-	size_t fileLen = strlen(filePath);
-	char *fullPath = malloc((pathLen+fileLen+1)*sizeof(char));
-	if(fullPath == NULL){
-		/** Memory allocation failure. **/
-		return -1;
-	}
-	memcpy(fullPath, prgPath, pathLen);
-	memcpy(fullPath+pathLen, filePath, fileLen);
-	fullPath[pathLen+fileLen] = '\0';
+	return_t r;
 
 	vertexIndex_t vertexNum;
 	vertex *vertices;
 	vertexIndexNum_t indexNum;
 	vertexIndex_t *indices;
-	char *sklPath = NULL;
-	r = mdlWavefrontObjLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, &mdl->name, &sklPath);
+
+	char fullPath[FILE_MAX_PATH_LENGTH];
+	char sklPath[FILE_MAX_PATH_LENGTH];
+	const size_t fileLength = strlen(filePath);
+
+	sklPath[0] = '\0';
+	fileGenerateFullPath(&fullPath[0], prgPath, strlen(prgPath), filePath, fileLength);
+
+	mdlInit(mdl);
+
+	r = mdlWavefrontObjLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, &mdl->name, &sklPath[0]);
 	//r = mdlSMDLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, &mdl->name, allSkeletons);
 	/** Replace and move the loading function here. **/
 	if(r <= 0){
-		free(fullPath);
 		return r;
 	}
-	if(sklPath == NULL){
+	if(sklPath[0] == '\0'){
 		// Use the default skeleton.
         mdl->skl = (skeleton *)cvGet(allSkeletons, 0);
 		//mdl->skl = (skeleton *)cvGet(allSkeletons, allSkeletons->size-1);
 	}else{
 		/** Check if the skeleton already exists. If not, load it. **/
 		skeleton tempSkl;
-		sklLoad(&tempSkl, prgPath, sklPath);
+		sklLoad(&tempSkl, prgPath, &sklPath[0]);
 		cvPush(allSkeletons, (void *)&tempSkl, sizeof(tempSkl));
 		mdl->skl = (skeleton *)cvGet(allSkeletons, allSkeletons->size-1);
-		free(sklPath);
 	}
-	free(fullPath);
 
 	/** Should mdlGenBufferObjects() be here? **/
-	r = mdlGenBufferObjects(mdl, fullPath, vertexNum, vertices, indexNum, indices);
+	r = mdlGenBufferObjects(mdl, &fullPath[0], vertexNum, vertices, indexNum, indices);
 	free(vertices);
 	free(indices);
 
@@ -78,14 +73,14 @@ signed char mdlLoad(model *mdl, const char *prgPath, const char *filePath, cVect
 			if(mdl->name != NULL){
 				free(mdl->name);
 			}
-			mdl->name = malloc((fileLen+1)*sizeof(char));
+			mdl->name = malloc((fileLength+1)*sizeof(char));
 			if(mdl->name == NULL){
 				/** Memory allocation failure. **/
 				mdlDelete(mdl);
 				return -1;
 			}
-			memcpy(mdl->name, filePath, fileLen);
-			mdl->name[fileLen] = '\0';
+			memcpy(mdl->name, filePath, fileLength);
+			mdl->name[fileLength] = '\0';
 		}
 
 	}else{
@@ -96,12 +91,18 @@ signed char mdlLoad(model *mdl, const char *prgPath, const char *filePath, cVect
 
 }
 
-signed char mdlDefault(model *mdl, cVector *allSkeletons){
+return_t mdlDefault(model *mdl, cVector *allSkeletons){
 
 	vertex vertices[24];
 	vertexIndex_t indices[36];
 
 	mdlInit(mdl);
+
+	mdl->name = memAllocate(8*sizeof(char));
+	if(mdl->name == NULL){
+		/** Memory allocation failure. **/
+		return -1;
+	}
 	mdl->vertexNum = 24;
 	mdl->indexNum = 36;
 
@@ -277,11 +278,6 @@ signed char mdlDefault(model *mdl, cVector *allSkeletons){
 	indices[34] = 21;
 	indices[35] = 23;
 
-	mdl->name = malloc(8*sizeof(char));
-	if(mdl->name == NULL){
-		/** Memory allocation failure. **/
-		return -1;
-	}
 	mdl->name[0] = 'd';
 	mdl->name[1] = 'e';
 	mdl->name[2] = 'f';
@@ -304,13 +300,13 @@ signed char mdlDefault(model *mdl, cVector *allSkeletons){
 }
 
 /** Change this function later **/
-signed char mdlCreateSprite(model *mdl, cVector *allSkeletons){
+return_t mdlCreateSprite(model *mdl, cVector *allSkeletons){
 
 	GLenum glError;
 
 	mdlInit(mdl);
 
-	mdl->name = malloc(7*sizeof(char));
+	mdl->name = memAllocate(7*sizeof(char));
 	if(mdl->name == NULL){
 		/** Memory allocation failure. **/
 		return -1;
@@ -383,7 +379,7 @@ static void mdlVertexAttributes(){
 	glEnableVertexAttribArray(4);
 }
 
-static signed char mdlGenBufferObjects(model *mdl, const char *filePath, const vertexIndex_t vertexNum, const vertex *vertices, const vertexIndexNum_t indexNum, const vertexIndex_t *indices){
+static return_t mdlGenBufferObjects(model *mdl, const char *filePath, const vertexIndex_t vertexNum, const vertex *vertices, const vertexIndexNum_t indexNum, const vertexIndex_t *indices){
 
 	if(vertexNum > 0){
 		if(indexNum > 0){

@@ -1,11 +1,11 @@
 #ifndef HITBOX_H
 #define HITBOX_H
 
+#include "memoryShared.h"
 #include "hitboxConvexMesh.h"
 #include "hitboxCapsule.h"
 #include "hitboxSphere.h"
 #include "hitboxAABB.h"
-#include "memoryShared.h"
 
 #define HB_TYPE_INVALID -1
 #define HB_TYPE_MESH 0

@@ -7,6 +7,7 @@
 #include "vertex.h"
 #include "skeleton.h"
 #include "memoryShared.h"
+#include "mat4.h"
 
 #define DEFAULT_GL_VERSION_MAJOR 3
 #define DEFAULT_GL_VERSION_MINOR 3
@@ -71,8 +72,8 @@ typedef struct {
 
 } graphicsManager;
 
-signed char gfxMngrInit(graphicsManager *gfxMngr, const char *prgPath);
-signed char gfxMngrUpdateWindow(graphicsManager *gfxMngr);
+return_t gfxMngrInit(graphicsManager *gfxMngr, const char *prgPath);
+return_t gfxMngrUpdateWindow(graphicsManager *gfxMngr);
 void gfxMngrDestroyProgram(graphicsManager *gfxMngr);
 
 #endif

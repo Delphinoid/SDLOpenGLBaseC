@@ -1,6 +1,11 @@
 #include "object.h"
-#include "helpersMisc.h"
+#include "helpersFileIO.h"
+#include "inline.h"
 #include <stdio.h>
+
+/****/
+#include "moduleTextureWrapper.h"
+#include "moduleModel.h"
 
 void objInit(object *obj){
 	obj->name = NULL;
@@ -17,34 +22,29 @@ void objInit(object *obj){
 	obj->renderables = 0;
 }
 
-signed char objLoad(object *obj, const char *prgPath, const char *filePath,
-                    cVector *allTextures, cVector *allTexWrappers, cVector *allSkeletons,
-                    cVector *allSklAnimations, cVector *allModels){
+return_t objLoad(object *obj, const char *prgPath, const char *filePath,
+                 cVector *allTextures, cVector *allTexWrappers, cVector *allSkeletons,
+                 cVector *allSklAnimations, cVector *allModels){
+
+	char fullPath[FILE_MAX_PATH_LENGTH];
+	const size_t fileLength = strlen(filePath);
 
 	FILE *objInfo;
-	const size_t pathLen = strlen(prgPath);
-	const size_t fileLen = strlen(filePath);
-	char *fullPath;
 
 	objInit(obj);
 
-	fullPath = malloc((pathLen+fileLen+1) * sizeof(char));
-	if(fullPath == NULL){
-		/** Memory allocation failure. **/
-		return -1;
-	}
-	memcpy(fullPath, prgPath, pathLen);
-	memcpy(fullPath+pathLen, filePath, fileLen);
-	fullPath[pathLen+fileLen] = '\0';
-	objInfo = fopen(fullPath, "r");
+	fileGenerateFullPath(&fullPath[0], prgPath, strlen(prgPath), filePath, fileLength);
+	objInfo = fopen(&fullPath[0], "r");
 
 	if(objInfo != NULL){
 
-		char lineFeed[1024];
+		char lineFeed[FILE_MAX_LINE_LENGTH];
 		char *line;
 		size_t lineLength;
 
-		unsigned int currentLine = 0;  // Current file line being read.
+		fileLine_t currentLine = 0;  // Current file line being read.
+
+		char loadPath[FILE_MAX_PATH_LENGTH];
 
 		while(fileParseNextLine(objInfo, lineFeed, sizeof(lineFeed), &line, &lineLength)){
 
@@ -65,7 +65,6 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 				if(obj->name == NULL){
 					/** Memory allocation failure. **/
 					objDelete(obj);
-					free(fullPath);
 					fclose(objInfo);
 					return -1;
 				}
@@ -76,8 +75,7 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 			// Skeleton
 			}else if(lineLength >= 10 && strncmp(line, "skeleton ", 9) == 0){
 
-				char *sklPath;
-				signed char skipLoad = 0;
+				int skipLoad = 0;
 				size_t pathBegin;
 				size_t pathLength;
 				const char *firstQuote = strchr(line+9, '"');
@@ -93,23 +91,15 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 					pathBegin = 9;
 					pathLength = lineLength-pathBegin;
 				}
-				sklPath = malloc((pathLength+1) * sizeof(char));
-				if(sklPath == NULL){
-					/** Memory allocation failure. **/
-					objDelete(obj);
-					free(fullPath);
-					fclose(objInfo);
-					return -1;
-				}
-				strncpy(sklPath, line+pathBegin, pathLength);
-				sklPath[pathLength] = '\0';
+				strncpy(&loadPath[0], line+pathBegin, pathLength);
+				loadPath[pathLength] = '\0';
 
 				/** Should the allSkeletons vector be used? It's not as nice or as modular
 				but if the assetHandler system is decided on it'll probably be better. **/
 				// Look for skeleton name in allSkeletons.
 				for(i = 0; i < allSkeletons->size; ++i){
 					skeleton *tempSkl = (skeleton *)cvGet(allSkeletons, i);
-					if(strcmp(sklPath, tempSkl->name) == 0){
+					if(strcmp(&loadPath[0], tempSkl->name) == 0){
 						obj->skl = (skeleton *)cvGet(allSkeletons, i);
 						skipLoad = 1;
 						break;
@@ -117,12 +107,10 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 				}
 				if(!skipLoad){
 					skeleton tempSkl;
-					const signed char r = sklLoad(&tempSkl, prgPath, sklPath);
+					const return_t r = sklLoad(&tempSkl, prgPath, &loadPath[0]);
 					if(r == -1){
 						/** Memory allocation failure. **/
-						free(sklPath);
 						objDelete(obj);
-						free(fullPath);
 						fclose(objInfo);
 						return -1;
 					}else if(r > 0){
@@ -133,21 +121,19 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 
 				// Use the default skeleton if no skeleton was loaded.
 				if(obj->skl == NULL){
-					printf("Error loading object \"%s\": Skeleton \"%s\" at line %u does not exist.\n", fullPath, sklPath, currentLine);
+					printf("Error loading object \"%s\": Skeleton \"%s\" at line %u does not exist.\n", &fullPath[0], &loadPath[0], currentLine);
 					obj->skl = (skeleton *)cvGet(allSkeletons, 0);
 				}
-				free(sklPath);
 
 
 			// Physics
 			}else if(lineLength >= 17 && strncmp(line, "skeletonPhysics ", 16) == 0){
 				if(obj->skl != NULL){
 
-					signed char r;
-					char *physPath;
+					return_t r;
 					physRigidBody *tempBuffer1;
 					flags_t *tempBuffer2;
-					constraintIndex_t *tempBuffer3;
+					physConstraintIndex_t *tempBuffer3;
 					physConstraint **tempBuffer4;
 					size_t pathBegin;
 					size_t pathLength;
@@ -164,24 +150,13 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 						pathBegin = 9;
 						pathLength = lineLength-pathBegin;
 					}
-
-					physPath = malloc((pathLength+1) * sizeof(char));
-					if(physPath == NULL){
-						/** Memory allocation failure. **/
-						objDelete(obj);
-						free(fullPath);
-						fclose(objInfo);
-						return -1;
-					}
-					strncpy(physPath, line+pathBegin, pathLength);
-					physPath[pathLength] = '\0';
+					strncpy(&loadPath[0], line+pathBegin, pathLength);
+					loadPath[pathLength] = '\0';
 
 					tempBuffer1 = realloc(obj->skeletonBodies, obj->skl->boneNum*sizeof(physRigidBody));
 					if(tempBuffer1 == NULL){
 						/** Memory allocation failure. **/
-						free(physPath);
 						objDelete(obj);
-						free(fullPath);
 						fclose(objInfo);
 						return -1;
 					}
@@ -189,19 +164,15 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 					tempBuffer2 = realloc(obj->skeletonBodyFlags, obj->skl->boneNum*sizeof(flags_t));
 					if(tempBuffer2 == NULL){
 						/** Memory allocation failure. **/
-						free(physPath);
 						objDelete(obj);
-						free(fullPath);
 						fclose(objInfo);
 						return -1;
 					}
 					obj->skeletonBodyFlags = tempBuffer2;
-					tempBuffer3 = realloc(obj->skeletonConstraintNum, obj->skl->boneNum*sizeof(constraintIndex_t));
+					tempBuffer3 = realloc(obj->skeletonConstraintNum, obj->skl->boneNum*sizeof(physConstraintIndex_t));
 					if(tempBuffer2 == NULL){
 						/** Memory allocation failure. **/
-						free(physPath);
 						objDelete(obj);
-						free(fullPath);
 						fclose(objInfo);
 						return -1;
 					}
@@ -209,9 +180,7 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 					tempBuffer4 = realloc(obj->skeletonConstraints, obj->skl->boneNum*sizeof(physConstraint *));
 					if(tempBuffer2 == NULL){
 						/** Memory allocation failure. **/
-						free(physPath);
 						objDelete(obj);
-						free(fullPath);
 						fclose(objInfo);
 						return -1;
 					}
@@ -219,12 +188,10 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 
 					r = physRigidBodyLoad(obj->skeletonBodies, obj->skeletonBodyFlags,
 					                      obj->skeletonConstraintNum, obj->skeletonConstraints,
-					                      obj->skl, prgPath, physPath);
-					free(physPath);
+					                      obj->skl, prgPath, loadPath);
 					if(r == -1){
 						/** Memory allocation failure. **/
 						objDelete(obj);
-						free(fullPath);
 						fclose(objInfo);
 						return -1;
 					}else if(r == 0){
@@ -239,7 +206,7 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 					}
 
 				}else{
-					printf("Error loading object \"%s\": Cannot load rigid bodies at line %u when no skeleton has been specified.\n", fullPath, currentLine);
+					printf("Error loading object \"%s\": Cannot load rigid bodies at line %u when no skeleton has been specified.\n", &fullPath[0], currentLine);
 				}
 
 
@@ -249,16 +216,15 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 					/** Load hitboxes. **/
 
 				}else{
-					printf("Error loading object \"%s\": Cannot load hitbox data at line %u when no skeleton has been specified.\n", fullPath, currentLine);
+					printf("Error loading object \"%s\": Cannot load hitbox data at line %u when no skeleton has been specified.\n", &fullPath[0], currentLine);
 				}
 
 
 			// Animation
 			}else if(lineLength >= 11 && strncmp(line, "animation ", 10) == 0){
 
-				char *animPath;
 				sklAnim *sklaPointer = NULL;
-				signed char skipLoad = 0;
+				int skipLoad = 0;
 				size_t pathBegin;
 				size_t pathLength;
 				const char *firstQuote = strchr(line+9, '"');
@@ -274,35 +240,25 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 					pathBegin = 9;
 					pathLength = lineLength-pathBegin;
 				}
-				animPath = malloc((pathLength+1) * sizeof(char));
-				if(animPath == NULL){
-					/** Memory allocation failure. **/
-					objDelete(obj);
-					free(fullPath);
-					fclose(objInfo);
-					return -1;
-				}
-				strncpy(animPath, line+pathBegin, pathLength);
-				animPath[pathLength] = '\0';
+				strncpy(&loadPath[0], line+pathBegin, pathLength);
+				loadPath[pathLength] = '\0';
 
 				/** Should the allSklAnimations vector be used? It's not as nice or as modular
 				but if the assetHandler system is decided on it'll probably be better. **/
 				// Look for animation name in allSklAnimations.
 				for(i = 0; i < allSklAnimations->size; ++i){
 					sklaPointer = (sklAnim *)cvGet(allSklAnimations, i);
-					if(strcmp(animPath, sklaPointer->name) == 0){
+					if(strcmp(&loadPath[0], sklaPointer->name) == 0){
 						skipLoad = 1;
 						break;
 					}
 				}
 				if(!skipLoad){
 					sklAnim tempSkla;
-					signed char r = sklaLoad(&tempSkla, prgPath, animPath);
+					return_t r = sklaLoad(&tempSkla, prgPath, &loadPath[0]);
 					if(r == -1){
 						/** Memory allocation failure. **/
-						free(animPath);
 						objDelete(obj);
-						free(fullPath);
 						fclose(objInfo);
 						return -1;
 					}else if(r > 0){
@@ -319,9 +275,7 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 						sklAnim **tempBuffer = realloc(obj->animations, tempCapacity*sizeof(sklAnim *));
 						if(tempBuffer == NULL){
 							/** Memory allocation failure. **/
-							free(animPath);
 							objDelete(obj);
-							free(fullPath);
 							fclose(objInfo);
 							return -1;
 						}
@@ -332,9 +286,8 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 					++obj->animationNum;
 
 				}else{
-					printf("Error loading object \"%s\": Skeletal animation \"%s\" at line %u does not exist.\n", fullPath, animPath, currentLine);
+					printf("Error loading object \"%s\": Skeletal animation \"%s\" at line %u does not exist.\n", &fullPath[0], &loadPath[0], currentLine);
 				}
-				free(animPath);
 
 
 			// Animation capacity
@@ -347,10 +300,7 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 
 				/** Load model and texture. **/
 				renderable *tempBuffer;
-
 				renderable rndr;
-				char *loadPath;
-				signed char skipLoad = 0;
 
 				size_t mdlPathBegin = 11;
 				size_t mdlPathLength = 0;
@@ -374,6 +324,8 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 
 				if(mdlPathLength > 0){
 
+					model *tempMdl = NULL;
+
 					size_t texPathBegin = mdlPathBegin+mdlPathLength+1;
 					size_t texPathLength = 0;
 					const char *texSecondQuote = NULL;
@@ -396,97 +348,90 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 					}
 
 					/* Load the model. */
-					loadPath = malloc(((mdlPathLength > texPathLength ? mdlPathLength : texPathLength)+1) * sizeof(char));
-					if(loadPath == NULL){
-						/** Memory allocation failure. **/
-						objDelete(obj);
-						free(fullPath);
-						fclose(objInfo);
-						return -1;
-					}
-					strncpy(loadPath, line+mdlPathBegin, mdlPathLength);
+					strncpy(&loadPath[0], line+mdlPathBegin, mdlPathLength);
 					loadPath[mdlPathLength] = '\0';
-					/** Should the allModels vector be used? It's not as nice or as modular
-					but if the assetHandler system is decided on it'll probably be better. **/
-					// Look for model name in allModels.
-					for(i = 0; i < allModels->size; ++i){
-						model *tempMdl = (model *)cvGet(allModels, i);
-						if(strcmp(loadPath, tempMdl->name) == 0){
-							rndr.mdl = (model *)cvGet(allModels, i);
-							skipLoad = 1;
-							break;
-						}
-					}
-					if(!skipLoad){
-						model tempMdl;
-						signed char r = mdlLoad(&tempMdl, prgPath, loadPath, allSkeletons);
-						if(r == -1){
+
+					// Check if the model has already been loaded.
+					tempMdl = moduleModelFind(&loadPath[0]);
+					if(tempMdl != NULL){
+						rndr.mdl = tempMdl;
+
+					// If the model path is surrounded by quotes, try and load it.
+					}else{
+						tempMdl = moduleModelAllocate();
+						if(tempMdl != NULL){
+							const return_t r = mdlLoad(tempMdl, prgPath, &loadPath[0], allSkeletons);
+							if(r == -1){
+								/** Memory allocation failure. **/
+								moduleModelFree(tempMdl);
+								objDelete(obj);
+								fclose(objInfo);
+								return -1;
+							}else if(r > 0){
+								rndr.mdl = tempMdl;
+							}
+						}else{
 							/** Memory allocation failure. **/
-							free(loadPath);
 							objDelete(obj);
-							free(fullPath);
 							fclose(objInfo);
 							return -1;
-						}else if(r > 0){
-							cvPush(allModels, (void *)&tempMdl, sizeof(tempMdl));  // Add it to allModels.
-							rndr.mdl = (model *)cvGet(allModels, allModels->size-1);
 						}
 					}
 					// Use the default model if no model was loaded.
 					if(rndr.mdl == NULL){
-						printf("Error loading object \"%s\": Model \"%s\" at line %u does not exist.\n", fullPath, loadPath, currentLine);
-						rndr.mdl = (model *)cvGet(allModels, 0);
+						printf("Error loading object \"%s\": Model \"%s\" at line %u does not exist.\n", &fullPath[0], &loadPath[0], currentLine);
+						rndr.mdl = moduleModelGetDefault();
 					}
 
 					if(texPathLength > 0){
 
-						skipLoad = 0;
+						textureWrapper *tempTw = NULL;
 
 						/* Load the texture wrapper. */
-						strncpy(loadPath, line+texPathBegin, texPathLength);
+						strncpy(&loadPath[0], line+texPathBegin, texPathLength);
 						loadPath[texPathLength] = '\0';
-						/** Should the allTexWrappers vector be used? It's not as nice or as modular
-						but if the assetHandler system is decided on it'll probably be better. **/
-						// Look for texture wrapper name in allTexWrappers.
-						for(i = 0; i < allTexWrappers->size; ++i){
-							textureWrapper *tempTw = (textureWrapper *)cvGet(allTexWrappers, i);
-							if(strcmp(loadPath, tempTw->name) == 0){
-								rndr.tw = (textureWrapper *)cvGet(allTexWrappers, i);
-								skipLoad = 1;
-								break;
-							}
-						}
-						if(!skipLoad){
-							textureWrapper tempTw;
-							signed char r = twLoad(&tempTw, prgPath, loadPath, allTextures);
-							if(r == -1){
+
+						// Check if the texture wrapper has already been loaded.
+						tempTw = moduleTextureWrapperFind(&loadPath[0]);
+						if(tempTw != NULL){
+							rndr.tw = tempTw;
+
+						// If the texture wrapper path is surrounded by quotes, try and load it.
+						}else{
+							tempTw = moduleTextureWrapperAllocate();
+							if(tempTw != NULL){
+								const return_t r = twLoad(tempTw, prgPath, &loadPath[0]);
+								if(r == -1){
+									/** Memory allocation failure. **/
+									moduleTextureWrapperFree(tempTw);
+									objDelete(obj);
+									fclose(objInfo);
+									return -1;
+								}else if(r > 0){
+									rndr.tw = tempTw;
+								}
+							}else{
 								/** Memory allocation failure. **/
-								free(loadPath);
 								objDelete(obj);
-								free(fullPath);
 								fclose(objInfo);
 								return -1;
-							}else if(r > 0){
-								cvPush(allTexWrappers, (void *)&tempTw, sizeof(tempTw));  // Add it to allTexWrappers.
-								rndr.tw = (textureWrapper *)cvGet(allTexWrappers, allTexWrappers->size-1);
 							}
 						}
 						// Use the default texture wrapper if no texture wrapper was loaded.
 						if(rndr.tw == NULL){
-							printf("Error loading object \"%s\": Texture wrapper \"%s\" at line %u does not exist.\n", fullPath, loadPath, currentLine);
-							rndr.tw = (textureWrapper *)cvGet(allTexWrappers, 0);
+							printf("Error loading object \"%s\": Texture wrapper \"%s\" at line %u does not exist.\n", &fullPath[0], &loadPath[0], currentLine);
+							rndr.tw = moduleTextureWrapperGetDefault();
 						}
 
 					}else{
-						printf("Error loading object \"%s\": Could not parse texture wrapper for renderable at line %u.\n", fullPath, currentLine);
-						rndr.tw = (textureWrapper *)cvGet(allTexWrappers, 0);
+						printf("Error loading object \"%s\": Could not parse texture wrapper for renderable at line %u.\n", &fullPath[0], currentLine);
+						rndr.tw = moduleTextureWrapperGetDefault();
 					}
-					free(loadPath);
 
 				}else{
-					printf("Error loading object \"%s\": Could not parse model for renderable at line %u.\n", fullPath, currentLine);
+					printf("Error loading object \"%s\": Could not parse model for renderable at line %u.\n", &fullPath[0], currentLine);
 					rndr.mdl = (model *)cvGet(allModels, 0);
-					rndr.tw = (textureWrapper *)cvGet(allTexWrappers, 0);
+					rndr.tw = moduleTextureWrapperGetDefault();
 				}
 
 				/* Add the renderable. */
@@ -494,7 +439,6 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 				if(tempBuffer == NULL){
 					/** Memory allocation failure. **/
 					objDelete(obj);
-					free(fullPath);
 					fclose(objInfo);
 					return -1;
 				}
@@ -507,11 +451,9 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 		}
 
 		fclose(objInfo);
-		free(fullPath);
 
 	}else{
-		printf("Error loading object \"%s\": Could not open file.\n", fullPath);
-		free(fullPath);
+		printf("Error loading object \"%s\": Could not open file.\n", &fullPath[0]);
 		return 0;
 	}
 
@@ -523,7 +465,7 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 
 	// If no renderables were loaded, load the default one.
 	if(obj->renderableNum == 0){
-		printf("Error loading object \"%s\": No renderables were loaded.\n", fullPath);
+		printf("Error loading object \"%s\": No renderables were loaded.\n", &fullPath[0]);
 		renderable *tempBuffer = realloc(obj->renderables, (obj->renderableNum+1)*sizeof(renderable));
 		if(tempBuffer == NULL){
 			/** Memory allocation failure. **/
@@ -541,14 +483,14 @@ signed char objLoad(object *obj, const char *prgPath, const char *filePath,
 		if(obj->name != NULL){
 			free(obj->name);
 		}
-		obj->name = malloc((fileLen+1)*sizeof(char));
+		obj->name = malloc((fileLength+1)*sizeof(char));
 		if(obj->name == NULL){
 			/** Memory allocation failure. **/
 			objDelete(obj);
 			return -1;
 		}
-		memcpy(obj->name, filePath, fileLen);
-		obj->name[fileLen] = '\0';
+		memcpy(obj->name, filePath, fileLength);
+		obj->name[fileLength] = '\0';
 	}
 
 	return 1;
@@ -594,7 +536,7 @@ void objDelete(object *obj){
 	}
 }
 
-signed char objiInit(void *obji){
+return_t objiInit(void *obji){
 	((objInstance *)obji)->base = NULL;
 	rndrConfigInit(&((objInstance *)obji)->tempRndrConfig);
 	//((objInstance *)obji)->skl = NULL;
@@ -621,7 +563,7 @@ signed char objiInit(void *obji){
 }
 
 /** FIX FOR PHYSICS OBJECTS **/
-signed char objiStateCopy(void *o, void *c){
+return_t objiStateCopy(void *o, void *c){
 
 	/* Resize the skeleton state arrays, if necessary, and copy everything over. */
 	if(((objInstance *)o)->skeletonData.skl != NULL){
@@ -935,7 +877,7 @@ void objiDelete(void *obji){
 	hbDelete(&((object *)obji)->hitboxData);**/
 }
 
-signed char objiInstantiate(objInstance *obji, object *base){
+return_t objiInstantiate(objInstance *obji, object *base){
 
 	renderableIndex_t j;
 
@@ -1072,7 +1014,7 @@ signed char objiInstantiate(objInstance *obji, object *base){
 
 }
 
-signed char objiNewRenderable(objInstance *obji, model *mdl, textureWrapper *tw){
+return_t objiNewRenderable(objInstance *obji, model *mdl, textureWrapper *tw){
 	/* Allocate room for a new renderable and initialize it. */
 	rndrInstance *tempBuffer = realloc(obji->renderables, (obji->renderableNum+1)*sizeof(rndrInstance));
 	if(tempBuffer == NULL){
@@ -1086,7 +1028,7 @@ signed char objiNewRenderable(objInstance *obji, model *mdl, textureWrapper *tw)
 	return 1;
 }
 
-signed char objiNewRenderableFromBase(objInstance *obji, const renderable *rndr){
+return_t objiNewRenderableFromBase(objInstance *obji, const renderable *rndr){
 	/* Allocate room for a new renderable and initialize it. */
 	rndrInstance *tempBuffer = realloc(obji->renderables, (obji->renderableNum+1)*sizeof(rndrInstance));
 	if(tempBuffer == NULL){
@@ -1099,7 +1041,7 @@ signed char objiNewRenderableFromBase(objInstance *obji, const renderable *rndr)
 	return 1;
 }
 
-signed char objiNewRenderableFromInstance(objInstance *obji, const rndrInstance *rndr){
+return_t objiNewRenderableFromInstance(objInstance *obji, const rndrInstance *rndr){
 	/* Allocate room for a new renderable and initialize it. */
 	rndrInstance *tempBuffer = realloc(obji->renderables, (obji->renderableNum+1)*sizeof(rndrInstance));
 	if(tempBuffer == NULL){
@@ -1113,7 +1055,7 @@ signed char objiNewRenderableFromInstance(objInstance *obji, const rndrInstance 
 	return 1;
 }
 
-signed char objiDeleteRenderable(objInstance *obji, const renderableIndex_t id){
+return_t objiDeleteRenderable(objInstance *obji, const renderableIndex_t id){
 	/* Remove a specified renderable. */
 	if(obji->renderableNum > 0){
 		renderableIndex_t i, write;
@@ -1138,7 +1080,7 @@ signed char objiDeleteRenderable(objInstance *obji, const renderableIndex_t id){
 	return 1;
 }
 
-signed char objiInitSkeleton(objInstance *obji, skeleton *skl){
+return_t objiInitSkeleton(objInstance *obji, skeleton *skl){
 	boneIndex_t i;
 	//size_t arraySizeS = skl->boneNum*sizeof(bone);
 	//bone *tempBuffer3;
@@ -1184,7 +1126,7 @@ signed char objiInitSkeleton(objInstance *obji, skeleton *skl){
 	return 1;
 }
 
-/*signed char objInitPhysics(object *obji){
+/*return_t objInitPhysics(object *obji){
 	if(obji->skl != NULL){
 		size_t i;
 		physRBInstance *tempBuffer = malloc(obji->skl->boneNum*sizeof(physRBInstance));
@@ -1239,27 +1181,27 @@ sklAnim *objiFindAnimation(objInstance *obji, const char *name){
 	return NULL;
 }
 
-inline void objiSetAnimationType(objInstance *obji, const animIndex_t slot, const signed char additive){
+__FORCE_INLINE__ void objiSetAnimationType(objInstance *obji, const animIndex_t slot, const flags_t additive){
 	skliSetAnimationType(&obji->skeletonData, slot, additive);
 }
 
-inline signed char objiChangeAnimation(objInstance *obji, const animIndex_t slot, sklAnim *anim, const frameIndex_t frame, const float blendTime){
+__FORCE_INLINE__ return_t objiChangeAnimation(objInstance *obji, const animIndex_t slot, sklAnim *anim, const frameIndex_t frame, const float blendTime){
 	return skliChangeAnimation(&obji->skeletonData, slot, anim, frame, blendTime);
 }
 
-inline void objiClearAnimation(objInstance *obji, const animIndex_t slot){
+__FORCE_INLINE__ void objiClearAnimation(objInstance *obji, const animIndex_t slot){
 	skliClearAnimation(&obji->skeletonData, slot);
 }
 
-inline void objiApplyLinearForce(objInstance *obji, const boneIndex_t boneID, const vec3 *F){
+__FORCE_INLINE__ void objiApplyLinearForce(objInstance *obji, const boneIndex_t boneID, const vec3 *F){
 	physRBIApplyLinearForce(&obji->skeletonPhysics[boneID], F);
 }
 
-inline void objiApplyAngularForceGlobal(objInstance *obji, const boneIndex_t boneID, const vec3 *F, const vec3 *r){
+__FORCE_INLINE__ void objiApplyAngularForceGlobal(objInstance *obji, const boneIndex_t boneID, const vec3 *F, const vec3 *r){
 	physRBIApplyAngularForceGlobal(&obji->skeletonPhysics[boneID], F, r);
 }
 
-inline void objiApplyForceGlobal(objInstance *obji, const boneIndex_t boneID, const vec3 *F, const vec3 *r){
+__FORCE_INLINE__ void objiApplyForceGlobal(objInstance *obji, const boneIndex_t boneID, const vec3 *F, const vec3 *r){
 	physRBIApplyForceGlobal(&obji->skeletonPhysics[boneID], F, r);
 }
 
@@ -1288,7 +1230,7 @@ void objiUpdate(objInstance *obji, physicsSolver *solver, const float elapsedTim
 	/* Update the object's skeleton. */
 	for(i = 0; i < obji->skeletonData.skl->boneNum; ++i){
 
-		const signed char isRoot = (i == obji->skeletonData.skl->bones[i].parent) ||
+		const return_t isRoot = (i == obji->skeletonData.skl->bones[i].parent) ||
 		                           (obji->skeletonData.skl->bones[i].parent >= obji->skeletonData.skl->boneNum);
 		obji->skeletonState[i2+1] = obji->skeletonState[i2];
 
@@ -1468,7 +1410,7 @@ void objiBoneLastState(objInstance *obji, const float dt){
 	//
 }
 
-signed char objiRenderMethod(objInstance *obji, const float interpT){
+return_t objiRenderMethod(objInstance *obji, const float interpT){
 	// Update alpha.
 	iFloatUpdate(&obji->tempRndrConfig.alpha, interpT);
 	if(obji->tempRndrConfig.alpha.render > 0.f){

@@ -1,17 +1,25 @@
 #include "resourceManager.h"
 #include "object.h"
 
-signed char resMngrInit(resourceManager *resMngr, memoryManager *memMngr){
+#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+return_t resMngrInit(resourceManager *resMngr, memoryManager *memMngr){
+#else
+return_t resMngrInit(resourceManager *resMngr){
+#endif
 
 	/*
 	** A general-purpose initializer
 	** for the resource manager.
 	*/
 
-	byte_t *i;
+	//byte_t *i;
 
 	/* Shared data. */
-	/*resMngr->resourceIDs = memMngrArenaNewTree(memMngr, NULL,
+	/*resMngr->resourceIDs = memMngrArenaNewTree(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_IDENTIFIER_SIZE,
 		RESOURCE_DEFAULT_IDENTIFIER_NUM
 	);
@@ -20,16 +28,24 @@ signed char resMngrInit(resourceManager *resMngr, memoryManager *memMngr){
 	}
 
 	// Shared mesh data.
-	resMngr->meshes = memMngrArenaNewTree(memMngr, NULL,
+	resMngr->meshes = memMngrArenaNewTree(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_MESH_SIZE,
 		RESOURCE_DEFAULT_MESH_NUM
 	);
 	if(resMngr->meshes == NULL){
 		return -1;
-	}*/
+	}*
 
 	// Shared hitbox data.
-	resMngr->hitboxes = memMngrArenaNewSLink(memMngr, NULL,
+	resMngr->hitboxes = memMngrArenaNewSLink(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_HITBOX_SIZE,
 		RESOURCE_DEFAULT_HITBOX_NUM
 	);
@@ -38,7 +54,11 @@ signed char resMngrInit(resourceManager *resMngr, memoryManager *memMngr){
 	}
 
 	// Shared physics data.
-	resMngr->colliders = memMngrArenaNewSLink(memMngr, NULL,
+	resMngr->colliders = memMngrArenaNewSLink(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_COLLIDER_SIZE,
 		RESOURCE_DEFAULT_COLLIDER_NUM
 	);
@@ -47,9 +67,13 @@ signed char resMngrInit(resourceManager *resMngr, memoryManager *memMngr){
 	}
 
 
-	/* Uninstantiated data. */
+	/* Uninstantiated data. *
 	// Uninstantiated object data.
-	resMngr->objects = memMngrArenaNewList(memMngr, NULL,
+	resMngr->objects = memMngrArenaNewList(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_OBJECT_SIZE,
 		RESOURCE_DEFAULT_OBJECT_NUM
 	);
@@ -58,30 +82,46 @@ signed char resMngrInit(resourceManager *resMngr, memoryManager *memMngr){
 	}
 
 	// Uninstantiated texture data.
-	resMngr->textures = memMngrArenaNewList(memMngr, NULL,
+	resMngr->textures = memMngrArenaNewList(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_TEXTURE_SIZE,
 		RESOURCE_DEFAULT_TEXTURE_NUM
 	);
 	if(resMngr->textures == NULL){
 		return -1;
 	}
-	resMngr->textureWrappers = memMngrArenaNewList(memMngr, NULL,
+	resMngr->textureWrappers = memMngrArenaNewList(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_TEXTURE_WRAPPER_SIZE,
 		RESOURCE_DEFAULT_TEXTURE_WRAPPER_NUM
 	);
 	if(resMngr->textureWrappers == NULL){
 		return -1;
 	}
-	/*resMngr->textureWrapperData = memMngrArenaNewTree(memMngr, NULL,
+	/*resMngr->textureWrapperData = memMngrArenaNewTree(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_TEXTURE_WRAPPER_DATA_SIZE,
 		RESOURCE_DEFAULT_TEXTURE_WRAPPER_DATA_NUM
 	);
 	if(resMngr->textureWrapperData == NULL){
 		return -1;
-	}*/
+	}*
 
 	// Uninstantiated model data.
-	resMngr->models = memMngrArenaNewList(memMngr, NULL,
+	resMngr->models = memMngrArenaNewList(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_MODEL_SIZE,
 		RESOURCE_DEFAULT_MODEL_NUM
 	);
@@ -90,7 +130,11 @@ signed char resMngrInit(resourceManager *resMngr, memoryManager *memMngr){
 	}
 
 	// Uninstantiated renderable data.
-	resMngr->renderables = memMngrArenaNewList(memMngr, NULL,
+	resMngr->renderables = memMngrArenaNewList(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_RENDERABLE_SIZE,
 		RESOURCE_DEFAULT_RENDERABLE_NUM
 	);
@@ -99,37 +143,57 @@ signed char resMngrInit(resourceManager *resMngr, memoryManager *memMngr){
 	}
 
 	// Uninstantiated skeleton data.
-	resMngr->skeletons = memMngrArenaNewList(memMngr, NULL,
+	resMngr->skeletons = memMngrArenaNewList(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_SKELETON_SIZE,
 		RESOURCE_DEFAULT_SKELETON_NUM
 	);
 	if(resMngr->skeletons == NULL){
 		return -1;
 	}
-	/*resMngr->skeletonData = memMngrArenaNewTree(memMngr, NULL,
+	/*resMngr->skeletonData = memMngrArenaNewTree(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_SKELETON_DATA_SIZE,
 		RESOURCE_DEFAULT_SKELETON_DATA_NUM
 	);
 	if(resMngr->skeletonData == NULL){
 		return -1;
-	}*/
-	resMngr->skeletalAnimations = memMngrArenaNewList(memMngr, NULL,
+	}*
+	resMngr->skeletalAnimations = memMngrArenaNewList(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_SKELETAL_ANIMATION_SIZE,
 		RESOURCE_DEFAULT_SKELETAL_ANIMATION_NUM
 	);
 	if(resMngr->skeletalAnimations == NULL){
 		return -1;
 	}
-	/*resMngr->skeletalAnimationData = memMngrArenaNewTree(memMngr, NULL,
+	/*resMngr->skeletalAnimationData = memMngrArenaNewTree(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_SKELETAL_ANIMATION_DATA_SIZE,
 		RESOURCE_DEFAULT_SKELETAL_ANIMATION_DATA_NUM
 	);
 	if(resMngr->skeletalAnimationData == NULL){
 		return -1;
-	}*/
+	}*
 
 	// Uninstantiated physics data.
-	resMngr->rigidBodies = memMngrArenaNewList(memMngr, NULL,
+	resMngr->rigidBodies = memMngrArenaNewList(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_RIGID_BODY_SIZE,
 		RESOURCE_DEFAULT_RIGID_BODY_NUM
 	);
@@ -138,25 +202,37 @@ signed char resMngrInit(resourceManager *resMngr, memoryManager *memMngr){
 	}
 
 
-	/* Instantiated data. */
+	/* Instantiated data. *
 	// Instantiated object data.
-	resMngr->objectInstances = memMngrArenaNewPool(memMngr, NULL,
+	resMngr->objectInstances = memMngrArenaNewPool(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_OBJECT_INSTANCE_SIZE,
 		RESOURCE_DEFAULT_OBJECT_INSTANCE_NUM
 	);
 	if(resMngr->objectInstances == NULL){
 		return -1;
 	}
-	/*resMngr->objectInstanceData = memMngrArenaNewTree(memMngr, NULL,
+	/*resMngr->objectInstanceData = memMngrArenaNewTree(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_OBJECT_INSTANCE_DATA_SIZE,
 		RESOURCE_DEFAULT_OBJECT_INSTANCE_DATA_NUM
 	);
 	if(resMngr->objectInstanceData == NULL){
 		return -1;
-	}*/
+	}*
 
 	// Instantiated renderable data.
-	resMngr->renderableInstances = memMngrArenaNewSLink(memMngr, NULL,
+	resMngr->renderableInstances = memMngrArenaNewSLink(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_RENDERABLE_INSTANCE_SIZE,
 		RESOURCE_DEFAULT_RENDERABLE_INSTANCE_NUM
 	);
@@ -165,14 +241,22 @@ signed char resMngrInit(resourceManager *resMngr, memoryManager *memMngr){
 	}
 
 	// Instantiated skeleton data.
-	resMngr->skeletalAnimationInstances = memMngrArenaNewSLink(memMngr, NULL,
+	resMngr->skeletalAnimationInstances = memMngrArenaNewSLink(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_SKELETAL_ANIMATION_INSTANCE_SIZE,
 		RESOURCE_DEFAULT_SKELETAL_ANIMATION_INSTANCE_NUM
 	);
 	if(resMngr->skeletalAnimationInstances == NULL){
 		return -1;
 	}
-	resMngr->skeletalAnimationFragments = memMngrArenaNewSLink(memMngr, NULL,
+	resMngr->skeletalAnimationFragments = memMngrArenaNewSLink(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_SKELETAL_ANIMATION_FRAGMENT_SIZE,
 		RESOURCE_DEFAULT_SKELETAL_ANIMATION_FRAGMENT_NUM
 	);
@@ -181,7 +265,11 @@ signed char resMngrInit(resourceManager *resMngr, memoryManager *memMngr){
 	}
 
 	// Instantiated hitbox data.
-	resMngr->hitboxArrayInstances = memMngrArenaNewSLink(memMngr, NULL,
+	resMngr->hitboxArrayInstances = memMngrArenaNewSLink(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_HITBOX_ARRAY_SIZE,
 		RESOURCE_DEFAULT_HITBOX_ARRAY_NUM
 	);
@@ -190,21 +278,33 @@ signed char resMngrInit(resourceManager *resMngr, memoryManager *memMngr){
 	}
 
 	// Instantiated physics data.
-	resMngr->rigidBodyInstances = memMngrArenaNewSLink(memMngr, NULL,
+	resMngr->rigidBodyInstances = memMngrArenaNewSLink(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_SIZE,
 		RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_NUM
 	);
 	if(resMngr->rigidBodyInstances == NULL){
 		return -1;
 	}
-	resMngr->constraintInstances = memMngrArenaNewSLink(memMngr, NULL,
+	resMngr->constraintInstances = memMngrArenaNewSLink(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_CONSTRAINT_SIZE,
 		RESOURCE_DEFAULT_CONSTRAINT_NUM
 	);
 	if(resMngr->constraintInstances == NULL){
 		return -1;
 	}
-	resMngr->collisionInstances = memMngrArenaNewSLink(memMngr, NULL,
+	resMngr->collisionInstances = memMngrArenaNewSLink(
+		#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
+		memMngr,
+		#endif
+		NULL,
 		RESOURCE_DEFAULT_COLLISION_SIZE,
 		RESOURCE_DEFAULT_COLLISION_NUM
 	);
@@ -266,14 +366,17 @@ signed char resMngrInit(resourceManager *resMngr, memoryManager *memMngr){
 	while(i < memListEnd(resMngr->rigidBodies)){
 		physRigidBodyInit((physRigidBody *)i);
 		memListBlockNext(resMngr->rigidBodies, i);
-	}
+	}*/
 
+
+	#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
 	resMngr->memMngr = memMngr;
+	#endif
 	return 1;
 
 }
 
-signed char resMngrCreateDefaultResources(resourceManager *resMngr){
+return_t resMngrCreateDefaultResources(resourceManager *resMngr){
 
 	//char *defaultName;
 	texture *defaultTexture;
@@ -294,17 +397,17 @@ signed char resMngrCreateDefaultResources(resourceManager *resMngr){
 	defaultName[6] = 't';
 	defaultName[7] = '\0';*/
 
-	defaultTexture = (texture *)memListAllocate(resMngr->textures);
+	defaultTexture = (texture *)memListAllocate(&resMngr->textures);
 	if(defaultTexture == NULL){
 		return -1;
 	}
-	tDefault(defaultTexture, resMngr);
+	tDefault(defaultTexture);
 
-	defaultTextureWrapper = (textureWrapper *)memListAllocate(resMngr->textureWrappers);
+	defaultTextureWrapper = (textureWrapper *)memListAllocate(&resMngr->textureWrappers);
 	if(defaultTexture == NULL){
 		return -1;
 	}
-	twDefault(defaultTextureWrapper, resMngr);
+	twDefault(defaultTextureWrapper);
 
 	/*defaultSkeleton = (skeleton *)memListAllocate(resMngr->skeletons);
 	if(defaultSkeleton == NULL){
@@ -325,59 +428,59 @@ signed char resMngrCreateDefaultResources(resourceManager *resMngr){
 void resMngrDelete(resourceManager *resMngr){
 
 	/* Shared data. */
-	//memTreeFree(&resMngr->memMngr->allocator, resMngr->resourceIDs);
+	//memTreeDelete(&resMngr->resourceIDs);
 
 	// Shared mesh data.
-	//memTreeFree(&resMngr->memMngr->allocator, resMngr->meshes);
+	//memTreeDelete(&resMngr->meshes);
 	// Shared hitbox data.
-	memTreeFree(&resMngr->memMngr->allocator, resMngr->hitboxes);
+	memSLinkDelete(&resMngr->hitboxes);
 	// Shared physics data.
-	memTreeFree(&resMngr->memMngr->allocator, resMngr->colliders);
+	memSLinkDelete(&resMngr->colliders);
 
 
 	/* Uninstantiated data. */
 	// Uninstantiated object data.
-	memTreeFree(&resMngr->memMngr->allocator, resMngr->objects);
+	memListDelete(&resMngr->objects);
 
 	// Uninstantiated texture data.
-	memTreeFree(&resMngr->memMngr->allocator, resMngr->textures);
-	memTreeFree(&resMngr->memMngr->allocator, resMngr->textureWrappers);
-	//memTreeFree(&resMngr->memMngr->allocator, resMngr->textureWrapperData);
+	memListDelete(&resMngr->textures);
+	memListDelete(&resMngr->textureWrappers);
+	//memTreeDelete(&resMngr->textureWrapperData);
 
 	// Uninstantiated model data.
-	memTreeFree(&resMngr->memMngr->allocator, resMngr->models);
+	memListDelete(&resMngr->models);
 
 	// Uninstantiated renderable data.
-	memTreeFree(&resMngr->memMngr->allocator, resMngr->renderables);
+	memListDelete(&resMngr->renderables);
 
 	// Uninstantiated skeleton data.
-	memTreeFree(&resMngr->memMngr->allocator, resMngr->skeletons);
-	//memTreeFree(&resMngr->memMngr->allocator, resMngr->skeletonData);
-	memTreeFree(&resMngr->memMngr->allocator, resMngr->skeletalAnimations);
-	//memTreeFree(&resMngr->memMngr->allocator, resMngr->skeletalAnimationData);
+	memListDelete(&resMngr->skeletons);
+	//memTreeDelete(&resMngr->skeletonData);
+	memListDelete(&resMngr->skeletalAnimations);
+	//memTreeDelete(&resMngr->skeletalAnimationData);
 
 	// Uninstantiated physics data.
-	memTreeFree(&resMngr->memMngr->allocator, resMngr->rigidBodies);
+	memListDelete(&resMngr->rigidBodies);
 
 
 	/* Instantiated data. */
 	// Instantiated object data.
-	memTreeFree(&resMngr->memMngr->allocator, resMngr->objectInstances);
-	//memTreeFree(&resMngr->memMngr->allocator, resMngr->objectInstanceData);
+	memPoolDelete(&resMngr->objectInstances);
+	//memTreeDelete(&resMngr->objectInstanceData);
 
 	// Instantiated renderable data.
-	memTreeFree(&resMngr->memMngr->allocator, resMngr->renderableInstances);
+	memSLinkDelete(&resMngr->renderableInstances);
 
 	// Instantiated skeleton data.
-	memTreeFree(&resMngr->memMngr->allocator, resMngr->skeletalAnimationInstances);
-	memTreeFree(&resMngr->memMngr->allocator, resMngr->skeletalAnimationFragments);
+	memSLinkDelete(&resMngr->skeletalAnimationInstances);
+	memSLinkDelete(&resMngr->skeletalAnimationFragments);
 
 	// Instantiated hitbox data.
-	memTreeFree(&resMngr->memMngr->allocator, resMngr->hitboxArrayInstances);
+	memSLinkDelete(&resMngr->hitboxArrayInstances);
 
 	// Instantiated physics data.
-	memTreeFree(&resMngr->memMngr->allocator, resMngr->rigidBodyInstances);
-	memTreeFree(&resMngr->memMngr->allocator, resMngr->constraintInstances);
-	memTreeFree(&resMngr->memMngr->allocator, resMngr->collisionInstances);
+	memSLinkDelete(&resMngr->rigidBodyInstances);
+	memSLinkDelete(&resMngr->constraintInstances);
+	memSLinkDelete(&resMngr->collisionInstances);
 
 }

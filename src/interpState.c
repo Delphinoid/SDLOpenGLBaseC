@@ -12,7 +12,7 @@ void iFloatInit(interpFloat *iFloat, const float s){
 void iFloatResetInterp(interpFloat *iFloat){
 	iFloat->previous = iFloat->value;
 }
-signed char iFloatUpdate(interpFloat *iFloat, const float interpT){
+return_t iFloatUpdate(interpFloat *iFloat, const float interpT){
 	if(interpT == 0.f){
 		// If the value hasn't changed, there's nothing to interpolate.
 		if(iFloat->render == iFloat->previous){
@@ -55,7 +55,7 @@ void iSizeTInit(interpSizeT *iSizeT, const size_t s){
 void iSizeTResetInterp(interpSizeT *iSizeT){
 	iSizeT->previous = iSizeT->value;
 }
-signed char iSizeTUpdate(interpSizeT *iSizeT, const float interpT){
+return_t iSizeTUpdate(interpSizeT *iSizeT, const float interpT){
 	if(interpT == 0.f){
 		// If the value hasn't changed, there's nothing to interpolate.
 		if(iSizeT->render == iSizeT->previous){
@@ -104,7 +104,7 @@ void iVec3Init(interpVec3 *iVec3, const float x, const float y, const float z){
 void iVec3ResetInterp(interpVec3 *iVec3){
 	iVec3->previous = iVec3->value;
 }
-signed char iVec3Update(interpVec3 *iVec3, const float interpT){
+return_t iVec3Update(interpVec3 *iVec3, const float interpT){
 	if(interpT == 0.f){
 		// If the value hasn't changed, there's nothing to interpolate.
 		if(iVec3->render.x == iVec3->previous.x &&
@@ -161,7 +161,7 @@ void iQuatInit(interpQuat *iQuat){
 void iQuatResetInterp(interpQuat *iQuat){
 	iQuat->previous = iQuat->value;
 }
-signed char iQuatUpdate(interpQuat *iQuat, const float interpT){
+return_t iQuatUpdate(interpQuat *iQuat, const float interpT){
 	if(interpT == 0.f){
 		// If the value hasn't changed, there's nothing to interpolate.
 		if(iQuat->render.w   == iQuat->previous.w   &&

@@ -23,7 +23,7 @@ void rndriInstantiate(rndrInstance *rndri, const renderable *base){
 	twiInit(&rndri->twi, base->tw);
 }
 
-/*signed char rndrCreate(renderable *rndr, model *mdl, textureWrapper *tw, const skl *oskl){
+/*return_t rndrCreate(renderable *rndr, model *mdl, textureWrapper *tw, const skl *oskl){
 
 	size_t arraySizeS = mdl->skl->boneNum*sizeof(size_t);
 	size_t arraySizeB = mdl->skl->boneNum*sizeof(bone);
@@ -60,7 +60,7 @@ void rndriInstantiate(rndrInstance *rndri, const renderable *base){
 
 }
 
-signed char rndrCopy(renderable *o, renderable *c){
+return_t rndrCopy(renderable *o, renderable *c){
 
 	if(o->skeletonState[0] == NULL){
 		if(c->skeletonState[0] != NULL){
@@ -132,7 +132,7 @@ void rndrConfigResetInterpolation(rndrConfig *rc){
 	iFloatResetInterp(&rc->alpha);
 }
 
-signed char rndrConfigRenderUpdate(rndrConfig *rc, const float interpT){
+return_t rndrConfigRenderUpdate(rndrConfig *rc, const float interpT){
 
 	// Return whether or not anything has changed.
 	/** Remove alpha updates from here once rndrRenderMethod() is being used by everything. **/
@@ -234,7 +234,7 @@ void rndrConfigGenerateTransform(const rndrConfig *rc, const camera *cam, mat4 *
 
 void rndrConfigGenerateSprite(const rndrConfig *rc, const twInstance *twi, vertex *vertices, const mat4 *transformMatrix){
 
-	unsigned int i;
+	int i;
 
 	/* Undo the initial translations in rndrGenerateTransform() and use our own */
 	/** Only way to remove this is to duplicate rndrGenerateTransform(). Is it worth it? **/
@@ -327,7 +327,7 @@ void rndrConfigGenerateSprite(const rndrConfig *rc, const twInstance *twi, verte
 void rndrConfigOffsetSpriteTexture(vertex *vertices, const float texFrag[4], const float texWidth, const float texHeight){
 	// We can't pass unique textureFragment values for each individual sprite when batching. Therefore,
 	// we have to do the offset calculations for each vertex UV here instead of in the shader
-	unsigned int i;
+	int i;
 	for(i = 0; i < 4; ++i){
 		vertices[i].u = ((vertices[i].u * texFrag[2]) + texFrag[0]) / texWidth;
 		vertices[i].v = ((vertices[i].v * texFrag[3]) + texFrag[1]) / texHeight;

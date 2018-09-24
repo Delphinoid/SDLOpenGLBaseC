@@ -11,6 +11,12 @@
 ** flag for iterations, stored in a
 ** header before the main block data.
 **
+** The flag may have three potential
+** states:
+** MEMORY_POOL_ACTIVE   - Currently in use.
+** MEMORY_POOL_INACTIVE - Currently not in use.
+** MEMORY_POOL_INVALID  - End of the pool.
+**
 ** Free-list pointers point to the
 ** data, not the beginning of the block.
 */
@@ -21,8 +27,9 @@
 *** active member?
 **/
 
-#define MEMORY_POOL_INACTIVE 0
-#define MEMORY_POOL_ACTIVE   1
+#define MEMORY_POOL_ACTIVE   (byte_t)0x00
+#define MEMORY_POOL_INACTIVE (byte_t)0x01
+#define MEMORY_POOL_INVALID  (byte_t)0x02
 
 #define MEMORY_POOL_BLOCK_POINTER_SIZE sizeof(byte_t *)
 #define MEMORY_POOL_BLOCK_FLAGS_SIZE   sizeof(byte_t)
@@ -64,11 +71,11 @@ typedef struct {
 	// The following can save small amounts of memory but can't be predicted as easily:
 	//(memPoolBlockSize(bytes) * (length - 1) + memPoolBlockSizeUnaligned(bytes) + (uintptr_t)memPoolAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 
-#define memPoolFirst(pool)        ((void *)memPoolAlignStartData(pool->region->start))
-#define memPoolBlockStatus(block) memPoolBlockGetFlags(block)
-#define memPoolBlockNext(pool, i) i += pool->block
-#define memPoolEnd(pool)          ((byte_t *)pool->region)
-#define memPoolChunkNext(pool)    pool->region->next
+#define memPoolFirst(pool)        ((void *)memPoolAlignStartData((pool).region->start))
+#define memPoolBlockStatus(block) memPoolDataGetFlags(block)
+#define memPoolBlockNext(pool, i) i = (void *)((byte_t *)i + (pool).block)
+#define memPoolEnd(pool)          ((byte_t *)(pool).region)
+#define memPoolChunkNext(pool)    (pool).region->next
 
 void memPoolInit(memoryPool *pool);
 void *memPoolCreate(memoryPool *pool, void *start, const size_t bytes, const size_t length);
@@ -77,5 +84,6 @@ void memPoolFree(memoryPool *pool, void *block);
 void *memPoolSetupMemory(void *start, const size_t bytes, const size_t length);
 void memPoolClear(memoryPool *pool);
 void *memPoolExtend(memoryPool *pool, void *start, const size_t bytes, const size_t length);
+void memPoolDelete(memoryPool *pool);
 
 #endif

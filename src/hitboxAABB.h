@@ -1,6 +1,8 @@
 #ifndef HITBOXAABB_H
 #define HITBOXAABB_H
 
+#include "typedefs.h"
+
 typedef struct {
 	float left;
 	float right;
@@ -10,6 +12,6 @@ typedef struct {
 	float back;
 } hbAABB;
 
-signed char hbAABBCollision(const hbAABB *c1, const hbAABB *c2);
+return_t hbAABBCollision(const hbAABB *c1, const hbAABB *c2);
 
 #endif

@@ -2,6 +2,7 @@
 #define ENGINEMATH_H
 
 #include "vec3.h"
+#include "typedefs.h"
 
 float fastInvSqrt(float x);
 float fastInvSqrtAccurate(float x);
@@ -19,6 +20,6 @@ float pointPlaneDistance(const vec3 *normal, const vec3 *vertex, const vec3 *poi
 void pointPlaneProject(const vec3 *normal, const vec3 *vertex, vec3 *point);
 
 void linePlaneIntersection(const vec3 *normal, const vec3 *vertex, const vec3 *line, vec3 *point);
-signed char segmentPlaneIntersection(const vec3 *normal, const vec3 *vertex, const vec3 *start, const vec3 *end, vec3 *point);
+return_t segmentPlaneIntersection(const vec3 *normal, const vec3 *vertex, const vec3 *start, const vec3 *end, vec3 *point);
 
 #endif

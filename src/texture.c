@@ -1,7 +1,8 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include "texture.h"
-#include "memoryShared.h"
+#include "memoryManager.h"
+#include "helpersFileIO.h"
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
 
@@ -15,33 +16,23 @@ void tInit(texture *tex){
 	tex->translucent = 0;
 }
 
-signed char tLoad(texture *tex, const char *prgPath, const char *filePath){
-
-	const size_t pathLen = strlen(prgPath);
-	const size_t fileLen = strlen(filePath);
-	char *fullPath;
+return_t tLoad(texture *tex, const char *prgPath, const char *filePath){
 
 	SDL_Surface *SDLimage;
 	GLint pixelFormat;
 	GLenum glError;
 
+	char fullPath[FILE_MAX_PATH_LENGTH];
+	const size_t fileLength = strlen(filePath);
+
 	tInit(tex);
 
-	fullPath = malloc((pathLen+fileLen+1)*sizeof(char));
-	if(fullPath == NULL){
-		/** Remove printf()s **/
-		/** Memory allocation failure. **/
-		return -1;
-	}
-	memcpy(fullPath, prgPath, pathLen);
-	memcpy(fullPath+pathLen, filePath, fileLen);
-	fullPath[pathLen+fileLen] = '\0';
+	fileGenerateFullPath(&fullPath[0], prgPath, strlen(prgPath), filePath, fileLength);
 
 	/* Load image with SDL_Image */
-	SDLimage = IMG_Load(fullPath);
+	SDLimage = IMG_Load(&fullPath[0]);
 	if(SDLimage == NULL){
-		printf("Error generating SDL_Surface for texture \"%s\": %s\n", fullPath, SDL_GetError());
-		free(fullPath);
+		printf("Error generating SDL_Surface for texture \"%s\": %s\n", &fullPath[0], SDL_GetError());
 		return 0;
 	}
 
@@ -67,9 +58,8 @@ signed char tLoad(texture *tex, const char *prgPath, const char *filePath){
 
 	glError = glGetError();
 	if(glError != GL_NO_ERROR){
-		printf("Error generating OpenGL texture \"%s\": %u\n", fullPath, glError);
+		printf("Error generating OpenGL texture \"%s\": %u\n", &fullPath[0], glError);
 		tDelete(tex);
-		free(fullPath);
 		return 0;
 	}
 
@@ -90,30 +80,27 @@ signed char tLoad(texture *tex, const char *prgPath, const char *filePath){
 	SDL_FreeSurface(SDLimage);
 
 
-	free(fullPath);
-
-
-	tex->name = malloc((fileLen+1)*sizeof(char));
+	tex->name = memAllocate((fileLength+1)*sizeof(char));
 	if(tex->name == NULL){
 		/** Memory allocation failure. **/
 		tDelete(tex);
 		return -1;
 	}
-	memcpy(tex->name, filePath, fileLen);
-	tex->name[fileLen] = '\0';
+	memcpy(tex->name, filePath, fileLength);
+	tex->name[fileLength] = '\0';
 
 	return 1;
 
 }
 
-signed char tDefault(texture *tex){
+return_t tDefault(texture *tex){
 
 	GLenum glError;
-	GLsizei pixels[32*32];
+	GLsizei pixels[1024];
 	size_t h, w;
 
 	tInit(tex);
-	tex->name = malloc(8*sizeof(char));
+	tex->name = memAllocate(8*sizeof(char));
 	if(tex->name == NULL){
 		/** Memory allocation failure. **/
 		return -1;
@@ -171,6 +158,6 @@ void tDelete(texture *tex){
 		tex->id = 0;
 	}
 	if(tex->name != NULL){
-		free(tex->name);
+		memFree(tex->name);
 	}
 }

@@ -3,6 +3,7 @@
 
 #include "vec4.h"
 #include "quat.h"
+#include "typedefs.h"
 
 typedef struct {
 	float m[4][4];
@@ -29,12 +30,12 @@ mat4 mat4GetTranspose(const mat4 *m);
 void mat4Transpose(mat4 *m);
 void mat4TransposeR(const mat4 *m, mat4 *r);
 
-signed char mat4Invert(mat4 *m);
-signed char mat4InvertR(const mat4 *m, mat4 *r);
+return_t mat4Invert(mat4 *m);
+return_t mat4InvertR(const mat4 *m, mat4 *r);
 
-signed char mat4Frustum(mat4 *m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar);
-signed char mat4Ortho(mat4 *m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar);
-signed char mat4Perspective(mat4 *m, const float fovy, const float aspectRatio, const float zNear, const float zFar);
+return_t mat4Frustum(mat4 *m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar);
+return_t mat4Ortho(mat4 *m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar);
+return_t mat4Perspective(mat4 *m, const float fovy, const float aspectRatio, const float zNear, const float zFar);
 void mat4RotateToFace(mat4 *m, const vec3 *eye, const vec3 *target, const vec3 *up);
 void mat4LookAt(mat4 *m, const vec3 *eye, const vec3 *target, const vec3 *up);
 

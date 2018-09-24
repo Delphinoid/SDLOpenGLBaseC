@@ -1,4 +1,5 @@
 #include "engineMath.h"
+#include "inline.h"
 #include <math.h>
 
 vec3 vec3New(const float x, const float y, const float z){
@@ -330,13 +331,13 @@ void vec3DivSByV(const float s, vec3 *v){
 	}
 }
 
-inline float vec3Magnitude(const vec3 *v){
+__FORCE_INLINE__ float vec3Magnitude(const vec3 *v){
 	return sqrtf(v->x*v->x + v->y*v->y + v->z*v->z);
 }
-inline float vec3MagnitudeSquared(const vec3 *v){
+__FORCE_INLINE__ float vec3MagnitudeSquared(const vec3 *v){
 	return v->x*v->x + v->y*v->y + v->z*v->z;
 }
-inline float vec3InverseMagnitude(const vec3 *v){
+__FORCE_INLINE__ float vec3InverseMagnitude(const vec3 *v){
 	const float magnitudeSquared = v->x*v->x + v->y*v->y + v->z*v->z;
 	return fastInvSqrt(magnitudeSquared);
 }

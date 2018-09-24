@@ -7,6 +7,7 @@
 #include "memorySLink.h"
 #include "memoryDLink.h"
 #include "memoryTree.h"
+#include "typedefs.h"
 
 /*
 ** The memory manager maintains a linked
@@ -51,6 +52,10 @@
 
 #endif
 
+#ifndef MEMORY_MANAGER_VIRTUAL_HEAP_REALLOC_SIZE
+	#define MEMORY_MANAGER_VIRTUAL_HEAP_REALLOC_SIZE MEMORY_MANAGER_DEFAULT_VIRTUAL_HEAP_SIZE
+#endif
+
 typedef struct {
 
 	/*
@@ -61,18 +66,69 @@ typedef struct {
 
 } memoryManager;
 
-#define memMngrAllocate(bytes)         memTreeAllocate(&memMngr->allocator, bytes)
-#define memMngrReallocate(data, bytes) memTreeReallocate(&memMngr->allocator, data, bytes)
-#define memMngrFree(data)              memTreeFree(&memMngr->allocator, data)
+#ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
 
-byte_t *memMngrAllocateVirtualHeap(memoryManager *memMngr, const size_t bytes);
-signed char memMngrInit(memoryManager *memMngr, const size_t bytes, const size_t num);
-memoryStack *memMngrArenaNewStack(memoryManager *memMngr, memoryStack *last, const size_t bytes, const size_t length);
-memoryList  *memMngrArenaNewList (memoryManager *memMngr, memoryList  *last, const size_t bytes, const size_t length);
-memoryPool  *memMngrArenaNewPool (memoryManager *memMngr, memoryPool  *last, const size_t bytes, const size_t length);
-memorySLink *memMngrArenaNewSLink(memoryManager *memMngr, memorySLink *last, const size_t bytes, const size_t length);
-memoryDLink *memMngrArenaNewDLink(memoryManager *memMngr, memoryDLink *last, const size_t bytes, const size_t length);
-memoryTree  *memMngrArenaNewTree (memoryManager *memMngr, memoryTree  *last, const size_t bytes, const size_t length);
-void memMngrDelete(memoryManager *memMngr);
+	#define memAllocate(bytes)         memTreeAllocate(&__memmngr->allocator, bytes)
+	#define memReallocate(data, bytes) memTreeReallocate(&__memmngr->allocator, data, bytes)
+	#define memFree(data)              memTreeFree(&__memmngr->allocator, data)
+
+	#ifdef MEMORY_DEBUG
+		#define memPrintFreeBlocks(recursions)  memTreePrintFreeBlocks(&__memmngr->allocator, recursions)
+		#define memPrintAllBlocks()             memTreePrintAllBlocks(&__memmngr->allocator)
+	#else
+		#define memPrintFreeBlocks(recursions)
+		#define memPrintAllBlocks()
+	#endif
+
+	byte_t *memMngrReallocateVirtualHeap(memoryManager *memMngr, const size_t bytes);
+	return_t memMngrInit(memoryManager *memMngr, const size_t bytes, const size_t num);
+	void memMngrDelete(memoryManager *memMngr);
+
+	#ifdef MEMORY_MANAGER_ENFORCE_STATIC_VIRTUAL_HEAP
+		#define memForceAllocate(bytes) memTreeAllocate(&__memmngr->allocator, bytes)
+	#else
+		#define memForceAllocate(bytes)                                                          \
+			if(                                                                                  \
+				memTreeAllocate(&__memmngr->allocator, bytes) == NULL &&                         \
+				memTreeAllocationSize(NULL, bytes, MEMORY_UNKNOWN_LENGTH)                        \
+				<                                                                                \
+				MEMORY_MANAGER_VIRTUAL_HEAP_REALLOC_SIZE - sizeof(memoryRegion)                  \
+			){                                                                                   \
+				memMngrAllocateVirtualHeap(__memmngr, MEMORY_MANAGER_VIRTUAL_HEAP_REALLOC_SIZE); \
+			}
+	#endif
+
+#else
+
+	//#ifdef MEMORY_DEBUG
+		//extern memoryManager __memmngr;
+	//#endif
+
+	//#define memAllocate(bytes)         memTreeAllocate(&__memmngr.allocator, bytes)
+	//#define memReallocate(data, bytes) memTreeReallocate(&__memmngr.allocator, data, bytes)
+	//#define memFree(data)              memTreeFree(&__memmngr.allocator, data)
+
+	//#ifdef MEMORY_DEBUG
+	//	#define memPrintFreeBlocks(recursions)  memTreePrintFreeBlocks(&__memmngr.allocator, recursions)
+	//	#define memPrintAllBlocks()             memTreePrintAllBlocks(&__memmngr.allocator)
+	//#else
+	//	#define memPrintFreeBlocks(recursions)
+	//	#define memPrintAllBlocks()
+	//#endif
+
+	void *memAllocate(const size_t bytes);
+	void *memReallocate(void *data, const size_t bytes);
+	void memFree(void *data);
+
+	void memPrintFreeBlocks(const unsigned int recursions);
+	void memPrintAllBlocks();
+
+	byte_t *memMngrAllocateVirtualHeap(const size_t bytes);
+	return_t memMngrInit(const size_t bytes, const size_t num);
+	void memMngrDelete();
+
+	void *memForceAllocate(const size_t bytes);
+
+#endif
 
 #endif

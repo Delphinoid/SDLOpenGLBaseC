@@ -1,7 +1,7 @@
 #include "model.h"
+#include "helpersFileIO.h"
 #include "helpersMisc.h"
 #include <string.h>
-#include <stdio.h>
 
 /** Merge mdlWavefrontObjLoad() with mdlLoad(). **/
 
@@ -21,9 +21,6 @@
 	if(*indices != NULL){ \
 		free(*indices); \
 	} \
-	if(*sklPath != NULL){ \
-		free(*sklPath); \
-	}
 
 #define mdlWavefrontObjFreeHelpers() \
 	if(tempPositions != NULL){ \
@@ -42,14 +39,14 @@
 		free(tempBoneWeights); \
 	}
 
-signed char mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndexNum_t *indexNum, vertexIndex_t **indices, char **name, char **sklPath){
+return_t mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndexNum_t *indexNum, vertexIndex_t **indices, char **name, char *sklPath){
 
 	FILE *mdlInfo = fopen(filePath, "r");
 
 	if(mdlInfo != NULL){
 
-		unsigned int i;
-		char lineFeed[1024];
+		int i;
+		char lineFeed[FILE_MAX_LINE_LENGTH];
 		char *line;
 		size_t lineLength;
 
@@ -93,7 +90,7 @@ signed char mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, 
 			free(*vertices);
 			return -1;
 		}
-		/**const signed char generatePhysProperties = (mass != NULL && area != NULL && centroid != NULL);
+		/**const int generatePhysProperties = (mass != NULL && area != NULL && centroid != NULL);
 		if(generatePhysProperties){
 			*mass = 0.f;
 			*area = 0.f;
@@ -176,7 +173,7 @@ signed char mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, 
 				(*name)[lineLength-5] = '\0';
 
 			// Skeleton
-			}else if(sklPath != NULL && *sklPath == NULL && lineLength > 9 && strncmp(line, "skeleton ", 9) == 0){
+			}else if(sklPath != NULL && sklPath[0] == '\0' && lineLength > 9 && strncmp(line, "skeleton ", 9) == 0){
 				size_t pathBegin;
 				size_t pathLength;
 				const char *firstQuote = strchr(line+9, '"');
@@ -192,16 +189,8 @@ signed char mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, 
 					pathBegin = 9;
 					pathLength = lineLength-pathBegin;
 				}
-				*sklPath = malloc((pathLength+1) * sizeof(char));
-				if(*sklPath == NULL){
-					/** Memory allocation failure. **/
-					mdlWavefrontObjFreeHelpers();
-					mdlWavefrontObjFreeReturns();
-					fclose(mdlInfo);
-					return -1;
-				}
-				strncpy(*sklPath, line+pathBegin, pathLength);
-				(*sklPath)[pathLength] = '\0';
+				strncpy(sklPath, line+pathBegin, pathLength);
+				sklPath[pathLength] = '\0';
 
 			// Vertex data
 			}else if(lineLength >= 7 && strncmp(line, "v ", 2) == 0){
@@ -434,7 +423,7 @@ signed char mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, 
 					}
 
 					// Check if the vertex has already been loaded, and if so add an index
-					signed char foundVertex = 0;
+					int foundVertex = 0;
 					vertexIndex_t j;
 					for(j = 0; j < *vertexNum; ++j){
 						vertex *checkVert = &(*vertices)[j];
@@ -538,7 +527,7 @@ signed char mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, 
 #define mdlSMDFreeHelpers() \
 	sklDelete(&tempSkl);
 
-signed char mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, size_t *indexNum, size_t **indices, char **name, cVector *allSkeletons){
+return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, size_t *indexNum, size_t **indices, char **name, cVector *allSkeletons){
 	/*
 	** Temporary function by 8426THMY.
 	*/

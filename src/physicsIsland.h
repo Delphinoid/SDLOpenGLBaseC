@@ -18,11 +18,11 @@ typedef struct {
 } physIsland;
 
 void physIslandInit(physIsland *island);
-signed char physIslandAddBody(physIsland *island, physRBInstance *prbi);
-/*signed char physIslandAddObject(physIsland *island, objInstance *obji);*/
+return_t physIslandAddBody(physIsland *island, physRBInstance *prbi);
+/*return_t physIslandAddObject(physIsland *island, objInstance *obji);*/
 void physIslandUpdate(physIsland *island, const float dt);
 void physIslandBroadPhase(physIsland *island, const float dt, physicsBodyIndex_t *pairArraySize, physRigidBody ***pairArray);
-signed char physIslandSimulate(physIsland *island, const float dt);
+return_t physIslandSimulate(physIsland *island, const float dt);
 void physIslandDelete(physIsland *island);
 
 #endif

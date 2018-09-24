@@ -3,7 +3,7 @@
 #include "mathConstants.h"
 #include <math.h>
 
-signed char camInit(void *cam){
+return_t camInit(void *cam){
 	iVec3Init(&((camera *)cam)->position, 0.f, 0.f, 0.f);
 	iQuatInit(&((camera *)cam)->orientation);
 	vec3Set(&((camera *)cam)->rotation, 0.f, 0.f, 0.f);
@@ -18,7 +18,7 @@ signed char camInit(void *cam){
 	((camera *)cam)->flags = CAM_UPDATE_VIEW | CAM_UPDATE_PROJECTION;
 	return 1;
 }
-signed char camStateCopy(void *o, void *c){
+return_t camStateCopy(void *o, void *c){
 	((camera *)c)->position = ((camera *)o)->position;
 	((camera *)c)->orientation = ((camera *)o)->orientation;
 	((camera *)c)->rotation = ((camera *)o)->rotation;

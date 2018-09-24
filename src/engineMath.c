@@ -178,7 +178,7 @@ void linePlaneIntersection(const vec3 *normal, const vec3 *vertex, const vec3 *l
 	point->y = line->y * t;
 	point->z = line->z * t;
 }
-signed char segmentPlaneIntersection(const vec3 *normal, const vec3 *vertex, const vec3 *start, const vec3 *end, vec3 *point){
+return_t segmentPlaneIntersection(const vec3 *normal, const vec3 *vertex, const vec3 *start, const vec3 *end, vec3 *point){
 	/*
 	** Finds the intersection between
 	** a line segment and a plane.

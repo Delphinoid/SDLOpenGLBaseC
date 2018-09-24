@@ -143,7 +143,7 @@ void mat3TransposeR(const mat3 *m, mat3 *r){
 	r->m[2][0] = m->m[0][2]; r->m[2][1] = m->m[1][2]; r->m[2][2] = m->m[2][2];
 }
 
-signed char mat3Invert(mat3 *m){
+return_t mat3Invert(mat3 *m){
 
 	const float f0 = m->m[1][1] * m->m[2][2] - m->m[1][2] * m->m[2][1];
 	const float f1 = m->m[2][1] * m->m[0][2] - m->m[0][1] * m->m[2][2];
@@ -174,7 +174,7 @@ signed char mat3Invert(mat3 *m){
 	return 0;
 
 }
-signed char mat3InvertR(const mat3 *m, mat3 *r){
+return_t mat3InvertR(const mat3 *m, mat3 *r){
 
 	const float f0 = m->m[1][1] * m->m[2][2] - m->m[1][2] * m->m[2][1];
 	const float f1 = m->m[2][1] * m->m[0][2] - m->m[0][1] * m->m[2][2];

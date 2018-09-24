@@ -231,16 +231,16 @@ void mat4TransposeR(const mat4 *m, mat4 *r){
 	r->m[3][0] = m->m[0][3]; r->m[3][1] = m->m[1][3]; r->m[3][2] = m->m[2][3]; r->m[3][3] = m->m[3][3];
 }
 
-signed char mat4Invert(mat4 *m){
+return_t mat4Invert(mat4 *m){
 	/* Find the inverse using Gauss-Jordan elimination. */
 	return 0;
 }
-signed char mat4InvertR(const mat4 *m, mat4 *r){
+return_t mat4InvertR(const mat4 *m, mat4 *r){
 	/* Find the inverse using Gauss-Jordan elimination. */
 	return 0;
 }
 
-signed char mat4Frustum(mat4 *m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar){
+return_t mat4Frustum(mat4 *m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar){
 	if(left == right || bottom == top || zNear == zFar){
 		return 0;
 	}
@@ -250,7 +250,7 @@ signed char mat4Frustum(mat4 *m, const float left, const float right, const floa
 	m->m[3][0] = 0.f;                       m->m[3][1] = 0.f;                       m->m[3][2] = 2.f*zFar*zNear/(zFar-zNear); m->m[3][3] = 0.f;
 	return 1;
 }
-signed char mat4Ortho(mat4 *m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar){
+return_t mat4Ortho(mat4 *m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar){
 	if(left == right || bottom == top || zNear == zFar){
 		return 0;
 	}
@@ -260,7 +260,7 @@ signed char mat4Ortho(mat4 *m, const float left, const float right, const float 
 	m->m[3][0] = -((right+left)/(right-left)); m->m[3][1] = -((top+bottom)/(top-bottom)); m->m[3][2] = -((zFar+zNear)/(zFar-zNear)); m->m[3][3] = 1.f;
 	return 1;
 }
-signed char mat4Perspective(mat4 *m, const float fovy, const float aspectRatio, const float zNear, const float zFar){
+return_t mat4Perspective(mat4 *m, const float fovy, const float aspectRatio, const float zNear, const float zFar){
 	if(fovy == 0.f || aspectRatio == 0.f || zNear == zFar){
 		return 0;
 	}

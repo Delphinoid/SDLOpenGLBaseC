@@ -1,4 +1,5 @@
 #include "memoryStack.h"
+#include "inline.h"
 
 void memStackInit(memoryStack *stack){
 	stack->free = NULL;
@@ -32,6 +33,10 @@ void memStackPop(memoryStack *stack, const size_t bytes){
 	}
 }
 
-inline void memStackClear(memoryStack *stack){
+__FORCE_INLINE__ void memStackClear(memoryStack *stack){
 	stack->free = stack->region->start;
+}
+
+void memStackDelete(memoryStack *stack){
+	memRegionFree(stack->region);
 }

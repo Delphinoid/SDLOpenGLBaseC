@@ -5,7 +5,7 @@
 
 typedef struct {
 	physRBInstance *body;
-	signed char active;
+	flags_t active;
 } physBodyReference;
 
 typedef struct {
@@ -26,7 +26,7 @@ typedef struct {
 
 void physSolverInit(physicsSolver *solver);
 void physSolverReset(physicsSolver *solver);
-signed char physSolverAddBody(physicsSolver *solver, physRBInstance *body);
+return_t physSolverAddBody(physicsSolver *solver, physRBInstance *body);
 void physSolverUpdate(physicsSolver *solver);
 void physSolverDelete(physicsSolver *solver);
 

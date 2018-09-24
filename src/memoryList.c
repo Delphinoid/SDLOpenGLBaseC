@@ -94,7 +94,7 @@ void memListClear(memoryList *list){
 
 	// Loop through every block, making it
 	// point to the next free block.
-	while(next < memListEnd(list)){
+	while(next < (byte_t *)list->region){
 		memListDataGetNextFree(block) = next;
 		block = next;
 		next += list->block;
@@ -126,4 +126,8 @@ void *memListExtend(memoryList *list, void *start, const size_t bytes, const siz
 
 	return start;
 
+}
+
+void memListDelete(memoryList *list){
+	memRegionFree(list->region);
 }

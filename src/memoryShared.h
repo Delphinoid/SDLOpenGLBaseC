@@ -18,13 +18,18 @@
 typedef uint8_t byte_t;
 typedef int8_t  signed_byte_t;
 
+void *memHeapLowLevelAllocate(const size_t bytes);
+void *memHeapLowLevelReallocate(void *block, const size_t bytes);
+int memHeapLowLevelFree(void *block);
+
 // Defines the region in memory that an
 // allocator consumes. The end of the
 // region is implicitly defined as the
 // address of the memoryRegion struct.
-typedef struct {
+typedef struct memoryRegion memoryRegion;
+typedef struct memoryRegion {
 	byte_t *start;
-	byte_t *next;
+	memoryRegion *next;
 } memoryRegion;
 
 void memRegionAppend(memoryRegion **first, memoryRegion *region, byte_t *data);

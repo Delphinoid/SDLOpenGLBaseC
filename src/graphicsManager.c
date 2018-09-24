@@ -5,14 +5,14 @@
 #include <string.h>
 #include <stdio.h>
 
-static signed char gfxMngrInitSDL(graphicsManager *gfxMngr);
-static signed char gfxMngrInitOGL(graphicsManager *gfxMngr);
-static signed char gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath);
-static signed char gfxMngrCreateBuffers(graphicsManager *gfxMngr);
+static return_t gfxMngrInitSDL(graphicsManager *gfxMngr);
+static return_t gfxMngrInitOGL(graphicsManager *gfxMngr);
+static return_t gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath);
+static return_t gfxMngrCreateBuffers(graphicsManager *gfxMngr);
 
-signed char gfxMngrInit(graphicsManager *gfxMngr, const char *prgPath){
+return_t gfxMngrInit(graphicsManager *gfxMngr, const char *prgPath){
 
-	signed char r;
+	return_t r;
 
 	mat4Identity(&gfxMngr->identityMatrix);
 	gfxMngr->windowWidth = DEFAULT_WIDTH;
@@ -40,7 +40,7 @@ signed char gfxMngrInit(graphicsManager *gfxMngr, const char *prgPath){
 
 }
 
-static signed char gfxMngrInitSDL(graphicsManager *gfxMngr){
+static return_t gfxMngrInitSDL(graphicsManager *gfxMngr){
 
 	/* Initialize SDL */
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0){
@@ -79,7 +79,7 @@ static signed char gfxMngrInitSDL(graphicsManager *gfxMngr){
 
 }
 
-static signed char gfxMngrInitOGL(graphicsManager *gfxMngr){
+static return_t gfxMngrInitOGL(graphicsManager *gfxMngr){
 
 	/* Initialize GLEW */
 	glewExperimental = GL_TRUE;
@@ -111,7 +111,7 @@ static signed char gfxMngrInitOGL(graphicsManager *gfxMngr){
 
 }
 
-static signed char gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath){
+static return_t gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath){
 
 	/* Vertex shader */
 	const char *vertexShaderExtra = "Resources\\Shaders\\vertexShader.vsh";
@@ -289,7 +289,7 @@ static signed char gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgP
 
 }
 
-static signed char gfxMngrCreateBuffers(graphicsManager *gfxMngr){
+static return_t gfxMngrCreateBuffers(graphicsManager *gfxMngr){
 
 	/* Set lastTexID to 0 since we haven't rendered anything yet */
 	gfxMngr->lastTexID = 0;
@@ -322,7 +322,7 @@ static signed char gfxMngrCreateBuffers(graphicsManager *gfxMngr){
 
 }
 
-signed char gfxMngrUpdateWindow(graphicsManager *gfxMngr){
+return_t gfxMngrUpdateWindow(graphicsManager *gfxMngr){
 	SDL_GetWindowSize(gfxMngr->window, &gfxMngr->windowWidth, &gfxMngr->windowHeight);
 	if(gfxMngr->windowWidth != gfxMngr->lastWindowWidth || gfxMngr->windowHeight != gfxMngr->lastWindowHeight){
 		GLint screenX, screenY, screenWidth, screenHeight;

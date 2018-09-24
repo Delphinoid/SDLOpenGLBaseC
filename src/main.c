@@ -3,6 +3,11 @@
 #include "mathConstants.h"
 #include <stdio.h>
 
+/****/
+#include "moduleTexture.h"
+#include "moduleTextureWrapper.h"
+#include "moduleModel.h"
+
 /** stateManager should be const. **/
 void renderScene(stateManager *gameStateManager, const size_t stateID, const float interpT, graphicsManager *gfxMngr);
 void cleanup(graphicsManager *gfxMngr, stateManager *gameStateManager,
@@ -14,10 +19,19 @@ void cleanup(graphicsManager *gfxMngr, stateManager *gameStateManager,
 int main(int argc, char *argv[]){
 
 	char *prgPath = (char*)argv[0];
-	prgPath[strrchr(prgPath, '\\') - prgPath + 1] = '\0';  // Removes program name (everything after the last backslash) from the path
+
+	//memoryManager memMngr;
+	graphicsManager gfxMngr;
+
+	// Removes program name (everything after the last backslash) from the path.
+	prgPath[strrchr(prgPath, '\\') - prgPath + 1] = '\0';
 	/** prgPath can be replaced with ".\\", but it may present some problems when running directly from Code::Blocks. **/
 
-	graphicsManager gfxMngr;
+	// Initialize the memory manager.
+	if(memMngrInit(MEMORY_MANAGER_DEFAULT_VIRTUAL_HEAP_SIZE, 1) == -1){
+		return 1;
+	}
+	// Initialize the graphics subsystem.
 	if(!gfxMngrInit(&gfxMngr, prgPath)){
 		return 1;
 	}
@@ -39,14 +53,18 @@ int main(int argc, char *argv[]){
 	cVector allModels; cvInit(&allModels, 1);                // Holds models.
 	cVector allObjects; cvInit(&allObjects, 1);              // Holds objects.
 
+	/****/
+	moduleTextureInit();
+	moduleTextureWrapperInit();
+	moduleModelInit();
+
 	/* Textures */
-	texture tempTex;
-	tDefault(&tempTex);
-	cvPush(&allTextures, (void *)&tempTex, sizeof(tempTex));
-	tLoad(&tempTex, prgPath, "Resources\\Images\\Misc\\Kobold.png");
-	cvPush(&allTextures, (void *)&tempTex, sizeof(tempTex));
-	tLoad(&tempTex, prgPath, "Resources\\Images\\Misc\\Avatar.png");
-	cvPush(&allTextures, (void *)&tempTex, sizeof(tempTex));
+	texture *tempTex = moduleTextureAllocate();
+	tDefault(tempTex);
+	tempTex = moduleTextureAllocate();
+	tLoad(tempTex, prgPath, "Resources\\Images\\Misc\\Kobold.png");
+	tempTex = moduleTextureAllocate();
+	tLoad(tempTex, prgPath, "Resources\\Images\\Misc\\Avatar.png");
 
 	/* Skeletons */
 	skeleton tempSkl;
@@ -54,20 +72,18 @@ int main(int argc, char *argv[]){
 	cvPush(&allSkeletons, (void *)&tempSkl, sizeof(tempSkl));
 
 	/* Texture Wrappers */
-	textureWrapper tempTexWrap;
-	twDefault(&tempTexWrap, &allTextures);
-	cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));
-	twLoad(&tempTexWrap, prgPath, "Resources\\Textures\\Static\\AvatarStatic.tdt", &allTextures);
-	cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));
-	twLoad(&tempTexWrap, prgPath, "Resources\\Textures\\Static\\KoboldStatic.tdt", &allTextures);
-	cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));
+	textureWrapper *tempTexWrap0 = moduleTextureWrapperAllocate();
+	twDefault(tempTexWrap0);
+	textureWrapper *tempTexWrap1 = moduleTextureWrapperAllocate();
+	twLoad(tempTexWrap1, prgPath, "Resources\\Textures\\Static\\AvatarStatic.tdt");
+	textureWrapper *tempTexWrap2 = moduleTextureWrapperAllocate();
+	twLoad(tempTexWrap2, prgPath, "Resources\\Textures\\Static\\KoboldStatic.tdt");
 
 	/* Models */
-	model tempMdl;
-	mdlDefault(&tempMdl, &allSkeletons);
-	cvPush(&allModels, (void *)&tempMdl, sizeof(tempMdl));
-	mdlCreateSprite(&tempMdl, &allSkeletons);
-	cvPush(&allModels, (void *)&tempMdl, sizeof(tempMdl));
+	model *tempMdl = moduleModelAllocate();
+	mdlDefault(tempMdl, &allSkeletons);
+	tempMdl = moduleModelAllocate();
+	mdlCreateSprite(tempMdl, &allSkeletons);
 
 	/* Objects */
 	object tempObj;
@@ -101,14 +117,14 @@ int main(int argc, char *argv[]){
 
 	/* Sprite Object Instances */
 	smObjectNew(&gameStateManager, SM_TYPE_OBJECT, &tempID);
-	objiNewRenderable(objGetState(&gameStateManager, tempID, 0), (model *)cvGet(&allModels, 1), (textureWrapper *)cvGet(&allTexWrappers, 1));
+	objiNewRenderable(objGetState(&gameStateManager, tempID, 0), tempMdl, tempTexWrap1);
 	objiInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
 	objGetState(&gameStateManager, tempID, 0)->tempRndrConfig.sprite = 1;
 	objGetState(&gameStateManager, tempID, 0)->configuration[0].scale.x = 0.026f;
 	objGetState(&gameStateManager, tempID, 0)->configuration[0].scale.y = 0.026f;
 	//
 	smObjectNew(&gameStateManager, SM_TYPE_OBJECT, &tempID);
-	objiNewRenderable(objGetState(&gameStateManager, tempID, 0), (model *)cvGet(&allModels, 1), (textureWrapper *)cvGet(&allTexWrappers, 1));
+	objiNewRenderable(objGetState(&gameStateManager, tempID, 0), tempMdl, tempTexWrap1);
 	objiInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
 	objGetState(&gameStateManager, tempID, 0)->tempRndrConfig.sprite = 1;
 	objGetState(&gameStateManager, tempID, 0)->configuration[0].position.y = 1.f;
@@ -118,7 +134,7 @@ int main(int argc, char *argv[]){
 	objGetState(&gameStateManager, tempID, 0)->configuration[0].scale.y = 0.0026f;
 	//
 	smObjectNew(&gameStateManager, SM_TYPE_OBJECT, &tempID);
-	objiNewRenderable(objGetState(&gameStateManager, tempID, 0), (model *)cvGet(&allModels, 1), (textureWrapper *)cvGet(&allTexWrappers, 1));
+	objiNewRenderable(objGetState(&gameStateManager, tempID, 0), tempMdl, tempTexWrap1);
 	objiInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
 	objGetState(&gameStateManager, tempID, 0)->tempRndrConfig.sprite = 1;
 	objGetState(&gameStateManager, tempID, 0)->configuration[0].position.x = 4.f;
@@ -128,7 +144,7 @@ int main(int argc, char *argv[]){
 	objGetState(&gameStateManager, tempID, 0)->tempRndrConfig.flags |= RNDR_BILLBOARD_TARGET | RNDR_BILLBOARD_Y;
 	//
 	smObjectNew(&gameStateManager, SM_TYPE_OBJECT, &tempID);
-	objiNewRenderable(objGetState(&gameStateManager, tempID, 0), (model *)cvGet(&allModels, 1), (textureWrapper *)cvGet(&allTexWrappers, 2));
+	objiNewRenderable(objGetState(&gameStateManager, tempID, 0), tempMdl, tempTexWrap2);
 	objiInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
 	objGetState(&gameStateManager, tempID, 0)->tempRndrConfig.sprite = 1;
 	objGetState(&gameStateManager, tempID, 0)->configuration[0].position.x = -3.f;

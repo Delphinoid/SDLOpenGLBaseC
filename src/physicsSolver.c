@@ -15,7 +15,7 @@ void physSolverReset(physicsSolver *solver){
 	solver->bodyNum = 0;
 }
 
-signed char physSolverAddBody(physicsSolver *solver, physRBInstance *body){
+return_t physSolverAddBody(physicsSolver *solver, physRBInstance *body){
 	/*
 	** Add a new body to the solver, resizing the
 	** bodies array if necessary.

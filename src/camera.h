@@ -30,8 +30,8 @@ typedef struct {
 	scene *targetScene;
 } camera;
 
-signed char camInit(void *cam);
-signed char camStateCopy(void *o, void *c);
+return_t camInit(void *cam);
+return_t camStateCopy(void *o, void *c);
 void camResetInterpolation(void *cam);
 
 void camCalculateUp(camera *cam);

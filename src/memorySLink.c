@@ -41,7 +41,7 @@ void *memSLinkAllocate(memorySLink *array){
 	byte_t *r = array->free;
 	if(r){
 		memSLinkDataGetNext(r) = NULL;
-		array->free = memSLinkDataGetNextFree(r);
+		array->free = memSLinkDataGetNextFreeMasked(r);
 	}
 	return r;
 
@@ -59,7 +59,7 @@ void *memSLinkPrepend(memorySLink *array, void **start){
 		memSLinkDataGetNext(r) = *start;
 		// Set the beginning of the array.
 		*start = r;
-		array->free = memSLinkDataGetNextFree(r);
+		array->free = memSLinkDataGetNextFreeMasked(r);
 	}
 	return r;
 
@@ -81,7 +81,7 @@ void *memSLinkAppend(memorySLink *array, void **start){
 		memSLinkDataGetNext(r) = NULL;
 		// Set the previous element's next pointer.
 		*next = r;
-		array->free = memSLinkDataGetNextFree(r);
+		array->free = memSLinkDataGetNextFreeMasked(r);
 	}
 	return r;
 
@@ -101,7 +101,7 @@ void *memSLinkInsertBefore(memorySLink *array, void *element, void *previous){
 			// Set the previous element's next pointer.
 			memSLinkDataGetNext(previous) = r;
 		}
-		array->free = memSLinkDataGetNextFree(r);
+		array->free = memSLinkDataGetNextFreeMasked(r);
 	}
 	return r;
 
@@ -122,7 +122,7 @@ void *memSLinkInsertAfter(memorySLink *array, void *element){
 			// Set the previous element's next pointer.
 			*next = r;
 		}
-		array->free = memSLinkDataGetNextFree(r);
+		array->free = memSLinkDataGetNextFreeMasked(r);
 	}
 	return r;
 
@@ -138,8 +138,7 @@ void memSLinkFree(memorySLink *array, void *element, void *previous){
 	// Set the previous element's next pointer.
 	memSLinkDataGetNext(previous) = memSLinkDataGetNext(element);
 
-	memSLinkDataGetNext(element) = (byte_t *)MEMORY_SLINK_BLOCK_INACTIVE;
-	memSLinkDataGetNextFree(element) = array->free;
+	memSLinkDataGetFlags(element) = (uintptr_t)array->free | MEMORY_SLINK_BLOCK_INACTIVE;
 	array->free = element;
 
 }
@@ -160,15 +159,13 @@ void *memSLinkSetupMemory(void *start, const size_t bytes, const size_t length){
 	// Loop through every block, making it
 	// point to the next free block.
 	while(next < end){
-		memSLinkDataGetNext(block) = (byte_t *)MEMORY_SLINK_BLOCK_INACTIVE;
-		memSLinkDataGetNextFree(block) = next;
+		memSLinkDataGetFlags(block) = (uintptr_t)next | MEMORY_SLINK_BLOCK_INVALID;
 		block = next;
 		next += blockSize;
 	}
 
 	// Final block contains a null pointer.
-	memSLinkDataGetNext(block) = (byte_t *)MEMORY_SLINK_BLOCK_INACTIVE;
-	memSLinkDataGetNextFree(block) = NULL;
+	memSLinkDataGetFlags(block) = MEMORY_SLINK_BLOCK_INVALID;
 
 	return start;
 
@@ -183,16 +180,14 @@ void memSLinkClear(memorySLink *array){
 
 	// Loop through every block, making it
 	// point to the next free block.
-	while(next < memSLinkEnd(array)){
-		memSLinkDataGetNext(block) = (byte_t *)MEMORY_SLINK_BLOCK_INACTIVE;
-		memSLinkDataGetNextFree(block) = next;
+	while(next < (byte_t *)array->region){
+		memSLinkDataGetFlags(block) = (uintptr_t)next | MEMORY_SLINK_BLOCK_INVALID;
 		block = next;
 		next += array->block;
 	}
 
 	// Final block contains a null pointer.
-	memSLinkDataGetNext(block) = (byte_t *)MEMORY_SLINK_BLOCK_INACTIVE;
-	memSLinkDataGetNextFree(block) = NULL;
+	memSLinkDataGetFlags(block) = MEMORY_SLINK_BLOCK_INVALID;
 
 }
 
@@ -217,4 +212,8 @@ void *memSLinkExtend(memorySLink *array, void *start, const size_t bytes, const 
 
 	return start;
 
+}
+
+void memSLinkDelete(memorySLink *array){
+	memRegionFree(array->region);
 }

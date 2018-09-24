@@ -2,6 +2,7 @@
 #define MAT3_H
 
 #include "quat.h"
+#include "typedefs.h"
 
 typedef struct {
 	float m[3][3];
@@ -25,8 +26,8 @@ mat3 mat3GetTranspose(const mat3 *m);
 void mat3Transpose(mat3 *m);
 void mat3TransposeR(const mat3 *m, mat3 *r);
 
-signed char mat3Invert(mat3 *m);
-signed char mat3InvertR(const mat3 *m, mat3 *r);
+return_t mat3Invert(mat3 *m);
+return_t mat3InvertR(const mat3 *m, mat3 *r);
 
 void mat3Quat(mat3 *m, const quat *q);
 

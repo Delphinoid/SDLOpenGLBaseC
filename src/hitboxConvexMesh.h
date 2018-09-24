@@ -2,6 +2,7 @@
 #define HITBOXCONVEXMESH_H
 
 #include "vec3.h"
+#include "typedefs.h"
 #include <stdlib.h>
 #include <stdint.h>
 
@@ -47,7 +48,7 @@ typedef struct {
 } hbMesh;
 
 void hbMeshInit(hbMesh *hbm);
-signed char hbMeshLoad(hbMesh *hbm, const char *prgPath, const char *filePath);
+return_t hbMeshLoad(hbMesh *hbm, const char *prgPath, const char *filePath);
 void hbMeshDelete(hbMesh *hbm);
 
 #endif

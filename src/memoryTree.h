@@ -221,11 +221,11 @@ typedef struct {
 #define memTreeAllocationSize(start, bytes, length) \
 	((length > 0 ? memTreeBlockSize(bytes) * length : bytes) + (uintptr_t)memTreeAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 
-#define memTreeFirst(tree)        ((void *)memTreeAlignStartData(tree->region->start))
+#define memTreeFirst(tree)        ((void *)memTreeAlignStartData((tree).region->start))
 #define memTreeBlockStatus(block) memTreeBlockGetActiveMasked(block)
-#define memTreeBlockNext(tree, i) i += memTreeDataGetCurrent(i);
-#define memTreeEnd(tree)          ((byte_t *)tree->region)
-#define memTreeChunkNext(tree)    tree->region->next
+#define memTreeBlockNext(tree, i) i = (void *)((byte_t *)i + memTreeDataGetCurrent(i));
+#define memTreeEnd(tree)          ((byte_t *)(tree).region)
+#define memTreeChunkNext(tree)    (tree).region->next
 
 void memTreeInit(memoryTree *tree);
 void *memTreeCreate(memoryTree *tree, void *start, const size_t bytes, const size_t length);
@@ -237,6 +237,7 @@ void *memTreeReallocate(memoryTree *tree, void *block, const size_t bytes);
 void *memTreeSetupMemory(void *start, const size_t bytes, const size_t length);
 void memTreeClear(memoryTree *tree);
 void *memTreeExtend(memoryTree *tree, void *start, const size_t bytes, const size_t length);
+void memTreeDelete(memoryTree *tree);
 
 #ifdef MEMORY_DEBUG
 void memTreePrintFreeBlocks(memoryTree *tree, const unsigned int recursions);

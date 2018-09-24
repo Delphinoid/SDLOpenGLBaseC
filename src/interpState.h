@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include "vec3.h"
 #include "quat.h"
+#include "typedefs.h"
 
 /** Should these store currentValue (known as render now)? **/
 
@@ -35,7 +36,7 @@ typedef struct {
 
 void iFloatInit(interpFloat *iFloat, const float s);
 void iFloatResetInterp(interpFloat *iFloat);
-signed char iFloatUpdate(interpFloat *iFloat, const float interpT);
+return_t iFloatUpdate(interpFloat *iFloat, const float interpT);
 
 
 typedef struct {
@@ -46,7 +47,7 @@ typedef struct {
 
 void iSizeTInit(interpSizeT *iSizeT, const size_t s);
 void iSizeTResetInterp(interpSizeT *iSizeT);
-signed char iSizeTUpdate(interpSizeT *iSizeT, const float interpT);
+return_t iSizeTUpdate(interpSizeT *iSizeT, const float interpT);
 
 
 typedef struct {
@@ -57,7 +58,7 @@ typedef struct {
 
 void iVec3Init(interpVec3 *iVec3, const float x, const float y, const float z);
 void iVec3ResetInterp(interpVec3 *iVec3);
-signed char iVec3Update(interpVec3 *iVec3, const float interpT);
+return_t iVec3Update(interpVec3 *iVec3, const float interpT);
 
 
 typedef struct {
@@ -68,7 +69,7 @@ typedef struct {
 
 void iQuatInit(interpQuat *iQuat);
 void iQuatResetInterp(interpQuat *iQuat);
-signed char iQuatUpdate(interpQuat *iQuat, const float interpT);
+return_t iQuatUpdate(interpQuat *iQuat, const float interpT);
 
 /*
 typedef struct {

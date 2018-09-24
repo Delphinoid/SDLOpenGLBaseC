@@ -1,4 +1,5 @@
 #include "memoryTree.h"
+#include "inline.h"
 #include <string.h>
 
 void memTreeInit(memoryTree *tree){
@@ -30,7 +31,7 @@ void *memTreeCreate(memoryTree *tree, void *start, const size_t bytes, const siz
 
 }
 
-static inline void memTreeRotateTreeLeft(memoryTree *tree, byte_t *node){
+static __FORCE_INLINE__ void memTreeRotateTreeLeft(memoryTree *tree, byte_t *node){
 
 	/*
 	** Rotate the red-black tree to the left.
@@ -61,7 +62,7 @@ static inline void memTreeRotateTreeLeft(memoryTree *tree, byte_t *node){
 
 }
 
-static inline void memTreeRotateTreeRight(memoryTree *tree, byte_t *node){
+static __FORCE_INLINE__ void memTreeRotateTreeRight(memoryTree *tree, byte_t *node){
 
 	/*
 	** Rotate the red-black tree to the right.
@@ -92,7 +93,7 @@ static inline void memTreeRotateTreeRight(memoryTree *tree, byte_t *node){
 
 }
 
-static inline void memTreeRepairTree(memoryTree *tree, byte_t *node){
+static __FORCE_INLINE__ void memTreeRepairTree(memoryTree *tree, byte_t *node){
 
 	/*
 	** Fix any violations of the red-black
@@ -927,7 +928,7 @@ void memTreeClear(memoryTree *tree){
 	byte_t *block;
 	tree->root = memTreeAlignStartData(tree->region->start);
 	block = memTreeNodeGetBlock(tree->root);
-	memTreeBlockGetCurrent(block) = (byte_t *)memTreeEnd(tree) - block;
+	memTreeBlockGetCurrent(block) = (byte_t *)tree->region - block;
 	memTreeBlockGetPrevious(block) = MEMORY_TREE_BLOCK_FIRST | MEMORY_TREE_BLOCK_LAST;
 	memTreeNodeGetLeft(tree->root) = NULL;
 	memTreeNodeGetRight(tree->root) = NULL;
@@ -959,6 +960,10 @@ void *memTreeExtend(memoryTree *tree, void *start, const size_t bytes, const siz
 
 }
 
+void memTreeDelete(memoryTree *tree){
+	memRegionFree(tree->region);
+}
+
 #ifdef MEMORY_DEBUG
 
 #include <stdio.h>
@@ -976,7 +981,7 @@ void memTreePrintFreeBlocks(memoryTree *tree, const unsigned int recursions){
 	byte_t *nodeParent;
 	unsigned int i = 0;
 
-	printf("Free blocks:\n");
+	fputs("MEMORY_DEBUG: Free Blocks\n~~~~~~~~~~~~~~~~~~~~~~~~~\n", stdout);
 
 	if(node != NULL){
 
@@ -990,12 +995,12 @@ void memTreePrintFreeBlocks(memoryTree *tree, const unsigned int recursions){
 			++i;
 
 			printf(
-				   "Address:%p Parent:%p Left:%p Right:%p Size:%u %u %s\n",
+				   "Address:%p Size:%u Parent:%p Left:%p Right:%p %u %s\n",
 				   node,
+				   memTreeNodeGetCurrent(node),
 				   memTreeNodeGetParentColourless(node),
 				   memTreeNodeGetLeft(node),
 				   memTreeNodeGetRight(node),
-				   memTreeNodeGetCurrent(node),
 				   memTreeNodeGetPreviousFlagless(node),
 				   memTreeNodeGetColourMasked(node) == 0 ? "B" : "R"
 			);
@@ -1031,22 +1036,36 @@ void memTreePrintFreeBlocks(memoryTree *tree, const unsigned int recursions){
 
 	}
 
-	printf("\n");
+	fputs("\n", stdout);
 
 }
 
 void memTreePrintAllBlocks(memoryTree *tree){
-	byte_t *block = memTreeAlignStartBlock(tree->region->start);
-	printf("Blocks:\n");
-	while(block < memTreeEnd(tree)){
-		const size_t size =  memTreeBlockGetCurrent(block);
-		printf("Address:%p Size:%u\n", memTreeBlockGetNode(block), memTreeBlockGetCurrent(block));
-		if(size == 0){
-			return;
+
+	size_t regionNum = 0;
+	memoryRegion *region = tree->region;
+
+	fputs("MEMORY_DEBUG: All Blocks\n~~~~~~~~~~~~~~~~~~~~~~~~", stdout);
+	while(region != NULL){
+
+		byte_t *block = memTreeAlignStartBlock(region->start);
+
+		printf("\nRegion #%u:\n", regionNum);
+		while(block < (byte_t *)region){
+
+			const size_t size =  memTreeBlockGetCurrent(block);
+			printf("Address:%p Size:%u\n", memTreeBlockGetNode(block), size);
+			block += memTreeBlockGetCurrent(block);
+
 		}
-		block += memTreeBlockGetCurrent(block);
+
+		region = region->next;
+		++regionNum;
+
+		fputs("\n", stdout);
+
 	}
-	printf("\n");
+
 }
 
 #endif

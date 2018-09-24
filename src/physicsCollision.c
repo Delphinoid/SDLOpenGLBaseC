@@ -1,5 +1,6 @@
-#include "physicsCollider.h"
+#include "physicsCollision.h"
 #include "mat3.h"
+#include "inline.h"
 
 #define PHYS_COLLIDER_DEFAULT_VERTEX_MASS 1
 
@@ -224,46 +225,47 @@ static void physColliderUpdateAABB(physCollider *collider, const physCollider *l
 
 }
 
-
-typedef float (*physColliderGenerateMassPrototype)(physCollider*, float*);
-float physColliderGenerateMass(physCollider *collider, float *vertexMassArray){
+static float (* const physColliderGenerateMassJumpTable[4])(physCollider *, float *) = {
+	physColliderGenerateMassMesh,
+	physColliderGenerateMassCapsule,
+	physColliderGenerateMassSphere,
+	physColliderGenerateMassAABB
+};
+__FORCE_INLINE__ float physColliderGenerateMass(physCollider *collider, float *vertexMassArray){
 
 	/*
 	** Calculates the collider's center of mass
 	** and default AABB. Returns the total mass.
 	*/
 
-	physColliderGenerateMassPrototype physColliderJumpTable[4] = {
-		physColliderGenerateMassMesh,
-		physColliderGenerateMassCapsule,
-		physColliderGenerateMassSphere,
-		physColliderGenerateMassAABB
-	};
-
-	return physColliderJumpTable[collider->hb.type](collider, vertexMassArray);
+	return physColliderGenerateMassJumpTable[collider->hb.type](collider, vertexMassArray);
 
 }
 
-typedef void (*physColliderGenerateMomentPrototype)(const physCollider*, const vec3*, const float*, float*);
-void physColliderGenerateMoment(const physCollider *collider, const vec3 *centroid, const float *vertexMassArray, float *inertiaTensor){
+static void (* const physColliderGenerateMomentJumpTable[4])(const physCollider *, const vec3 *, const float *, float *) = {
+	physColliderGenerateMomentMesh,
+	physColliderGenerateMomentCapsule,
+	physColliderGenerateMomentSphere,
+	physColliderGenerateMomentAABB
+};
+__FORCE_INLINE__ void physColliderGenerateMoment(const physCollider *collider, const vec3 *centroid, const float *vertexMassArray, float *inertiaTensor){
 
 	/*
 	** Calculates the collider's moment of inertia tensor.
 	*/
 
-	physColliderGenerateMomentPrototype physColliderJumpTable[4] = {
-		physColliderGenerateMomentMesh,
-		physColliderGenerateMomentCapsule,
-		physColliderGenerateMomentSphere,
-		physColliderGenerateMomentAABB
-	};
-
-	physColliderJumpTable[collider->hb.type](collider, centroid, vertexMassArray, inertiaTensor);
+	physColliderGenerateMomentJumpTable[collider->hb.type](collider, centroid, vertexMassArray, inertiaTensor);
 
 }
 
-typedef void (*physColliderUpdatePrototype)(physCollider*, const physCollider*, const bone*);
-void physColliderUpdate(physCollider *collider, const physCollider *local, const bone *configuration){
+
+static void (* const physColliderUpdateJumpTable[4])(physCollider *, const physCollider *, const bone *) = {
+	physColliderUpdateMesh,
+	physColliderUpdateCapsule,
+	physColliderUpdateSphere,
+	physColliderUpdateAABB
+};
+__FORCE_INLINE__ void physColliderUpdate(physCollider *collider, const physCollider *local, const bone *configuration){
 
 	/*
 	** Updates the collider for collision detection.
@@ -271,14 +273,7 @@ void physColliderUpdate(physCollider *collider, const physCollider *local, const
 	** collider's global position.
 	*/
 
-	physColliderUpdatePrototype physColliderJumpTable[4] = {
-		physColliderUpdateMesh,
-		physColliderUpdateCapsule,
-		physColliderUpdateSphere,
-		physColliderUpdateAABB
-	};
-
-	physColliderJumpTable[collider->hb.type](collider, local, configuration);
+	physColliderUpdateJumpTable[collider->hb.type](collider, local, configuration);
 
 }
 

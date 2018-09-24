@@ -21,12 +21,12 @@ typedef struct {
 
 } scene;
 
-signed char scnInit(void *scn);
-signed char scnStateCopy(void *o, void *c);
+return_t scnInit(void *scn);
+return_t scnStateCopy(void *o, void *c);
 void scnResetInterpolation(void *scn);
-signed char scnLoad(scene *scn);
+return_t scnLoad(scene *scn);
 
-signed char scnObjectAdd(scene *scn, const objectIndex_t id);
+return_t scnObjectAdd(scene *scn, const objectIndex_t id);
 void scnObjectRemove(scene *scn, stateManager *sm, const objectIndex_t id);
 
 void scnUpdate(scene *scn, stateManager *sm, const float elapsedTime, const float dt);

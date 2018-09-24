@@ -32,5 +32,6 @@ void *memStackPush(memoryStack *stack, const size_t bytes);
 void memStackPop(memoryStack *stack, const size_t bytes);
 //void memStackShrink(memoryStack *stack, const size_t bytes);
 void memStackClear(memoryStack *stack);
+void memStackDelete(memoryStack *stack);
 
 #endif

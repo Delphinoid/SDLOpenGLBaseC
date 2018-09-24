@@ -2,11 +2,10 @@
 #define PHYSICSRIGIDBODY_H
 
 #include "physicsBodyShared.h"
-#include "physicsCollider.h"
-#include "hitboxCollision.h"
+#include "physicsCollision.h"
+#include "physicsConstraint.h"
 #include "skeleton.h"
 #include "mat3.h"
-#include "typedefs.h"
 #include <stdlib.h>
 
 /** Remove PHYS_BODY_INITIALIZE? **/
@@ -16,22 +15,16 @@
 #define PHYS_BODY_COLLIDE    0x04  // Whether or not the body will listen for collisions.
 #define PHYS_BODY_DELETE     0x08  // Set by an object's deletion function so the body can be freed by the physics handler.
 
-#define PHYS_CONSTRAINT_TYPE_1  0x01
-#define PHYS_CONSTRAINT_TYPE_2  0x02
-#define PHYS_CONSTRAINT_COLLIDE 0x04
-
-#define PHYS_BODY_MAX_CONSTRAINTS 256
-#define PHYS_BODY_MAX_CACHE_SIZE 256
-
-typedef uint8_t colliderIndex_t;
-typedef uint8_t constraintIndex_t;
-typedef uint8_t cacheIndex_t;
+/**#define PHYS_BODY_MAX_CONSTRAINTS 256
+#define PHYS_BODY_MAX_CACHE_SIZE  256**/
 
 typedef struct {
 
+	/** char *name; **/
+
 	/* Physical colliders. */
 	/** Update functions for single collider. **/
-	colliderIndex_t colliderNum;  // The body's number of convex colliders.
+	physColliderIndex_t colliderNum;  // The body's number of convex colliders.
 	physCollider *colliders;      // The body's convex colliders.
 	//hbMesh hull;
 
@@ -44,20 +37,6 @@ typedef struct {
 	mat3 inertiaTensor;               // The body's local inertia tensor.
 
 } physRigidBody;
-
-typedef struct {
-	flags_t flags;
-	physicsBodyIndex_t constraintID;  // An identifier for the other body being constrained.
-	vec3 constraintOffsetMin;
-	vec3 constraintOffsetMax;
-	vec3 constraintRotationMin;
-	vec3 constraintRotationMax;
-} physConstraint;
-
-typedef struct {
-	physicsBodyIndex_t collisionID;  // An identifier for the other body involved in the collision.
-	hbCollisionInfo info;
-} physCollisionInfo;
 
 /** Finish physRBIStateCopy(). **/
 typedef struct {
@@ -89,36 +68,33 @@ typedef struct {
 	vec3 netTorque;        // Torque accumulator.
 
 	/* Physical constraints. */
-	constraintIndex_t constraintNum;
-	constraintIndex_t constraintCapacity;
+	physConstraintIndex_t constraintNum;
+	physConstraintIndex_t constraintCapacity;
 	physConstraint *constraints;  // An array of constraints for the kinematics
 	                              // chain, ordered by constraintID.
 
 	/* Separation caching. */
-	cacheIndex_t separationNum;
-	cacheIndex_t separationCapacity;
+	physCollisionIndex_t separationNum;
+	physCollisionIndex_t separationCapacity;
 	physCollisionInfo *cache;  // An array of separations from previous
 	                           // frames, ordered by collisionID.
 
 } physRBInstance;
 
-/* Physics constraint functions. */
-void physConstraintInit(physConstraint *constraint);
-
 /* Physics rigid body functions. */
 void physRigidBodyInit(physRigidBody *body);
 void physRigidBodyGenerateMassProperties(physRigidBody *body, float **vertexMassArrays);
-signed char physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, constraintIndex_t *constraintNum, physConstraint **constraints,
-                              const skeleton *skl, const char *prgPath, const char *filePath);
+return_t physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, physConstraintIndex_t *constraintNum, physConstraint **constraints,
+                           const skeleton *skl, const char *prgPath, const char *filePath);
 void physRigidBodyDelete(physRigidBody *body);
 
 /* Physics rigid body instance functions. */
 void physRBIInit(physRBInstance *prbi);
-signed char physRBIInstantiate(physRBInstance *prbi, physRigidBody *body, bone *configuration);
-signed char physRBIStateCopy(physRBInstance *o, physRBInstance *c);
+return_t physRBIInstantiate(physRBInstance *prbi, physRigidBody *body, bone *configuration);
+return_t physRBIStateCopy(physRBInstance *o, physRBInstance *c);
 
-signed char physRBIAddConstraint(physRBInstance *prbi, physConstraint *c);
-signed char physRBICacheSeparation(physRBInstance *prbi, physCollisionInfo *c);
+return_t physRBIAddConstraint(physRBInstance *prbi, physConstraint *c);
+return_t physRBICacheSeparation(physRBInstance *prbi, physCollisionInfo *c);
 
 void physRBIUpdateCollisionMesh(physRBInstance *prbi);
 

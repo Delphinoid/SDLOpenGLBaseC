@@ -1,10 +1,10 @@
 #include "stateManager.h"
 #include <string.h>
 
-signed char stateObjectTypeInit(stateObjectType *objType,
-                                signed char (*stateInit)(void*), signed char (*stateCopy)(void*, void*),
-                                void (*stateResetInterpolation)(void*), void (*stateDelete)(void*),
-                                const size_t size, const size_t capacity, const size_t stateNum){
+return_t stateObjectTypeInit(stateObjectType *objType,
+                             return_t (*stateInit)(void*), return_t (*stateCopy)(void*, void*),
+                             void (*stateResetInterpolation)(void*), void (*stateDelete)(void*),
+                             const size_t size, const size_t capacity, const size_t stateNum){
 
 	size_t i, j;
 
@@ -50,7 +50,7 @@ signed char stateObjectTypeInit(stateObjectType *objType,
 	return 1;
 
 }
-signed char stateObjectTypeUpdate(stateObjectType *objType){
+return_t stateObjectTypeUpdate(stateObjectType *objType){
 	/*
 	** For each object, shift its state pointers over. Move its last state
 	** object pointer to the front and copy the latest state object into it.
@@ -151,10 +151,10 @@ void stateObjectTypeDelete(stateObjectType *objType){
 	free(objType->instance);
 }
 
-signed char smObjectTypeNew(stateManager *sm,
-                            signed char (*stateInit)(void*), signed char (*stateCopy)(void*, void*),
-                            void (*stateResetInterpolation)(void*), void (*stateDelete)(void*),
-                            const size_t size, const size_t capacity, const size_t stateNum){
+return_t smObjectTypeNew(stateManager *sm,
+                         return_t (*stateInit)(void*), return_t (*stateCopy)(void*, void*),
+                         void (*stateResetInterpolation)(void*), void (*stateDelete)(void*),
+                         const size_t size, const size_t capacity, const size_t stateNum){
 
 	/* Create a temporary objectType array that will later replace the current one. */
 	stateObjectType *tempBuffer = malloc((sm->objectTypeNum+1) * sizeof(stateObjectType));
@@ -183,7 +183,7 @@ signed char smObjectTypeNew(stateManager *sm,
 	return 1;
 
 }
-signed char smObjectNew(stateManager *sm, const size_t objectTypeID, size_t *objectID){
+return_t smObjectNew(stateManager *sm, const size_t objectTypeID, size_t *objectID){
 	/* Search for an inactive scene and allocate a state for it. */
 	size_t i;
 	for(i = 0; i < sm->objectType[objectTypeID].capacity; ++i){
@@ -238,7 +238,7 @@ void smInit(stateManager *sm){
 	sm->objectTypeNum = 0;
 	sm->objectType = NULL;
 }
-signed char smPrepareNextState(stateManager *sm){
+return_t smPrepareNextState(stateManager *sm){
 	size_t i;
 	++sm->currentStateID;
 	for(i = 0; i < sm->objectTypeNum; ++i){
@@ -248,7 +248,7 @@ signed char smPrepareNextState(stateManager *sm){
 	}
 	return 1;
 }
-signed char smGenerateDeltaState(const stateManager *sm, const size_t stateID){
+return_t smGenerateDeltaState(const stateManager *sm, const size_t stateID){
 	return 1;
 }
 void smDelete(stateManager *sm){
