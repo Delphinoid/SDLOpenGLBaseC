@@ -251,7 +251,7 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *c
 	for(i = 0; i < allModels->size; ++i){
 
 		objInstance *curMdl = *((objInstance **)cvGet(allModels, i));
-		return_t currentRenderMethod = objiRenderMethod(curMdl, interpT);
+		const return_t currentRenderMethod = objiRenderMethod(curMdl, interpT);
 
 		if(currentRenderMethod == 0){  // If the model is fully opaque, add it straight to the render list
 			cvPush(mdlRenderList, (void *)&curMdl, sizeof(objInstance *));

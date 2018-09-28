@@ -87,7 +87,7 @@ void *memSLinkAppend(memorySLink *array, void **start){
 
 }
 
-void *memSLinkInsertBefore(memorySLink *array, void *element, void *previous){
+void *memSLinkInsertBefore(memorySLink *array, void **start, void *element, void *previous){
 
 	/*
 	** Inserts a new item before the specified element.
@@ -100,6 +100,8 @@ void *memSLinkInsertBefore(memorySLink *array, void *element, void *previous){
 		if(previous != NULL){
 			// Set the previous element's next pointer.
 			memSLinkDataGetNext(previous) = r;
+		}else{
+			*start = r;
 		}
 		array->free = memSLinkDataGetNextFreeMasked(r);
 	}
@@ -128,15 +130,19 @@ void *memSLinkInsertAfter(memorySLink *array, void *element){
 
 }
 
-void memSLinkFree(memorySLink *array, void *element, void *previous){
+void memSLinkFree(memorySLink *array, void **start, void *element, void *previous){
 
 	/*
 	** Removes an element from an array
 	** and frees the block.
 	*/
 
-	// Set the previous element's next pointer.
-	memSLinkDataGetNext(previous) = memSLinkDataGetNext(element);
+	if(previous != NULL){
+		// Set the previous element's next pointer.
+		memSLinkDataGetNext(previous) = memSLinkDataGetNext(element);
+	}else{
+		*start = memSLinkDataGetNext(element);
+	}
 
 	memSLinkDataGetFlags(element) = (uintptr_t)array->free | MEMORY_SLINK_BLOCK_INACTIVE;
 	array->free = element;

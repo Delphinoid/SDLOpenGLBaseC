@@ -5,6 +5,7 @@
 
 /****/
 #include "moduleTextureWrapper.h"
+#include "moduleSkeleton.h"
 #include "moduleModel.h"
 
 void objInit(object *obj){
@@ -48,7 +49,6 @@ return_t objLoad(object *obj, const char *prgPath, const char *filePath,
 
 		while(fileParseNextLine(objInfo, lineFeed, sizeof(lineFeed), &line, &lineLength)){
 
-			size_t i;
 			++currentLine;
 
 			// Name
@@ -75,7 +75,7 @@ return_t objLoad(object *obj, const char *prgPath, const char *filePath,
 			// Skeleton
 			}else if(lineLength >= 10 && strncmp(line, "skeleton ", 9) == 0){
 
-				int skipLoad = 0;
+				skeleton *tempSkl;
 				size_t pathBegin;
 				size_t pathLength;
 				const char *firstQuote = strchr(line+9, '"');
@@ -94,35 +94,36 @@ return_t objLoad(object *obj, const char *prgPath, const char *filePath,
 				strncpy(&loadPath[0], line+pathBegin, pathLength);
 				loadPath[pathLength] = '\0';
 
-				/** Should the allSkeletons vector be used? It's not as nice or as modular
-				but if the assetHandler system is decided on it'll probably be better. **/
-				// Look for skeleton name in allSkeletons.
-				for(i = 0; i < allSkeletons->size; ++i){
-					skeleton *tempSkl = (skeleton *)cvGet(allSkeletons, i);
-					if(strcmp(&loadPath[0], tempSkl->name) == 0){
-						obj->skl = (skeleton *)cvGet(allSkeletons, i);
-						skipLoad = 1;
-						break;
-					}
-				}
-				if(!skipLoad){
-					skeleton tempSkl;
-					const return_t r = sklLoad(&tempSkl, prgPath, &loadPath[0]);
-					if(r == -1){
+				// Check if the skeleton has already been loaded.
+				tempSkl = moduleSkeletonFind(&loadPath[0]);
+				if(tempSkl != NULL){
+					obj->skl = tempSkl;
+
+				// If the skeleton path is surrounded by quotes, try and load it.
+				}else{
+					tempSkl = moduleSkeletonAllocate();
+					if(tempSkl != NULL){
+						const return_t r = sklLoad(tempSkl, prgPath, &loadPath[0]);
+						if(r < 1){
+							// The load failed. Clean up.
+							moduleSkeletonFree(tempSkl);
+							if(r == -1){
+								/** Memory allocation failure. **/
+								objDelete(obj);
+								fclose(objInfo);
+								return -1;
+							}
+							printf("Error loading object \"%s\": Skeleton \"%s\" at line %u does not exist.\n", &fullPath[0], &loadPath[0], currentLine);
+							obj->skl = moduleSkeletonGetDefault();
+						}else{
+							obj->skl = tempSkl;
+						}
+					}else{
 						/** Memory allocation failure. **/
 						objDelete(obj);
 						fclose(objInfo);
 						return -1;
-					}else if(r > 0){
-						cvPush(allSkeletons, (void *)&tempSkl, sizeof(tempSkl));  // Add it to allSkeletons.
-						obj->skl = (skeleton *)cvGet(allSkeletons, allSkeletons->size-1);
 					}
-				}
-
-				// Use the default skeleton if no skeleton was loaded.
-				if(obj->skl == NULL){
-					printf("Error loading object \"%s\": Skeleton \"%s\" at line %u does not exist.\n", &fullPath[0], &loadPath[0], currentLine);
-					obj->skl = (skeleton *)cvGet(allSkeletons, 0);
 				}
 
 
@@ -223,8 +224,7 @@ return_t objLoad(object *obj, const char *prgPath, const char *filePath,
 			// Animation
 			}else if(lineLength >= 11 && strncmp(line, "animation ", 10) == 0){
 
-				sklAnim *sklaPointer = NULL;
-				int skipLoad = 0;
+				sklAnim *tempSkla;
 				size_t pathBegin;
 				size_t pathLength;
 				const char *firstQuote = strchr(line+9, '"');
@@ -243,35 +243,38 @@ return_t objLoad(object *obj, const char *prgPath, const char *filePath,
 				strncpy(&loadPath[0], line+pathBegin, pathLength);
 				loadPath[pathLength] = '\0';
 
-				/** Should the allSklAnimations vector be used? It's not as nice or as modular
-				but if the assetHandler system is decided on it'll probably be better. **/
-				// Look for animation name in allSklAnimations.
-				for(i = 0; i < allSklAnimations->size; ++i){
-					sklaPointer = (sklAnim *)cvGet(allSklAnimations, i);
-					if(strcmp(&loadPath[0], sklaPointer->name) == 0){
-						skipLoad = 1;
-						break;
-					}
-				}
-				if(!skipLoad){
-					sklAnim tempSkla;
-					return_t r = sklaLoad(&tempSkla, prgPath, &loadPath[0]);
-					if(r == -1){
+				// Check if the animation has already been loaded.
+				tempSkla = moduleSkeletalAnimationFind(&loadPath[0]);
+
+				// If the animation path is surrounded by quotes, try and load it.
+				if(tempSkla == NULL){
+					tempSkla = moduleSkeletalAnimationAllocate();
+					if(tempSkla != NULL){
+						const return_t r = sklaLoad(tempSkla, prgPath, &loadPath[0]);
+						if(r < 1){
+							// The load failed. Clean up.
+							moduleSkeletalAnimationFree(tempSkla);
+							if(r == -1){
+								/** Memory allocation failure. **/
+								objDelete(obj);
+								fclose(objInfo);
+								return -1;
+							}
+							tempSkla = NULL;
+						}
+					}else{
 						/** Memory allocation failure. **/
 						objDelete(obj);
 						fclose(objInfo);
 						return -1;
-					}else if(r > 0){
-						cvPush(allSklAnimations, (void *)&tempSkla, sizeof(tempSkla));  // Add it to allSklAnimations.
-						sklaPointer = (sklAnim *)cvGet(allSklAnimations, allSklAnimations->size-1);
 					}
 				}
 
-				if(sklaPointer != NULL){
+				if(tempSkla != NULL){
 
 					// Allocate room for the new animation pointer if necessary.
 					if(obj->animationNum == obj->animationCapacity){
-						size_t tempCapacity = obj->animationCapacity + 1;
+						const size_t tempCapacity = obj->animationCapacity + 1;
 						sklAnim **tempBuffer = realloc(obj->animations, tempCapacity*sizeof(sklAnim *));
 						if(tempBuffer == NULL){
 							/** Memory allocation failure. **/
@@ -282,7 +285,7 @@ return_t objLoad(object *obj, const char *prgPath, const char *filePath,
 						obj->animationCapacity = tempCapacity;
 						obj->animations = tempBuffer;
 					}
-					obj->animations[obj->animationNum] = sklaPointer;
+					obj->animations[obj->animationNum] = tempSkla;
 					++obj->animationNum;
 
 				}else{
@@ -360,7 +363,7 @@ return_t objLoad(object *obj, const char *prgPath, const char *filePath,
 					}else{
 						tempMdl = moduleModelAllocate();
 						if(tempMdl != NULL){
-							const return_t r = mdlLoad(tempMdl, prgPath, &loadPath[0], allSkeletons);
+							const return_t r = mdlLoad(tempMdl, prgPath, &loadPath[0]);
 							if(r == -1){
 								/** Memory allocation failure. **/
 								moduleModelFree(tempMdl);

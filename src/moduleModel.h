@@ -5,11 +5,15 @@
 #include "memoryManager.h"
 #include "model.h"
 
-return_t moduleModelInit();
+/** Support locals? Merge all module containers? **/
+
+return_t moduleModelResourcesInit();
+void moduleModelResourcesDelete();
 
 model *moduleModelGetDefault();
 model *moduleModelAllocate();
 void moduleModelFree(model *resource);
 model *moduleModelFind(const char *name);
+void moduleModelClear();
 
 #endif

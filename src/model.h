@@ -25,11 +25,9 @@ typedef struct {
 } model;
 
 void mdlInit(model *mdl);
-/** I don't like the cVector being passed in here at all. **/
-#include "cVector.h"
-return_t mdlLoad(model *mdl, const char *prgPath, const char *filePath, cVector *allSkeletons);
-return_t mdlDefault(model *mdl, cVector *allSkeletons);
-return_t mdlCreateSprite(model *mdl, cVector *allSkeletons);
+return_t mdlLoad(model *mdl, const char *prgPath, const char *filePath);
+return_t mdlDefault(model *mdl);
+return_t mdlCreateSprite(model *mdl);
 void mdlDelete(model *mdl);
 
 #endif

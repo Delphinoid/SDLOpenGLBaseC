@@ -1,8 +1,8 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include "model.h"
+#include "moduleSkeleton.h"
 #include "helpersFileIO.h"
-#include "memoryManager.h"
 
 return_t mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndexNum_t *indexNum, vertexIndex_t **indices, char **name, char *sklPath);
 return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndexNum_t *indexNum, vertexIndex_t **indices, char **name, cVector *allSkeletons);
@@ -24,7 +24,7 @@ void mdlInit(model *mdl){
 	mdl->hitboxes = NULL;**/
 }
 
-return_t mdlLoad(model *mdl, const char *prgPath, const char *filePath, cVector *allSkeletons){
+return_t mdlLoad(model *mdl, const char *prgPath, const char *filePath){
 
 	/** Create a proper model file that loads a specified mesh, a name and a skeleton. **/
 	return_t r;
@@ -49,31 +49,47 @@ return_t mdlLoad(model *mdl, const char *prgPath, const char *filePath, cVector 
 	if(r <= 0){
 		return r;
 	}
-	if(sklPath[0] == '\0'){
-		// Use the default skeleton.
-        mdl->skl = (skeleton *)cvGet(allSkeletons, 0);
-		//mdl->skl = (skeleton *)cvGet(allSkeletons, allSkeletons->size-1);
-	}else{
-		/** Check if the skeleton already exists. If not, load it. **/
-		skeleton tempSkl;
-		sklLoad(&tempSkl, prgPath, &sklPath[0]);
-		cvPush(allSkeletons, (void *)&tempSkl, sizeof(tempSkl));
-		mdl->skl = (skeleton *)cvGet(allSkeletons, allSkeletons->size-1);
-	}
 
 	/** Should mdlGenBufferObjects() be here? **/
 	r = mdlGenBufferObjects(mdl, &fullPath[0], vertexNum, vertices, indexNum, indices);
-	free(vertices);
-	free(indices);
+	memFree(vertices);
+	memFree(indices);
+
+	if(sklPath[0] == '\0'){
+		// Use the default skeleton.
+        mdl->skl = moduleSkeletonGetDefault();
+	}else{
+		/** Check if the skeleton already exists. If not, load it. **/
+		skeleton *tempSkl = moduleSkeletonAllocate();
+		if(tempSkl != NULL){
+			const return_t r2 = sklLoad(tempSkl, prgPath, &sklPath[0]);
+			if(r2 < 1){
+				// The load failed. Clean up.
+				moduleSkeletonFree(tempSkl);
+				if(r2 == -1){
+					/** Memory allocation failure. **/
+					mdlDelete(mdl);
+					return -1;
+				}
+				mdl->skl = moduleSkeletonGetDefault();
+			}else{
+				mdl->skl = tempSkl;
+			}
+		}else{
+			/** Memory allocation failure. **/
+			mdlDelete(mdl);
+			return -1;
+		}
+	}
 
 	if(r > 0){
 
 		// If no name was given, generate one based off the file path.
 		if(mdl->name == NULL || mdl->name[0] == '\0'){
 			if(mdl->name != NULL){
-				free(mdl->name);
+				memFree(mdl->name);
 			}
-			mdl->name = malloc((fileLength+1)*sizeof(char));
+			mdl->name = memAllocate((fileLength+1)*sizeof(char));
 			if(mdl->name == NULL){
 				/** Memory allocation failure. **/
 				mdlDelete(mdl);
@@ -81,6 +97,8 @@ return_t mdlLoad(model *mdl, const char *prgPath, const char *filePath, cVector 
 			}
 			memcpy(mdl->name, filePath, fileLength);
 			mdl->name[fileLength] = '\0';
+		}else{
+			mdl->name = memReallocate(mdl->name, strlen(mdl->name)*sizeof(char));
 		}
 
 	}else{
@@ -91,7 +109,7 @@ return_t mdlLoad(model *mdl, const char *prgPath, const char *filePath, cVector 
 
 }
 
-return_t mdlDefault(model *mdl, cVector *allSkeletons){
+return_t mdlDefault(model *mdl){
 
 	vertex vertices[24];
 	vertexIndex_t indices[36];
@@ -288,7 +306,7 @@ return_t mdlDefault(model *mdl, cVector *allSkeletons){
 	mdl->name[7] = '\0';
 
 	// Use the default skeleton.
-	mdl->skl = (skeleton *)cvGet(allSkeletons, 0);
+	mdl->skl = moduleSkeletonGetDefault();
 
 	if(mdlGenBufferObjects(mdl, NULL, mdl->vertexNum, vertices, mdl->indexNum, indices) <= 0){
 		mdlDelete(mdl);
@@ -300,7 +318,7 @@ return_t mdlDefault(model *mdl, cVector *allSkeletons){
 }
 
 /** Change this function later **/
-return_t mdlCreateSprite(model *mdl, cVector *allSkeletons){
+return_t mdlCreateSprite(model *mdl){
 
 	GLenum glError;
 
@@ -320,7 +338,7 @@ return_t mdlCreateSprite(model *mdl, cVector *allSkeletons){
 	mdl->name[6] = '\0';
 
 	// Use the default skeleton.
-	mdl->skl = (skeleton *)cvGet(allSkeletons, 0);
+	mdl->skl = moduleSkeletonGetDefault();
 
 	// Create and bind the VAO
 	glGenVertexArrays(1, &mdl->vaoID);
@@ -460,7 +478,7 @@ static return_t mdlGenBufferObjects(model *mdl, const char *filePath, const vert
 
 void mdlDelete(model *mdl){
 	if(mdl->name != NULL){
-		free(mdl->name);
+		memFree(mdl->name);
 	}
 	if(mdl->vaoID != 0){
 		glDeleteBuffers(1, &mdl->vaoID);

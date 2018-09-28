@@ -397,7 +397,7 @@ return_t resMngrCreateDefaultResources(resourceManager *resMngr){
 	defaultName[6] = 't';
 	defaultName[7] = '\0';*/
 
-	defaultTexture = (texture *)memListAllocate(&resMngr->textures);
+	/*defaultTexture = (texture *)memListAllocate(&resMngr->textures);
 	if(defaultTexture == NULL){
 		return -1;
 	}
@@ -407,7 +407,7 @@ return_t resMngrCreateDefaultResources(resourceManager *resMngr){
 	if(defaultTexture == NULL){
 		return -1;
 	}
-	twDefault(defaultTextureWrapper);
+	twDefault(defaultTextureWrapper);*/
 
 	/*defaultSkeleton = (skeleton *)memListAllocate(resMngr->skeletons);
 	if(defaultSkeleton == NULL){
@@ -433,12 +433,12 @@ void resMngrDelete(resourceManager *resMngr){
 	// Shared mesh data.
 	//memTreeDelete(&resMngr->meshes);
 	// Shared hitbox data.
-	memSLinkDelete(&resMngr->hitboxes);
+	/*memSLinkDelete(&resMngr->hitboxes);
 	// Shared physics data.
 	memSLinkDelete(&resMngr->colliders);
 
 
-	/* Uninstantiated data. */
+	/* Uninstantiated data. *
 	// Uninstantiated object data.
 	memListDelete(&resMngr->objects);
 
@@ -463,7 +463,7 @@ void resMngrDelete(resourceManager *resMngr){
 	memListDelete(&resMngr->rigidBodies);
 
 
-	/* Instantiated data. */
+	/* Instantiated data. *
 	// Instantiated object data.
 	memPoolDelete(&resMngr->objectInstances);
 	//memTreeDelete(&resMngr->objectInstanceData);
@@ -481,6 +481,6 @@ void resMngrDelete(resourceManager *resMngr){
 	// Instantiated physics data.
 	memSLinkDelete(&resMngr->rigidBodyInstances);
 	memSLinkDelete(&resMngr->constraintInstances);
-	memSLinkDelete(&resMngr->collisionInstances);
+	memSLinkDelete(&resMngr->collisionInstances);*/
 
 }

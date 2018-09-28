@@ -14,9 +14,9 @@ typedef uint16_t animIndex_t;
 typedef uint16_t frameIndex_t;
 
 typedef struct {
-	uint8_t desiredLoops;  // How many times the animation will loop (with -1 being infinite times).
-	frameIndex_t frameNum;   // The total number of keyframes in the animation.
-	float *frameDelays;    // Represents when each frame ends. "frameEnds" is a more accurate name, but this name is a bit of an inside joke now.
+	uint8_t desiredLoops;   // How many times the animation will loop (with -1 being infinite times).
+	frameIndex_t frameNum;  // The total number of keyframes in the animation.
+	float *frameDelays;     // Represents when each frame ends. "frameEnds" is a more accurate name, but this name is a bit of an inside joke now.
 } animationData;
 
 typedef struct {

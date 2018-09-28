@@ -21,13 +21,13 @@ typedef struct {
 	//memoryTree meshes;
 
 	// Shared hitbox data.
-	memorySLink hitboxes;
+	/*memorySLink hitboxes;
 
 	// Shared physics data.
 	memorySLink colliders;
 
 
-	/* Uninstantiated data. */
+	/* Uninstantiated data. *
 	// Uninstantiated object data.
 	memoryList objects;
 
@@ -52,7 +52,7 @@ typedef struct {
 	memoryList rigidBodies;
 
 
-	/* Instantiated data. */
+	/* Instantiated data. *
 	// Instantiated object data.
 	memoryPool objectInstances;
 	//memoryTree objectInstanceData;
@@ -70,7 +70,7 @@ typedef struct {
 	// Instantiated physics data.
 	memorySLink rigidBodyInstances;
 	memorySLink constraintInstances;
-	memorySLink collisionInstances;
+	memorySLink collisionInstances;*/
 
 } resourceManager;
 

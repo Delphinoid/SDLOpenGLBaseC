@@ -1,4 +1,5 @@
 #include "model.h"
+#include "memoryManager.h"
 #include "helpersFileIO.h"
 #include "helpersMisc.h"
 #include <string.h>
@@ -13,30 +14,30 @@
 
 #define mdlWavefrontObjFreeReturns() \
 	if(*name != NULL){ \
-		free(*name); \
+		memFree(*name); \
 	} \
 	if(*vertices != NULL){ \
-		free(*vertices); \
+		memFree(*vertices); \
 	} \
 	if(*indices != NULL){ \
-		free(*indices); \
+		memFree(*indices); \
 	} \
 
 #define mdlWavefrontObjFreeHelpers() \
 	if(tempPositions != NULL){ \
-		free(tempPositions); \
+		memFree(tempPositions); \
 	} \
 	if(tempTexCoords != NULL){ \
-		free(tempTexCoords); \
+		memFree(tempTexCoords); \
 	} \
 	if(tempNormals != NULL){ \
-		free(tempNormals); \
+		memFree(tempNormals); \
 	} \
 	if(tempBoneIDs != NULL){ \
-		free(tempBoneIDs); \
+		memFree(tempBoneIDs); \
 	} \
 	if(tempBoneWeights != NULL){ \
-		free(tempBoneWeights); \
+		memFree(tempBoneWeights); \
 	}
 
 return_t mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndexNum_t *indexNum, vertexIndex_t **indices, char **name, char *sklPath){
@@ -79,15 +80,15 @@ return_t mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, ver
 		float *tempBoneWeights;
 
 
-		*vertices = malloc(vertexCapacity*sizeof(vertex));
+		*vertices = memAllocate(vertexCapacity*sizeof(vertex));
 		if(*vertices == NULL){
 			/** Memory allocation failure. **/
 			return -1;
 		}
-		*indices = malloc(indexCapacity*sizeof(vertexIndex_t));
+		*indices = memAllocate(indexCapacity*sizeof(vertexIndex_t));
 		if(*indices == NULL){
 			/** Memory allocation failure. **/
-			free(*vertices);
+			memFree(*vertices);
 			return -1;
 		}
 		/**const int generatePhysProperties = (mass != NULL && area != NULL && centroid != NULL);
@@ -99,53 +100,53 @@ return_t mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, ver
 		*vertexNum = 0;
 		*indexNum = 0;
 		// Temporarily holds vertex positions before they are pushed into vertices
-		tempPositions = malloc(tempPositionsCapacity*sizeof(float));
+		tempPositions = memAllocate(tempPositionsCapacity*sizeof(float));
 		if(tempPositions == NULL){
 			/** Memory allocation failure. **/
-			free(*vertices);
-			free(*indices);
+			memFree(*vertices);
+			memFree(*indices);
 			return -1;
 		}
 		// Temporarily holds vertex UVs they are pushed into vertices
-		tempTexCoords = malloc(tempTexCoordsCapacity*sizeof(float));
+		tempTexCoords = memAllocate(tempTexCoordsCapacity*sizeof(float));
 		if(tempTexCoords == NULL){
 			/** Memory allocation failure. **/
-			free(*vertices);
-			free(*indices);
-			free(tempPositions);
+			memFree(*vertices);
+			memFree(*indices);
+			memFree(tempPositions);
 			return -1;
 		}
 		// Temporarily holds vertex normals before they are pushed into vertices
-		tempNormals = malloc(tempNormalsCapacity*sizeof(float));
+		tempNormals = memAllocate(tempNormalsCapacity*sizeof(float));
 		if(tempNormals == NULL){
 			/** Memory allocation failure. **/
-			free(*vertices);
-			free(*indices);
-			free(tempPositions);
-			free(tempTexCoords);
+			memFree(*vertices);
+			memFree(*indices);
+			memFree(tempPositions);
+			memFree(tempTexCoords);
 			return -1;
 		}
 		// Temporarily holds bone IDs before they are pushed into vertices
-		tempBoneIDs = malloc(tempBoneIDsCapacity*sizeof(int));
+		tempBoneIDs = memAllocate(tempBoneIDsCapacity*sizeof(int));
 		if(tempBoneIDs == NULL){
 			/** Memory allocation failure. **/
-			free(*vertices);
-			free(*indices);
-			free(tempPositions);
-			free(tempTexCoords);
-			free(tempNormals);
+			memFree(*vertices);
+			memFree(*indices);
+			memFree(tempPositions);
+			memFree(tempTexCoords);
+			memFree(tempNormals);
 			return -1;
 		}
 		// Temporarily holds bone weights before they are pushed into vertices
-		tempBoneWeights = malloc(tempBoneWeightsCapacity*sizeof(float));
+		tempBoneWeights = memAllocate(tempBoneWeightsCapacity*sizeof(float));
 		if(tempBoneWeights == NULL){
 			/** Memory allocation failure. **/
-			free(*vertices);
-			free(*indices);
-			free(tempPositions);
-			free(tempTexCoords);
-			free(tempNormals);
-			free(tempBoneIDs);
+			memFree(*vertices);
+			memFree(*indices);
+			memFree(tempPositions);
+			memFree(tempTexCoords);
+			memFree(tempNormals);
+			memFree(tempBoneIDs);
 			return -1;
 		}
 
@@ -161,7 +162,7 @@ return_t mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, ver
 					++line;
 					lineLength -= 2;
 				}
-				*name = malloc((lineLength-4) * sizeof(char));
+				*name = memAllocate((lineLength-4) * sizeof(char));
 				if(*name == NULL){
 					/** Memory allocation failure. **/
 					mdlWavefrontObjFreeHelpers();
@@ -355,6 +356,9 @@ return_t mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, ver
 				char *token = strtok(line+2, " /");
 				for(i = 0; i < 3; ++i){
 
+					int foundVertex = 0;
+					vertexIndex_t j;
+
 					// Load face data
 					positionIndex[i] = strtoul(token, NULL, 0)-1;
 					token = strtok(NULL, " /");
@@ -423,8 +427,6 @@ return_t mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, ver
 					}
 
 					// Check if the vertex has already been loaded, and if so add an index
-					int foundVertex = 0;
-					vertexIndex_t j;
 					for(j = 0; j < *vertexNum; ++j){
 						vertex *checkVert = &(*vertices)[j];
 						/** CHECK BONE DATA HERE **/

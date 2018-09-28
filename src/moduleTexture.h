@@ -5,11 +5,15 @@
 #include "memoryManager.h"
 #include "texture.h"
 
-return_t moduleTextureInit();
+/** Support locals? Merge all module containers? **/
+
+return_t moduleTextureResourcesInit();
+void moduleTextureResourcesDelete();
 
 texture *moduleTextureGetDefault();
 texture *moduleTextureAllocate();
 void moduleTextureFree(texture *resource);
 texture *moduleTextureFind(const char *name);
+void moduleTextureClear();
 
 #endif

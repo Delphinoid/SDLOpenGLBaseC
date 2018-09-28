@@ -1,4 +1,5 @@
 #include "animation.h"
+#include "memoryManager.h"
 
 /** These animation functions are particularly bad, redo them later maybe? **/
 
@@ -16,7 +17,7 @@ void animDataInit(animationData *animData){
 }
 void animDataDelete(animationData *animData){
 	if(animData->frameDelays != NULL){
-		free(animData->frameDelays);
+		memFree(animData->frameDelays);
 	}
 }
 
@@ -91,7 +92,7 @@ void animAdvance(animationInstance *animInst, const animationData *animData, con
 						--animInst->currentLoops;
 					} while(animInst->totalElapsedTime < 0.f);
 					// Check if we've looped too far and currentLoops has overflowed (as it is unsigned).
-					if(animInst->currentLoops > prevLoops){
+					if(animInst->currentLoops < prevLoops){
 						animInst->currentLoops = 0;
 						if(animData->desiredLoops >= 0){
 							// We're not looping infinitely, so place the animation at the beginning and return.

@@ -1,11 +1,6 @@
 #ifndef MEMORYMANAGER_H
 #define MEMORYMANAGER_H
 
-#include "memoryStack.h"
-#include "memoryList.h"
-#include "memoryPool.h"
-#include "memorySLink.h"
-#include "memoryDLink.h"
 #include "memoryTree.h"
 #include "typedefs.h"
 

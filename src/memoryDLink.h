@@ -104,9 +104,9 @@ void *memDLinkCreate(memoryDLink *array, void *start, const size_t bytes, const 
 void *memDLinkAllocate(memoryDLink *array);
 void *memDLinkPrepend(memoryDLink *array, void **start);
 void *memDLinkAppend(memoryDLink *array, void **start);
-void *memDLinkInsertBefore(memoryDLink *array, void *element);
+void *memDLinkInsertBefore(memoryDLink *array, void **start, void *element);
 void *memDLinkInsertAfter(memoryDLink *array, void *element);
-void memDLinkFree(memoryDLink *array, void *element);
+void memDLinkFree(memoryDLink *array, void **start, void *element);
 void *memDLinkSetupMemory(void *start, const size_t bytes, const size_t length);
 void memDLinkClear(memoryDLink *array);
 void *memDLinkExtend(memoryDLink *array, void *start, const size_t bytes, const size_t length);

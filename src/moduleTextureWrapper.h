@@ -5,11 +5,15 @@
 #include "memoryManager.h"
 #include "textureWrapper.h"
 
-return_t moduleTextureWrapperInit();
+/** Support locals? Merge all module containers? **/
+
+return_t moduleTextureWrapperResourcesInit();
+void moduleTextureWrapperResourcesDelete();
 
 textureWrapper *moduleTextureWrapperGetDefault();
 textureWrapper *moduleTextureWrapperAllocate();
 void moduleTextureWrapperFree(textureWrapper *resource);
 textureWrapper *moduleTextureWrapperFind(const char *name);
+void moduleTextureWrapperClear();
 
 #endif

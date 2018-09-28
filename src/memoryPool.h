@@ -13,9 +13,9 @@
 **
 ** The flag may have three potential
 ** states:
-** MEMORY_POOL_ACTIVE   - Currently in use.
-** MEMORY_POOL_INACTIVE - Currently not in use.
-** MEMORY_POOL_INVALID  - End of the pool.
+** MEMORY_POOL_BLOCK_ACTIVE   - Currently in use.
+** MEMORY_POOL_BLOCK_INACTIVE - Currently not in use.
+** MEMORY_POOL_BLOCK_INVALID  - End of the pool.
 **
 ** Free-list pointers point to the
 ** data, not the beginning of the block.
@@ -27,9 +27,9 @@
 *** active member?
 **/
 
-#define MEMORY_POOL_ACTIVE   (byte_t)0x00
-#define MEMORY_POOL_INACTIVE (byte_t)0x01
-#define MEMORY_POOL_INVALID  (byte_t)0x02
+#define MEMORY_POOL_BLOCK_ACTIVE   (byte_t)0x00
+#define MEMORY_POOL_BLOCK_INACTIVE (byte_t)0x01
+#define MEMORY_POOL_BLOCK_INVALID  (byte_t)0x02
 
 #define MEMORY_POOL_BLOCK_POINTER_SIZE sizeof(byte_t *)
 #define MEMORY_POOL_BLOCK_FLAGS_SIZE   sizeof(byte_t)

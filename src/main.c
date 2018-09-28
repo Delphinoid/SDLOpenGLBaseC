@@ -6,6 +6,7 @@
 /****/
 #include "moduleTexture.h"
 #include "moduleTextureWrapper.h"
+#include "moduleSkeleton.h"
 #include "moduleModel.h"
 
 /** stateManager should be const. **/
@@ -54,9 +55,10 @@ int main(int argc, char *argv[]){
 	cVector allObjects; cvInit(&allObjects, 1);              // Holds objects.
 
 	/****/
-	moduleTextureInit();
-	moduleTextureWrapperInit();
-	moduleModelInit();
+	moduleTextureResourcesInit();
+	moduleTextureWrapperResourcesInit();
+	moduleSkeletonResourcesInit();
+	moduleModelResourcesInit();
 
 	/* Textures */
 	texture *tempTex = moduleTextureAllocate();
@@ -67,9 +69,8 @@ int main(int argc, char *argv[]){
 	tLoad(tempTex, prgPath, "Resources\\Images\\Misc\\Avatar.png");
 
 	/* Skeletons */
-	skeleton tempSkl;
-	sklDefault(&tempSkl);
-	cvPush(&allSkeletons, (void *)&tempSkl, sizeof(tempSkl));
+	skeleton *tempSkl = moduleSkeletonAllocate();
+	sklDefault(tempSkl);
 
 	/* Texture Wrappers */
 	textureWrapper *tempTexWrap0 = moduleTextureWrapperAllocate();
@@ -81,9 +82,9 @@ int main(int argc, char *argv[]){
 
 	/* Models */
 	model *tempMdl = moduleModelAllocate();
-	mdlDefault(tempMdl, &allSkeletons);
+	mdlDefault(tempMdl);
 	tempMdl = moduleModelAllocate();
-	mdlCreateSprite(tempMdl, &allSkeletons);
+	mdlCreateSprite(tempMdl);
 
 	/* Objects */
 	object tempObj;
@@ -178,6 +179,10 @@ int main(int argc, char *argv[]){
 	smObjectNew(&gameStateManager, SM_TYPE_CAMERA, &tempID);
 	camGetState(&gameStateManager, tempID, 0)->flags |= CAM_PROJECTION_ORTHO;
 	camGetState(&gameStateManager, tempID, 0)->targetScene = (scene *)gameStateManager.objectType[SM_TYPE_SCENE].instance[1].state[0];
+
+
+	memPrintAllBlocks();
+	memPrintFreeBlocks(0);
 
 
 	signed char prgRunning = 1;
@@ -277,6 +282,8 @@ int main(int argc, char *argv[]){
 			/* Handle inputs */
 			if(UP){
 				globalTimeMod = 1.f;
+				tickrateMod = tickrate*globalTimeMod;
+				tickratioMod = tickratio*globalTimeMod;
 				/** changeRotation is created to initialize the second renderable. **/
 				quatSetEuler(&changeRotation, -90.f*RADIAN_RATIO, 0.f, 0.f);
 				quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, tickratio, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
@@ -285,6 +292,8 @@ int main(int argc, char *argv[]){
 			}
 			if(DOWN){
 				globalTimeMod = -1.f;
+				tickrateMod = tickrate*globalTimeMod;
+				tickratioMod = tickratio*globalTimeMod;
 				/** changeRotation is created to initialize the second renderable. **/
 				quatSetEuler(&changeRotation, 90.f*RADIAN_RATIO, 0.f, 0.f);
 				quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, tickratio, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
@@ -358,6 +367,9 @@ int main(int argc, char *argv[]){
 
 
 	cleanup(&gfxMngr, &gameStateManager, &allTextures, &allTexWrappers, &allSkeletons, &allSklAnimations, &allModels, &allObjects);
+	memPrintAllBlocks();
+	memPrintFreeBlocks(0);
+	memMngrDelete();
 	return 0;
 
 }
@@ -368,37 +380,20 @@ void cleanup(graphicsManager *gfxMngr, stateManager *gameStateManager,
              cVector *allModels, cVector *allObjects){
 
 	size_t i;
-	for(i = 0; i < allTextures->size; ++i){
-		tDelete((texture *)cvGet(allTextures, i));
-	}
-	cvClear(allTextures);
 
-	for(i = 0; i < allTexWrappers->size; ++i){
-		twDelete((textureWrapper *)cvGet(allTexWrappers, i));
-	}
-	cvClear(allTexWrappers);
-
-	for(i = 0; i < allSkeletons->size; ++i){
-		sklDelete((skeleton *)cvGet(allSkeletons, i));
-	}
-	cvClear(allSkeletons);
-
-	for(i = 0; i < allSklAnimations->size; ++i){
-		sklaDelete((sklAnim *)cvGet(allSklAnimations, i));
-	}
-	cvClear(allSklAnimations);
-
-	for(i = 0; i < allModels->size; ++i){
-		mdlDelete((model *)cvGet(allModels, i));
-	}
-	cvClear(allModels);
+	smDelete(gameStateManager);
 
 	for(i = 0; i < allObjects->size; ++i){
 		objDelete((object *)cvGet(allObjects, i));
 	}
 	cvClear(allObjects);
 
-	smDelete(gameStateManager);
+	/****/
+	moduleModelResourcesDelete();
+	moduleSkeletonResourcesDelete();
+	moduleTextureWrapperResourcesDelete();
+	moduleTextureResourcesDelete();
+
 	gfxMngrDestroyProgram(gfxMngr);
 
 }

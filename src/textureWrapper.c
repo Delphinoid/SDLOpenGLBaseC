@@ -103,7 +103,7 @@ static return_t twaNew(twAnim *twa, const frameIndex_t animframeCapacity){
 		/** Memory allocation failure. **/
 		return -1;
 	}
-	twa->animData.frameDelays = malloc(animframeCapacity*sizeof(float));
+	twa->animData.frameDelays = memAllocate(animframeCapacity*sizeof(float));
 	if(twa->animData.frameDelays == NULL){
 		/** Memory allocation failure. **/
 		memFree(twa->frames);
@@ -127,7 +127,7 @@ static return_t twaAddFrame(twAnim *twa, const frameIndex_t f, const frameIndex_
 			/** Memory allocation failure. **/
 			return -1;
 		}
-		tempBuffer2 = realloc(twa->animData.frameDelays, *animframeCapacity*sizeof(float));
+		tempBuffer2 = memReallocate(twa->animData.frameDelays, *animframeCapacity*sizeof(float));
 		if(tempBuffer2 == NULL){
 			/** Memory allocation failure. **/
 			memFree(tempBuffer1);
@@ -152,7 +152,7 @@ static return_t twaResizeToFit(twAnim *twa, const frameIndex_t animframeCapacity
 			/** Memory allocation failure. **/
 			return -1;
 		}
-		tempBuffer2 = realloc(twa->animData.frameDelays, twa->animData.frameNum*sizeof(float));
+		tempBuffer2 = memReallocate(twa->animData.frameDelays, twa->animData.frameNum*sizeof(float));
 		if(tempBuffer2 == NULL){
 			/** Memory allocation failure. **/
 			memFree(tempBuffer1);
@@ -217,6 +217,7 @@ static void twDefragment(textureWrapper *tw){
 	frameIndex_t i;
 	tw->frames     = memReallocate(tw->frames,     tw->frameNum    *sizeof(twFrame));
 	tw->animations = memReallocate(tw->animations, tw->animationNum*sizeof(twAnim ));
+	tw->name       = memReallocate(tw->name,       strlen(tw->name)*sizeof(char   ));
 	for(i = 0; i < tw->frameNum; ++i){
 		tw->frames[i].baseTexture->name =
 		memReallocate(
@@ -235,7 +236,11 @@ static void twDefragment(textureWrapper *tw){
 			tw->animations[i].frames,
 			tw->animations[i].animData.frameNum*sizeof(twFramePair)
 		);
-		/** Reallocate frame delays. **/
+		tw->animations[i].animData.frameDelays =
+		memReallocate(
+			tw->animations[i].animData.frameDelays,
+			tw->animations[i].animData.frameNum*sizeof(float)
+		);
 	}
 	tw->name = memReallocate(tw->name, strlen(tw->name)*sizeof(char));
 }
@@ -245,7 +250,7 @@ static return_t twResizeToFit(textureWrapper *tw, const frameIndex_t frameCapaci
 		twFrame *tempBuffer1;
 		tempBuffer1 = memReallocate(tw->frames, tw->frameNum*sizeof(twFrame));
 		if(tempBuffer1 == NULL){
-			/** Memory allocation failure. **
+			** Memory allocation failure. **
 			twDelete(tw);
 			return -1;
 		}
@@ -255,19 +260,18 @@ static return_t twResizeToFit(textureWrapper *tw, const frameIndex_t frameCapaci
 		twAnim *tempBuffer2;
 		tempBuffer2 = memReallocate(tw->animations, tw->animationNum*sizeof(twAnim));
 		if(tempBuffer2 == NULL){
-			/** Memory allocation failure. **
+			** Memory allocation failure. **
 			twDelete(tw);
 			return -1;
 		}
 		tw->animations = tempBuffer2;
 	}*/
 	/**
-	*** Multiple defrags until I create
-	*** a new binary texture wrapper file
-	*** format where the sizes are all
-	*** known beforehand.
+	*** Defrag until I create a new
+	*** binary texture wrapper file
+	*** format where the sizes are
+	*** all known beforehand.
 	**/
-	twDefragment(tw);
 	twDefragment(tw);
 	return 1;
 }
@@ -353,7 +357,7 @@ return_t twLoad(textureWrapper *tw, const char *prgPath, const char *filePath){
 			// New texture frame
 			}else if(lineLength >= 7 && strncmp(line, "image ", 6) == 0){
 
-				texture *tempTex = NULL;
+				texture *tempTex;
 				size_t pathBegin;
 				size_t pathLength;
 				const char *firstQuote = strchr(line+6, '"');
@@ -438,13 +442,18 @@ return_t twLoad(textureWrapper *tw, const char *prgPath, const char *filePath){
 					tempTex = moduleTextureAllocate();
 					if(tempTex != NULL){
 						const return_t r = tLoad(tempTex, prgPath, &texPath[0]);
-						if(r == -1){
-							/** Memory allocation failure. **/
+						if(r < 1){
+							// The load failed. Clean up.
 							moduleTextureFree(tempTex);
-							twaDelete(&tempAnim);
-							fclose(texInfo);
-							return -1;
-						}else if(r > 0){
+							if(r == -1){
+								/** Memory allocation failure. **/
+								twaDelete(&tempAnim);
+								fclose(texInfo);
+								return -1;
+							}
+							printf("Error loading texture wrapper \"%s\": Image \"%s\" at line %u does not exist.\n", &fullPath[0], &texPath[0], currentLine);
+							tempFrame.baseTexture = moduleTextureGetDefault();
+						}else{
 							tempFrame.baseTexture = tempTex;
 						}
 					}else{
@@ -453,11 +462,6 @@ return_t twLoad(textureWrapper *tw, const char *prgPath, const char *filePath){
 						fclose(texInfo);
 						return -1;
 					}
-				}
-				// Use the default texture if no texture was loaded.
-				if(tempFrame.baseTexture == NULL){
-					printf("Error loading texture wrapper \"%s\": Image \"%s\" at line %u does not exist.\n", &fullPath[0], &texPath[0], currentLine);
-					tempFrame.baseTexture = moduleTextureGetDefault();
 				}
 
 				// Check if the command spans multiple lines (it contains an opening brace at the end).

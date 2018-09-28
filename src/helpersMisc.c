@@ -1,4 +1,5 @@
 #include "helpersMisc.h"
+#include "memoryManager.h"
 #include <string.h>
 
 /*return_t nextToken(const char *str, const char *delims, size_t *tokenOffset, size_t *tokenLength){
@@ -32,19 +33,20 @@
 return_t pushDynamicArray(void **vector, const void *element, const size_t bytes, size_t *size, size_t *capacity){
 	/* Push an element into a dynamic array. */
 	if(*size == *capacity){
+		void *tempBuffer;
 		if(*capacity == 0){
 			*capacity = 1;
 		}else{
 			*capacity *= 2;
 		}
-		void *tempBuffer = realloc(*vector, (*capacity)*bytes);
+		tempBuffer = memReallocate(*vector, (*capacity)*bytes);
 		if(tempBuffer == NULL){
 			/** Memory allocation failure. **/
 			return -1;
 		}
 		*vector = tempBuffer;
 	}
-	memcpy(((char *)(*vector))+(*size)*bytes, element, bytes);
+	memcpy(((byte_t *)(*vector))+(*size)*bytes, element, bytes);
 	++(*size);
 	return 1;
 }

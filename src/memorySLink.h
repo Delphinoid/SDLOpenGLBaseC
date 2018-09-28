@@ -98,9 +98,9 @@ void *memSLinkCreate(memorySLink *array, void *start, const size_t bytes, const 
 void *memSLinkAllocate(memorySLink *array);
 void *memSLinkPrepend(memorySLink *array, void **start);
 void *memSLinkAppend(memorySLink *array, void **start);
-void *memSLinkInsertBefore(memorySLink *array, void *element, void *previous);
+void *memSLinkInsertBefore(memorySLink *array, void **start, void *element, void *previous);
 void *memSLinkInsertAfter(memorySLink *array, void *element);
-void memSLinkFree(memorySLink *array, void *element, void *previous);
+void memSLinkFree(memorySLink *array, void **start, void *element, void *previous);
 void *memSLinkSetupMemory(void *start, const size_t bytes, const size_t length);
 void memSLinkClear(memorySLink *array);
 void *memSLinkExtend(memorySLink *array, void *start, const size_t bytes, const size_t length);
