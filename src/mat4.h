@@ -3,7 +3,7 @@
 
 #include "vec4.h"
 #include "quat.h"
-#include "typedefs.h"
+#include "return.h"
 
 typedef struct {
 	float m[4][4];

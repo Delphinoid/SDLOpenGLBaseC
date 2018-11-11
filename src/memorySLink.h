@@ -79,19 +79,22 @@ typedef struct {
 
 #define memSLinkBlockSize(bytes) MEMORY_SLINK_ALIGN(bytes + MEMORY_SLINK_BLOCK_HEADER_SIZE)
 #define memSLinkBlockSizeUnaligned(bytes)          (bytes + MEMORY_SLINK_BLOCK_HEADER_SIZE)
-#define memSLinkAlignStartBlock(start) ((byte_t *)MEMORY_SLINK_ALIGN((uintptr_t)start + MEMORY_SLINK_BLOCK_HEADER_SIZE) - MEMORY_SLINK_BLOCK_HEADER_SIZE)
-#define memSLinkAlignStartData(start)  ((byte_t *)MEMORY_SLINK_ALIGN((uintptr_t)start + MEMORY_SLINK_BLOCK_HEADER_SIZE))
+#ifndef MEMORY_ALLOCATOR_ALIGNED
+	#define memSLinkAlignStartBlock(start) ((byte_t *)MEMORY_SLINK_ALIGN((uintptr_t)start + MEMORY_SLINK_BLOCK_HEADER_SIZE) - MEMORY_SLINK_BLOCK_HEADER_SIZE)
+	#define memSLinkAlignStartData(start)  ((byte_t *)MEMORY_SLINK_ALIGN((uintptr_t)start + MEMORY_SLINK_BLOCK_HEADER_SIZE))
+#else
+	#define memSLinkAlignStartBlock(start) start
+	#define memSLinkAlignStartData(start)  ((byte_t *)start + MEMORY_SLINK_BLOCK_HEADER_SIZE)
+#endif
 #define memSLinkAllocationSize(start, bytes, length) \
 	(memSLinkBlockSize(bytes) * length + (uintptr_t)memSLinkAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 	// The following can save small amounts of memory but can't be predicted as easily:
 	//(memSLinkBlockSize(bytes) * (length - 1) + memSLinkBlockSizeUnaligned(bytes) + (uintptr_t)memSLinkAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 
-#define memSLinkFirst(array)        ((void *)memSLinkAlignStartData((array).region->start))
+#define memSLinkFirst(region)       ((void *)memSLinkAlignStartData((region)->start))
 #define memSLinkNext(i)             i = memSLinkDataGetNext(i)
 #define memSLinkBlockStatus(block)  memSLinkDataGetActiveMasked(block)
 #define memSLinkBlockNext(array, i) i = (void *)((byte_t *)i + (array).block)
-#define memSLinkEnd(array)          ((byte_t *)(array).region)
-#define memSLinkChunkNext(array)    (array).region->next
 
 void memSLinkInit(memorySLink *array);
 void *memSLinkCreate(memorySLink *array, void *start, const size_t bytes, const size_t length);

@@ -1,7 +1,7 @@
 #ifndef HELPERSFILEIO_H
 #define HELPERSFILEIO_H
 
-#include "typedefs.h"
+#include "return.h"
 #include <stdio.h>
 
 #define FILE_MAX_PATH_LENGTH 1024

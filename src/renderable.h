@@ -4,7 +4,7 @@
 #include "model.h"
 #include "textureWrapper.h"
 #include "interpState.h"
-#include "camera.h"
+///#include "camera.h"
 
 #define RNDR_BILLBOARD_X             0x01  // Whether or not the object uses the camera's rotated X axis.
 #define RNDR_BILLBOARD_Y             0x02  // Whether or not the object uses the camera's rotated Y axis.
@@ -19,8 +19,15 @@ typedef struct {
 } renderable;
 
 typedef struct {
+
 	model *mdl;
 	twInstance twi;
+
+	/** Is this really worth it? **/
+	float alpha;  // Updated alpha.
+	float alphaCurrent;   // Current alpha for rendering.
+	float alphaPrevious;  // Previous alpha for rendering.
+
 } rndrInstance;
 
 /** Move to particle / sprite files? **/
@@ -33,15 +40,16 @@ typedef struct {
 	//interpVec3 scale;              // Scale of the object.
 	interpFloat alpha;             // A value to multiply against the alpha values of the pixels.
 	/** Sprite should not be necessary anymore. Maybe check the model's name? **/
-	uint8_t sprite;
-	uint8_t flags;
+	uint_least8_t sprite;
+	uint_least8_t flags;
 } rndrConfig;
 
 void rndrInit(renderable *rndr);
 
-void rndriInit(rndrInstance *rndr);
-void rndriInstantiate(rndrInstance *rndr, const renderable *base);
-void rndriDelete(rndrInstance *rndr);
+void rndriInit(rndrInstance *rndri);
+void rndriInstantiate(rndrInstance *rndri, const renderable *base);
+void rndriUpdate(rndrInstance *rndri, const float elapsedTime);
+//void rndriDelete(rndrInstance *rndr);
 
 void rndrConfigInit(rndrConfig *rc);
 void rndrConfigStateCopy(rndrConfig *o, rndrConfig *c);
@@ -49,8 +57,8 @@ void rndrConfigResetInterpolation(rndrConfig *rc);
 
 return_t rndrConfigRenderUpdate(rndrConfig *rc, const float interpT);
 
-void rndrConfigGenerateTransform(const rndrConfig *rc, const camera *cam, mat4 *transformMatrix);
+/**void rndrConfigGenerateTransform(const rndrConfig *rc, const camera *cam, mat4 *transformMatrix);
 void rndrConfigGenerateSprite(const rndrConfig *rc, const twInstance *twi, vertex *vertices, const mat4 *transformMatrix);
-void rndrConfigOffsetSpriteTexture(vertex *vertices, const float texFrag[4], const float texWidth, const float texHeight);
+void rndrConfigOffsetSpriteTexture(vertex *vertices, const float texFrag[4], const float texWidth, const float texHeight);**/
 
 #endif

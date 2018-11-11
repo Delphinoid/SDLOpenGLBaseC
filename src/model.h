@@ -5,8 +5,8 @@
 #include "vertex.h"
 #include "skeleton.h"
 
-typedef uint32_t vertexIndex_t;
-typedef uint32_t vertexIndexNum_t;
+typedef uint_least32_t vertexIndex_t;
+typedef uint_least32_t vertexIndexNum_t;
 
 typedef struct {
 

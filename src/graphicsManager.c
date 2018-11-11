@@ -1,5 +1,6 @@
 #include "graphicsManager.h"
 #include "helpersMisc.h"
+#include "inline.h"
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
 #include <string.h>
@@ -15,14 +16,14 @@ return_t gfxMngrInit(graphicsManager *gfxMngr, const char *prgPath){
 	return_t r;
 
 	mat4Identity(&gfxMngr->identityMatrix);
-	gfxMngr->windowWidth = DEFAULT_WIDTH;
-	gfxMngr->windowHeight = DEFAULT_HEIGHT;
-	gfxMngr->aspectRatioX = DEFAULT_ASPECT_RATIO_X;
-	gfxMngr->aspectRatioY = DEFAULT_ASPECT_RATIO_Y;
-	gfxMngr->lastWindowWidth = 0;
-	gfxMngr->lastWindowHeight = 0;
-	gfxMngr->stretchToFit = 0;
-	gfxMngr->windowChanged = 1;
+	gfxMngr->windowAspectRatioX = GFX_DEFAULT_ASPECT_RATIO_X;
+	gfxMngr->windowAspectRatioY = GFX_DEFAULT_ASPECT_RATIO_Y;
+	gfxMngr->windowWidth = GFX_DEFAULT_WIDTH;
+	gfxMngr->windowHeight = GFX_DEFAULT_HEIGHT;
+	gfxMngr->windowWidthLast = 0;
+	gfxMngr->windowHeightLast = 0;
+	gfxMngr->windowStretchToFit = 0;
+	gfxMngr->windowModified = 1;
 
 	r = gfxMngrInitSDL(gfxMngr);
 	if(r <= 0){
@@ -50,13 +51,13 @@ static return_t gfxMngrInitSDL(graphicsManager *gfxMngr){
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, DEFAULT_GL_VERSION_MAJOR);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, DEFAULT_GL_VERSION_MINOR);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, GFX_DEFAULT_GL_VERSION_MAJOR);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, GFX_DEFAULT_GL_VERSION_MINOR);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
 	// Create the window and context
-	gfxMngr->window = SDL_CreateWindow("Luna", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, DEFAULT_WIDTH, DEFAULT_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+	gfxMngr->window = SDL_CreateWindow("Luna", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, GFX_DEFAULT_WIDTH, GFX_DEFAULT_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 	if(!gfxMngr->window || !(gfxMngr->context = SDL_GL_CreateContext(gfxMngr->window))){
 		printf("Error initializing SDL library: %s\n", SDL_GetError());
 		return 0;
@@ -70,7 +71,7 @@ static return_t gfxMngrInitSDL(graphicsManager *gfxMngr){
 		printf("Error initializing SDL extension library SDL_image: %s\n", IMG_GetError());
 		return 0;
 	}
-	if(Mix_OpenAudio(DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, DEFAULT_CHANNELS, DEFAULT_CHUNKSIZE) < 0){
+	if(Mix_OpenAudio(GFX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, GFX_DEFAULT_CHANNELS, GFX_DEFAULT_CHUNKSIZE) < 0){
 		printf("Error initializing SDL extension library SDL_mixer: %s\n", Mix_GetError());
 		return 0;
 	}
@@ -93,10 +94,10 @@ static return_t gfxMngrInitOGL(graphicsManager *gfxMngr){
 
 
 	/* Initialize OpenGL */
-	glClearColor(0.f, 0.f, 0.f, 1.f);
+	glClearColor(0.f, 0.f, 0.f, 0.f);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
@@ -322,39 +323,60 @@ static return_t gfxMngrCreateBuffers(graphicsManager *gfxMngr){
 
 }
 
-return_t gfxMngrUpdateWindow(graphicsManager *gfxMngr){
-	SDL_GetWindowSize(gfxMngr->window, &gfxMngr->windowWidth, &gfxMngr->windowHeight);
-	if(gfxMngr->windowWidth != gfxMngr->lastWindowWidth || gfxMngr->windowHeight != gfxMngr->lastWindowHeight){
-		GLint screenX, screenY, screenWidth, screenHeight;
-		if(gfxMngr->stretchToFit){
-			screenX = 0;
-			screenY = 0;
-			screenWidth = gfxMngr->windowWidth;
-			screenHeight = gfxMngr->windowHeight;
+
+
+__FORCE_INLINE__ unsigned int gfxMngrUpdateWindow(graphicsManager *gfxMngr){
+	SDL_GetWindowSize(gfxMngr->window, (int *)&gfxMngr->windowWidth, (int *)&gfxMngr->windowHeight);
+	if(gfxMngr->windowWidth != gfxMngr->windowWidthLast || gfxMngr->windowHeight != gfxMngr->windowHeightLast){
+		if(gfxMngr->windowStretchToFit){
+			gfxMngr->viewport.x = 0;
+			gfxMngr->viewport.y = 0;
+			gfxMngr->viewport.width = gfxMngr->windowWidth;
+			gfxMngr->viewport.height = gfxMngr->windowHeight;
 		}else{
-			float tempWidth  = gfxMngr->windowWidth  / gfxMngr->aspectRatioX;
-			float tempHeight = gfxMngr->windowHeight / gfxMngr->aspectRatioY;
+			float tempWidth  = gfxMngr->windowWidth  / gfxMngr->windowAspectRatioX;
+			float tempHeight = gfxMngr->windowHeight / gfxMngr->windowAspectRatioY;
 			if(tempWidth > tempHeight){
-				screenWidth  = tempHeight * gfxMngr->aspectRatioX;
-				screenHeight = gfxMngr->windowHeight;
+				gfxMngr->viewport.width  = (unsigned int)tempHeight * gfxMngr->windowAspectRatioX;
+				gfxMngr->viewport.height = gfxMngr->windowHeight;
 			}else if(tempWidth < tempHeight){
-				screenWidth  = gfxMngr->windowWidth;
-				screenHeight = tempWidth * gfxMngr->aspectRatioY;
+				gfxMngr->viewport.width  = gfxMngr->windowWidth;
+				gfxMngr->viewport.height = (unsigned int)tempWidth * gfxMngr->windowAspectRatioY;
 			}else{
-				screenWidth  = gfxMngr->windowWidth;
-				screenHeight = gfxMngr->windowHeight;
+				gfxMngr->viewport.width  = gfxMngr->windowWidth;
+				gfxMngr->viewport.height = gfxMngr->windowHeight;
 			}
-			screenX = (gfxMngr->windowWidth  - screenWidth)  >> 1;
-			screenY = (gfxMngr->windowHeight - screenHeight) >> 1;
+			gfxMngr->viewport.x = (gfxMngr->windowWidth  - gfxMngr->viewport.width)  >> 1;
+			gfxMngr->viewport.y = (gfxMngr->windowHeight - gfxMngr->viewport.height) >> 1;
 		}
-		glViewport(screenX, screenY, screenWidth, screenHeight);
-		gfxMngr->lastWindowWidth = gfxMngr->windowWidth;
-		gfxMngr->lastWindowHeight = gfxMngr->windowHeight;
-		gfxMngr->windowChanged = 1;
+		gfxMngr->windowWidthLast  = gfxMngr->windowWidth;
+		gfxMngr->windowHeightLast = gfxMngr->windowHeight;
+		gfxViewReset(&gfxMngr->viewLast);
+		gfxMngr->windowModified = 1;
 	}else{
-		gfxMngr->windowChanged = 0;
+		gfxMngr->windowModified = 0;
 	}
-	return gfxMngr->windowChanged;
+	return gfxMngr->windowModified;
+}
+
+__FORCE_INLINE__ void gfxMngrSwitchView(graphicsManager *gfxMngr, const gfxView *view){
+    if(memcmp(view, &gfxMngr->viewLast, sizeof(gfxView))){
+		glViewport(
+			gfxMngr->viewport.x + (int)(view->x * gfxMngr->viewport.width),
+			gfxMngr->viewport.y + (int)(view->y * gfxMngr->viewport.height),
+			(unsigned int)view->width * gfxMngr->viewport.width,
+			(unsigned int)view->height * gfxMngr->viewport.height
+		);
+		gfxMngr->viewLast = *view;
+    }
+}
+
+__FORCE_INLINE__ void gfxMngrBindTexture(graphicsManager *gfxMngr, const GLenum texture, const GLuint textureID){
+	glActiveTexture(texture);
+	if(textureID != gfxMngr->lastTexID){
+		gfxMngr->lastTexID = textureID;
+		glBindTexture(GL_TEXTURE_2D, textureID);
+	}
 }
 
 void gfxMngrDestroyProgram(graphicsManager *gfxMngr){

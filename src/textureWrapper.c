@@ -1,4 +1,5 @@
 #include "textureWrapper.h"
+#include "memoryManager.h"
 #include "moduleTexture.h"
 #include "helpersFileIO.h"
 #include "inline.h"
@@ -39,7 +40,7 @@ static return_t twfAddSubframe(twFrame *twf, const twBounds *sf, frameIndex_t *s
 		}else{
 			*subframeCapacity = 1;
 		}
-		tempBuffer = memReallocate(twf->subframes, *subframeCapacity*sizeof(twBounds));
+		tempBuffer = memReallocateForced(twf->subframes, *subframeCapacity*sizeof(twBounds));
 		if(tempBuffer == NULL){
 			/** Memory allocation failure. **/
 			return -1;
@@ -58,7 +59,7 @@ static return_t twfAddSubframe(twFrame *twf, const twBounds *sf, frameIndex_t *s
 static return_t twfAddDefaultSubframe(twFrame *twf, const frameIndex_t subframeCapacity){
 	if(subframeCapacity != twf->subframeNum+1){
 		twBounds *tempBuffer;
-		tempBuffer = memReallocate(twf->subframes, (twf->subframeNum+1)*sizeof(twBounds));
+		tempBuffer = memReallocateForced(twf->subframes, (twf->subframeNum+1)*sizeof(twBounds));
 		if(tempBuffer == NULL){
 			/** Memory allocation failure. **/
 			return -1;
@@ -76,7 +77,7 @@ static return_t twfAddDefaultSubframe(twFrame *twf, const frameIndex_t subframeC
 static return_t twfResizeToFit(twFrame *twf, const frameIndex_t subframeCapacity){
 	if(twf->subframeNum != subframeCapacity){
 		twBounds *tempBuffer;
-		tempBuffer = memReallocate(twf->subframes, twf->subframeNum*sizeof(twBounds));
+		tempBuffer = memReallocateForced(twf->subframes, twf->subframeNum*sizeof(twBounds));
 		if(tempBuffer == NULL){
 			/** Memory allocation failure. **/
 			return -1;
@@ -122,12 +123,12 @@ static return_t twaAddFrame(twAnim *twa, const frameIndex_t f, const frameIndex_
 		}else{
 			*animframeCapacity = 1;
 		}
-		tempBuffer1 = memReallocate(twa->frames, *animframeCapacity*sizeof(twFramePair));
+		tempBuffer1 = memReallocateForced(twa->frames, *animframeCapacity*sizeof(twFramePair));
 		if(tempBuffer1 == NULL){
 			/** Memory allocation failure. **/
 			return -1;
 		}
-		tempBuffer2 = memReallocate(twa->animData.frameDelays, *animframeCapacity*sizeof(float));
+		tempBuffer2 = memReallocateForced(twa->animData.frameDelays, *animframeCapacity*sizeof(float));
 		if(tempBuffer2 == NULL){
 			/** Memory allocation failure. **/
 			memFree(tempBuffer1);
@@ -147,12 +148,12 @@ static return_t twaResizeToFit(twAnim *twa, const frameIndex_t animframeCapacity
 	if(twa->animData.frameNum != animframeCapacity){
 		twFramePair *tempBuffer1;
 		float *tempBuffer2;
-		tempBuffer1 = memReallocate(twa->frames, twa->animData.frameNum*sizeof(twFramePair));
+		tempBuffer1 = memReallocateForced(twa->frames, twa->animData.frameNum*sizeof(twFramePair));
 		if(tempBuffer1 == NULL){
 			/** Memory allocation failure. **/
 			return -1;
 		}
-		tempBuffer2 = memReallocate(twa->animData.frameDelays, twa->animData.frameNum*sizeof(float));
+		tempBuffer2 = memReallocateForced(twa->animData.frameDelays, twa->animData.frameNum*sizeof(float));
 		if(tempBuffer2 == NULL){
 			/** Memory allocation failure. **/
 			memFree(tempBuffer1);
@@ -180,7 +181,7 @@ static return_t twAddFrame(textureWrapper *tw, const twFrame *f, frameIndex_t *f
 		}else{
 			*frameCapacity = 1;
 		}
-		tempBuffer = memReallocate(tw->frames, *frameCapacity*sizeof(twFrame));
+		tempBuffer = memReallocateForced(tw->frames, *frameCapacity*sizeof(twFrame));
 		if(tempBuffer == NULL){
 			/** Memory allocation failure. **/
 			memFree(tw->animations);
@@ -201,7 +202,7 @@ static return_t twAddAnim(textureWrapper *tw, const twAnim *a, animIndex_t *anim
 		}else{
 			*animCapacity = 1;
 		}
-		tempBuffer = memReallocate(tw->animations, *animCapacity*sizeof(twAnim));
+		tempBuffer = memReallocateForced(tw->animations, *animCapacity*sizeof(twAnim));
 		if(tempBuffer == NULL){
 			/** Memory allocation failure. **/
 			memFree(tw->frames);
@@ -215,40 +216,40 @@ static return_t twAddAnim(textureWrapper *tw, const twAnim *a, animIndex_t *anim
 
 static void twDefragment(textureWrapper *tw){
 	frameIndex_t i;
-	tw->frames     = memReallocate(tw->frames,     tw->frameNum    *sizeof(twFrame));
-	tw->animations = memReallocate(tw->animations, tw->animationNum*sizeof(twAnim ));
-	tw->name       = memReallocate(tw->name,       strlen(tw->name)*sizeof(char   ));
+	tw->frames     = memReallocateForced(tw->frames,     tw->frameNum    *sizeof(twFrame));
+	tw->animations = memReallocateForced(tw->animations, tw->animationNum*sizeof(twAnim ));
+	tw->name       = memReallocateForced(tw->name,       strlen(tw->name)*sizeof(char   ));
 	for(i = 0; i < tw->frameNum; ++i){
 		tw->frames[i].baseTexture->name =
-		memReallocate(
+		memReallocateForced(
 			tw->frames[i].baseTexture->name,
 			strlen(tw->frames[i].baseTexture->name)*sizeof(char)
 		);
 		tw->frames[i].subframes =
-		memReallocate(
+		memReallocateForced(
 			tw->frames[i].subframes,
 			tw->frames[i].subframeNum*sizeof(twBounds)
 		);
 	}
 	for(i = 0; i < tw->animationNum; ++i){
 		tw->animations[i].frames =
-		memReallocate(
+		memReallocateForced(
 			tw->animations[i].frames,
 			tw->animations[i].animData.frameNum*sizeof(twFramePair)
 		);
 		tw->animations[i].animData.frameDelays =
-		memReallocate(
+		memReallocateForced(
 			tw->animations[i].animData.frameDelays,
 			tw->animations[i].animData.frameNum*sizeof(float)
 		);
 	}
-	tw->name = memReallocate(tw->name, strlen(tw->name)*sizeof(char));
+	tw->name = memReallocateForced(tw->name, strlen(tw->name)*sizeof(char));
 }
 
 static return_t twResizeToFit(textureWrapper *tw, const frameIndex_t frameCapacity, const animIndex_t animCapacity){
 	/*if(tw->frameNum != frameCapacity){
 		twFrame *tempBuffer1;
-		tempBuffer1 = memReallocate(tw->frames, tw->frameNum*sizeof(twFrame));
+		tempBuffer1 = memReallocateForced(tw->frames, tw->frameNum*sizeof(twFrame));
 		if(tempBuffer1 == NULL){
 			** Memory allocation failure. **
 			twDelete(tw);
@@ -258,7 +259,7 @@ static return_t twResizeToFit(textureWrapper *tw, const frameIndex_t frameCapaci
 	}
 	if(tw->animationNum != animCapacity){
 		twAnim *tempBuffer2;
-		tempBuffer2 = memReallocate(tw->animations, tw->animationNum*sizeof(twAnim));
+		tempBuffer2 = memReallocateForced(tw->animations, tw->animationNum*sizeof(twAnim));
 		if(tempBuffer2 == NULL){
 			** Memory allocation failure. **
 			twDelete(tw);
@@ -990,7 +991,7 @@ void twiAnimate(twInstance *twi, const float elapsedTime){
 	animAdvance(&twi->animator, &twi->tw->animations[twi->currentAnim].animData, elapsedTime*twi->timeMod);
 }
 
-/**void twiAnimate(twInstance *twi, const uint32_t currentTick, const float globalDelayMod){
+/**void twiAnimate(twInstance *twi, const uint_least32_t currentTick, const float globalDelayMod){
 
 	// Make sure lastUpdate has been set
 	if(twi->lastUpdate == 0.f){
@@ -1044,7 +1045,7 @@ void twiAnimate(twInstance *twi, const float elapsedTime){
 
 }**/
 
-/*void twiAnimate(twInstance *twi, uint32_t currentTick, float globalDelayMod){
+/*void twiAnimate(twInstance *twi, uint_least32_t currentTick, float globalDelayMod){
 	animAdvance(&twi->animState,
 	            &twGetAnim(twi->texWrap, *twi->animInst.currentAnim)->frameDelays,
 	            twGetAnim(twi->texWrap, *twi->animInst.currentAnim)->desiredLoops,

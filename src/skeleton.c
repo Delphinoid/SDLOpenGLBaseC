@@ -1,6 +1,7 @@
 #include "skeleton.h"
+#include "memoryManager.h"
 #include "moduleSkeleton.h"
-#include "mathConstants.h"
+#include "constantsMath.h"
 #include "mat4.h"
 #include "inline.h"
 #include "helpersFileIO.h"
@@ -15,16 +16,16 @@
 
 static void sklDefragment(skeleton *skl){
 	frameIndex_t i;
-	skl->bones = memReallocate(skl->bones, skl->boneNum     *sizeof(sklNode));
-	skl->name  = memReallocate(skl->name,  strlen(skl->name)*sizeof(char   ));
+	skl->bones = memReallocateForced(skl->bones, skl->boneNum     *sizeof(sklNode));
+	skl->name  = memReallocateForced(skl->name,  strlen(skl->name)*sizeof(char   ));
 	for(i = 0; i < skl->boneNum; ++i){
 		skl->bones[i].name =
-		memReallocate(
+		memReallocateForced(
 			skl->bones[i].name,
 			strlen(skl->bones[i].name)*sizeof(char)
 		);
 	}
-	skl->name = memReallocate(skl->name, strlen(skl->name)*sizeof(char));
+	skl->name = memReallocateForced(skl->name, strlen(skl->name)*sizeof(char));
 }
 
 static return_t sklResizeToFit(skeleton *skl){
@@ -352,17 +353,17 @@ void sklaInit(sklAnim *skla){
 }
 static void sklaDefragment(sklAnim *skla){
 	frameIndex_t i;
-	skla->bones = memReallocate(skla->bones, skla->boneNum*sizeof(char *));
-	skla->frames = memReallocate(skla->frames, skla->animData.frameNum*sizeof(bone *));
-	skla->animData.frameDelays = memReallocate(skla->animData.frameDelays, skla->animData.frameNum*sizeof(float));
-	skla->name = memReallocate(skla->name, strlen(skla->name)*sizeof(char));
+	skla->bones = memReallocateForced(skla->bones, skla->boneNum*sizeof(char *));
+	skla->frames = memReallocateForced(skla->frames, skla->animData.frameNum*sizeof(bone *));
+	skla->animData.frameDelays = memReallocateForced(skla->animData.frameDelays, skla->animData.frameNum*sizeof(float));
+	skla->name = memReallocateForced(skla->name, strlen(skla->name)*sizeof(char));
 	for(i = 0; i < skla->boneNum; ++i){
-		skla->bones[i] = memReallocate(skla->bones[i], strlen(skla->bones[i])*sizeof(char));
+		skla->bones[i] = memReallocateForced(skla->bones[i], strlen(skla->bones[i])*sizeof(char));
 	}
 	for(i = 0; i < skla->animData.frameNum; ++i){
-		skla->frames[i] = memReallocate(skla->frames[i], skla->boneNum*sizeof(bone));
+		skla->frames[i] = memReallocateForced(skla->frames[i], skla->boneNum*sizeof(bone));
 	}
-	skla->name = memReallocate(skla->name, strlen(skla->name)*sizeof(char));
+	skla->name = memReallocateForced(skla->name, strlen(skla->name)*sizeof(char));
 }
 static return_t sklaResizeToFit(sklAnim *skla, const size_t boneCapacity, const size_t frameCapacity){
 	/*if(skla->boneNum != boneCapacity){
@@ -474,7 +475,7 @@ return_t sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 					// Resize the bone name array if necessary.
 					if(skla->boneNum == boneCapacity){
 						boneCapacity *= 2;
-						char **tempBuffer = memReallocate(skla->bones, boneCapacity*sizeof(char *));
+						char **tempBuffer = memReallocateForced(skla->bones, boneCapacity*sizeof(char *));
 						if(tempBuffer == NULL){
 							/** Memory allocation failure. **/
 							sklaDelete(skla);
@@ -532,7 +533,7 @@ return_t sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 					// Resize the bone name array if necessary.
 					if(skla->animData.frameNum == frameCapacity){
 						frameCapacity *= 2;
-						bone **tempBuffer1 = memReallocate(skla->frames, frameCapacity*sizeof(bone *));
+						bone **tempBuffer1 = memReallocateForced(skla->frames, frameCapacity*sizeof(bone *));
 						if(tempBuffer1 == NULL){
 							/** Memory allocation failure. **/
 							sklaDelete(skla);
@@ -540,7 +541,7 @@ return_t sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 							return -1;
 						}
 						skla->frames = tempBuffer1;
-						float *tempBuffer2 = memReallocate(skla->animData.frameDelays, frameCapacity*sizeof(float));
+						float *tempBuffer2 = memReallocateForced(skla->animData.frameDelays, frameCapacity*sizeof(float));
 						if(tempBuffer2 == NULL){
 							/** Memory allocation failure. **/
 							sklaDelete(skla);
@@ -966,7 +967,7 @@ void sklaDelete(sklAnim *skla){
 static return_t sklafInit(sklAnimFragment *sklaf, sklAnim *anim, const skeleton *skl, const frameIndex_t frame){
 
 	// Initialize animBoneLookup.
-	/*uint8_t i;
+	/*uint_least8_t i;
 	for(i = 0; i < anim->boneNum; ++i){
 		** Create a proper lookup below. **
 		sklaf->animBoneLookup[i] = i;
@@ -1357,7 +1358,7 @@ return_t skliLoad(sklInstance *skli, const char *prgPath, const char *filePath, 
 
 
 
-	sklAnim *skla = moduleSkeletalAnimationAllocate();
+	sklAnim *skla = moduleSkeletonAnimationAllocate();
 	skla->name = memAllocate(5*sizeof(char));
 	memcpy(skla->name, "test\0", 5);
 	//skla->additive = 1;

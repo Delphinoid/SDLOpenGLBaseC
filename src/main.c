@@ -1,6 +1,6 @@
-#include "graphicsManager.h"
-#include "stateManagerHelpers.h"
-#include "mathConstants.h"
+#include "graphicsRenderer.h"
+#include "hitboxConvexMesh.h"
+#include "constantsMath.h"
 #include <stdio.h>
 
 /****/
@@ -8,13 +8,9 @@
 #include "moduleTextureWrapper.h"
 #include "moduleSkeleton.h"
 #include "moduleModel.h"
-
-/** stateManager should be const. **/
-void renderScene(stateManager *gameStateManager, const size_t stateID, const float interpT, graphicsManager *gfxMngr);
-void cleanup(graphicsManager *gfxMngr, stateManager *gameStateManager,
-             cVector *allTextures, cVector *allTexWrappers,
-             cVector *allSkeletons, cVector *allSklAnimations,
-             cVector *allModels, cVector *allObjects);
+#include "moduleObject.h"
+#include "moduleScene.h"
+#include "moduleCamera.h"
 
 /** Remember to do regular searches for these important comments when possible **/
 int main(int argc, char *argv[]){
@@ -41,12 +37,6 @@ int main(int argc, char *argv[]){
 	//
 
 	/** Most of the code below this comment will be removed eventually **/
-	stateManager gameStateManager;
-	smInit(&gameStateManager);
-	smObjectTypeNew(&gameStateManager, &scnInit,  &scnStateCopy,  &scnResetInterpolation,  &scnDelete,  sizeof(scene),  2, 1);
-	smObjectTypeNew(&gameStateManager, &camInit,  &camStateCopy,  &camResetInterpolation,  &camDelete,  sizeof(camera), 2, 1);
-	smObjectTypeNew(&gameStateManager, &objiInit, &objiStateCopy, &objiResetInterpolation, &objiDelete, sizeof(objInstance), 8, 1);
-
 	cVector allTextures; cvInit(&allTextures, 1);            // Holds textures.
 	cVector allTexWrappers; cvInit(&allTexWrappers, 1);      // Holds textureWrappers.
 	cVector allSkeletons; cvInit(&allSkeletons, 1);          // Holds skeletons.
@@ -59,6 +49,9 @@ int main(int argc, char *argv[]){
 	moduleTextureWrapperResourcesInit();
 	moduleSkeletonResourcesInit();
 	moduleModelResourcesInit();
+	moduleObjectResourcesInit();
+	moduleSceneResourcesInit();
+	moduleCameraResourcesInit();
 
 	/* Textures */
 	texture *tempTex = moduleTextureAllocate();
@@ -73,12 +66,12 @@ int main(int argc, char *argv[]){
 	sklDefault(tempSkl);
 
 	/* Texture Wrappers */
-	textureWrapper *tempTexWrap0 = moduleTextureWrapperAllocate();
-	twDefault(tempTexWrap0);
-	textureWrapper *tempTexWrap1 = moduleTextureWrapperAllocate();
-	twLoad(tempTexWrap1, prgPath, "Resources\\Textures\\Static\\AvatarStatic.tdt");
-	textureWrapper *tempTexWrap2 = moduleTextureWrapperAllocate();
-	twLoad(tempTexWrap2, prgPath, "Resources\\Textures\\Static\\KoboldStatic.tdt");
+	textureWrapper *tempTexWrap = moduleTextureWrapperAllocate();
+	twDefault(tempTexWrap);
+	tempTexWrap = moduleTextureWrapperAllocate();
+	twLoad(tempTexWrap, prgPath, "Resources\\Textures\\Static\\AvatarStatic.tdt");
+	tempTexWrap = moduleTextureWrapperAllocate();
+	twLoad(tempTexWrap, prgPath, "Resources\\Textures\\Static\\KoboldStatic.tdt");
 
 	/* Models */
 	model *tempMdl = moduleModelAllocate();
@@ -87,121 +80,120 @@ int main(int argc, char *argv[]){
 	mdlCreateSprite(tempMdl);
 
 	/* Objects */
-	object tempObj;
-	objLoad(&tempObj, prgPath, "Resources\\Objects\\CubeTest.tdo", &allTextures, &allTexWrappers, &allSkeletons, &allSklAnimations, &allModels);
-	cvPush(&allObjects, (void *)&tempObj, sizeof(tempObj));
+	object *tempObj = moduleObjectAllocate();
+	objLoad(tempObj, prgPath, "Resources\\Objects\\CubeTest.tdo", &allTextures, &allTexWrappers, &allSkeletons, &allSklAnimations, &allModels);
 
 	/* Object Instances */
-	size_t tempID;
-	smObjectNew(&gameStateManager, SM_TYPE_OBJECT, &tempID);
-	objiInstantiate(objGetState(&gameStateManager, tempID, 0), (object *)cvGet(&allObjects, 0));
-	objiChangeAnimation(objGetState(&gameStateManager, tempID, 0), 0, objGetState(&gameStateManager, tempID, 0)->base->animations[0], 0, 0.f);
+	objInstance *tempObji = moduleObjectInstanceAllocate();
+	objiInstantiate(tempObji, moduleObjectFind("CubeTest"));
+	objiChangeAnimation(tempObji, 0, tempObji->base->animations[0], 0, 0.f);
 	//objNewRenderable(objGetState(&gameStateManager, tempID, 0));
 	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
 	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 1);
 	//objInitSkeleton(objGetState(&gameStateManager, tempID, 0), (skeleton *)cvGet(&allSkeletons, 1));
 	//
-	smObjectNew(&gameStateManager, SM_TYPE_OBJECT, &tempID);
-	objiInstantiate(objGetState(&gameStateManager, tempID, 0), (object *)cvGet(&allObjects, 0));
+	tempObji = moduleObjectInstanceAllocate();
+	objiInstantiate(tempObji, moduleObjectFind("CubeTest"));
 	//objiChangeAnimation(objGetState(&gameStateManager, tempID, 0), 0, objGetState(&gameStateManager, tempID, 0)->base->animations[0], 0, 0.f);
 	//objNewRenderable(objGetState(&gameStateManager, tempID, 0));
 	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
 	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 2);
 	//objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
-	objGetState(&gameStateManager, tempID, 0)->configuration[0].position.x = 0.5f;
-	objGetState(&gameStateManager, tempID, 0)->configuration[0].position.y = 0.5f;
-	vec3SetS(&objGetState(&gameStateManager, tempID, 0)->configuration[0].scale, 0.15f);
+	tempObji->configuration[0].position.x = 0.5f;
+	tempObji->configuration[0].position.y = 0.5f;
+	vec3SetS(&tempObji->configuration[0].scale, 0.15f);
 	quat changeRotation;
 	quatSetEuler(&changeRotation, 45.f*RADIAN_RATIO, 45.f*RADIAN_RATIO, 0.f);
-	quatMultQByQ2(&changeRotation, &objGetState(&gameStateManager, tempID, 0)->configuration[0].orientation);
-	objGetState(&gameStateManager, tempID, 0)->tempRndrConfig.alpha.value = 0.5f;
+	quatMultQByQ2(&changeRotation, &tempObji->configuration[0].orientation);
+	tempObji->renderables[0].alpha = 0.5f;
 
 	/* Sprite Object Instances */
-	smObjectNew(&gameStateManager, SM_TYPE_OBJECT, &tempID);
-	objiNewRenderable(objGetState(&gameStateManager, tempID, 0), tempMdl, tempTexWrap1);
-	objiInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
-	objGetState(&gameStateManager, tempID, 0)->tempRndrConfig.sprite = 1;
-	objGetState(&gameStateManager, tempID, 0)->configuration[0].scale.x = 0.026f;
-	objGetState(&gameStateManager, tempID, 0)->configuration[0].scale.y = 0.026f;
+	tempObji = moduleObjectInstanceAllocate();
+	objiNewRenderable(tempObji, tempMdl, moduleTextureWrapperFind("AvatarStatic"));
+	objiInitSkeleton(tempObji, tempObji->renderables[0].mdl->skl);
+	///tempObji->tempRndrConfig.sprite = 1;
+	tempObji->configuration[0].scale.x = 0.026f;
+	tempObji->configuration[0].scale.y = 0.026f;
 	//
-	smObjectNew(&gameStateManager, SM_TYPE_OBJECT, &tempID);
-	objiNewRenderable(objGetState(&gameStateManager, tempID, 0), tempMdl, tempTexWrap1);
-	objiInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
-	objGetState(&gameStateManager, tempID, 0)->tempRndrConfig.sprite = 1;
-	objGetState(&gameStateManager, tempID, 0)->configuration[0].position.y = 1.f;
-	objGetState(&gameStateManager, tempID, 0)->tempRndrConfig.pivot.value.x = -0.5f;
-	objGetState(&gameStateManager, tempID, 0)->tempRndrConfig.pivot.value.y = 0.5f;
-	objGetState(&gameStateManager, tempID, 0)->configuration[0].scale.x = 0.0026f;
-	objGetState(&gameStateManager, tempID, 0)->configuration[0].scale.y = 0.0026f;
+	tempObji = moduleObjectInstanceAllocate();
+	objiNewRenderable(tempObji, tempMdl, moduleTextureWrapperFind("AvatarStatic"));
+	objiInitSkeleton(tempObji, tempObji->renderables[0].mdl->skl);
+	///tempObji->tempRndrConfig.sprite = 1;
+	tempObji->configuration[0].position.y = 1.f;
+	///tempObji->tempRndrConfig.pivot.value.x = -0.5f;
+	///tempObji->tempRndrConfig.pivot.value.y = 0.5f;
+	tempObji->configuration[0].scale.x = 0.0026f;
+	tempObji->configuration[0].scale.y = 0.0026f;
 	//
-	smObjectNew(&gameStateManager, SM_TYPE_OBJECT, &tempID);
-	objiNewRenderable(objGetState(&gameStateManager, tempID, 0), tempMdl, tempTexWrap1);
-	objiInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
-	objGetState(&gameStateManager, tempID, 0)->tempRndrConfig.sprite = 1;
-	objGetState(&gameStateManager, tempID, 0)->configuration[0].position.x = 4.f;
-	objGetState(&gameStateManager, tempID, 0)->configuration[0].position.z = -3.f;
-	objGetState(&gameStateManager, tempID, 0)->configuration[0].scale.x = 0.026f;
-	objGetState(&gameStateManager, tempID, 0)->configuration[0].scale.y = 0.026f;
-	objGetState(&gameStateManager, tempID, 0)->tempRndrConfig.flags |= RNDR_BILLBOARD_TARGET | RNDR_BILLBOARD_Y;
+	tempObji = moduleObjectInstanceAllocate();
+	objiNewRenderable(tempObji, tempMdl, moduleTextureWrapperFind("AvatarStatic"));
+	objiInitSkeleton(tempObji, tempObji->renderables[0].mdl->skl);
+	///tempObji->tempRndrConfig.sprite = 1;
+	tempObji->configuration[0].position.x = 4.f;
+	tempObji->configuration[0].position.z = -3.f;
+	tempObji->configuration[0].scale.x = 0.026f;
+	tempObji->configuration[0].scale.y = 0.026f;
+	///tempObji->tempRndrConfig.flags |= RNDR_BILLBOARD_TARGET | RNDR_BILLBOARD_Y;
 	//
-	smObjectNew(&gameStateManager, SM_TYPE_OBJECT, &tempID);
-	objiNewRenderable(objGetState(&gameStateManager, tempID, 0), tempMdl, tempTexWrap2);
-	objiInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
-	objGetState(&gameStateManager, tempID, 0)->tempRndrConfig.sprite = 1;
-	objGetState(&gameStateManager, tempID, 0)->configuration[0].position.x = -3.f;
-	objGetState(&gameStateManager, tempID, 0)->configuration[0].position.y = -2.f;
-	objGetState(&gameStateManager, tempID, 0)->configuration[0].position.z = -3.f;
-	objGetState(&gameStateManager, tempID, 0)->configuration[0].scale.x = 0.0085f;
-	objGetState(&gameStateManager, tempID, 0)->configuration[0].scale.y = 0.0065f;
+	tempObji = moduleObjectInstanceAllocate();
+	objiNewRenderable(tempObji, tempMdl, moduleTextureWrapperFind("KoboldStatic"));
+	objiInitSkeleton(tempObji, tempObji->renderables[0].mdl->skl);
+	///tempObji->tempRndrConfig.sprite = 1;
+	tempObji->configuration[0].position.x = -3.f;
+	tempObji->configuration[0].position.y = -2.f;
+	tempObji->configuration[0].position.z = -3.f;
+	tempObji->configuration[0].scale.x = 0.0085f;
+	tempObji->configuration[0].scale.y = 0.0065f;
 
 	/* Scenes */
-	smObjectNew(&gameStateManager, SM_TYPE_SCENE, &tempID);
-	scnGetState(&gameStateManager, tempID, 0)->objectNum = 4;
-	scnGetState(&gameStateManager, tempID, 0)->objectCapacity = 4;
-	scnGetState(&gameStateManager, tempID, 0)->objectIDs = malloc(scnGetState(&gameStateManager, tempID, 0)->objectCapacity * sizeof(size_t));
-	scnGetState(&gameStateManager, tempID, 0)->objectIDs[0] = 0;
-	scnGetState(&gameStateManager, tempID, 0)->objectIDs[1] = 2;
-	scnGetState(&gameStateManager, tempID, 0)->objectIDs[2] = 4;
-	scnGetState(&gameStateManager, tempID, 0)->objectIDs[3] = 5;
+	scene *scnMain = moduleSceneAllocate();
+	scnInit(scnMain, 4);
+	*scnAllocate(scnMain) = moduleObjectInstanceIndex(0);
+	*scnAllocate(scnMain) = moduleObjectInstanceIndex(2);
+	*scnAllocate(scnMain) = moduleObjectInstanceIndex(4);
+	*scnAllocate(scnMain) = moduleObjectInstanceIndex(5);
 	//
-	smObjectNew(&gameStateManager, SM_TYPE_SCENE, &tempID);
-	scnGetState(&gameStateManager, tempID, 0)->objectNum = 2;
-	scnGetState(&gameStateManager, tempID, 0)->objectCapacity = 2;
-	scnGetState(&gameStateManager, tempID, 0)->objectIDs = malloc(scnGetState(&gameStateManager, tempID, 0)->objectCapacity * sizeof(size_t));
-	scnGetState(&gameStateManager, tempID, 0)->objectIDs[0] = 1;
-	scnGetState(&gameStateManager, tempID, 0)->objectIDs[1] = 3;
+	scene *scnHUD = moduleSceneAllocate();
+	scnInit(scnHUD, 2);
+	*scnAllocate(scnHUD) = moduleObjectInstanceIndex(1);
+	*scnAllocate(scnHUD) = moduleObjectInstanceIndex(3);
 
 	/* Cameras */
-	smObjectNew(&gameStateManager, SM_TYPE_CAMERA, &tempID);
-	vec3Set(&camGetState(&gameStateManager, tempID, 0)->position.value, 0.f, 2.f, 7.f);
-	camGetState(&gameStateManager, tempID, 0)->targetScene = (scene *)gameStateManager.objectType[SM_TYPE_SCENE].instance[0].state[0];
+	camera *camMain = moduleCameraAllocate();
+	camInit(camMain);
+	vec3Set(&camMain->position.value, 0.f, 2.f, 7.f);
 	//
-	smObjectNew(&gameStateManager, SM_TYPE_CAMERA, &tempID);
-	camGetState(&gameStateManager, tempID, 0)->flags |= CAM_PROJECTION_ORTHO;
-	camGetState(&gameStateManager, tempID, 0)->targetScene = (scene *)gameStateManager.objectType[SM_TYPE_SCENE].instance[1].state[0];
+	camera *camHUD = moduleCameraAllocate();
+	camInit(camHUD);
+	vec3Set(&camHUD->position.value, 0.f, 0.f, 0.f);
+	flagsSet(camHUD->flags, CAM_PROJECTION_ORTHO);
 
 
-	memPrintAllBlocks();
-	memPrintFreeBlocks(0);
+	//memPrintAllBlocks();
+	//memPrintFreeBlocks(0);
 
 
 	signed char prgRunning = 1;
 
-	float globalTimeMod = 1.f;
+	float timeMod = 1.f;
+	float updateMod = 1.f;
+
 	float framerate = 1000.f / 125.f;  // Desired milliseconds per render.
-	float tickrate = 1000.f / 125.f;  // Desired milliseconds per update.
+	float tickrate = 1000.f / 125.f;   // Desired milliseconds per update.
 	float tickratio = tickrate / 1000.f;  // 1 / updates per second.
-	float tickrateMod = tickrate * globalTimeMod;
-	float tickratioMod = tickratio * globalTimeMod;
+
+	float tickrateTimeMod = tickrate * timeMod;
+	float tickratioTimeMod = tickratio * timeMod;
+	float tickrateUpdateMod = tickrate / updateMod;
 
 	float startUpdate;
 	float nextUpdate = (float)SDL_GetTicks();
 	float startRender;
 	float nextRender = (float)SDL_GetTicks();
 
-	uint32_t updates = 0;
-	uint32_t renders = 0;
-	uint32_t lastPrint = 0;
+	uint_least32_t updates = 0;
+	uint_least32_t renders = 0;
+	uint_least32_t lastPrint = 0;
 
 	SDL_Event prgEventHandler;
 
@@ -214,14 +206,13 @@ int main(int argc, char *argv[]){
 	int mouseRelX;
 	int mouseRelY;
 
-	size_t i;
     while(prgRunning){
 
 		gfxMngrUpdateWindow(&gfxMngr);
 
 
 		/* Take input */
-		/** Use input queuing system. **/
+		/** Use command queuing system and poll input on another thread. **/
 		// Detect input
 		SDL_PollEvent(&prgEventHandler);
 
@@ -277,56 +268,55 @@ int main(int argc, char *argv[]){
 		while(startUpdate >= nextUpdate){
 
 			/* Prepare the next game state. */
-			smPrepareNextState(&gameStateManager);
+			/**smPrepareNextState(&gameStateManager);**/
+			camResetInterpolation((void *)camMain);
+			camResetInterpolation((void *)camHUD);
 
 			/* Handle inputs */
 			if(UP){
-				globalTimeMod = 1.f;
-				tickrateMod = tickrate*globalTimeMod;
-				tickratioMod = tickratio*globalTimeMod;
+				timeMod = 1.f;
+				tickrateTimeMod = tickrate*timeMod;
+				tickratioTimeMod = tickratio*timeMod;
 				/** changeRotation is created to initialize the second renderable. **/
 				quatSetEuler(&changeRotation, -90.f*RADIAN_RATIO, 0.f, 0.f);
-				quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, tickratio, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
-				camGetState(&gameStateManager, 0, 0)->position.value.z += -5.f * tickratio;
+				quatRotate(&moduleObjectInstanceIndex(0)->configuration[0].orientation, &changeRotation, tickratio, &moduleObjectInstanceIndex(0)->configuration[0].orientation);
+				camMain->position.value.z += -5.f * tickratio;
 				//objGetState(&gameStateManager, 4, 0)->tempRndrConfig.targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
 			}
 			if(DOWN){
-				globalTimeMod = -1.f;
-				tickrateMod = tickrate*globalTimeMod;
-				tickratioMod = tickratio*globalTimeMod;
+				timeMod = -1.f;
+				tickrateTimeMod = tickrate*timeMod;
+				tickratioTimeMod = tickratio*timeMod;
 				/** changeRotation is created to initialize the second renderable. **/
 				quatSetEuler(&changeRotation, 90.f*RADIAN_RATIO, 0.f, 0.f);
-				quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, tickratio, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
-				camGetState(&gameStateManager, 0, 0)->position.value.z += 5.f * tickratio;
+				quatRotate(&moduleObjectInstanceIndex(0)->configuration[0].orientation, &changeRotation, tickratio, &moduleObjectInstanceIndex(0)->configuration[0].orientation);
+				camMain->position.value.z += 5.f * tickratio;
 				//objGetState(&gameStateManager, 4, 0)->tempRndrConfig.targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
 			}
 			if(LEFT){
 				/** changeRotation is created to initialize the second renderable. **/
 				quatSetEuler(&changeRotation, 0.f, -90.f*RADIAN_RATIO, 0.f);
-				quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, tickratio, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
+				quatRotate(&moduleObjectInstanceIndex(0)->configuration[0].orientation, &changeRotation, tickratio, &moduleObjectInstanceIndex(0)->configuration[0].orientation);
 				quatSetEuler(&changeRotation, 0.f, 0.f, -90.f*RADIAN_RATIO);
-				quatRotate(&objGetState(&gameStateManager, 3, 0)->configuration[0].orientation, &changeRotation, tickratio, &objGetState(&gameStateManager, 3, 0)->configuration[0].orientation);
-				camGetState(&gameStateManager, 0, 0)->position.value.x += -5.f * tickratio;
+				quatRotate(&moduleObjectInstanceIndex(3)->configuration[0].orientation, &changeRotation, tickratio, &moduleObjectInstanceIndex(3)->configuration[0].orientation);
+				camMain->position.value.x += -5.f * tickratio;
 				//objGetState(&gameStateManager, 4, 0)->tempRndrConfig.targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
 			}
 			if(RIGHT){
 				/** changeRotation is created to initialize the second renderable. **/
 				quatSetEuler(&changeRotation, 0.f, 90.f*RADIAN_RATIO, 0.f);
-				quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, tickratio, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
+				quatRotate(&moduleObjectInstanceIndex(0)->configuration[0].orientation, &changeRotation, tickratio, &moduleObjectInstanceIndex(0)->configuration[0].orientation);
 				quatSetEuler(&changeRotation, 0.f, 0.f, 90.f*RADIAN_RATIO);
-				quatRotate(&objGetState(&gameStateManager, 3, 0)->configuration[0].orientation, &changeRotation, tickratio, &objGetState(&gameStateManager, 3, 0)->configuration[0].orientation);
-				camGetState(&gameStateManager, 0, 0)->position.value.x += 5.f * tickratio;
+				quatRotate(&moduleObjectInstanceIndex(3)->configuration[0].orientation, &changeRotation, tickratio, &moduleObjectInstanceIndex(3)->configuration[0].orientation);
+				camMain->position.value.x += 5.f * tickratio;
 				//objGetState(&gameStateManager, 4, 0)->tempRndrConfig.targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
 			}
 
 			/* Update. */
-			for(i = 0; i < gameStateManager.objectType[SM_TYPE_SCENE].capacity; ++i){
-				// Update each scene.
-				scnUpdate(scnGetState(&gameStateManager, i, 0), &gameStateManager, tickrateMod, tickratioMod);
-			}
+			moduleSceneUpdate(tickrateTimeMod, tickratioTimeMod);
 
 			/* Next frame */
-			nextUpdate += tickrate;
+			nextUpdate += tickrateUpdateMod;
 			++updates;
 
 		}
@@ -337,13 +327,15 @@ int main(int argc, char *argv[]){
 		if(startRender >= nextRender){
 
 			/* Progress between current and next frame. */
-			const float interpT = (startRender - (nextUpdate - tickrate)) / tickrate;
+			const float interpT = (startRender - (nextUpdate - tickrateUpdateMod)) / tickrateUpdateMod;
 
 			/* Render */
 			/** Remove later **/
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			// Render the scene
-			renderScene(&gameStateManager, 0, interpT, &gfxMngr);
+			gfxRendererDrawScene(&gfxMngr, camMain, scnMain, interpT);
+			// Render the HUD
+			gfxRendererDrawScene(&gfxMngr, camHUD, scnHUD, interpT);
 			// Update the window
 			SDL_GL_SwapWindow(gfxMngr.window);
 
@@ -366,34 +358,20 @@ int main(int argc, char *argv[]){
     }
 
 
-	cleanup(&gfxMngr, &gameStateManager, &allTextures, &allTexWrappers, &allSkeletons, &allSklAnimations, &allModels, &allObjects);
-	memPrintAllBlocks();
-	memPrintFreeBlocks(0);
-	memMngrDelete();
-	return 0;
-
-}
-
-void cleanup(graphicsManager *gfxMngr, stateManager *gameStateManager,
-             cVector *allTextures, cVector *allTexWrappers,
-             cVector *allSkeletons, cVector *allSklAnimations,
-             cVector *allModels, cVector *allObjects){
-
-	size_t i;
-
-	smDelete(gameStateManager);
-
-	for(i = 0; i < allObjects->size; ++i){
-		objDelete((object *)cvGet(allObjects, i));
-	}
-	cvClear(allObjects);
-
-	/****/
+	moduleCameraResourcesDelete();
+	moduleSceneResourcesDelete();
+	moduleObjectResourcesDelete();
 	moduleModelResourcesDelete();
 	moduleSkeletonResourcesDelete();
 	moduleTextureWrapperResourcesDelete();
 	moduleTextureResourcesDelete();
 
-	gfxMngrDestroyProgram(gfxMngr);
+	gfxMngrDestroyProgram(&gfxMngr);
+
+	memPrintAllBlocks();
+	memPrintFreeBlocks(0);
+	memMngrDelete();
+
+	return 0;
 
 }

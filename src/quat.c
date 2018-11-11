@@ -1,6 +1,6 @@
 #include "quat.h"
-#include "engineMath.h"
-#include "mathConstants.h"
+#include "helpersMath.h"
+#include "constantsMath.h"
 #include <math.h>
 #include <float.h>
 

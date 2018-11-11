@@ -13,9 +13,9 @@
                                             // collider and a vertex from the first collider.
 #define COLLISION_SEPARATION_TYPE_EDGE   3  // hbCollisionInfo contains two edges.
 
-typedef uint8_t collisionType_t;
-typedef uint8_t axisIndex_t;
-typedef uint8_t contactIndex_t;
+typedef uint_least8_t collisionType_t;
+typedef uint_least8_t axisIndex_t;
+typedef uint_least8_t contactIndex_t;
 
 typedef struct {
 	collisionType_t type;

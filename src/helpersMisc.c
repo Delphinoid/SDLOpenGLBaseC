@@ -39,14 +39,14 @@ return_t pushDynamicArray(void **vector, const void *element, const size_t bytes
 		}else{
 			*capacity *= 2;
 		}
-		tempBuffer = memReallocate(*vector, (*capacity)*bytes);
+		tempBuffer = memReallocateForced(*vector, (*capacity)*bytes);
 		if(tempBuffer == NULL){
 			/** Memory allocation failure. **/
 			return -1;
 		}
 		*vector = tempBuffer;
 	}
-	memcpy(((byte_t *)(*vector))+(*size)*bytes, element, bytes);
+	memcpy((byte_t *)*vector + (*size)*bytes, element, bytes);
 	++(*size);
 	return 1;
 }

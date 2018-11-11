@@ -3,13 +3,13 @@
 
 #include "physicsBodyShared.h"
 #include "vec3.h"
-#include "typedefs.h"
+#include "flags.h"
 
 #define PHYS_CONSTRAINT_TYPE_1  0x01
 #define PHYS_CONSTRAINT_TYPE_2  0x02
 #define PHYS_CONSTRAINT_COLLIDE 0x04
 
-typedef uint8_t physConstraintIndex_t;
+typedef uint_least8_t physConstraintIndex_t;
 
 typedef struct {
 	flags_t flags;

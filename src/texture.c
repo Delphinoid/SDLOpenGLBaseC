@@ -16,6 +16,16 @@ void tInit(texture *tex){
 	tex->translucent = 0;
 }
 
+void tGenerate(texture *tex, const GLsizei width, const GLsizei height, const GLint format, const GLint filter, const GLvoid *data){
+	glGenTextures(1, &tex->id);
+	glBindTexture(GL_TEXTURE_2D, tex->id);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+	tex->width = width;
+	tex->height = height;
+}
+
 return_t tLoad(texture *tex, const char *prgPath, const char *filePath){
 
 	SDL_Surface *SDLimage;
@@ -44,17 +54,9 @@ return_t tLoad(texture *tex, const char *prgPath, const char *filePath){
 		pixelFormat = -1;
 	}
 
-	tex->width = SDLimage->w;
-	tex->height = SDLimage->h;
-
 
 	/* Convert it to an OpenGL texture and free the SDL Surface */
-	glGenTextures(1, &tex->id);
-	glBindTexture(GL_TEXTURE_2D, tex->id);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, pixelFormat, tex->width, tex->height, 0, pixelFormat, GL_UNSIGNED_BYTE, SDLimage->pixels);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, TEXTURE_DEFAULT_FILTER_MODE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, TEXTURE_DEFAULT_FILTER_MODE);
+	tGenerate(tex, SDLimage->w, SDLimage->h, pixelFormat, TEXTURE_DEFAULT_FILTER_MODE, SDLimage->pixels);
 
 	glError = glGetError();
 	if(glError != GL_NO_ERROR){

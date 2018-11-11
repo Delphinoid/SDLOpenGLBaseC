@@ -19,18 +19,18 @@
 
 #define HB_ARRAY_MAX_HITBOXES 256
 
-typedef int8_t  hitboxType_t;
-typedef uint8_t hitboxIndex_t;
+typedef int_least8_t  hitboxType_t;
+typedef uint_least8_t hitboxIndex_t;
 
 typedef struct {
-	hitboxType_t type;  // -1 = invalid, 0 = mesh, 1 = capsule, 2 = sphere, 3 = AABB
 	byte_t hull[HB_MAX_COLLIDER_SIZE];  // Stores a collider of the type specified by "type". Needs to be casted.
 	                                    // May be affected by translation, rotation and scaling, depending on the type.
+	hitboxType_t type;  // -1 = invalid, 0 = mesh, 1 = capsule, 2 = sphere, 3 = AABB
 } hitbox;
 
 typedef struct {
-	hitboxIndex_t hitboxNum;
 	hitbox *hitboxes;
+	hitboxIndex_t hitboxNum;
 } hbArray;
 
 void hbInit(hitbox *hb, const hitboxType_t type);

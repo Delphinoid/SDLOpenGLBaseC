@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include "vec3.h"
 #include "quat.h"
-#include "typedefs.h"
+#include "return.h"
 
 /** Should these store currentValue (known as render now)? **/
 

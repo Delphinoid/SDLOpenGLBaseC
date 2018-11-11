@@ -3,11 +3,12 @@
 
 #include "bone.h"
 #include "animation.h"
-#include "typedefs.h"
+#include "flags.h"
+#include "return.h"
 
 #define SKL_MAX_BONE_NUM 128
 
-typedef uint8_t boneIndex_t;
+typedef uint_least8_t boneIndex_t;
 
 // Skeleton node, containing a bone and the index of its parent.
 typedef struct {
@@ -100,7 +101,7 @@ return_t sklLoad(skeleton *skl, const char *prgPath, const char *filePath);
 return_t sklCopy(const skeleton *oskl, skeleton *cskl);
 return_t sklDefault(skeleton *skl);
 /** If we're sticking with fixed bone lookups, change the return value to void. **/
-//return_t sklGenerateLookup(const skeleton *skl1, const skeleton *skl2, uint8_t *lookup);
+//return_t sklGenerateLookup(const skeleton *skl1, const skeleton *skl2, uint_least8_t *lookup);
 boneIndex_t sklFindBone(const skeleton *skl, const boneIndex_t id, const char *name);
 void sklDelete(skeleton *skl);
 

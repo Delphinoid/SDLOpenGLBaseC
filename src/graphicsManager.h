@@ -1,23 +1,24 @@
-#ifndef GFXPROGRAM_H
-#define GFXPROGRAM_H
+#ifndef GRAPHICSPROGRAM_H
+#define GRAPHICSPROGRAM_H
 
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
+#include "graphicsViewport.h"
 #include "vertex.h"
 #include "skeleton.h"
 #include "memoryShared.h"
 #include "mat4.h"
 
-#define DEFAULT_GL_VERSION_MAJOR 3
-#define DEFAULT_GL_VERSION_MINOR 3
-#define DEFAULT_WIDTH 800
-#define DEFAULT_HEIGHT 450
-#define DEFAULT_ASPECT_RATIO_X 16
-#define DEFAULT_ASPECT_RATIO_Y 9
-#define DEFAULT_FREQUENCY 22050
-#define DEFAULT_CHANNELS 2
-#define DEFAULT_CHUNKSIZE 2048
+#define GFX_DEFAULT_GL_VERSION_MAJOR 3
+#define GFX_DEFAULT_GL_VERSION_MINOR 3
+#define GFX_DEFAULT_ASPECT_RATIO_X 16.f
+#define GFX_DEFAULT_ASPECT_RATIO_Y 9.f
+#define GFX_DEFAULT_WIDTH 800
+#define GFX_DEFAULT_HEIGHT 450
+#define GFX_DEFAULT_FREQUENCY 22050
+#define GFX_DEFAULT_CHANNELS 2
+#define GFX_DEFAULT_CHUNKSIZE 2048
 
 #define SPR_MAX_BATCH_SIZE (6*64)  /** Move this! **/
 #define GFX_MAX_TEX_SAMPLER_NUM 1
@@ -60,20 +61,26 @@ typedef struct {
 	// Identity matrix.
 	mat4 identityMatrix;
 
-	// Window sizes (should be stored elsewhere).
-	int windowWidth;
-	int windowHeight;
-	byte_t aspectRatioX;
-	byte_t aspectRatioY;
-	int lastWindowWidth;
-	int lastWindowHeight;
-	signed char stretchToFit;
-	signed char windowChanged;
+	// Master viewport and last view rendered.
+	gfxViewport viewport;
+	gfxView viewLast;
+
+	// Window variables (should be stored elsewhere or in a struct).
+	float windowAspectRatioX;
+	float windowAspectRatioY;
+	unsigned int windowWidth;
+	unsigned int windowHeight;
+	unsigned int windowWidthLast;
+	unsigned int windowHeightLast;
+	unsigned int windowStretchToFit;
+	unsigned int windowModified;
 
 } graphicsManager;
 
 return_t gfxMngrInit(graphicsManager *gfxMngr, const char *prgPath);
-return_t gfxMngrUpdateWindow(graphicsManager *gfxMngr);
+unsigned int gfxMngrUpdateWindow(graphicsManager *gfxMngr);
+void gfxMngrSwitchView(graphicsManager *gfxMngr, const gfxView *view);
+void gfxMngrBindTexture(graphicsManager *gfxMngr, const GLenum texture, const GLuint textureID);
 void gfxMngrDestroyProgram(graphicsManager *gfxMngr);
 
 #endif

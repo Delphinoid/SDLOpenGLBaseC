@@ -1,7 +1,7 @@
 #ifndef HELPERSMISC_H
 #define HELPERSMISC_H
 
-#include "typedefs.h"
+#include "return.h"
 #include <stdlib.h>
 
 #define LTOSTR_MAX_LENGTH 20  // Max number length for ltostr (including minus sign and null terminator). 64-bit just in case.

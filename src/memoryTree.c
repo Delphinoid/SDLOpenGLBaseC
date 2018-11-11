@@ -1002,14 +1002,12 @@ void memTreePrintFreeBlocks(memoryTree *tree, const unsigned int recursions){
 			++i;
 
 			printf(
-				   "Address:%p Size:%u Parent:%p Left:%p Right:%p %u %s\n",
-				   node,
+				   "Address:%u Size:%u Previous:%u First:%u Last:%u State:Inactive\n",
+				   (uintptr_t)node,
 				   memTreeNodeGetCurrent(node),
-				   memTreeNodeGetParentColourless(node),
-				   memTreeNodeGetLeft(node),
-				   memTreeNodeGetRight(node),
 				   memTreeNodeGetPreviousFlagless(node),
-				   memTreeNodeGetColourMasked(node) == 0 ? "B" : "R"
+			       memTreeBlockIsFirst(memTreeNodeGetFlags(node)) > 0,
+			       memTreeBlockIsLast(memTreeNodeGetFlags(node)) > 0
 			);
 
 			nodeRight = memTreeNodeGetRight(node);
@@ -1061,8 +1059,30 @@ void memTreePrintAllBlocks(memoryTree *tree){
 		while(block < (byte_t *)region){
 
 			const size_t size =  memTreeBlockGetCurrent(block);
-			printf("Address:%p Size:%u\n", memTreeBlockGetNode(block), size);
-			block += memTreeBlockGetCurrent(block);
+			if(memTreeBlockGetActiveMasked(block) == MEMORY_TREE_BLOCK_INACTIVE){
+				printf(
+				       "Address:%u Size:%u Previous:%u First:%u Last:%u State:Inactive\nParent:%u Left:%u Right:%u Colour:%s\n",
+				       (uintptr_t)memTreeBlockGetNode(block),
+				       size,
+				       memTreeBlockGetPreviousFlagless(block),
+				       memTreeBlockIsFirst(memTreeBlockGetFlags(block)) > 0,
+				       memTreeBlockIsLast(memTreeBlockGetFlags(block)) > 0,
+				       (uintptr_t)memTreeBlockGetParentColourless(block),
+				       (uintptr_t)memTreeBlockGetLeft(block),
+				       (uintptr_t)memTreeBlockGetRight(block),
+				       memTreeBlockGetColourMasked(block) == 0 ? "Black" : "Red"
+				);
+			}else{
+				printf(
+				       "Address:%u Size:%u Previous:%u First:%u Last:%u State:Active\n",
+				       (uintptr_t)memTreeBlockGetNode(block),
+				       size,
+				       memTreeBlockGetPreviousFlagless(block),
+				       memTreeBlockIsFirst(memTreeBlockGetFlags(block)) > 0,
+				       memTreeBlockIsLast(memTreeBlockGetFlags(block)) > 0
+				);
+			}
+			block += size;
 
 		}
 

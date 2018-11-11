@@ -84,20 +84,23 @@ typedef struct {
 
 #define memDLinkBlockSize(bytes) MEMORY_DLINK_ALIGN(bytes + MEMORY_DLINK_BLOCK_HEADER_SIZE)
 #define memDLinkBlockSizeUnaligned(bytes)          (bytes + MEMORY_DLINK_BLOCK_HEADER_SIZE)
-#define memDLinkAlignStartBlock(start) ((byte_t *)MEMORY_DLINK_ALIGN((uintptr_t)start + MEMORY_DLINK_BLOCK_HEADER_SIZE) - MEMORY_DLINK_BLOCK_HEADER_SIZE)
-#define memDLinkAlignStartData(start)  ((byte_t *)MEMORY_DLINK_ALIGN((uintptr_t)start + MEMORY_DLINK_BLOCK_HEADER_SIZE))
+#ifndef MEMORY_ALLOCATOR_ALIGNED
+	#define memDLinkAlignStartBlock(start) ((byte_t *)MEMORY_DLINK_ALIGN((uintptr_t)start + MEMORY_DLINK_BLOCK_HEADER_SIZE) - MEMORY_DLINK_BLOCK_HEADER_SIZE)
+	#define memDLinkAlignStartData(start)  ((byte_t *)MEMORY_DLINK_ALIGN((uintptr_t)start + MEMORY_DLINK_BLOCK_HEADER_SIZE))
+#else
+	#define memDLinkAlignStartBlock(start) start
+	#define memDLinkAlignStartData(start)  ((byte_t *)start + MEMORY_DLINK_BLOCK_HEADER_SIZE)
+#endif
 #define memDLinkAllocationSize(start, bytes, length) \
 	(memDLinkBlockSize(bytes) * length + (uintptr_t)memDLinkAlignStartBlock(start) - (uintptr_t)start)
 	// The following can save small amounts of memory but can't be predicted as easily:
 	//(memDLinkBlockSize(bytes) * (length - 1) + memDLinkBlockSizeUnaligned(bytes) + (uintptr_t)memDLinkAlignStartBlock(start) - (uintptr_t)start)
 
-#define memDLinkFirst(array)        ((void *)memDLinkAlignStartData((array).start))
+#define memDLinkFirst(region)       ((void *)memDLinkAlignStartData((region)->start))
 #define memDLinkPrev(i)             i = memDLinkDataGetPrev(i)
 #define memDLinkNext(i)             i = memDLinkDataGetNext(i)
 #define memDLinkBlockStatus(block)  memDLinkDataGetActiveMasked(block)
 #define memDLinkBlockNext(array, i) i = (void *)((byte_t *)i + (array).block)
-#define memDLinkEnd(array)          ((byte_t *)(array).region)
-#define memDLinkChunkNext(array)    (array).region->next
 
 void memDLinkInit(memoryDLink *array);
 void *memDLinkCreate(memoryDLink *array, void *start, const size_t bytes, const size_t length);

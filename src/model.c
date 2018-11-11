@@ -1,6 +1,7 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include "model.h"
+#include "memoryManager.h"
 #include "moduleSkeleton.h"
 #include "helpersFileIO.h"
 
@@ -98,7 +99,7 @@ return_t mdlLoad(model *mdl, const char *prgPath, const char *filePath){
 			memcpy(mdl->name, filePath, fileLength);
 			mdl->name[fileLength] = '\0';
 		}else{
-			mdl->name = memReallocate(mdl->name, strlen(mdl->name)*sizeof(char));
+			mdl->name = memReallocateForced(mdl->name, strlen(mdl->name)*sizeof(char));
 		}
 
 	}else{

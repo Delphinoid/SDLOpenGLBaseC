@@ -1,4 +1,4 @@
-#include "engineMath.h"
+#include "helpersMath.h"
 
 float fastInvSqrt(float x){
 	/* Black magic perfected by some very clever people. */
@@ -194,4 +194,14 @@ return_t segmentPlaneIntersection(const vec3 *normal, const vec3 *vertex, const 
 	}
 	vec3Lerp(start, end, startDistance / (startDistance - endDistance), point);
 	return 1;
+}
+
+float floatLerp(const float f1, const float f2, const float t){
+	if(t == 0.f){
+		return f1;
+	}else if(t == 1.f){
+		return f2;
+	}else{
+		return f1 + (f2 - f1) * t;
+	}
 }

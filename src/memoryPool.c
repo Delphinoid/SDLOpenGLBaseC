@@ -37,7 +37,6 @@ void *memPoolAllocate(memoryPool *pool){
 	** and updates the "free" pointer.
 	** Unspecified behaviour with variable element sizes.
 	*/
-
 	byte_t *r = pool->free;
 	if(r){
 		pool->free = memPoolDataGetNextFree(r);
@@ -89,6 +88,29 @@ void *memPoolSetupMemory(void *start, const size_t bytes, const size_t length){
 
 }
 
+void *memPoolIndex(memoryPool *pool, const size_t i){
+
+	/*
+	** Finds the element at index i.
+	*/
+
+	size_t offset = pool->block * i;
+
+	memoryRegion *region = pool->region;
+	byte_t *regionStart  = memPoolFirst(region);
+	size_t  regionSize   = memAllocatorEnd(region) - regionStart;
+
+	while(offset >= regionSize){
+		region      = memAllocatorNext(region);
+		regionStart = memPoolFirst(region);
+		regionSize  = memAllocatorEnd(region) - regionStart;
+		offset -= regionSize;
+	}
+
+	return (void *)(regionStart + offset);
+
+}
+
 void memPoolClear(memoryPool *pool){
 
 	byte_t *block = memPoolAlignStartData(pool->region->start);
@@ -123,7 +145,7 @@ void *memPoolExtend(memoryPool *pool, void *start, const size_t bytes, const siz
 	if(start){
 
 		memoryRegion *newRegion = (memoryRegion *)((byte_t *)start + memPoolAllocationSize(start, bytes, length) - sizeof(memoryRegion));
-		memRegionAppend(&pool->region, newRegion, start);
+		memRegionExtend(&pool->region, newRegion, start);
 
 		memPoolSetupMemory(start, bytes, length);
 		pool->free = memPoolAlignStartData(start);

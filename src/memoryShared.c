@@ -47,11 +47,11 @@ int memHeapLowLevelFree(void *block){
 	region->next = *first; \
 	*first = region;
 
-__FORCE_INLINE__ void memRegionAppend(memoryRegion **first, memoryRegion *region, byte_t *data){
+__FORCE_INLINE__ void memRegionExtend(memoryRegion **first, memoryRegion *region, byte_t *data){
 	/*
-	** Appends a new memory region
-	** to the list. Used when order
-	** does matter.
+	** Extends a memory region.
+	** Same as memRegionAppend() unless
+	** MEMORY_FORCE_ORDERED_EXTENSIONS is defined.
 	*/
 	#if !defined(MEMORY_FORCE_ORDERLESS_EXTENSIONS) || defined(MEMORY_FORCE_ORDERED_EXTENSIONS)
 		memRegionAppendMacro(first, region);
@@ -61,17 +61,23 @@ __FORCE_INLINE__ void memRegionAppend(memoryRegion **first, memoryRegion *region
 	region->start = data;
 }
 
+__FORCE_INLINE__ void memRegionAppend(memoryRegion **first, memoryRegion *region, byte_t *data){
+	/*
+	** Appends a new memory region
+	** to the list. Used when order
+	** does matter.
+	*/
+	memRegionAppendMacro(first, region);
+	region->start = data;
+}
+
 __FORCE_INLINE__ void memRegionPrepend(memoryRegion **first, memoryRegion *region, byte_t *data){
 	/*
 	** Prepends a new memory region
 	** to the list. Used when order
 	** doesn't matter.
 	*/
-	#if !defined(MEMORY_FORCE_ORDERED_EXTENSIONS) || defined(MEMORY_FORCE_ORDERLESS_EXTENSIONS)
-		memRegionPrependMacro(first, region);
-	#else
-		memRegionAppendMacro(first, region);
-	#endif
+	memRegionPrependMacro(first, region);
 	region->start = data;
 }
 

@@ -1,6 +1,6 @@
 #include "hitboxConvexMesh.h"
 #include "hitboxCollision.h"
-#include "engineMath.h"
+#include "helpersMath.h"
 #include "inline.h"
 #include <string.h>
 #include <math.h>

@@ -1,4 +1,5 @@
 #include "graphicsManager.h"
+#include "helpersMath.h"
 #include "object.h"
 #include "stateManagerHelpers.h"
 #include <math.h>
@@ -12,21 +13,24 @@
 /** THIS FILE IS TEMPORARY **/
 
 /** This should not be necessary! **/
-void renderModel(objInstance *obji, const camera *cam, const float interpT, graphicsManager *gfxMngr){
+void renderModel(const objInstance *obji, const camera *cam, const float interpT, graphicsManager *gfxMngr){
 
 	renderableIndex_t i;
 	boneIndex_t j;
 	bone interpBone;
 
 	/* Update the object's configuration for rendering. */
-	rndrConfigRenderUpdate(&obji->tempRndrConfig, interpT);  /** Only line that requires non-const object. **/
+	//rndrConfigRenderUpdate(&obji->tempRndrConfig, interpT);  /** Only line that requires non-const object. **/
 
 	/* Interpolate between the previous and last skeleton states. */
 	for(j = 0; j < obji->skeletonData.skl->boneNum; ++j){
 
+		const bone *current  = &obji->state.skeleton[j];
+		const bone *previous = (obji->state.previous == NULL ? current : &obji->state.previous->skeleton[j]);
+
 		// Interpolate between bone states.
 		//boneInterpolate(&obji->skeletonState[1][j], &obji->skeletonState[0][j], interpT, &interpBone);
-		boneInterpolate(&obji->skeletonState[j+j+1], &obji->skeletonState[j+j], interpT, &interpBone);
+		boneInterpolate(previous, current, interpT, &interpBone);
 
 		// Convert the bone to a matrix.
 		//mat4SetScaleMatrix(&gfxMngr->sklTransformState[j], gfxMngr->sklAnimationState[j].scale.x, gfxMngr->sklAnimationState[j].scale.y, gfxMngr->sklAnimationState[j].scale.z);
@@ -41,35 +45,28 @@ void renderModel(objInstance *obji, const camera *cam, const float interpT, grap
 
 	}
 
-	/* Feed the translucency multiplier to the shader */
-	glUniform1f(gfxMngr->alphaID, obji->tempRndrConfig.alpha.render);
-
 	/* Draw each renderable. */
 	for(i = 0; i < obji->renderableNum; ++i){
 
-		if(obji->renderables[i].mdl != NULL){  /** Remove? **/
+		/* Get texture information for rendering and feed it to the shader. */
+		float texFrag[4];  // The x, y, width and height of the fragment of the texture being rendered.
+		GLuint frameTexID;
+		twiGetFrameInfo(&obji->renderables[i].twi, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &frameTexID, interpT);
+		// Bind the texture (if needed).
+		gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, frameTexID);
+		// Feed the texture coordinates to the shader.
+		glUniform4fv(gfxMngr->textureFragmentID, 1, texFrag);
 
+		/*
+		** Generate the renderable configuration based off the animated skeleton, if possible.
+		** The loop converts the global skeleton state in gfxMngr->sklTransformState to local
+		** model space for rendering.
+		*/
+		if(obji->renderables[i].mdl->skl != NULL){
 
-			/* Get texture information for rendering and feed it to the shader. */
-			float texFrag[4];  // The x, y, width and height of the fragment of the texture being rendered.
-			GLuint frameTexID;
-			twiGetFrameInfo(&obji->renderables[i].twi, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &frameTexID, interpT);
-			// Bind the texture (if needed).
-			glActiveTexture(GL_TEXTURE0);
-			if(frameTexID != gfxMngr->lastTexID){
-				gfxMngr->lastTexID = frameTexID;
-				glBindTexture(GL_TEXTURE_2D, frameTexID);
-			}
-			// Feed the texture coordinates to the shader.
-			glUniform4fv(gfxMngr->textureFragmentID, 1, texFrag);
+			const float alpha = floatLerp(obji->renderables[i].alphaPrevious, obji->renderables[i].alpha, interpT);
 
-
-			/*
-			** Generate the renderable configuration based off the animated skeleton, if possible.
-			** The loop converts the global skeleton state in gfxMngr->sklTransformState to local
-			** model space for rendering.
-			*/
-			if(obji->renderables[i].mdl->skl != NULL){
+			if(alpha > 0.f){
 
 				boneIndex_t rndrBone;
 				vec4 translation;
@@ -124,17 +121,18 @@ void renderModel(objInstance *obji, const camera *cam, const float interpT, grap
 
 				}
 
+				/* Feed the translucency multiplier to the shader */
+				glUniform1f(gfxMngr->alphaID, alpha);
+
+				/* Render the model. */
+				glBindVertexArray(obji->renderables[i].mdl->vaoID);
+				if(obji->renderables[i].mdl->indexNum > 0){
+					glDrawElements(GL_TRIANGLES, obji->renderables[i].mdl->indexNum, GL_UNSIGNED_INT, (void *)0);
+				}else{
+					glDrawArrays(GL_TRIANGLES, 0, obji->renderables[i].mdl->vertexNum);
+				}
+
 			}
-
-
-			/* Render the model. */
-			glBindVertexArray(obji->renderables[i].mdl->vaoID);
-			if(obji->renderables[i].mdl->indexNum > 0){
-				glDrawElements(GL_TRIANGLES, obji->renderables[i].mdl->indexNum, GL_UNSIGNED_INT, (void *)0);
-			}else{
-				glDrawArrays(GL_TRIANGLES, 0, obji->renderables[i].mdl->vertexNum);
-			}
-
 
 		}
 
@@ -173,12 +171,12 @@ void batchRenderSprites(cVector *allSprites, const camera *cam, const float inte
 					// Bind the VAO.
 					glBindVertexArray((*((objInstance **)cvGet(allSprites, i)))->renderables[j].mdl->vaoID);
 					vboID = (*((objInstance **)cvGet(allSprites, i)))->renderables[j].mdl->vboID;
-					goto EXIT;
+					goto RENDER_SPRITES;
 				}
 			}
 		}
 	}
-	EXIT:
+	RENDER_SPRITES:
 
 	while(i < allSprites->size){
 
@@ -186,7 +184,7 @@ void batchRenderSprites(cVector *allSprites, const camera *cam, const float inte
 
 		if(curSpr != NULL){  /** Remove? **/
 
-			rndrConfigRenderUpdate(&curSpr->tempRndrConfig, interpT);
+			//rndrConfigRenderUpdate(&curSpr->tempRndrConfig, interpT);
 
 			while(j < curSpr->renderableNum){
 
@@ -239,7 +237,7 @@ void batchRenderSprites(cVector *allSprites, const camera *cam, const float inte
 
 }
 
-void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *cam, const float interpT){
+void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *cam){
 
 	/** Use quick sort and potentially some sort of linked list data structure? **/
 
@@ -251,17 +249,17 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *c
 	for(i = 0; i < allModels->size; ++i){
 
 		objInstance *curMdl = *((objInstance **)cvGet(allModels, i));
-		const return_t currentRenderMethod = objiRenderMethod(curMdl, interpT);
+		const gfxRenderGroup_t currentRenderGroup = 1;//objiRenderGroup(curMdl);
 
-		if(currentRenderMethod == 0){  // If the model is fully opaque, add it straight to the render list
+		if(currentRenderGroup == GFX_RENDER_GROUP_OPAQUE){
 			cvPush(mdlRenderList, (void *)&curMdl, sizeof(objInstance *));
-		}else if(currentRenderMethod == 1){  // If the model contains translucency, it'll need to be depth sorted
+		}else if(currentRenderGroup == GFX_RENDER_GROUP_TRANSLUCENT){
 			cvPush(&translucentModels, (void *)&curMdl, sizeof(objInstance *));
-			float tempDistance = camDistance(cam, &curMdl->skeletonState[0].position);
+			float tempDistance = camDistance(cam, &curMdl->state.skeleton[0].position);
 			cvPush(&distances, (void *)&tempDistance, sizeof(float));
 		}
 
-		// If currentRenderMethod is anything else (e.g. 2), the model will not be rendered at all
+		// If currentRenderMethod is anything else (e.g. -1), the model will not be rendered at all
 
 	}
 
@@ -298,15 +296,15 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *c
 }
 
 /** stateManager should be const. **/
-void sortElements(stateManager *gameStateManager, const size_t stateID,
+/**void sortElements(stateManager *gameStateManager, const size_t stateID,
                   cVector *modelsScene,  cVector *modelsHUD,
                   cVector *spritesScene, cVector *spritesHUD){
 
-	/** Merge with camera updating? **/
-	/**
+	** Merge with camera updating? **
+	**
 	*** Use separate vectors for translucent objects, or render
 	*** opaque objects after a glEnable(GL_CULL_FACE).
-	**/
+	**
 	// Sort models and sprites into their scene and HUD vectors
 	size_t i, j;
 	for(i = 0; i < gameStateManager->objectType[SM_TYPE_CAMERA].capacity; ++i){
@@ -329,23 +327,62 @@ void sortElements(stateManager *gameStateManager, const size_t stateID,
 					}
 				}
 			}
+
 		}
 	}
 
 }
 
+void rndrSortObjects(const size_t objectNum, objInstance **objects){
+
+	//
+
+}
+
+void renderScene(graphicsManager *gfxMngr, scene *scn, camera *cam, const float interpT){
+
+	* Update the camera's VP matrix. *
+	camUpdateViewProjectionMatrix(
+		cam,
+		gfxMngr->windowModified,
+		gfxMngr->windowAspectRatioX,
+		gfxMngr->windowAspectRatioY,
+		interpT
+	);
+
+	* Switch to the camera's view. *
+	gfxMngrSwitchView(gfxMngr, &cam->view);
+
+	* Find which zones should be rendered. *
+	///
+
+	* Prepare the scene for rendering. *
+	scnSortObjects(scn);
+
+	* Render the scene. *
+	// Feed the view-projection matrix into the shader.
+	glUniformMatrix4fv(gfxMngr->vpMatrixID, 1, GL_FALSE, &cam->viewProjectionMatrix.m[0][0]);
+	// Render the scene's objects.
+	for(i = 0; i < renderList.size; ++i){
+		///
+	}
+
+	//glClear(GL_DEPTH_BUFFER_BIT);
+
+}
+
 /** stateManager should be const. **/
 /** This entire function should be part of the camera. **/
-void renderScene(stateManager *gameStateManager, const size_t stateID, const float interpT, graphicsManager *gfxMngr){
+/**void renderScene(stateManager *gameStateManager, const size_t stateID, const float interpT, graphicsManager *gfxMngr){
 
 	// Update cameras.
 	size_t i;
 	for(i = 0; i < gameStateManager->objectType[SM_TYPE_CAMERA].capacity; ++i){
 		if(camGetState(gameStateManager, i, stateID) != NULL){
 			camUpdateViewProjectionMatrix(camGetState(gameStateManager, i, stateID),
-			                              gfxMngr->windowChanged,
-			                              gfxMngr->aspectRatioX,
-			                              gfxMngr->aspectRatioY,
+			                              gfxMngr->windowModified,
+			                              gfxMngr->windowAspectRatioX,
+			                              gfxMngr->windowAspectRatioY,
 			                              interpT);
 		}
 	}
@@ -363,7 +400,7 @@ void renderScene(stateManager *gameStateManager, const size_t stateID, const flo
 		glUniformMatrix4fv(gfxMngr->vpMatrixID, 1, GL_FALSE, &camGetState(gameStateManager, 0, stateID)->viewProjectionMatrix.m[0][0]);
 		// Depth sort scene models.
 		cVector renderList; cvInit(&renderList, 1);  // Holds model pointers; pointers to depth-sorted scene models that must be rendered.
-		depthSortModels(&modelsScene, &renderList, camGetState(gameStateManager, 0, stateID), interpT);
+		depthSortModels(&modelsScene, &renderList, camGetState(gameStateManager, 0, stateID));
 		// Render scene models.
 		for(i = 0; i < renderList.size; ++i){
 			renderModel(*((objInstance **)cvGet(&renderList, i)), camGetState(gameStateManager, 0, stateID), interpT, gfxMngr);
@@ -380,7 +417,7 @@ void renderScene(stateManager *gameStateManager, const size_t stateID, const flo
 		// Feed the view-projection matrix into the shader.
 		glUniformMatrix4fv(gfxMngr->vpMatrixID, 1, GL_FALSE, &camGetState(gameStateManager, 1, stateID)->viewProjectionMatrix.m[0][0]);
 		// Render HUD models.
-		/** HUD camera? Streamline this to make handling different cameras easily **/
+		** HUD camera? Streamline this to make handling different cameras easily **
 		for(i = 0; i < modelsHUD.size; ++i){
 			renderModel(*((objInstance **)cvGet(&modelsHUD, i)), camGetState(gameStateManager, 1, stateID), interpT, gfxMngr);
 		}
@@ -393,4 +430,4 @@ void renderScene(stateManager *gameStateManager, const size_t stateID, const flo
 	cvClear(&spritesScene);
 	cvClear(&spritesHUD);
 
-}
+}**/

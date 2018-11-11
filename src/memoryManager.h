@@ -2,7 +2,7 @@
 #define MEMORYMANAGER_H
 
 #include "memoryTree.h"
-#include "typedefs.h"
+#include "return.h"
 
 /*
 ** The memory manager maintains a linked
@@ -63,9 +63,9 @@ typedef struct {
 
 #ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
 
-	#define memAllocate(bytes)         memTreeAllocate(&__memmngr->allocator, bytes)
-	#define memReallocate(data, bytes) memTreeReallocate(&__memmngr->allocator, data, bytes)
-	#define memFree(data)              memTreeFree(&__memmngr->allocator, data)
+	#define memAllocateStatic(bytes)         memTreeAllocate(&__memmngr->allocator, bytes)
+	#define memReallocateFixed(data, bytes) memTreeReallocate(&__memmngr->allocator, data, bytes)
+	#define memFree(data)                   memTreeFree(&__memmngr->allocator, data)
 
 	#ifdef MEMORY_DEBUG
 		#define memPrintFreeBlocks(recursions)  memTreePrintFreeBlocks(&__memmngr->allocator, recursions)
@@ -80,17 +80,11 @@ typedef struct {
 	void memMngrDelete(memoryManager *memMngr);
 
 	#ifdef MEMORY_MANAGER_ENFORCE_STATIC_VIRTUAL_HEAP
-		#define memForceAllocate(bytes) memTreeAllocate(&__memmngr->allocator, bytes)
+		#define memAllocate(bytes)         memTreeAllocate(&__memmngr->allocator, bytes)
+		#define memReallocateForced(data, bytes) memTreeReallocate(&__memmngr->allocator, data, bytes)
 	#else
-		#define memForceAllocate(bytes)                                                          \
-			if(                                                                                  \
-				memTreeAllocate(&__memmngr->allocator, bytes) == NULL &&                         \
-				memTreeAllocationSize(NULL, bytes, MEMORY_UNKNOWN_LENGTH)                        \
-				<                                                                                \
-				MEMORY_MANAGER_VIRTUAL_HEAP_REALLOC_SIZE - sizeof(memoryRegion)                  \
-			){                                                                                   \
-				memMngrAllocateVirtualHeap(__memmngr, MEMORY_MANAGER_VIRTUAL_HEAP_REALLOC_SIZE); \
-			}
+		#define memAllocate(bytes)         NULL  // Undefined for now.
+		#define memReallocateForced(data, bytes) NULL  // Undefined for now.
 	#endif
 
 #else
@@ -99,9 +93,9 @@ typedef struct {
 		//extern memoryManager __memmngr;
 	//#endif
 
-	//#define memAllocate(bytes)         memTreeAllocate(&__memmngr.allocator, bytes)
-	//#define memReallocate(data, bytes) memTreeReallocate(&__memmngr.allocator, data, bytes)
-	//#define memFree(data)              memTreeFree(&__memmngr.allocator, data)
+	//#define memAllocateStatic(bytes)         memTreeAllocate(&__memmngr.allocator, bytes)
+	//#define memReallocateFixed(data, bytes) memTreeReallocate(&__memmngr.allocator, data, bytes)
+	//#define memFree(data)                   memTreeFree(&__memmngr.allocator, data)
 
 	//#ifdef MEMORY_DEBUG
 	//	#define memPrintFreeBlocks(recursions)  memTreePrintFreeBlocks(&__memmngr.allocator, recursions)
@@ -111,8 +105,10 @@ typedef struct {
 	//	#define memPrintAllBlocks()
 	//#endif
 
-	void *memAllocate(const size_t bytes);
-	void *memReallocate(void *data, const size_t bytes);
+	extern memoryManager __memmngr;
+
+	void *memAllocateStatic(const size_t bytes);
+	void *memReallocateFixed(void *data, const size_t bytes);
 	void memFree(void *data);
 
 	void memPrintFreeBlocks(const unsigned int recursions);
@@ -122,7 +118,8 @@ typedef struct {
 	return_t memMngrInit(const size_t bytes, const size_t num);
 	void memMngrDelete();
 
-	void *memForceAllocate(const size_t bytes);
+	void *memAllocate(const size_t bytes);
+	void *memReallocateForced(void *data, const size_t bytes);
 
 #endif
 

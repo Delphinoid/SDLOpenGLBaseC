@@ -5,8 +5,8 @@
 #include "hitboxCollision.h"
 #include "bone.h"
 
-typedef uint8_t physColliderIndex_t;
-typedef uint8_t physCollisionIndex_t;
+typedef uint_least8_t physColliderIndex_t;
+typedef uint_least8_t physCollisionIndex_t;
 
 /** Allow more than just convex meshes? **/
 typedef struct {

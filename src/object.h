@@ -1,11 +1,13 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
-#include "interpState.h"
+#include "graphicsRenderGroup.h"
 #include "renderable.h"
 #include "skeleton.h"
 #include "physicsRigidBody.h"
+#include "physicsSolver.h"
 #include "hitbox.h"
+#include "state.h"
 
 /**                   **/
 /** Remove rndrConfig **/
@@ -13,52 +15,11 @@
 
 /**#define OBJ_MAX_RENDERABLE_NUM 256**/
 
-typedef uint8_t renderableIndex_t;
-
-/*typedef struct {
-
-	char *name;
-
-	skeleton *skl;  // The object's recommended animation skeleton.
-
-	animIndex_t animationNum;       // Number of animations.
-	animIndex_t animationCapacity;  // The maximum number of animations that the object can play at once.
-	sklAnim **animations;           // Array of pointers to animations associated with the object.
-
-	physRigidBody *skeletonBodies[SKL_BONE_NUM];
-	flags_t skeletonBodyFlags[SKL_BONE_NUM];
-	constraintIndex_t *skeletonConstraintNum;  // Number of default constraints for each bone.
-	physConstraint **skeletonConstraints;      // Default constraints for each bone.
-	hbArray *skeletonHitboxes[SKL_BONE_NUM];
-
-	renderable *renderables[OBJ_MAX_RENDERABLE_NUM];
-
-} object;
+typedef uint_least8_t renderableIndex_t;
 
 typedef struct {
 
-	object *base;
-	** Access base object animations array? **
-
-	** Store model matrix here, update only when changed? **
-	** Remove rndrConfig. **
-	rndrConfig tempRndrConfig;  // The object's global space configuration.
-
-	//skeleton *skl;              // The object's animation skeleton.
-	sklInstance skeletonData;  // An array of skeletal animation instances.
-
-	bone *configuration[SKL_BONE_NUM];  // Array of custom bone transformations.
-	bone *previousState[SKL_BONE_NUM];  // The global skeleton states from the previous update.
-	bone *currentState[SKL_BONE_NUM];   // The global skeleton states from the current update.
-
-	physRBInstance *skeletonPhysics[SKL_BONE_NUM];  // Array of pointers to physics bodies, one for each bone in skl.
-	hbArray *skeletonHitboxes[SKL_BONE_NUM];        // Array of pointers to hitbox arrays, one for each bone in skl.
-
-	rndrInstance *renderables[OBJ_MAX_RENDERABLE_NUM];  // Renderable instance array.
-
-} objInstance;*/
-
-typedef struct {
+	/** Include previous state num. **/
 
 	char *name;
 
@@ -69,33 +30,42 @@ typedef struct {
 	sklAnim **animations;           // Array of pointers to animations associated with the object.
 
 	physRigidBody *skeletonBodies;                 // Rigid bodies for each bone.
-	flags_t *skeletonBodyFlags;                    // Default flags for each rigid body.
-	physConstraintIndex_t *skeletonConstraintNum;  // Number of default constraints for each bone.
+	///flags_t *skeletonBodyFlags;                    // Default flags for each rigid body.
+	///physConstraintIndex_t *skeletonConstraintNum;  // Number of default constraints for each bone.
 	physConstraint **skeletonConstraints;          // Default constraints for each bone.
 	hbArray *skeletonHitboxes;                     // Hitboxes for each bone.
 
 	renderableIndex_t renderableNum;  // Default number of attached renderables.
 	renderable *renderables;          // Default renderable array.
 
+	stateIndex_t stateNum;  // Maximum number of previous states.
+
 } object;
 
+typedef struct objiState objiState;
+typedef struct objiState {
+
+	bone *skeleton;       // Skeleton state.
+	objiState *previous;  // Previous state.
+
+} objiState;
+
+/** Store pointer to previous bones / hitboxes. **/
 typedef struct {
 
-	object *base;
 	/** Access base object animations array? **/
-
 	/** Store model matrix here, update only when changed? **/
-	/** Remove rndrConfig. **/
-	rndrConfig tempRndrConfig;  // The object's global space configuration.
+	/** Pivot variable? **/
 
-	//skeleton *skl;              // The object's animation skeleton.
+	object *base;
+
 	sklInstance skeletonData;  // An array of skeletal animation instances.
 
 	bone *configuration;  // Array of custom bone transformations.
-	/** Split these into three arrays for position, orientation and scale? **/
-	bone *skeletonState;  // The global skeleton states from the current and previous updates.
-	                      // Stored as the current configuration for bone i followed by its
-	                      // previous configuration.
+
+	stateIndex_t stateNum;     // Number of previous states.
+	objiState state;
+	objiState **oldestStatePrevious;  // The oldest state's previous pointer.
 
 	physRBInstance *skeletonPhysics;  // Array of physics bodies, one for each bone in skl.
 	hbArray *skeletonHitboxes;        // Array of hitbox arrays, one for each bone in skl.
@@ -112,12 +82,14 @@ return_t objLoad(object *obj, const char *prgPath, const char *filePath,
                  cVector *allTextures, cVector *allTexWrappers, cVector *allSkeletons, cVector *allModels, cVector *allSklAnimations);
 void objDelete(object *obj);
 
-return_t objiInit(void *obj);
+return_t objiInit(objInstance *obj);
 return_t objiStateCopy(void *o, void *c);
 void objiResetInterpolation(void *obj);
-void objiDelete(void *obj);
+void objiDelete(objInstance *obj);
 
 return_t objiInstantiate(objInstance *obji, object *base);
+
+return_t objiStatePreallocate(objInstance *obji);
 
 return_t objiNewRenderable(objInstance *obji, model *mdl, textureWrapper *tw);
 return_t objiNewRenderableFromBase(objInstance *obji, const renderable *rndr);
@@ -129,7 +101,7 @@ return_t objiInitSkeleton(objInstance *obji, skeleton *skl);
 void objiBoneSetPhysicsFlags(objInstance *obji, const boneIndex_t boneID, const flags_t flags);
 
 sklAnim *objiGetAnimation(objInstance *obji, const animIndex_t id);
-sklAnim *objiFindAnimation(objInstance *obji, const char *name);
+sklAnim *objiFindAnimation(const objInstance *obji, const char *name);
 void objiSetAnimationType(objInstance *obji, const animIndex_t slot, const flags_t additive);
 return_t objiChangeAnimation(objInstance *obji, const animIndex_t slot, sklAnim *anim, const frameIndex_t frame, const float blendTime);
 void objiClearAnimation(objInstance *obji, const animIndex_t slot);
@@ -143,9 +115,9 @@ void objiAddLinearVelocity(objInstance *obji, const size_t boneID, const float x
 void objiApplyLinearImpulse(objInstance *obji, const size_t boneID, const float x, const float y, const float z);
 void objiAddAngularVelocity(objInstance *obji, const size_t boneID, const float angle, const float x, const float y, const float z);*/
 
-void objiUpdate(objInstance *obji, physicsSolver *solver, const float elapsedTime, const float dt);
+return_t objiUpdate(objInstance *obji, physicsSolver *solver, const float elapsedTime, const float dt);
 
-return_t objiRenderMethod(objInstance *obji, const float interpT);
+gfxRenderGroup_t objiRenderGroup(const objInstance *obji, const float interpT);
 void objiGenerateSprite(const objInstance *obji, const renderableIndex_t rndr, const float interpT, const float *texFrag, vertex *vertices);
 
 #endif

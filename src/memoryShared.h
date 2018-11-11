@@ -15,8 +15,8 @@
 
 #define MEMORY_UNSPECIFIED_LENGTH 0
 
-typedef uint8_t byte_t;
-typedef int8_t  signed_byte_t;
+typedef unsigned char byte_t;
+typedef signed char   signed_byte_t;
 
 void *memHeapLowLevelAllocate(const size_t bytes);
 void *memHeapLowLevelReallocate(void *block, const size_t bytes);
@@ -32,6 +32,10 @@ typedef struct memoryRegion {
 	memoryRegion *next;
 } memoryRegion;
 
+#define memAllocatorEnd(region)  ((byte_t *)(region))
+#define memAllocatorNext(region) (region)->next
+
+void memRegionExtend(memoryRegion **first, memoryRegion *region, byte_t *data);
 void memRegionAppend(memoryRegion **first, memoryRegion *region, byte_t *data);
 void memRegionPrepend(memoryRegion **first, memoryRegion *region, byte_t *data);
 void memRegionFree(memoryRegion *region);

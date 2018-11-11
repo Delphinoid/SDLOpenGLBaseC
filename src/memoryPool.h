@@ -62,26 +62,30 @@ typedef struct {
 	memoryRegion *region;  // Pointer to the allocator's memory region.
 } memoryPool;
 
-#define memPoolBlockSize(bytes) MEMORY_POOL_ALIGN((bytes > MEMORY_POOL_BLOCK_SIZE ? bytes : MEMORY_POOL_BLOCK_SIZE) + MEMORY_POOL_BLOCK_HEADER_SIZE)
-#define memPoolBlockSizeUnaligned(bytes)         ((bytes > MEMORY_POOL_BLOCK_SIZE ? bytes : MEMORY_POOL_BLOCK_SIZE) + MEMORY_POOL_BLOCK_HEADER_SIZE)
-#define memPoolAlignStartBlock(start) ((byte_t *)MEMORY_POOL_ALIGN((uintptr_t)start + MEMORY_POOL_BLOCK_HEADER_SIZE) - MEMORY_POOL_BLOCK_HEADER_SIZE)
-#define memPoolAlignStartData(start)  ((byte_t *)MEMORY_POOL_ALIGN((uintptr_t)start + MEMORY_POOL_BLOCK_HEADER_SIZE))
+#define memPoolBlockSize(bytes) MEMORY_POOL_ALIGN((bytes > MEMORY_POOL_BLOCK_SIZE ? (bytes + MEMORY_POOL_BLOCK_HEADER_SIZE) : MEMORY_POOL_BLOCK_TOTAL_SIZE))
+#define memPoolBlockSizeUnaligned(bytes)          (bytes > MEMORY_POOL_BLOCK_SIZE ? (bytes + MEMORY_POOL_BLOCK_HEADER_SIZE) : MEMORY_POOL_BLOCK_TOTAL_SIZE)
+#ifndef MEMORY_ALLOCATOR_ALIGNED
+	#define memPoolAlignStartBlock(start) ((byte_t *)MEMORY_POOL_ALIGN((uintptr_t)start + MEMORY_POOL_BLOCK_HEADER_SIZE) - MEMORY_POOL_BLOCK_HEADER_SIZE)
+	#define memPoolAlignStartData(start)  ((byte_t *)MEMORY_POOL_ALIGN((uintptr_t)start + MEMORY_POOL_BLOCK_HEADER_SIZE))
+#else
+	#define memPoolAlignStartBlock(start) start
+	#define memPoolAlignStartData(start)  ((byte_t *)start + MEMORY_POOL_BLOCK_HEADER_SIZE)
+#endif
 #define memPoolAllocationSize(start, bytes, length) \
 	(memPoolBlockSize(bytes) * length + (uintptr_t)memPoolAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 	// The following can save small amounts of memory but can't be predicted as easily:
 	//(memPoolBlockSize(bytes) * (length - 1) + memPoolBlockSizeUnaligned(bytes) + (uintptr_t)memPoolAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 
-#define memPoolFirst(pool)        ((void *)memPoolAlignStartData((pool).region->start))
+#define memPoolFirst(region)      ((void *)memPoolAlignStartData((region)->start))
 #define memPoolBlockStatus(block) memPoolDataGetFlags(block)
 #define memPoolBlockNext(pool, i) i = (void *)((byte_t *)i + (pool).block)
-#define memPoolEnd(pool)          ((byte_t *)(pool).region)
-#define memPoolChunkNext(pool)    (pool).region->next
 
 void memPoolInit(memoryPool *pool);
 void *memPoolCreate(memoryPool *pool, void *start, const size_t bytes, const size_t length);
 void *memPoolAllocate(memoryPool *pool);
 void memPoolFree(memoryPool *pool, void *block);
 void *memPoolSetupMemory(void *start, const size_t bytes, const size_t length);
+void *memPoolIndex(memoryPool *pool, const size_t i);
 void memPoolClear(memoryPool *pool);
 void *memPoolExtend(memoryPool *pool, void *start, const size_t bytes, const size_t length);
 void memPoolDelete(memoryPool *pool);

@@ -40,8 +40,8 @@ void *memSLinkAllocate(memorySLink *array){
 
 	byte_t *r = array->free;
 	if(r){
-		memSLinkDataGetNext(r) = NULL;
 		array->free = memSLinkDataGetNextFreeMasked(r);
+		memSLinkDataGetNext(r) = NULL;
 	}
 	return r;
 
@@ -55,11 +55,11 @@ void *memSLinkPrepend(memorySLink *array, void **start){
 
 	byte_t *r = array->free;
 	if(r){
+		array->free = memSLinkDataGetNextFreeMasked(r);
 		// Set the new element's pointers.
 		memSLinkDataGetNext(r) = *start;
 		// Set the beginning of the array.
 		*start = r;
-		array->free = memSLinkDataGetNextFreeMasked(r);
 	}
 	return r;
 
@@ -77,11 +77,11 @@ void *memSLinkAppend(memorySLink *array, void **start){
 		while(*next != NULL){
 			next = memSLinkDataGetNextPointer(*next);
 		}
+		array->free = memSLinkDataGetNextFreeMasked(r);
 		// Set the new element's pointers.
 		memSLinkDataGetNext(r) = NULL;
 		// Set the previous element's next pointer.
 		*next = r;
-		array->free = memSLinkDataGetNextFreeMasked(r);
 	}
 	return r;
 
@@ -95,6 +95,7 @@ void *memSLinkInsertBefore(memorySLink *array, void **start, void *element, void
 
 	byte_t *r = array->free;
 	if(r){
+		array->free = memSLinkDataGetNextFreeMasked(r);
 		// Set the new element's next pointer.
 		memSLinkDataGetNext(r) = element;
 		if(previous != NULL){
@@ -103,7 +104,6 @@ void *memSLinkInsertBefore(memorySLink *array, void **start, void *element, void
 		}else{
 			*start = r;
 		}
-		array->free = memSLinkDataGetNextFreeMasked(r);
 	}
 	return r;
 
@@ -118,13 +118,13 @@ void *memSLinkInsertAfter(memorySLink *array, void *element){
 	byte_t *r = array->free;
 	if(r){
 		byte_t **next = memSLinkDataGetNextPointer(element);
+		array->free = memSLinkDataGetNextFreeMasked(r);
 		// Set the new element's next pointer.
 		memSLinkDataGetNext(r) = *next;
 		if(*next != NULL){
 			// Set the previous element's next pointer.
 			*next = r;
 		}
-		array->free = memSLinkDataGetNextFreeMasked(r);
 	}
 	return r;
 
@@ -209,7 +209,7 @@ void *memSLinkExtend(memorySLink *array, void *start, const size_t bytes, const 
 	if(start){
 
 		memoryRegion *newRegion = (memoryRegion *)((byte_t *)start + memSLinkAllocationSize(start, bytes, length) - sizeof(memoryRegion));
-		memRegionAppend(&array->region, newRegion, start);
+		memRegionPrepend(&array->region, newRegion, start);
 
 		memSLinkSetupMemory(start, bytes, length);
 		array->free = memSLinkAlignStartData(start);

@@ -31,23 +31,27 @@ typedef struct {
 
 #define memListBlockSize(bytes) MEMORY_LIST_ALIGN((bytes > MEMORY_LIST_BLOCK_SIZE ? bytes : MEMORY_LIST_BLOCK_SIZE))
 #define memListBlockSizeUnaligned(bytes)         ((bytes > MEMORY_LIST_BLOCK_SIZE ? bytes : MEMORY_LIST_BLOCK_SIZE))
-#define memListAlignStartBlock(start) ((byte_t *)MEMORY_LIST_ALIGN((uintptr_t)start + MEMORY_LIST_BLOCK_HEADER_SIZE) - MEMORY_LIST_BLOCK_HEADER_SIZE)
-#define memListAlignStartData(start)  ((byte_t *)MEMORY_LIST_ALIGN((uintptr_t)start + MEMORY_LIST_BLOCK_HEADER_SIZE))
+#ifndef MEMORY_ALLOCATOR_ALIGNED
+	#define memListAlignStartBlock(start) ((byte_t *)MEMORY_LIST_ALIGN((uintptr_t)start + MEMORY_LIST_BLOCK_HEADER_SIZE) - MEMORY_LIST_BLOCK_HEADER_SIZE)
+	#define memListAlignStartData(start)  ((byte_t *)MEMORY_LIST_ALIGN((uintptr_t)start + MEMORY_LIST_BLOCK_HEADER_SIZE))
+#else
+	#define memListAlignStartBlock(start) start
+	#define memListAlignStartData(start)  ((byte_t *)start + MEMORY_LIST_BLOCK_HEADER_SIZE)
+#endif
 #define memListAllocationSize(start, bytes, length) \
 	(memListBlockSize(bytes) * length + (uintptr_t)memListAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 	// The following can save small amounts of memory but can't be predicted as easily:
 	//(memListBlockSize(bytes) * (length - 1) + memListBlockSizeUnaligned(bytes) + (uintptr_t)memListAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 
-#define memListFirst(list)        ((void *)memListAlignStartData((list).region->start))
+#define memListFirst(list)        ((void *)memListAlignStartData((region)->start))
 #define memListBlockNext(list, i) i = (void *)((byte_t *)i + (list).block)
-#define memListEnd(list)          ((byte_t *)(list).region)
-#define memListChunkNext(list)    (list).region->next
 
 void memListInit(memoryList *list);
 void *memListCreate(memoryList *list, void *start, const size_t bytes, const size_t length);
 void *memListAllocate(memoryList *list);
 void memListFree(memoryList *list, void *block);
 void *memListSetupMemory(void *start, const size_t bytes, const size_t length);
+void *memListIndex(memoryList *list, const size_t i);
 void memListClear(memoryList *list);
 void *memListExtend(memoryList *list, void *start, const size_t bytes, const size_t length);
 void memListDelete(memoryList *list);

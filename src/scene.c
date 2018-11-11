@@ -1,8 +1,7 @@
 #include "scene.h"
-#include "stateManagerHelpers.h"
-#include <string.h>
+#include "inline.h"
 
-#define SCENE_START_CAPACITY 1
+/**#define SCENE_START_CAPACITY 1
 
 return_t scnInit(void *scn){
 	((scene *)scn)->objectNum = 0;
@@ -14,13 +13,13 @@ return_t scnInit(void *scn){
 
 return_t scnStateCopy(void *o, void *c){
 	if(((scene *)c)->objectCapacity != ((scene *)o)->objectCapacity){
-		/*
+		*
 		** We need to allocate more or less memory so that
 		** the memory allocated for both scenes match.
-		*/
+		*
 		objectIndex_t *tempBuffer = malloc(((scene *)o)->objectCapacity*sizeof(objectIndex_t));
 		if(tempBuffer == NULL){
-			/** Memory allocation failure. **/
+			** Memory allocation failure. **
 			return -1;
 		}
 		free(((scene *)c)->objectIDs);
@@ -44,10 +43,10 @@ return_t scnLoad(scene *scn){
 
 return_t scnObjectAdd(scene *scn, const objectIndex_t objectID){
 	if(scn->objectNum >= scn->objectCapacity){
-		/* Allocate room for more object IDs. */
-		/**if(scn->objectCapacity == 0){
+		* Allocate room for more object IDs. *
+		**if(scn->objectCapacity == 0){
 			scn->objectCapacity = SCENE_START_CAPACITY;
-		}**/
+		}**
 		objectIndex_t tempCapacity;
 		objectIndex_t *tempBuffer;
 		if(scn->objectCapacity == 0){
@@ -58,7 +57,7 @@ return_t scnObjectAdd(scene *scn, const objectIndex_t objectID){
 			tempBuffer = realloc(scn->objectIDs, tempCapacity*sizeof(objectIndex_t));
 		}
 		if(tempBuffer == NULL){
-			/** Memory allocation failure. **/
+			** Memory allocation failure. **
 			return -1;
 		}
 		scn->objectCapacity = tempCapacity;
@@ -77,36 +76,125 @@ void scnObjectRemove(scene *scn, stateManager *sm, const objectIndex_t pos){
 			memmove(&scn->objectIDs[pos], &scn->objectIDs[pos+1], scn->objectNum+1-pos);
 		}
 	}
-}
+}**/
 
-void scnUpdate(scene *scn, stateManager *sm, const float elapsedTime, const float dt){
+return_t scnInit(scene *scn, const size_t objectNum){
 
-	size_t i;
+	scn->objectNum = 0;
+	memListInit(&scn->objects);
+	physSolverInit(&scn->solver);
 
-	physSolverReset(&scn->solver);
+	if(objectNum > 0){
 
-	for(i = 0; i < scn->objectNum; ++i){
+		void *memory = memAllocate(
+			memListAllocationSize(NULL, sizeof(objInstance *), objectNum)
+		);
 
-		// Update each object in the scene.
-		objInstance *obji = objGetState(sm, scn->objectIDs[i], 0);
-		if(obji != NULL){
-
-			objiUpdate(obji, &scn->solver, elapsedTime, dt);
-
-		}else{
-			// If the object's state is NULL,
-			// remove it from the scene.
-			scnObjectRemove(scn, sm, i);
+		if(memListCreate(&scn->objects, memory, sizeof(objInstance *), objectNum) == NULL){
+			return -1;
 		}
+		scn->objectNum = objectNum;
 
 	}
 
-	physSolverUpdate(&scn->solver);
+	return 1;
 
 }
 
-void scnDelete(void *scn){
-	if(((scene *)scn)->objectIDs != NULL){
-		free(((scene *)scn)->objectIDs);
+__FORCE_INLINE__ objInstance **scnAllocate(scene *scn){
+	/** scn->objectNum is not correct here. We want fixed-size regions. **/
+	objInstance **r = memListAllocate(&scn->objects);
+	if(r == NULL){
+		// Attempt to extend the allocator.
+		void *memory = memAllocate(
+			memListAllocationSize(NULL, sizeof(objInstance *), scn->objectNum)
+		);
+		if(memListExtend(&scn->objects, memory, sizeof(objInstance *), scn->objectNum)){
+			r = memListAllocate(&scn->objects);
+		}
 	}
+	return r;
+}
+
+__FORCE_INLINE__ void scnFree(scene *scn, objInstance **obji){
+	memListFree(&scn->objects, (void *)obji);
+}
+
+void scnUpdate(scene *scn, const float elapsedTime, const float dt){
+
+	/*
+	** Update each object in the scene.
+	*/
+
+	if(scn->objectNum > 0){
+
+		size_t objectsLeft = scn->objectNum;
+		memoryRegion *region = scn->objects.region;
+		objInstance **i;
+
+		physSolverReset(&scn->solver);
+
+		do {
+			i = memListFirst(region);
+			while(i < (objInstance **)memAllocatorEnd(region)){
+
+				if(objectsLeft > 0){
+
+					// Update each object in the scene.
+					objInstance *obji = *i;
+					if(obji != NULL){
+
+						objiUpdate(obji, &scn->solver, elapsedTime, dt);
+						--objectsLeft;
+
+					}
+					memListBlockNext(scn->objects, i);
+
+				}else{
+					goto UPDATE_PHYSICS_SOLVER;
+				}
+
+			}
+			region = memAllocatorNext(region);
+		} while(region != NULL);
+
+		UPDATE_PHYSICS_SOLVER:
+		physSolverUpdate(&scn->solver);
+
+	}
+
+}
+
+void scnReset(scene *scn){
+
+	/*
+	** Free each of the scene's memory regions.
+	*/
+
+	memoryRegion *region = scn->objects.region->next;
+	while(region != NULL){
+		memoryRegion *next = memAllocatorNext(region);
+		memFree(region->start);
+		region = next;
+	}
+	scn->objects.region->next = NULL;
+
+	physSolverDelete(&scn->solver);
+
+}
+
+void scnDelete(scene *scn){
+
+	/*
+	** Free each of the scene's memory regions.
+	*/
+
+	memoryRegion *region = scn->objects.region;
+	while(region != NULL){
+		memoryRegion *next = memAllocatorNext(region);
+		memFree(region->start);
+		region = next;
+	}
+	physSolverDelete(&scn->solver);
+
 }

@@ -897,15 +897,15 @@ return_t physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, physConstraint
 			}else if(lineLength >= 11 && strncmp(line, "collision ", 10) == 0){
 				if(currentCommand == 0){
 					if(strtoul(line+10, NULL, 0)){
-						flags[currentBone] |= PHYS_BODY_COLLIDE;
+						flagsSet(flags[currentBone], PHYS_BODY_COLLIDE);
 					}else{
-						flags[currentBone] &= ~PHYS_BODY_COLLIDE;
+						flagsUnset(flags[currentBone], PHYS_BODY_COLLIDE);
 					}
 				}else if(currentCommand == 1){
 					if(strtoul(line+10, NULL, 0)){
-						constraints[currentBone][constraintNum[currentBone]-1].flags |= PHYS_CONSTRAINT_COLLIDE;
+						flagsSet(constraints[currentBone][constraintNum[currentBone]-1].flags, PHYS_CONSTRAINT_COLLIDE);
 					}else{
-						constraints[currentBone][constraintNum[currentBone]-1].flags &= ~PHYS_CONSTRAINT_COLLIDE;
+						flagsUnset(constraints[currentBone][constraintNum[currentBone]-1].flags, PHYS_CONSTRAINT_COLLIDE);
 					}
 				}else if(currentCommand > 1){
 					printf("Error loading rigid bodies \"%s\": Rigid body and constraint sub-command \"collision\" at line %u does not belong "
@@ -920,9 +920,9 @@ return_t physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, physConstraint
 			}else if(lineLength >= 8 && strncmp(line, "active ", 7) == 0){
 				if(currentCommand == 0){
 					if(strtoul(line+7, NULL, 0)){
-						flags[currentBone] |= PHYS_BODY_INITIALIZE;
+						flagsSet(flags[currentBone], PHYS_BODY_INITIALIZE);
 					}else{
-						flags[currentBone] &= ~PHYS_BODY_INITIALIZE;
+						flagsUnset(flags[currentBone], PHYS_BODY_INITIALIZE);
 					}
 				}else if(currentCommand > 0){
 					printf("Error loading rigid bodies \"%s\": Rigid body sub-command \"active\" at line %u does not belong "
@@ -1429,7 +1429,7 @@ void physRBIUpdateCollisionMesh(physRBInstance *prbi){
 		for(i = 0; i < prbi->local->colliderNum; ++i){
 
 			// Update the collider.
-			physColliderUpdate(&prbi->colliders[i], &prbi->local->colliders[i], &prbi->configuration[0]);
+			physColliderUpdate(&prbi->colliders[i], &prbi->local->colliders[i], prbi->configuration);
 
 			// Update body minima and maxima.
 			if(i == 0){

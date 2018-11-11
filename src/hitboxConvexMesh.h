@@ -2,15 +2,15 @@
 #define HITBOXCONVEXMESH_H
 
 #include "vec3.h"
-#include "typedefs.h"
+#include "return.h"
 #include <stdlib.h>
 #include <stdint.h>
 
 #define HB_MESH_MAX_ARRAY_SIZE 256
 
-typedef uint8_t hbVertexIndex_t;
-typedef uint8_t hbFaceIndex_t;
-typedef uint8_t hbEdgeIndex_t;
+typedef uint_least8_t hbVertexIndex_t;
+typedef uint_least8_t hbFaceIndex_t;
+typedef uint_least8_t hbEdgeIndex_t;
 
 /** Temporary? **/
 typedef struct {

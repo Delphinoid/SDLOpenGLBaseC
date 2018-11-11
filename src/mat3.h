@@ -2,7 +2,7 @@
 #define MAT3_H
 
 #include "quat.h"
-#include "typedefs.h"
+#include "return.h"
 
 typedef struct {
 	float m[3][3];

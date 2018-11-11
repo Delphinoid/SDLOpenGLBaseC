@@ -61,7 +61,7 @@ typedef struct {
 	mat3 inverseInertiaTensor;  // The inverse of the body's global inertia tensor.
 
 	/* Physical space properties. */
-	bone *configuration;   // Pointers to current and last configurations of the body.
+	bone *configuration;   // Pointer to the current configuration of the body.
 	vec3 linearVelocity;   // Current linear velocity.
 	vec3 angularVelocity;  // Current angular velocity.
 	vec3 netForce;         // Force accumulator.

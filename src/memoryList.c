@@ -85,6 +85,29 @@ void *memListSetupMemory(void *start, const size_t bytes, const size_t length){
 
 }
 
+void *memListIndex(memoryList *list, const size_t i){
+
+	/*
+	** Finds the element at index i.
+	*/
+
+	size_t offset = list->block * i;
+
+	memoryRegion *region = list->region;
+	byte_t *regionStart  = memListFirst(region);
+	size_t  regionSize   = memAllocatorEnd(region) - regionStart;
+
+	while(offset >= regionSize){
+		region      = memAllocatorNext(region);
+		regionStart = memListFirst(region);
+		regionSize  = memAllocatorEnd(region) - regionStart;
+		offset -= regionSize;
+	}
+
+	return (void *)(regionStart + offset);
+
+}
+
 void memListClear(memoryList *list){
 
 	byte_t *block = memListAlignStartData(list->region->start);
@@ -117,7 +140,7 @@ void *memListExtend(memoryList *list, void *start, const size_t bytes, const siz
 	if(start){
 
 		memoryRegion *newRegion = (memoryRegion *)((byte_t *)start + memListAllocationSize(start, bytes, length) - sizeof(memoryRegion));
-		memRegionAppend(&list->region, newRegion, start);
+		memRegionExtend(&list->region, newRegion, start);
 
 		memListSetupMemory(start, bytes, length);
 		list->free = memListAlignStartData(start);

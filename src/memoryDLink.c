@@ -40,9 +40,9 @@ void *memDLinkAllocate(memoryDLink *array){
 
 	byte_t *r = array->free;
 	if(r){
+		array->free = memDLinkDataGetNextFreeMasked(r);
 		memDLinkDataGetNext(r) = NULL;
 		memDLinkDataGetPrev(r) = NULL;
-		array->free = memDLinkDataGetNextFreeMasked(r);
 	}
 	return r;
 
@@ -56,6 +56,7 @@ void *memDLinkPrepend(memoryDLink *array, void **start){
 
 	byte_t *r = array->free;
 	if(r){
+		array->free = memDLinkDataGetNextFreeMasked(r);
 		// Set the new element's pointers.
 		memDLinkDataGetNext(r) = *start;
 		memDLinkDataGetPrev(r) = NULL;
@@ -65,7 +66,6 @@ void *memDLinkPrepend(memoryDLink *array, void **start){
 		}
 		// Set the beginning of the array.
 		*start = r;
-		array->free = memDLinkDataGetNextFreeMasked(r);
 	}
 	return r;
 
@@ -85,12 +85,12 @@ void *memDLinkAppend(memoryDLink *array, void **start){
 			last = *next;
 			next = memDLinkDataGetNextPointer(*next);
 		}
+		array->free = memDLinkDataGetNextFreeMasked(r);
 		// Set the new element's pointers.
 		memDLinkDataGetNext(r) = NULL;
 		memDLinkDataGetPrev(r) = last;
 		// Set the previous element's next pointer.
 		*next = r;
-		array->free = memDLinkDataGetNextFreeMasked(r);
 	}
 	return r;
 
@@ -105,6 +105,7 @@ void *memDLinkInsertBefore(memoryDLink *array, void **start, void *element){
 	byte_t *r = array->free;
 	if(r){
 		byte_t **prev = memDLinkDataGetPrevPointer(element);
+		array->free = memDLinkDataGetNextFreeMasked(r);
 		// Set the new element's pointers.
 		memDLinkDataGetNext(r) = element;
 		memDLinkDataGetPrev(r) = *prev;
@@ -116,7 +117,6 @@ void *memDLinkInsertBefore(memoryDLink *array, void **start, void *element){
 		}else{
 			*start = r;
 		}
-		array->free = memDLinkDataGetNextFreeMasked(r);
 	}
 	return r;
 
@@ -131,6 +131,7 @@ void *memDLinkInsertAfter(memoryDLink *array, void *element){
 	byte_t *r = array->free;
 	if(r){
 		byte_t **next = memDLinkDataGetNextPointer(element);
+		array->free = memDLinkDataGetNextFreeMasked(r);
 		// Set the new element's pointers.
 		memDLinkDataGetNext(r) = *next;
 		memDLinkDataGetPrev(r) = element;
@@ -140,7 +141,6 @@ void *memDLinkInsertAfter(memoryDLink *array, void *element){
 			// Set the previous element's next pointer.
 			*next = r;
 		}
-		array->free = memDLinkDataGetNextFreeMasked(r);
 	}
 	return r;
 
@@ -232,7 +232,7 @@ void *memDLinkExtend(memoryDLink *array, void *start, const size_t bytes, const 
 	if(start){
 
 		memoryRegion *newRegion = (memoryRegion *)((byte_t *)start + memDLinkAllocationSize(start, bytes, length) - sizeof(memoryRegion));
-		memRegionAppend(&array->region, newRegion, start);
+		memRegionPrepend(&array->region, newRegion, start);
 
 		memDLinkSetupMemory(start, bytes, length);
 		array->free = memDLinkAlignStartData(start);

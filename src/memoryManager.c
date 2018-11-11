@@ -16,18 +16,18 @@
 
 #else
 
-	static memoryManager __memmngr;
+	memoryManager __memmngr;
 
 	#define memInit()                      memTreeInit(&__memmngr.allocator);
 	#define memCreate(data, bytes, length) memTreeCreate(&__memmngr.allocator, data, bytes, MEMORY_TREE_UNSPECIFIED_LENGTH)
 	#define memExtend(data, bytes, length) memTreeExtend(&__memmngr.allocator, data, bytes, MEMORY_TREE_UNSPECIFIED_LENGTH)
 	#define memAllocateVirtualHeap(bytes)  memMngrAllocateVirtualHeap(bytes)
 
-	__FORCE_INLINE__ void *memAllocate(const size_t bytes){
+	__FORCE_INLINE__ void *memAllocateStatic(const size_t bytes){
 		return memTreeAllocate(&__memmngr.allocator, bytes);
 	}
 
-	__FORCE_INLINE__ void *memReallocate(void *data, const size_t bytes){
+	__FORCE_INLINE__ void *memReallocateFixed(void *data, const size_t bytes){
 		return memTreeReallocate(&__memmngr.allocator, data, bytes);
 	}
 
@@ -136,7 +136,7 @@ void memMngrDelete(){
 	memTreeDelete(&__memmngr.allocator);
 }
 
-__FORCE_INLINE__ void *memForceAllocate(const size_t bytes){
+__FORCE_INLINE__ void *memAllocate(const size_t bytes){
 	#ifdef MEMORY_MANAGER_ENFORCE_STATIC_VIRTUAL_HEAP
 	return memTreeAllocate(&__memmngr.allocator, bytes);
 	#else
@@ -149,6 +149,24 @@ __FORCE_INLINE__ void *memForceAllocate(const size_t bytes){
 	){
 		memMngrAllocateVirtualHeap(MEMORY_MANAGER_VIRTUAL_HEAP_REALLOC_SIZE);
 		r = memTreeAllocate(&__memmngr.allocator, bytes);
+	}
+	return r;
+	#endif
+}
+
+__FORCE_INLINE__ void *memReallocateForced(void *data, const const size_t bytes){
+	#ifdef MEMORY_MANAGER_ENFORCE_STATIC_VIRTUAL_HEAP
+	return memTreeReallocate(&__memmngr.allocator, bytes);
+	#else
+	void *r = memTreeReallocate(&__memmngr.allocator, data, bytes);
+	if(
+		r == NULL &&
+		memTreeAllocationSize(NULL, bytes, MEMORY_UNSPECIFIED_LENGTH)
+		<
+		MEMORY_MANAGER_VIRTUAL_HEAP_REALLOC_SIZE - sizeof(memoryRegion)
+	){
+		memMngrAllocateVirtualHeap(MEMORY_MANAGER_VIRTUAL_HEAP_REALLOC_SIZE);
+		r = memTreeReallocate(&__memmngr.allocator, data, bytes);
 	}
 	return r;
 	#endif

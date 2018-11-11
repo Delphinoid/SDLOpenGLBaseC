@@ -214,18 +214,16 @@ typedef struct {
 	memoryRegion *region;  // Pointer to the allocator's memory region.
 } memoryTree;
 
-#define memTreeBlockSize(bytes) MEMORY_TREE_ALIGN(((bytes > MEMORY_TREE_BLOCK_SIZE ? bytes : MEMORY_TREE_BLOCK_SIZE) + MEMORY_TREE_BLOCK_HEADER_SIZE))
-#define memTreeBlockSizeUnaligned(bytes)         (((bytes > MEMORY_TREE_BLOCK_SIZE ? bytes : MEMORY_TREE_BLOCK_SIZE) + MEMORY_TREE_BLOCK_HEADER_SIZE))
+#define memTreeBlockSize(bytes) MEMORY_TREE_ALIGN((bytes > MEMORY_TREE_BLOCK_SIZE ? (bytes + MEMORY_TREE_BLOCK_HEADER_SIZE) : MEMORY_TREE_BLOCK_TOTAL_SIZE))
+#define memTreeBlockSizeUnaligned(bytes)          (bytes > MEMORY_TREE_BLOCK_SIZE ? (bytes + MEMORY_TREE_BLOCK_HEADER_SIZE) : MEMORY_TREE_BLOCK_TOTAL_SIZE)
 #define memTreeAlignStartBlock(start) ((byte_t *)MEMORY_TREE_ALIGN((uintptr_t)start + MEMORY_TREE_BLOCK_HEADER_SIZE) - MEMORY_TREE_BLOCK_HEADER_SIZE)
 #define memTreeAlignStartData(start)  ((byte_t *)MEMORY_TREE_ALIGN((uintptr_t)start + MEMORY_TREE_BLOCK_HEADER_SIZE))
 #define memTreeAllocationSize(start, bytes, length) \
 	((length > 0 ? memTreeBlockSize(bytes) * length : bytes) + (uintptr_t)memTreeAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 
-#define memTreeFirst(tree)        ((void *)memTreeAlignStartData((tree).region->start))
+#define memTreeFirst(region)      ((void *)memTreeAlignStartData((region)->start))
 #define memTreeBlockStatus(block) memTreeBlockGetActiveMasked(block)
 #define memTreeBlockNext(tree, i) i = (void *)((byte_t *)i + memTreeDataGetCurrent(i));
-#define memTreeEnd(tree)          ((byte_t *)(tree).region)
-#define memTreeChunkNext(tree)    (tree).region->next
 
 void memTreeInit(memoryTree *tree);
 void *memTreeCreate(memoryTree *tree, void *start, const size_t bytes, const size_t length);

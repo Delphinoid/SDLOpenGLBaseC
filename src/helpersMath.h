@@ -1,8 +1,8 @@
-#ifndef ENGINEMATH_H
-#define ENGINEMATH_H
+#ifndef HELPERSMATH_H
+#define HELPERSMATH_H
 
 #include "vec3.h"
-#include "typedefs.h"
+#include "return.h"
 
 float fastInvSqrt(float x);
 float fastInvSqrtAccurate(float x);
@@ -21,5 +21,7 @@ void pointPlaneProject(const vec3 *normal, const vec3 *vertex, vec3 *point);
 
 void linePlaneIntersection(const vec3 *normal, const vec3 *vertex, const vec3 *line, vec3 *point);
 return_t segmentPlaneIntersection(const vec3 *normal, const vec3 *vertex, const vec3 *start, const vec3 *end, vec3 *point);
+
+float floatLerp(const float f1, const float f2, const float t);
 
 #endif

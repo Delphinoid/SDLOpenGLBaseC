@@ -80,7 +80,7 @@ void animAdvance(animationInstance *animInst, const animationData *animData, con
 
 				// Handle loops if totalElapsedTime indicates the end of the animation has been passed.
 				if(animInst->totalElapsedTime < 0.f){
-					uint8_t prevLoops = animInst->currentLoops;
+					uint_least8_t prevLoops = animInst->currentLoops;
 					// Iteratively reset totalElapsedTime so it is once again within the bounds of 0 and animationLength.
 					do {
 						/**

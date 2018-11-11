@@ -71,7 +71,7 @@ void physIslandUpdate(physIsland *island, const float dt){
 		island->bodies[index] = island->bodies[i];
 
 		// Check if the body's owner has been deleted.
-		if((island->bodies[index]->flags & PHYS_BODY_DELETE) > 0){
+		if(flagsAreSet(island->bodies[index]->flags, PHYS_BODY_DELETE)){
 
 			// The body's owner has been deleted, free the body and
 			// increase del so future bodies will be shifted over.
@@ -82,12 +82,12 @@ void physIslandUpdate(physIsland *island, const float dt){
 		}else{
 
 			// Integrate the body and solve constraints if desired.
-			if((island->bodies[index]->flags & PHYS_BODY_SIMULATE) > 0){
+			if(flagsAreSet(island->bodies[index]->flags, PHYS_BODY_SIMULATE)){
 				physRBIIntegrateEuler(island->bodies[index], dt);
 			}
 
 			// If the body can collide, update its collision mesh.
-			if((island->bodies[index]->flags & PHYS_BODY_COLLIDE) > 0){
+			if(flagsAreSet(island->bodies[index]->flags, PHYS_BODY_COLLIDE)){
 				physRBIUpdateCollisionMesh(island->bodies[index]);
 			}
 

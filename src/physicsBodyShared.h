@@ -5,6 +5,6 @@
 #include "memoryManager.h"
 #include <stdint.h>
 
-typedef uint32_t physicsBodyIndex_t;
+typedef uint_least32_t physicsBodyIndex_t;
 
 #endif

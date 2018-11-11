@@ -1,7 +1,7 @@
 #ifndef HITBOXAABB_H
 #define HITBOXAABB_H
 
-#include "typedefs.h"
+#include "return.h"
 
 typedef struct {
 	float left;

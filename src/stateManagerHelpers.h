@@ -2,6 +2,7 @@
 #define STATEMANAGERHELPERS_H
 
 #include "stateManager.h"
+#include "scene.h"
 #include "camera.h"
 #include "object.h"
 
