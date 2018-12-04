@@ -5,6 +5,12 @@
 
 /*
 ** Free-list allocator.
+**
+** Also defines list pool functions,
+** which differ only in that they
+** store the free-list pointer at the
+** end of the block, allowing active
+** flags to be stored at the beginning.
 */
 
 #define MEMORY_LIST_BLOCK_POINTER_SIZE sizeof(byte_t *)
@@ -44,7 +50,7 @@ typedef struct {
 	//(memListBlockSize(bytes) * (length - 1) + memListBlockSizeUnaligned(bytes) + (uintptr_t)memListAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 
 #define memListFirst(list)        ((void *)memListAlignStartData((region)->start))
-#define memListBlockNext(list, i) i = (void *)((byte_t *)i + (list).block)
+#define memListBlockNext(list, i) (void *)((byte_t *)i + (list).block)
 
 void memListInit(memoryList *list);
 void *memListCreate(memoryList *list, void *start, const size_t bytes, const size_t length);

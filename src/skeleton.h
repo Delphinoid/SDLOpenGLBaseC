@@ -6,22 +6,25 @@
 #include "flags.h"
 #include "return.h"
 
-#define SKL_MAX_BONE_NUM 128
+#define SKELETON_MAX_BONE_NUM 128
+
+#define SKELETON_ANIM_INSTANCE_OVERWRITE 0
+#define SKELETON_ANIM_INSTANCE_ADDITIVE  1
 
 typedef uint_least8_t boneIndex_t;
 
 // Skeleton node, containing a bone and the index of its parent.
 typedef struct {
-	char *name;
 	bone defaultState;
 	boneIndex_t parent;  // If the node has no parent, this will be set to its own position in bones.
+	char *name;
 } sklNode;
 
 // Combines the above structures.
 typedef struct {
-	char *name;
-	boneIndex_t boneNum;
 	sklNode *bones;  // Depth-first vector of each bone.
+	boneIndex_t boneNum;
+	char *name;
 } skeleton;
 
 /**
@@ -43,13 +46,13 @@ typedef struct {
 
 // A full animation, containing a vector of keyframes.
 typedef struct {
-	char *name;
 	animationData animData;
 	boneIndex_t boneNum;  // The total number of unique bones in the animation.
 	/** char* rather than char**? **/
 	char **bones;         // Array of names for each bone.
 	bone **frames;  // An array of keyframes, where each keyframe is an array of
 	                // bone delta transforms (offsets from their default states).
+	char *name;
 } sklAnim;
 
 /*
@@ -59,10 +62,10 @@ typedef struct {
 // Animation fragment, containing an animation pointer, an animator, a bone lookup and a blend.
 typedef struct {
 
-	sklAnim *currentAnim;
+	sklAnim *animation;
 	animationInstance animator;
 	/** Really need to move animBoneLookup. **/
-	//boneIndex_t animBoneLookup[SKL_MAX_BONE_NUM];  // Which bone in skeletonState each bone in currentAnim corresponds to.
+	//boneIndex_t animBoneLookup[SKELETON_MAX_BONE_NUM];  // Which bone in skeletonState each bone in currentAnim corresponds to.
 	                                               // If the root (first) bone in currentAnim is named "blah" and the
 	                                               // second bone in animState is named "blah", the array will start
 	                                               // with animBoneLookup[0] == 1. If the bone does not exist, its entry
@@ -79,26 +82,21 @@ typedef struct {
 
 // Skeletal animation instance.
 typedef struct {
+	sklAnimFragment *fragments;
 	float timeMod;
-	flags_t additive;
-	animIndex_t animFragNum;
-	animIndex_t animFragCapacity;
-	sklAnimFragment *animFrags;
+	flags_t flags;
 } sklAnimInstance;
 
 // Skeleton instance.
 /** Restructure for proper element attachments (and I've forgotten again, fantastic) **/
 typedef struct {
-	skeleton *skl;
-	float timeMod;
-	animIndex_t animationNum;
-	animIndex_t animationCapacity;
 	sklAnimInstance *animations;
+	float timeMod;
+	skeleton *skl;
 } sklInstance;
 
 void sklInit(skeleton *skl);
 return_t sklLoad(skeleton *skl, const char *prgPath, const char *filePath);
-return_t sklCopy(const skeleton *oskl, skeleton *cskl);
 return_t sklDefault(skeleton *skl);
 /** If we're sticking with fixed bone lookups, change the return value to void. **/
 //return_t sklGenerateLookup(const skeleton *skl1, const skeleton *skl2, uint_least8_t *lookup);
@@ -111,16 +109,23 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, co
 boneIndex_t sklaFindBone(const sklAnim *skla, const boneIndex_t id, const char *name);
 void sklaDelete(sklAnim *skla);
 
+void sklaiInit(sklAnimInstance *sklai);
+void sklaiSetType(sklAnimInstance *sklai, const flags_t additive);
+return_t sklaiChange(sklAnimInstance *sklai, const skeleton *skl, sklAnim *anim, const frameIndex_t frame, const float blendTime);
+void sklaiClear(sklAnimInstance *sklai);
+void sklaiDelete(sklAnimInstance *sklai);
+
 return_t skliInit(sklInstance *skli, skeleton *skl, const animIndex_t animationCapacity);
-#include"cVector.h"
-return_t skliLoad(sklInstance *skli, const char *prgPath, const char *filePath, cVector *allSklAnimations);
+return_t skliLoad(sklInstance *skli, const char *prgPath, const char *filePath);
+sklAnimInstance *skliAnimationNew(sklInstance *skli);
+void skliAnimationDelete(sklInstance *skli, sklAnimInstance *anim, sklAnimInstance *previous);
 void skliUpdateAnimations(sklInstance *skli, const float elapsedTime, const float interpT);
 //void skliGenerateBoneState(sklInstance *skli, bone *boneState, const boneIndex_t boneID);
 void skliGenerateBoneState(const sklInstance *skli, const boneIndex_t id, const char *name, bone *state);
-void skliSetAnimationType(sklInstance *skli, const animIndex_t slot, const flags_t additive);
-return_t skliChangeAnimation(sklInstance *skli, const animIndex_t slot, sklAnim *anim, const frameIndex_t frame, const float blendTime);
-void skliClearAnimation(sklInstance *skli, const animIndex_t slot);
-return_t skliStateCopy(sklInstance *o, sklInstance *c);
+///void skliSetAnimationType(sklInstance *skli, const animIndex_t slot, const flags_t additive);
+///return_t skliChangeAnimation(sklInstance *skli, const animIndex_t slot, sklAnim *anim, const frameIndex_t frame, const float blendTime);
+///void skliClearAnimation(sklInstance *skli, const animIndex_t slot);
+///return_t skliStateCopy(sklInstance *o, sklInstance *c);
 void skliDelete(sklInstance *skli);
 
 #endif

@@ -4,6 +4,16 @@
 #include "texture.h"
 #include "memoryPool.h"
 
+#define RESOURCE_DEFAULT_TEXTURE_SIZE sizeof(texture)
+#ifndef RESOURCE_DEFAULT_TEXTURE_NUM
+	#define RESOURCE_DEFAULT_TEXTURE_NUM 4096
+#endif
+
+#ifndef RESOURCE_TEXTURE_CONSTANTS
+	#define RESOURCE_TEXTURE_CONSTANTS 1
+#endif
+#define RESOURCE_TEXTURE_BLOCK_SIZE memPoolBlockSize(sizeof(texture))
+
 extern memoryPool __TextureResourceArray;  // Contains textures.
 
 /** Support locals? Merge all module containers? **/

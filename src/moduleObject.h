@@ -4,6 +4,16 @@
 #include "object.h"
 #include "memoryPool.h"
 
+#define RESOURCE_DEFAULT_OBJECT_SIZE sizeof(object)
+#ifndef RESOURCE_DEFAULT_OBJECT_NUM
+	#define RESOURCE_DEFAULT_OBJECT_NUM 1024
+#endif
+
+#define RESOURCE_DEFAULT_OBJECT_INSTANCE_SIZE sizeof(objInstance)
+#ifndef RESOURCE_DEFAULT_OBJECT_INSTANCE_NUM
+	#define RESOURCE_DEFAULT_OBJECT_INSTANCE_NUM 4096
+#endif
+
 extern memoryPool __ObjectResourceArray;          // Contains objects.
 extern memoryPool __ObjectInstanceResourceArray;  // Contains object instances.
 

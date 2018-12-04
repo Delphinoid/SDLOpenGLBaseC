@@ -2,54 +2,74 @@
 #define SCENE_H
 
 #include "object.h"
-#include "memoryList.h"
+#include "memoryPool.h"
+
+#ifndef SCENE_ZONE_DEFAULT_OBJECT_NUM
+	#define SCENE_ZONE_DEFAULT_OBJECT_NUM 1024
+#endif
+
+#define SCENE_ZONE_SLEEP 0x01
 
 /** Add physics island arrays to scenes.           **/
 /** Links both ways for object removal / deletion. **/
 
 //typedef uint_least32_t objectIndex_t;
 
+typedef struct scnZone scnZone;
 typedef struct {
 
-	// Objects in the scene.
-	memoryList objects;  // Contains objInstance pointers.
+	// Maximum render distance.
+	float distance;
+
+	// Portal bounding box.
+	cAABB bounds;
+
+	// Zone pointer.
+	scnZone *zone;
+
+} scnPortal;
+
+typedef struct scnZone {
+
+	// Objects in the zone.
+	memoryPool objects;  // Contains objInstance pointers.
 	size_t objectNum;    // The number of objects in each region.
+	                     // Allows preallocations when rendering.
 
-	// Zone bounding box.
-	// Used by cameras to check which
-	// zone they should render.
-	hbAABB bounds;
+	// Zone portals.
+	// Used to mark the areas between
+	// this zone and other zones.
+	scnPortal *portals;  // Contains scnPortals.
+	size_t portalNum;
 
-} zone;
+	// Zone collider.
+	// Used to find which zone the
+	// camera is in, if any.
+	colliderArray bounds;
 
-/** Rename to zone. **/
+	// Flags for the zone.
+	flags_t flags;
+
+} scnZone;
+
 typedef struct {
 
-	// Objects in the scene.
-	/** Replace __ObjectInstanceResourceArray? **/
-	memoryList objects;  // Contains objInstance pointers.
+	/**
+	*** Eventually, the object pool should
+	*** replace __ObjectInstanceResourceArray.
+	**/
+
+	// Objects in the zone.
+	memoryPool objects;  // Contains objInstance pointers.
 	size_t objectNum;    // The number of objects in each region.
-
-	/*objectIndex_t objectNum;
-	objectIndex_t objectCapacity;
-	objectIndex_t *objectIDs;*/
-
-	/** Create scene portals? **/
+	                     // Allows preallocations when rendering.
 
 	// Solver for physically simulated objects.
 	physicsSolver solver;
 
 } scene;
 
-/*return_t scnInit(void *scn);
-return_t scnStateCopy(void *o, void *c);
-void scnResetInterpolation(void *scn);
-return_t scnLoad(scene *scn);
-
-return_t scnObjectAdd(scene *scn, const objectIndex_t id);
-void scnObjectRemove(scene *scn, stateManager *sm, const objectIndex_t id);*/
-
-return_t scnInit(scene *scn, const size_t objectNum);
+return_t scnInit(scene *scn, size_t zoneNum);
 
 objInstance **scnAllocate(scene *scn);
 void scnFree(scene *scn, objInstance **obji);

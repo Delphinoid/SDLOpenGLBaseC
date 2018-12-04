@@ -2,6 +2,11 @@
 #define PHYSICSSOLVER_H
 
 #include "physicsIsland.h"
+#include "memoryPool.h"
+
+#ifndef PHYSICS_SOLVER_DEFAULT_BODY_NUM
+	#define PHYSICS_SOLVER_DEFAULT_BODY_NUM 1024
+#endif
 
 typedef struct {
 	physRBInstance *body;
@@ -11,9 +16,7 @@ typedef struct {
 typedef struct {
 
 	// Array of pointers to object physics bodies.
-	physicsBodyIndex_t bodyNum;
-	physicsBodyIndex_t bodyCapacity;
-	physBodyReference *bodies;
+	memoryPool bodies;  // Contains physRBInstance pointers.
 
 	/** Constraints? **/
 
@@ -24,7 +27,7 @@ typedef struct {
 
 } physicsSolver;
 
-void physSolverInit(physicsSolver *solver);
+return_t physSolverInit(physicsSolver *solver, size_t bodyNum);
 void physSolverReset(physicsSolver *solver);
 return_t physSolverAddBody(physicsSolver *solver, physRBInstance *body);
 void physSolverUpdate(physicsSolver *solver);

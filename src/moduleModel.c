@@ -4,14 +4,6 @@
 #include "inline.h"
 #include <string.h>
 
-#define RESOURCE_DEFAULT_MODEL_SIZE sizeof(model)
-#ifndef RESOURCE_DEFAULT_MODEL_NUM
-	#define RESOURCE_DEFAULT_MODEL_NUM 4096
-#endif
-
-#define RESOURCE_MODEL_CONSTANTS  2
-#define RESOURCE_MODEL_BLOCK_SIZE memPoolBlockSize(sizeof(model))
-
 memoryPool __ModelResourceArray;  // Contains models.
 
 return_t moduleModelResourcesInit(){
@@ -49,6 +41,7 @@ void moduleModelResourcesReset(){
 		memFree(region->start);
 		region = next;
 	}
+	__ModelResourceArray.region->next = NULL;
 }
 void moduleModelResourcesDelete(){
 	memoryRegion *region;
@@ -90,6 +83,7 @@ __FORCE_INLINE__ model *moduleModelAllocate(){
 	return r;
 }
 __FORCE_INLINE__ void moduleModelFree(model *resource){
+	mdlDelete(resource);
 	memPoolFree(&__ModelResourceArray, (void *)resource);
 }
 model *moduleModelFind(const char *name){
@@ -110,7 +104,7 @@ model *moduleModelFind(const char *name){
 			}else if(flag == MEMORY_POOL_BLOCK_INVALID){
 				return NULL;
 			}
-			memPoolBlockNext(__ModelResourceArray, i);
+			i = memPoolBlockNext(__ModelResourceArray, i);
 		}
 		region = memAllocatorNext(region);
 	} while(region != NULL);
@@ -128,12 +122,12 @@ void moduleModelClear(){
 			const byte_t flag = memPoolBlockStatus(i);
 			if(flag == MEMORY_POOL_BLOCK_ACTIVE){
 
-				mdlDelete(i);
+				moduleModelFree(i);
 
 			}else if(flag == MEMORY_POOL_BLOCK_INVALID){
 				return;
 			}
-			memPoolBlockNext(__ModelResourceArray, i);
+			i = memPoolBlockNext(__ModelResourceArray, i);
 		}
 		region = memAllocatorNext(region);
 		if(region == NULL){

@@ -1,4 +1,5 @@
 #include "graphicsRenderer.h"
+#include "memoryManager.h"
 /// Shouldn't need to include object.h. Use gfxRenderStructure.
 #include "object.h"
 /// Shouldn't need to include object.h. Use gfxRenderStructure.
@@ -6,8 +7,8 @@
 
 typedef struct {
 
-	objInstance **objects;
-	size_t objectNum;
+	gfxRenderElement *elements;
+	size_t elementNum;
 
 } gfxRenderQueue;
 
@@ -22,8 +23,8 @@ typedef struct {
 
 
 static __FORCE_INLINE__ void gfxRenderQueueInit(gfxRenderQueue *queue){
-	queue->objectNum = 0;
-	queue->objects = 0;
+	queue->elementNum = 0;
+	queue->elements = 0;
 }
 
 static __FORCE_INLINE__ void gfxRenderQueueDepthSort(gfxRenderQueue *queue){
@@ -38,22 +39,22 @@ static __FORCE_INLINE__ void gfxRendererInit(gfxRenderer *renderer, const float 
 	renderer->interpT = interpT;
 }
 
-static __FORCE_INLINE__ return_t gfxRendererInitQueues(gfxRenderer *renderer, const size_t objectNum){
+static __FORCE_INLINE__ return_t gfxRendererInitQueues(gfxRenderer *renderer, const size_t elementNum){
 
-	objInstance **array = memAllocate(objectNum * sizeof(objInstance *));
+	gfxRenderElement *array = memAllocate(elementNum * sizeof(gfxRenderElement));
 
 	if(array == NULL){
 		/** Memory allocation failure. **/
 		return -1;
 	}
 
-	// Add opaque objects to the front of the array.
-	renderer->qOpaque.objectNum = 0;
-	renderer->qOpaque.objects = array;
+	// Add opaque elements to the front of the array.
+	renderer->qOpaque.elementNum = 0;
+	renderer->qOpaque.elements = array;
 
-	// Add translucent objects to the back of the array.
-	renderer->qTranslucent.objectNum = 0;
-	renderer->qTranslucent.objects = &array[objectNum];
+	// Add translucent elements to the back of the array.
+	renderer->qTranslucent.elementNum = 0;
+	renderer->qTranslucent.elements = &array[elementNum];
 
 	return 1;
 
@@ -66,7 +67,7 @@ static __FORCE_INLINE__ void gfxRendererGenerateQueuesArray(gfxRenderer *rendere
 	** queues from a regular array of objects.
 	*/
 
-	objInstance **array = &renderer->qOpaque.objects[renderer->qOpaque.objectNum];
+	gfxRenderElement *array = &renderer->qOpaque.elements[renderer->qOpaque.elementNum];
 
 	size_t i;
 	for(i = 0; i < objectNum; ++i){
@@ -78,18 +79,22 @@ static __FORCE_INLINE__ void gfxRendererGenerateQueuesArray(gfxRenderer *rendere
 			if(group == GFX_RENDER_GROUP_OPAQUE){
 
 				// The object is fully opaque.
-				*array = objects[i];
+				array->structure = (void *)objects[i];
+				array->type = GFX_RNDR_ELEMENT_TYPE_OBJECT;
+				array->distance = 0.f;
 				++array;
-				++renderer->qOpaque.objectNum;
+				++renderer->qOpaque.elementNum;
 
 			}else if(group == GFX_RENDER_GROUP_TRANSLUCENT){
 
 				// The object contains translucency.
 				// It will have to be depth-sorted and
 				// rendered after the opaque objects.
-				--renderer->qTranslucent.objects;
-				*renderer->qTranslucent.objects = objects[i];
-				++renderer->qTranslucent.objectNum;
+				--renderer->qTranslucent.elements;
+				renderer->qTranslucent.elements->structure = (void *)objects[i];
+				renderer->qTranslucent.elements->type = GFX_RNDR_ELEMENT_TYPE_OBJECT;
+				renderer->qTranslucent.elements->distance = 0.f;
+				++renderer->qTranslucent.elementNum;
 
 			}
 
@@ -99,79 +104,81 @@ static __FORCE_INLINE__ void gfxRendererGenerateQueuesArray(gfxRenderer *rendere
 
 }
 
-static __FORCE_INLINE__ void gfxRendererGenerateQueuesList(gfxRenderer *renderer, const size_t objectNum, memoryList objects){
+static __FORCE_INLINE__ void gfxRendererGenerateQueuesList(gfxRenderer *renderer, const size_t objectNum, memoryPool objects){
 
 	/*
 	** Generates opaque and translucent render
-	** queues from a memoryList.
+	** queues from a memoryPool.
 	*/
 
-	if(objectNum > 0){
+	gfxRenderElement *array = &renderer->qOpaque.elements[renderer->qOpaque.elementNum];
 
-		objInstance **array = &renderer->qOpaque.objects[renderer->qOpaque.objectNum];
+	memoryRegion *region = objects.region;
+	objInstance **i;
 
-		size_t objectsLeft = objectNum;
-		memoryRegion *region = objects.region;
-		objInstance **i;
+	do {
+		i = memPoolFirst(region);
+		while(i < (objInstance **)memAllocatorEnd(region)){
+			const byte_t flag = memPoolBlockStatus(i);
+			if(flag == MEMORY_POOL_BLOCK_ACTIVE){
 
-		do {
-			i = memListFirst(region);
-			while(i < (objInstance **)memAllocatorEnd(region)){
+				objInstance *obji = *i;
+				const gfxRenderGroup_t group = objiRenderGroup(obji, renderer->interpT);
 
-				if(objectsLeft > 0){
+				if(group == GFX_RENDER_GROUP_OPAQUE){
 
-					objInstance *obji = *i;
-					if(obji != NULL){
+					// The object is fully opaque.
+					array->structure = (void *)obji;
+					array->type = GFX_RNDR_ELEMENT_TYPE_OBJECT;
+					array->distance = 0.f;
+					++array;
+					++renderer->qOpaque.elementNum;
 
-						const gfxRenderGroup_t group = objiRenderGroup(obji, renderer->interpT);
+				}else if(group == GFX_RENDER_GROUP_TRANSLUCENT){
 
-						if(group == GFX_RENDER_GROUP_OPAQUE){
+					// The object contains translucency.
+					// It will have to be depth-sorted and
+					// rendered after the opaque objects.
+					--renderer->qTranslucent.elements;
+					renderer->qTranslucent.elements->structure = (void *)obji;
+					renderer->qTranslucent.elements->type = GFX_RNDR_ELEMENT_TYPE_OBJECT;
+					renderer->qTranslucent.elements->distance = 0.f;
+					++renderer->qTranslucent.elementNum;
 
-							// The object is fully opaque.
-							*array = obji;
-							++array;
-							++renderer->qOpaque.objectNum;
-
-						}else if(group == GFX_RENDER_GROUP_TRANSLUCENT){
-
-							// The object contains translucency.
-							// It will have to be depth-sorted and
-							// rendered after the opaque objects.
-							--renderer->qTranslucent.objects;
-							*renderer->qTranslucent.objects = obji;
-							++renderer->qTranslucent.objectNum;
-
-						}
-
-						--objectsLeft;
-
-					}
-					memListBlockNext(objects, i);
-
-				}else{
-					return;
 				}
 
+			}else if(flag == MEMORY_POOL_BLOCK_INVALID){
+				return;
 			}
-			region = memAllocatorNext(region);
-		} while(region != NULL);
+			i = memPoolBlockNext(objects, i);
+		}
+		region = memAllocatorNext(region);
+	} while(region != NULL);
 
+}
+
+static __FORCE_INLINE__ void gfxRendererDelete(const gfxRenderer *renderer){
+	memFree(renderer->qOpaque.elements);
+}
+
+/** MOVE AND RENAME renderModel!!!! **/
+void renderModel(const objInstance *obji, const float distance, const camera *cam, const float interpT, const graphicsManager *gfxMngr);
+/** MOVE AND RENAME renderModel!!!! **/
+
+static __FORCE_INLINE__ void gfxRendererDrawElement(gfxRenderElement *element, const camera *cam, const float interpT, const graphicsManager *gfxMngr){
+	switch(element->type){
+		case GFX_RNDR_ELEMENT_TYPE_OBJECT:
+			/// REMOVE THIS LINE EVENTUALLY
+			element->distance = camDistance(cam, &((objInstance *)element->structure)->state.skeleton[0].position);
+			renderModel((objInstance *)element->structure, element->distance, cam, interpT, gfxMngr);
+		break;
 	}
-
 }
 
-static __FORCE_INLINE__ void gfxRendererDelete(gfxRenderer *renderer){
-	memFree(renderer->qOpaque.objects);
-}
-
-/** MOVE AND RENAME renderModel!!!! **/
-void renderModel(const objInstance *obji, const camera *cam, const float interpT, graphicsManager *gfxMngr);
-/** MOVE AND RENAME renderModel!!!! **/
-
-return_t gfxRendererDrawScene(graphicsManager *gfxMngr, camera *cam, scene *scn, const float interpT){
+return_t gfxRendererDrawScene(graphicsManager *gfxMngr, camera *cam, const scene *scn, const float interpT){
 
 	size_t i;
-	objInstance **queue;
+	gfxRenderElement *queue;
 
 	gfxRenderer renderer;
 	gfxRendererInit(&renderer, interpT);
@@ -204,14 +211,14 @@ return_t gfxRendererDrawScene(graphicsManager *gfxMngr, camera *cam, scene *scn,
 	gfxRenderQueueDepthSort(&renderer.qTranslucent);
 
 	/* Render the scene's objects. */
-	queue = renderer.qOpaque.objects;
-	for(i = renderer.qOpaque.objectNum; i > 0; --i){
-		renderModel(*queue, cam, interpT, gfxMngr);
+	queue = renderer.qOpaque.elements;
+	for(i = renderer.qOpaque.elementNum; i > 0; --i){
+		gfxRendererDrawElement(queue, cam, interpT, gfxMngr);
 		++queue;
 	}
-	queue = renderer.qTranslucent.objects;
-	for(i = renderer.qTranslucent.objectNum; i > 0; --i){
-		renderModel(*queue, cam, interpT, gfxMngr);
+	queue = renderer.qTranslucent.elements;
+	for(i = renderer.qTranslucent.elementNum; i > 0; --i){
+		gfxRendererDrawElement(queue, cam, interpT, gfxMngr);
 		++queue;
 	}
 

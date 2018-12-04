@@ -140,7 +140,7 @@ void memSLinkFree(memorySLink *array, void **start, void *element, void *previou
 	if(previous != NULL){
 		// Set the previous element's next pointer.
 		memSLinkDataGetNext(previous) = memSLinkDataGetNext(element);
-	}else{
+	}else if(start != NULL){
 		*start = memSLinkDataGetNext(element);
 	}
 

@@ -14,8 +14,6 @@
 
 typedef struct {
 
-	flags_t flags;
-
 	/** Should be in a struct? **/
 	interpVec3 position;
 	interpQuat orientation;
@@ -35,11 +33,12 @@ typedef struct {
 	mat4 projectionMatrix;
 	mat4 viewProjectionMatrix;
 
+	flags_t flags;
+
 } camera;
 
-return_t camInit(void *cam);
-return_t camStateCopy(void *o, void *c);
-void camResetInterpolation(void *cam);
+return_t camInit(camera *cam);
+void camResetInterpolation(camera *cam);
 
 void camCalculateUp(camera *cam);
 void camUpdateViewMatrix(camera *cam, const float interpT);

@@ -4,11 +4,6 @@
 #include "inline.h"
 #include <string.h>
 
-#define RESOURCE_DEFAULT_SCENE_SIZE sizeof(scene)
-#ifndef RESOURCE_DEFAULT_SCENE_NUM
-	#define RESOURCE_DEFAULT_SCENE_NUM 2
-#endif
-
 memoryList __SceneResourceArray;  // Contains scenes.
 
 return_t moduleSceneResourcesInit(){
@@ -33,6 +28,7 @@ void moduleSceneResourcesReset(){
 		memFree(region->start);
 		region = next;
 	}
+	__SceneResourceArray.region->next = NULL;
 }
 void moduleSceneResourcesDelete(){
 	memoryRegion *region;
@@ -66,6 +62,7 @@ __FORCE_INLINE__ scene *moduleSceneAllocate(){
 	return r;
 }
 __FORCE_INLINE__ void moduleSceneFree(scene *resource){
+	scnDelete(resource);
 	memListFree(&__SceneResourceArray, (void *)resource);
 }
 void moduleSceneClear(){
@@ -76,8 +73,8 @@ void moduleSceneClear(){
 		i = memListFirst(region);
 		while(i < (scene *)memAllocatorEnd(region)){
 
-			scnDelete(i);
-			memListBlockNext(__SceneResourceArray, i);
+			moduleSceneFree(i);
+			i = memListBlockNext(__SceneResourceArray, i);
 
 		}
 		region = memAllocatorNext(region);
@@ -94,7 +91,7 @@ void moduleSceneUpdate(const float elapsedTime, const float dt){
 		while(i < (scene *)memAllocatorEnd(region)){
 
 			scnUpdate(i, elapsedTime, dt);
-			memListBlockNext(__SceneResourceArray, i);
+			i = memListBlockNext(__SceneResourceArray, i);
 
 		}
 		region = memAllocatorNext(region);

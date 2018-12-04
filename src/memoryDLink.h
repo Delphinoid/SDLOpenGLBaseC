@@ -97,10 +97,10 @@ typedef struct {
 	//(memDLinkBlockSize(bytes) * (length - 1) + memDLinkBlockSizeUnaligned(bytes) + (uintptr_t)memDLinkAlignStartBlock(start) - (uintptr_t)start)
 
 #define memDLinkFirst(region)       ((void *)memDLinkAlignStartData((region)->start))
-#define memDLinkPrev(i)             i = memDLinkDataGetPrev(i)
-#define memDLinkNext(i)             i = memDLinkDataGetNext(i)
+#define memDLinkPrev(i)             memDLinkDataGetPrev(i)
+#define memDLinkNext(i)             memDLinkDataGetNext(i)
 #define memDLinkBlockStatus(block)  memDLinkDataGetActiveMasked(block)
-#define memDLinkBlockNext(array, i) i = (void *)((byte_t *)i + (array).block)
+#define memDLinkBlockNext(array, i) (void *)((byte_t *)i + (array).block)
 
 void memDLinkInit(memoryDLink *array);
 void *memDLinkCreate(memoryDLink *array, void *start, const size_t bytes, const size_t length);

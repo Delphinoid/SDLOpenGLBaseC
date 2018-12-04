@@ -4,21 +4,49 @@
 #include "return.h"
 #include <SDL2/SDL_opengl.h>
 
-#define TEXTURE_DEFAULT_FILTER_MODE GL_LINEAR
+#define TEXTURE_FILTER_MODE_ANY       0
+#define TEXTURE_FILTER_MODE_NEAREST   1
+#define TEXTURE_FILTER_MODE_LINEAR    2
+#define TEXTURE_FILTER_MODE_BILINEAR  3
+#define TEXTURE_FILTER_MODE_TRILINEAR 4
 
+#define TEXTURE_FILTER_MODE_DEFAULT TEXTURE_FILTER_MODE_BILINEAR
+
+/*
+** The texture struct should be 23 bytes (minus padding).
+** This, plus the extra byte overhead for the active flag
+** in memory pools, makes the final block divisible by
+** 8 bytes, reducing waste.
+*/
 typedef struct {
 
-	char *name;
+	// OpenGL texture ID.
 	GLuint id;
-	GLsizei width;
-	GLsizei height;
-	int_least8_t translucent;  // If this is set, the texture contains translucency.
-	                           // Used when depth-sorting before rendering.
+
+	// The internal pixel format of the texture.
+	// Used for retrieving pixel data later on.
+	GLenum format;
+
+	// Dimensions of the texture's first MIP level.
+	float width;
+	float height;
+
+	// Image name.
+	char *name;
+
+	// Number of MIP levels.
+	int_least8_t mips;
+
+	// Forced filtering mode.
+	int_least8_t filtering;
+
+	// If this is set, the texture contains translucency.
+	// Used when depth-sorting before rendering.
+	int_least8_t translucent;
 
 } texture;
 
 void tInit(texture *tex);
-void tGenerate(texture *tex, const GLsizei width, const GLsizei height, const GLint format, const GLint filter, const GLvoid *data);
 return_t tLoad(texture *tex, const char *prgPath, const char *filePath);
 return_t tDefault(texture *tex);
 void tDelete(texture *tex);

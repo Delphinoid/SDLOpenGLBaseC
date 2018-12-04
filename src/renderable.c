@@ -33,7 +33,7 @@ __FORCE_INLINE__ void rndriUpdate(rndrInstance *rndri, const float elapsedTime){
 	rndri->alphaCurrent = rndri->alpha;
 }
 
-/*return_t rndrCreate(renderable *rndr, model *mdl, textureWrapper *tw, const skl *oskl){
+/**return_t rndrCreate(renderable *rndr, model *mdl, textureWrapper *tw, const skl *oskl){
 
 	size_t arraySizeS = mdl->skl->boneNum*sizeof(size_t);
 	size_t arraySizeB = mdl->skl->boneNum*sizeof(bone);
@@ -41,22 +41,22 @@ __FORCE_INLINE__ void rndriUpdate(rndrInstance *rndri, const float elapsedTime){
 	//size_t arraySizeH = mdl->skl->boneNum*sizeof(hitbox *);
 
 	* Allocate memory for various arrays. *
-    rndr->skeletonState[0] = malloc(arraySizeB);
+    rndr->skeletonState[0] = memAllocate(arraySizeB);
 	if(rndr->skeletonState[0] == NULL){
 		** Memory allocation failure. **
 		return 0;
 	}
-	rndr->skeletonState[1] = malloc(arraySizeB);
+	rndr->skeletonState[1] = memAllocate(arraySizeB);
 	if(rndr->skeletonState[1] == NULL){
 		** Memory allocation failure. **
-		free(rndr->skeletonState[0]);
+		memFree(rndr->skeletonState[0]);
 		return 0;
 	}
-	rndr->physicsState = malloc(arraySizeP);
+	rndr->physicsState = memAllocate(arraySizeP);
 	if(rndr->physicsState == NULL){
 		** Memory allocation failure. **
-		free(rndr->skeletonState[1]);
-		free(rndr->skeletonState[0]);
+		memFree(rndr->skeletonState[1]);
+		memFree(rndr->skeletonState[0]);
 		return 0;
 	}
 
@@ -74,7 +74,7 @@ return_t rndrCopy(renderable *o, renderable *c){
 
 	if(o->skeletonState[0] == NULL){
 		if(c->skeletonState[0] != NULL){
-            free(c->skeletonState[0]);
+            memFree(c->skeletonState[0]);
 		}
 		c->skeletonState[0] = NULL;
 	}else if( NULL){
@@ -83,27 +83,27 @@ return_t rndrCopy(renderable *o, renderable *c){
 	c->mdl = o->mdl;
 	c->twi = o->twi;
 
-}*/
+}**/
 
 void rndriDelete(rndrInstance *rndri){
-	/*size_t i;
+	/**size_t i;
 	if(rndr->parentBoneLookup != NULL){
-		free(rndr->parentBoneLookup);
+		memFree(rndr->parentBoneLookup);
 	}
 	if(rndr->physicsState != NULL){
 		for(i = 0; i < rndr->mdl->skl->boneNum; ++i){
 			prbiDelete(&rndr->physicsState[i]);
 		}
-		free(rndr->physicsState);
+		memFree(rndr->physicsState);
 	}*/
-	/*if(rndr->hitboxState != NULL){
+	/**if(rndr->hitboxState != NULL){
 		for(i = 0; i < rndr->mdl->skl->boneNum; ++i){
 			if(rndr->hitboxState[i] != NULL){
-				free(rndr->hitboxState[i]);
+				memFree(rndr->hitboxState[i]);
 			}
 		}
-		free(rndr->hitboxState);
-	}*/
+		memFree(rndr->hitboxState);
+	}**/
 }
 
 

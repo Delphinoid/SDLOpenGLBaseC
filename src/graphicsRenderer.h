@@ -6,13 +6,16 @@
 #include "scene.h"
 #include <stdint.h>
 
+#define GFX_RNDR_ELEMENT_TYPE_OBJECT 0
+
 typedef struct {
 
 	void *structure;
 	uint_least8_t type;
+	float distance;
 
-} gfxRenderStructure;
+} gfxRenderElement;
 
-return_t gfxRendererDrawScene(graphicsManager *gfxMngr, camera *cam, scene *scn, const float interpT);
+return_t gfxRendererDrawScene(graphicsManager *gfxMngr, camera *cam, const scene *scn, const float interpT);
 
 #endif

@@ -20,8 +20,11 @@
 #define GFX_DEFAULT_CHANNELS 2
 #define GFX_DEFAULT_CHUNKSIZE 2048
 
-#define SPR_MAX_BATCH_SIZE (6*64)  /** Move this! **/
-#define GFX_MAX_TEX_SAMPLER_NUM 1
+#define SPRITE_MAX_BATCH_SIZE (6*64)  /** Move this! **/
+#define GFX_TEXTURE_SAMPLER_NUM 1
+
+#define GFX_DEFAULT_BIAS_MIP 0.f
+#define GFX_DEFAULT_BIAS_LOD 0
 
 typedef struct {
 
@@ -37,19 +40,20 @@ typedef struct {
 	// Per-instance uniforms.
 	GLuint vpMatrixID;
 	GLuint textureFragmentID;
-	GLuint boneArrayID[SKL_MAX_BONE_NUM];
-	/*GLuint bonePositionArrayID[SKL_MAX_BONE_NUM];
-	GLuint boneOrientationArrayID[SKL_MAX_BONE_NUM];
-	GLuint boneScaleArrayID[SKL_MAX_BONE_NUM];*/
+	GLuint boneArrayID[SKELETON_MAX_BONE_NUM];
+	/*GLuint bonePositionArrayID[SKELETON_MAX_BONE_NUM];
+	GLuint boneOrientationArrayID[SKELETON_MAX_BONE_NUM];
+	GLuint boneScaleArrayID[SKELETON_MAX_BONE_NUM];*/
 	GLuint alphaID;
+	GLuint mipID;
 
 	// Uniform buffers.
-	vertex sprVertexBatchBuffer[SPR_MAX_BATCH_SIZE];  // An array of vertices used for batch rendering sprites.
-	vec3 sklBindAccumulator[SKL_MAX_BONE_NUM];        // Accumulates bind states for bones before rendering.
-	mat4 sklTransformState[SKL_MAX_BONE_NUM];         // Stores the renderable's transform state before rendering.
+	vertex sprVertexBatchBuffer[SPRITE_MAX_BATCH_SIZE];  // An array of vertices used for batch rendering sprites.
+	vec3 sklBindAccumulator[SKELETON_MAX_BONE_NUM];      // Accumulates bind states for bones before rendering.
+	mat4 sklTransformState[SKELETON_MAX_BONE_NUM];       // Stores the renderable's transform state before rendering.
 
 	// Texture samplers.
-	GLuint textureSamplerArrayID[GFX_MAX_TEX_SAMPLER_NUM];
+	GLuint textureSamplerArrayID[GFX_TEXTURE_SAMPLER_NUM];
 
 	// Previously bound texture ID for more efficient binding.
 	GLuint lastTexID;
@@ -74,6 +78,10 @@ typedef struct {
 	unsigned int windowHeightLast;
 	unsigned int windowStretchToFit;
 	unsigned int windowModified;
+
+	// Current MIP and LODs biases.
+	float  biasMIP;
+	size_t biasLOD;
 
 } graphicsManager;
 

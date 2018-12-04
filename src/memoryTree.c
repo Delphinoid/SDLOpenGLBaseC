@@ -796,127 +796,128 @@ void *memTreeReallocate(memoryTree *tree, void *block, const size_t bytes){
 
 	byte_t *rBlock = block;
 
-	byte_t *cBlock = memTreeDataGetBlock(rBlock);
-	size_t cBytes = memTreeBlockGetCurrent(cBlock);
-	size_t cFlags = memTreeBlockGetPrevious(cBlock);
-
-	const size_t totalBytes = (bytes <= MEMORY_TREE_BLOCK_SIZE ? MEMORY_TREE_BLOCK_TOTAL_SIZE : (bytes + MEMORY_TREE_BLOCK_HEADER_SIZE));
-	const size_t copyBytes = cBytes < totalBytes ? (cBytes - MEMORY_TREE_BLOCK_HEADER_SIZE) : bytes;
-
-	byte_t *prev;
-	byte_t *next;
-
 	// If the block is inactive, allocate a new one.
 	if(block == NULL || memTreeDataGetActiveMasked(block) == MEMORY_TREE_BLOCK_INACTIVE){
+
 		return memTreeAllocate(tree, bytes);
-	}
-
-	prev = cBlock - memTreeBlockPreviousFlagless(cFlags);
-	next = cBlock + cBytes;
-
-	// Check if there is a preceding
-	// block that is inactive.
-	if(memTreeBlockIsFirst(cFlags) == 0 && memTreeBlockGetActiveMasked(prev) == MEMORY_TREE_BLOCK_INACTIVE){
-		// Perform a merge.
-		cBlock = prev;
-		cBytes += memTreeBlockGetCurrent(prev);
-		memTreeBlockSetPreviousKeepLastAndActive(cFlags, memTreeBlockGetPrevious(prev));
-		// Remove the free block from the tree.
-		memTreeRemove(tree, prev);
-	}
-	// Check if there is a following
-	// block that is inactive.
-	if(memTreeBlockIsLast(cFlags) == 0){
-		if(memTreeBlockGetActiveMasked(next) == MEMORY_TREE_BLOCK_INACTIVE){
-			const size_t nextSize = memTreeBlockGetCurrent(next);
-			// Perform a merge.
-			cBytes += nextSize;
-			// Remove the free block from the tree.
-			memTreeRemove(tree, next);
-			if(memTreeBlockIsLast(memTreeBlockGetFlags(next)) == 0){
-				next += nextSize;
-				// Set the next block's "previous" property.
-				memTreeBlockGetPrevious(next) &= MEMORY_TREE_BLOCK_FLAGS_MASK;
-				memTreeBlockGetPrevious(next) |= cBytes;
-			}else{
-				// Mark the merged block as the last.
-				cFlags |= MEMORY_TREE_BLOCK_LAST;
-			}
-		}else{
-			// Set the next block's "previous" property.
-			memTreeBlockGetPrevious(next) &= MEMORY_TREE_BLOCK_FLAGS_MASK;
-			memTreeBlockGetPrevious(next) |= cBytes;
-		}
-	}
-
-	// Check if we can fit the new data
-	// into this particular fragment.
-	if(totalBytes <= cBytes){
-
-		// We can coalesce the previous and / or
-		// next blocks to create enough room for
-		// the new data.
-		byte_t *cNext = memTreeAlignStartBlock((cBlock + totalBytes));
-		size_t nextSize = cBlock + cBytes - cNext;
-
-		rBlock = memTreeBlockGetData(cBlock);
-
-		// Copy the block's data over.
-		memcpy((void *)rBlock, (void *)block, copyBytes);
-
-		if(nextSize >= MEMORY_TREE_BLOCK_TOTAL_SIZE){
-
-			// There's enough room for a split.
-			// Include the alignment padding in
-			// the allocated block.
-			cBytes -= nextSize;
-			memTreeBlockGetCurrent(cNext) = nextSize;
-
-			if(memTreeBlockIsLast(cFlags) == 0){
-				byte_t *cNextNext = cNext+nextSize;
-				// cBytes should always have a 0 in the LSB.
-				memTreeBlockGetPrevious(cNext) = cBytes;
-				// Set the next-next block's new previous block size.
-				memTreeBlockGetFlags(cNextNext) = nextSize | (memTreeBlockGetFlags(cNextNext) & MEMORY_TREE_BLOCK_FLAGS_MASK);
-			}else{
-				// cBytes should always have a 0 in the LSB.
-				// Also inherit whether or not the block was the last.
-				memTreeBlockGetPrevious(cNext) = cBytes | MEMORY_TREE_BLOCK_LAST;
-				// The previous block can't be the last node anymore.
-				cFlags &= MEMORY_TREE_BLOCK_LAST_MASK;
-			}
-
-			// Insert the new free block.
-			memTreeInsert(tree, cNext, nextSize);
-
-		}
-
-		// Set the new block's header information.
-		memTreeBlockGetCurrent(cBlock) = cBytes;
-		memTreeBlockGetPrevious(cBlock) = cFlags;
 
 	}else{
 
-		// We'll have to look for a new block.
-		rBlock = memTreeAllocate(tree, bytes);
+		byte_t *cBlock = memTreeDataGetBlock(rBlock);
+		size_t cBytes = memTreeBlockGetCurrent(cBlock);
+		size_t cFlags = memTreeBlockGetPrevious(cBlock);
 
-		if(rBlock != NULL){
+		const size_t totalBytes = (bytes <= MEMORY_TREE_BLOCK_SIZE ? MEMORY_TREE_BLOCK_TOTAL_SIZE : (bytes + MEMORY_TREE_BLOCK_HEADER_SIZE));
+		const size_t copyBytes = cBytes < totalBytes ? (cBytes - MEMORY_TREE_BLOCK_HEADER_SIZE) : bytes;
+
+		byte_t *prev = cBlock - memTreeBlockPreviousFlagless(cFlags);
+		byte_t *next = cBlock + cBytes;
+
+		// Check if there is a preceding
+		// block that is inactive.
+		if(memTreeBlockIsFirst(cFlags) == 0 && memTreeBlockGetActiveMasked(prev) == MEMORY_TREE_BLOCK_INACTIVE){
+			// Perform a merge.
+			cBlock = prev;
+			cBytes += memTreeBlockGetCurrent(prev);
+			memTreeBlockSetPreviousKeepLastAndActive(cFlags, memTreeBlockGetPrevious(prev));
+			// Remove the free block from the tree.
+			memTreeRemove(tree, prev);
+		}
+		// Check if there is a following
+		// block that is inactive.
+		if(memTreeBlockIsLast(cFlags) == 0){
+			if(memTreeBlockGetActiveMasked(next) == MEMORY_TREE_BLOCK_INACTIVE){
+				const size_t nextSize = memTreeBlockGetCurrent(next);
+				// Perform a merge.
+				cBytes += nextSize;
+				// Remove the free block from the tree.
+				memTreeRemove(tree, next);
+				if(memTreeBlockIsLast(memTreeBlockGetFlags(next)) == 0){
+					next += nextSize;
+					// Set the next block's "previous" property.
+					memTreeBlockGetPrevious(next) &= MEMORY_TREE_BLOCK_FLAGS_MASK;
+					memTreeBlockGetPrevious(next) |= cBytes;
+				}else{
+					// Mark the merged block as the last.
+					cFlags |= MEMORY_TREE_BLOCK_LAST;
+				}
+			}else{
+				// Set the next block's "previous" property.
+				memTreeBlockGetPrevious(next) &= MEMORY_TREE_BLOCK_FLAGS_MASK;
+				memTreeBlockGetPrevious(next) |= cBytes;
+			}
+		}
+
+		// Check if we can fit the new data
+		// into this particular fragment.
+		if(totalBytes <= cBytes){
+
+			// We can coalesce the previous and / or
+			// next blocks to create enough room for
+			// the new data.
+			byte_t *cNext = memTreeAlignStartBlock((cBlock + totalBytes));
+			size_t nextSize = cBlock + cBytes - cNext;
+
+			rBlock = memTreeBlockGetData(cBlock);
 
 			// Copy the block's data over.
-			memcpy((void *)rBlock, (void *)block, copyBytes);
+			memmove((void *)rBlock, (void *)block, copyBytes);
 
-			// Set the linked list header data.
+			if(nextSize >= MEMORY_TREE_BLOCK_TOTAL_SIZE){
+
+				// There's enough room for a split.
+				// Include the alignment padding in
+				// the allocated block.
+				cBytes -= nextSize;
+				memTreeBlockGetCurrent(cNext) = nextSize;
+
+				if(memTreeBlockIsLast(cFlags) == 0){
+					byte_t *cNextNext = cNext+nextSize;
+					// cBytes should always have a 0 in the LSB.
+					memTreeBlockGetPrevious(cNext) = cBytes;
+					// Set the next-next block's new previous block size.
+					memTreeBlockGetFlags(cNextNext) = nextSize | (memTreeBlockGetFlags(cNextNext) & MEMORY_TREE_BLOCK_FLAGS_MASK);
+				}else{
+					// cBytes should always have a 0 in the LSB.
+					// Also inherit whether or not the block was the last.
+					memTreeBlockGetPrevious(cNext) = cBytes | MEMORY_TREE_BLOCK_LAST;
+					// The previous block can't be the last node anymore.
+					cFlags &= MEMORY_TREE_BLOCK_LAST_MASK;
+				}
+
+				// Insert the new free block.
+				memTreeInsert(tree, cNext, nextSize);
+
+			}
+
+			// Set the new block's header information.
 			memTreeBlockGetCurrent(cBlock) = cBytes;
 			memTreeBlockGetPrevious(cBlock) = cFlags;
 
-			// Add the new free block to the tree.
-			memTreeInsert(tree, cBlock, cBytes);
+		}else{
+
+			// We'll have to look for a new block.
+			rBlock = memTreeAllocate(tree, bytes);
+
+			if(rBlock != NULL){
+
+				// Copy the block's data over.
+				memcpy((void *)rBlock, (void *)block, copyBytes);
+
+				// Set the linked list header data.
+				memTreeBlockGetCurrent(cBlock) = cBytes;
+				memTreeBlockGetPrevious(cBlock) = cFlags;
+
+				// Add the new free block to the tree.
+				memTreeInsert(tree, cBlock, cBytes);
+
+			}
 
 		}
 
-	}
+		return rBlock;
 
-	return rBlock;
+	}
 
 }
 

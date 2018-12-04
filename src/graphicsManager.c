@@ -1,4 +1,5 @@
 #include "graphicsManager.h"
+#include "memoryManager.h"
 #include "helpersMisc.h"
 #include "inline.h"
 #include <SDL2/SDL_image.h>
@@ -24,6 +25,8 @@ return_t gfxMngrInit(graphicsManager *gfxMngr, const char *prgPath){
 	gfxMngr->windowHeightLast = 0;
 	gfxMngr->windowStretchToFit = 0;
 	gfxMngr->windowModified = 1;
+	gfxMngr->biasMIP = GFX_DEFAULT_BIAS_MIP;
+	gfxMngr->biasLOD = GFX_DEFAULT_BIAS_LOD;
 
 	r = gfxMngrInitSDL(gfxMngr);
 	if(r <= 0){
@@ -37,6 +40,7 @@ return_t gfxMngrInit(graphicsManager *gfxMngr, const char *prgPath){
 	if(r <= 0){
 		return r;
 	}
+	glUniform1f(gfxMngr->mipID, GFX_DEFAULT_BIAS_MIP);
 	return gfxMngrCreateBuffers(gfxMngr);
 
 }
@@ -115,10 +119,10 @@ static return_t gfxMngrInitOGL(graphicsManager *gfxMngr){
 static return_t gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath){
 
 	/* Vertex shader */
-	const char *vertexShaderExtra = "Resources\\Shaders\\vertexShader.vsh";
+	const char *vertexShaderExtra = "Resources\\Shaders\\s_vertex.gls";
 	const size_t pathLen = strlen(prgPath);
 	const size_t vsExtraLen = strlen(vertexShaderExtra);
-	char *vertexShaderPath = malloc((pathLen+vsExtraLen+1)*sizeof(char));
+	char *vertexShaderPath = memAllocate((pathLen+vsExtraLen+1)*sizeof(char));
 	if(vertexShaderPath == NULL){
 		/** Memory allocation failure. **/
 		return -1;
@@ -132,10 +136,10 @@ static return_t gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath
 	fseek(vertexShaderFile, 0, SEEK_END);
 	long size = ftell(vertexShaderFile);
 	rewind(vertexShaderFile);
-	char *vertexShaderCode = malloc((size+1)*sizeof(char));
+	char *vertexShaderCode = memAllocate((size+1)*sizeof(char));
 	if(vertexShaderCode == NULL){
 		/** Memory allocation failure. **/
-		free(vertexShaderPath);
+		memFree(vertexShaderPath);
 		return -1;
 	}
 	fread(vertexShaderCode, sizeof(char), size, vertexShaderFile);
@@ -147,8 +151,8 @@ static return_t gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath
 	const char *vertexShaderCodePointer = vertexShaderCode;
 	glShaderSource(gfxMngr->vertexShaderID, 1, &vertexShaderCodePointer, NULL);
 	glCompileShader(gfxMngr->vertexShaderID);
-	free(vertexShaderPath);
-	free(vertexShaderCode);
+	memFree(vertexShaderPath);
+	memFree(vertexShaderCode);
 
 	/* Validate vertex shader */
 	GLint compileStatus = GL_FALSE;
@@ -156,22 +160,22 @@ static return_t gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath
 	glGetShaderiv(gfxMngr->vertexShaderID, GL_COMPILE_STATUS, &compileStatus);
  	glGetShaderiv(gfxMngr->vertexShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
  	if(infoLogLength > 1){
-		char *vertexShaderError = malloc((infoLogLength+1)*sizeof(char));
+		char *vertexShaderError = memAllocate((infoLogLength+1)*sizeof(char));
 		if(vertexShaderError == NULL){
 			/** Memory allocation failure. **/
 			return -1;
 		}
  		glGetShaderInfoLog(gfxMngr->vertexShaderID, infoLogLength, NULL, &vertexShaderError[0]);
  		printf("Error validating vertex shader: %s", &vertexShaderError[0]);
- 		free(vertexShaderError);
+ 		memFree(vertexShaderError);
  		return 0;
  	}
 
 
 	/* Fragment shader */
-	const char *fragmentShaderExtra = "Resources\\Shaders\\fragmentShader.fsh";
+	const char *fragmentShaderExtra = "Resources\\Shaders\\s_fragment.gls";
 	const size_t fsExtraLen = strlen(fragmentShaderExtra);
-	char *fragmentShaderPath = malloc((pathLen+fsExtraLen+1)*sizeof(char));
+	char *fragmentShaderPath = memAllocate((pathLen+fsExtraLen+1)*sizeof(char));
 	if(fragmentShaderPath == NULL){
 		/** Memory allocation failure. **/
 		return -1;
@@ -185,10 +189,10 @@ static return_t gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath
 	fseek(fragmentShaderFile, 0, SEEK_END);
 	size = ftell(fragmentShaderFile);
 	rewind(fragmentShaderFile);
-	char *fragmentShaderCode = malloc((size+1)*sizeof(char));
+	char *fragmentShaderCode = memAllocate((size+1)*sizeof(char));
 	if(fragmentShaderCode == NULL){
 		/** Memory allocation failure. **/
-		free(fragmentShaderPath);
+		memFree(fragmentShaderPath);
 		return -1;
 	}
 	fread(fragmentShaderCode, sizeof(char), size, fragmentShaderFile);
@@ -200,21 +204,21 @@ static return_t gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath
 	const char *fragmentShaderCodePointer = fragmentShaderCode;
 	glShaderSource(gfxMngr->fragmentShaderID, 1, &fragmentShaderCodePointer, NULL);
 	glCompileShader(gfxMngr->fragmentShaderID);
-	free(fragmentShaderPath);
-	free(fragmentShaderCode);
+	memFree(fragmentShaderPath);
+	memFree(fragmentShaderCode);
 
 	/* Validate fragment shader */
 	glGetShaderiv(gfxMngr->fragmentShaderID, GL_COMPILE_STATUS, &compileStatus);
  	glGetShaderiv(gfxMngr->fragmentShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
  	if(infoLogLength > 1){
-		char *fragmentShaderError = malloc((infoLogLength+1)*sizeof(char));
+		char *fragmentShaderError = memAllocate((infoLogLength+1)*sizeof(char));
 		if(fragmentShaderError == NULL){
 			/** Memory allocation failure. **/
 			return -1;
 		}
  		glGetShaderInfoLog(gfxMngr->fragmentShaderID, infoLogLength, NULL, &fragmentShaderError[0]);
  		printf("Error validating fragment shader: %s", &fragmentShaderError[0]);
- 		free(fragmentShaderError);
+ 		memFree(fragmentShaderError);
  		return 0;
  	}
 
@@ -238,10 +242,11 @@ static return_t gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath
 	gfxMngr->vpMatrixID        = glGetUniformLocation(gfxMngr->shaderProgramID, "vpMatrix");
 	gfxMngr->textureFragmentID = glGetUniformLocation(gfxMngr->shaderProgramID, "textureFragment");
 	gfxMngr->alphaID           = glGetUniformLocation(gfxMngr->shaderProgramID, "alpha");
+	gfxMngr->mipID             = glGetUniformLocation(gfxMngr->shaderProgramID, "mip");
 
 	/* Create references to each bone  */
 	boneIndex_t i;
-	for(i = 0; i < SKL_MAX_BONE_NUM; ++i){
+	for(i = 0; i < SKELETON_MAX_BONE_NUM; ++i){
 
 		char num[LTOSTR_MAX_LENGTH];
 		const size_t numLen = ltostr(i, &num[0]);
@@ -265,7 +270,7 @@ static return_t gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath
 	}
 
 	/* Create references to each texture sampler */
-	for(i = 0; i < GFX_MAX_TEX_SAMPLER_NUM; ++i){
+	for(i = 0; i < GFX_TEXTURE_SAMPLER_NUM; ++i){
 
 		char num[LTOSTR_MAX_LENGTH];
 		const size_t numLen = ltostr(i, &num[0]);

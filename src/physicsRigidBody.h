@@ -8,24 +8,21 @@
 #include "mat3.h"
 #include <stdlib.h>
 
-/** Remove PHYS_BODY_INITIALIZE? **/
-#define PHYS_BODY_INACTIVE   0x00
-#define PHYS_BODY_INITIALIZE 0x01  // Whether or not the simulation has just begun on this frame.
-#define PHYS_BODY_SIMULATE   0x02  // Whether or not the body is active. Still listens for collisions.
-#define PHYS_BODY_COLLIDE    0x04  // Whether or not the body will listen for collisions.
-#define PHYS_BODY_DELETE     0x08  // Set by an object's deletion function so the body can be freed by the physics handler.
+/** Remove PHYSICS_BODY_INITIALIZE? **/
+#define PHYSICS_BODY_INACTIVE   0x00
+#define PHYSICS_BODY_INITIALIZE 0x01  // Whether or not the simulation has just begun on this frame.
+#define PHYSICS_BODY_SIMULATE   0x02  // Whether or not the body is active. Still listens for collisions.
+#define PHYSICS_BODY_COLLIDE    0x04  // Whether or not the body will listen for collisions.
+#define PHYSICS_BODY_DELETE     0x08  // Set by an object's deletion function so the body can be freed by the physics handler.
 
-/**#define PHYS_BODY_MAX_CONSTRAINTS 256
-#define PHYS_BODY_MAX_CACHE_SIZE  256**/
+/**#define PHYSICS_BODY_MAX_CONSTRAINTS 256
+#define PHYSICS_BODY_MAX_CACHE_SIZE  256**/
 
 typedef struct {
 
-	/** char *name; **/
-
 	/* Physical colliders. */
 	/** Update functions for single collider. **/
-	physColliderIndex_t colliderNum;  // The body's number of convex colliders.
-	physCollider *colliders;      // The body's convex colliders.
+	physCollider *colliders;  // The body's convex colliders.
 	//hbMesh hull;
 
 	/* Physical mass properties. */
@@ -36,22 +33,27 @@ typedef struct {
 	vec3 centroid;                    // The body's center of mass.
 	mat3 inertiaTensor;               // The body's local inertia tensor.
 
+	/* Physical constraints. */
+	physConstraint *constraints;  // Default constraints.
+
+	/* Default flags. */
+	flags_t flags;
+
+	/* The bone the body is associated with. */
+	physicsBodyIndex_t id;
+
+	/** char *name; **/
+
 } physRigidBody;
 
 /** Finish physRBIStateCopy(). **/
 typedef struct {
 
-	/* Various flags for the rigid body. */
-	flags_t flags;
-
-	/* The body's ID in the physics solver. */
-	physicsBodyIndex_t id;
-
 	/* The rigid body this instance is derived from, in local space. */
 	physRigidBody *local;
 
 	/* Physical colliders. */
-	hbAABB aabb;              // The body's global, transformed bounding box.
+	cAABB aabb;               // The body's global, transformed bounding box.
 	physCollider *colliders;  // The body's global, transformed convex colliders.
 	                          // Their hulls re-use indices allocated for the local colliders.
 
@@ -68,30 +70,30 @@ typedef struct {
 	vec3 netTorque;        // Torque accumulator.
 
 	/* Physical constraints. */
-	physConstraintIndex_t constraintNum;
-	physConstraintIndex_t constraintCapacity;
 	physConstraint *constraints;  // An array of constraints for the kinematics
 	                              // chain, ordered by constraintID.
 
 	/* Separation caching. */
-	physCollisionIndex_t separationNum;
-	physCollisionIndex_t separationCapacity;
 	physCollisionInfo *cache;  // An array of separations from previous
 	                           // frames, ordered by collisionID.
+
+	/* Various flags for the rigid body. */
+	flags_t flags;
+
+	/* The body's ID in the physics solver. */
+	physicsBodyIndex_t id;
 
 } physRBInstance;
 
 /* Physics rigid body functions. */
 void physRigidBodyInit(physRigidBody *body);
 void physRigidBodyGenerateMassProperties(physRigidBody *body, float **vertexMassArrays);
-return_t physRigidBodyLoad(physRigidBody *bodies, flags_t *flags, physConstraintIndex_t *constraintNum, physConstraint **constraints,
-                           const skeleton *skl, const char *prgPath, const char *filePath);
+return_t physRigidBodyLoad(physRigidBody **bodies, const skeleton *skl, const char *prgPath, const char *filePath);
 void physRigidBodyDelete(physRigidBody *body);
 
 /* Physics rigid body instance functions. */
 void physRBIInit(physRBInstance *prbi);
 return_t physRBIInstantiate(physRBInstance *prbi, physRigidBody *body, bone *configuration);
-return_t physRBIStateCopy(physRBInstance *o, physRBInstance *c);
 
 return_t physRBIAddConstraint(physRBInstance *prbi, physConstraint *c);
 return_t physRBICacheSeparation(physRBInstance *prbi, physCollisionInfo *c);
@@ -112,7 +114,7 @@ void physRBIIntegrateLeapfrog(physRBInstance *prbi, const float dt);
 void physRBIIntegrateLeapfrogVelocity(physRBInstance *prbi, const float dt);
 void physRBIIntegrateLeapfrogConstraints(physRBInstance *prbi, const float dt);
 
-void physRBIResolveCollisionGS(physRBInstance *body1, physRBInstance *body2, const hbCollisionContactManifold *cm);
+void physRBIResolveCollisionGS(physRBInstance *body1, physRBInstance *body2, const cCollisionContactManifold *cm);
 
 void physRBIDelete(physRBInstance *prbi);
 

@@ -1,5 +1,5 @@
-#ifndef HITBOXAABB_H
-#define HITBOXAABB_H
+#ifndef COLLIDERAABB_H
+#define COLLIDERAABB_H
 
 #include "return.h"
 
@@ -10,8 +10,8 @@ typedef struct {
 	float bottom;
 	float front;
 	float back;
-} hbAABB;
+} cAABB;
 
-return_t hbAABBCollision(const hbAABB *c1, const hbAABB *c2);
+return_t cAABBCollision(const cAABB *c1, const cAABB *c2);
 
 #endif

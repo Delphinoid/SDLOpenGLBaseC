@@ -223,7 +223,7 @@ typedef struct {
 
 #define memTreeFirst(region)      ((void *)memTreeAlignStartData((region)->start))
 #define memTreeBlockStatus(block) memTreeBlockGetActiveMasked(block)
-#define memTreeBlockNext(tree, i) i = (void *)((byte_t *)i + memTreeDataGetCurrent(i));
+#define memTreeBlockNext(tree, i) (void *)((byte_t *)i + memTreeDataGetCurrent(i));
 
 void memTreeInit(memoryTree *tree);
 void *memTreeCreate(memoryTree *tree, void *start, const size_t bytes, const size_t length);

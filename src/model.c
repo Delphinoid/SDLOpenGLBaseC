@@ -4,12 +4,14 @@
 #include "memoryManager.h"
 #include "moduleSkeleton.h"
 #include "helpersFileIO.h"
+#include "inline.h"
+#include <float.h>
 
-return_t mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndexNum_t *indexNum, vertexIndex_t **indices, char **name, char *sklPath);
-return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndexNum_t *indexNum, vertexIndex_t **indices, char **name, cVector *allSkeletons);
+#define MODEL_RESOURCE_DIRECTORY_STRING "Resources\\Models\\"
+#define MODEL_RESOURCE_DIRECTORY_LENGTH 17
 
-static void mdlVertexAttributes();
-static return_t mdlGenBufferObjects(model *mdl, const char *filePath, const vertexIndex_t vertexNum, const vertex *vertices, const vertexIndexNum_t indexNum, const vertexIndex_t *indices);
+return_t mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex **vertices, size_t *indexNum, vertexIndex_t **indices, size_t *lodNum, mdlLOD **lods, char *sklPath);
+///return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, size_t *indexNum, vertexIndex_t **indices);
 
 void mdlInit(model *mdl){
 	mdl->name = NULL;
@@ -18,11 +20,106 @@ void mdlInit(model *mdl){
 	mdl->vaoID = 0;
 	mdl->vboID = 0;
 	mdl->iboID = 0;
-	/**mdl->boneNum = 0;
-	mdl->boneNames = NULL;**/
+	mdl->lodNum = 0;
+	mdl->lods = NULL;
 	mdl->skl = NULL;
-	/**mdl->bodies = NULL;
-	mdl->hitboxes = NULL;**/
+}
+
+static void mdlVertexAttributes(){
+	// Position offset
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, position));
+	glEnableVertexAttribArray(0);
+	// UV offset
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, u));
+	glEnableVertexAttribArray(1);
+	// Normals offset
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, normal));
+	glEnableVertexAttribArray(2);
+	// Bone index offset
+	glVertexAttribIPointer(3, VERTEX_MAX_BONES, GL_INT, sizeof(vertex), (GLvoid*)offsetof(vertex, bIDs));
+	glEnableVertexAttribArray(3);
+	// Bone weight offset
+	glVertexAttribPointer(4, VERTEX_MAX_BONES, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, bWeights));
+	glEnableVertexAttribArray(4);
+}
+
+static return_t mdlGenBufferObjects(model *mdl, const char *filePath, const size_t vertexNum, const vertex *vertices, const size_t indexNum, const vertexIndex_t *indices){
+
+	if(vertexNum > 0){
+		if(indexNum > 0){
+
+			GLenum glError;
+
+			// Create and bind the VAO
+			glGenVertexArrays(1, &mdl->vaoID);
+			glBindVertexArray(mdl->vaoID);
+
+			// Create and bind the VBO
+			glGenBuffers(1, &mdl->vboID);
+			glBindBuffer(GL_ARRAY_BUFFER, mdl->vboID);
+			glBufferData(GL_ARRAY_BUFFER, vertexNum*sizeof(vertex), vertices, GL_STATIC_DRAW);
+			// Check for errors
+			glError = glGetError();
+			if(glError != GL_NO_ERROR){
+				printf("Error creating vertex buffer for model");
+				if(filePath != NULL){
+					printf(" \"%s\"", filePath);
+				}
+				printf(": %u\n", glError);
+				return 0;
+			}
+			mdl->vertexNum = vertexNum;
+
+			// Create and bind the IBO
+			glGenBuffers(1, &mdl->iboID);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mdl->iboID);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexNum*sizeof(vertexIndex_t), indices, GL_STATIC_DRAW);
+			// Check for errors
+			glError = glGetError();
+			if(glError != GL_NO_ERROR){
+				printf("Error creating index buffer for model");
+				if(filePath != NULL){
+					printf(" \"%s\"", filePath);
+				}
+				printf(": %u\n", glError);
+				return 0;
+			}
+			mdl->indexNum = indexNum;
+
+			mdlVertexAttributes();
+			glBindVertexArray(0);
+
+			// Check for errors
+			glError = glGetError();
+			if(glError != GL_NO_ERROR){
+				printf("Error creating vertex array buffer for model");
+				if(filePath != NULL){
+					printf(" \"%s\"", filePath);
+				}
+				printf(": %u\n", glError);
+				return 0;
+			}
+
+		}else{
+			printf("Error creating buffers for model");
+			if(filePath != NULL){
+				printf(" \"%s\"", filePath);
+			}
+			printf(": model has no indices.\n");
+			return 0;
+		}
+
+	}else{
+		printf("Error creating buffers for model");
+		if(filePath != NULL){
+			printf(" \"%s\"", filePath);
+		}
+		printf(": model has no vertices.\n");
+		return 0;
+	}
+
+	return 1;
+
 }
 
 return_t mdlLoad(model *mdl, const char *prgPath, const char *filePath){
@@ -30,29 +127,33 @@ return_t mdlLoad(model *mdl, const char *prgPath, const char *filePath){
 	/** Create a proper model file that loads a specified mesh, a name and a skeleton. **/
 	return_t r;
 
-	vertexIndex_t vertexNum;
+	size_t vertexNum;
 	vertex *vertices;
-	vertexIndexNum_t indexNum;
+	size_t indexNum;
 	vertexIndex_t *indices;
+	size_t lodNum;
+	mdlLOD *lods;
 
 	char fullPath[FILE_MAX_PATH_LENGTH];
 	char sklPath[FILE_MAX_PATH_LENGTH];
 	const size_t fileLength = strlen(filePath);
 
 	sklPath[0] = '\0';
-	fileGenerateFullPath(&fullPath[0], prgPath, strlen(prgPath), filePath, fileLength);
+	fileGenerateFullPath(fullPath, prgPath, strlen(prgPath), MODEL_RESOURCE_DIRECTORY_STRING, MODEL_RESOURCE_DIRECTORY_LENGTH, filePath, fileLength);
 
 	mdlInit(mdl);
 
-	r = mdlWavefrontObjLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, &mdl->name, &sklPath[0]);
-	//r = mdlSMDLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, &mdl->name, allSkeletons);
+	r = mdlWavefrontObjLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, &lodNum, &lods, &sklPath[0]);
+	//r = mdlSMDLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, allSkeletons);
 	/** Replace and move the loading function here. **/
 	if(r <= 0){
 		return r;
 	}
 
 	/** Should mdlGenBufferObjects() be here? **/
-	r = mdlGenBufferObjects(mdl, &fullPath[0], vertexNum, vertices, indexNum, indices);
+	r = mdlGenBufferObjects(mdl, fullPath, vertexNum, vertices, indexNum, indices);
+	mdl->lodNum = lodNum;
+	mdl->lods = lods;
 	memFree(vertices);
 	memFree(indices);
 
@@ -78,6 +179,7 @@ return_t mdlLoad(model *mdl, const char *prgPath, const char *filePath){
 			}
 		}else{
 			/** Memory allocation failure. **/
+			memFree(lods);
 			mdlDelete(mdl);
 			return -1;
 		}
@@ -85,21 +187,22 @@ return_t mdlLoad(model *mdl, const char *prgPath, const char *filePath){
 
 	if(r > 0){
 
-		// If no name was given, generate one based off the file path.
-		if(mdl->name == NULL || mdl->name[0] == '\0'){
-			if(mdl->name != NULL){
-				memFree(mdl->name);
-			}
-			mdl->name = memAllocate((fileLength+1)*sizeof(char));
-			if(mdl->name == NULL){
+		if(lods != NULL){
+			// Reallocate the LODs.
+			mdl->lods = memReallocate(lods, mdl->lodNum*sizeof(mdlLOD));
+			if(mdl->lods == NULL){
 				/** Memory allocation failure. **/
+				memFree(lods);
 				mdlDelete(mdl);
-				return -1;
 			}
-			memcpy(mdl->name, filePath, fileLength);
-			mdl->name[fileLength] = '\0';
-		}else{
-			mdl->name = memReallocateForced(mdl->name, strlen(mdl->name)*sizeof(char));
+		}
+
+		// Generate a name based off the file path.
+		mdl->name = fileGenerateResourceName(filePath, fileLength);
+		if(mdl->name == NULL){
+			/** Memory allocation failure. **/
+			mdlDelete(mdl);
+			return -1;
 		}
 
 	}else{
@@ -380,106 +483,61 @@ return_t mdlCreateSprite(model *mdl){
 
 }
 
-static void mdlVertexAttributes(){
-	// Position offset
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, position));
-	glEnableVertexAttribArray(0);
-	// UV offset
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, u));
-	glEnableVertexAttribArray(1);
-	// Normals offset
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, normal));
-	glEnableVertexAttribArray(2);
-	// Bone index offset
-	glVertexAttribIPointer(3, VERTEX_MAX_BONES, GL_INT, sizeof(vertex), (GLvoid*)offsetof(vertex, bIDs));
-	glEnableVertexAttribArray(3);
-	// Bone weight offset
-	glVertexAttribPointer(4, VERTEX_MAX_BONES, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, bWeights));
-	glEnableVertexAttribArray(4);
-}
+__FORCE_INLINE__ void mdlFindCurrentLOD(model *mdl, GLsizei *indexNum, void **offset, const float distance, size_t bias){
 
-static return_t mdlGenBufferObjects(model *mdl, const char *filePath, const vertexIndex_t vertexNum, const vertex *vertices, const vertexIndexNum_t indexNum, const vertexIndex_t *indices){
-
-	if(vertexNum > 0){
-		if(indexNum > 0){
-
-			GLenum glError;
-
-			// Create and bind the VAO
-			glGenVertexArrays(1, &mdl->vaoID);
-			glBindVertexArray(mdl->vaoID);
-
-			// Create and bind the VBO
-			glGenBuffers(1, &mdl->vboID);
-			glBindBuffer(GL_ARRAY_BUFFER, mdl->vboID);
-			glBufferData(GL_ARRAY_BUFFER, vertexNum*sizeof(vertex), vertices, GL_STATIC_DRAW);
-			// Check for errors
-			glError = glGetError();
-			if(glError != GL_NO_ERROR){
-				printf("Error creating vertex buffer for model");
-				if(filePath != NULL){
-					printf(" \"%s\"", filePath);
-				}
-				printf(": %u\n", glError);
-				return 0;
-			}
-			mdl->vertexNum = vertexNum;
-
-			// Create and bind the IBO
-			glGenBuffers(1, &mdl->iboID);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mdl->iboID);
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexNum*sizeof(vertexIndex_t), indices, GL_STATIC_DRAW);
-			// Check for errors
-			glError = glGetError();
-			if(glError != GL_NO_ERROR){
-				printf("Error creating index buffer for model");
-				if(filePath != NULL){
-					printf(" \"%s\"", filePath);
-				}
-				printf(": %u\n", glError);
-				return 0;
-			}
-			mdl->indexNum = indexNum;
-
-			mdlVertexAttributes();
-			glBindVertexArray(0);
-
-			// Check for errors
-			glError = glGetError();
-			if(glError != GL_NO_ERROR){
-				printf("Error creating vertex array buffer for model");
-				if(filePath != NULL){
-					printf(" \"%s\"", filePath);
-				}
-				printf(": %u\n", glError);
-				return 0;
-			}
-
-		}else{
-			printf("Error creating buffers for model");
-			if(filePath != NULL){
-				printf(" \"%s\"", filePath);
-			}
-			printf(": model has no indices.\n");
-			return 0;
-		}
-
+	if(mdl->lods == NULL){
+		*indexNum = mdl->indexNum;
+		*offset = 0;
 	}else{
-		printf("Error creating buffers for model");
-		if(filePath != NULL){
-			printf(" \"%s\"", filePath);
-		}
-		printf(": model has no vertices.\n");
-		return 0;
-	}
 
-	return 1;
+		// Find the current LOD based off the distance.
+		lodNum_t i = 1;
+		mdlLOD *lod = mdl->lods;
+
+		// Loop through each LOD until one within
+		// the specified distance is found.
+		MDL_FIND_CURRENT_LOD_LOOP:
+		if((++lod)->distance <= distance){
+			if(++i < mdl->lodNum){
+				goto MDL_FIND_CURRENT_LOD_LOOP;
+			}
+		}else{
+			--lod;
+		}
+
+		// Apply the specified LOD bias.
+		if(bias != 0){
+			if(bias < 0){
+				// If the bias is negative, get some
+				// higher-detail LODs.
+				while(i < mdl->lodNum && bias != 0){
+					--lod;
+					--bias;
+					++i;
+				}
+			}else{
+				// If the bias is negative, get some
+				// lower-detail LODs.
+				while(lod->distance != 0.f && bias != 0){
+					--lod;
+					--bias;
+				}
+			}
+		}
+
+		*indexNum = lod->indexNum;
+		*offset = lod->offset;
+
+	}
 
 }
 
 void mdlDelete(model *mdl){
 	if(mdl->name != NULL){
 		memFree(mdl->name);
+	}
+	if(mdl->lods != NULL){
+		memFree(mdl->lods);
 	}
 	if(mdl->vaoID != 0){
 		glDeleteBuffers(1, &mdl->vaoID);
@@ -492,20 +550,20 @@ void mdlDelete(model *mdl){
 	}
 	/**if(mdl->bones != NULL){
 		for(i = 0; i < mdl->boneNum; ++i){
-			free(mdl->boneNames[i]);
+			memFree(mdl->boneNames[i]);
 		}
-		free(mdl->boneNames);
+		memFree(mdl->boneNames);
 	}
 	if(mdl->bodies != NULL){
 		for(i = 0; i < mdl->boneNum; ++i){
 			physRigidBodyDelete(&mdl->bodies[i]);
 		}
-		free(mdl->bodies);
+		memFree(mdl->bodies);
 	}
 	if(mdl->hitboxes != NULL){
 		for(i = 0; i < mdl->boneNum; ++i){
-			free(mdl->hitboxes[i]);
+			memFree(mdl->hitboxes[i]);
 		}
-		free(mdl->hitboxes);
+		memFree(mdl->hitboxes);
 	}**/
 }

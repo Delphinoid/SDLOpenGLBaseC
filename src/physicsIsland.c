@@ -1,4 +1,5 @@
 #include "physicsIsland.h"
+#include "memoryManager.h"
 
 /** Move and rename this when possible. Should implement collision pairing. **/
 
@@ -9,7 +10,7 @@ void physIslandInit(physIsland *island){
 }
 
 return_t physIslandAddBody(physIsland *island, physRBInstance *prbi){
-	if(prbi->local != NULL && prbi->local->colliderNum){
+	if(prbi->local != NULL && prbi->local->colliders){
 		if(island->bodyNum >= island->bodyCapacity){
 			/* Allocate room for more bodies. */
 			physicsBodyIndex_t i;
@@ -17,10 +18,10 @@ return_t physIslandAddBody(physIsland *island, physRBInstance *prbi){
 			physRBInstance **tempBuffer;
 			if(island->bodyCapacity == 0){
 				tempCapacity = 1;
-				tempBuffer = malloc(tempCapacity*sizeof(physRBInstance *));
+				tempBuffer = memAllocate(tempCapacity*sizeof(physRBInstance *));
 			}else{
 				tempCapacity = island->bodyCapacity*2;
-				tempBuffer = realloc(island->bodies, tempCapacity*sizeof(physRBInstance *));
+				tempBuffer = memReallocate(island->bodies, tempCapacity*sizeof(physRBInstance *));
 			}
 			if(tempBuffer == NULL){
 				/** Memory allocation failure. **/
@@ -40,11 +41,11 @@ return_t physIslandAddBody(physIsland *island, physRBInstance *prbi){
 }
 
 /*return_t physIslandAddObject(physIsland *island, objInstance *obji){
-	if(obji->skeletonPhysics != NULL){
+	if(obji->skeletonBodies != NULL){
 		size_t i;
 		for(i = 0; i < obji->skl->boneNum; ++i){
 			** Memory allocation failure. **
-			if(physIslandAddBody(island, &obji->skeletonPhysics[i]) == -1){
+			if(physIslandAddBody(island, &obji->skeletonBodies[i]) == -1){
 				break;
 			}
 		}
@@ -71,23 +72,23 @@ void physIslandUpdate(physIsland *island, const float dt){
 		island->bodies[index] = island->bodies[i];
 
 		// Check if the body's owner has been deleted.
-		if(flagsAreSet(island->bodies[index]->flags, PHYS_BODY_DELETE)){
+		if(flagsAreSet(island->bodies[index]->flags, PHYSICS_BODY_DELETE)){
 
 			// The body's owner has been deleted, free the body and
 			// increase del so future bodies will be shifted over.
 			physRBIDelete(island->bodies[index]);
-			free(island->bodies[index]);
+			memFree(island->bodies[index]);
 			++del;
 
 		}else{
 
 			// Integrate the body and solve constraints if desired.
-			if(flagsAreSet(island->bodies[index]->flags, PHYS_BODY_SIMULATE)){
+			if(flagsAreSet(island->bodies[index]->flags, PHYSICS_BODY_SIMULATE)){
 				physRBIIntegrateEuler(island->bodies[index], dt);
 			}
 
 			// If the body can collide, update its collision mesh.
-			if(flagsAreSet(island->bodies[index]->flags, PHYS_BODY_COLLIDE)){
+			if(flagsAreSet(island->bodies[index]->flags, PHYSICS_BODY_COLLIDE)){
 				physRBIUpdateCollisionMesh(island->bodies[index]);
 			}
 
@@ -109,7 +110,7 @@ void physIslandBroadPhase(physIsland *island, const float dt, physicsBodyIndex_t
 return_t physIslandSimulate(physIsland *island, const float dt){
 
 	//size_t pairArraySize = 0;
-	//physRigidBody **pairArray = malloc(2*sizeof(physRigidBody));
+	//physRigidBody **pairArray = memAllocate(2*sizeof(physRigidBody));
 	//pairArray[0] = NULL; pairArray[1] = NULL;
 
 	/* Resolve deletions, integrate, solve constraints and update collision meshes. */
@@ -124,16 +125,16 @@ return_t physIslandSimulate(physIsland *island, const float dt){
 	/* Resolve collision pairs. */
 
 
-	//free(pairArray);
+	//memFree(pairArray);
 
 	physicsBodyIndex_t i, j;
-	hbCollisionInfo separationInfo;
-	hbCollisionContactManifold collisionData;
+	cCollisionInfo separationInfo;
+	cCollisionContactManifold collisionData;
 	for(i = 0; i < island->bodyNum; ++i){
 		for(j = i+1; j < island->bodyNum; ++j){
-			if(hbCollision(&island->bodies[i]->colliders[0].hb, &island->bodies[i]->colliders[0].centroid,
-			               &island->bodies[j]->colliders[0].hb, &island->bodies[j]->colliders[0].centroid,
-			               &separationInfo, &collisionData)){
+			if(cCollision(&island->bodies[i]->colliders[0].c, &island->bodies[i]->colliders[0].centroid,
+			              &island->bodies[j]->colliders[0].c, &island->bodies[j]->colliders[0].centroid,
+			              &separationInfo, &collisionData)){
 				//physRBIResolveCollision(island->bodies[i], island->bodies[j], &collisionData);
 				//if(j==island->bodyNum-1){
 					//island->bodies[i]->blah=1;
@@ -150,6 +151,6 @@ return_t physIslandSimulate(physIsland *island, const float dt){
 
 void physIslandDelete(physIsland *island){
 	if(island->bodies != NULL){
-		free(island->bodies);
+		memFree(island->bodies);
 	}
 }

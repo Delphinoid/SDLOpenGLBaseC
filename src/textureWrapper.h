@@ -3,19 +3,15 @@
 
 #include "texture.h"
 #include "animation.h"
+#include "rectangle.h"
 
-// Simple rectangle structure for the frame boundaries when using sprite sheets
+// Contains details describing a single image.
 typedef struct {
-	float x, y, w, h;
-} twBounds;
-
-/** Optimize subframes. **/
-// Contains details describing a single image
-typedef struct {
-	texture *baseTexture;     // The actual image
-	//texture *normalTexture;   // Normal map for the image
+	rectangle *subframes;  // Represents frame bounds (always contains one element, or multiple for sprite sheets).
+	texture *diffuse;
+	texture *normals;
+	texture *specular;
 	frameIndex_t subframeNum;
-	twBounds *subframes;      // Holds twBounds; represents frame bounds (always contains one element, or multiple for sprite sheets)
 } twFrame;
 
 typedef struct {
@@ -23,22 +19,22 @@ typedef struct {
 	frameIndex_t subframeID;
 } twFramePair;
 
-// Contains details describing an animation
+// Contains details describing an animation.
 typedef struct {
 	animationData animData;
-	twFramePair *frames;     // Represents the positions of the frames in textureWrapper.frames
+	twFramePair *frames;  // Represents the positions of the frames in textureWrapper.frames.
 } twAnim;
 
-// Combines the above structures
+// Combines the above structures.
 typedef struct {
-	char *name;
+	twFrame *frames;     // Holds twFrames.
+	twAnim *animations;  // Holds twAnims.
 	frameIndex_t frameNum;
 	animIndex_t animationNum;
-	twFrame *frames;     // Holds twFrames
-	twAnim *animations;  // Holds twAnims
+	char *name;
 } textureWrapper;
 
-// Texture wrapper instance
+// Texture wrapper instance.
 typedef struct {
 	textureWrapper *tw;
 	float timeMod;

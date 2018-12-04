@@ -1,4 +1,5 @@
 #include "helpersFileIO.h"
+#include "memoryManager.h"
 #include "inline.h"
 #include <string.h>
 
@@ -53,10 +54,51 @@ return_t fileParseNextLine(FILE *file, char *buffer, size_t bufferSize, char **l
 
 }
 
-__FORCE_INLINE__ void fileGenerateFullPath(char *fullPath, const char *prgPath, const size_t prgLength, const char *filePath, const size_t fileLength){
+__FORCE_INLINE__ void fileGenerateFullPath(char *fullPath,
+                                           const char *prgPath, const size_t prgLength,
+                                           const char *resPath, const size_t resLength,
+                                           const char *filePath, const size_t fileLength){
 
-	memcpy(fullPath, prgPath, prgLength);
-	memcpy(fullPath+prgLength, filePath, fileLength);
-	fullPath[prgLength+fileLength] = '\0';
+	char *path = fullPath;
+
+	memcpy(path, prgPath, prgLength);
+	path += prgLength;
+
+	memcpy(path, resPath, resLength);
+	path += resLength;
+
+	memcpy(path, filePath, fileLength);
+	path += fileLength;
+
+	*path = '\0';
+
+}
+
+__FORCE_INLINE__ char *fileGenerateResourceName(const char *resource, const size_t length){
+
+	char *name;
+
+	// Check if there's a file extension.
+	// If there is, remove it.
+	/*size_t extension = 0;
+	char *c = resource[length-1];
+	while(c != resource){
+		if(*c == '.'){
+			extension = resource[length-1] - c;
+			break;
+		}else if(*c == '\\'){
+			break;
+		}
+		--c;
+	}*/
+
+	// Allocate the name.
+	name = memAllocate((length/*-extension*/+1)*sizeof(char));
+	if(name != NULL){
+		memcpy(name, resource, length/*-extension*/);
+		name[length/*-extension*/] = '\0';
+	}
+
+	return name;
 
 }

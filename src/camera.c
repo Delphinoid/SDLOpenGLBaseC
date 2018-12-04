@@ -2,47 +2,27 @@
 #include "constantsMath.h"
 #include <math.h>
 
-return_t camInit(void *cam){
-	iVec3Init(&((camera *)cam)->position, 0.f, 0.f, 0.f);
-	iQuatInit(&((camera *)cam)->orientation);
-	vec3Set(&((camera *)cam)->rotation, 0.f, 0.f, 0.f);
-	///vec3Set(&((camera *)cam)->previousRotation, 0.f, 0.f, 0.f);
-	iVec3Init(&((camera *)cam)->targetPosition, 0.f, 0.f, -1.f);
-	iVec3Init(&((camera *)cam)->up, 0.f, 1.f, 0.f);
-	iFloatInit(&((camera *)cam)->fovy, 90.f);
-	gfxViewInit(&((camera *)cam)->view);
-	mat4Identity(&((camera *)cam)->viewMatrix);
-	mat4Identity(&((camera *)cam)->projectionMatrix);
-	mat4Identity(&((camera *)cam)->viewProjectionMatrix);
-	((camera *)cam)->flags = CAM_UPDATE_VIEW | CAM_UPDATE_PROJECTION;
+return_t camInit(camera *cam){
+	iVec3Init(&cam->position, 0.f, 0.f, 0.f);
+	iQuatInit(&cam->orientation);
+	vec3Set(&cam->rotation, 0.f, 0.f, 0.f);
+	///vec3Set(cam->previousRotation, 0.f, 0.f, 0.f);
+	iVec3Init(&cam->targetPosition, 0.f, 0.f, -1.f);
+	iVec3Init(&cam->up, 0.f, 1.f, 0.f);
+	iFloatInit(&cam->fovy, 90.f);
+	gfxViewInit(&cam->view);
+	mat4Identity(&cam->viewMatrix);
+	mat4Identity(&cam->projectionMatrix);
+	mat4Identity(&cam->viewProjectionMatrix);
+	cam->flags = CAM_UPDATE_VIEW | CAM_UPDATE_PROJECTION;
 	return 1;
 }
-return_t camStateCopy(void *o, void *c){
-	((camera *)c)->position = ((camera *)o)->position;
-	((camera *)c)->orientation = ((camera *)o)->orientation;
-	((camera *)c)->rotation = ((camera *)o)->rotation;
-	///((camera *)c)->previousRotation = ((camera *)o)->previousRotation;
-	((camera *)c)->targetPosition = ((camera *)o)->targetPosition;
-	((camera *)c)->up = ((camera *)o)->up;
-	((camera *)c)->fovy = ((camera *)o)->fovy;
-	if(flagsAreUnset(((camera *)o)->flags, CAM_UPDATE_VIEW)){
-		/*
-		** Only copy the view and projection matrices if they are
-		** not likely to change before a render.
-		*/
-		((camera *)c)->viewMatrix = ((camera *)o)->viewMatrix;
-		((camera *)c)->projectionMatrix = ((camera *)o)->projectionMatrix;
-		((camera *)c)->viewProjectionMatrix = ((camera *)o)->viewProjectionMatrix;
-	}
-	((camera *)c)->flags = ((camera *)o)->flags;
-	return 1;
-}
-void camResetInterpolation(void *cam){
-	iVec3ResetInterp(&((camera *)cam)->position);
-	iQuatResetInterp(&((camera *)cam)->orientation);
-	iVec3ResetInterp(&((camera *)cam)->targetPosition);
-	iVec3ResetInterp(&((camera *)cam)->up);
-	iFloatResetInterp(&((camera *)cam)->fovy);
+void camResetInterpolation(camera *cam){
+	iVec3ResetInterp(&cam->position);
+	iQuatResetInterp(&cam->orientation);
+	iVec3ResetInterp(&cam->targetPosition);
+	iVec3ResetInterp(&cam->up);
+	iFloatResetInterp(&cam->fovy);
 }
 
 void camCalculateUp(camera *cam){  /** Probably not entirely necessary **/

@@ -1,7 +1,7 @@
-#ifndef HITBOXCOLLISION_H
-#define HITBOXCOLLISION_H
+#ifndef COLLISION_H
+#define COLLISION_H
 
-#include "hitbox.h"
+#include "collider.h"
 
 #define COLLISION_MAX_CONTACT_POINTS 8
 #define COLLISION_CONTACT_TANGENTS 2
@@ -20,22 +20,22 @@ typedef uint_least8_t contactIndex_t;
 typedef struct {
 	collisionType_t type;
 	axisIndex_t axisID;  // The ID of a face or an edge.
-} hbCollisionInfo;
+} cCollisionInfo;
 
 typedef struct {
 	float depthSquared;
 	vec3 position;
-} hbCollisionContact;
+} cCollisionContact;
 
 typedef struct {
 	vec3 normal;
 	contactIndex_t contactNum;
-	hbCollisionContact contacts[COLLISION_MAX_CONTACT_POINTS];
+	cCollisionContact contacts[COLLISION_MAX_CONTACT_POINTS];
 	vec3 tangents[COLLISION_CONTACT_TANGENTS];
-} hbCollisionContactManifold;
+} cCollisionContactManifold;
 
-return_t hbCollision(const hitbox* c1, const vec3 *c1c, const hitbox *c2, const vec3 *c2c, hbCollisionInfo *info, hbCollisionContactManifold *cm);
-void hbCollisionContactManifoldInit(hbCollisionContactManifold *cm);
-void hbCollisionGenerateContactTangents(const vec3 *normal, vec3 *tangentA, vec3 *tangentB);
+return_t cCollision(const collider *c1, const vec3 *c1c, const collider *c2, const vec3 *c2c, cCollisionInfo *info, cCollisionContactManifold *cm);
+void cCollisionContactManifoldInit(cCollisionContactManifold *cm);
+void cCollisionGenerateContactTangents(const vec3 *normal, vec3 *tangentA, vec3 *tangentB);
 
 #endif

@@ -1,8 +1,11 @@
 #include "graphicsManager.h"
 #include "helpersMath.h"
 #include "object.h"
-#include "stateManagerHelpers.h"
+#include "camera.h"
 #include <math.h>
+
+/** **/
+#include "moduleRenderable.h"
 
 /** THIS FILE IS TEMPORARY **/
 /** THIS FILE IS TEMPORARY **/
@@ -13,45 +16,46 @@
 /** THIS FILE IS TEMPORARY **/
 
 /** This should not be necessary! **/
-void renderModel(const objInstance *obji, const camera *cam, const float interpT, graphicsManager *gfxMngr){
+void renderModel(const objInstance *obji, const float distance, const camera *cam, const float interpT, graphicsManager *gfxMngr){
 
-	renderableIndex_t i;
-	boneIndex_t j;
+	boneIndex_t i;
 	bone interpBone;
+
+	rndrInstance *currentRndr = obji->renderables;
 
 	/* Update the object's configuration for rendering. */
 	//rndrConfigRenderUpdate(&obji->tempRndrConfig, interpT);  /** Only line that requires non-const object. **/
 
 	/* Interpolate between the previous and last skeleton states. */
-	for(j = 0; j < obji->skeletonData.skl->boneNum; ++j){
+	for(i = 0; i < obji->skeletonData.skl->boneNum; ++i){
 
-		const bone *current  = &obji->state.skeleton[j];
-		const bone *previous = (obji->state.previous == NULL ? current : &obji->state.previous->skeleton[j]);
+		const bone *current  = &obji->state.skeleton[i];
+		const bone *previous = (obji->state.previous == NULL ? current : &obji->state.previous->skeleton[i]);
 
 		// Interpolate between bone states.
-		//boneInterpolate(&obji->skeletonState[1][j], &obji->skeletonState[0][j], interpT, &interpBone);
+		//boneInterpolate(&obji->skeletonState[1][i], &obji->skeletonState[0][i], interpT, &interpBone);
 		boneInterpolate(previous, current, interpT, &interpBone);
 
 		// Convert the bone to a matrix.
-		//mat4SetScaleMatrix(&gfxMngr->sklTransformState[j], gfxMngr->sklAnimationState[j].scale.x, gfxMngr->sklAnimationState[j].scale.y, gfxMngr->sklAnimationState[j].scale.z);
-		//mat4SetTranslationMatrix(&gfxMngr->sklTransformState[j], gfxMngr->sklAnimationState[j].position.x, gfxMngr->sklAnimationState[j].position.y, gfxMngr->sklAnimationState[j].position.z);
-		mat4SetRotationMatrix(&gfxMngr->sklTransformState[j], &interpBone.orientation);
-		//mat4Rotate(&gfxMngr->sklTransformState[j], &gfxMngr->sklAnimationState[j].orientation);
-		//mat4Translate(&gfxMngr->sklTransformState[j], gfxMngr->sklAnimationState[j].position.x, gfxMngr->sklAnimationState[j].position.y, gfxMngr->sklAnimationState[j].position.z);
-		mat4Scale(&gfxMngr->sklTransformState[j], interpBone.scale.x, interpBone.scale.y, interpBone.scale.z);
-		gfxMngr->sklTransformState[j].m[3][0] = interpBone.position.x;
-		gfxMngr->sklTransformState[j].m[3][1] = interpBone.position.y;
-		gfxMngr->sklTransformState[j].m[3][2] = interpBone.position.z;
+		//mat4SetScaleMatrix(&gfxMngr->sklTransformState[i], gfxMngr->sklAnimationState[i].scale.x, gfxMngr->sklAnimationState[i].scale.y, gfxMngr->sklAnimationState[i].scale.z);
+		//mat4SetTranslationMatrix(&gfxMngr->sklTransformState[i], gfxMngr->sklAnimationState[i].position.x, gfxMngr->sklAnimationState[i].position.y, gfxMngr->sklAnimationState[i].position.z);
+		mat4SetRotationMatrix(&gfxMngr->sklTransformState[i], &interpBone.orientation);
+		//mat4Rotate(&gfxMngr->sklTransformState[i], &gfxMngr->sklAnimationState[i].orientation);
+		//mat4Translate(&gfxMngr->sklTransformState[i], gfxMngr->sklAnimationState[i].position.x, gfxMngr->sklAnimationState[i].position.y, gfxMngr->sklAnimationState[i].position.z);
+		mat4Scale(&gfxMngr->sklTransformState[i], interpBone.scale.x, interpBone.scale.y, interpBone.scale.z);
+		gfxMngr->sklTransformState[i].m[3][0] = interpBone.position.x;
+		gfxMngr->sklTransformState[i].m[3][1] = interpBone.position.y;
+		gfxMngr->sklTransformState[i].m[3][2] = interpBone.position.z;
 
 	}
 
 	/* Draw each renderable. */
-	for(i = 0; i < obji->renderableNum; ++i){
+	while(currentRndr != NULL){
 
 		/* Get texture information for rendering and feed it to the shader. */
 		float texFrag[4];  // The x, y, width and height of the fragment of the texture being rendered.
 		GLuint frameTexID;
-		twiGetFrameInfo(&obji->renderables[i].twi, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &frameTexID, interpT);
+		twiGetFrameInfo(&currentRndr->twi, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &frameTexID, interpT);
 		// Bind the texture (if needed).
 		gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, frameTexID);
 		// Feed the texture coordinates to the shader.
@@ -62,9 +66,9 @@ void renderModel(const objInstance *obji, const camera *cam, const float interpT
 		** The loop converts the global skeleton state in gfxMngr->sklTransformState to local
 		** model space for rendering.
 		*/
-		if(obji->renderables[i].mdl->skl != NULL){
+		if(currentRndr->mdl->skl != NULL){
 
-			const float alpha = floatLerp(obji->renderables[i].alphaPrevious, obji->renderables[i].alpha, interpT);
+			const float alpha = floatLerp(currentRndr->alphaPrevious, currentRndr->alpha, interpT);
 
 			if(alpha > 0.f){
 
@@ -73,50 +77,50 @@ void renderModel(const objInstance *obji, const camera *cam, const float interpT
 				mat4 transform;
 
 				// If there is a valid animated skeleton, apply animation transformations.
-				for(j = 0; j < obji->renderables[i].mdl->skl->boneNum; ++j){
+				for(i = 0; i < currentRndr->mdl->skl->boneNum; ++i){
 
-					// Accumulate the bind positions. We need to use global bone offsets
-					if(obji->renderables[i].mdl->skl->bones[j].parent < obji->renderables[i].mdl->skl->boneNum &&
-					   j != obji->renderables[i].mdl->skl->bones[j].parent){
+					// Accumulate the bind positions. We need to use global bone offsets.
+					if(currentRndr->mdl->skl->bones[i].parent < currentRndr->mdl->skl->boneNum &&
+					   i != currentRndr->mdl->skl->bones[i].parent){
 						// Apply the parent's bind offsets.
-						gfxMngr->sklBindAccumulator[j].x = gfxMngr->sklBindAccumulator[obji->renderables[i].mdl->skl->bones[j].parent].x;
-						gfxMngr->sklBindAccumulator[j].y = gfxMngr->sklBindAccumulator[obji->renderables[i].mdl->skl->bones[j].parent].y;
-						gfxMngr->sklBindAccumulator[j].z = gfxMngr->sklBindAccumulator[obji->renderables[i].mdl->skl->bones[j].parent].z;
+						gfxMngr->sklBindAccumulator[i].x = gfxMngr->sklBindAccumulator[currentRndr->mdl->skl->bones[i].parent].x;
+						gfxMngr->sklBindAccumulator[i].y = gfxMngr->sklBindAccumulator[currentRndr->mdl->skl->bones[i].parent].y;
+						gfxMngr->sklBindAccumulator[i].z = gfxMngr->sklBindAccumulator[currentRndr->mdl->skl->bones[i].parent].z;
 					}else{
-						gfxMngr->sklBindAccumulator[j].x = 0.f;
-						gfxMngr->sklBindAccumulator[j].y = 0.f;
-						gfxMngr->sklBindAccumulator[j].z = 0.f;
+						gfxMngr->sklBindAccumulator[i].x = 0.f;
+						gfxMngr->sklBindAccumulator[i].y = 0.f;
+						gfxMngr->sklBindAccumulator[i].z = 0.f;
 					}
 
 					// If the animated bone is in the model, pass in its animation transforms.
 					/** Use a lookup, same in object.c. **/
-					rndrBone = sklFindBone(obji->skeletonData.skl, j, obji->renderables[i].mdl->skl->bones[j].name);
+					rndrBone = sklFindBone(obji->skeletonData.skl, i, currentRndr->mdl->skl->bones[i].name);
 					if(rndrBone < obji->skeletonData.skl->boneNum){
 
 						// Rotate the bind pose position by the current bone's orientation
 						// and add this offset to the bind pose accumulator.
-						mat4MultNByM(obji->renderables[i].mdl->skl->bones[j].defaultState.position.x,
-						             obji->renderables[i].mdl->skl->bones[j].defaultState.position.y,
-						             obji->renderables[i].mdl->skl->bones[j].defaultState.position.z,
+						mat4MultNByM(currentRndr->mdl->skl->bones[i].defaultState.position.x,
+						             currentRndr->mdl->skl->bones[i].defaultState.position.y,
+						             currentRndr->mdl->skl->bones[i].defaultState.position.z,
 						             0.f,
 						             &gfxMngr->sklTransformState[rndrBone],
 						             &translation);
-						gfxMngr->sklBindAccumulator[j].x += translation.x;
-						gfxMngr->sklBindAccumulator[j].y += translation.y;
-						gfxMngr->sklBindAccumulator[j].z += translation.z;
+						gfxMngr->sklBindAccumulator[i].x += translation.x;
+						gfxMngr->sklBindAccumulator[i].y += translation.y;
+						gfxMngr->sklBindAccumulator[i].z += translation.z;
 
 						// Translate the bone by the inverse of the accumulated bind translations.
 						transform = gfxMngr->sklTransformState[rndrBone];
-						transform.m[3][0] -= gfxMngr->sklBindAccumulator[j].x;
-						transform.m[3][1] -= gfxMngr->sklBindAccumulator[j].y;
-						transform.m[3][2] -= gfxMngr->sklBindAccumulator[j].z;
+						transform.m[3][0] -= gfxMngr->sklBindAccumulator[i].x;
+						transform.m[3][1] -= gfxMngr->sklBindAccumulator[i].y;
+						transform.m[3][2] -= gfxMngr->sklBindAccumulator[i].z;
 
 						// Feed the bone configuration to the shader.
-						glUniformMatrix4fv(gfxMngr->boneArrayID[j], 1, GL_FALSE, &transform.m[0][0]);
+						glUniformMatrix4fv(gfxMngr->boneArrayID[i], 1, GL_FALSE, &transform.m[0][0]);
 
 					}else{
 						// Otherwise pass in an identity bone.
-						glUniformMatrix4fv(gfxMngr->boneArrayID[j], 1, GL_FALSE, &gfxMngr->identityMatrix.m[0][0]);
+						glUniformMatrix4fv(gfxMngr->boneArrayID[i], 1, GL_FALSE, &gfxMngr->identityMatrix.m[0][0]);
 					}
 
 				}
@@ -125,27 +129,34 @@ void renderModel(const objInstance *obji, const camera *cam, const float interpT
 				glUniform1f(gfxMngr->alphaID, alpha);
 
 				/* Render the model. */
-				glBindVertexArray(obji->renderables[i].mdl->vaoID);
-				if(obji->renderables[i].mdl->indexNum > 0){
-					glDrawElements(GL_TRIANGLES, obji->renderables[i].mdl->indexNum, GL_UNSIGNED_INT, (void *)0);
+				glBindVertexArray(currentRndr->mdl->vaoID);
+				if(currentRndr->mdl->indexNum > 0){
+					GLsizei indexNum;
+					void *offset;
+					mdlFindCurrentLOD(currentRndr->mdl, &indexNum, &offset, distance, gfxMngr->biasLOD);
+					if(indexNum){
+						glDrawElements(GL_TRIANGLES, indexNum, GL_UNSIGNED_INT, offset);
+					}
 				}else{
-					glDrawArrays(GL_TRIANGLES, 0, obji->renderables[i].mdl->vertexNum);
+					glDrawArrays(GL_TRIANGLES, 0, currentRndr->mdl->vertexNum);
 				}
 
 			}
 
 		}
 
+		currentRndr = moduleRenderableInstanceNext(currentRndr);
+
 	}
 
 }
 
 /** Clean this up! **/
-void batchRenderSprites(cVector *allSprites, const camera *cam, const float interpT, graphicsManager *gfxMngr){
+/**void batchRenderSprites(cVector *allSprites, const camera *cam, const float interpT, graphicsManager *gfxMngr){
 
-	objInstance *curSpr;
+	objInstance *currentSpr;
+	rndrInstance *currentRndr;
 	size_t i;
-	size_t j = 0;
 	float texFrag[4];
 	GLuint currentTexID;
 	GLuint vboID;
@@ -155,24 +166,26 @@ void batchRenderSprites(cVector *allSprites, const camera *cam, const float inte
 	glUniform4f(gfxMngr->textureFragmentID, 0.f, 0.f, 1.f, 1.f);
 	// Reset the root bone.
 	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &gfxMngr->identityMatrix.m[0][0]);
-	/*glUniform3f(gfxMngr->bonePositionArrayID[0], 0.f, 0.f, 0.f);
+	*glUniform3f(gfxMngr->bonePositionArrayID[0], 0.f, 0.f, 0.f);
 	glUniform4f(gfxMngr->boneOrientationArrayID[0], 1.f, 0.f, 0.f, 1.f);
-	glUniform3f(gfxMngr->boneScaleArrayID[0], 1.f, 1.f, 1.f);*/
+	glUniform3f(gfxMngr->boneScaleArrayID[0], 1.f, 1.f, 1.f);*
 	// Reset the translucency value.
 	glUniform1f(gfxMngr->alphaID, 1.f);
 
 	// Find the first sprite with a valid renderable.
 	// Bind its VAO and use its VBO to draw every other sprite.
 	for(i = 0; i < allSprites->size; ++i){
-		curSpr = *((objInstance **)cvGet(allSprites, i));
-		if(curSpr != NULL){  /** Remove? **/
-			for(j = 0; j < curSpr->renderableNum; ++j){
-				if(curSpr->renderables[j].mdl != NULL){  /** Remove? **/
+		currentSpr = *((objInstance **)cvGet(allSprites, i));
+		if(currentSpr != NULL){  ** Remove? **
+			currentRndr = currentSpr->renderables;
+			while(currentRndr != NULL){
+				if(currentRndr->mdl != NULL){  ** Remove? **
 					// Bind the VAO.
-					glBindVertexArray((*((objInstance **)cvGet(allSprites, i)))->renderables[j].mdl->vaoID);
-					vboID = (*((objInstance **)cvGet(allSprites, i)))->renderables[j].mdl->vboID;
+					glBindVertexArray(currentRndr->mdl->vaoID);
+					vboID = currentRndr->mdl->vboID;
 					goto RENDER_SPRITES;
 				}
+				currentRndr = moduleRenderableInstanceNext(currentRndr);
 			}
 		}
 	}
@@ -180,24 +193,22 @@ void batchRenderSprites(cVector *allSprites, const camera *cam, const float inte
 
 	while(i < allSprites->size){
 
-		curSpr = *((objInstance **)cvGet(allSprites, i));
+		if(currentSpr != NULL){  ** Remove? **
 
-		if(curSpr != NULL){  /** Remove? **/
+			//rndrConfigRenderUpdate(&currentSpr->tempRndrConfig, interpT);
 
-			//rndrConfigRenderUpdate(&curSpr->tempRndrConfig, interpT);
+			while(currentRndr != NULL){
 
-			while(j < curSpr->renderableNum){
+				if(currentRndr->mdl != NULL){  ** Remove? **
 
-				if(curSpr->renderables[j].mdl != NULL){  /** Remove? **/
-
-					twiGetFrameInfo(&curSpr->renderables[j].twi, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &currentTexID, interpT);
+					twiGetFrameInfo(&currentRndr->twi, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &currentTexID, interpT);
 
 					// If the current texture ID differs from the last, render and clear the VBO.
-					if((gfxMngr->lastTexID != currentTexID && currentVertexBatchSize >= /**4**/6) || currentVertexBatchSize >= SPR_MAX_BATCH_SIZE){
+					if((gfxMngr->lastTexID != currentTexID && currentVertexBatchSize >= **4**6) || currentVertexBatchSize >= SPRITE_MAX_BATCH_SIZE){
 						// We need the texture width and height to get around texture offset calculations in the shader.
-						/** This shouldn't be necessary! **/
+						** This shouldn't be necessary! **
 						glBindTexture(GL_TEXTURE_2D, gfxMngr->lastTexID);
-						glBindBuffer(GL_ARRAY_BUFFER, vboID);  /** Why does this need to be bound...? **/
+						glBindBuffer(GL_ARRAY_BUFFER, vboID);  ** Why does this need to be bound...? **
 						glBufferData(GL_ARRAY_BUFFER, sizeof(gfxMngr->sprVertexBatchBuffer), &gfxMngr->sprVertexBatchBuffer[0], GL_DYNAMIC_DRAW);
 						glDrawArrays(GL_TRIANGLES, 0, currentVertexBatchSize);
 						currentVertexBatchSize = 0;
@@ -205,32 +216,32 @@ void batchRenderSprites(cVector *allSprites, const camera *cam, const float inte
 
 					// Add sprite to the current batch.
 					gfxMngr->lastTexID = currentTexID;
-					objiGenerateSprite(curSpr, j, interpT, texFrag, (vertex *)(&gfxMngr->sprVertexBatchBuffer[currentVertexBatchSize]));
+					objiGenerateSprite(currentSpr, currentRndr, interpT, texFrag, (vertex *)(&gfxMngr->sprVertexBatchBuffer[currentVertexBatchSize]));
 					// Copy duplicates, since IBOs aren't working.
 					gfxMngr->sprVertexBatchBuffer[currentVertexBatchSize+5] = gfxMngr->sprVertexBatchBuffer[currentVertexBatchSize];
 					gfxMngr->sprVertexBatchBuffer[currentVertexBatchSize+4] = gfxMngr->sprVertexBatchBuffer[currentVertexBatchSize+2];
 					gfxMngr->sprVertexBatchBuffer[currentVertexBatchSize+2] = gfxMngr->sprVertexBatchBuffer[currentVertexBatchSize+3];
-					currentVertexBatchSize += /**4**/6;
+					currentVertexBatchSize += **4**6;
 
 				}
 
-				++j;
+				currentRndr = moduleRenderableInstanceNext(currentRndr);
 
 			}
-
-			j = 0;
 
 		}
 
 		++i;
+		currentSpr = *((objInstance **)cvGet(allSprites, i));
+		currentRndr = currentSpr->renderables;
 
 	}
 
 	// Renders the final batch if necessary.
-	if(currentVertexBatchSize >= /**4**/6){
-		/** This STILL shouldn't be necessary! **/
+	if(currentVertexBatchSize >= **4**6){
+		** This STILL shouldn't be necessary! **
 		glBindTexture(GL_TEXTURE_2D, gfxMngr->lastTexID);
-		glBindBuffer(GL_ARRAY_BUFFER, vboID);  /** Why does this need to be bound...? **/
+		glBindBuffer(GL_ARRAY_BUFFER, vboID);  ** Why does this need to be bound...? **
 		glBufferData(GL_ARRAY_BUFFER, sizeof(gfxMngr->sprVertexBatchBuffer), &gfxMngr->sprVertexBatchBuffer[0], GL_DYNAMIC_DRAW);
 		glDrawArrays(GL_TRIANGLES, 0, currentVertexBatchSize);
 	}
@@ -239,7 +250,7 @@ void batchRenderSprites(cVector *allSprites, const camera *cam, const float inte
 
 void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *cam){
 
-	/** Use quick sort and potentially some sort of linked list data structure? **/
+	** Use quick sort and potentially some sort of linked list data structure? **
 
 	cVector translucentModels; cvInit(&translucentModels, 1);  // Holds object pointers
 	cVector distances;  cvInit(&distances, 1);  // Holds floats
@@ -293,7 +304,7 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *c
 	cvClear(&translucentModels);
 	cvClear(&distances);
 
-}
+}**/
 
 /** stateManager should be const. **/
 /**void sortElements(stateManager *gameStateManager, const size_t stateID,
@@ -371,9 +382,9 @@ void renderScene(graphicsManager *gfxMngr, scene *scn, camera *cam, const float 
 
 }
 
-/** stateManager should be const. **/
-/** This entire function should be part of the camera. **/
-/**void renderScene(stateManager *gameStateManager, const size_t stateID, const float interpT, graphicsManager *gfxMngr){
+** stateManager should be const. **
+** This entire function should be part of the camera. **
+**void renderScene(stateManager *gameStateManager, const size_t stateID, const float interpT, graphicsManager *gfxMngr){
 
 	// Update cameras.
 	size_t i;

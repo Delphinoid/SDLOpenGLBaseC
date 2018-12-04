@@ -4,6 +4,11 @@
 #include "camera.h"
 #include "memoryList.h"
 
+#define RESOURCE_DEFAULT_CAMERA_SIZE sizeof(camera)
+#ifndef RESOURCE_DEFAULT_CAMERA_NUM
+	#define RESOURCE_DEFAULT_CAMERA_NUM 2
+#endif
+
 extern memoryList __CameraResourceArray;  // Contains scenes.
 
 /** Support locals? Merge all module containers? **/

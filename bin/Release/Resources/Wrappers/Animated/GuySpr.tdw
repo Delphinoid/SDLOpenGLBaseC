@@ -1,6 +1,4 @@
-name GuySpr
-
-image "Resources\Images\Guy\Guy.png" {
+texture "Guy\Guy.tdt" {
 	subframe 0/0/200/170
 	subframe 200/0/200/170
 	subframe 400/0/200/170

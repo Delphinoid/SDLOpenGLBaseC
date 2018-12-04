@@ -1,77 +1,44 @@
 #ifndef MODULERENDERABLE_H
 #define MODULERENDERABLE_H
 
-#include "memoryManager.h"
 #include "renderable.h"
+#include "memorySLink.h"
 
 #define RESOURCE_DEFAULT_RENDERABLE_SIZE sizeof(renderable)
 #ifndef RESOURCE_DEFAULT_RENDERABLE_NUM
-	#define RESOURCE_DEFAULT_RENDERABLE_NUM RESOURCE_DEFAULT_MODEL_NUM
+	#define RESOURCE_DEFAULT_RENDERABLE_NUM 1024
 #endif
 
 #define RESOURCE_DEFAULT_RENDERABLE_INSTANCE_SIZE sizeof(rndrInstance)
 #ifndef RESOURCE_DEFAULT_RENDERABLE_INSTANCE_NUM
-	#define RESOURCE_DEFAULT_RENDERABLE_INSTANCE_NUM 4*RESOURCE_DEFAULT_OBJECT_INSTANCE_NUM
+	#define RESOURCE_DEFAULT_RENDERABLE_INSTANCE_NUM 4096
 #endif
 
-#ifndef MODULE_RENDERABLE_USE_LOCAL_DEFINITION
+extern memorySLink __RenderableResourceArray;          // Contains renderable.
+extern memorySLink __RenderableInstanceResourceArray;  // Contains rndrInstances.
 
-extern memoryPool  RenderableResourceArray;          // Contains renderable.
-extern memorySLink RenderableInstanceResourceArray;  // Contains rndrInstances.
+/** Support locals? Merge all module containers? **/
 
-return_t moduleRenderableInit(){
-	void *memory = memAllocate(
-		memPoolAllocationSize(
-			NULL,
-			RESOURCE_DEFAULT_RENDERABLE_SIZE,
-			RESOURCE_DEFAULT_RENDERABLE_NUM
-		)
-	);
-	if(memPoolCreate(&RenderableResourceArray, memory, RESOURCE_DEFAULT_RENDERABLE_SIZE, RESOURCE_DEFAULT_RENDERABLE_NUM) == NULL){
-		return -1;
-	}
-	memory = memAllocate(
-		memSLinkAllocationSize(
-			NULL,
-			RESOURCE_DEFAULT_RENDERABLE_INSTANCE_SIZE,
-			RESOURCE_DEFAULT_RENDERABLE_INSTANCE_NUM
-		)
-	);
-	if(memSLinkCreate(&RenderableInstanceResourceArray, memory, RESOURCE_DEFAULT_RENDERABLE_INSTANCE_SIZE, RESOURCE_DEFAULT_RENDERABLE_INSTANCE_NUM) == NULL){
-		return -1;
-	}
-	return 1;
-}
+return_t moduleRenderableResourcesInit();
+void moduleRenderableResourcesReset();
+void moduleRenderableResourcesDelete();
 
-#else
+renderable *moduleRenderableAppendStatic(renderable **array);
+renderable *moduleRenderableAppend(renderable **array);
+renderable *moduleRenderableInsertAfterStatic(renderable *resource);
+renderable *moduleRenderableInsertAfter(renderable *resource);
+renderable *moduleRenderableNext(renderable *i);
+void moduleRenderableFree(renderable **array, renderable *resource, renderable *previous);
+void moduleRenderableFreeArray(renderable **array);
+void moduleRenderableClear();
 
-return_t moduleRenderableInit(
-	memoryPool  *RenderableResourceArray,         // Contains renderable.
-	memorySLink *RenderableInstanceResourceArray  // Contains rndrInstances.
-){
-	void *memory = memAllocate(
-		memPoolAllocationSize(
-			NULL,
-			RESOURCE_DEFAULT_RENDERABLE_SIZE,
-			RESOURCE_DEFAULT_RENDERABLE_NUM
-		)
-	);
-	if(memPoolCreate(RenderableResourceArray, memory, RESOURCE_DEFAULT_RENDERABLE_SIZE, RESOURCE_DEFAULT_RENDERABLE_NUM) == NULL){
-		return -1;
-	}
-	memory = memAllocate(
-		memSLinkAllocationSize(
-			NULL,
-			RESOURCE_DEFAULT_RENDERABLE_INSTANCE_SIZE,
-			RESOURCE_DEFAULT_RENDERABLE_INSTANCE_NUM
-		)
-	);
-	if(memSLinkCreate(RenderableInstanceResourceArray, memory, RESOURCE_DEFAULT_RENDERABLE_INSTANCE_SIZE, RESOURCE_DEFAULT_RENDERABLE_INSTANCE_NUM) == NULL){
-		return -1;
-	}
-	return 1;
-}
-
-#endif
+rndrInstance *moduleRenderableInstanceAppendStatic(rndrInstance **array);
+rndrInstance *moduleRenderableInstanceAppend(rndrInstance **array);
+rndrInstance *moduleRenderableInstanceInsertAfterStatic(rndrInstance *resource);
+rndrInstance *moduleRenderableInstanceInsertAfter(rndrInstance *resource);
+rndrInstance *moduleRenderableInstanceNext(rndrInstance *i);
+void moduleRenderableInstanceFree(rndrInstance **array, rndrInstance *resource, rndrInstance *previous);
+void moduleRenderableInstanceFreeArray(rndrInstance **array);
+void moduleRenderableInstanceClear();
 
 #endif

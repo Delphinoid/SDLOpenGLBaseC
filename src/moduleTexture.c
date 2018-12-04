@@ -4,14 +4,6 @@
 #include "inline.h"
 #include <string.h>
 
-#define RESOURCE_DEFAULT_TEXTURE_SIZE sizeof(texture)
-#ifndef RESOURCE_DEFAULT_TEXTURE_NUM
-	#define RESOURCE_DEFAULT_TEXTURE_NUM 4096
-#endif
-
-#define RESOURCE_TEXTURE_CONSTANTS  1
-#define RESOURCE_TEXTURE_BLOCK_SIZE memPoolBlockSize(sizeof(texture))
-
 memoryPool __TextureResourceArray;  // Contains textures.
 
 return_t moduleTextureResourcesInit(){
@@ -44,6 +36,7 @@ void moduleTextureResourcesReset(){
 		memFree(region->start);
 		region = next;
 	}
+	__TextureResourceArray.region->next = NULL;
 }
 void moduleTextureResourcesDelete(){
 	memoryRegion *region;
@@ -81,6 +74,7 @@ __FORCE_INLINE__ texture *moduleTextureAllocate(){
 	return r;
 }
 __FORCE_INLINE__ void moduleTextureFree(texture *resource){
+	tDelete(resource);
 	memPoolFree(&__TextureResourceArray, (void *)resource);
 }
 texture *moduleTextureFind(const char *name){
@@ -101,7 +95,7 @@ texture *moduleTextureFind(const char *name){
 			}else if(flag == MEMORY_POOL_BLOCK_INVALID){
 				return NULL;
 			}
-			memPoolBlockNext(__TextureResourceArray, i);
+			i = memPoolBlockNext(__TextureResourceArray, i);
 		}
 		region = memAllocatorNext(region);
 	} while(region != NULL);
@@ -119,12 +113,12 @@ void moduleTextureClear(){
 			const byte_t flag = memPoolBlockStatus(i);
 			if(flag == MEMORY_POOL_BLOCK_ACTIVE){
 
-				tDelete(i);
+				moduleTextureFree(i);
 
 			}else if(flag == MEMORY_POOL_BLOCK_INVALID){
 				return;
 			}
-			memPoolBlockNext(__TextureResourceArray, i);
+			i = memPoolBlockNext(__TextureResourceArray, i);
 		}
 		region = memAllocatorNext(region);
 		if(region == NULL){

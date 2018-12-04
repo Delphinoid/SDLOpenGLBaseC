@@ -4,14 +4,6 @@
 #include "inline.h"
 #include <string.h>
 
-#define RESOURCE_DEFAULT_TEXTURE_WRAPPER_SIZE sizeof(textureWrapper)
-#ifndef RESOURCE_DEFAULT_TEXTURE_WRAPPER_NUM
-	#define RESOURCE_DEFAULT_TEXTURE_WRAPPER_NUM 4096
-#endif
-
-#define RESOURCE_TEXTURE_WRAPPER_CONSTANTS  1
-#define RESOURCE_TEXTURE_WRAPPER_BLOCK_SIZE memPoolBlockSize(sizeof(textureWrapper))
-
 memoryPool __TextureWrapperResourceArray;  // Contains textureWrappers.
 
 return_t moduleTextureWrapperResourcesInit(){
@@ -44,6 +36,7 @@ void moduleTextureWrapperResourcesReset(){
 		memFree(region->start);
 		region = next;
 	}
+	__TextureWrapperResourceArray.region->next = NULL;
 }
 void moduleTextureWrapperResourcesDelete(){
 	memoryRegion *region;
@@ -81,6 +74,7 @@ __FORCE_INLINE__ textureWrapper *moduleTextureWrapperAllocate(){
 	return r;
 }
 __FORCE_INLINE__ void moduleTextureWrapperFree(textureWrapper *resource){
+	twDelete(resource);
 	memPoolFree(&__TextureWrapperResourceArray, (void *)resource);
 }
 textureWrapper *moduleTextureWrapperFind(const char *name){
@@ -101,7 +95,7 @@ textureWrapper *moduleTextureWrapperFind(const char *name){
 			}else if(flag == MEMORY_POOL_BLOCK_INVALID){
 				return NULL;
 			}
-			memPoolBlockNext(__TextureWrapperResourceArray, i);
+			i = memPoolBlockNext(__TextureWrapperResourceArray, i);
 		}
 		region = memAllocatorNext(region);
 	} while(region != NULL);
@@ -118,12 +112,12 @@ void moduleTextureWrapperClear(){
 			byte_t flag = memPoolBlockStatus(i);
 			if(flag == MEMORY_POOL_BLOCK_ACTIVE){
 
-				twDelete(i);
+				moduleTextureWrapperFree(i);
 
 			}else if(flag == MEMORY_POOL_BLOCK_INVALID){
 				return;
 			}
-			memPoolBlockNext(__TextureWrapperResourceArray, i);
+			i = memPoolBlockNext(__TextureWrapperResourceArray, i);
 		}
 		region = memAllocatorNext(region);
 		if(region == NULL){

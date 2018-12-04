@@ -92,9 +92,9 @@ typedef struct {
 	//(memSLinkBlockSize(bytes) * (length - 1) + memSLinkBlockSizeUnaligned(bytes) + (uintptr_t)memSLinkAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 
 #define memSLinkFirst(region)       ((void *)memSLinkAlignStartData((region)->start))
-#define memSLinkNext(i)             i = memSLinkDataGetNext(i)
+#define memSLinkNext(i)             memSLinkDataGetNext(i)
 #define memSLinkBlockStatus(block)  memSLinkDataGetActiveMasked(block)
-#define memSLinkBlockNext(array, i) i = (void *)((byte_t *)i + (array).block)
+#define memSLinkBlockNext(array, i) (void *)((byte_t *)i + (array).block)
 
 void memSLinkInit(memorySLink *array);
 void *memSLinkCreate(memorySLink *array, void *start, const size_t bytes, const size_t length);

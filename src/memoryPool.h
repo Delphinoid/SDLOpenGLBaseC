@@ -78,7 +78,7 @@ typedef struct {
 
 #define memPoolFirst(region)      ((void *)memPoolAlignStartData((region)->start))
 #define memPoolBlockStatus(block) memPoolDataGetFlags(block)
-#define memPoolBlockNext(pool, i) i = (void *)((byte_t *)i + (pool).block)
+#define memPoolBlockNext(pool, i) (void *)((byte_t *)i + (pool).block)
 
 void memPoolInit(memoryPool *pool);
 void *memPoolCreate(memoryPool *pool, void *start, const size_t bytes, const size_t length);

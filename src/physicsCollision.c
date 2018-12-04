@@ -2,11 +2,11 @@
 #include "mat3.h"
 #include "inline.h"
 
-#define PHYS_COLLIDER_DEFAULT_VERTEX_MASS 1
+#define PHYSICS_COLLIDER_DEFAULT_VERTEX_MASS 1
 
 static float physColliderGenerateMassMesh(physCollider *collider, float *vertexMassArray){
 
-	hbMesh *cHull = (hbMesh *)&collider->hb.hull;
+	cMesh *cHull = (cMesh *)&collider->c.hull;
 
 	float totalMass = 0.f;
 
@@ -34,7 +34,7 @@ static float physColliderGenerateMassMesh(physCollider *collider, float *vertexM
 			if(vertexMassArray != NULL){
 				vertexMass = vertexMassArray[i];
 			}else{
-				vertexMass = PHYS_COLLIDER_DEFAULT_VERTEX_MASS;
+				vertexMass = PHYSICS_COLLIDER_DEFAULT_VERTEX_MASS;
 			}
 			collider->centroid.x += cHull->vertices[i].x * vertexMass;
 			collider->centroid.y += cHull->vertices[i].y * vertexMass;
@@ -77,7 +77,7 @@ static float physColliderGenerateMassMesh(physCollider *collider, float *vertexM
 }
 static void physColliderGenerateMomentMesh(const physCollider *collider, const vec3 *centroid, const float *vertexMassArray, float *inertiaTensor){
 
-	const hbMesh *cHull = (const hbMesh *)&collider->hb.hull;
+	const cMesh *cHull = (const cMesh *)&collider->c.hull;
 
 	size_t i;
 	inertiaTensor[0] = 0.f; inertiaTensor[1] = 0.f; inertiaTensor[2] = 0.f;
@@ -95,7 +95,7 @@ static void physColliderGenerateMomentMesh(const physCollider *collider, const v
 		if(vertexMassArray != NULL){
 			vertexMass = vertexMassArray[i];
 		}else{
-			vertexMass = PHYS_COLLIDER_DEFAULT_VERTEX_MASS;
+			vertexMass = PHYSICS_COLLIDER_DEFAULT_VERTEX_MASS;
 		}
 		// xx
 		inertiaTensor[0] += (sqrY + sqrZ) * vertexMass;
@@ -115,8 +115,8 @@ static void physColliderGenerateMomentMesh(const physCollider *collider, const v
 }
 static void physColliderUpdateMesh(physCollider *collider, const physCollider *local, const bone *configuration){
 
-	hbMesh *cGlobal = (hbMesh *)&collider->hb.hull;
-	const hbMesh *cLocal = (const hbMesh *)&local->hb.hull;
+	cMesh *cGlobal = (cMesh *)&collider->c.hull;
+	const cMesh *cLocal = (const cMesh *)&local->c.hull;
 
 	size_t i;
 
@@ -238,7 +238,7 @@ __FORCE_INLINE__ float physColliderGenerateMass(physCollider *collider, float *v
 	** and default AABB. Returns the total mass.
 	*/
 
-	return physColliderGenerateMassJumpTable[collider->hb.type](collider, vertexMassArray);
+	return physColliderGenerateMassJumpTable[collider->c.type](collider, vertexMassArray);
 
 }
 
@@ -254,7 +254,7 @@ __FORCE_INLINE__ void physColliderGenerateMoment(const physCollider *collider, c
 	** Calculates the collider's moment of inertia tensor.
 	*/
 
-	physColliderGenerateMomentJumpTable[collider->hb.type](collider, centroid, vertexMassArray, inertiaTensor);
+	physColliderGenerateMomentJumpTable[collider->c.type](collider, centroid, vertexMassArray, inertiaTensor);
 
 }
 
@@ -273,10 +273,10 @@ __FORCE_INLINE__ void physColliderUpdate(physCollider *collider, const physColli
 	** collider's global position.
 	*/
 
-	physColliderUpdateJumpTable[collider->hb.type](collider, local, configuration);
+	physColliderUpdateJumpTable[collider->c.type](collider, local, configuration);
 
 }
 
 void physColliderDelete(physCollider *collider){
-	hbDelete(&collider->hb);
+	cDelete(&collider->c);
 }

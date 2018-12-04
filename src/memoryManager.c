@@ -27,7 +27,7 @@
 		return memTreeAllocate(&__memmngr.allocator, bytes);
 	}
 
-	__FORCE_INLINE__ void *memReallocateFixed(void *data, const size_t bytes){
+	__FORCE_INLINE__ void *memReallocateStatic(void *data, const size_t bytes){
 		return memTreeReallocate(&__memmngr.allocator, data, bytes);
 	}
 
@@ -154,7 +154,7 @@ __FORCE_INLINE__ void *memAllocate(const size_t bytes){
 	#endif
 }
 
-__FORCE_INLINE__ void *memReallocateForced(void *data, const const size_t bytes){
+__FORCE_INLINE__ void *memReallocate(void *data, const const size_t bytes){
 	#ifdef MEMORY_MANAGER_ENFORCE_STATIC_VIRTUAL_HEAP
 	return memTreeReallocate(&__memmngr.allocator, bytes);
 	#else

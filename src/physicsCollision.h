@@ -2,7 +2,7 @@
 #define PHYSICSCOLLISION_H
 
 #include "physicsBodyShared.h"
-#include "hitboxCollision.h"
+#include "collision.h"
 #include "bone.h"
 
 typedef uint_least8_t physColliderIndex_t;
@@ -10,14 +10,14 @@ typedef uint_least8_t physCollisionIndex_t;
 
 /** Allow more than just convex meshes? **/
 typedef struct {
-	hbAABB aabb;  // The hull's bounding box.
-	hitbox hb;    // The collision mesh in local space.
+	cAABB aabb;  // The hull's bounding box.
+	collider c;  // The collision mesh in local space.
 	vec3 centroid;
 } physCollider;
 
 typedef struct {
 	physicsBodyIndex_t collisionID;  // An identifier for the other body involved in the collision.
-	hbCollisionInfo info;
+	cCollisionInfo info;
 } physCollisionInfo;
 
 float physColliderGenerateMass(physCollider *collider, float *vertexMassArray);

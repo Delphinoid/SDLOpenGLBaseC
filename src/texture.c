@@ -3,93 +3,279 @@
 #include "texture.h"
 #include "memoryManager.h"
 #include "helpersFileIO.h"
+#include "inline.h"
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
+#include <math.h>
+
+#define IMAGE_RESOURCE_DIRECTORY_STRING "Resources\\Images\\"
+#define IMAGE_RESOURCE_DIRECTORY_LENGTH 17
+
+#define TEXTURE_RESOURCE_DIRECTORY_STRING "Resources\\Textures\\"
+#define TEXTURE_RESOURCE_DIRECTORY_LENGTH 19
 
 /** Maybe remove printf()s? **/
 
 void tInit(texture *tex){
-	tex->name = NULL;
 	tex->id = 0;
+	tex->format = 0;
 	tex->width = 0;
 	tex->height = 0;
+	tex->name = NULL;
+	tex->filtering = TEXTURE_FILTER_MODE_ANY;
 	tex->translucent = 0;
 }
 
-void tGenerate(texture *tex, const GLsizei width, const GLsizei height, const GLint format, const GLint filter, const GLvoid *data){
-	glGenTextures(1, &tex->id);
-	glBindTexture(GL_TEXTURE_2D, tex->id);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
-	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-	tex->width = width;
-	tex->height = height;
+static void tInitFiltering(int_least8_t filtering, const int_least8_t mips){
+
+	GLint filteringMin, filteringMag;
+
+	if(filtering == TEXTURE_FILTER_MODE_ANY){
+		filtering = TEXTURE_FILTER_MODE_DEFAULT;
+	}
+
+	switch(filtering){
+		case TEXTURE_FILTER_MODE_NEAREST:
+			if(mips > 1){
+				filteringMin = GL_NEAREST_MIPMAP_NEAREST;
+			}else{
+				filteringMin = GL_NEAREST;
+			}
+			filteringMag = GL_NEAREST;
+		break;
+		case TEXTURE_FILTER_MODE_LINEAR:
+			if(mips > 1){
+				filteringMin = GL_NEAREST_MIPMAP_LINEAR;
+			}else{
+				filteringMin = GL_LINEAR;
+			}
+			filteringMag = GL_LINEAR;
+		break;
+		case TEXTURE_FILTER_MODE_BILINEAR:
+			if(mips > 1){
+				filteringMin = GL_LINEAR_MIPMAP_NEAREST;
+			}else{
+				filteringMin = GL_LINEAR;
+			}
+			filteringMag = GL_LINEAR;
+		break;
+		case TEXTURE_FILTER_MODE_TRILINEAR:
+			if(mips > 1){
+				filteringMin = GL_LINEAR_MIPMAP_LINEAR;
+			}else{
+				filteringMin = GL_LINEAR;
+			}
+			filteringMag = GL_LINEAR;
+		break;
+		default:
+			return;
+	}
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filteringMin);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filteringMag);
+
+}
+
+static SDL_Surface *tLoadImage(const char *path){
+	return IMG_Load(path);
+}
+
+static GLuint tCreate(){
+	GLuint id;
+	glGenTextures(1, &id);
+	glBindTexture(GL_TEXTURE_2D, id);
+	return id;
 }
 
 return_t tLoad(texture *tex, const char *prgPath, const char *filePath){
 
-	SDL_Surface *SDLimage;
-	GLint pixelFormat;
 	GLenum glError;
+	SDL_Surface *image = NULL;
+	GLenum format;
+	GLuint bytes;
+	GLint mipNum = 0;
+	GLsizei mips[32][4];
 
 	char fullPath[FILE_MAX_PATH_LENGTH];
 	const size_t fileLength = strlen(filePath);
 
+	FILE *texInfo;
+
 	tInit(tex);
 
-	fileGenerateFullPath(&fullPath[0], prgPath, strlen(prgPath), filePath, fileLength);
+	fileGenerateFullPath(fullPath, prgPath, strlen(prgPath), TEXTURE_RESOURCE_DIRECTORY_STRING, TEXTURE_RESOURCE_DIRECTORY_LENGTH, filePath, fileLength);
+	texInfo = fopen(fullPath, "r");
 
-	/* Load image with SDL_Image */
-	SDLimage = IMG_Load(&fullPath[0]);
-	if(SDLimage == NULL){
-		printf("Error generating SDL_Surface for texture \"%s\": %s\n", &fullPath[0], SDL_GetError());
-		return 0;
-	}
+	if(texInfo != NULL){
 
-	if(SDLimage->format->BytesPerPixel == 3){
-		pixelFormat = GL_RGB;  // 24 bits per pixel is most likely the RGB format
-	}else if(SDLimage->format->BytesPerPixel == 4){
-		pixelFormat = GL_RGBA; // 32 bits per pixel is most likely the RGBA format
+		char lineFeed[FILE_MAX_LINE_LENGTH];
+		char *line;
+		size_t lineLength;
+
+		fileLine_t currentLine = 0;  // Current file line being read.
+
+		while(fileParseNextLine(texInfo, lineFeed, sizeof(lineFeed), &line, &lineLength)){
+
+			++currentLine;
+
+			// Image
+			if(lineLength >= 7 && strncmp(line, "image ", 6) == 0){
+				if(image == NULL){
+					char imgPath[FILE_MAX_PATH_LENGTH];
+					if(line[6] == '"' && line[lineLength-1] == '"'){
+						line[lineLength-1] = '\0';
+						++line;
+						lineLength -= 2;
+					}
+					fileGenerateFullPath(imgPath, prgPath, strlen(prgPath), IMAGE_RESOURCE_DIRECTORY_STRING, IMAGE_RESOURCE_DIRECTORY_LENGTH, &line[6], lineLength-6);
+					image = tLoadImage(imgPath);
+					if(image == NULL){
+						printf("Error generating SDL_Surface for texture \"%s\": %s\n", imgPath, SDL_GetError());
+					}
+				}
+
+			// Filtering
+			}else if(lineLength >= 13 && strncmp(line, "filter ", 7) == 0){
+				if(strncmp(line+7, "ANY", 3) == 0){
+					tex->filtering = TEXTURE_FILTER_MODE_ANY;
+
+				}else if(strncmp(line+7, "NEAREST", 7) == 0){
+					tex->filtering = TEXTURE_FILTER_MODE_NEAREST;
+
+				}else if(strncmp(line+7, "LINEAR", 6) == 0){
+					tex->filtering = TEXTURE_FILTER_MODE_LINEAR;
+
+				}else if(strncmp(line+7, "BILINEAR", 8) == 0){
+					tex->filtering = TEXTURE_FILTER_MODE_BILINEAR;
+
+				}else if(strncmp(line+7, "TRILINEAR", 9) == 0){
+					tex->filtering = TEXTURE_FILTER_MODE_TRILINEAR;
+
+				}
+
+			// MIPs
+			}else if(lineLength >= 11 && strncmp(line, "mip ", 4) == 0){
+				if(mipNum < 32){
+					// Loads start and end textures, start and end subframes and the frame delays.
+					int i;
+					char *token = strtok(line+4, "/");
+					for(i = 0; i < 4; ++i){
+						mips[mipNum][i] = strtol(token, NULL, 0);
+						token = strtok(NULL, "/");
+					}
+					if(
+						(mipNum > 0 && mips[mipNum][2] == mips[mipNum-1][2] >> 1 && mips[mipNum][3] == mips[mipNum-1][3] >> 1) ||
+						(mipNum == 0 && mips[0][0] == 0 && mips[0][1] == 0)
+					){
+						++mipNum;
+					}else{
+						printf("Error loading texture \"%s\": MIP at line %u is invalid.\n", fullPath, currentLine);
+					}
+				}
+
+			}
+
+		}
+
+		fclose(texInfo);
+
 	}else{
-		pixelFormat = -1;
-	}
-
-
-	/* Convert it to an OpenGL texture and free the SDL Surface */
-	tGenerate(tex, SDLimage->w, SDLimage->h, pixelFormat, TEXTURE_DEFAULT_FILTER_MODE, SDLimage->pixels);
-
-	glError = glGetError();
-	if(glError != GL_NO_ERROR){
-		printf("Error generating OpenGL texture \"%s\": %u\n", &fullPath[0], glError);
-		tDelete(tex);
+		printf("Error loading texture \"%s\": Could not open file.\n", fullPath);
 		return 0;
 	}
 
+	if(image == NULL){
+		printf("Error loading texture \"%s\": No image specified.\n", fullPath);
+		return 0;
+	}
 
-	/* Check if the texture contains translucent (not just transparent) pixels and then free the SDL surface */
-	if(pixelFormat == GL_RGBA){
-		const byte_t *pixelData = (byte_t *)SDLimage->pixels;
-		const GLsizei textureSize = tex->width * tex->height;
+	tex->id = tCreate();
+	if(tex->id == 0){
+		glError = glGetError();
+		if(glError != GL_NO_ERROR){
+			printf("Error generating mip levels for texture \"%s\": %u\nPlease make sure you specified valid mips.\n", fullPath, glError);
+			return 0;
+		}
+		return 0;
+	}
+
+	// Determine the pixel format.
+	switch(image->format->BytesPerPixel){
+		case 4:
+			SDL_ConvertSurfaceFormat(image, SDL_PIXELFORMAT_RGBA8888, 0);
+			tex->format = GL_RGBA8;
+			format = GL_RGBA;
+			bytes = 4;
+		break;
+		default:
+			SDL_ConvertSurfaceFormat(image, SDL_PIXELFORMAT_RGB888, 0);
+			tex->format = GL_RGB8;
+			format = GL_RGB;
+			bytes = 3;
+	}
+
+	// Check if the texture contains translucent pixels.
+	if(format == GL_RGBA){
+		const byte_t *pixels = (byte_t *)image->pixels;
+		const GLsizei textureSize = image->w * image->h;
 		GLsizei i;
 		for(i = 0; i < textureSize; ++i){
-			byte_t alpha = pixelData[i*4+3];
+			byte_t alpha = pixels[i*4+3];
 			if(alpha > 0 && alpha < 255){
 				tex->translucent = 1;
-				i = tex->width * tex->height;
+				break;
 			}
 		}
 	}
-	SDL_FreeSurface(SDLimage);
 
+	// Generate MIPs if none were loaded.
+	if(mipNum == 0){
 
-	tex->name = memAllocate((fileLength+1)*sizeof(char));
+		tex->width = image->w;
+		tex->height = image->h;
+		tex->mips = 1 + floor(log(fmax(tex->width, tex->height)));
+
+		glTexImage2D(GL_TEXTURE_2D, 0, format, image->w, image->h, 0, format, GL_UNSIGNED_BYTE, image->pixels);
+		glGenerateMipmap(GL_TEXTURE_2D);
+
+	}else{
+
+		GLint i;
+		int y;
+		byte_t *pixels = (byte_t *)image->pixels;
+		byte_t *mipmap = memAllocate(mips[0][2] * mips[0][3] * bytes);
+
+		tex->width = mips[0][2];
+		tex->height = mips[0][3];
+		tex->mips = mipNum;
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, mipNum-1);
+		for(i = 0; i < mipNum; ++i){
+
+			// Copy each row of the MIP into a temporary buffer to feed to OpenGL.
+			for(y = 0; y < mips[i][3]; ++y){
+				memcpy((void *)(mipmap + y * mips[i][2] * bytes), (void *)(pixels + (mips[i][1] + y) * image->pitch + mips[i][0] * bytes), mips[i][2] * bytes);
+			}
+			glTexImage2D(GL_TEXTURE_2D, i, format, mips[i][2], mips[i][3], 0, format, GL_UNSIGNED_BYTE, mipmap);
+
+		}
+
+		memFree(mipmap);
+
+	}
+
+	SDL_FreeSurface(image);
+
+	// Change the texture's filtering mode.
+	tInitFiltering(tex->filtering, tex->mips);
+
+	// Generate a name based off the file path.
+	tex->name = fileGenerateResourceName(filePath, fileLength);
 	if(tex->name == NULL){
 		/** Memory allocation failure. **/
 		tDelete(tex);
 		return -1;
 	}
-	memcpy(tex->name, filePath, fileLength);
-	tex->name[fileLength] = '\0';
 
 	return 1;
 
@@ -99,9 +285,41 @@ return_t tDefault(texture *tex){
 
 	GLenum glError;
 	GLsizei pixels[1024];
-	size_t h, w;
+	int x, y;
+	const int_least8_t mips = 1 + floor(log(fmax(tex->width, tex->height)));
 
 	tInit(tex);
+
+	for(y = 0; y < 32; ++y){
+		for(x = 0; x < 32; ++x){
+			if((x / 4) % 2){
+				if((y / 4) % 2){
+					pixels[(y * 32) + x] = 0xFFFF00DC;
+				}else{
+					pixels[(y * 32) + x] = 0xFF000000;
+				}
+			}else{
+				if((y / 4) % 2){
+					pixels[(y * 32) + x] = 0xFF000000;
+				}else{
+					pixels[(y * 32) + x] = 0xFFFF00DC;
+				}
+			}
+		}
+	}
+
+	tex->id = tCreate();
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	tInitFiltering(tex->filtering, mips);
+
+	glError = glGetError();
+	if(glError != GL_NO_ERROR){
+		printf("Error generating default texture: %u\n", glError);
+		tDelete(tex);
+		return 0;
+	}
+
 	tex->name = memAllocate(8*sizeof(char));
 	if(tex->name == NULL){
 		/** Memory allocation failure. **/
@@ -115,40 +333,10 @@ return_t tDefault(texture *tex){
 	tex->name[5] = 'l';
 	tex->name[6] = 't';
 	tex->name[7] = '\0';
+	tex->format = GL_RGBA8;
 	tex->width = 32;
 	tex->height = 32;
-
-	for(h = 0; h < tex->height; ++h){
-		for(w = 0; w < tex->width; ++w){
-			if((w / 4) % 2){
-				if((h / 4) % 2){
-					pixels[(h * tex->width) + w] = 0xFFFF00DC;
-				}else{
-					pixels[(h * tex->width) + w] = 0xFF000000;
-				}
-			}else{
-				if((h / 4) % 2){
-					pixels[(h * tex->width) + w] = 0xFF000000;
-				}else{
-					pixels[(h * tex->width) + w] = 0xFFFF00DC;
-				}
-			}
-		}
-	}
-
-	glGenTextures(1, &tex->id);
-	glBindTexture(GL_TEXTURE_2D, tex->id);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->width, tex->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, TEXTURE_DEFAULT_FILTER_MODE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, TEXTURE_DEFAULT_FILTER_MODE);
-
-	glError = glGetError();
-	if(glError != GL_NO_ERROR){
-		printf("Error generating default texture.\n");
-		tDelete(tex);
-		return 0;
-	}
+	tex->mips = mips;
 
 	return 1;
 

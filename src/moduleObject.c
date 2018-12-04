@@ -4,16 +4,6 @@
 #include "inline.h"
 #include <string.h>
 
-#define RESOURCE_DEFAULT_OBJECT_SIZE sizeof(object)
-#ifndef RESOURCE_DEFAULT_OBJECT_NUM
-	#define RESOURCE_DEFAULT_OBJECT_NUM 1024
-#endif
-
-#define RESOURCE_DEFAULT_OBJECT_INSTANCE_SIZE sizeof(objInstance)
-#ifndef RESOURCE_DEFAULT_OBJECT_INSTANCE_NUM
-	#define RESOURCE_DEFAULT_OBJECT_INSTANCE_NUM 4096
-#endif
-
 memoryPool __ObjectResourceArray;          // Contains objects.
 memoryPool __ObjectInstanceResourceArray;  // Contains object instances.
 
@@ -42,7 +32,6 @@ return_t moduleObjectResourcesInit(){
 }
 void moduleObjectResourcesReset(){
 	memoryRegion *region;
-	moduleObjectInstanceClear();
 	moduleObjectClear();
 	region = __ObjectResourceArray.region->next;
 	while(region != NULL){
@@ -51,6 +40,7 @@ void moduleObjectResourcesReset(){
 		region = next;
 	}
 	__ObjectResourceArray.region->next = NULL;
+	moduleObjectInstanceClear();
 	region = __ObjectInstanceResourceArray.region->next;
 	while(region != NULL){
 		memoryRegion *next = memAllocatorNext(region);
@@ -61,7 +51,6 @@ void moduleObjectResourcesReset(){
 }
 void moduleObjectResourcesDelete(){
 	memoryRegion *region;
-	moduleObjectInstanceClear();
 	moduleObjectClear();
 	region = __ObjectResourceArray.region;
 	while(region != NULL){
@@ -69,6 +58,7 @@ void moduleObjectResourcesDelete(){
 		memFree(region->start);
 		region = next;
 	}
+	moduleObjectInstanceClear();
 	region = __ObjectInstanceResourceArray.region;
 	while(region != NULL){
 		memoryRegion *next = memAllocatorNext(region);
@@ -98,6 +88,7 @@ __FORCE_INLINE__ object *moduleObjectAllocate(){
 	return r;
 }
 __FORCE_INLINE__ void moduleObjectFree(object *resource){
+	objDelete(resource);
 	memPoolFree(&__ObjectResourceArray, (void *)resource);
 }
 object *moduleObjectFind(const char *name){
@@ -118,7 +109,7 @@ object *moduleObjectFind(const char *name){
 			}else if(flag == MEMORY_POOL_BLOCK_INVALID){
 				return NULL;
 			}
-			memPoolBlockNext(__ObjectResourceArray, i);
+			i = memPoolBlockNext(__ObjectResourceArray, i);
 		}
 		region = memAllocatorNext(region);
 	} while(region != NULL);
@@ -136,12 +127,12 @@ void moduleObjectClear(){
 			const byte_t flag = memPoolBlockStatus(i);
 			if(flag == MEMORY_POOL_BLOCK_ACTIVE){
 
-				objDelete(i);
+				moduleObjectFree(i);
 
 			}else if(flag == MEMORY_POOL_BLOCK_INVALID){
 				return;
 			}
-			memPoolBlockNext(__ObjectResourceArray, i);
+			i = memPoolBlockNext(__ObjectResourceArray, i);
 		}
 		region = memAllocatorNext(region);
 	} while(region != NULL);
@@ -172,6 +163,7 @@ __FORCE_INLINE__ objInstance *moduleObjectInstanceIndex(const size_t i){
 	return memPoolIndex(&__ObjectInstanceResourceArray, i);
 }
 __FORCE_INLINE__ void moduleObjectInstanceFree(objInstance *resource){
+	objiDelete(resource);
 	memPoolFree(&__ObjectInstanceResourceArray, (void *)resource);
 }
 void moduleObjectInstanceClear(){
@@ -184,12 +176,12 @@ void moduleObjectInstanceClear(){
 			const byte_t flag = memPoolBlockStatus(i);
 			if(flag == MEMORY_POOL_BLOCK_ACTIVE){
 
-				objiDelete(i);
+				moduleObjectInstanceFree(i);
 
 			}else if(flag == MEMORY_POOL_BLOCK_INVALID){
 				return;
 			}
-			memPoolBlockNext(__ObjectInstanceResourceArray, i);
+			i = memPoolBlockNext(__ObjectInstanceResourceArray, i);
 		}
 		region = memAllocatorNext(region);
 	} while(region != NULL);

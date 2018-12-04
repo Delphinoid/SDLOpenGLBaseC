@@ -81,10 +81,10 @@ typedef struct {
 
 	#ifdef MEMORY_MANAGER_ENFORCE_STATIC_VIRTUAL_HEAP
 		#define memAllocate(bytes)         memTreeAllocate(&__memmngr->allocator, bytes)
-		#define memReallocateForced(data, bytes) memTreeReallocate(&__memmngr->allocator, data, bytes)
+		#define memReallocate(data, bytes) memTreeReallocate(&__memmngr->allocator, data, bytes)
 	#else
 		#define memAllocate(bytes)         NULL  // Undefined for now.
-		#define memReallocateForced(data, bytes) NULL  // Undefined for now.
+		#define memReallocate(data, bytes) NULL  // Undefined for now.
 	#endif
 
 #else
@@ -108,7 +108,7 @@ typedef struct {
 	extern memoryManager __memmngr;
 
 	void *memAllocateStatic(const size_t bytes);
-	void *memReallocateFixed(void *data, const size_t bytes);
+	void *memReallocateStatic(void *data, const size_t bytes);
 	void memFree(void *data);
 
 	void memPrintFreeBlocks(const unsigned int recursions);
@@ -119,7 +119,7 @@ typedef struct {
 	void memMngrDelete();
 
 	void *memAllocate(const size_t bytes);
-	void *memReallocateForced(void *data, const size_t bytes);
+	void *memReallocate(void *data, const size_t bytes);
 
 #endif
 

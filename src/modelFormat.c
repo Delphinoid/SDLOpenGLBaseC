@@ -3,24 +3,25 @@
 #include "helpersFileIO.h"
 #include "helpersMisc.h"
 #include <string.h>
+#include <float.h>
 
 /** Merge mdlWavefrontObjLoad() with mdlLoad(). **/
 
 #define MDL_VERTEX_START_CAPACITY 1
 #define MDL_INDEX_START_CAPACITY 1
-#define MDL_BONE_START_CAPACITY 1
+#define MDL_LOD_START_CAPACITY 1
 
 /** Remove printf()s **/
 
 #define mdlWavefrontObjFreeReturns() \
-	if(*name != NULL){ \
-		memFree(*name); \
-	} \
 	if(*vertices != NULL){ \
 		memFree(*vertices); \
 	} \
 	if(*indices != NULL){ \
 		memFree(*indices); \
+	} \
+	if(*lods != NULL){ \
+		memFree(*lods); \
 	} \
 
 #define mdlWavefrontObjFreeHelpers() \
@@ -40,7 +41,7 @@
 		memFree(tempBoneWeights); \
 	}
 
-return_t mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndexNum_t *indexNum, vertexIndex_t **indices, char **name, char *sklPath){
+return_t mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex **vertices, size_t *indexNum, size_t **indices, size_t *lodNum, mdlLOD **lods, char *sklPath){
 
 	FILE *mdlInfo = fopen(filePath, "r");
 
@@ -79,6 +80,9 @@ return_t mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, ver
 		size_t tempBoneWeightsCapacity = 1*MDL_VERTEX_START_CAPACITY;
 		float *tempBoneWeights;
 
+		size_t lodCapacity = MDL_LOD_START_CAPACITY;
+		mdlLOD lodTemp;
+
 
 		*vertices = memAllocate(vertexCapacity*sizeof(vertex));
 		if(*vertices == NULL){
@@ -91,6 +95,13 @@ return_t mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, ver
 			memFree(*vertices);
 			return -1;
 		}
+		*lods = memAllocate(lodCapacity*sizeof(mdlLOD));
+		if(*lods == NULL){
+			/** Memory allocation failure. **/
+			memFree(*vertices);
+			memFree(*indices);
+			return -1;
+		}
 		/**const int generatePhysProperties = (mass != NULL && area != NULL && centroid != NULL);
 		if(generatePhysProperties){
 			*mass = 0.f;
@@ -99,12 +110,18 @@ return_t mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, ver
 		}**/
 		*vertexNum = 0;
 		*indexNum = 0;
+		*lodNum = 0;
+		lodTemp.distance = 0.f;
+		lodTemp.offset = 0;
+		lodTemp.indexNum = 0;
+
 		// Temporarily holds vertex positions before they are pushed into vertices
 		tempPositions = memAllocate(tempPositionsCapacity*sizeof(float));
 		if(tempPositions == NULL){
 			/** Memory allocation failure. **/
 			memFree(*vertices);
 			memFree(*indices);
+			memFree(*lods);
 			return -1;
 		}
 		// Temporarily holds vertex UVs they are pushed into vertices
@@ -113,6 +130,7 @@ return_t mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, ver
 			/** Memory allocation failure. **/
 			memFree(*vertices);
 			memFree(*indices);
+			memFree(*lods);
 			memFree(tempPositions);
 			return -1;
 		}
@@ -122,6 +140,7 @@ return_t mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, ver
 			/** Memory allocation failure. **/
 			memFree(*vertices);
 			memFree(*indices);
+			memFree(*lods);
 			memFree(tempPositions);
 			memFree(tempTexCoords);
 			return -1;
@@ -132,6 +151,7 @@ return_t mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, ver
 			/** Memory allocation failure. **/
 			memFree(*vertices);
 			memFree(*indices);
+			memFree(*lods);
 			memFree(tempPositions);
 			memFree(tempTexCoords);
 			memFree(tempNormals);
@@ -143,6 +163,7 @@ return_t mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, ver
 			/** Memory allocation failure. **/
 			memFree(*vertices);
 			memFree(*indices);
+			memFree(*lods);
 			memFree(tempPositions);
 			memFree(tempTexCoords);
 			memFree(tempNormals);
@@ -152,29 +173,8 @@ return_t mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, ver
 
 		while(fileParseNextLine(mdlInfo, lineFeed, sizeof(lineFeed), &line, &lineLength)){
 
-			// Name
-			if(name != NULL && *name == NULL && lineLength >= 6 && strncmp(line, "name ", 5) == 0){
-				while(line[5] == ' ' || line[5] == '\t'){
-					++line;
-					--lineLength;
-				}
-				if(line[5] == '"' && line[lineLength-1] == '"'){
-					++line;
-					lineLength -= 2;
-				}
-				*name = memAllocate((lineLength-4) * sizeof(char));
-				if(*name == NULL){
-					/** Memory allocation failure. **/
-					mdlWavefrontObjFreeHelpers();
-					mdlWavefrontObjFreeReturns();
-					fclose(mdlInfo);
-					return -1;
-				}
-				strncpy(*name, line+5, lineLength-5);
-				(*name)[lineLength-5] = '\0';
-
 			// Skeleton
-			}else if(sklPath != NULL && sklPath[0] == '\0' && lineLength > 9 && strncmp(line, "skeleton ", 9) == 0){
+			if(sklPath != NULL && sklPath[0] == '\0' && lineLength > 9 && strncmp(line, "skeleton ", 9) == 0){
 				size_t pathBegin;
 				size_t pathLength;
 				const char *firstQuote = strchr(line+9, '"');
@@ -192,6 +192,28 @@ return_t mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, ver
 				}
 				strncpy(sklPath, line+pathBegin, pathLength);
 				sklPath[pathLength] = '\0';
+
+			// LOD
+			}else if(lineLength >= 5 && strncmp(line, "lod ", 4) == 0){
+				const float lodNewDistance = strtod(line+4, NULL);
+				if((*lodNum == 0 && lodNewDistance == 0.f) || ((*lodNum > 0 || lodTemp.distance == 0.f) && lodNewDistance > lodTemp.distance)){
+					// The new LOD seems valid.
+					// If one was specified before it, add it to the array.
+					if(lodNewDistance != 0.f){
+						lodTemp.indexNum = *indexNum - lodTemp.indexNum;
+						if(pushDynamicArray((void **)lods, &lodTemp, sizeof(mdlLOD), lodNum, &lodCapacity) == -1){
+							/** Memory allocation failure. **/
+							mdlWavefrontObjFreeHelpers();
+							mdlWavefrontObjFreeReturns();
+							fclose(mdlInfo);
+							return -1;
+						}
+					}
+					// Start the next LOD.
+					lodTemp.distance = lodNewDistance;
+					lodTemp.offset = (void *)(*indexNum * sizeof(vertexIndex_t));
+					lodTemp.indexNum = *indexNum;
+				}
 
 			// Vertex data
 			}else if(lineLength >= 7 && strncmp(line, "v ", 2) == 0){
@@ -476,6 +498,27 @@ return_t mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, ver
 		fclose(mdlInfo);
 		mdlWavefrontObjFreeHelpers();
 
+		// Add the last LOD if it was in progress.
+		if(*lodNum > 0 && lodTemp.distance != 0.f){
+			// The new LOD seems valid.
+			// If one was specified before it, add it to the array.
+			lodTemp.indexNum = *indexNum - lodTemp.indexNum;
+			if(pushDynamicArray((void **)lods, &lodTemp, sizeof(mdlLOD), lodNum, &lodCapacity) == -1){
+				/** Memory allocation failure. **/
+				mdlWavefrontObjFreeHelpers();
+				mdlWavefrontObjFreeReturns();
+				fclose(mdlInfo);
+				return -1;
+			}
+		}
+
+		// Clean up LODs.
+		if(*lodNum <= 1){
+			memFree(*lods);
+			*lods = NULL;
+			*lodNum = 0;
+		}
+
 	}else{
 		printf("Error loading model \"%s\": Could not open file.\n", filePath);
 		return 0;
@@ -517,19 +560,19 @@ return_t mdlWavefrontObjLoad(const char *filePath, vertexIndex_t *vertexNum, ver
 
 #define mdlSMDFreeReturns() \
 	if(*name != NULL){ \
-		free(*name); \
+		memFree(*name); \
 	} \
 	if(*vertices != NULL){ \
-		free(*vertices); \
+		memFree(*vertices); \
 	} \
 	if(*indices != NULL){ \
-		free(*indices); \
+		memFree(*indices); \
 	} \
 
 #define mdlSMDFreeHelpers() \
 	sklDelete(&tempSkl);
 
-return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, size_t *indexNum, size_t **indices, char **name, cVector *allSkeletons){
+return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, size_t *indexNum, size_t **indices, char **name){
 	/*
 	** Temporary function by 8426THMY.
 	*/
@@ -539,18 +582,18 @@ return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, 
 		//Temporarily stores only unique vertices.
 		*vertexNum = 0;
 		size_t vertexCapacity = MDL_VERTEX_START_CAPACITY;
-		*vertices = malloc(vertexCapacity * sizeof(**vertices));
+		*vertices = memAllocate(vertexCapacity * sizeof(**vertices));
 		//Temporarily stores vertex indices for faces.
 		//We can use the model's totalIndices variable for the size so we don't have to set it later.
 		*indexNum = 0;
 		size_t indexCapacity = MDL_INDEX_START_CAPACITY;
-		*indices = malloc(indexCapacity * sizeof(**indices));
+		*indices = memAllocate(indexCapacity * sizeof(**indices));
 		//Temporarily stores bones.
 		skeleton tempSkl;
 		tempSkl.name = NULL;
 		tempSkl.boneNum = 0;
-		size_t boneCapacity = MDL_BONE_START_CAPACITY;
-		tempSkl.bones = malloc(boneCapacity * sizeof(*tempSkl.bones));
+		size_t boneCapacity = 1;
+		tempSkl.bones = memAllocate(boneCapacity * sizeof(*tempSkl.bones));
 		//This indicates what sort of data we're currently supposed to be reading.
 		unsigned char dataType = 0;
 		//This variable stores data specific to the type we're currently loading.
@@ -586,7 +629,7 @@ return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, 
 					//If we've finished identifying the skeleton's bones, shrink the vector!
 					if(dataType == 1){
 						boneCapacity = tempSkl.boneNum;
-						tempSkl.bones = realloc(tempSkl.bones, boneCapacity * sizeof(*tempSkl.bones));
+						tempSkl.bones = memReallocate(tempSkl.bones, boneCapacity * sizeof(*tempSkl.bones));
 					}
 
 					dataType = 0;
@@ -603,7 +646,7 @@ return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, 
 							//Get the bone's name.
 							size_t boneNameLength;
 							getDelimitedString(tokPos, line + lineLength - tokPos, "\" ", &tokPos, &boneNameLength);
-							tempBone.name = malloc(boneNameLength + 1);
+							tempBone.name = memAllocate(boneNameLength + 1);
 							memcpy(tempBone.name, tokPos, boneNameLength);
 							tempBone.name[boneNameLength] = '\0';
 
@@ -614,7 +657,7 @@ return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, 
 							//If we're out of space, allocate some more!
 							if(tempSkl.boneNum >= boneCapacity){
 								boneCapacity = tempSkl.boneNum * 2;
-								tempSkl.bones = realloc(tempSkl.bones, boneCapacity * sizeof(*tempSkl.bones));
+								tempSkl.bones = memReallocate(tempSkl.bones, boneCapacity * sizeof(*tempSkl.bones));
 							}
 							//Add the bone to our vector!
 							tempSkl.bones[tempSkl.boneNum] = tempBone;
@@ -809,7 +852,7 @@ return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, 
 									//If we're out of space, allocate some more!
 									if(*vertexNum >= vertexCapacity){
 										vertexCapacity = *vertexNum * 2;
-										*vertices = realloc(*vertices, vertexCapacity * sizeof(**vertices));
+										*vertices = memReallocate(*vertices, vertexCapacity * sizeof(**vertices));
 									}
 									(*vertices)[*vertexNum] = tempVertex;
 									++(*vertexNum);
@@ -817,7 +860,7 @@ return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, 
 								//Add an index for the new vertex!
 								if(*indexNum >= indexCapacity){
 									indexCapacity = *indexNum * 2;
-									*indices = realloc(*indices, indexCapacity * sizeof(**indices));
+									*indices = memReallocate(*indices, indexCapacity * sizeof(**indices));
 								}
 								(*indices)[*indexNum] = i;
 								++(*indexNum);
@@ -844,18 +887,6 @@ return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, 
 		}
 
 		fclose(mdlFile);
-
-		size_t fileLen = strlen(filePath);
-		tempSkl.name = malloc((fileLen+1)*sizeof(char));
-		if(tempSkl.name == NULL){
-			/** Memory allocation failure. **/
-			mdlSMDFreeReturns();
-			mdlSMDFreeHelpers();
-			return -1;
-		}
-		memcpy(tempSkl.name, filePath, fileLen);
-		tempSkl.name[fileLen] = '\0';
-		cvPush(allSkeletons, (void *)&tempSkl, sizeof(tempSkl));
 
 	}else{
 		printf("Unable to open model file!\n"

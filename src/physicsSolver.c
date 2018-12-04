@@ -1,18 +1,35 @@
 #include "physicsSolver.h"
+#include "memoryManager.h"
 
-void physSolverInit(physicsSolver *solver){
-	solver->bodyNum = 0;
-	solver->bodyCapacity = 0;
-	solver->bodies = NULL;
+return_t physSolverInit(physicsSolver *solver, size_t bodyNum){
+
+	void *memory;
+
+	memPoolInit(&solver->bodies);
+
+	if(bodyNum == 0){
+		bodyNum = PHYSICS_SOLVER_DEFAULT_BODY_NUM;
+	}
+
+	memory = memAllocate(
+		memPoolAllocationSize(NULL, sizeof(physRBInstance *), bodyNum)
+	);
+
+	if(memPoolCreate(&solver->bodies, memory, sizeof(physRBInstance *), bodyNum) == NULL){
+		return -1;
+	}
+
+	return 1;
+
 }
 
 void physSolverReset(physicsSolver *solver){
 	/** Temporary: This will later be done during solving. **/
-	physicsBodyIndex_t i;
+	/**physicsBodyIndex_t i;
 	for(i = 0; i < solver->bodyCapacity; ++i){
 		solver->bodies[i].active = solver->bodies[i].body != NULL;
 	}
-	solver->bodyNum = 0;
+	solver->bodyNum = 0;**/
 }
 
 return_t physSolverAddBody(physicsSolver *solver, physRBInstance *body){
@@ -20,7 +37,7 @@ return_t physSolverAddBody(physicsSolver *solver, physRBInstance *body){
 	** Add a new body to the solver, resizing the
 	** bodies array if necessary.
 	*/
-	if(body->id >= solver->bodyCapacity){
+	/**if(body->id >= solver->bodyCapacity){
 		physicsBodyIndex_t i;
 		for(i = 0; i < solver->bodyCapacity; ++i){
 			if(!solver->bodies[i].active){
@@ -29,21 +46,21 @@ return_t physSolverAddBody(physicsSolver *solver, physRBInstance *body){
 		}
 		body->id = i;
 		if(body->id == solver->bodyCapacity){
-			/*
+			*
 			** The body array is full, double its size.
 			** Increasing it by 1 may be better in the
 			** long run, but would also probably lead
 			** to more fragmentation, so who knows.
-			*/
+			*
 			physBodyReference *tempBuffer;
 			if(solver->bodyCapacity == 0){
 				solver->bodyCapacity = 1;
 			}else{
 				solver->bodyCapacity *= 2;
 			}
-			tempBuffer = realloc(solver->bodies, solver->bodyCapacity * sizeof(physBodyReference));
+			tempBuffer = memReallocate(solver->bodies, solver->bodyCapacity * sizeof(physBodyReference));
 			if(tempBuffer == NULL){
-				/** Memory allocation failure. **/
+				** Memory allocation failure. **
 				return -1;
 			}
 			// Set all the new elements to NULL.
@@ -60,7 +77,7 @@ return_t physSolverAddBody(physicsSolver *solver, physRBInstance *body){
 	}
 	solver->bodies[body->id].body = body;
 	++solver->bodyNum;
-	return 1;
+	return 1;**/
 }
 
 static void physSolverGenerateIslands(physicsSolver *solver){
@@ -77,14 +94,14 @@ void physSolverUpdate(physicsSolver *solver){
 
 	/** TEMPORARY **/
 
-	physicsBodyIndex_t i, j;
-	hbCollisionInfo separationInfo;
-	hbCollisionContactManifold collisionData;
+	/**physicsBodyIndex_t i, j;
+	cCollisionInfo separationInfo;
+	cCollisionContactManifold collisionData;
 	for(i = 0; i < solver->bodyNum; i=solver->bodyNum){
 		for(j = 2; j < solver->bodyNum; j=solver->bodyNum){
-			if(hbCollision(&solver->bodies[i].body->colliders[0].hb, &solver->bodies[i].body->centroid,
-			               &solver->bodies[j].body->colliders[0].hb, &solver->bodies[j].body->centroid,
-			               &separationInfo, &collisionData)){
+			if(cCollision(&solver->bodies[i].body->colliders[0].c, &solver->bodies[i].body->centroid,
+			              &solver->bodies[j].body->colliders[0].c, &solver->bodies[j].body->centroid,
+			              &separationInfo, &collisionData)){
 			    //
 				//physRBIResolveCollision(island->bodies[i], island->bodies[j], &collisionData);
 				//if(j==island->bodyNum-1){
@@ -96,15 +113,21 @@ void physSolverUpdate(physicsSolver *solver){
 				//physRBICacheSeparation()
 			}
 		}
-	}
+	}**/
 
 }
 
 void physSolverDelete(physicsSolver *solver){
 	//if(solver->bodyArraySizes != NULL){
-		//free(solver->bodyArraySizes);
+		//memFree(solver->bodyArraySizes);
 	//}
-	if(solver->bodies != NULL){
-		free(solver->bodies);
+	///if(solver->bodies != NULL){
+	///	memFree(solver->bodies);
+	///}
+	memoryRegion *region = solver->bodies.region;
+	while(region != NULL){
+		memoryRegion *next = memAllocatorNext(region);
+		memFree(region->start);
+		region = next;
 	}
 }

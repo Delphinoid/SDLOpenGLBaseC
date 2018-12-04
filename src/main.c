@@ -1,5 +1,6 @@
+#include "memoryManager.h"
 #include "graphicsRenderer.h"
-#include "hitboxConvexMesh.h"
+#include "colliderConvexMesh.h"
 #include "constantsMath.h"
 #include <stdio.h>
 
@@ -8,6 +9,8 @@
 #include "moduleTextureWrapper.h"
 #include "moduleSkeleton.h"
 #include "moduleModel.h"
+#include "moduleRenderable.h"
+#include "modulePhysics.h"
 #include "moduleObject.h"
 #include "moduleScene.h"
 #include "moduleCamera.h"
@@ -33,33 +36,32 @@ int main(int argc, char *argv[]){
 		return 1;
 	}
 
-	/** Configs should be loaded here **/
+	/** Configs should be loaded here. **/
 	//
 
-	/** Most of the code below this comment will be removed eventually **/
-	cVector allTextures; cvInit(&allTextures, 1);            // Holds textures.
-	cVector allTexWrappers; cvInit(&allTexWrappers, 1);      // Holds textureWrappers.
-	cVector allSkeletons; cvInit(&allSkeletons, 1);          // Holds skeletons.
-	cVector allSklAnimations; cvInit(&allSklAnimations, 1);  // Holds sklAnims.
-	cVector allModels; cvInit(&allModels, 1);                // Holds models.
-	cVector allObjects; cvInit(&allObjects, 1);              // Holds objects.
-
-	/****/
+	/** Most of the code below this comment will be removed eventually. **/
 	moduleTextureResourcesInit();
 	moduleTextureWrapperResourcesInit();
 	moduleSkeletonResourcesInit();
 	moduleModelResourcesInit();
+	moduleRenderableResourcesInit();
+	modulePhysicsResourcesInit();
 	moduleObjectResourcesInit();
 	moduleSceneResourcesInit();
 	moduleCameraResourcesInit();
+
+	moduleTextureResourcesInitConstants();
+	moduleTextureWrapperResourcesInitConstants();
+	moduleSkeletonResourcesInitConstants();
+	moduleModelResourcesInitConstants();
 
 	/* Textures */
 	texture *tempTex = moduleTextureAllocate();
 	tDefault(tempTex);
 	tempTex = moduleTextureAllocate();
-	tLoad(tempTex, prgPath, "Resources\\Images\\Misc\\Kobold.png");
+	tLoad(tempTex, prgPath, "Misc\\Kobold.tdt");
 	tempTex = moduleTextureAllocate();
-	tLoad(tempTex, prgPath, "Resources\\Images\\Misc\\Avatar.png");
+	tLoad(tempTex, prgPath, "Misc\\Avatar.tdt");
 
 	/* Skeletons */
 	skeleton *tempSkl = moduleSkeletonAllocate();
@@ -69,9 +71,9 @@ int main(int argc, char *argv[]){
 	textureWrapper *tempTexWrap = moduleTextureWrapperAllocate();
 	twDefault(tempTexWrap);
 	tempTexWrap = moduleTextureWrapperAllocate();
-	twLoad(tempTexWrap, prgPath, "Resources\\Textures\\Static\\AvatarStatic.tdt");
+	twLoad(tempTexWrap, prgPath, "Static\\AvatarStatic.tdw");
 	tempTexWrap = moduleTextureWrapperAllocate();
-	twLoad(tempTexWrap, prgPath, "Resources\\Textures\\Static\\KoboldStatic.tdt");
+	twLoad(tempTexWrap, prgPath, "Static\\KoboldStatic.tdw");
 
 	/* Models */
 	model *tempMdl = moduleModelAllocate();
@@ -81,19 +83,20 @@ int main(int argc, char *argv[]){
 
 	/* Objects */
 	object *tempObj = moduleObjectAllocate();
-	objLoad(tempObj, prgPath, "Resources\\Objects\\CubeTest.tdo", &allTextures, &allTexWrappers, &allSkeletons, &allSklAnimations, &allModels);
+	objLoad(tempObj, prgPath, "CubeTest.tdo");
 
 	/* Object Instances */
 	objInstance *tempObji = moduleObjectInstanceAllocate();
-	objiInstantiate(tempObji, moduleObjectFind("CubeTest"));
-	objiChangeAnimation(tempObji, 0, tempObji->base->animations[0], 0, 0.f);
+	objiInstantiate(tempObji, moduleObjectFind("CubeTest.tdo"));
+	sklaiChange(skliAnimationNew(&tempObji->skeletonData), tempObji->skeletonData.skl, tempObji->base->animations[0], 0, 0.f);
+	//objiChangeAnimation(tempObji, 0, tempObji->base->animations[0], 0, 0.f);
 	//objNewRenderable(objGetState(&gameStateManager, tempID, 0));
 	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
 	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 1);
 	//objInitSkeleton(objGetState(&gameStateManager, tempID, 0), (skeleton *)cvGet(&allSkeletons, 1));
 	//
 	tempObji = moduleObjectInstanceAllocate();
-	objiInstantiate(tempObji, moduleObjectFind("CubeTest"));
+	objiInstantiate(tempObji, moduleObjectFind("CubeTest.tdo"));
 	//objiChangeAnimation(objGetState(&gameStateManager, tempID, 0), 0, objGetState(&gameStateManager, tempID, 0)->base->animations[0], 0, 0.f);
 	//objNewRenderable(objGetState(&gameStateManager, tempID, 0));
 	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
@@ -109,14 +112,16 @@ int main(int argc, char *argv[]){
 
 	/* Sprite Object Instances */
 	tempObji = moduleObjectInstanceAllocate();
-	objiNewRenderable(tempObji, tempMdl, moduleTextureWrapperFind("AvatarStatic"));
+	objiInit(tempObji);
+	objiNewRenderable(tempObji, tempMdl, moduleTextureWrapperFind("Static\\AvatarStatic.tdw"));
 	objiInitSkeleton(tempObji, tempObji->renderables[0].mdl->skl);
 	///tempObji->tempRndrConfig.sprite = 1;
 	tempObji->configuration[0].scale.x = 0.026f;
 	tempObji->configuration[0].scale.y = 0.026f;
 	//
 	tempObji = moduleObjectInstanceAllocate();
-	objiNewRenderable(tempObji, tempMdl, moduleTextureWrapperFind("AvatarStatic"));
+	objiInit(tempObji);
+	objiNewRenderable(tempObji, tempMdl, moduleTextureWrapperFind("Static\\AvatarStatic.tdw"));
 	objiInitSkeleton(tempObji, tempObji->renderables[0].mdl->skl);
 	///tempObji->tempRndrConfig.sprite = 1;
 	tempObji->configuration[0].position.y = 1.f;
@@ -126,7 +131,8 @@ int main(int argc, char *argv[]){
 	tempObji->configuration[0].scale.y = 0.0026f;
 	//
 	tempObji = moduleObjectInstanceAllocate();
-	objiNewRenderable(tempObji, tempMdl, moduleTextureWrapperFind("AvatarStatic"));
+	objiInit(tempObji);
+	objiNewRenderable(tempObji, tempMdl, moduleTextureWrapperFind("Static\\AvatarStatic.tdw"));
 	objiInitSkeleton(tempObji, tempObji->renderables[0].mdl->skl);
 	///tempObji->tempRndrConfig.sprite = 1;
 	tempObji->configuration[0].position.x = 4.f;
@@ -136,7 +142,8 @@ int main(int argc, char *argv[]){
 	///tempObji->tempRndrConfig.flags |= RNDR_BILLBOARD_TARGET | RNDR_BILLBOARD_Y;
 	//
 	tempObji = moduleObjectInstanceAllocate();
-	objiNewRenderable(tempObji, tempMdl, moduleTextureWrapperFind("KoboldStatic"));
+	objiInit(tempObji);
+	objiNewRenderable(tempObji, tempMdl, moduleTextureWrapperFind("Static\\KoboldStatic.tdw"));
 	objiInitSkeleton(tempObji, tempObji->renderables[0].mdl->skl);
 	///tempObji->tempRndrConfig.sprite = 1;
 	tempObji->configuration[0].position.x = -3.f;
@@ -361,6 +368,8 @@ int main(int argc, char *argv[]){
 	moduleCameraResourcesDelete();
 	moduleSceneResourcesDelete();
 	moduleObjectResourcesDelete();
+	modulePhysicsResourcesDelete();
+	moduleRenderableResourcesDelete();
 	moduleModelResourcesDelete();
 	moduleSkeletonResourcesDelete();
 	moduleTextureWrapperResourcesDelete();

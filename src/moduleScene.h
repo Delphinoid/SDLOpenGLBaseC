@@ -3,8 +3,15 @@
 
 #include "scene.h"
 #include "memoryList.h"
+#include "memorySLink.h"
 
-extern memoryList __SceneResourceArray;  // Contains scenes.
+#define RESOURCE_DEFAULT_SCENE_SIZE sizeof(scene)
+#ifndef RESOURCE_DEFAULT_SCENE_NUM
+	#define RESOURCE_DEFAULT_SCENE_NUM 2
+#endif
+
+extern memoryList  __SceneResourceArray;      // Contains scenes.
+extern memorySLink __SceneZoneResourceArray;  // Contains zones.
 
 /** Support locals? Merge all module containers? **/
 

@@ -1,8 +1,19 @@
 #ifndef MODULEPHYSICS_H
 #define MODULEPHYSICS_H
 
-#include "memoryManager.h"
 #include "physicsRigidBody.h"
+#include "skeleton.h"
+#include "memorySLink.h"
+
+#define RESOURCE_DEFAULT_RIGID_BODY_SIZE sizeof(physRigidBody)
+#ifndef RESOURCE_DEFAULT_RIGID_BODY_NUM
+	#define RESOURCE_DEFAULT_RIGID_BODY_NUM 1024*SKELETON_MAX_BONE_NUM
+#endif
+
+#define RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_SIZE sizeof(physRBInstance)
+#ifndef RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_NUM
+	#define RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_NUM SKELETON_MAX_BONE_NUM*4096
+#endif
 
 #define RESOURCE_DEFAULT_COLLIDER_SIZE sizeof(physCollider)
 #ifndef RESOURCE_DEFAULT_COLLIDER_NUM
@@ -19,140 +30,62 @@
 	#define RESOURCE_DEFAULT_CONSTRAINT_NUM RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_NUM
 #endif
 
-#define RESOURCE_DEFAULT_RIGID_BODY_SIZE sizeof(physRigidBody)
-#ifndef RESOURCE_DEFAULT_RIGID_BODY_NUM
-	#define RESOURCE_DEFAULT_RIGID_BODY_NUM RESOURCE_DEFAULT_OBJECT_NUM*SKL_MAX_BONE_NUM
-#endif
+extern memorySLink __PhysicsRigidBodyResourceArray;           // Contains physRigidBodies.
+extern memorySLink __PhysicsRigidBodyInstanceResourceArray;   // Contains physRBInstances.
+extern memorySLink __PhysicsColliderResourceArray;            // Contains physColliders.
+extern memorySLink __PhysicsCollisionInstanceResourceArray;   // Contains physCollisionInfos.
+extern memorySLink __PhysicsConstraintResourceArray;          // Contains physConstraints.
 
-#define RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_SIZE sizeof(physRBInstance)
-#ifndef RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_NUM
-	#define RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_NUM SKL_MAX_BONE_NUM*RESOURCE_DEFAULT_OBJECT_INSTANCE_NUM
-#endif
+/** Support locals? Merge all module containers? **/
 
-#ifndef MODULE_PHYSICS_USE_LOCAL_DEFINITION
+return_t modulePhysicsResourcesInit();
+void modulePhysicsResourcesReset();
+void modulePhysicsResourcesDelete();
 
-extern memorySLink ColliderResourceArray;            // Contains physColliders.
-extern memorySLink CollisionInstanceResourceArray;   // Contains physCollisionInfos.
-extern memorySLink ConstraintInstanceResourceArray;  // Contains physConstraints.
-extern memoryPool  RigidBodyResourceArray;           // Contains physRigidBodies.
-extern memorySLink RigidBodyInstanceResourceArray;   // Contains physRBInstances.
+physRigidBody *modulePhysicsRigidBodyAppendStatic(physRigidBody **array);
+physRigidBody *modulePhysicsRigidBodyAppend(physRigidBody **array);
+physRigidBody *modulePhysicsRigidBodyInsertAfterStatic(physRigidBody *resource);
+physRigidBody *modulePhysicsRigidBodyInsertAfter(physRigidBody *resource);
+physRigidBody *modulePhysicsRigidBodyNext(physRigidBody *i);
+void modulePhysicsRigidBodyFree(physRigidBody **array, physRigidBody *resource, physRigidBody *previous);
+void modulePhysicsRigidBodyFreeArray(physRigidBody **array);
+void modulePhysicsRigidBodyClear();
 
-return_t modulePhysicsInit(){
-	void *memory = memAllocate(
-		memSLinkAllocationSize(
-			NULL,
-			RESOURCE_DEFAULT_COLLIDER_SIZE,
-			RESOURCE_DEFAULT_COLLIDER_NUM
-		)
-	);
-	if(memSLinkCreate(&ColliderResourceArray, memory, RESOURCE_DEFAULT_COLLIDER_SIZE, RESOURCE_DEFAULT_COLLIDER_NUM) == NULL){
-		return -1;
-	}
-	memory = memAllocate(
-		memSLinkAllocationSize(
-			NULL,
-			RESOURCE_DEFAULT_COLLISION_SIZE,
-			RESOURCE_DEFAULT_COLLISION_NUM
-		)
-	);
-	if(memSLinkCreate(&CollisionInstanceResourceArray, memory, RESOURCE_DEFAULT_COLLISION_SIZE, RESOURCE_DEFAULT_COLLISION_NUM) == NULL){
-		return -1;
-	}
-	memory = memAllocate(
-		memSLinkAllocationSize(
-			NULL,
-			RESOURCE_DEFAULT_CONSTRAINT_SIZE,
-			RESOURCE_DEFAULT_CONSTRAINT_NUM
-		)
-	);
-	if(memSLinkCreate(&ConstraintInstanceResourceArray, memory, RESOURCE_DEFAULT_CONSTRAINT_SIZE, RESOURCE_DEFAULT_CONSTRAINT_NUM) == NULL){
-		return -1;
-	}
-	memory = memAllocate(
-		memPoolAllocationSize(
-			NULL,
-			RESOURCE_DEFAULT_RIGID_BODY_SIZE,
-			RESOURCE_DEFAULT_RIGID_BODY_NUM
-		)
-	);
-	if(memPoolCreate(&RigidBodyResourceArray, memory, RESOURCE_DEFAULT_RIGID_BODY_SIZE, RESOURCE_DEFAULT_RIGID_BODY_NUM) == NULL){
-		return -1;
-	}
-	memory = memAllocate(
-		memSLinkAllocationSize(
-			NULL,
-			RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_SIZE,
-			RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_NUM
-		)
-	);
-	if(memSLinkCreate(&RigidBodyInstanceResourceArray, memory, RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_SIZE, RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_NUM) == NULL){
-		return -1;
-	}
-	return 1;
-}
+physRBInstance *modulePhysicsRigidBodyInstanceAppendStatic(physRBInstance **array);
+physRBInstance *modulePhysicsRigidBodyInstanceAppend(physRBInstance **array);
+physRBInstance *modulePhysicsRigidBodyInstanceInsertAfterStatic(physRBInstance *resource);
+physRBInstance *modulePhysicsRigidBodyInstanceInsertAfter(physRBInstance *resource);
+physRBInstance *modulePhysicsRigidBodyInstanceNext(physRBInstance *i);
+void modulePhysicsRigidBodyInstanceFree(physRBInstance **array, physRBInstance *resource, physRBInstance *previous);
+void modulePhysicsRigidBodyInstanceFreeArray(physRBInstance **array);
+void modulePhysicsRigidBodyInstanceClear();
 
-#else
+physCollider *modulePhysicsColliderAppendStatic(physCollider **array);
+physCollider *modulePhysicsColliderAppend(physCollider **array);
+physCollider *modulePhysicsColliderInsertAfterStatic(physCollider *resource);
+physCollider *modulePhysicsColliderInsertAfter(physCollider *resource);
+physCollider *modulePhysicsColliderNext(physCollider *i);
+void modulePhysicsColliderFree(physCollider **array, physCollider *resource, physCollider *previous);
+void modulePhysicsColliderFreeArray(physCollider **array);
+void modulePhysicsColliderRBIFreeArray(physCollider **array);
+void modulePhysicsColliderClear();
 
-return_t modulePhysicsInit(
-	memorySLink *ColliderResourceArray,            // Contains physColliders.
-	memorySLink *CollisionInstanceResourceArray,   // Contains physCollisionInfos.
-	memorySLink *ConstraintInstanceResourceArray,  // Contains physConstraints.
-	memoryPool  *RigidBodyResourceArray,           // Contains physRigidBodies.
-	memorySLink *RigidBodyInstanceResourceArray    // Contains physRBInstances.
-){
-	void *memory = memAllocate(
-		memSLinkAllocationSize(
-			NULL,
-			RESOURCE_DEFAULT_COLLIDER_SIZE,
-			RESOURCE_DEFAULT_COLLIDER_NUM
-		)
-	);
-	if(memSLinkCreate(ColliderResourceArray, memory, RESOURCE_DEFAULT_COLLIDER_SIZE, RESOURCE_DEFAULT_COLLIDER_NUM) == NULL){
-		return -1;
-	}
-	memory = memAllocate(
-		memSLinkAllocationSize(
-			NULL,
-			RESOURCE_DEFAULT_COLLISION_SIZE,
-			RESOURCE_DEFAULT_COLLISION_NUM
-		)
-	);
-	if(memSLinkCreate(CollisionInstanceResourceArray, memory, RESOURCE_DEFAULT_COLLISION_SIZE, RESOURCE_DEFAULT_COLLISION_NUM) == NULL){
-		return -1;
-	}
-	memory = memAllocate(
-		memSLinkAllocationSize(
-			NULL,
-			RESOURCE_DEFAULT_CONSTRAINT_SIZE,
-			RESOURCE_DEFAULT_CONSTRAINT_NUM
-		)
-	);
-	if(memSLinkCreate(ConstraintInstanceResourceArray, memory, RESOURCE_DEFAULT_CONSTRAINT_SIZE, RESOURCE_DEFAULT_CONSTRAINT_NUM) == NULL){
-		return -1;
-	}
-	memory = memAllocate(
-		memPoolAllocationSize(
-			NULL,
-			RESOURCE_DEFAULT_RIGID_BODY_SIZE,
-			RESOURCE_DEFAULT_RIGID_BODY_NUM
-		)
-	);
-	if(memPoolCreate(RigidBodyResourceArray, memory, RESOURCE_DEFAULT_RIGID_BODY_SIZE, RESOURCE_DEFAULT_RIGID_BODY_NUM) == NULL){
-		return -1;
-	}
-	memory = memAllocate(
-		memSLinkAllocationSize(
-			NULL,
-			RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_SIZE,
-			RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_NUM
-		)
-	);
-	if(memSLinkCreate(RigidBodyInstanceResourceArray, memory, RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_SIZE, RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_NUM) == NULL){
-		return -1;
-	}
-	return 1;
-}
+physCollisionInfo *modulePhysicsCollisionInstanceAppendStatic(physCollisionInfo **array);
+physCollisionInfo *modulePhysicsCollisionInstanceAppend(physCollisionInfo **array);
+physCollisionInfo *modulePhysicsCollisionInstanceInsertAfterStatic(physCollisionInfo *resource);
+physCollisionInfo *modulePhysicsCollisionInstanceInsertAfter(physCollisionInfo *resource);
+physCollisionInfo *modulePhysicsCollisionInstanceNext(physCollisionInfo *i);
+void modulePhysicsCollisionInstanceFree(physCollisionInfo **array, physCollisionInfo *resource, physCollisionInfo *previous);
+void modulePhysicsCollisionInstanceFreeArray(physCollisionInfo **array);
+void modulePhysicsCollisionInstanceClear();
 
-#endif
+physConstraint *modulePhysicsConstraintAppendStatic(physConstraint **array);
+physConstraint *modulePhysicsConstraintAppend(physConstraint **array);
+physConstraint *modulePhysicsConstraintInsertAfterStatic(physConstraint *resource);
+physConstraint *modulePhysicsConstraintInsertAfter(physConstraint *resource);
+physConstraint *modulePhysicsConstraintNext(physConstraint *i);
+void modulePhysicsConstraintFree(physConstraint **array, physConstraint *resource, physConstraint *previous);
+void modulePhysicsConstraintFreeArray(physConstraint **array);
+void modulePhysicsConstraintClear();
 
 #endif

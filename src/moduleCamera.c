@@ -4,11 +4,6 @@
 #include "inline.h"
 #include <string.h>
 
-#define RESOURCE_DEFAULT_CAMERA_SIZE sizeof(camera)
-#ifndef RESOURCE_DEFAULT_CAMERA_NUM
-	#define RESOURCE_DEFAULT_CAMERA_NUM 2
-#endif
-
 memoryList __CameraResourceArray;  // Contains scenes.
 
 return_t moduleCameraResourcesInit(){
@@ -33,6 +28,7 @@ void moduleCameraResourcesReset(){
 		memFree(region->start);
 		region = next;
 	}
+	__CameraResourceArray.region->next = NULL;
 }
 void moduleCameraResourcesDelete(){
 	memoryRegion *region;
@@ -66,6 +62,7 @@ __FORCE_INLINE__ camera *moduleCameraAllocate(){
 	return r;
 }
 __FORCE_INLINE__ void moduleCameraFree(camera *resource){
+	camDelete(resource);
 	memListFree(&__CameraResourceArray, (void *)resource);
 }
 void moduleCameraClear(){
@@ -76,8 +73,8 @@ void moduleCameraClear(){
 		i = memListFirst(region);
 		while(i < (camera *)memAllocatorEnd(region)){
 
-			camDelete(i);
-			memListBlockNext(__CameraResourceArray, i);
+			moduleCameraFree(i);
+			i = memListBlockNext(__CameraResourceArray, i);
 
 		}
 		region = memAllocatorNext(region);
