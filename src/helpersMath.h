@@ -22,6 +22,8 @@ void pointPlaneProject(const vec3 *normal, const vec3 *vertex, vec3 *point);
 void linePlaneIntersection(const vec3 *normal, const vec3 *vertex, const vec3 *line, vec3 *point);
 return_t segmentPlaneIntersection(const vec3 *normal, const vec3 *vertex, const vec3 *start, const vec3 *end, vec3 *point);
 
+void segmentClosestPoints(const vec3 *s1, const vec3 *e1, const vec3 *s2, const vec3 *e2, vec3 *p1, vec3 *p2);
+
 float floatLerp(const float f1, const float f2, const float t);
 
 #endif

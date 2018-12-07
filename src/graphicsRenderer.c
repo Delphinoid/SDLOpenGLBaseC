@@ -69,34 +69,32 @@ static __FORCE_INLINE__ void gfxRendererGenerateQueuesArray(gfxRenderer *rendere
 
 	gfxRenderElement *array = &renderer->qOpaque.elements[renderer->qOpaque.elementNum];
 
-	size_t i;
-	for(i = 0; i < objectNum; ++i){
+	objInstance **o;
+	objInstance **oLast = &objects[objectNum];
 
-		if(objects[i] != NULL){
+	for(o = objects; o < oLast; ++o){
 
-			const gfxRenderGroup_t group = objiRenderGroup(objects[i], renderer->interpT);
+		const gfxRenderGroup_t group = objiRenderGroup(*o, renderer->interpT);
 
-			if(group == GFX_RENDER_GROUP_OPAQUE){
+		if(group == GFX_RENDER_GROUP_OPAQUE){
 
-				// The object is fully opaque.
-				array->structure = (void *)objects[i];
-				array->type = GFX_RNDR_ELEMENT_TYPE_OBJECT;
-				array->distance = 0.f;
-				++array;
-				++renderer->qOpaque.elementNum;
+			// The object is fully opaque.
+			array->structure = (void *)(*o);
+			array->type = GFX_RNDR_ELEMENT_TYPE_OBJECT;
+			array->distance = 0.f;
+			++array;
+			++renderer->qOpaque.elementNum;
 
-			}else if(group == GFX_RENDER_GROUP_TRANSLUCENT){
+		}else if(group == GFX_RENDER_GROUP_TRANSLUCENT){
 
-				// The object contains translucency.
-				// It will have to be depth-sorted and
-				// rendered after the opaque objects.
-				--renderer->qTranslucent.elements;
-				renderer->qTranslucent.elements->structure = (void *)objects[i];
-				renderer->qTranslucent.elements->type = GFX_RNDR_ELEMENT_TYPE_OBJECT;
-				renderer->qTranslucent.elements->distance = 0.f;
-				++renderer->qTranslucent.elementNum;
-
-			}
+			// The object contains translucency.
+			// It will have to be depth-sorted and
+			// rendered after the opaque objects.
+			--renderer->qTranslucent.elements;
+			renderer->qTranslucent.elements->structure = (void *)(*o);
+			renderer->qTranslucent.elements->type = GFX_RNDR_ELEMENT_TYPE_OBJECT;
+			renderer->qTranslucent.elements->distance = 0.f;
+			++renderer->qTranslucent.elementNum;
 
 		}
 

@@ -5,13 +5,9 @@
 #include "memoryPool.h"
 
 #define RESOURCE_DEFAULT_TEXTURE_SIZE sizeof(texture)
-#ifndef RESOURCE_DEFAULT_TEXTURE_NUM
-	#define RESOURCE_DEFAULT_TEXTURE_NUM 4096
-#endif
+#define RESOURCE_DEFAULT_TEXTURE_NUM 4096
 
-#ifndef RESOURCE_TEXTURE_CONSTANTS
-	#define RESOURCE_TEXTURE_CONSTANTS 1
-#endif
+#define RESOURCE_TEXTURE_CONSTANTS 1
 #define RESOURCE_TEXTURE_BLOCK_SIZE memPoolBlockSize(sizeof(texture))
 
 extern memoryPool __TextureResourceArray;  // Contains textures.

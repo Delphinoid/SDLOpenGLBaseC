@@ -929,16 +929,22 @@ return_t twDefault(textureWrapper *tw){
 }
 
 void twDelete(textureWrapper *tw){
-	frameIndex_t i;
-	animIndex_t j;
-	for(i = 0; i < tw->frameNum; ++i){
-		twfDelete(&tw->frames[i]);
+	if(tw->frames != NULL){
+		twFrame *f = tw->frames;
+		twFrame *fLast = &f[tw->frameNum];
+		for(; f < fLast; ++f){
+			twfDelete(f);
+		}
+		memFree(tw->frames);
 	}
-	memFree(tw->frames);
-	for(j = 0; j < tw->animationNum; ++j){
-		twaDelete(&tw->animations[j]);
+	if(tw->animations != NULL){
+		twAnim *a = tw->animations;
+		twAnim *aLast = &a[tw->animationNum];
+		for(; a < aLast; ++a){
+			twaDelete(a);
+		}
+		memFree(tw->animations);
 	}
-	memFree(tw->animations);
 	if(tw->name != NULL){
 		memFree(tw->name);
 	}

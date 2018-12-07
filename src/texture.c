@@ -240,23 +240,30 @@ return_t tLoad(texture *tex, const char *prgPath, const char *filePath){
 
 	}else{
 
-		GLint i;
-		int y;
+		GLint i = 0;
 		byte_t *pixels = (byte_t *)image->pixels;
 		byte_t *mipmap = memAllocate(mips[0][2] * mips[0][3] * bytes);
+		GLsizei *mipCurrent = &mips[0][0];
+		GLsizei *mipLast = &mips[mipNum][4];
+		int y;
 
 		tex->width = mips[0][2];
 		tex->height = mips[0][3];
 		tex->mips = mipNum;
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, mipNum-1);
-		for(i = 0; i < mipNum; ++i){
+		for(; mipCurrent < mipLast; mipCurrent+=4, ++i){
+
+			const GLsizei mipx = mipCurrent[0];
+			const GLsizei mipy = mipCurrent[1];
+			const GLsizei mipw = mipCurrent[2];
+			const GLsizei miph = mipCurrent[3];
 
 			// Copy each row of the MIP into a temporary buffer to feed to OpenGL.
-			for(y = 0; y < mips[i][3]; ++y){
-				memcpy((void *)(mipmap + y * mips[i][2] * bytes), (void *)(pixels + (mips[i][1] + y) * image->pitch + mips[i][0] * bytes), mips[i][2] * bytes);
+			for(y = 0; y < miph; ++y){//printf("%u\n", y);
+				memcpy((void *)(mipmap + y * mipw * bytes), (void *)(pixels + (mipy + y) * image->pitch + mipx * bytes), mipw * bytes);
 			}
-			glTexImage2D(GL_TEXTURE_2D, i, format, mips[i][2], mips[i][3], 0, format, GL_UNSIGNED_BYTE, mipmap);
+			glTexImage2D(GL_TEXTURE_2D, i, format, mipw, miph, 0, format, GL_UNSIGNED_BYTE, mipmap);
 
 		}
 

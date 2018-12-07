@@ -69,7 +69,7 @@ typedef struct {
 
 } scene;
 
-return_t scnInit(scene *scn, size_t zoneNum);
+return_t scnInit(scene *scn, size_t objectNum, size_t bodyNum);
 
 objInstance **scnAllocate(scene *scn);
 void scnFree(scene *scn, objInstance **obji);

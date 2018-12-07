@@ -2,13 +2,12 @@
 #include "memoryManager.h"
 #include "inline.h"
 
-return_t scnInit(scene *scn, size_t objectNum){
+return_t scnInit(scene *scn, size_t objectNum, size_t bodyNum){
 
 	void *memory;
 
 	scn->objectNum = 0;
 	memPoolInit(&scn->objects);
-	physSolverInit(&scn->solver, 0);
 
 	if(objectNum == 0){
 		objectNum = SCENE_ZONE_DEFAULT_OBJECT_NUM;
@@ -23,7 +22,7 @@ return_t scnInit(scene *scn, size_t objectNum){
 	}
 	scn->objectNum = objectNum;
 
-	return 1;
+	return physSolverInit(&scn->solver, 0);
 
 }
 

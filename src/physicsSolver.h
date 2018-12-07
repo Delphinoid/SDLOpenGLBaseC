@@ -8,15 +8,16 @@
 	#define PHYSICS_SOLVER_DEFAULT_BODY_NUM 1024
 #endif
 
-typedef struct {
+/**typedef struct {
 	physRBInstance *body;
 	flags_t active;
-} physBodyReference;
+} physBodyReference;**/
 
 typedef struct {
 
 	// Array of pointers to object physics bodies.
 	memoryPool bodies;  // Contains physRBInstance pointers.
+	size_t bodyNum;
 
 	/** Constraints? **/
 
@@ -29,7 +30,7 @@ typedef struct {
 
 return_t physSolverInit(physicsSolver *solver, size_t bodyNum);
 void physSolverReset(physicsSolver *solver);
-return_t physSolverAddBody(physicsSolver *solver, physRBInstance *body);
+physRBInstance **physSolverAllocate(physicsSolver *solver);
 void physSolverUpdate(physicsSolver *solver);
 void physSolverDelete(physicsSolver *solver);
 

@@ -18,34 +18,34 @@
 /** This should not be necessary! **/
 void renderModel(const objInstance *obji, const float distance, const camera *cam, const float interpT, graphicsManager *gfxMngr){
 
-	boneIndex_t i;
 	bone interpBone;
-
 	rndrInstance *currentRndr = obji->renderables;
+
+	mat4 *transform = gfxMngr->sklTransformState;
+	bone *bCurrent = obji->state.skeleton;
+	bone *bPrevious = (obji->state.previous == NULL ? bCurrent : obji->state.previous->skeleton);
+	bone *bLast = &bCurrent[obji->skeletonData.skl->boneNum];
 
 	/* Update the object's configuration for rendering. */
 	//rndrConfigRenderUpdate(&obji->tempRndrConfig, interpT);  /** Only line that requires non-const object. **/
 
 	/* Interpolate between the previous and last skeleton states. */
-	for(i = 0; i < obji->skeletonData.skl->boneNum; ++i){
-
-		const bone *current  = &obji->state.skeleton[i];
-		const bone *previous = (obji->state.previous == NULL ? current : &obji->state.previous->skeleton[i]);
+	for(; bCurrent < bLast; ++bCurrent, ++bPrevious, ++transform){
 
 		// Interpolate between bone states.
 		//boneInterpolate(&obji->skeletonState[1][i], &obji->skeletonState[0][i], interpT, &interpBone);
-		boneInterpolate(previous, current, interpT, &interpBone);
+		boneInterpolate(bPrevious, bCurrent, interpT, &interpBone);
 
 		// Convert the bone to a matrix.
 		//mat4SetScaleMatrix(&gfxMngr->sklTransformState[i], gfxMngr->sklAnimationState[i].scale.x, gfxMngr->sklAnimationState[i].scale.y, gfxMngr->sklAnimationState[i].scale.z);
 		//mat4SetTranslationMatrix(&gfxMngr->sklTransformState[i], gfxMngr->sklAnimationState[i].position.x, gfxMngr->sklAnimationState[i].position.y, gfxMngr->sklAnimationState[i].position.z);
-		mat4SetRotationMatrix(&gfxMngr->sklTransformState[i], &interpBone.orientation);
+		mat4SetRotationMatrix(transform, &interpBone.orientation);
 		//mat4Rotate(&gfxMngr->sklTransformState[i], &gfxMngr->sklAnimationState[i].orientation);
 		//mat4Translate(&gfxMngr->sklTransformState[i], gfxMngr->sklAnimationState[i].position.x, gfxMngr->sklAnimationState[i].position.y, gfxMngr->sklAnimationState[i].position.z);
-		mat4Scale(&gfxMngr->sklTransformState[i], interpBone.scale.x, interpBone.scale.y, interpBone.scale.z);
-		gfxMngr->sklTransformState[i].m[3][0] = interpBone.position.x;
-		gfxMngr->sklTransformState[i].m[3][1] = interpBone.position.y;
-		gfxMngr->sklTransformState[i].m[3][2] = interpBone.position.z;
+		mat4Scale(transform, interpBone.scale.x, interpBone.scale.y, interpBone.scale.z);
+		transform->m[3][0] = interpBone.position.x;
+		transform->m[3][1] = interpBone.position.y;
+		transform->m[3][2] = interpBone.position.z;
 
 	}
 
@@ -72,55 +72,62 @@ void renderModel(const objInstance *obji, const float distance, const camera *ca
 
 			if(alpha > 0.f){
 
+				boneIndex_t i;
+				boneIndex_t boneNum = currentRndr->mdl->skl->boneNum;
+
 				boneIndex_t rndrBone;
 				vec4 translation;
 				mat4 transform;
 
+				sklNode *nLayout = currentRndr->mdl->skl->bones;
+				GLuint *bArray = gfxMngr->boneArrayID;
+				vec3 *bAccumulator = gfxMngr->sklBindAccumulator;
+
 				// If there is a valid animated skeleton, apply animation transformations.
-				for(i = 0; i < currentRndr->mdl->skl->boneNum; ++i){
+				for(i = 0; i < boneNum; ++i, ++bAccumulator, ++bArray, ++nLayout){
 
 					// Accumulate the bind positions. We need to use global bone offsets.
-					if(currentRndr->mdl->skl->bones[i].parent < currentRndr->mdl->skl->boneNum &&
-					   i != currentRndr->mdl->skl->bones[i].parent){
+					// Also make sure the bone's parent isn't itself (that is, make sure it has a parent).
+					if(nLayout->parent < boneNum && i != nLayout->parent){
 						// Apply the parent's bind offsets.
-						gfxMngr->sklBindAccumulator[i].x = gfxMngr->sklBindAccumulator[currentRndr->mdl->skl->bones[i].parent].x;
-						gfxMngr->sklBindAccumulator[i].y = gfxMngr->sklBindAccumulator[currentRndr->mdl->skl->bones[i].parent].y;
-						gfxMngr->sklBindAccumulator[i].z = gfxMngr->sklBindAccumulator[currentRndr->mdl->skl->bones[i].parent].z;
+						const vec3 *bParent = &gfxMngr->sklBindAccumulator[nLayout->parent];
+						bAccumulator->x = bParent->x;
+						bAccumulator->y = bParent->y;
+						bAccumulator->z = bParent->z;
 					}else{
-						gfxMngr->sklBindAccumulator[i].x = 0.f;
-						gfxMngr->sklBindAccumulator[i].y = 0.f;
-						gfxMngr->sklBindAccumulator[i].z = 0.f;
+						bAccumulator->x = 0.f;
+						bAccumulator->y = 0.f;
+						bAccumulator->z = 0.f;
 					}
 
 					// If the animated bone is in the model, pass in its animation transforms.
 					/** Use a lookup, same in object.c. **/
-					rndrBone = sklFindBone(obji->skeletonData.skl, i, currentRndr->mdl->skl->bones[i].name);
+					rndrBone = sklFindBone(obji->skeletonData.skl, i, nLayout->name);
 					if(rndrBone < obji->skeletonData.skl->boneNum){
+
+						transform = gfxMngr->sklTransformState[rndrBone];
 
 						// Rotate the bind pose position by the current bone's orientation
 						// and add this offset to the bind pose accumulator.
-						mat4MultNByM(currentRndr->mdl->skl->bones[i].defaultState.position.x,
-						             currentRndr->mdl->skl->bones[i].defaultState.position.y,
-						             currentRndr->mdl->skl->bones[i].defaultState.position.z,
-						             0.f,
-						             &gfxMngr->sklTransformState[rndrBone],
-						             &translation);
-						gfxMngr->sklBindAccumulator[i].x += translation.x;
-						gfxMngr->sklBindAccumulator[i].y += translation.y;
-						gfxMngr->sklBindAccumulator[i].z += translation.z;
+						mat4MultNByM(nLayout->defaultState.position.x,
+						             nLayout->defaultState.position.y,
+						             nLayout->defaultState.position.z,
+						             0.f, &transform, &translation);
+						bAccumulator->x += translation.x;
+						bAccumulator->y += translation.y;
+						bAccumulator->z += translation.z;
 
 						// Translate the bone by the inverse of the accumulated bind translations.
-						transform = gfxMngr->sklTransformState[rndrBone];
-						transform.m[3][0] -= gfxMngr->sklBindAccumulator[i].x;
-						transform.m[3][1] -= gfxMngr->sklBindAccumulator[i].y;
-						transform.m[3][2] -= gfxMngr->sklBindAccumulator[i].z;
+						transform.m[3][0] -= bAccumulator->x;
+						transform.m[3][1] -= bAccumulator->y;
+						transform.m[3][2] -= bAccumulator->z;
 
 						// Feed the bone configuration to the shader.
-						glUniformMatrix4fv(gfxMngr->boneArrayID[i], 1, GL_FALSE, &transform.m[0][0]);
+						glUniformMatrix4fv(*bArray, 1, GL_FALSE, &transform.m[0][0]);
 
 					}else{
 						// Otherwise pass in an identity bone.
-						glUniformMatrix4fv(gfxMngr->boneArrayID[i], 1, GL_FALSE, &gfxMngr->identityMatrix.m[0][0]);
+						glUniformMatrix4fv(*bArray, 1, GL_FALSE, &gfxMngr->identityMatrix.m[0][0]);
 					}
 
 				}

@@ -196,6 +196,13 @@ return_t segmentPlaneIntersection(const vec3 *normal, const vec3 *vertex, const 
 	return 1;
 }
 
+void segmentClosestPoints(const vec3 *s1, const vec3 *e1, const vec3 *s2, const vec3 *e2, vec3 *p1, vec3 *p2){
+	/*
+	** Finds the closest points that
+	** lie on the two line segments.
+	*/
+}
+
 float floatLerp(const float f1, const float f2, const float t){
 	if(t == 0.f){
 		return f1;

@@ -9,9 +9,6 @@
 #include "collider.h"
 #include "state.h"
 
-// Use 0 for unlimited.
-#define OBJECT_DEFAULT_RENDER_DISTANCE 0
-
 /** Fix skeletons then physics structs. **/
 
 /**                   **/

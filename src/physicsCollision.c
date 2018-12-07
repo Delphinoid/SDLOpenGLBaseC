@@ -12,7 +12,9 @@ static float physColliderGenerateMassMesh(physCollider *collider, float *vertexM
 
 	if(cHull->vertexNum > 0){
 
-		size_t i;
+		float *m = vertexMassArray;
+		vec3 *v = cHull->vertices;
+		vec3 *vLast = &v[cHull->vertexNum];
 		float inverseTotalMass;
 		float vertexMass;
 
@@ -29,35 +31,35 @@ static float physColliderGenerateMassMesh(physCollider *collider, float *vertexM
 		collider->centroid.z = 0.f;
 
 		// Recursively calculate the center of mass and the AABB.
-		for(i = 0; i < cHull->vertexNum; ++i){
+		for(; v < vLast; ++v, ++m){
 
 			if(vertexMassArray != NULL){
-				vertexMass = vertexMassArray[i];
+				vertexMass = *m;
 			}else{
 				vertexMass = PHYSICS_COLLIDER_DEFAULT_VERTEX_MASS;
 			}
-			collider->centroid.x += cHull->vertices[i].x * vertexMass;
-			collider->centroid.y += cHull->vertices[i].y * vertexMass;
-			collider->centroid.z += cHull->vertices[i].z * vertexMass;
+			collider->centroid.x += v->x * vertexMass;
+			collider->centroid.y += v->y * vertexMass;
+			collider->centroid.z += v->z * vertexMass;
 			totalMass += vertexMass;
 
 			// Update aabb.left and aabb.right.
-			if(cHull->vertices[i].x <= collider->aabb.left){
-				collider->aabb.left = cHull->vertices[i].x;
-			}else if(cHull->vertices[i].x > collider->aabb.right){
-				collider->aabb.right = cHull->vertices[i].x;
+			if(v->x <= collider->aabb.left){
+				collider->aabb.left = v->x;
+			}else if(v->x > collider->aabb.right){
+				collider->aabb.right = v->x;
 			}
 			// Update aabb.top and aabb.bottom.
-			if(cHull->vertices[i].y >= collider->aabb.top){
-				collider->aabb.top = cHull->vertices[i].y;
-			}else if(cHull->vertices[i].y < collider->aabb.bottom){
-				collider->aabb.bottom = cHull->vertices[i].y;
+			if(v->y >= collider->aabb.top){
+				collider->aabb.top = v->y;
+			}else if(v->y < collider->aabb.bottom){
+				collider->aabb.bottom = v->y;
 			}
 			// Update aabb.front and aabb.back.
-			if(cHull->vertices[i].z >= collider->aabb.front){
-				collider->aabb.front = cHull->vertices[i].z;
-			}else if(cHull->vertices[i].z < collider->aabb.back){
-				collider->aabb.back = cHull->vertices[i].z;
+			if(v->z >= collider->aabb.front){
+				collider->aabb.front = v->z;
+			}else if(v->z < collider->aabb.back){
+				collider->aabb.back = v->z;
 			}
 
 		}
@@ -79,21 +81,24 @@ static void physColliderGenerateMomentMesh(const physCollider *collider, const v
 
 	const cMesh *cHull = (const cMesh *)&collider->c.hull;
 
-	size_t i;
+	const float *m = vertexMassArray;
+	vec3 *v = cHull->vertices;
+	vec3 *vLast = &v[cHull->vertexNum];
+
 	inertiaTensor[0] = 0.f; inertiaTensor[1] = 0.f; inertiaTensor[2] = 0.f;
 	inertiaTensor[3] = 0.f; inertiaTensor[4] = 0.f; inertiaTensor[5] = 0.f;
 
-	for(i = 0; i < cHull->vertexNum; ++i){
+	for(; v < vLast; ++v, ++m){
 
-		const float x = cHull->vertices[i].x - centroid->x;  /** Is this correct? **/
-		const float y = cHull->vertices[i].y - centroid->y;
-		const float z = cHull->vertices[i].z - centroid->z;
+		const float x = v->x - centroid->x;  /** Is this correct? **/
+		const float y = v->y - centroid->y;
+		const float z = v->z - centroid->z;
 		const float sqrX = x*x;
 		const float sqrY = y*y;
 		const float sqrZ = z*z;
 		float vertexMass;
 		if(vertexMassArray != NULL){
-			vertexMass = vertexMassArray[i];
+			vertexMass = *m;
 		}else{
 			vertexMass = PHYSICS_COLLIDER_DEFAULT_VERTEX_MASS;
 		}
@@ -118,61 +123,80 @@ static void physColliderUpdateMesh(physCollider *collider, const physCollider *l
 	cMesh *cGlobal = (cMesh *)&collider->c.hull;
 	const cMesh *cLocal = (const cMesh *)&local->c.hull;
 
-	size_t i;
+	vec3 *vLocal = cLocal->vertices;
+	vec3 *vGlobal = cGlobal->vertices;
+	vec3 *vLast = &vGlobal[cGlobal->vertexNum];
 
 	// Update the collider's global centroid.
 	collider->centroid.x = local->centroid.x + configuration->position.x;
 	collider->centroid.y = local->centroid.y + configuration->position.y;
 	collider->centroid.z = local->centroid.z + configuration->position.z;
 
+
+	/* First iteration. */
+	// Transform the vertex.
+	// Subtract the local centroid from the vertex.
+	vec3SubVFromVR(vLocal, &local->centroid, vGlobal);
+	// Rotate the new vertex around (0, 0, 0).
+	quatRotateVec3Fast(&configuration->orientation, vGlobal);
+	// Scale the vertex.
+	vec3MultVByV(vGlobal, &configuration->scale);
+	// Translate it by the global centroid.
+	vec3AddVToV(vGlobal, &collider->centroid);
+
+	// Initialize them to the first vertex.
+	collider->aabb.left = vGlobal->x;
+	collider->aabb.right = vGlobal->x;
+	collider->aabb.top = vGlobal->y;
+	collider->aabb.bottom = vGlobal->y;
+	collider->aabb.front = vGlobal->z;
+	collider->aabb.back = vGlobal->z;
+
+
+	/* Other iterations. */
 	// Update each vertex.
-	for(i = 0; i < cGlobal->vertexNum; ++i){
+	for(++vLocal, ++vGlobal; vGlobal < vLast; ++vLocal, ++vGlobal){
 
 		// Transform the vertex.
 		// Subtract the local centroid from the vertex.
-		vec3SubVFromVR(&cLocal->vertices[i], &local->centroid, &cGlobal->vertices[i]);
+		vec3SubVFromVR(vLocal, &local->centroid, vGlobal);
 		// Rotate the new vertex around (0, 0, 0).
-		quatRotateVec3Fast(&configuration->orientation, &cGlobal->vertices[i]);
+		quatRotateVec3Fast(&configuration->orientation, vGlobal);
 		// Scale the vertex.
-		vec3MultVByV(&cGlobal->vertices[i], &configuration->scale);
+		vec3MultVByV(vGlobal, &configuration->scale);
 		// Translate it by the global centroid.
-		vec3AddVToV(&cGlobal->vertices[i], &collider->centroid);
+		vec3AddVToV(vGlobal, &collider->centroid);
 
 		// Update mesh minima and maxima.
-		if(i == 0){
-			// Initialize them to the first vertex.
-			collider->aabb.left = cGlobal->vertices[i].x;
-			collider->aabb.right = cGlobal->vertices[i].x;
-			collider->aabb.top = cGlobal->vertices[i].y;
-			collider->aabb.bottom = cGlobal->vertices[i].y;
-			collider->aabb.front = cGlobal->vertices[i].z;
-			collider->aabb.back = cGlobal->vertices[i].z;
-		}else{
-			// Update aabb.left and aabb.right.
-			if(cGlobal->vertices[i].x <= collider->aabb.left){
-				collider->aabb.left = cGlobal->vertices[i].x;
-			}else if(cGlobal->vertices[i].x > collider->aabb.right){
-				collider->aabb.right = cGlobal->vertices[i].x;
-			}
-			// Update aabb.top and aabb.bottom.
-			if(cGlobal->vertices[i].y >= collider->aabb.top){
-				collider->aabb.top = cGlobal->vertices[i].y;
-			}else if(cGlobal->vertices[i].y < collider->aabb.bottom){
-				collider->aabb.bottom = cGlobal->vertices[i].y;
-			}
-			// Update aabb.front and aabb.back.
-			if(cGlobal->vertices[i].z >= collider->aabb.front){
-				collider->aabb.front = cGlobal->vertices[i].z;
-			}else if(cGlobal->vertices[i].z < collider->aabb.back){
-				collider->aabb.back = cGlobal->vertices[i].z;
-			}
+		// Update aabb.left and aabb.right.
+		if(vGlobal->x <= collider->aabb.left){
+			collider->aabb.left = vGlobal->x;
+		}else if(vGlobal->x > collider->aabb.right){
+			collider->aabb.right = vGlobal->x;
+		}
+		// Update aabb.top and aabb.bottom.
+		if(vGlobal->y >= collider->aabb.top){
+			collider->aabb.top = vGlobal->y;
+		}else if(vGlobal->y < collider->aabb.bottom){
+			collider->aabb.bottom = vGlobal->y;
+		}
+		// Update aabb.front and aabb.back.
+		if(vGlobal->z >= collider->aabb.front){
+			collider->aabb.front = vGlobal->z;
+		}else if(vGlobal->z < collider->aabb.back){
+			collider->aabb.back = vGlobal->z;
 		}
 
 	}
 
+
+	vLocal = cLocal->normals;
+	vGlobal = cGlobal->normals;
+	vLast = &vGlobal[cGlobal->faceNum];
+
 	// Update each normal.
-	for(i = 0; i < cGlobal->faceNum; ++i){
-		quatRotateVec3FastR(&configuration->orientation, &cLocal->normals[i], &cGlobal->normals[i]);
+	for(; vGlobal < vLast; ++vLocal, ++vGlobal){
+		quatRotateVec3FastR(&configuration->orientation, vLocal, vGlobal);
 	}
 
 }

@@ -5,6 +5,7 @@ return_t physSolverInit(physicsSolver *solver, size_t bodyNum){
 
 	void *memory;
 
+	solver->bodyNum = 0;
 	memPoolInit(&solver->bodies);
 
 	if(bodyNum == 0){
@@ -18,66 +19,56 @@ return_t physSolverInit(physicsSolver *solver, size_t bodyNum){
 	if(memPoolCreate(&solver->bodies, memory, sizeof(physRBInstance *), bodyNum) == NULL){
 		return -1;
 	}
+	solver->bodyNum = bodyNum;
 
 	return 1;
 
 }
 
 void physSolverReset(physicsSolver *solver){
+
 	/** Temporary: This will later be done during solving. **/
-	/**physicsBodyIndex_t i;
-	for(i = 0; i < solver->bodyCapacity; ++i){
-		solver->bodies[i].active = solver->bodies[i].body != NULL;
-	}
-	solver->bodyNum = 0;**/
+
+	memoryRegion *region = solver->bodies.region;
+	physRBInstance **i;
+
+	do {
+		i = memPoolFirst(region);
+		while(i < (physRBInstance **)memAllocatorEnd(region)){
+			const byte_t flag = memPoolBlockStatus(i);
+			if(flag == MEMORY_POOL_BLOCK_ACTIVE){
+
+				memPoolFree(&solver->bodies, (void *)i);
+
+			}else if(flag == MEMORY_POOL_BLOCK_INVALID){
+				return;
+			}
+			i = memPoolBlockNext(solver->bodies, i);
+		}
+		region = memAllocatorNext(region);
+	} while(region != NULL);
+
 }
 
-return_t physSolverAddBody(physicsSolver *solver, physRBInstance *body){
+physRBInstance **physSolverAllocate(physicsSolver *solver){
 	/*
 	** Add a new body to the solver, resizing the
 	** bodies array if necessary.
 	*/
-	/**if(body->id >= solver->bodyCapacity){
-		physicsBodyIndex_t i;
-		for(i = 0; i < solver->bodyCapacity; ++i){
-			if(!solver->bodies[i].active){
-				break;
-			}
+	physRBInstance **r = memPoolAllocate(&solver->bodies);
+	if(r == NULL){
+		// Attempt to extend the allocator.
+		void *memory = memAllocate(
+			memPoolAllocationSize(NULL, sizeof(physRBInstance *), solver->bodyNum)
+		);
+		if(memPoolExtend(&solver->bodies, memory, sizeof(physRBInstance *), solver->bodyNum)){
+			r = memPoolAllocate(&solver->bodies);
 		}
-		body->id = i;
-		if(body->id == solver->bodyCapacity){
-			*
-			** The body array is full, double its size.
-			** Increasing it by 1 may be better in the
-			** long run, but would also probably lead
-			** to more fragmentation, so who knows.
-			*
-			physBodyReference *tempBuffer;
-			if(solver->bodyCapacity == 0){
-				solver->bodyCapacity = 1;
-			}else{
-				solver->bodyCapacity *= 2;
-			}
-			tempBuffer = memReallocate(solver->bodies, solver->bodyCapacity * sizeof(physBodyReference));
-			if(tempBuffer == NULL){
-				** Memory allocation failure. **
-				return -1;
-			}
-			// Set all the new elements to NULL.
-			// Skip the first new element, as it
-			// is being set later by the new body.
-			++i;
-			while(i < solver->bodyCapacity){
-				tempBuffer[i].active = 0;
-				++i;
-			}
-			solver->bodies = tempBuffer;
-		}
-		solver->bodies[body->id].active = 1;
 	}
-	solver->bodies[body->id].body = body;
-	++solver->bodyNum;
-	return 1;**/
+	if(r != NULL){
+		++solver->bodyNum;
+	}
+	return r;
 }
 
 static void physSolverGenerateIslands(physicsSolver *solver){
@@ -91,6 +82,67 @@ void physSolverUpdate(physicsSolver *solver){
 	** something dynamic AABB tree, something
 	** something simulation islands.
 	*/
+
+	memoryRegion *region1 = solver->bodies.region;
+	memoryRegion *region2;
+	physRBInstance **i;
+	physRBInstance **j;
+
+	cCollisionInfo separationInfo;
+	cCollisionContactManifold collisionData;
+
+	do {
+		i = memPoolFirst(region1);
+		while(i < (physRBInstance **)memAllocatorEnd(region1)){
+			const byte_t flag = memPoolBlockStatus(i);
+			if(flag == MEMORY_POOL_BLOCK_ACTIVE){
+
+				region2 = region1;
+				j = memPoolBlockNext(solver->bodies, i);
+				for(;;){
+					while(j < (physRBInstance **)memAllocatorEnd(region2)){
+						const byte_t flag = memPoolBlockStatus(j);
+						if(flag == MEMORY_POOL_BLOCK_ACTIVE){
+
+							if(
+								cCollision(
+									&(*i)->colliders[0].c, &(*i)->centroid,
+									&(*j)->colliders[0].c, &(*j)->centroid,
+									&separationInfo, &collisionData
+								)
+							){
+								//
+								//physRBIResolveCollision(island->bodies[i], island->bodies[j], &collisionData);
+								//if(j==island->bodyNum-1){
+									//island->bodies[i]->blah=1;
+									//island->bodies[j]->blah=1;
+									//exit(0);
+								//}
+							}else{
+								//physRBICacheSeparation()
+							}
+
+						}else if(flag == MEMORY_POOL_BLOCK_INVALID){
+							goto PHYSICS_SOLVER_END_LOOP;
+						}
+						j = memPoolBlockNext(solver->bodies, j);
+					}
+					region2 = memAllocatorNext(region2);
+					if(region2 == NULL){
+						break;
+					}
+					j = memPoolFirst(region2);
+				}
+
+
+			}else if(flag == MEMORY_POOL_BLOCK_INVALID){
+				return;
+			}
+			PHYSICS_SOLVER_END_LOOP:
+			i = memPoolBlockNext(solver->bodies, i);
+		}
+		region1 = memAllocatorNext(region1);
+	} while(region1 != NULL);
 
 	/** TEMPORARY **/
 
@@ -118,12 +170,6 @@ void physSolverUpdate(physicsSolver *solver){
 }
 
 void physSolverDelete(physicsSolver *solver){
-	//if(solver->bodyArraySizes != NULL){
-		//memFree(solver->bodyArraySizes);
-	//}
-	///if(solver->bodies != NULL){
-	///	memFree(solver->bodies);
-	///}
 	memoryRegion *region = solver->bodies.region;
 	while(region != NULL){
 		memoryRegion *next = memAllocatorNext(region);

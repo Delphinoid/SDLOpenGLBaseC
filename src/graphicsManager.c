@@ -17,12 +17,10 @@ return_t gfxMngrInit(graphicsManager *gfxMngr, const char *prgPath){
 	return_t r;
 
 	mat4Identity(&gfxMngr->identityMatrix);
-	gfxMngr->windowAspectRatioX = GFX_DEFAULT_ASPECT_RATIO_X;
-	gfxMngr->windowAspectRatioY = GFX_DEFAULT_ASPECT_RATIO_Y;
-	gfxMngr->windowWidth = GFX_DEFAULT_WIDTH;
-	gfxMngr->windowHeight = GFX_DEFAULT_HEIGHT;
-	gfxMngr->windowWidthLast = 0;
-	gfxMngr->windowHeightLast = 0;
+	gfxMngr->windowAspectRatioX = GFX_DEFAULT_WINDOW_ASPECT_RATIO_X;
+	gfxMngr->windowAspectRatioY = GFX_DEFAULT_WINDOW_ASPECT_RATIO_Y;
+	gfxMngr->windowWidth = GFX_DEFAULT_WINDOW_WIDTH;
+	gfxMngr->windowHeight = GFX_DEFAULT_WINDOW_HEIGHT;
 	gfxMngr->windowStretchToFit = 0;
 	gfxMngr->windowModified = 1;
 	gfxMngr->biasMIP = GFX_DEFAULT_BIAS_MIP;
@@ -61,7 +59,7 @@ static return_t gfxMngrInitSDL(graphicsManager *gfxMngr){
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
 	// Create the window and context
-	gfxMngr->window = SDL_CreateWindow("Luna", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, GFX_DEFAULT_WIDTH, GFX_DEFAULT_HEIGHT, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+	gfxMngr->window = SDL_CreateWindow("Luna", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, GFX_DEFAULT_WINDOW_WIDTH, GFX_DEFAULT_WINDOW_HEIGHT, GFX_DEFAULT_WINDOW_FLAGS);
 	if(!gfxMngr->window || !(gfxMngr->context = SDL_GL_CreateContext(gfxMngr->window))){
 		printf("Error initializing SDL library: %s\n", SDL_GetError());
 		return 0;
@@ -328,40 +326,100 @@ static return_t gfxMngrCreateBuffers(graphicsManager *gfxMngr){
 
 }
 
-
-
-__FORCE_INLINE__ unsigned int gfxMngrUpdateWindow(graphicsManager *gfxMngr){
-	SDL_GetWindowSize(gfxMngr->window, (int *)&gfxMngr->windowWidth, (int *)&gfxMngr->windowHeight);
-	if(gfxMngr->windowWidth != gfxMngr->windowWidthLast || gfxMngr->windowHeight != gfxMngr->windowHeightLast){
-		if(gfxMngr->windowStretchToFit){
-			gfxMngr->viewport.x = 0;
-			gfxMngr->viewport.y = 0;
-			gfxMngr->viewport.width = gfxMngr->windowWidth;
-			gfxMngr->viewport.height = gfxMngr->windowHeight;
-		}else{
-			float tempWidth  = gfxMngr->windowWidth  / gfxMngr->windowAspectRatioX;
-			float tempHeight = gfxMngr->windowHeight / gfxMngr->windowAspectRatioY;
-			if(tempWidth > tempHeight){
-				gfxMngr->viewport.width  = (unsigned int)tempHeight * gfxMngr->windowAspectRatioX;
-				gfxMngr->viewport.height = gfxMngr->windowHeight;
-			}else if(tempWidth < tempHeight){
-				gfxMngr->viewport.width  = gfxMngr->windowWidth;
-				gfxMngr->viewport.height = (unsigned int)tempWidth * gfxMngr->windowAspectRatioY;
-			}else{
-				gfxMngr->viewport.width  = gfxMngr->windowWidth;
-				gfxMngr->viewport.height = gfxMngr->windowHeight;
-			}
-			gfxMngr->viewport.x = (gfxMngr->windowWidth  - gfxMngr->viewport.width)  >> 1;
-			gfxMngr->viewport.y = (gfxMngr->windowHeight - gfxMngr->viewport.height) >> 1;
-		}
-		gfxMngr->windowWidthLast  = gfxMngr->windowWidth;
-		gfxMngr->windowHeightLast = gfxMngr->windowHeight;
-		gfxViewReset(&gfxMngr->viewLast);
+unsigned int gfxMngrWindowChanged(graphicsManager *gfxMngr){
+	int windowWidth, windowHeight;
+	SDL_GetWindowSize(gfxMngr->window, &windowWidth, &windowHeight);
+	if((int)gfxMngr->windowWidth != windowWidth || (int)gfxMngr->windowHeight != windowHeight){
+		gfxMngr->windowWidth = windowWidth;
+		gfxMngr->windowHeight = windowHeight;
 		gfxMngr->windowModified = 1;
-	}else{
-		gfxMngr->windowModified = 0;
 	}
 	return gfxMngr->windowModified;
+}
+
+void gfxMngrUpdateViewport(graphicsManager *gfxMngr){
+	if(gfxMngr->windowStretchToFit){
+		gfxMngr->viewport.x = 0;
+		gfxMngr->viewport.y = 0;
+		gfxMngr->viewport.width = gfxMngr->windowWidth;
+		gfxMngr->viewport.height = gfxMngr->windowHeight;
+	}else{
+		float tempWidth  = gfxMngr->windowWidth  / gfxMngr->windowAspectRatioX;
+		float tempHeight = gfxMngr->windowHeight / gfxMngr->windowAspectRatioY;
+		if(tempWidth > tempHeight){
+			gfxMngr->viewport.width  = (unsigned int)tempHeight * gfxMngr->windowAspectRatioX;
+			gfxMngr->viewport.height = gfxMngr->windowHeight;
+		}else if(tempWidth < tempHeight){
+			gfxMngr->viewport.width  = gfxMngr->windowWidth;
+			gfxMngr->viewport.height = (unsigned int)tempWidth * gfxMngr->windowAspectRatioY;
+		}else{
+			gfxMngr->viewport.width  = gfxMngr->windowWidth;
+			gfxMngr->viewport.height = gfxMngr->windowHeight;
+		}
+		gfxMngr->viewport.x = (gfxMngr->windowWidth - gfxMngr->viewport.width)  >> 1;
+		gfxMngr->viewport.y = (gfxMngr->windowHeight - gfxMngr->viewport.height) >> 1;
+	}
+	gfxViewReset(&gfxMngr->viewLast);
+}
+
+void gfxMngrUpdateWindow(graphicsManager *gfxMngr){
+	if(gfxMngrWindowChanged(gfxMngr)){
+		gfxMngrUpdateViewport(gfxMngr);
+		gfxMngr->windowModified = 0;
+	}
+}
+
+int gfxMngrSetWindowMode(graphicsManager *gfxMngr, const Uint32 mode){
+	int r;
+	if(mode == SDL_WINDOW_FULLSCREEN){
+		SDL_DisplayMode displayMode;
+		SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(gfxMngr->window), &displayMode);
+		r = SDL_SetWindowFullscreen(gfxMngr->window, SDL_WINDOW_FULLSCREEN);
+		SDL_SetWindowSize(gfxMngr->window, displayMode.w, displayMode.h);
+	}else if(mode == 0){
+		r = SDL_SetWindowFullscreen(gfxMngr->window, 0);
+		SDL_SetWindowSize(gfxMngr->window, GFX_DEFAULT_WINDOW_WIDTH, GFX_DEFAULT_WINDOW_HEIGHT);
+	}else{
+		return 0;
+	}
+	return r;
+}
+
+void gfxMngrSetWindowFill(graphicsManager *gfxMngr, const unsigned int fill){
+	gfxMngr->windowStretchToFit = fill;
+	gfxMngr->windowModified = 1;
+}
+
+void gfxMngrSetViewportAspectRatio(graphicsManager *gfxMngr, const float x, const float y){
+	gfxMngr->windowAspectRatioX = x;
+	gfxMngr->windowAspectRatioY = y;
+	gfxMngr->windowModified = 1;
+}
+
+void gfxMngrSetViewportAspectX(graphicsManager *gfxMngr, const float x){
+	gfxMngr->windowAspectRatioX = x;
+	gfxMngr->windowModified = 1;
+}
+
+void gfxMngrSetViewportAspectY(graphicsManager *gfxMngr, const float y){
+	gfxMngr->windowAspectRatioY = y;
+	gfxMngr->windowModified = 1;
+}
+
+void gfxMngrSetViewportSize(graphicsManager *gfxMngr, const unsigned int width, const unsigned int height){
+	gfxMngr->viewport.width = width;
+	gfxMngr->viewport.height = height;
+	gfxMngr->windowModified = 1;
+}
+
+void gfxMngrSetViewportWidth(graphicsManager *gfxMngr, const unsigned int width){
+	gfxMngr->viewport.width = width;
+	gfxMngr->windowModified = 1;
+}
+
+void gfxMngrSetViewportHeight(graphicsManager *gfxMngr, const unsigned int height){
+	gfxMngr->viewport.height = height;
+	gfxMngr->windowModified = 1;
 }
 
 __FORCE_INLINE__ void gfxMngrSwitchView(graphicsManager *gfxMngr, const gfxView *view){

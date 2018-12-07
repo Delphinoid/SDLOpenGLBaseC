@@ -154,14 +154,14 @@ int main(int argc, char *argv[]){
 
 	/* Scenes */
 	scene *scnMain = moduleSceneAllocate();
-	scnInit(scnMain, 4);
+	scnInit(scnMain, 4, 4);
 	*scnAllocate(scnMain) = moduleObjectInstanceIndex(0);
 	*scnAllocate(scnMain) = moduleObjectInstanceIndex(2);
 	*scnAllocate(scnMain) = moduleObjectInstanceIndex(4);
 	*scnAllocate(scnMain) = moduleObjectInstanceIndex(5);
 	//
 	scene *scnHUD = moduleSceneAllocate();
-	scnInit(scnHUD, 2);
+	scnInit(scnHUD, 2, 2);
 	*scnAllocate(scnHUD) = moduleObjectInstanceIndex(1);
 	*scnAllocate(scnHUD) = moduleObjectInstanceIndex(3);
 

@@ -6,9 +6,7 @@
 #include "memorySLink.h"
 
 #define RESOURCE_DEFAULT_SCENE_SIZE sizeof(scene)
-#ifndef RESOURCE_DEFAULT_SCENE_NUM
-	#define RESOURCE_DEFAULT_SCENE_NUM 2
-#endif
+#define RESOURCE_DEFAULT_SCENE_NUM 2
 
 extern memoryList  __SceneResourceArray;      // Contains scenes.
 extern memorySLink __SceneZoneResourceArray;  // Contains zones.

@@ -214,25 +214,28 @@ boneIndex_t sklFindBone(const skeleton *skl, const boneIndex_t id, const char *n
 	}
 	return (boneIndex_t)-1;*/
 	boneIndex_t i;
+	sklNode *n;
 	if(id < skl->boneNum){
 		i = id;
-		if(strcmp(skl->bones[i].name, name) == 0){
+		n = &skl->bones[id];
+		if(strcmp(n->name, name) == 0){
 			return i;
 		}
 		while(i > 0){
 			--i;
-			if(strcmp(skl->bones[i].name, name) == 0){
+			--n;
+			if(strcmp(n->name, name) == 0){
 				return i;
 			}
 		}
-		for(i = id; i < skl->boneNum; ++i){
-			if(strcmp(skl->bones[i].name, name) == 0){
+		for(i = id, n = &skl->bones[id]; i < skl->boneNum; ++i, ++n){
+			if(strcmp(n->name, name) == 0){
 				return i;
 			}
 		}
 	}else{
-		for(i = 0; i < skl->boneNum; ++i){
-			if(strcmp(skl->bones[i].name, name) == 0){
+		for(i = 0, n = skl->bones; i < skl->boneNum; ++i, ++n){
+			if(strcmp(n->name, name) == 0){
 				return i;
 			}
 		}
@@ -456,7 +459,7 @@ return_t sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath){
 					++skla->animData.frameNum;
 					currentCommand = 1;
 				}else{
-					// Worth it?
+					/// Worth it?
 					printf("Error loading skeletal animation \"%s\": Frame command at line %u does not contain a brace.\n", fullPath, currentLine);
 				}
 
@@ -802,25 +805,28 @@ boneIndex_t sklaFindBone(const sklAnim *skla, const boneIndex_t id, const char *
 	}
 	return (boneIndex_t)-1;*/
 	boneIndex_t i;
+	char **n;
 	if(id < skla->boneNum){
 		i = id;
-		if(strcmp(skla->bones[i], name) == 0){
+		n = &skla->bones[id];
+		if(strcmp(*n, name) == 0){
 			return i;
 		}
 		while(i > 0){
 			--i;
-			if(strcmp(skla->bones[i], name) == 0){
+			--n;
+			if(strcmp(*n, name) == 0){
 				return i;
 			}
 		}
-		for(i = id; i < skla->boneNum; ++i){
-			if(strcmp(skla->bones[i], name) == 0){
+		for(i = id, n = &skla->bones[id]; i < skla->boneNum; ++i, ++n){
+			if(strcmp(*n, name) == 0){
 				return i;
 			}
 		}
 	}else{
-		for(i = 0; i < skla->boneNum; ++i){
-			if(strcmp(skla->bones[i], name) == 0){
+		for(i = 0, n = skla->bones; i < skla->boneNum; ++i, ++n){
+			if(strcmp(*n, name) == 0){
 				return i;
 			}
 		}
@@ -832,19 +838,21 @@ void sklaDelete(sklAnim *skla){
 		memFree(skla->name);
 	}
 	if(skla->bones != NULL){
-		boneIndex_t i;
-		for(i = 0; i < skla->boneNum; ++i){
-			if(skla->bones[i] != NULL){
-				memFree(skla->bones[i]);
+		char **n = skla->bones;
+		char **nLast = &n[skla->boneNum];
+		for(; n < nLast; ++n){
+			if(*n != NULL){
+				memFree(*n);
 			}
 		}
 		memFree(skla->bones);
 	}
 	if(skla->frames != NULL){
-		frameIndex_t i;
-		for(i = 0; i < skla->animData.frameNum; ++i){
-			if(skla->frames[i] != NULL){
-				memFree(skla->frames[i]);
+		bone **b = skla->frames;
+		bone **bLast = &b[skla->animData.frameNum];
+		for(; b < bLast; ++b){
+			if(*b != NULL){
+				memFree(*b);
 			}
 		}
 		memFree(skla->frames);

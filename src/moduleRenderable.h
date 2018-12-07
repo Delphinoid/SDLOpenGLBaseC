@@ -5,14 +5,10 @@
 #include "memorySLink.h"
 
 #define RESOURCE_DEFAULT_RENDERABLE_SIZE sizeof(renderable)
-#ifndef RESOURCE_DEFAULT_RENDERABLE_NUM
-	#define RESOURCE_DEFAULT_RENDERABLE_NUM 1024
-#endif
+#define RESOURCE_DEFAULT_RENDERABLE_NUM 1024
 
 #define RESOURCE_DEFAULT_RENDERABLE_INSTANCE_SIZE sizeof(rndrInstance)
-#ifndef RESOURCE_DEFAULT_RENDERABLE_INSTANCE_NUM
-	#define RESOURCE_DEFAULT_RENDERABLE_INSTANCE_NUM 4096
-#endif
+#define RESOURCE_DEFAULT_RENDERABLE_INSTANCE_NUM 4096
 
 extern memorySLink __RenderableResourceArray;          // Contains renderable.
 extern memorySLink __RenderableInstanceResourceArray;  // Contains rndrInstances.

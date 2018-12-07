@@ -19,7 +19,7 @@ typedef uint_least8_t contactIndex_t;
 
 typedef struct {
 	collisionType_t type;
-	axisIndex_t axisID;  // The ID of a face or an edge.
+	void *feature;
 } cCollisionInfo;
 
 typedef struct {

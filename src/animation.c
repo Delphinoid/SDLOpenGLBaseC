@@ -26,6 +26,7 @@ void animAdvance(animationInstance *animInst, const animationData *animData, con
 	if(animData->frameNum > 1){
 
 		const float animationLength = animData->frameDelays[animData->frameNum-1];
+		float *currentDelay;
 
 		animInst->prevElapsedTime = elapsedTime;
 		if(animationLength > 0.f && elapsedTime != 0.f){
@@ -64,8 +65,10 @@ void animAdvance(animationInstance *animInst, const animationData *animData, con
 					animInst->nextFrame = 1;
 				}
 				// Advance currentFrame.
-				while(animInst->totalElapsedTime > animData->frameDelays[animInst->currentFrame]){
+				currentDelay = &animData->frameDelays[animInst->currentFrame];
+				while(animInst->totalElapsedTime > *currentDelay){
 					++animInst->currentFrame;
+					++currentDelay;
 				}
 				// Set nextFrame.
 				animInst->nextFrame = animInst->currentFrame+1;
@@ -149,9 +152,12 @@ void animGetRenderData(const animationInstance *animInst, const animationData *a
 	** Calculates the start frame, the end frame and the progress through the two based on the provided data.
 	*/
 
-	*startFrame = 0;
 
 	const float animLength = animData->frameDelays[animData->frameNum-1];
+	float *currentDelay;
+
+	*startFrame = 0;
+
 	if(animLength > 0.f){
 
 		float interpStartTime = animInst->totalElapsedTime - (animInst->prevElapsedTime * (1.f - interpT));
@@ -164,8 +170,10 @@ void animGetRenderData(const animationInstance *animInst, const animationData *a
 		}
 
 		// Find the two frames to interpolate between.
-		while(interpStartTime > animData->frameDelays[*startFrame]){
+		currentDelay = &animData->frameDelays[*startFrame];
+		while(interpStartTime > *currentDelay){
 			++(*startFrame);
+			++currentDelay;
 		}
 		if(endFrame != NULL){
 			*endFrame = *startFrame + 1;
@@ -181,9 +189,9 @@ void animGetRenderData(const animationInstance *animInst, const animationData *a
 			if(*startFrame == 0){
 				startFrameTime = 0.f;
 			}else{
-				startFrameTime = animData->frameDelays[*startFrame-1];
+				startFrameTime = *(currentDelay-1);
 			}
-			endFrameTime = animData->frameDelays[*startFrame];
+			endFrameTime = *currentDelay;
 			*animInterpT = (interpStartTime - startFrameTime) / (endFrameTime - startFrameTime);
 		}
 

@@ -5,9 +5,7 @@
 #include "memoryList.h"
 
 #define RESOURCE_DEFAULT_CAMERA_SIZE sizeof(camera)
-#ifndef RESOURCE_DEFAULT_CAMERA_NUM
-	#define RESOURCE_DEFAULT_CAMERA_NUM 2
-#endif
+#define RESOURCE_DEFAULT_CAMERA_NUM 2
 
 extern memoryList __CameraResourceArray;  // Contains scenes.
 
