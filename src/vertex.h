@@ -3,7 +3,7 @@
 
 #include "quat.h"
 
-// WARNING: Changing this currently does not work,
+// WARNING: Changing this alone will not work,
 //          as the shader still expects 4 values.
 #define VERTEX_MAX_BONES 4
 

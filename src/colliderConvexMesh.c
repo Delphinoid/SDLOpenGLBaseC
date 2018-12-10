@@ -50,12 +50,12 @@ static __FORCE_INLINE__ vec3 *cMeshCollisionSupport(const cMesh *c, const vec3 *
 }
 
 typedef struct {
-	float depth;
+	float depthSquared;
 	cFaceIndex_t index;
 } cMeshSHFaceHelper;
 
 typedef struct {
-	float depth;
+	float depthSquared;
 	cMeshEdge *edge1;
 	cMeshEdge *edge2;
 } cMeshSHEdgeHelper;
@@ -72,12 +72,12 @@ typedef struct {
 } cMeshPenetrationPlanes;
 
 static __FORCE_INLINE__ void cMeshSHFaceInit(cMeshSHFaceHelper *e){
-	e->depth = -INFINITY;
+	e->depthSquared = -INFINITY;
 	e->index = (cFaceIndex_t)-1;
 }
 
 static __FORCE_INLINE__ void cMeshSHEdgeInit(cMeshSHEdgeHelper *e){
-	e->depth = -INFINITY;
+	e->depthSquared = -INFINITY;
 	e->edge1 = NULL;
 	e->edge2 = NULL;
 }
@@ -124,7 +124,7 @@ static return_t cMeshClipPatchRegion(const cMesh *reference, const cFaceIndex_t 
 		}
 
 		// Only add the vertex if it is behind the incident face.
-		depthSquared = pointPlaneDistance(incidentNormal, incidentVertex, &contact->position);
+		depthSquared = pointPlaneDistanceSquared(incidentNormal, incidentVertex, &contact->position);
 		if(depthSquared <= 0.f){
 			// If the vertex is behind the incident face, project it onto it.
 			pointPlaneProject(incidentNormal, incidentVertex, &contact->position);
@@ -150,8 +150,8 @@ static __FORCE_INLINE__ return_t cMeshClipEdge(const vec3 *normal, const vec3 *v
 	** If the starting vertex was clipped, it returns 1.
 	** If the ending vertex was clipped, it returns 2.
 	*/
-	const float startDistance = pointPlaneDistance(normal, vertex, start);
-	const float endDistance = pointPlaneDistance(normal, vertex, end);
+	const float startDistance = pointPlaneDistanceSquared(normal, vertex, start);
+	const float endDistance = pointPlaneDistanceSquared(normal, vertex, end);
 	// Check if the starting vertex is behind the plane.
 	if(startDistance <= 0.f){
 		// If the starting vertex is behind the plane and
@@ -178,8 +178,8 @@ static __FORCE_INLINE__ return_t cMeshClipEdgeAlloc(const vec3 *normal, const ve
 	** If the starting vertex was clipped, it returns 1.
 	** If the ending vertex was clipped, it returns 2.
 	*/
-	const float startDistance = pointPlaneDistance(normal, vertex, start);
-	const float endDistance = pointPlaneDistance(normal, vertex, end);
+	const float startDistance = pointPlaneDistanceSquared(normal, vertex, start);
+	const float endDistance = pointPlaneDistanceSquared(normal, vertex, end);
 	// Check if the starting vertex is behind the plane.
 	if(startDistance <= 0.f){
 		// If the starting vertex is behind the plane and
@@ -206,36 +206,35 @@ static __FORCE_INLINE__ void cMeshClipEdgeContact(const cMesh *reference, const 
                                                   const cMeshEdge *referenceEdge, const cMeshEdge *incidentEdge,
                                                   cCollisionContactManifold *cm){
 
-	vec3 *referenceEdgeStart = &reference->vertices[referenceEdge->start];
-	vec3 *referenceEdgeEnd   = &reference->vertices[referenceEdge->end];
+	const vec3 *referenceEdgeStart = &reference->vertices[referenceEdge->start];
+	const vec3 *referenceEdgeEnd   = &reference->vertices[referenceEdge->end];
 	vec3 referenceContact;
 
-	vec3 *incidentEdgeStart = &incident->vertices[incidentEdge->start];
-	vec3 *incidentEdgeEnd   = &incident->vertices[incidentEdge->end];
+	const vec3 *incidentEdgeStart = &incident->vertices[incidentEdge->start];
+	const vec3 *incidentEdgeEnd   = &incident->vertices[incidentEdge->end];
 	vec3 incidentContact;
+
+	float depthSquared;
 
 	// Get the closest points on the line segments.
 	segmentClosestPoints(referenceEdgeStart, referenceEdgeEnd, incidentEdgeStart, incidentEdgeEnd, &referenceContact, &incidentContact);
 
 	// Calculate the contact normal.
-	/*vec3SubVFromVR(&cm->normal);
-	cm->normal.x = -reference->normals[referenceFaceIndex].x;
-	cm->normal.y = -reference->normals[referenceFaceIndex].y;
-	cm->normal.z = -reference->normals[referenceFaceIndex].z;
+	vec3SubVFromVR(&incidentContact, &referenceContact, &cm->normal);
+	depthSquared = vec3MagnitudeSquared(&cm->normal);
 
-	depthSquared = pointPlaneDistance(&cm->normal, referenceVertex, &start);
+	// Add the contact point.
 	if(depthSquared >= 0.f){
 		cm->contacts[cm->contactNum].depthSquared = depthSquared;
-		cm->contacts[cm->contactNum].position = start;
+		cm->contacts[cm->contactNum].position.x = referenceContact.x + 0.5f * cm->normal.x;
+		cm->contacts[cm->contactNum].position.y = referenceContact.y + 0.5f * cm->normal.y;
+		cm->contacts[cm->contactNum].position.z = referenceContact.z + 0.5f * cm->normal.z;
 		++cm->contactNum;
-		if(cm->contactNum == COLLISION_MAX_CONTACT_POINTS){
-			return;
-		}
-	}*/
+	}
 
-
-
-	printf("Not yet implemented.\n");
+	// Convert the contact normal to a unit vector
+	// using the magnitude we calculated earlier.
+	vec3MultVByS(&cm->normal, fastInvSqrtAccurate(depthSquared));
 
 }
 
@@ -410,7 +409,7 @@ static void cMeshClipFaceContact(const cMesh *reference, const cMesh *incident,
 		// are valid contact points. Check if the edge's
 		// vertices satisfy this condition.
 		// Begin by checking the ending vertex.
-		depthSquared = pointPlaneDistance(&cm->normal, referenceVertex, &end);
+		depthSquared = pointPlaneDistanceSquared(&cm->normal, referenceVertex, &end);
 		if(depthSquared >= 0.f){
 			contact->depthSquared = depthSquared;
 			contact->position = end;
@@ -425,7 +424,7 @@ static void cMeshClipFaceContact(const cMesh *reference, const cMesh *incident,
 		// either has already been added or will be added later as an
 		// ending vertex, and we don't want duplicate contact points.
 		if(startClipped){
-			depthSquared = pointPlaneDistance(&cm->normal, referenceVertex, &start);
+			depthSquared = pointPlaneDistanceSquared(&cm->normal, referenceVertex, &start);
 			if(depthSquared >= 0.f){
 				contact->depthSquared = depthSquared;
 				contact->position = start;
@@ -632,7 +631,7 @@ static void cMeshClipFaceContactAlloc(const cMesh *reference, const cMesh *incid
 		// checking which ones we can use as contact points.
 		vertex = vertexArray;
 		for(; vertex < vertexLast; ++vertex){
-			const float depthSquared = pointPlaneDistance(&cm->normal, referenceVertex, vertex);
+			const float depthSquared = pointPlaneDistanceSquared(&cm->normal, referenceVertex, vertex);
 			if(depthSquared >= 0.f){
 				contact->depthSquared = depthSquared;
 				contact->position = *vertex;
@@ -658,12 +657,12 @@ static __FORCE_INLINE__ void cMeshCollisionSHClipping(const cMesh *c1, const cMe
 	** a collision.
 	*/
 
-	const float maxSeparation = planes->face2.depth > planes->face1.depth ? planes->face2.depth : planes->face1.depth;
+	const float maxSeparation = planes->face2.depthSquared > planes->face1.depthSquared ? planes->face2.depthSquared : planes->face1.depthSquared;
 
 	// Only create an edge contact if the edge penetration depth
 	// is greater than both face penetration depths. Favours
 	// face contacts over edge contacts.
-	if(planes->edge.depth > 0.5f + maxSeparation * 0.9f){
+	if(planes->edge.depthSquared > 0.5f + maxSeparation * 0.9f){
 
 		cMeshClipEdgeContact(c1, c2, planes->edge.edge1, planes->edge.edge2, cm);
 
@@ -673,7 +672,7 @@ static __FORCE_INLINE__ void cMeshCollisionSHClipping(const cMesh *c1, const cMe
 		// the first, create a face contact with it. Favours the
 		// first hull as the reference collider and the second
 		// as the incident collider.
-		if(planes->face2.depth > planes->face1.depth * 0.95f){
+		if(planes->face2.depthSquared > planes->face1.depthSquared * 0.95f){
 
 			cMeshClipFaceContactAlloc(c2, c1, planes->face2.index, planes->face1.index, cm);
 
@@ -712,15 +711,15 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATFaceQuery(const cMesh *c1, con
 		                        .y = -n->y,
 		                        .z = -n->z};
 		// After this, find the distance between them.
-		const float distance = pointPlaneDistance(n, &c1->vertices[c1->edges[f->edge].start], cMeshCollisionSupport(c2, &invNormal));
+		const float distance = pointPlaneDistanceSquared(n, &c1->vertices[c1->edges[f->edge].start], cMeshCollisionSupport(c2, &invNormal));
 
 		if(distance > 0.f){
 			// Early exit, a separating axis has been found.
 			// Cache the separating axis.
 			*feature = (void *)f;
 			return 0;
-		}else if(distance > r->depth){
-			r->depth = distance;
+		}else if(distance > r->depthSquared){
+			r->depthSquared = distance;
 			r->index = i;
 		}
 
@@ -729,7 +728,7 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATFaceQuery(const cMesh *c1, con
 
 	}
 
-	return r->depth <= 0.f;
+	return r->depthSquared <= 0.f;
 
 }
 
@@ -807,9 +806,9 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATMinkowskiFace(const cMesh *c1,
 
 }
 
-static __FORCE_INLINE__ float cMeshCollisionSATEdgeSeparation(const cMesh *c1, const cMesh *c2, const vec3 *centroid,
-                                                              const cMeshEdge *e1, const vec3 *e1InvDir,
-                                                              const cMeshEdge *e2, const vec3 *e2InvDir){
+static __FORCE_INLINE__ float cMeshCollisionSATEdgeSeparationSquared(const cMesh *c1, const cMesh *c2, const vec3 *centroid,
+                                                                     const cMeshEdge *e1, const vec3 *e1InvDir,
+                                                                     const cMeshEdge *e2, const vec3 *e2InvDir){
 
 	/*
 	** Check the distance between the two edges.
@@ -907,17 +906,17 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATEdgeQuery(const cMesh *c1, con
 			if(cMeshCollisionSATMinkowskiFace(c1, c2, e1, &e1InvDir, e2, &e2InvDir)){
 				// Now that we have a Minkowski face, we can
 				// get the distance between the two edges.
-				const float distance = cMeshCollisionSATEdgeSeparation(c1, c2, centroid, e1, &e1InvDir, e2, &e2InvDir);
+				const float distance = cMeshCollisionSATEdgeSeparationSquared(c1, c2, centroid, e1, &e1InvDir, e2, &e2InvDir);
 				if(distance > 0.f){
 					// Early exit, a separating axis has been found.
 					// Cache the separating axis.
 					*feature = (void *)e1;
 					return 0;
-				}else if(distance > r->depth){
+				}else if(distance > r->depthSquared){
 					// If the distance between these two edges
 					// is larger than the previous greatest
 					// distance, record it.
-					r->depth = distance;
+					r->depthSquared = distance;
 					r->edge1 = e1;
 					r->edge2 = e2;
 				}
@@ -925,7 +924,7 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATEdgeQuery(const cMesh *c1, con
 		}
 	}
 
-	return r->depth <= 0.f;
+	return r->depthSquared <= 0.f;
 
 }
 

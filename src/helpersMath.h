@@ -16,7 +16,7 @@ void faceNormal(const vec3 *a, const vec3 *b, const vec3 *c, vec3 *r);
 vec3 getBarycentric(const vec3 *a, const vec3 *b, const vec3 *c, const vec3 *p);
 void barycentric(const vec3 *a, const vec3 *b, const vec3 *c, const vec3 *p, vec3 *r);
 
-float pointPlaneDistance(const vec3 *normal, const vec3 *vertex, const vec3 *point);
+float pointPlaneDistanceSquared(const vec3 *normal, const vec3 *vertex, const vec3 *point);
 void pointPlaneProject(const vec3 *normal, const vec3 *vertex, vec3 *point);
 
 void linePlaneIntersection(const vec3 *normal, const vec3 *vertex, const vec3 *line, vec3 *point);

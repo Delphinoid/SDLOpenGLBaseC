@@ -143,7 +143,7 @@ void barycentric(const vec3 *a, const vec3 *b, const vec3 *c, const vec3 *p, vec
 	r->x = 1.f - r->y - r->z;
 }
 
-float pointPlaneDistance(const vec3 *normal, const vec3 *vertex, const vec3 *point){
+float pointPlaneDistanceSquared(const vec3 *normal, const vec3 *vertex, const vec3 *point){
 	/*
 	** Calculates the squared distance
 	** between a point and a plane.
@@ -172,8 +172,8 @@ void linePlaneIntersection(const vec3 *normal, const vec3 *vertex, const vec3 *l
 	** a line and a plane.
 	*/
 	const float startDistance = vec3Dot(normal, vertex);
-	const float t = startDistance / (startDistance + pointPlaneDistance(normal, vertex, line));
-	/* Lerp */
+	const float t = startDistance / (startDistance + pointPlaneDistanceSquared(normal, vertex, line));
+	// Lerp
 	point->x = line->x * t;
 	point->y = line->y * t;
 	point->z = line->z * t;
@@ -183,8 +183,8 @@ return_t segmentPlaneIntersection(const vec3 *normal, const vec3 *vertex, const 
 	** Finds the intersection between
 	** a line segment and a plane.
 	*/
-	const float startDistance = pointPlaneDistance(normal, vertex, start);
-	const float endDistance = pointPlaneDistance(normal, vertex, end);
+	const float startDistance = pointPlaneDistanceSquared(normal, vertex, start);
+	const float endDistance = pointPlaneDistanceSquared(normal, vertex, end);
 	if(startDistance <= 0.f){
 		if(endDistance <= 0.f){
 			return 0;
@@ -201,6 +201,34 @@ void segmentClosestPoints(const vec3 *s1, const vec3 *e1, const vec3 *s2, const 
 	** Finds the closest points that
 	** lie on the two line segments.
 	*/
+	const vec3 v1 = {.x = s1->x - s2->x,
+	                 .y = s1->y - s2->y,
+	                 .z = s1->z - s2->z};
+	const vec3 v2 = {.x = e1->x - s1->x,
+	                 .y = e1->y - s1->y,
+	                 .z = e1->z - s1->z};
+	const vec3 v3 = {.x = e2->x - s2->x,
+	                 .y = e2->y - s2->y,
+	                 .z = e2->z - s2->z};
+	const float d12 = vec3Dot(&v1, &v2);
+	const float d13 = vec3Dot(&v1, &v3);
+	const float d22 = vec3Dot(&v2, &v2);
+	const float d32 = vec3Dot(&v3, &v2);
+	const float d33 = vec3Dot(&v3, &v3);
+	const float denom = d22 * d33 - d32 * d32;
+	// If the denominator is 0, use 0.5 as the position
+	// along the first line segment. This puts the closest
+	// point in the very center.
+	const float m1 = denom == 0.f ? 0.5f : (d13 * d32 - d12 * d33) / denom;
+	const float m2 = (d13 + m1 * d32) / d33;
+	// Calculate the point on the first line segment.
+	p1->x = s1->x + m1 * (e1->x - s1->x);
+	p1->y = s1->y + m1 * (e1->y - s1->y);
+	p1->z = s1->z + m1 * (e1->z - s1->z);
+	// Calculate the point on the second line segment.
+	p2->x = s2->x + m2 * (e2->x - s2->x);
+	p2->y = s2->y + m2 * (e2->y - s2->y);
+	p2->z = s2->z + m2 * (e2->z - s2->z);
 }
 
 float floatLerp(const float f1, const float f2, const float t){
