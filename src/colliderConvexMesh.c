@@ -891,19 +891,25 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATEdgeQuery(const cMesh *c1, con
 	*/
 
 	cMeshEdge *e1 = c1->edges;
-	cMeshEdge *e2 = c2->edges;
+	cMeshEdge *e2;
 	cMeshEdge *eLast1 = &e1[c1->edgeNum];
-	cMeshEdge *eLast2 = &e2[c2->edgeNum];
+	cMeshEdge *eLast2 = &c2->edges[c2->edgeNum];
 	vec3 e1InvDir, e2InvDir;
 
 	for(; e1 < eLast1; ++e1){
-		for(; e2 < eLast2; ++e2){
-			// Get the inverse direction vectors for the edges.
-			vec3SubVFromVR(&c1->vertices[e1->start], &c1->vertices[e1->end], &e1InvDir);
+
+		// Get the inverse direction vector for the first collider's edge.
+		vec3SubVFromVR(&c1->vertices[e1->start], &c1->vertices[e1->end], &e1InvDir);
+
+		for(e2 = c2->edges; e2 < eLast2; ++e2){
+
+			// Get the inverse direction vector for the second collider's edge.
 			vec3SubVFromVR(&c2->vertices[e2->start], &c2->vertices[e2->end], &e2InvDir);
+
 			// The inverse direction vectors are used in place of the cross product
 			// between the edge's face normal and its twin's face normal.
 			if(cMeshCollisionSATMinkowskiFace(c1, c2, e1, &e1InvDir, e2, &e2InvDir)){
+
 				// Now that we have a Minkowski face, we can
 				// get the distance between the two edges.
 				const float distance = cMeshCollisionSATEdgeSeparationSquared(c1, c2, centroid, e1, &e1InvDir, e2, &e2InvDir);
@@ -920,8 +926,11 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATEdgeQuery(const cMesh *c1, con
 					r->edge1 = e1;
 					r->edge2 = e2;
 				}
+
 			}
+
 		}
+
 	}
 
 	return r->depthSquared <= 0.f;
