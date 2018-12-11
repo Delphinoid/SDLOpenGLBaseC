@@ -1258,25 +1258,25 @@ void skliGenerateBoneState(const sklInstance *skli, const boneIndex_t id, const 
 	bone baseState = *state;
 	bone animationState;
 	bone fragmentState;
-	sklAnimFragment *frag;
-	sklAnimFragment *next;
-	boneIndex_t animBoneID;
 
 	// Loop through each animation.
 	sklAnimInstance *anim = skli->animations;
 	while(anim != NULL){
 
+		sklAnimFragment *frag = anim->fragments;
+
 		boneInit(&animationState);
 
 		// Loop through each animation fragment, blending between them and generating an animation state.
-		frag = anim->fragments;
 		if(frag != NULL){
 
 			for(;;){
 
+				sklAnimFragment *next;
+
 				// If the bone exists in the current animation fragment, generate a fragment state and add it to the animation state.
 				//if(skli->animations[i].animFrags[j].animBoneLookup[boneID] != (boneIndex_t)-1){
-				animBoneID = sklaFindBone(frag->animation, id, name);
+				boneIndex_t animBoneID = sklaFindBone(frag->animation, id, name);
 				if(animBoneID < frag->animation->boneNum){
 
 					// Interpolate between startFrame and endFrame, storing the result in fragmentState.

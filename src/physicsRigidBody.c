@@ -701,8 +701,12 @@ return_t physRigidBodyLoad(physRigidBody **bodies, const skeleton *skl, const ch
 						vec3Cross(&BsA, &CsA, &cHull->normals[cHull->faceNum]);
 						vec3NormalizeFastAccurate(&cHull->normals[cHull->faceNum]);
 
-						cHull->faces[cHull->faceNum].edgeNum = addNum;
-						cHull->faces[cHull->faceNum].edge = first;
+						//cHull->faces[cHull->faceNum].edgeNum = addNum;
+						if(addNum > cHull->edgeMax){
+							// Update the maximum edge num.
+							cHull->edgeMax = addNum;
+						}
+						cHull->faces[cHull->faceNum] = first;
 
 						++cHull->faceNum;
 
@@ -1193,6 +1197,7 @@ return_t physRBIInstantiate(physRBInstance *prbi, physRigidBody *body, bone *con
 			}
 
 			cTemp->vertexNum = cHull->vertexNum;
+			cTemp->edgeMax   = cHull->edgeMax;
 			cTemp->faceNum   = cHull->faceNum;
 			cTemp->edgeNum   = cHull->edgeNum;
 

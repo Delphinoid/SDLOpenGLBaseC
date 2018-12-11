@@ -24,6 +24,7 @@ void cMeshInit(cMesh *cm){
 	cm->vertices = NULL;
 	cm->faceNum = 0;
 	cm->normals = NULL;
+	cm->edgeMax = 0;
 	cm->faces = NULL;
 	cm->edgeNum = 0;
 	cm->edges = NULL;
@@ -248,15 +249,13 @@ static void cMeshClipFaceContact(const cMesh *reference, const cMesh *incident,
 	** reference face.
 	*/
 
-	const cMeshFace *referenceFace = &reference->faces[referenceFaceIndex];
-	cMeshEdge *referenceFaceFirstEdge = &reference->edges[referenceFace->edge];
+	const cMeshFace referenceFace = reference->faces[referenceFaceIndex];
+	cMeshEdge *referenceFaceFirstEdge = &reference->edges[referenceFace];
 	cMeshEdge *referenceEdge;
-	cMeshEdge *referenceEdgeNext;
 
-	const cMeshFace *incidentFace = &incident->faces[incidentFaceIndex];
-	cMeshEdge *incidentFaceFirstEdge = &incident->edges[incidentFace->edge];
+	const cMeshFace incidentFace = incident->faces[incidentFaceIndex];
+	cMeshEdge *incidentFaceFirstEdge = &incident->edges[incidentFace];
 	cMeshEdge *incidentEdge = incidentFaceFirstEdge;
-	cMeshEdge *incidentEdgeNext;
 
 	cMeshEdge *startRegion = NULL;
 	cMeshEdge *endRegionFinal = NULL;
@@ -268,6 +267,14 @@ static void cMeshClipFaceContact(const cMesh *reference, const cMesh *incident,
 
 	cCollisionContact *contact = &cm->contacts[cm->contactNum];
 
+	// Incident edge loop variables.
+	int startClipped;
+	float depthSquared;
+	vec3 start;
+	vec3 end;
+	cMeshEdge *startRegionOld;
+	cMeshEdge *endRegion = NULL;
+
 	// Calculate the contact normal.
 	cm->normal.x = -reference->normals[referenceFaceIndex].x;
 	cm->normal.y = -reference->normals[referenceFaceIndex].y;
@@ -276,170 +283,178 @@ static void cMeshClipFaceContact(const cMesh *reference, const cMesh *incident,
 	// Generate the contact tangents.
 	cCollisionGenerateContactTangents(&cm->normal, &cm->tangents[0], &cm->tangents[1]);
 
+
+	//
 	// Loop through every edge of the incident face.
-	do {
+	//
+	MESH_CLIP_INCIDENT_EDGE_LOOP:
 
-		int startClipped = 0;
-		float depthSquared;
-		vec3 start;
-		vec3 end;
+	startClipped = 0;
+	endRegion = NULL;
 
-		cMeshEdge *startRegionOld = startRegion;
-		cMeshEdge *endRegion = NULL;
-
-		// Get the next edge.
-		if(incidentEdge->face == incidentFaceIndex){
-			incidentEdgeNext = &incident->edges[incidentEdge->next];
-		}else{
-			incidentEdgeNext = &incident->edges[incidentEdge->twinNext];
-		}
+	// Add the edge's starting vertex and get the next edge.
+	if(incidentEdge->face == incidentFaceIndex){
+		// The next edge associated with this face is not a twin.
+		start = incident->vertices[incidentEdge->start];
+		end = incident->vertices[incidentEdge->end];
+		incidentEdge = &incident->edges[incidentEdge->next];
+	}else{
+		// The next edge associated with this face is a twin.
 		// Swap the start and end vertices around to
 		// stay consistent with previous edges.
-		if(incidentEdge->end == incidentEdgeNext->start || incidentEdge->end == incidentEdgeNext->end){
-			start = incident->vertices[incidentEdge->start];
-			end = incident->vertices[incidentEdge->end];
+		start = incident->vertices[incidentEdge->end];
+		end = incident->vertices[incidentEdge->start];
+		incidentEdge = &incident->edges[incidentEdge->twinNext];
+	}
+
+	// Loop through every edge on the reference face
+	// to find its adjacent faces. Clip the edge of the
+	// incident mesh against each of the adjacent face's
+	// normals.
+	referenceEdge = referenceFaceFirstEdge;
+	do {
+
+		// Clip the vertex with the normal of the
+		// current twin edge's face.
+
+		cMeshEdge *referenceEdgeNext;
+
+		vec3 *adjacentFaceNormal;
+		vec3 *adjacentFaceVertex;
+
+		int clipped;
+
+		adjacentFaceVertex = &reference->vertices[referenceEdge->start];
+		if(referenceEdge->face == referenceFaceIndex){
+			// The next edge associated with this face is not a twin.
+			adjacentFaceNormal = &reference->normals[referenceEdge->twinFace];
+			referenceEdgeNext = &reference->edges[referenceEdge->next];
 		}else{
-			start = incident->vertices[incidentEdge->end];
-			end = incident->vertices[incidentEdge->start];
+			// The next edge associated with this face is a twin.
+			adjacentFaceNormal = &reference->normals[referenceEdge->face];
+			referenceEdgeNext = &reference->edges[referenceEdge->twinNext];
 		}
 
-		// Loop through every edge on the reference face
-		// to find its adjacent faces. Clip the edge of the
-		// incident mesh against each of the adjacent face's
-		// normals.
-		referenceEdge = referenceFaceFirstEdge;
-		do {
+		clipped = cMeshClipEdge(adjacentFaceNormal, adjacentFaceVertex, &start, &end);
 
-			// Clip the vertex with the normal of the
-			// current twin edge's face.
-			cFaceIndex_t adjacentFace;
-			int clipped;
-
-			if(referenceEdge->face == referenceFaceIndex){
-				// The next edge associated with this face is not a twin.
-				adjacentFace = referenceEdge->twinFace;
-				referenceEdgeNext = &reference->edges[referenceEdge->next];
-			}else{
-				// The next edge associated with this face is a twin.
-				adjacentFace = referenceEdge->face;
-				referenceEdgeNext = &reference->edges[referenceEdge->twinNext];
-			}
-
-			clipped = cMeshClipEdge(&reference->normals[adjacentFace],
-			                        &reference->vertices[reference->edges[reference->faces[adjacentFace].edge].start],
-			                        &start, &end);
-
-			if(!clipped){
-				startRegion = startRegionOld;
-				goto SKIP_CURRENT_EDGE;
-			}
-
-			if(clipped == 1){
-				// The starting vertex was clipped,
-				// so it may potentially be a new
-				// contact point.
-				startClipped = 1;
-				// Save the final edge it was clipped
-				// on as somewhere to end when adding
-				// clipping region vertices.
-				endRegion = referenceEdge;
-			}else{
-				// The ending vertex was clipped, save
-				// the final edge it was clipped on as
-				// somewhere to start when adding
-				// clipping region vertices.
-				startRegion = referenceEdge;
-			}
-			referenceEdge = referenceEdgeNext;
-
-		} while(referenceEdge != referenceFaceFirstEdge);
-
-		// If new clipped faces were found but some were skipped,
-		// add vertices from the clipping region to patch the gap.
-		if(endRegion != NULL && startRegion != endRegion){
-
-			// If the edge's normal (perpendicular to the edge and
-			// the incident face normal) is pointing away from
-			// endRegion's starting vertex, swap startRegion and
-			// endRegion so the edges are looped through in the
-			// correct order.
-			vec3 local;
-			vec3 edgeNormal;
-			// Translate the edge direction into start's space.
-			vec3SubVFromVR(&end, &start, &local);
-			vec3Cross(incidentNormal, &local, &edgeNormal);
-			// Calculate the starting vertex in local space.
-			// First we need to find which vertex is the starting vertex.
-			if(endRegion->end == reference->edges[endRegion->next].start || endRegion->end == reference->edges[endRegion->next].end){
-				// Translate the starting vertex into start's space.
-				vec3SubVFromVR(&reference->vertices[endRegion->start], &start, &local);
-			}else{
-				// Translate the starting vertex into local space.
-				vec3SubVFromVR(&reference->vertices[endRegion->end], &start, &local);
-			}
-
-			if(startRegion == NULL){
-				// Check whether or not startRegion and
-				// endRegion should be swapped.
-				if(vec3Dot(&edgeNormal, &local) < 0.f){
-					swapEdgesFinal = 1;
-				}
-				// We've only found an ending edge.
-				// Store it until we've finished this loop.
-				endRegionFinal = endRegion;
-			}else{
-				// Check whether or not startRegion and
-				// endRegion should be swapped.
-				if(vec3Dot(&edgeNormal, &local) < 0.f){
-					cMeshEdge *swap = startRegion;
-					startRegion = endRegion;
-					endRegion = swap;
-				}
-				// Add all the vertices between startRegion
-				// and endRegion as contact points.
-				if(cMeshClipPatchRegion(reference, referenceFaceIndex, incidentNormal, incidentVertex, startRegion, endRegion, cm)){
-					return;
-				}
-				startRegion = NULL;
-			}
-
+		if(!clipped){
+			startRegion = startRegionOld;
+			goto MESH_CLIP_SKIP_CURRENT_EDGE;
 		}
 
-		// The vertices that lie behind the reference face
-		// are valid contact points. Check if the edge's
-		// vertices satisfy this condition.
-		// Begin by checking the ending vertex.
-		depthSquared = pointPlaneDistanceSquared(&cm->normal, referenceVertex, &end);
+		if(clipped == 1){
+			// The starting vertex was clipped,
+			// so it may potentially be a new
+			// contact point.
+			startClipped = 1;
+			// Save the final edge it was clipped
+			// on as somewhere to end when adding
+			// clipping region vertices.
+			endRegion = referenceEdge;
+		}else{
+			// The ending vertex was clipped, save
+			// the final edge it was clipped on as
+			// somewhere to start when adding
+			// clipping region vertices.
+			startRegion = referenceEdge;
+		}
+
+		referenceEdge = referenceEdgeNext;
+
+	} while(referenceEdge != referenceFaceFirstEdge);
+
+	// If new clipped faces were found but some were skipped,
+	// add vertices from the clipping region to patch the gap.
+	if(endRegion != NULL && startRegion != endRegion){
+
+		// If the edge's normal (perpendicular to the edge and
+		// the incident face normal) is pointing away from
+		// endRegion's starting vertex, swap startRegion and
+		// endRegion so the edges are looped through in the
+		// correct order.
+		vec3 local;
+		vec3 edgeNormal;
+
+		// Translate the edge direction into start's space.
+		vec3SubVFromVR(&end, &start, &local);
+		vec3Cross(incidentNormal, &local, &edgeNormal);
+
+		// Calculate the starting vertex in local space.
+		// First we need to find which vertex is the starting vertex.
+		if(endRegion->end == reference->edges[endRegion->next].start || endRegion->end == reference->edges[endRegion->next].end){
+			// Translate the starting vertex into start's space.
+			vec3SubVFromVR(&reference->vertices[endRegion->start], &start, &local);
+		}else{
+			// Translate the starting vertex into local space.
+			vec3SubVFromVR(&reference->vertices[endRegion->end], &start, &local);
+		}
+
+		if(startRegion == NULL){
+			// Check whether or not startRegion and
+			// endRegion should be swapped.
+			if(vec3Dot(&edgeNormal, &local) < 0.f){
+				swapEdgesFinal = 1;
+			}
+			// We've only found an ending edge.
+			// Store it until we've finished this loop.
+			endRegionFinal = endRegion;
+		}else{
+			// Check whether or not startRegion and
+			// endRegion should be swapped.
+			if(vec3Dot(&edgeNormal, &local) < 0.f){
+				cMeshEdge *swap = startRegion;
+				startRegion = endRegion;
+				endRegion = swap;
+			}
+			// Add all the vertices between startRegion
+			// and endRegion as contact points.
+			if(cMeshClipPatchRegion(reference, referenceFaceIndex, incidentNormal, incidentVertex, startRegion, endRegion, cm)){
+				return;
+			}
+			startRegion = NULL;
+		}
+
+	}
+
+	// The vertices that lie behind the reference face
+	// are valid contact points. Check if the edge's
+	// vertices satisfy this condition.
+	// Begin by checking the ending vertex.
+	depthSquared = pointPlaneDistanceSquared(&cm->normal, referenceVertex, &end);
+	if(depthSquared >= 0.f){
+		contact->depthSquared = depthSquared;
+		contact->position = end;
+		++cm->contactNum;
+		if(cm->contactNum == COLLISION_MAX_CONTACT_POINTS){
+			return;
+		}
+		++contact;
+	}
+	// Only potentially add the starting vertex if it was clipped.
+	// The reason for this is because if it wasn't clipped, it
+	// either has already been added or will be added later as an
+	// ending vertex, and we don't want duplicate contact points.
+	if(startClipped){
+		depthSquared = pointPlaneDistanceSquared(&cm->normal, referenceVertex, &start);
 		if(depthSquared >= 0.f){
 			contact->depthSquared = depthSquared;
-			contact->position = end;
+			contact->position = start;
 			++cm->contactNum;
 			if(cm->contactNum == COLLISION_MAX_CONTACT_POINTS){
 				return;
 			}
 			++contact;
 		}
-		// Only potentially add the starting vertex if it was clipped.
-		// The reason for this is because if it wasn't clipped, it
-		// either has already been added or will be added later as an
-		// ending vertex, and we don't want duplicate contact points.
-		if(startClipped){
-			depthSquared = pointPlaneDistanceSquared(&cm->normal, referenceVertex, &start);
-			if(depthSquared >= 0.f){
-				contact->depthSquared = depthSquared;
-				contact->position = start;
-				++cm->contactNum;
-				if(cm->contactNum == COLLISION_MAX_CONTACT_POINTS){
-					return;
-				}
-				++contact;
-			}
-		}
+	}
 
-		SKIP_CURRENT_EDGE:
-		incidentEdge = incidentEdgeNext;
+	MESH_CLIP_SKIP_CURRENT_EDGE:
+	if(incidentEdge != incidentFaceFirstEdge){
+		goto MESH_CLIP_INCIDENT_EDGE_LOOP;
+	}
+	//
+	// End incident face edge loop.
+	//
 
-	} while(incidentEdge != incidentFaceFirstEdge);
 
 	// If the start and final end edges are not null, we can
 	// still add the vertices between the start edge and it.
@@ -470,19 +485,15 @@ static void cMeshClipFaceContactAlloc(const cMesh *reference, const cMesh *incid
 	** reference face.
 	*/
 
-	const cMeshFace *referenceFace = &reference->faces[referenceFaceIndex];
-	cMeshEdge *referenceFaceFirstEdge = &reference->edges[referenceFace->edge];
-
-	const cMeshFace *incidentFace = &incident->faces[incidentFaceIndex];
-
-	const cVertexIndex_t referenceVertexNum = referenceFace->edgeNum;
-	cVertexIndex_t vertexNum = incidentFace->edgeNum;
+	cMeshEdge *referenceFaceFirstEdge = &reference->edges[reference->faces[referenceFaceIndex]];
+	const cVertexIndex_t referenceVertexNum = reference->edgeNum;
+	cVertexIndex_t vertexNum = incident->edgeNum;
 
 	const cVertexIndex_t maxOutput = referenceVertexNum > vertexNum ?
 	                                 referenceVertexNum + referenceVertexNum : vertexNum + vertexNum;
 
-	//alloca((maxOutput + maxOutput) * sizeof(vec3));
-	vec3 *vertices = memAllocate((maxOutput + maxOutput) * sizeof(vec3));
+	//alloca(maxOutput * sizeof(vec3) * 2);
+	vec3 *vertices = memAllocate(maxOutput * sizeof(vec3) * 2);
 
 	// Make sure the allocation didn't fail.
 	if(vertices != NULL){
@@ -497,19 +508,10 @@ static void cMeshClipFaceContactAlloc(const cMesh *reference, const cMesh *incid
 		vec3 *vertexArraySwap;
 
 		cMeshEdge *edgeFirst = referenceFaceFirstEdge;
-		cMeshEdge *edge = &incident->edges[incidentFace->edge];
-		cMeshEdge *edgeNext;
+		cMeshEdge *edge = &incident->edges[incident->faces[incidentFaceIndex]];
 
 		vec3 *vertex;
-		vec3 *vertexClip;
-		vec3 *vertexPrevious;
 		vec3 *vertexLast;
-		vec3 *vertexLastNew;
-
-		cFaceIndex_t adjacentFace;
-
-		int clipped;
-
 
 		// Calculate the contact normal.
 		cm->normal.x = -reference->normals[referenceFaceIndex].x;
@@ -519,29 +521,23 @@ static void cMeshClipFaceContactAlloc(const cMesh *reference, const cMesh *incid
 		// Generate the contact tangents.
 		cCollisionGenerateContactTangents(&cm->normal, &cm->tangents[0], &cm->tangents[1]);
 
-
 		// Add the vertex positions to vertexArray.
 		vertex = vertexArray;
 		vertexLast = &vertexArray[vertexNum];
 		for(; vertex < vertexLast; ++vertex){
 
-			// Get the next edge.
+			// Add the edge's starting vertex and get the next edge.
 			if(edge->face == incidentFaceIndex){
-				edgeNext = &incident->edges[edge->next];
-			}else{
-				edgeNext = &incident->edges[edge->twinNext];
-			}
-
-			// Only add starting vertices.
-			// Swap the start and end vertices around to
-			// stay consistent with previous edges.
-			if(edge->end == edgeNext->start || edge->end == edgeNext->end){
+				// The next edge associated with this face is not a twin.
 				*vertex = incident->vertices[edge->start];
+				edge = &incident->edges[edge->next];
 			}else{
+				// The next edge associated with this face is a twin.
+				// Swap the start and end vertices around to
+				// stay consistent with previous edges.
 				*vertex = incident->vertices[edge->end];
+				edge = &incident->edges[edge->twinNext];
 			}
-
-			edge = edgeNext;
 
 		}
 
@@ -554,14 +550,25 @@ static void cMeshClipFaceContactAlloc(const cMesh *reference, const cMesh *incid
 
 			// Clip the vertex with the normal of the
 			// current twin edge's face.
+
+			vec3 *vertexClip;
+			vec3 *vertexPrevious;
+			vec3 *vertexLastNew;
+
+			vec3 *adjacentFaceNormal;
+			vec3 *adjacentFaceVertex;
+
+			int clipped;
+
+			adjacentFaceVertex = &reference->vertices[edge->start];
 			if(edge->face == referenceFaceIndex){
 				// The next edge associated with this face is not a twin.
-				adjacentFace = edge->twinFace;
-				edgeNext = &reference->edges[edge->next];
+				adjacentFaceNormal = &reference->normals[edge->twinFace];
+				edge = &reference->edges[edge->next];
 			}else{
 				// The next edge associated with this face is a twin.
-				adjacentFace = edge->face;
-				edgeNext = &reference->edges[edge->twinNext];
+				adjacentFaceNormal = &reference->normals[edge->face];
+				edge = &reference->edges[edge->twinNext];
 			}
 
 
@@ -574,10 +581,10 @@ static void cMeshClipFaceContactAlloc(const cMesh *reference, const cMesh *incid
 			vertexLastNew = vertexClipArray;
 
 			for(; vertex < vertexLast; ++vertex, ++vertexPrevious){
-				clipped =
-				cMeshClipEdgeAlloc(&reference->normals[adjacentFace],
-				                   &reference->vertices[reference->edges[reference->faces[adjacentFace].edge].start],
-				                   vertexPrevious, vertex, vertexClip);
+				clipped = cMeshClipEdgeAlloc(
+					adjacentFaceNormal, adjacentFaceVertex,
+					vertexPrevious, vertex, vertexClip
+				);
 				if(clipped > 0){
 					++vertexLastNew;
 					++vertexClip;
@@ -593,10 +600,10 @@ static void cMeshClipFaceContactAlloc(const cMesh *reference, const cMesh *incid
 				}
 			}
 			// Final iteration between last and first vertices.
-			clipped =
-			cMeshClipEdgeAlloc(&reference->normals[adjacentFace],
-			                   &reference->vertices[reference->edges[reference->faces[adjacentFace].edge].start],
-			                   vertexPrevious, &vertexArray[0], vertexClip);
+			clipped = cMeshClipEdgeAlloc(
+				adjacentFaceNormal, adjacentFaceVertex,
+				vertexPrevious, &vertexArray[0], vertexClip
+			);
 			if(clipped > 0){
 				++vertexLastNew;
 				++vertexClip;
@@ -621,8 +628,6 @@ static void cMeshClipFaceContactAlloc(const cMesh *reference, const cMesh *incid
 			// Resize the array to represent our new,
 			// culled collection of potential contacts.
 			vertexLast = vertexLastNew;
-
-			edge = edgeNext;
 
 		} while(edge != edgeFirst);
 
@@ -711,7 +716,7 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATFaceQuery(const cMesh *c1, con
 		                        .y = -n->y,
 		                        .z = -n->z};
 		// After this, find the distance between them.
-		const float distance = pointPlaneDistanceSquared(n, &c1->vertices[c1->edges[f->edge].start], cMeshCollisionSupport(c2, &invNormal));
+		const float distance = pointPlaneDistanceSquared(n, &c1->vertices[c1->edges[*f].start], cMeshCollisionSupport(c2, &invNormal));
 
 		if(distance > 0.f){
 			// Early exit, a separating axis has been found.

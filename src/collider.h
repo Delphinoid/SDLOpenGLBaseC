@@ -16,8 +16,8 @@
 #define COLLIDER_TYPE_NUM 5
 
 // The size of the largest collider type.
-// In this case, it tied between the mesh and capsule at 28 bytes.
-#define COLLIDER_MAX_SIZE 28
+// In this case, it is the capsule at 28 bytes.
+#define COLLIDER_MAX_SIZE sizeof(cCapsule)
 
 #define COLLIDER_ARRAY_MAX_SIZE 256
 
