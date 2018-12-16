@@ -1,12 +1,12 @@
 #include "memoryPool.h"
 
-void memPoolInit(memoryPool *pool){
+void memPoolInit(memoryPool *const restrict pool){
 	pool->block = 0;
 	pool->free = NULL;
 	pool->region = NULL;
 }
 
-void *memPoolCreate(memoryPool *pool, void *start, const size_t bytes, const size_t length){
+void *memPoolCreate(memoryPool *const restrict pool, void *start, const size_t bytes, const size_t length){
 
 	/*
 	** Initialize a memory pool with "length"-many
@@ -30,14 +30,14 @@ void *memPoolCreate(memoryPool *pool, void *start, const size_t bytes, const siz
 
 }
 
-void *memPoolAllocate(memoryPool *pool){
+void *memPoolAllocate(memoryPool *const restrict pool){
 
 	/*
 	** Retrieves a new block of memory from the pool
 	** and updates the "free" pointer.
 	** Unspecified behaviour with variable element sizes.
 	*/
-	byte_t *r = pool->free;
+	byte_t *const r = pool->free;
 	if(r){
 		pool->free = memPoolDataGetNextFree(r);
 		memPoolDataGetFlags(r) = MEMORY_POOL_BLOCK_ACTIVE;
@@ -46,7 +46,7 @@ void *memPoolAllocate(memoryPool *pool){
 
 }
 
-void memPoolFree(memoryPool *pool, void *block){
+void memPoolFree(memoryPool *const restrict pool, void *const block){
 
 	/*
 	** Frees a block of memory from the pool.
@@ -63,9 +63,8 @@ void *memPoolSetupMemory(void *start, const size_t bytes, const size_t length){
 	const size_t blockSize = memPoolBlockSize(bytes);
 	byte_t *block;
 	byte_t *next;
-	byte_t *end;
+	const byte_t *const end = (byte_t *)start + memPoolAllocationSize(start, bytes, length) - sizeof(memoryRegion);
 
-	end = (byte_t *)start + memPoolAllocationSize(start, bytes, length) - sizeof(memoryRegion);
 	start = memPoolAlignStartData(start);
 
 	block = start;
@@ -88,7 +87,7 @@ void *memPoolSetupMemory(void *start, const size_t bytes, const size_t length){
 
 }
 
-void *memPoolIndex(memoryPool *pool, const size_t i){
+void *memPoolIndex(memoryPool *const restrict pool, const size_t i){
 
 	/*
 	** Finds the element at index i.
@@ -96,7 +95,7 @@ void *memPoolIndex(memoryPool *pool, const size_t i){
 
 	size_t offset = pool->block * i;
 
-	memoryRegion *region = pool->region;
+	const memoryRegion *restrict region = pool->region;
 	byte_t *regionStart  = memPoolFirst(region);
 	size_t  regionSize   = memAllocatorEnd(region) - regionStart;
 
@@ -111,7 +110,7 @@ void *memPoolIndex(memoryPool *pool, const size_t i){
 
 }
 
-void memPoolClear(memoryPool *pool){
+void memPoolClear(memoryPool *const restrict pool){
 
 	byte_t *block = memPoolAlignStartData(pool->region->start);
 	byte_t *next = block + pool->block;
@@ -133,7 +132,7 @@ void memPoolClear(memoryPool *pool){
 
 }
 
-void *memPoolExtend(memoryPool *pool, void *start, const size_t bytes, const size_t length){
+void *memPoolExtend(memoryPool *const restrict pool, void *const start, const size_t bytes, const size_t length){
 
 	/*
 	** Extends the memory allocator.
@@ -144,7 +143,7 @@ void *memPoolExtend(memoryPool *pool, void *start, const size_t bytes, const siz
 
 	if(start){
 
-		memoryRegion *newRegion = (memoryRegion *)((byte_t *)start + memPoolAllocationSize(start, bytes, length) - sizeof(memoryRegion));
+		memoryRegion *const newRegion = (memoryRegion *)((byte_t *)start + memPoolAllocationSize(start, bytes, length) - sizeof(memoryRegion));
 		memRegionExtend(&pool->region, newRegion, start);
 
 		memPoolSetupMemory(start, bytes, length);
@@ -156,6 +155,6 @@ void *memPoolExtend(memoryPool *pool, void *start, const size_t bytes, const siz
 
 }
 
-void memPoolDelete(memoryPool *pool){
+void memPoolDelete(memoryPool *const restrict pool){
 	memRegionFree(pool->region);
 }

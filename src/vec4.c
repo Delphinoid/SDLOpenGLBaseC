@@ -19,14 +19,14 @@ vec4 vec4NewS(const float s){
 	v.w = s;
 	return v;
 }
-void vec4Set(vec4 *v, const float x, const float y, const float z, const float w){
+void vec4Set(vec4 *const restrict v, const float x, const float y, const float z, const float w){
 	v->x = x; v->y = y; v->z = z; v->w = w;
 }
-void vec4SetS(vec4 *v, const float s){
+void vec4SetS(vec4 *const restrict v, const float s){
 	v->x = s; v->y = s; v->z = s; v->w = s;
 }
 
-vec4 vec4VAddV(const vec4 *v1, const vec4 *v2){
+vec4 vec4VAddV(const vec4 *const restrict v1, const vec4 *const restrict v2){
 	vec4 r;
 	r.x = v1->x + v2->x;
 	r.y = v1->y + v2->y;
@@ -34,7 +34,7 @@ vec4 vec4VAddV(const vec4 *v1, const vec4 *v2){
 	r.w = v1->w + v2->w;
 	return r;
 }
-vec4 vec4VAddN(const vec4 *v, const float x, const float y, const float z, const float w){
+vec4 vec4VAddN(const vec4 *const restrict v, const float x, const float y, const float z, const float w){
 	vec4 r;
 	r.x = v->x + x;
 	r.y = v->y + y;
@@ -42,7 +42,7 @@ vec4 vec4VAddN(const vec4 *v, const float x, const float y, const float z, const
 	r.w = v->w + w;
 	return r;
 }
-vec4 vec4VAddS(const vec4 *v, const float s){
+vec4 vec4VAddS(const vec4 *const restrict v, const float s){
 	vec4 r;
 	r.x = v->x + s;
 	r.y = v->y + s;
@@ -50,20 +50,20 @@ vec4 vec4VAddS(const vec4 *v, const float s){
 	r.w = v->w + s;
 	return r;
 }
-void vec4AddVToV(vec4 *v1, const vec4 *v2){
+void vec4AddVToV(vec4 *const restrict v1, const vec4 *const restrict v2){
 	v1->x += v2->x; v1->y += v2->y; v1->z += v2->z; v1->w += v2->w;
 }
-void vec4AddVToVR(const vec4 *v1, const vec4 *v2, vec4 *r){
+void vec4AddVToVR(const vec4 *const restrict v1, const vec4 *const restrict v2, vec4 *const restrict r){
 	r->x = v1->x + v2->x; r->y = v1->y + v2->y; r->z = v1->z + v2->z; r->w = v1->w + v2->w;
 }
-void vec4AddNToV(vec4 *v, const float x, const float y, const float z, const float w){
+void vec4AddNToV(vec4 *const restrict v, const float x, const float y, const float z, const float w){
 	v->x += x; v->y += y; v->z += z; v->w += w;
 }
-void vec4AddSToV(vec4 *v, const float s){
+void vec4AddSToV(vec4 *const restrict v, const float s){
 	v->x += s; v->y += s; v->z += s; v->w += s;
 }
 
-vec4 vec4VSubV(const vec4 *v1, const vec4 *v2){
+vec4 vec4VSubV(const vec4 *const restrict v1, const vec4 *const restrict v2){
 	vec4 r;
 	r.x = v1->x - v2->x;
 	r.y = v1->y - v2->y;
@@ -71,7 +71,7 @@ vec4 vec4VSubV(const vec4 *v1, const vec4 *v2){
 	r.w = v1->w - v2->w;
 	return r;
 }
-vec4 vec4VSubN(const vec4 *v, const float x, const float y, const float z, const float w){
+vec4 vec4VSubN(const vec4 *const restrict v, const float x, const float y, const float z, const float w){
 	vec4 r;
 	r.x = v->x - x;
 	r.y = v->y - y;
@@ -79,7 +79,7 @@ vec4 vec4VSubN(const vec4 *v, const float x, const float y, const float z, const
 	r.w = v->w - w;
 	return r;
 }
-vec4 vec4VSubS(const vec4 *v, const float s){
+vec4 vec4VSubS(const vec4 *const restrict v, const float s){
 	vec4 r;
 	r.x = v->x - s;
 	r.y = v->y - s;
@@ -87,7 +87,7 @@ vec4 vec4VSubS(const vec4 *v, const float s){
 	r.w = v->w - s;
 	return r;
 }
-vec4 vec4NSubV(const float x, const float y, const float z, const float w, const vec4 *v){
+vec4 vec4NSubV(const float x, const float y, const float z, const float w, const vec4 *const restrict v){
 	vec4 r;
 	r.x = x - v->x;
 	r.y = y - v->y;
@@ -95,7 +95,7 @@ vec4 vec4NSubV(const float x, const float y, const float z, const float w, const
 	r.w = w - v->w;
 	return r;
 }
-vec4 vec4SSubV(const float s, const vec4 *v){
+vec4 vec4SSubV(const float s, const vec4 *const restrict v){
 	vec4 r;
 	r.x = s - v->x;
 	r.y = s - v->y;
@@ -103,29 +103,29 @@ vec4 vec4SSubV(const float s, const vec4 *v){
 	r.w = s - v->w;
 	return r;
 }
-void vec4SubVFromV1(vec4 *v1, const vec4 *v2){
+void vec4SubVFromV1(vec4 *const restrict v1, const vec4 *const restrict v2){
 	v1->x -= v2->x; v1->y -= v2->y; v1->z -= v2->z; v1->w -= v2->w;
 }
-void vec4SubVFromV2(const vec4 *v1, vec4 *v2){
+void vec4SubVFromV2(const vec4 *const restrict v1, vec4 *const restrict v2){
 	v2->x = v1->x - v2->x; v2->y = v1->y - v2->y; v2->z = v1->z - v2->z; v2->w = v1->w - v2->w;
 }
-void vec4SubVFromVR(const vec4 *v1, const vec4 *v2, vec4 *r){
+void vec4SubVFromVR(const vec4 *const restrict v1, const vec4 *const restrict v2, vec4 *const restrict r){
 	r->x = v1->x - v2->x; r->y = v1->y - v2->y; r->z = v1->z - v2->z; r->w = v1->w - v2->w;
 }
-void vec4SubNFromV(vec4 *v, const float x, const float y, const float z, const float w){
+void vec4SubNFromV(vec4 *const restrict v, const float x, const float y, const float z, const float w){
 	v->x -= x; v->y -= y; v->z -= z; v->w -= w;
 }
-void vec4SubSFromV(vec4 *v, const float s){
+void vec4SubSFromV(vec4 *const restrict v, const float s){
 	v->x -= s; v->y -= s; v->z -= s; v->w -= s;
 }
-void vec4SubVFromN(const float x, const float y, const float z, const float w, vec4 *v){
+void vec4SubVFromN(const float x, const float y, const float z, const float w, vec4 *const restrict v){
 	v->x = x - v->x; v->y = y - v->y; v->z = z - v->z; v->w = w - v->w;
 }
-void vec4SubVFromS(const float s, vec4 *v){
+void vec4SubVFromS(const float s, vec4 *const restrict v){
 	v->x = s - v->x; v->y = s - v->y; v->z = s - v->z; v->w = s - v->w;
 }
 
-vec4 vec4VMultV(const vec4 *v1, const vec4 *v2){
+vec4 vec4VMultV(const vec4 *const restrict v1, const vec4 *const restrict v2){
 	vec4 r;
 	r.x = v1->x * v2->x;
 	r.y = v1->y * v2->y;
@@ -133,7 +133,7 @@ vec4 vec4VMultV(const vec4 *v1, const vec4 *v2){
 	r.w = v1->w * v2->w;
 	return r;
 }
-vec4 vec4VMultN(const vec4 *v, const float x, const float y, const float z, const float w){
+vec4 vec4VMultN(const vec4 *const restrict v, const float x, const float y, const float z, const float w){
 	vec4 r;
 	r.x = v->x * x;
 	r.y = v->y * y;
@@ -141,7 +141,7 @@ vec4 vec4VMultN(const vec4 *v, const float x, const float y, const float z, cons
 	r.w = v->w * w;
 	return r;
 }
-vec4 vec4VMultS(const vec4 *v, const float s){
+vec4 vec4VMultS(const vec4 *const restrict v, const float s){
 	vec4 r;
 	r.x = v->x * s;
 	r.y = v->y * s;
@@ -149,20 +149,20 @@ vec4 vec4VMultS(const vec4 *v, const float s){
 	r.w = v->w * s;
 	return r;
 }
-void vec4MultVByV(vec4 *v1, const vec4 *v2){
+void vec4MultVByV(vec4 *const restrict v1, const vec4 *const restrict v2){
 	v1->x *= v2->x; v1->y *= v2->y; v1->z *= v2->z; v1->w *= v2->w;
 }
-void vec4MultVByVR(const vec4 *v1, const vec4 *v2, vec4 *r){
+void vec4MultVByVR(const vec4 *const restrict v1, const vec4 *const restrict v2, vec4 *const restrict r){
 	r->x = v1->x * v2->x; r->y = v1->y * v2->y; r->z = v1->z * v2->z; r->w = v1->w * v2->w;
 }
-void vec4MultVByN(vec4 *v, const float x, const float y, const float z, const float w){
+void vec4MultVByN(vec4 *const restrict v, const float x, const float y, const float z, const float w){
 	v->x *= x; v->y *= y; v->z *= z; v->w *= w;
 }
-void vec4MultVByS(vec4 *v, const float s){
+void vec4MultVByS(vec4 *const restrict v, const float s){
 	v->x *= s; v->y *= s; v->z *= s; v->w *= s;
 }
 
-vec4 vec4VDivV(const vec4 *v1, const vec4 *v2){
+vec4 vec4VDivV(const vec4 *const restrict v1, const vec4 *const restrict v2){
 	vec4 r;
 	if(v2->x != 0.f){
 		r.x = v1->x / v2->x;
@@ -186,7 +186,7 @@ vec4 vec4VDivV(const vec4 *v1, const vec4 *v2){
 	}
 	return r;
 }
-vec4 vec4VDivN(const vec4 *v, const float x, const float y, const float z, const float w){
+vec4 vec4VDivN(const vec4 *const restrict v, const float x, const float y, const float z, const float w){
 	vec4 r;
 	if(x != 0.f){
 		r.x = v->x / x;
@@ -210,7 +210,7 @@ vec4 vec4VDivN(const vec4 *v, const float x, const float y, const float z, const
 	}
 	return r;
 }
-vec4 vec4VDivS(const vec4 *v, const float s){
+vec4 vec4VDivS(const vec4 *const restrict v, const float s){
 	vec4 r;
 	if(s != 0.f){
 		const float invS = 1.f / s;
@@ -223,7 +223,7 @@ vec4 vec4VDivS(const vec4 *v, const float s){
 	}
 	return r;
 }
-vec4 vec4NDivV(const float x, const float y, const float z, const float w, const vec4 *v){
+vec4 vec4NDivV(const float x, const float y, const float z, const float w, const vec4 *const restrict v){
 	vec4 r;
 	if(v->x != 0.f){
 		r.x = x / v->x;
@@ -247,7 +247,7 @@ vec4 vec4NDivV(const float x, const float y, const float z, const float w, const
 	}
 	return r;
 }
-vec4 vec4SDivV(const float s, const vec4 *v){
+vec4 vec4SDivV(const float s, const vec4 *const restrict v){
 	vec4 r;
 	if(v->x != 0.f){
 		r.x = s / v->x;
@@ -271,7 +271,7 @@ vec4 vec4SDivV(const float s, const vec4 *v){
 	}
 	return r;
 }
-void vec4DivVByV1(vec4 *v1, const vec4 *v2){
+void vec4DivVByV1(vec4 *const restrict v1, const vec4 *const restrict v2){
 	if(v2->x != 0.f){
 		v1->x /= v2->x;
 	}else{
@@ -293,7 +293,7 @@ void vec4DivVByV1(vec4 *v1, const vec4 *v2){
 		v1->w = 0.f;
 	}
 }
-void vec4DivVByV2(const vec4 *v1, vec4 *v2){
+void vec4DivVByV2(const vec4 *const restrict v1, vec4 *const restrict v2){
 	if(v2->x != 0.f){
 		v2->x = v1->x / v2->x;
 	}else{
@@ -315,7 +315,7 @@ void vec4DivVByV2(const vec4 *v1, vec4 *v2){
 		v2->w = 0.f;
 	}
 }
-void vec4DivVByVR(const vec4 *v1, const vec4 *v2, vec4 *r){
+void vec4DivVByVR(const vec4 *const restrict v1, const vec4 *const restrict v2, vec4 *const restrict r){
 	if(v2->x != 0.f){
 		r->x = v1->x / v2->x;
 	}else{
@@ -337,7 +337,7 @@ void vec4DivVByVR(const vec4 *v1, const vec4 *v2, vec4 *r){
 		r->w = 0.f;
 	}
 }
-void vec4DivVByN(vec4 *v, const float x, const float y, const float z, const float w){
+void vec4DivVByN(vec4 *const restrict v, const float x, const float y, const float z, const float w){
 	if(x != 0.f){
 		v->x /= x;
 	}else{
@@ -359,7 +359,7 @@ void vec4DivVByN(vec4 *v, const float x, const float y, const float z, const flo
 		v->w = 0.f;
 	}
 }
-void vec4DivVByS(vec4 *v, const float s){
+void vec4DivVByS(vec4 *const restrict v, const float s){
 	if(s != 0.f){
 		const float invS = 1.f / s;
 		v->x *= invS; v->y *= invS; v->z *= invS; v->w *= invS;
@@ -367,7 +367,7 @@ void vec4DivVByS(vec4 *v, const float s){
 		v->x = 0.f; v->y = 0.f; v->z = 0.f; v->w = 0.f;
 	}
 }
-void vec4DivNByV(const float x, const float y, const float z, const float w, vec4 *v){
+void vec4DivNByV(const float x, const float y, const float z, const float w, vec4 *const restrict v){
 	if(v->x != 0.f){
 		v->x = x / v->x;
 	}else{
@@ -389,7 +389,7 @@ void vec4DivNByV(const float x, const float y, const float z, const float w, vec
 		v->w = 0.f;
 	}
 }
-void vec4DivSByV(const float s, vec4 *v){
+void vec4DivSByV(const float s, vec4 *const restrict v){
 	if(v->x != 0.f){
 		v->x = s / v->x;
 	}else{
@@ -412,56 +412,56 @@ void vec4DivSByV(const float s, vec4 *v){
 	}
 }
 
-__FORCE_INLINE__ float vec4Magnitude(const vec4 *v){
+__FORCE_INLINE__ float vec4Magnitude(const vec4 *const restrict v){
 	return sqrtf(v->x*v->x + v->y*v->y + v->z*v->z + v->w*v->w);
 }
-__FORCE_INLINE__ float vec4MagnitudeSquared(const vec4 *v){
+__FORCE_INLINE__ float vec4MagnitudeSquared(const vec4 *const restrict v){
 	return v->x*v->x + v->y*v->y + v->z*v->z + v->w*v->w;
 }
-__FORCE_INLINE__ float vec4InverseMagnitude(const vec4 *v){
+__FORCE_INLINE__ float vec4InverseMagnitude(const vec4 *const restrict v){
 	const float magnitudeSquared = v->x*v->x + v->y*v->y + v->z*v->z + v->w*v->w;
 	return fastInvSqrt(magnitudeSquared);
 }
 
-vec4 vec4GetUnit(const vec4 *v){
+vec4 vec4GetUnit(const vec4 *const restrict v){
 	const float magnitude = vec4Magnitude(v);
 	if(magnitude != 0.f){
 		return vec4VDivS(v, magnitude);
 	}
 	return *v;
 }
-vec4 vec4GetUnitFast(const vec4 *v){
+vec4 vec4GetUnitFast(const vec4 *const restrict v){
 	const float magnitudeSquared = v->x*v->x + v->y*v->y + v->z*v->z + v->w*v->w;
 	const float invSqrt = fastInvSqrt(magnitudeSquared);
 	return vec4VMultS(v, invSqrt);
 }
-vec4 vec4GetUnitFastAccurate(const vec4 *v){
+vec4 vec4GetUnitFastAccurate(const vec4 *const restrict v){
 	const float magnitudeSquared = v->x*v->x + v->y*v->y + v->z*v->z + v->w*v->w;
 	const float invSqrt = fastInvSqrtAccurate(magnitudeSquared);
 	return vec4VMultS(v, invSqrt);
 }
-void vec4Normalize(vec4 *v){
+void vec4Normalize(vec4 *const restrict v){
 	const float magnitude = vec4Magnitude(v);
 	if(magnitude != 0.f){
 		vec4DivVByS(v, magnitude);
 	}
 }
-void vec4NormalizeFast(vec4 *v){
+void vec4NormalizeFast(vec4 *const restrict v){
 	const float magnitudeSquared = v->x*v->x + v->y*v->y + v->z*v->z + v->w*v->w;
 	const float invSqrt = fastInvSqrt(magnitudeSquared);
 	vec4MultVByS(v, invSqrt);
 }
-void vec4NormalizeFastAccurate(vec4 *v){
+void vec4NormalizeFastAccurate(vec4 *const restrict v){
 	const float magnitudeSquared = v->x*v->x + v->y*v->y + v->z*v->z + v->w*v->w;
 	const float invSqrt = fastInvSqrtAccurate(magnitudeSquared);
 	vec4MultVByS(v, invSqrt);
 }
 
-float vec4Dot(const vec4 *v1, const vec4 *v2){
+float vec4Dot(const vec4 *const restrict v1, const vec4 *const restrict v2){
 	return v1->x * v2->x + v1->y * v2->y + v1->z * v2->z + v1->w * v2->w;
 }
 
-void vec4Lerp(const vec4 *v1, const vec4 *v2, const float t, vec4 *r){
+void vec4Lerp(const vec4 *const restrict v1, const vec4 *const restrict v2, const float t, vec4 *const restrict r){
 	/*
 	** r = v1 + (v2 - v1) * t
 	*/

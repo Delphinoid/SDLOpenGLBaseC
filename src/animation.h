@@ -28,11 +28,11 @@ typedef struct {
 } animationInstance;
 
 /** The two functions below are REALLY bad, redo them later. **/
-void animInstInit(animationInstance *animInst);
-void animDataInit(animationData *animData);
-void animDataDelete(animationData *animData);
-void animAdvance(animationInstance *animInst, const animationData *animData, const float elapsedTime);
-void animGetRenderData(const animationInstance *animInst, const animationData *animData, const float interpT,
-                       frameIndex_t *startFrame, frameIndex_t *endFrame, float *animInterpT);
+void animInstInit(animationInstance *const restrict animInst);
+void animDataInit(animationData *const restrict animData);
+void animDataDelete(animationData *const restrict animData);
+void animAdvance(animationInstance *const restrict animInst, const animationData *const restrict animData, const float elapsedTime);
+void animGetRenderData(const animationInstance *const restrict animInst, const animationData *const restrict animData, const float interpT,
+                       frameIndex_t *const restrict startFrame, frameIndex_t *const restrict endFrame, float *const restrict animInterpT);
 
 #endif

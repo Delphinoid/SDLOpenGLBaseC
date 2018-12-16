@@ -19,22 +19,22 @@ return_t moduleRenderableResourcesInit();
 void moduleRenderableResourcesReset();
 void moduleRenderableResourcesDelete();
 
-renderable *moduleRenderableAppendStatic(renderable **array);
-renderable *moduleRenderableAppend(renderable **array);
-renderable *moduleRenderableInsertAfterStatic(renderable *resource);
-renderable *moduleRenderableInsertAfter(renderable *resource);
-renderable *moduleRenderableNext(renderable *i);
-void moduleRenderableFree(renderable **array, renderable *resource, renderable *previous);
-void moduleRenderableFreeArray(renderable **array);
+renderable *moduleRenderableAppendStatic(renderable **const restrict array);
+renderable *moduleRenderableAppend(renderable **const restrict array);
+renderable *moduleRenderableInsertAfterStatic(renderable *const restrict resource);
+renderable *moduleRenderableInsertAfter(renderable *const restrict resource);
+renderable *moduleRenderableNext(const renderable *const restrict i);
+void moduleRenderableFree(renderable **const restrict array, renderable *const restrict resource, renderable *const restrict previous);
+void moduleRenderableFreeArray(renderable **const restrict array);
 void moduleRenderableClear();
 
-rndrInstance *moduleRenderableInstanceAppendStatic(rndrInstance **array);
-rndrInstance *moduleRenderableInstanceAppend(rndrInstance **array);
-rndrInstance *moduleRenderableInstanceInsertAfterStatic(rndrInstance *resource);
-rndrInstance *moduleRenderableInstanceInsertAfter(rndrInstance *resource);
-rndrInstance *moduleRenderableInstanceNext(rndrInstance *i);
-void moduleRenderableInstanceFree(rndrInstance **array, rndrInstance *resource, rndrInstance *previous);
-void moduleRenderableInstanceFreeArray(rndrInstance **array);
+rndrInstance *moduleRenderableInstanceAppendStatic(rndrInstance **const restrict array);
+rndrInstance *moduleRenderableInstanceAppend(rndrInstance **const restrict array);
+rndrInstance *moduleRenderableInstanceInsertAfterStatic(rndrInstance *const restrict resource);
+rndrInstance *moduleRenderableInstanceInsertAfter(rndrInstance *const restrict resource);
+rndrInstance *moduleRenderableInstanceNext(const rndrInstance *const restrict i);
+void moduleRenderableInstanceFree(rndrInstance **const restrict array, rndrInstance *resource, rndrInstance *const restrict previous);
+void moduleRenderableInstanceFreeArray(rndrInstance **const restrict array);
 void moduleRenderableInstanceClear();
 
 #endif

@@ -2,8 +2,10 @@
 #define COLLISION_H
 
 #include "collider.h"
+#include "vec3.h"
+#include "return.h"
 
-#define COLLISION_MAX_CONTACT_POINTS 8
+#define COLLISION_MAX_CONTACT_POINTS 4
 #define COLLISION_CONTACT_TANGENTS 2
 
 #define COLLISION_SEPARATION_TYPE_NULL   0
@@ -19,12 +21,13 @@ typedef uint_least8_t contactIndex_t;
 
 typedef struct {
 	collisionType_t type;
-	void *feature;
+	const void *feature;
 } cCollisionInfo;
 
 typedef struct {
+	vec3 positionA;  // Contact point on collider A's surface.
+	vec3 positionB;  // Contact point on collider B's surface.
 	float depthSquared;
-	vec3 position;
 } cCollisionContact;
 
 typedef struct {
@@ -34,8 +37,8 @@ typedef struct {
 	vec3 tangents[COLLISION_CONTACT_TANGENTS];
 } cCollisionContactManifold;
 
-return_t cCollision(const collider *c1, const vec3 *c1c, const collider *c2, const vec3 *c2c, cCollisionInfo *info, cCollisionContactManifold *cm);
-void cCollisionContactManifoldInit(cCollisionContactManifold *cm);
-void cCollisionGenerateContactTangents(const vec3 *normal, vec3 *tangentA, vec3 *tangentB);
+return_t cCollision(const collider *const restrict c1, const vec3 *const restrict c1c, const collider *const restrict c2, const vec3 *const restrict c2c, cCollisionInfo *const restrict info, cCollisionContactManifold *const restrict cm);
+void cCollisionContactManifoldInit(cCollisionContactManifold *const restrict cm);
+void cCollisionGenerateContactTangents(const vec3 *const restrict normal, vec3 *const restrict tangentA, vec3 *const restrict tangentB);
 
 #endif

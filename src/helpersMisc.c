@@ -30,7 +30,7 @@
 	return 0;
 }*/
 
-return_t pushDynamicArray(void **vector, const void *element, const size_t bytes, size_t *size, size_t *capacity){
+return_t pushDynamicArray(void **const restrict vector, const void *const restrict element, const size_t bytes, size_t *const restrict size, size_t *const restrict capacity){
 	/* Push an element into a dynamic array. */
 	if(*size == *capacity){
 		void *tempBuffer;
@@ -51,7 +51,7 @@ return_t pushDynamicArray(void **vector, const void *element, const size_t bytes
 	return 1;
 }
 
-size_t ltostr(long n, char *s){
+size_t ltostr(long n, char *const restrict s){
 	/* Converts a long to a C-string. */
 	size_t l;  // Length of the ouput (discluding null terminator).
 	if(n == 0){
@@ -87,7 +87,7 @@ size_t ltostr(long n, char *s){
 }
 
 /** TEMPORARY **/
-void getDelimitedString(char *line, const size_t lineLength, const char *delims, char **strStart, size_t *strLength){
+void getDelimitedString(char *const restrict line, const size_t lineLength, const char *restrict delims, char **const restrict strStart, size_t *const restrict strLength){
 	/*
 	** Temporary function by 8426THMY.
 	*/

@@ -8,9 +8,9 @@
 // Contains details describing a single image.
 typedef struct {
 	rectangle *subframes;  // Represents frame bounds (always contains one element, or multiple for sprite sheets).
-	texture *diffuse;
-	texture *normals;
-	texture *specular;
+	const texture *diffuse;
+	const texture *normals;
+	const texture *specular;
 	frameIndex_t subframeNum;
 } twFrame;
 
@@ -36,26 +36,26 @@ typedef struct {
 
 // Texture wrapper instance.
 typedef struct {
-	textureWrapper *tw;
+	const textureWrapper *tw;
 	float timeMod;
 	animIndex_t currentAnim;
 	animationInstance animator;
 } twInstance;
 
 /** twLoad() and twiAnimate() may need some tidying up. **/
-void twInit(textureWrapper *tw);
-return_t twLoad(textureWrapper *tw, const char *prgPath, const char *filePath);
-return_t twDefault(textureWrapper *tw);
-void twDelete(textureWrapper *tw);
+void twInit(textureWrapper *const restrict tw);
+return_t twLoad(textureWrapper *const restrict tw, const char *const restrict prgPath, const char *const restrict filePath);
+return_t twDefault(textureWrapper *const restrict tw);
+void twDelete(textureWrapper *const restrict tw);
 
-void twiInit(twInstance *twi, textureWrapper *tw);
-void twiAnimate(twInstance *twi, const float elapsedTime);
-GLuint twiGetTexWidth(const twInstance *twi);
-GLuint twiGetTexHeight(const twInstance *twi);
-GLuint twiGetTexID(const twInstance *twi);
-float twiGetFrameWidth(const twInstance *twi);
-float twiGetFrameHeight(const twInstance *twi);
-void twiGetFrameInfo(const twInstance *twi, float *x, float *y, float *w, float *h, GLuint *frameTexID, const float interpT);
-return_t twiContainsTranslucency(const twInstance *twi);
+void twiInit(twInstance *const restrict twi, const textureWrapper *const tw);
+void twiAnimate(twInstance *const restrict twi, const float elapsedTime);
+GLuint twiGetTexWidth(const twInstance *const restrict twi);
+GLuint twiGetTexHeight(const twInstance *const restrict twi);
+GLuint twiGetTexID(const twInstance *const restrict twi);
+float twiGetFrameWidth(const twInstance *const restrict twi);
+float twiGetFrameHeight(const twInstance *const restrict twi);
+void twiGetFrameInfo(const twInstance *const restrict twi, float *const restrict x, float *const restrict y, float *const restrict w, float *const restrict h, GLuint *const restrict frameTexID, const float interpT);
+return_t twiContainsTranslucency(const twInstance *const restrict twi);
 
 #endif

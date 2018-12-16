@@ -37,17 +37,17 @@ typedef struct {
 
 } camera;
 
-return_t camInit(camera *cam);
-void camResetInterpolation(camera *cam);
+return_t camInit(camera *const restrict cam);
+void camResetInterpolation(camera *const restrict cam);
 
-void camCalculateUp(camera *cam);
-void camUpdateViewMatrix(camera *cam, const float interpT);
-void camUpdateProjectionMatrix(camera *cam, const float windowAspectRatioX, const float windowAspectRatioY, const float interpT);
-void camUpdateViewProjectionMatrix(camera *cam, const unsigned int windowModified, const float windowAspectRatioX, const float windowAspectRatioY, const float interpT);
+void camCalculateUp(camera *const restrict cam);
+void camUpdateViewMatrix(camera *const restrict cam, const float interpT);
+void camUpdateProjectionMatrix(camera *const restrict cam, const float windowAspectRatioX, const float windowAspectRatioY, const float interpT);
+void camUpdateViewProjectionMatrix(camera *const restrict cam, const unsigned int windowModified, const float windowAspectRatioX, const float windowAspectRatioY, const float interpT);
 
-float camDistance(const camera *cam, const vec3 *target);
+float camDistance(const camera *const restrict cam, const vec3 *const restrict target);
 
-void camDelete(void *cam);
+void camDelete(camera *const restrict cam);
 
 /**void camMoveX(camera *cam, const float x);
 void camMoveY(camera *cam, const float y);

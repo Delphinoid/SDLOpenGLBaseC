@@ -27,11 +27,11 @@
 		return memTreeAllocate(&__memmngr.allocator, bytes);
 	}
 
-	__FORCE_INLINE__ void *memReallocateStatic(void *data, const size_t bytes){
+	__FORCE_INLINE__ void *memReallocateStatic(void *const restrict data, const size_t bytes){
 		return memTreeReallocate(&__memmngr.allocator, data, bytes);
 	}
 
-	__FORCE_INLINE__ void memFree(void *data){
+	__FORCE_INLINE__ void memFree(void *const restrict data){
 		memTreeFree(&__memmngr.allocator, data);
 	}
 
@@ -50,7 +50,7 @@
 #endif
 
 #ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
-byte_t *memMngrAllocateVirtualHeap(memoryManager *memMngr, const size_t bytes){
+byte_t *memMngrAllocateVirtualHeap(memoryManager *const restrict memMngr, const size_t bytes){
 #else
 byte_t *memMngrAllocateVirtualHeap(const size_t bytes){
 #endif
@@ -93,7 +93,7 @@ byte_t *memMngrAllocateVirtualHeap(const size_t bytes){
 }
 
 #ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
-return_t memMngrInit(memoryManager *memMngr, const size_t bytes, size_t num){
+return_t memMngrInit(memoryManager *const restrict memMngr, const size_t bytes, size_t num){
 #else
 return_t memMngrInit(const size_t bytes, size_t num){
 #endif
@@ -120,7 +120,7 @@ return_t memMngrInit(const size_t bytes, size_t num){
 
 #ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
 
-void memMngrDelete(memoryManager *memMngr){
+void memMngrDelete(memoryManager *const restrict memMngr){
 	/*
 	** Free each virtual heap.
 	*/
@@ -154,7 +154,7 @@ __FORCE_INLINE__ void *memAllocate(const size_t bytes){
 	#endif
 }
 
-__FORCE_INLINE__ void *memReallocate(void *data, const const size_t bytes){
+__FORCE_INLINE__ void *memReallocate(void *const restrict data, const const size_t bytes){
 	#ifdef MEMORY_MANAGER_ENFORCE_STATIC_VIRTUAL_HEAP
 	return memTreeReallocate(&__memmngr.allocator, bytes);
 	#else

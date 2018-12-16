@@ -1,6 +1,6 @@
 #include "mat3.h"
 
-void mat3Identity(mat3 *m){
+void mat3Identity(mat3 *const restrict m){
 	m->m[0][0] = 1.f; m->m[0][1] = 0.f; m->m[0][2] = 0.f;
 	m->m[1][0] = 0.f; m->m[1][1] = 1.f; m->m[1][2] = 0.f;
 	m->m[2][0] = 0.f; m->m[2][1] = 0.f; m->m[2][2] = 1.f;
@@ -12,7 +12,7 @@ mat3 mat3GetIdentity(){
 	return r;
 }
 
-mat3 mat3MMultM(const mat3 *m1, const mat3 *m2){
+mat3 mat3MMultM(const mat3 *const restrict m1, const mat3 *const restrict m2){
 
 	mat3 r;
 
@@ -31,7 +31,7 @@ mat3 mat3MMultM(const mat3 *m1, const mat3 *m2){
 	return r;
 
 }
-void mat3MultMByM1(mat3 *m1, const mat3 *m2){
+void mat3MultMByM1(mat3 *const restrict m1, const mat3 *const restrict m2){
 
 	mat3 r;
 
@@ -50,7 +50,7 @@ void mat3MultMByM1(mat3 *m1, const mat3 *m2){
 	*m1 = r;
 
 }
-void mat3MultMByM2(const mat3 *m1, mat3 *m2){
+void mat3MultMByM2(const mat3 *const restrict m1, mat3 *const restrict m2){
 
 	mat3 r;
 
@@ -69,7 +69,7 @@ void mat3MultMByM2(const mat3 *m1, mat3 *m2){
 	*m2 = r;
 
 }
-void mat3MultMByMR(const mat3 *m1, const mat3 *m2, mat3 *r){
+void mat3MultMByMR(const mat3 *const restrict m1, const mat3 *const restrict m2, mat3 *const restrict r){
 
 	r->m[0][0] = m1->m[0][0]*m2->m[0][0] + m1->m[0][1]*m2->m[1][0] + m1->m[0][2]*m2->m[2][0];
 	r->m[0][1] = m1->m[0][0]*m2->m[0][1] + m1->m[0][1]*m2->m[1][1] + m1->m[0][2]*m2->m[2][1];
@@ -84,28 +84,28 @@ void mat3MultMByMR(const mat3 *m1, const mat3 *m2, mat3 *r){
 	r->m[2][2] = m1->m[2][0]*m2->m[0][2] + m1->m[2][1]*m2->m[1][2] + m1->m[2][2]*m2->m[2][2];
 
 }
-vec3 mat3VMultMColumn(vec3 v, const mat3 *m){
+vec3 mat3VMultMColumn(vec3 v, const mat3 *const restrict m){
 	vec3 r;
 	r.x = v.x * m->m[0][0] + v.y * m->m[1][0] + v.z * m->m[2][0];
 	r.y = v.x * m->m[0][1] + v.y * m->m[1][1] + v.z * m->m[2][1];
 	r.z = v.x * m->m[0][2] + v.y * m->m[1][2] + v.z * m->m[2][2];
 	return r;
 }
-void mat3MultVByMColumn(vec3 *v, const mat3 *m){
+void mat3MultVByMColumn(vec3 *const restrict v, const mat3 *const restrict m){
 	vec3 r;
 	r.x = v->x * m->m[0][0] + v->y * m->m[1][0] + v->z * m->m[2][0];
 	r.y = v->x * m->m[0][1] + v->y * m->m[1][1] + v->z * m->m[2][1];
 	r.z = v->x * m->m[0][2] + v->y * m->m[1][2] + v->z * m->m[2][2];
 	v->x = r.x; v->y = r.y; v->z = r.z;
 }
-vec3 mat3MMultVRow(const mat3 *m, vec3 v){
+vec3 mat3MMultVRow(const mat3 *const restrict m, vec3 v){
 	vec3 r;
 	r.x = v.x * m->m[0][0] + v.y * m->m[0][1] + v.z * m->m[0][2];
 	r.y = v.x * m->m[1][0] + v.y * m->m[1][1] + v.z * m->m[1][2];
 	r.z = v.x * m->m[2][0] + v.y * m->m[2][1] + v.z * m->m[2][2];
 	return r;
 }
-void mat3MultMByVRow(const mat3 *m, vec3 *v){
+void mat3MultMByVRow(const mat3 *const restrict m, vec3 *const restrict v){
 	vec3 r;
 	r.x = v->x * m->m[0][0] + v->y * m->m[0][1] + v->z * m->m[0][2];
 	r.y = v->x * m->m[1][0] + v->y * m->m[1][1] + v->z * m->m[1][2];
@@ -113,19 +113,19 @@ void mat3MultMByVRow(const mat3 *m, vec3 *v){
 	v->x = r.x; v->y = r.y; v->z = r.z;
 }
 
-float mat3Determinant(const mat3 *m){
+float mat3Determinant(const mat3 *const restrict m){
 	return m->m[0][0] * (m->m[1][1]*m->m[2][2] - m->m[2][1]*m->m[1][2]) -
 	       m->m[1][0] * (m->m[0][1]*m->m[2][2] - m->m[2][1]*m->m[0][2]) +
 	       m->m[2][0] * (m->m[0][1]*m->m[1][2] - m->m[1][1]*m->m[0][2]);
 }
 
-mat3 mat3GetTranspose(const mat3 *m){
+mat3 mat3GetTranspose(const mat3 *const restrict m){
 	mat3 r = {.m = {{m->m[0][0], m->m[1][0], m->m[2][0]},
 	                {m->m[0][1], m->m[1][1], m->m[2][1]},
 	                {m->m[0][2], m->m[1][2], m->m[2][2]}}};
 	return r;
 }
-void mat3Transpose(mat3 *m){
+void mat3Transpose(mat3 *const restrict m){
 	float swap = m->m[1][0];
 	m->m[1][0] = m->m[0][1];
 	m->m[0][1] = swap;
@@ -137,13 +137,13 @@ void mat3Transpose(mat3 *m){
 	m->m[1][2] = swap;
 }
 
-void mat3TransposeR(const mat3 *m, mat3 *r){
+void mat3TransposeR(const mat3 *const restrict m, mat3 *const restrict r){
 	r->m[0][0] = m->m[0][0]; r->m[0][1] = m->m[1][0]; r->m[0][2] = m->m[2][0];
 	r->m[1][0] = m->m[0][1]; r->m[1][1] = m->m[1][1]; r->m[1][2] = m->m[2][1];
 	r->m[2][0] = m->m[0][2]; r->m[2][1] = m->m[1][2]; r->m[2][2] = m->m[2][2];
 }
 
-return_t mat3Invert(mat3 *m){
+return_t mat3Invert(mat3 *const restrict m){
 
 	const float f0 = m->m[1][1] * m->m[2][2] - m->m[1][2] * m->m[2][1];
 	const float f1 = m->m[2][1] * m->m[0][2] - m->m[0][1] * m->m[2][2];
@@ -174,7 +174,7 @@ return_t mat3Invert(mat3 *m){
 	return 0;
 
 }
-return_t mat3InvertR(const mat3 *m, mat3 *r){
+return_t mat3InvertR(const mat3 *const restrict m, mat3 *const restrict r){
 
 	const float f0 = m->m[1][1] * m->m[2][2] - m->m[1][2] * m->m[2][1];
 	const float f1 = m->m[2][1] * m->m[0][2] - m->m[0][1] * m->m[2][2];
@@ -206,7 +206,7 @@ return_t mat3InvertR(const mat3 *m, mat3 *r){
 
 }
 
-void mat3Quat(mat3 *m, const quat *q){
+void mat3Quat(mat3 *const restrict m, const quat *const restrict q){
 	const float xx = q->v.x*q->v.x;
 	const float yy = q->v.y*q->v.y;
 	const float zz = q->v.z*q->v.z;

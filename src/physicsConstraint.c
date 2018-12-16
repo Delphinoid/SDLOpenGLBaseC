@@ -1,6 +1,6 @@
 #include "physicsConstraint.h"
 
-void physConstraintInit(physConstraint *constraint){
+void physConstraintInit(physConstraint *const restrict constraint){
 	constraint->flags = PHYSICS_CONSTRAINT_TYPE_1;
 	constraint->ownerID = (physConstraintIndex_t)-1;
 	constraint->constraintID = (physConstraintIndex_t)-1;

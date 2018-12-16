@@ -16,7 +16,7 @@
 /** THIS FILE IS TEMPORARY **/
 
 /** This should not be necessary! **/
-void renderModel(const objInstance *obji, const float distance, const camera *cam, const float interpT, graphicsManager *gfxMngr){
+void renderModel(const objInstance *const restrict obji, const float distance, const camera *const restrict cam, const float interpT, graphicsManager *const restrict gfxMngr){
 
 	bone interpBone;
 	rndrInstance *currentRndr = obji->renderables;
@@ -34,7 +34,7 @@ void renderModel(const objInstance *obji, const float distance, const camera *ca
 
 		// Interpolate between bone states.
 		//boneInterpolate(&obji->skeletonState[1][i], &obji->skeletonState[0][i], interpT, &interpBone);
-		boneInterpolate(bPrevious, bCurrent, interpT, &interpBone);
+		boneInterpolateR(bPrevious, bCurrent, interpT, &interpBone);
 
 		// Convert the bone to a matrix.
 		//mat4SetScaleMatrix(&gfxMngr->sklTransformState[i], gfxMngr->sklAnimationState[i].scale.x, gfxMngr->sklAnimationState[i].scale.y, gfxMngr->sklAnimationState[i].scale.z);
@@ -139,7 +139,7 @@ void renderModel(const objInstance *obji, const float distance, const camera *ca
 				glBindVertexArray(currentRndr->mdl->vaoID);
 				if(currentRndr->mdl->indexNum > 0){
 					GLsizei indexNum;
-					void *offset;
+					const void *offset;
 					mdlFindCurrentLOD(currentRndr->mdl, &indexNum, &offset, distance, gfxMngr->biasLOD);
 					if(indexNum){
 						glDrawElements(GL_TRIANGLES, indexNum, GL_UNSIGNED_INT, offset);

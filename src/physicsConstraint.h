@@ -21,6 +21,6 @@ typedef struct {
 	vec3 constraintRotationMax;
 } physConstraint;
 
-void physConstraintInit(physConstraint *constraint);
+void physConstraintInit(physConstraint *const restrict constraint);
 
 #endif

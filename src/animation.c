@@ -3,14 +3,14 @@
 
 /** These animation functions are particularly bad, redo them later maybe? **/
 
-void animInstInit(animationInstance *animInst){
+void animInstInit(animationInstance *const restrict animInst){
 	animInst->currentLoops = 0;
 	animInst->currentFrame = 0;
 	animInst->nextFrame = 0;
 	animInst->prevElapsedTime = 0.f;
 	animInst->totalElapsedTime = 0.f;
 }
-void animDataInit(animationData *animData){
+void animDataInit(animationData *const restrict animData){
 	animData->desiredLoops = -1;
 	animData->frameNum = 0;
 	animData->frameDelays = NULL;
@@ -21,12 +21,12 @@ void animDataDelete(animationData *animData){
 	}
 }
 
-void animAdvance(animationInstance *animInst, const animationData *animData, const float elapsedTime){
+void animAdvance(animationInstance *const restrict animInst, const animationData *const restrict animData, const float elapsedTime){
 
 	if(animData->frameNum > 1){
 
 		const float animationLength = animData->frameDelays[animData->frameNum-1];
-		float *currentDelay;
+		const float *restrict currentDelay;
 
 		animInst->prevElapsedTime = elapsedTime;
 		if(animationLength > 0.f && elapsedTime != 0.f){
@@ -145,8 +145,8 @@ void animAdvance(animationInstance *animInst, const animationData *animData, con
 
 }
 
-void animGetRenderData(const animationInstance *animInst, const animationData *animData, const float interpT,
-                       frameIndex_t *startFrame, frameIndex_t *endFrame, float *animInterpT){
+void animGetRenderData(const animationInstance *const restrict animInst, const animationData *const restrict animData, const float interpT,
+                       frameIndex_t *const restrict startFrame, frameIndex_t *const restrict endFrame, float *const restrict animInterpT){
 
 	/*
 	** Calculates the start frame, the end frame and the progress through the two based on the provided data.
@@ -154,7 +154,7 @@ void animGetRenderData(const animationInstance *animInst, const animationData *a
 
 
 	const float animLength = animData->frameDelays[animData->frameNum-1];
-	float *currentDelay;
+	const float *restrict currentDelay;
 
 	*startFrame = 0;
 

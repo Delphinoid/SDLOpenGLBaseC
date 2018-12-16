@@ -2,7 +2,7 @@
 #include "constantsMath.h"
 #include <math.h>
 
-return_t camInit(camera *cam){
+return_t camInit(camera *const restrict cam){
 	iVec3Init(&cam->position, 0.f, 0.f, 0.f);
 	iQuatInit(&cam->orientation);
 	vec3Set(&cam->rotation, 0.f, 0.f, 0.f);
@@ -17,7 +17,7 @@ return_t camInit(camera *cam){
 	cam->flags = CAM_UPDATE_VIEW | CAM_UPDATE_PROJECTION;
 	return 1;
 }
-void camResetInterpolation(camera *cam){
+void camResetInterpolation(camera *const restrict cam){
 	iVec3ResetInterp(&cam->position);
 	iQuatResetInterp(&cam->orientation);
 	iVec3ResetInterp(&cam->targetPosition);
@@ -25,7 +25,7 @@ void camResetInterpolation(camera *cam){
 	iFloatResetInterp(&cam->fovy);
 }
 
-void camCalculateUp(camera *cam){  /** Probably not entirely necessary **/
+void camCalculateUp(camera *const restrict cam){  /** Probably not entirely necessary **/
 
 	/*
 	** Finds the relative up direction based off where the camera is looking
@@ -74,7 +74,7 @@ void camCalculateUp(camera *cam){  /** Probably not entirely necessary **/
 	quatRotateVec3Fast(&camRotation, &cam->up);*/
 
 }
-void camUpdateViewMatrix(camera *cam, const float interpT){
+void camUpdateViewMatrix(camera *const restrict cam, const float interpT){
 
 	// Check if the camera was rotated.
 	/**if(cam->rotation.x != cam->previousRotation.x ||
@@ -110,7 +110,7 @@ void camUpdateViewMatrix(camera *cam, const float interpT){
 	}
 
 }
-void camUpdateProjectionMatrix(camera *cam, const float windowAspectRatioX, const float windowAspectRatioY, const float interpT){
+void camUpdateProjectionMatrix(camera *const restrict cam, const float windowAspectRatioX, const float windowAspectRatioY, const float interpT){
 
 	if((flagsAreUnset(cam->flags, CAM_PROJECTION_ORTHO) && iFloatUpdate(&cam->fovy, interpT)) || flagsAreSet(cam->flags, CAM_UPDATE_PROJECTION)){
 
@@ -134,7 +134,7 @@ void camUpdateProjectionMatrix(camera *cam, const float windowAspectRatioX, cons
 	}
 
 }
-void camUpdateViewProjectionMatrix(camera *cam, const unsigned int windowModified, const float windowAspectRatioX, const float windowAspectRatioY, const float interpT){
+void camUpdateViewProjectionMatrix(camera *const restrict cam, const unsigned int windowModified, const float windowAspectRatioX, const float windowAspectRatioY, const float interpT){
 	camUpdateViewMatrix(cam, interpT);
 	if(windowModified){
 		// If the window size changed, update the camera projection matrices as well.
@@ -144,13 +144,13 @@ void camUpdateViewProjectionMatrix(camera *cam, const unsigned int windowModifie
 	mat4MultMByMR(&cam->viewMatrix, &cam->projectionMatrix, &cam->viewProjectionMatrix);
 }
 
-float camDistance(const camera *cam, const vec3 *target){
+float camDistance(const camera *const restrict cam, const vec3 *const restrict target){
 	return sqrt(fabsf((target->x - cam->position.render.x) * (target->x - cam->position.render.x) +
 	                  (target->y - cam->position.render.y) * (target->y - cam->position.render.y) +
 	                  (target->z - cam->position.render.z) * (target->z - cam->position.render.z)));
 }
 
-void camDelete(void *cam){
+void camDelete(camera *const restrict cam){
 	//
 }
 

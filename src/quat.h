@@ -12,90 +12,95 @@ quat quatNew(const float w, const float x, const float y, const float z);
 quat quatNewS(const float s);
 quat quatNewAxisAngle(const float angle, const float axisX, const float axisY, const float axisZ);
 quat quatNewEuler(const float x, const float y, const float z);
-void quatSet(quat *q, const float w, const float x, const float y, const float z);
-void quatSetS(quat *q, const float s);
-void quatSetAxisAngle(quat *q, const float angle, const float axisX, const float axisY, const float axisZ);
-void quatSetEuler(quat *q, const float x, const float y, const float z);
+void quatSet(quat *const restrict q, const float w, const float x, const float y, const float z);
+void quatSetS(quat *const restrict q, const float s);
+void quatSetAxisAngle(quat *const restrict q, const float angle, const float axisX, const float axisY, const float axisZ);
+void quatSetEuler(quat *const restrict q, const float x, const float y, const float z);
 
-quat quatQAddQ(const quat *q1, const quat *q2);
-quat quatQAddS(const quat *q, const float s);
-quat quatQAddW(const quat *q, const float w);
-void quatAddQToQ(quat *q1, const quat *q2);
-void quatAddQToQR(const quat *q1, const quat *q2, quat *r);
-void quatAddSToQ(quat *q, const float s);
-void quatAddWToQ(quat *q, const float w);
+quat quatQAddQ(const quat *const restrict q1, const quat *const restrict q2);
+quat quatQAddS(const quat *const restrict q, const float s);
+quat quatQAddW(const quat *const restrict q, const float w);
+void quatAddQToQ(quat *const restrict q1, const quat *const restrict q2);
+void quatAddQToQR(const quat *const restrict q1, const quat *const restrict q2, quat *const restrict r);
+void quatAddSToQ(quat *const restrict q, const float s);
+void quatAddWToQ(quat *const restrict q, const float w);
 
-quat quatQSubQ(const quat *q1, const quat *q2);
-quat quatQSubS(const quat *q, const float s);
-quat quatQSubW(const quat *q, const float w);
-void quatSubQFromQ1(quat *q1, const quat *q2);
-void quatSubQFromQ2(const quat *q1, quat *q2);
-void quatSubQFromQR(const quat *q1, const quat *q2, quat *r);
-void quatSubSFromQ(quat *q, const float s);
-void quatSubWFromQ(quat *q, const float w);
+quat quatQSubQ(const quat *const restrict q1, const quat *const restrict q2);
+quat quatQSubS(const quat *const restrict q, const float s);
+quat quatQSubW(const quat *const restrict q, const float w);
+void quatSubQFromQ1(quat *const restrict q1, const quat *const restrict q2);
+void quatSubQFromQ2(const quat *const restrict q1, quat *const restrict q2);
+void quatSubQFromQR(const quat *const restrict q1, const quat *const restrict q2, quat *const restrict r);
+void quatSubSFromQ(quat *const restrict q, const float s);
+void quatSubWFromQ(quat *const restrict q, const float w);
 
-quat quatQMultQ(const quat *q1, const quat *q2);
-quat quatQMultS(const quat *q, const float s);
-void quatMultQByQ1(quat *q1, const quat *q2);
-void quatMultQByQ2(const quat *q1, quat *q2);
-void quatMultQByQR(const quat *q1, const quat *q2, quat *r);
-void quatMultQByS(quat *q, const float s);
+quat quatQMultQ(const quat *const restrict q1, const quat *const restrict q2);
+quat quatQMultS(const quat *const restrict q, const float s);
+void quatMultQByQ1(quat *const restrict q1, const quat *const restrict q2);
+void quatMultQByQ2(const quat *const restrict q1, quat *const restrict q2);
+void quatMultQByQR(const quat *const restrict q1, const quat *const restrict q2, quat *const restrict r);
+void quatMultQByS(quat *const restrict q, const float s);
 
-quat quatQDivQ(const quat *q1, const quat *q2);
-quat quatQDivS(const quat *q, const float s);
-void quatDivQByQ1(quat *q1, const quat *q2);
-void quatDivQByQ2(const quat *q1, quat *q2);
-void quatDivQByQR(const quat *q1, const quat *q2, quat *r);
-void quatDivQByS(quat *q, const float s);
+quat quatQDivQ(const quat *const restrict q1, const quat *const restrict q2);
+quat quatQDivS(const quat *const restrict q, const float s);
+void quatDivQByQ1(quat *const restrict q1, const quat *const restrict q2);
+void quatDivQByQ2(const quat *const restrict q1, quat *const restrict q2);
+void quatDivQByQR(const quat *const restrict q1, const quat *const restrict q2, quat *const restrict r);
+void quatDivQByS(quat *const restrict q, const float s);
 
-float quatGetMagnitude(const quat *q);
+float quatGetMagnitude(const quat *const restrict q);
 
-quat quatGetConjugate(const quat *q);
-quat quatGetConjugateFast(const quat *q);
-void quatConjugate(quat *q);
-void quatConjugateFast(quat *q);
-void quatConjugateR(const quat *q, quat *r);
-void quatConjugateFastR(const quat *q, quat *r);
+quat quatGetConjugate(const quat *const restrict q);
+quat quatGetConjugateFast(const quat *const restrict q);
+void quatConjugate(quat *const restrict q);
+void quatConjugateFast(quat *const restrict q);
+void quatConjugateR(const quat *const restrict q, quat *const restrict r);
+void quatConjugateFastR(const quat *const restrict q, quat *const restrict r);
 
-quat quatGetNegative(const quat *q);
-void quatNegate(quat *q);
-void quatNegateR(const quat *q, quat *r);
+quat quatGetNegative(const quat *const restrict q);
+void quatNegate(quat *const restrict q);
+void quatNegateR(const quat *const restrict q, quat *const restrict r);
 
-quat quatGetInverse(const quat *q);
-void quatInvert(quat *q);
-void quatInvertR(const quat *q, quat *r);
+quat quatGetInverse(const quat *const restrict q);
+void quatInvert(quat *const restrict q);
+void quatInvertR(const quat *const restrict q, quat *const restrict r);
 
-quat quatGetDifference(const quat *q1, const quat *q2);
-void quatDifference(const quat *q1, const quat *q2, quat *r);
+quat quatGetDifference(const quat *const restrict q1, const quat *const restrict q2);
+void quatDifference(const quat *const restrict q1, const quat *const restrict q2, quat *const restrict r);
 
-quat quatGetUnit(const quat *q);
-quat quatGetUnitFast(const quat *q);
-void quatNormalize(quat *q);
-void quatNormalizeFast(quat *q);
+quat quatGetUnit(const quat *const restrict q);
+quat quatGetUnitFast(const quat *const restrict q);
+void quatNormalize(quat *const restrict q);
+void quatNormalizeFast(quat *const restrict q);
 
 quat quatIdentity();
-void quatSetIdentity(quat *q);
+void quatSetIdentity(quat *const restrict q);
 
-void quatAxisAngle(const quat *q, float *angle, float *axisX, float *axisY, float *axisZ);
-void quatAxisAngleFast(const quat *q, float *angle, float *axisX, float *axisY, float *axisZ);
+void quatAxisAngle(const quat *const restrict q, float *angle, float *axisX, float *axisY, float *axisZ);
+void quatAxisAngleFast(const quat *const restrict q, float *angle, float *axisX, float *axisY, float *axisZ);
 
-float quatDot(const quat *q1, const quat *q2);
+float quatDot(const quat *const restrict q1, const quat *const restrict q2);
 
-vec3 quatGetRotatedVec3(const quat *q, const vec3 *v);
-vec3 quatGetRotatedVec3Fast(const quat *q, const vec3 *v);
-void quatRotateVec3(const quat *q, vec3 *v);
-void quatRotateVec3R(const quat *q, const vec3 *v, vec3 *r);
-void quatRotateVec3Fast(const quat *q, vec3 *v);
-void quatRotateVec3FastR(const quat *q, const vec3 *v, vec3 *r);
+vec3 quatGetRotatedVec3(const quat *const restrict q, const vec3 *v);
+vec3 quatGetRotatedVec3Fast(const quat *const restrict q, const vec3 *v);
+void quatRotateVec3(const quat *const restrict q, vec3 *v);
+void quatRotateVec3R(const quat *const restrict q, const vec3 *v, vec3 *r);
+void quatRotateVec3Fast(const quat *const restrict q, vec3 *v);
+void quatRotateVec3FastR(const quat *const restrict q, const vec3 *v, vec3 *r);
 
 quat quatLookingAt(const vec3 *eye, const vec3 *target, const vec3 *up);
-void quatLookAt(quat *q, const vec3 *eye, const vec3 *target, const vec3 *up);
+void quatLookAt(quat *const restrict q, const vec3 *eye, const vec3 *target, const vec3 *up);
 
-quat quatGetLerp(const quat *q1, const quat *q2, const float t);
-void quatLerp(const quat *q1, const quat *q2, const float t, quat *r);
-quat quatGetSlerp(const quat *q1, const quat *q2, const float t);
-void quatSlerp(const quat *q1, const quat *q2, const float t, quat *r);
+quat quatGetLerp(const quat *const restrict q1, const quat *const restrict q2, const float t);
+void quatLerp1(quat *const restrict q1, const quat *const restrict q2, const float t);
+void quatLerp2(const quat *const restrict q1, quat *const restrict q2, const float t);
+void quatLerpR(const quat *const restrict q1, const quat *const restrict q2, const float t, quat *const restrict r);
 
-void quatRotate(const quat *q1, const quat *q2, const float t, quat *r);
+quat quatGetSlerp(const quat *const restrict q1, const quat *const restrict q2, const float t);
+void quatSlerp1(quat *const restrict q1, const quat *const restrict q2, const float t);
+void quatSlerp2(const quat *const restrict q1, quat *const restrict q2, const float t);
+void quatSlerpR(const quat *const restrict q1, const quat *const restrict q2, const float t, quat *const restrict r);
+
+void quatRotateR(const quat *const restrict q1, const quat *const restrict q2, const float t, quat *const restrict r);
 
 #endif

@@ -1,10 +1,7 @@
 #ifndef COLLIDERCONVEXMESH_H
 #define COLLIDERCONVEXMESH_H
 
-#include "vec3.h"
-#include "return.h"
-#include <stdlib.h>
-#include <stdint.h>
+#include "collision.h"
 
 #define COLLIDER_MESH_MAX_ARRAY_SIZE 256
 
@@ -53,8 +50,9 @@ typedef struct {
 
 } cMesh;
 
-void cMeshInit(cMesh *cm);
-return_t cMeshLoad(cMesh *cm, const char *prgPath, const char *filePath);
-void cMeshDelete(cMesh *cm);
+void cMeshInit(cMesh *const restrict cm);
+return_t cMeshCollisionSAT(const cMesh *const restrict c1, const cMesh *const restrict c2, const vec3 *const restrict centroid, cCollisionInfo *const restrict info, cCollisionContactManifold *const restrict cm);
+return_t cMeshCollisionGJK(const cMesh *const restrict c1, const vec3 *const restrict c1c, const cMesh *const restrict c2, const vec3 *const restrict c2c, cCollisionContactManifold *const restrict cm);
+void cMeshDelete(cMesh *const restrict cm);
 
 #endif

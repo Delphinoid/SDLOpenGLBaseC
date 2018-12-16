@@ -44,18 +44,18 @@ typedef struct {
 	uint_least8_t flags;
 } rndrConfig;
 
-void rndrInit(renderable *rndr);
+void rndrInit(renderable *const restrict rndr);
 
-void rndriInit(rndrInstance *rndri);
-void rndriInstantiate(rndrInstance *rndri, const renderable *base);
-void rndriUpdate(rndrInstance *rndri, const float elapsedTime);
+void rndriInit(rndrInstance *const restrict rndri);
+void rndriInstantiate(rndrInstance *const restrict rndri, const renderable *const base);
+void rndriUpdate(rndrInstance *const restrict rndri, const float elapsedTime);
 //void rndriDelete(rndrInstance *rndr);
 
-void rndrConfigInit(rndrConfig *rc);
-void rndrConfigStateCopy(rndrConfig *o, rndrConfig *c);
-void rndrConfigResetInterpolation(rndrConfig *rc);
+void rndrConfigInit(rndrConfig *const restrict rc);
+void rndrConfigStateCopy(rndrConfig *const restrict o, rndrConfig *const restrict c);
+void rndrConfigResetInterpolation(rndrConfig *const restrict rc);
 
-return_t rndrConfigRenderUpdate(rndrConfig *rc, const float interpT);
+return_t rndrConfigRenderUpdate(rndrConfig *const restrict rc, const float interpT);
 
 /**void rndrConfigGenerateTransform(const rndrConfig *rc, const camera *cam, mat4 *transformMatrix);
 void rndrConfigGenerateSprite(const rndrConfig *rc, const twInstance *twi, vertex *vertices, const mat4 *transformMatrix);

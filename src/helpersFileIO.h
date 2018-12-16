@@ -9,8 +9,8 @@
 
 typedef unsigned int fileLine_t;
 
-return_t fileParseNextLine(FILE *file, char *buffer, size_t bufferSize, char **line, size_t *lineLength);
-void fileGenerateFullPath(char *fullPath, const char *prgPath, const size_t prgLength, const char *resPath, const size_t resLength, const char *filePath, const size_t fileLength);
-char *fileGenerateResourceName(const char *resource, const size_t length);
+return_t fileParseNextLine(FILE *const restrict file, char *const restrict buffer, size_t bufferSize, char **const line, size_t *const restrict lineLength);
+void fileGenerateFullPath(char *const restrict fullPath, const char *const restrict prgPath, const size_t prgLength, const char *const restrict resPath, const size_t resLength, const char *const restrict filePath, const size_t fileLength);
+char *fileGenerateResourceName(const char *const restrict resource, const size_t length);
 
 #endif

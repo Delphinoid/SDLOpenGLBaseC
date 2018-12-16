@@ -4,17 +4,17 @@
 #include "inline.h"
 #include <string.h>
 
-memoryList __SceneResourceArray;  // Contains scenes.
+memoryPool __SceneResourceArray;  // Contains scenes.
 
 return_t moduleSceneResourcesInit(){
-	void *memory = memAllocate(
-		memListAllocationSize(
+	void *const memory = memAllocate(
+		memPoolAllocationSize(
 			NULL,
 			RESOURCE_DEFAULT_SCENE_SIZE,
 			RESOURCE_DEFAULT_SCENE_NUM
 		)
 	);
-	if(memListCreate(&__SceneResourceArray, memory, RESOURCE_DEFAULT_SCENE_SIZE, RESOURCE_DEFAULT_SCENE_NUM) == NULL){
+	if(memPoolCreate(&__SceneResourceArray, memory, RESOURCE_DEFAULT_SCENE_SIZE, RESOURCE_DEFAULT_SCENE_NUM) == NULL){
 		return -1;
 	}
 	return 1;
@@ -42,59 +42,45 @@ void moduleSceneResourcesDelete(){
 }
 
 __FORCE_INLINE__ scene *moduleSceneAllocateStatic(){
-	return memListAllocate(&__SceneResourceArray);
+	return memPoolAllocate(&__SceneResourceArray);
 }
 __FORCE_INLINE__ scene *moduleSceneAllocate(){
-	scene *r = memListAllocate(&__SceneResourceArray);
+	scene *r = memPoolAllocate(&__SceneResourceArray);
 	if(r == NULL){
 		// Attempt to extend the allocator.
-		void *memory = memAllocate(
-			memListAllocationSize(
+		void *const memory = memAllocate(
+			memPoolAllocationSize(
 				NULL,
 				RESOURCE_DEFAULT_SCENE_SIZE,
 				RESOURCE_DEFAULT_SCENE_NUM
 			)
 		);
-		if(memListExtend(&__SceneResourceArray, memory, RESOURCE_DEFAULT_SCENE_SIZE, RESOURCE_DEFAULT_SCENE_NUM)){
-			r = memListAllocate(&__SceneResourceArray);
+		if(memPoolExtend(&__SceneResourceArray, memory, RESOURCE_DEFAULT_SCENE_SIZE, RESOURCE_DEFAULT_SCENE_NUM)){
+			r = memPoolAllocate(&__SceneResourceArray);
 		}
 	}
 	return r;
 }
-__FORCE_INLINE__ void moduleSceneFree(scene *resource){
+__FORCE_INLINE__ void moduleSceneFree(scene *const restrict resource){
 	scnDelete(resource);
-	memListFree(&__SceneResourceArray, (void *)resource);
+	memPoolFree(&__SceneResourceArray, (void *)resource);
 }
 void moduleSceneClear(){
 
-	memoryRegion *region = __SceneResourceArray.region;
-	scene *i;
-	do {
-		i = memListFirst(region);
-		while(i < (scene *)memAllocatorEnd(region)){
+	MEMORY_POOL_LOOP_BEGIN(__SceneResourceArray, i, scene *);
 
-			moduleSceneFree(i);
-			i = memListBlockNext(__SceneResourceArray, i);
+		moduleSceneFree(i);
 
-		}
-		region = memAllocatorNext(region);
-	} while(region != NULL);
+	MEMORY_POOL_LOOP_END(__SceneResourceArray, i, return;);
 
 }
 
 void moduleSceneUpdate(const float elapsedTime, const float dt){
 
-	memoryRegion *region = __SceneResourceArray.region;
-	scene *i;
-	do {
-		i = memListFirst(region);
-		while(i < (scene *)memAllocatorEnd(region)){
+	MEMORY_POOL_LOOP_BEGIN(__SceneResourceArray, i, scene *);
 
-			scnUpdate(i, elapsedTime, dt);
-			i = memListBlockNext(__SceneResourceArray, i);
+		scnUpdate(i, elapsedTime, dt);
 
-		}
-		region = memAllocatorNext(region);
-	} while(region != NULL);
+	MEMORY_POOL_LOOP_END(__SceneResourceArray, i, return;);
 
 }

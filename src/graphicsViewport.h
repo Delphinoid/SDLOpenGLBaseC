@@ -15,8 +15,8 @@ typedef struct {
 	float height;
 } gfxView;
 
-void gfxViewInit(gfxView *v);
-void gfxViewReset(gfxView *v);
-void gfxViewSet(gfxView *v, const float x, const float y, const float width, const float height);
+void gfxViewInit(gfxView *const restrict v);
+void gfxViewReset(gfxView *const restrict v);
+void gfxViewSet(gfxView *const restrict v, const float x, const float y, const float width, const float height);
 
 #endif

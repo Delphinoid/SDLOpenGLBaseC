@@ -34,9 +34,9 @@ typedef struct {
 	float render;
 } interpFloat;
 
-void iFloatInit(interpFloat *iFloat, const float s);
-void iFloatResetInterp(interpFloat *iFloat);
-return_t iFloatUpdate(interpFloat *iFloat, const float interpT);
+void iFloatInit(interpFloat *const restrict iFloat, const float s);
+void iFloatResetInterp(interpFloat *const restrict iFloat);
+return_t iFloatUpdate(interpFloat *const restrict iFloat, const float interpT);
 
 
 typedef struct {
@@ -45,9 +45,9 @@ typedef struct {
 	size_t render;
 } interpSizeT;
 
-void iSizeTInit(interpSizeT *iSizeT, const size_t s);
-void iSizeTResetInterp(interpSizeT *iSizeT);
-return_t iSizeTUpdate(interpSizeT *iSizeT, const float interpT);
+void iSizeTInit(interpSizeT *const restrict iSizeT, const size_t s);
+void iSizeTResetInterp(interpSizeT *const restrict iSizeT);
+return_t iSizeTUpdate(interpSizeT *const restrict iSizeT, const float interpT);
 
 
 typedef struct {
@@ -56,9 +56,9 @@ typedef struct {
 	vec3 render;
 } interpVec3;
 
-void iVec3Init(interpVec3 *iVec3, const float x, const float y, const float z);
-void iVec3ResetInterp(interpVec3 *iVec3);
-return_t iVec3Update(interpVec3 *iVec3, const float interpT);
+void iVec3Init(interpVec3 *const restrict iVec3, const float x, const float y, const float z);
+void iVec3ResetInterp(interpVec3 *const restrict iVec3);
+return_t iVec3Update(interpVec3 *const restrict iVec3, const float interpT);
 
 
 typedef struct {

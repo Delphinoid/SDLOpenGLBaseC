@@ -17,12 +17,12 @@ typedef struct {
 
 } physIsland;
 
-void physIslandInit(physIsland *island);
-return_t physIslandAddBody(physIsland *island, physRBInstance *prbi);
-/*return_t physIslandAddObject(physIsland *island, objInstance *obji);*/
-void physIslandUpdate(physIsland *island, const float dt);
-void physIslandBroadPhase(physIsland *island, const float dt, physicsBodyIndex_t *pairArraySize, physRigidBody ***pairArray);
-return_t physIslandSimulate(physIsland *island, const float dt);
-void physIslandDelete(physIsland *island);
+void physIslandInit(physIsland *const restrict island);
+return_t physIslandAddBody(physIsland *const restrict island, physRBInstance *const prbi);
+/*return_t physIslandAddObject(physIsland *const restrict island, objInstance *const restrict obji);*/
+void physIslandUpdate(physIsland *const restrict island, const float dt);
+void physIslandBroadPhase(physIsland *const restrict island, const float dt, physicsBodyIndex_t *const restrict pairArraySize, physRigidBody ***const restrict pairArray);
+return_t physIslandSimulate(physIsland *const restrict island, const float dt);
+void physIslandDelete(physIsland *const restrict island);
 
 #endif

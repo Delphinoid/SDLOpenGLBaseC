@@ -10,131 +10,131 @@ vec3 vec3NewS(const float s){
 	const vec3 v = {.x = s, .y = s, .z = s};
 	return v;
 }
-void vec3Set(vec3 *v, const float x, const float y, const float z){
+void vec3Set(vec3 *const restrict v, const float x, const float y, const float z){
 	v->x = x; v->y = y; v->z = z;
 }
-void vec3SetS(vec3 *v, const float s){
+void vec3SetS(vec3 *const restrict v, const float s){
 	v->x = s; v->y = s; v->z = s;
 }
 
-vec3 vec3VAddV(const vec3 *v1, const vec3 *v2){
+vec3 vec3VAddV(const vec3 *const restrict v1, const vec3 *const restrict v2){
 	vec3 r = {.x = v1->x + v2->x,
 	          .y = v1->y + v2->y,
 	          .z = v1->z + v2->z};
 	return r;
 }
-vec3 vec3VAddN(const vec3 *v, const float x, const float y, const float z){
+vec3 vec3VAddN(const vec3 *const restrict v, const float x, const float y, const float z){
 	vec3 r = {.x = v->x + x,
 	          .y = v->y + y,
 	          .z = v->z + z};
 	return r;
 }
-vec3 vec3VAddS(const vec3 *v, const float s){
+vec3 vec3VAddS(const vec3 *const restrict v, const float s){
 	vec3 r = {.x = v->x + s,
 	          .y = v->y + s,
 	          .z = v->z + s};
 	return r;
 }
-void vec3AddVToV(vec3 *v1, const vec3 *v2){
+void vec3AddVToV(vec3 *const restrict v1, const vec3 *const restrict v2){
 	v1->x += v2->x; v1->y += v2->y; v1->z += v2->z;
 }
-void vec3AddVToVR(const vec3 *v1, const vec3 *v2, vec3 *r){
+void vec3AddVToVR(const vec3 *const restrict v1, const vec3 *const restrict v2, vec3 *const restrict r){
 	r->x = v1->x + v2->x; r->y = v1->y + v2->y; r->z = v1->z + v2->z;
 }
-void vec3AddNToV(vec3 *v, const float x, const float y, const float z){
+void vec3AddNToV(vec3 *const restrict v, const float x, const float y, const float z){
 	v->x += x; v->y += y; v->z += z;
 }
-void vec3AddSToV(vec3 *v, const float s){
+void vec3AddSToV(vec3 *const restrict v, const float s){
 	v->x += s; v->y += s; v->z += s;
 }
 
-vec3 vec3VSubV(const vec3 *v1, const vec3 *v2){
+vec3 vec3VSubV(const vec3 *const restrict v1, const vec3 *const restrict v2){
 	vec3 r = {.x = v1->x - v2->x,
 	          .y = v1->y - v2->y,
 	          .z = v1->z - v2->z};
 	return r;
 }
-vec3 vec3VSubN(const vec3 *v, const float x, const float y, const float z){
+vec3 vec3VSubN(const vec3 *const restrict v, const float x, const float y, const float z){
 	vec3 r = {.x = v->x - x,
 	          .y = v->y - y,
 	          .z = v->z - z};
 	return r;
 }
-vec3 vec3VSubS(const vec3 *v, const float s){
+vec3 vec3VSubS(const vec3 *const restrict v, const float s){
 	vec3 r = {.x = v->x - s,
 	          .y = v->y - s,
 	          .z = v->z - s};
 	return r;
 }
-vec3 vec3NSubV(const float x, const float y, const float z, const vec3 *v){
+vec3 vec3NSubV(const float x, const float y, const float z, const vec3 *const restrict v){
 	vec3 r = {.x = x - v->x,
 	          .y = y - v->y,
 	          .z = z - v->z};
 	return r;
 }
-vec3 vec3SSubV(const float s, const vec3 *v){
+vec3 vec3SSubV(const float s, const vec3 *const restrict v){
 	vec3 r = {.x = s - v->x,
 	          .y = s - v->y,
 	          .z = s - v->z};
 	return r;
 }
-void vec3SubVFromV1(vec3 *v1, const vec3 *v2){
+void vec3SubVFromV1(vec3 *const restrict v1, const vec3 *const restrict v2){
 	v1->x -= v2->x; v1->y -= v2->y; v1->z -= v2->z;
 }
-void vec3SubVFromV2(const vec3 *v1, vec3 *v2){
+void vec3SubVFromV2(const vec3 *const restrict v1, vec3 *const restrict v2){
 	v2->x = v1->x - v2->x; v2->y = v1->y - v2->y; v2->z = v1->z - v2->z;
 }
-void vec3SubVFromVR(const vec3 *v1, const vec3 *v2, vec3 *r){
+void vec3SubVFromVR(const vec3 *const restrict v1, const vec3 *const restrict v2, vec3 *const restrict r){
 	r->x = v1->x - v2->x; r->y = v1->y - v2->y; r->z = v1->z - v2->z;
 }
-void vec3SubNFromV(vec3 *v, const float x, const float y, const float z){
+void vec3SubNFromV(vec3 *const restrict v, const float x, const float y, const float z){
 	v->x -= x; v->y -= y; v->z -= z;
 }
-void vec3SubSFromV(vec3 *v, const float s){
+void vec3SubSFromV(vec3 *const restrict v, const float s){
 	v->x -= s; v->y -= s; v->z -= s;
 }
-void vec3SubVFromN(const float x, const float y, const float z, vec3 *v){
+void vec3SubVFromN(const float x, const float y, const float z, vec3 *const restrict v){
 	v->x = x - v->x; v->y = y - v->y; v->z = z - v->z;
 }
-void vec3SubVFromS(const float s, vec3 *v){
+void vec3SubVFromS(const float s, vec3 *const restrict v){
 	v->x = s - v->x; v->y = s - v->y; v->z = s - v->z;
 }
 
-vec3 vec3VMultV(const vec3 *v1, const vec3 *v2){
+vec3 vec3VMultV(const vec3 *const restrict v1, const vec3 *const restrict v2){
 	vec3 r = {.x = v1->x * v2->x,
 	          .y = v1->y * v2->y,
 	          .z = v1->z * v2->z};
 	return r;
 }
-vec3 vec3VMultN(const vec3 *v, const float x, const float y, const float z){
+vec3 vec3VMultN(const vec3 *const restrict v, const float x, const float y, const float z){
 	vec3 r = {.x = v->x * x,
 	          .y = v->y * y,
 	          .z = v->z * z};
 	return r;
 }
-vec3 vec3VMultS(const vec3 *v, const float s){
+vec3 vec3VMultS(const vec3 *const restrict v, const float s){
 	vec3 r = {.x = v->x * s,
 	          .y = v->y * s,
 	          .z = v->z * s};
 	return r;
 }
-void vec3MultVByV(vec3 *v1, const vec3 *v2){
+void vec3MultVByV(vec3 *const restrict v1, const vec3 *const restrict v2){
 	v1->x *= v2->x; v1->y *= v2->y; v1->z *= v2->z;
 }
-void vec3MultVByVR(const vec3 *v1, const vec3 *v2, vec3 *r){
+void vec3MultVByVR(const vec3 *const restrict v1, const vec3 *const restrict v2, vec3 *const restrict r){
 	r->x = v1->x * v2->x; r->y = v1->y * v2->y; r->z = v1->z * v2->z;
 }
-void vec3MultVByN(vec3 *v, const float x, const float y, const float z){
+void vec3MultVByN(vec3 *const restrict v, const float x, const float y, const float z){
 	v->x *= x; v->y *= y; v->z *= z;
 }
-void vec3MultVByS(vec3 *v, const float s){
+void vec3MultVByS(vec3 *const restrict v, const float s){
 	v->x *= s; v->y *= s; v->z *= s;
 }
-void vec3MultVBySR(const vec3 *v, const float s, vec3 *r){
+void vec3MultVBySR(const vec3 *const restrict v, const float s, vec3 *const restrict r){
 	r->x = v->x * s; r->y = v->y * s; r->z = v->z * s;
 }
 
-vec3 vec3VDivV(const vec3 *v1, const vec3 *v2){
+vec3 vec3VDivV(const vec3 *const restrict v1, const vec3 *const restrict v2){
 	vec3 r;
 	if(v2->x != 0.f){
 		r.x = v1->x / v2->x;
@@ -153,7 +153,7 @@ vec3 vec3VDivV(const vec3 *v1, const vec3 *v2){
 	}
 	return r;
 }
-vec3 vec3VDivN(const vec3 *v, const float x, const float y, const float z){
+vec3 vec3VDivN(const vec3 *const restrict v, const float x, const float y, const float z){
 	vec3 r;
 	if(x != 0.f){
 		r.x = v->x / x;
@@ -172,7 +172,7 @@ vec3 vec3VDivN(const vec3 *v, const float x, const float y, const float z){
 	}
 	return r;
 }
-vec3 vec3VDivS(const vec3 *v, const float s){
+vec3 vec3VDivS(const vec3 *const restrict v, const float s){
 	if(s != 0.f){
 		const float invS = 1.f / s;
 		vec3 r = {.x = v->x * invS,
@@ -182,7 +182,7 @@ vec3 vec3VDivS(const vec3 *v, const float s){
 	}
 	return vec3NewS(0.f);
 }
-vec3 vec3NDivV(const float x, const float y, const float z, const vec3 *v){
+vec3 vec3NDivV(const float x, const float y, const float z, const vec3 *const restrict v){
 	vec3 r;
 	if(v->x != 0.f){
 		r.x = x / v->x;
@@ -201,7 +201,7 @@ vec3 vec3NDivV(const float x, const float y, const float z, const vec3 *v){
 	}
 	return r;
 }
-vec3 vec3SDivV(const float s, const vec3 *v){
+vec3 vec3SDivV(const float s, const vec3 *const restrict v){
 	vec3 r;
 	if(v->x != 0.f){
 		r.x = s / v->x;
@@ -220,7 +220,7 @@ vec3 vec3SDivV(const float s, const vec3 *v){
 	}
 	return r;
 }
-void vec3DivVByV1(vec3 *v1, const vec3 *v2){
+void vec3DivVByV1(vec3 *const restrict v1, const vec3 *const restrict v2){
 	if(v2->x != 0.f){
 		v1->x /= v2->x;
 	}else{
@@ -237,7 +237,7 @@ void vec3DivVByV1(vec3 *v1, const vec3 *v2){
 		v1->z = 0.f;
 	}
 }
-void vec3DivVByV2(const vec3 *v1, vec3 *v2){
+void vec3DivVByV2(const vec3 *const restrict v1, vec3 *const restrict v2){
 	if(v2->x != 0.f){
 		v2->x = v1->x / v2->x;
 	}else{
@@ -254,7 +254,7 @@ void vec3DivVByV2(const vec3 *v1, vec3 *v2){
 		v2->z = 0.f;
 	}
 }
-void vec3DivVByVR(const vec3 *v1, const vec3 *v2, vec3 *r){
+void vec3DivVByVR(const vec3 *const restrict v1, const vec3 *const restrict v2, vec3 *const restrict r){
 	if(v2->x != 0.f){
 		r->x = v1->x / v2->x;
 	}else{
@@ -271,7 +271,7 @@ void vec3DivVByVR(const vec3 *v1, const vec3 *v2, vec3 *r){
 		r->z = 0.f;
 	}
 }
-void vec3DivVByN(vec3 *v, const float x, const float y, const float z){
+void vec3DivVByN(vec3 *const restrict v, const float x, const float y, const float z){
 	if(x != 0.f){
 		v->x /= x;
 	}else{
@@ -288,7 +288,7 @@ void vec3DivVByN(vec3 *v, const float x, const float y, const float z){
 		v->z = 0.f;
 	}
 }
-void vec3DivVByS(vec3 *v, const float s){
+void vec3DivVByS(vec3 *const restrict v, const float s){
 	if(s != 0.f){
 		const float invS = 1.f / s;
 		v->x *= invS; v->y *= invS; v->z *= invS;
@@ -296,7 +296,7 @@ void vec3DivVByS(vec3 *v, const float s){
 		v->x = 0.f; v->y = 0.f; v->z = 0.f;
 	}
 }
-void vec3DivNByV(const float x, const float y, const float z, vec3 *v){
+void vec3DivNByV(const float x, const float y, const float z, vec3 *const restrict v){
 	if(v->x != 0.f){
 		v->x = x / v->x;
 	}else{
@@ -313,7 +313,7 @@ void vec3DivNByV(const float x, const float y, const float z, vec3 *v){
 		v->z = 0.f;
 	}
 }
-void vec3DivSByV(const float s, vec3 *v){
+void vec3DivSByV(const float s, vec3 *const restrict v){
 	if(v->x != 0.f){
 		v->x = s / v->x;
 	}else{
@@ -331,67 +331,85 @@ void vec3DivSByV(const float s, vec3 *v){
 	}
 }
 
-__FORCE_INLINE__ float vec3Magnitude(const vec3 *v){
+__FORCE_INLINE__ float vec3Magnitude(const vec3 *const restrict v){
 	return sqrtf(v->x*v->x + v->y*v->y + v->z*v->z);
 }
-__FORCE_INLINE__ float vec3MagnitudeSquared(const vec3 *v){
+__FORCE_INLINE__ float vec3MagnitudeSquared(const vec3 *const restrict v){
 	return v->x*v->x + v->y*v->y + v->z*v->z;
 }
-__FORCE_INLINE__ float vec3InverseMagnitude(const vec3 *v){
+__FORCE_INLINE__ float vec3InverseMagnitude(const vec3 *const restrict v){
 	const float magnitudeSquared = v->x*v->x + v->y*v->y + v->z*v->z;
 	return fastInvSqrt(magnitudeSquared);
 }
 
-vec3 vec3GetUnit(const vec3 *v){
+vec3 vec3GetUnit(const vec3 *const restrict v){
 	const float magnitude = vec3Magnitude(v);
 	if(magnitude != 0.f){
 		return vec3VMultS(v, 1.f/magnitude);
 	}
 	return *v;
 }
-vec3 vec3GetUnitFast(const vec3 *v){
+vec3 vec3GetUnitFast(const vec3 *const restrict v){
 	const float magnitudeSquared = v->x*v->x + v->y*v->y + v->z*v->z;
 	const float invSqrt = fastInvSqrt(magnitudeSquared);
 	return vec3VMultS(v, invSqrt);
 }
-vec3 vec3GetUnitFastAccurate(const vec3 *v){
+vec3 vec3GetUnitFastAccurate(const vec3 *const restrict v){
 	const float magnitudeSquared = v->x*v->x + v->y*v->y + v->z*v->z;
 	const float invSqrt = fastInvSqrtAccurate(magnitudeSquared);
 	return vec3VMultS(v, invSqrt);
 }
-void vec3Normalize(vec3 *v){
+void vec3Normalize(vec3 *const restrict v){
 	const float magnitude = vec3Magnitude(v);
 	if(magnitude != 0.f){
 		vec3MultVByS(v, 1.f/magnitude);
 	}
 }
-void vec3NormalizeFast(vec3 *v){
+void vec3NormalizeFast(vec3 *const restrict v){
 	const float magnitudeSquared = v->x*v->x + v->y*v->y + v->z*v->z;
 	const float invSqrt = fastInvSqrt(magnitudeSquared);
 	vec3MultVByS(v, invSqrt);
 }
-void vec3NormalizeFastAccurate(vec3 *v){
+void vec3NormalizeFastAccurate(vec3 *const restrict v){
 	const float magnitudeSquared = v->x*v->x + v->y*v->y + v->z*v->z;
 	const float invSqrt = fastInvSqrtAccurate(magnitudeSquared);
 	vec3MultVByS(v, invSqrt);
 }
 
-float vec3Dot(const vec3 *v1, const vec3 *v2){
+float vec3Dot(const vec3 *const restrict v1, const vec3 *const restrict v2){
 	return v1->x * v2->x + v1->y * v2->y + v1->z * v2->z;
 }
-vec3 vec3GetCross(const vec3 *v1, const vec3 *v2){
+vec3 vec3GetCross(const vec3 *const restrict v1, const vec3 *const restrict v2){
 	vec3 r = {.x = v1->y * v2->z - v1->z * v2->y,
 	          .y = v1->z * v2->x - v1->x * v2->z,
 	          .z = v1->x * v2->y - v1->y * v2->x};
     return r;
 }
-void vec3Cross(const vec3 *v1, const vec3 *v2, vec3 *r){
+void vec3Cross(const vec3 *const restrict v1, const vec3 *const restrict v2, vec3 *const restrict r){
 	r->x = v1->y * v2->z - v1->z * v2->y;
 	r->y = v1->z * v2->x - v1->x * v2->z;
 	r->z = v1->x * v2->y - v1->y * v2->x;
 }
 
-void vec3Lerp(const vec3 *v1, const vec3 *v2, const float t, vec3 *r){
+void vec3Lerp1(vec3 *const restrict v1, const vec3 *const restrict v2, const float t){
+	/*
+	** r = v1 + (v2 - v1) * t
+	*/
+	v1->x += (v2->x - v1->x) * t;
+	v1->y += (v2->y - v1->y) * t;
+	v1->z += (v2->z - v1->z) * t;
+}
+
+void vec3Lerp2(const vec3 *const restrict v1, vec3 *const restrict v2, const float t){
+	/*
+	** r = v1 + (v2 - v1) * t
+	*/
+	v2->x = v1->x + (v2->x - v1->x) * t;
+	v2->y = v1->y + (v2->y - v1->y) * t;
+	v2->z = v1->z + (v2->z - v1->z) * t;
+}
+
+void vec3LerpR(const vec3 *const restrict v1, const vec3 *const restrict v2, const float t, vec3 *const restrict r){
 	/*
 	** r = v1 + (v2 - v1) * t
 	*/
@@ -400,8 +418,8 @@ void vec3Lerp(const vec3 *v1, const vec3 *v2, const float t, vec3 *r){
 	r->z = v1->z + (v2->z - v1->z) * t;
 }
 
-void vec3CombineLinear(const vec3 *v1, const vec3 *v2, const vec3 *v3,
-                       const float a, const float b, const float c, vec3 *r){
+void vec3CombineLinear(const vec3 *const restrict v1, const vec3 *const restrict v2, const vec3 *const restrict v3,
+                       const float a, const float b, const float c, vec3 *const restrict r){
 	/*
 	** Linearly combine the vectors v1, v2 and v3 using the constants a, b and c.
 	*/

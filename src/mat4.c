@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <math.h>
 
-void mat4Identity(mat4 *m){
+void mat4Identity(mat4 *const restrict m){
 	m->m[0][0] = 1.f; m->m[0][1] = 0.f; m->m[0][2] = 0.f; m->m[0][3] = 0.f;
 	m->m[1][0] = 0.f; m->m[1][1] = 1.f; m->m[1][2] = 0.f; m->m[1][3] = 0.f;
 	m->m[2][0] = 0.f; m->m[2][1] = 0.f; m->m[2][2] = 1.f; m->m[2][3] = 0.f;
@@ -16,7 +16,7 @@ mat4 mat4GetIdentity(){
 	return r;
 }
 
-mat4 mat4MMultM(const mat4 *m1, const mat4 *m2){
+mat4 mat4MMultM(const mat4 *const restrict m1, const mat4 *const restrict m2){
 
 	mat4 r;
 
@@ -53,7 +53,7 @@ mat4 mat4MMultM(const mat4 *m1, const mat4 *m2){
 	return r;
 
 }
-void mat4MultMByM1(mat4 *m1, const mat4 *m2){
+void mat4MultMByM1(mat4 *const restrict m1, const mat4 *const restrict m2){
 
 	mat4 r;
 
@@ -80,7 +80,7 @@ void mat4MultMByM1(mat4 *m1, const mat4 *m2){
 	*m1 = r;
 
 }
-void mat4MultMByM2(const mat4 *m1, mat4 *m2){
+void mat4MultMByM2(const mat4 *const restrict m1, mat4 *const restrict m2){
 
 	mat4 r;
 
@@ -107,7 +107,7 @@ void mat4MultMByM2(const mat4 *m1, mat4 *m2){
 	*m2 = r;
 
 }
-void mat4MultMByMR(const mat4 *m1, const mat4 *m2, mat4 *r){
+void mat4MultMByMR(const mat4 *const restrict m1, const mat4 *const restrict m2, mat4 *const restrict r){
 
 	r->m[0][0] = m1->m[0][0]*m2->m[0][0] + m1->m[0][1]*m2->m[1][0] + m1->m[0][2]*m2->m[2][0] + m1->m[0][3]*m2->m[3][0];
 	r->m[0][1] = m1->m[0][0]*m2->m[0][1] + m1->m[0][1]*m2->m[1][1] + m1->m[0][2]*m2->m[2][1] + m1->m[0][3]*m2->m[3][1];
@@ -130,7 +130,7 @@ void mat4MultMByMR(const mat4 *m1, const mat4 *m2, mat4 *r){
 	r->m[3][3] = m1->m[3][0]*m2->m[0][3] + m1->m[3][1]*m2->m[1][3] + m1->m[3][2]*m2->m[2][3] + m1->m[3][3]*m2->m[3][3];
 
 }
-vec4 mat4VMultMColumn(vec4 v, const mat4 *m){
+vec4 mat4VMultMColumn(vec4 v, const mat4 *const restrict m){
 	vec4 r;
 	r.x = v.x * m->m[0][0] + v.y * m->m[1][0] + v.z * m->m[2][0] + v.w * m->m[3][0];
 	r.y = v.x * m->m[0][1] + v.y * m->m[1][1] + v.z * m->m[2][1] + v.w * m->m[3][1];
@@ -138,7 +138,7 @@ vec4 mat4VMultMColumn(vec4 v, const mat4 *m){
 	r.w = v.x * m->m[0][3] + v.y * m->m[1][3] + v.z * m->m[2][3] + v.w * m->m[3][3];
 	return r;
 }
-void mat4MultVByMColumn(vec4 *v, const mat4 *m){
+void mat4MultVByMColumn(vec4 *const restrict v, const mat4 *const restrict m){
 	vec4 r;
 	r.x = v->x * m->m[0][0] + v->y * m->m[1][0] + v->z * m->m[2][0] + v->w * m->m[3][0];
 	r.y = v->x * m->m[0][1] + v->y * m->m[1][1] + v->z * m->m[2][1] + v->w * m->m[3][1];
@@ -146,13 +146,13 @@ void mat4MultVByMColumn(vec4 *v, const mat4 *m){
 	r.w = v->x * m->m[0][3] + v->y * m->m[1][3] + v->z * m->m[2][3] + v->w * m->m[3][3];
 	v->x = r.x; v->y = r.y; v->z = r.z; v->w = r.w;
 }
-void mat4MultNByM(const float x, const float y, const float z, const float w, const mat4 *m, vec4 *r){
+void mat4MultNByM(const float x, const float y, const float z, const float w, const mat4 *const restrict m, vec4 *const restrict r){
 	r->x = x * m->m[0][0] + y * m->m[1][0] + z * m->m[2][0] + w * m->m[3][0];
 	r->y = x * m->m[0][1] + y * m->m[1][1] + z * m->m[2][1] + w * m->m[3][1];
 	r->z = x * m->m[0][2] + y * m->m[1][2] + z * m->m[2][2] + w * m->m[3][2];
 	r->w = x * m->m[0][3] + y * m->m[1][3] + z * m->m[2][3] + w * m->m[3][3];
 }
-vec4 mat4MMultVRow(const mat4 *m, vec4 v){
+vec4 mat4MMultVRow(const mat4 *const restrict m, vec4 v){
 	vec4 r;
 	r.x = v.x * m->m[0][0] + v.y * m->m[0][1] + v.z * m->m[0][2] + v.w * m->m[0][3];
 	r.y = v.x * m->m[1][0] + v.y * m->m[1][1] + v.z * m->m[1][2] + v.w * m->m[1][3];
@@ -160,7 +160,7 @@ vec4 mat4MMultVRow(const mat4 *m, vec4 v){
 	r.w = v.x * m->m[3][0] + v.y * m->m[3][1] + v.z * m->m[3][2] + v.w * m->m[3][3];
 	return r;
 }
-void mat4MultMByVRow(const mat4 *m, vec4 *v){
+void mat4MultMByVRow(const mat4 *const restrict m, vec4 *const restrict v){
 	vec4 r;
 	r.x = v->x * m->m[0][0] + v->y * m->m[0][1] + v->z * m->m[0][2] + v->w * m->m[0][3];
 	r.y = v->x * m->m[1][0] + v->y * m->m[1][1] + v->z * m->m[1][2] + v->w * m->m[1][3];
@@ -168,13 +168,13 @@ void mat4MultMByVRow(const mat4 *m, vec4 *v){
 	r.w = v->x * m->m[3][0] + v->y * m->m[3][1] + v->z * m->m[3][2] + v->w * m->m[3][3];
 	v->x = r.x; v->y = r.y; v->z = r.z; v->w = r.w;
 }
-void mat4MultMByN(const mat4 *m, const float x, const float y, const float z, const float w, vec4 *r){
+void mat4MultMByN(const mat4 *const restrict m, const float x, const float y, const float z, const float w, vec4 *r){
 	r->x = x * m->m[0][0] + y * m->m[0][1] + z * m->m[0][2] + w * m->m[0][3];
 	r->y = x * m->m[1][0] + y * m->m[1][1] + z * m->m[1][2] + w * m->m[1][3];
 	r->z = x * m->m[2][0] + y * m->m[2][1] + z * m->m[2][2] + w * m->m[2][3];
 	r->w = x * m->m[3][0] + y * m->m[3][1] + z * m->m[3][2] + w * m->m[3][3];
 }
-void mat4TransformV(const mat4 *m, vec3 *v){
+void mat4TransformV(const mat4 *const restrict m, vec3 *const restrict v){
 	vec3 r;
 	r.x = v->x * m->m[0][0] + v->y * m->m[0][1] + v->z * m->m[0][2] + m->m[0][3];
 	r.y = v->x * m->m[1][0] + v->y * m->m[1][1] + v->z * m->m[1][2] + m->m[1][3];
@@ -182,7 +182,7 @@ void mat4TransformV(const mat4 *m, vec3 *v){
 	v->x = r.x; v->y = r.y; v->z = r.z;
 }
 
-float mat4Determinant(const mat4 *m){
+float mat4Determinant(const mat4 *const restrict m){
 	return m->m[0][0] * (m->m[1][1] * (m->m[2][2]*m->m[3][3] - m->m[3][3]*m->m[2][3]) -
 	                     m->m[2][1] * (m->m[1][2]*m->m[3][3] - m->m[3][3]*m->m[1][3]) +
 	                     m->m[3][1] * (m->m[1][2]*m->m[2][3] - m->m[2][3]*m->m[1][3])) -
@@ -197,14 +197,14 @@ float mat4Determinant(const mat4 *m){
 	                     m->m[2][1] * (m->m[0][2]*m->m[1][3] - m->m[1][3]*m->m[0][3]));
 }
 
-mat4 mat4GetTranspose(const mat4 *m){
+mat4 mat4GetTranspose(const mat4 *const restrict m){
 	mat4 r = {.m = {{m->m[0][0], m->m[1][0], m->m[2][0], m->m[3][0]},
 	                {m->m[0][1], m->m[1][1], m->m[2][1], m->m[3][1]},
 	                {m->m[0][2], m->m[1][2], m->m[2][2], m->m[3][2]},
 	                {m->m[0][3], m->m[1][3], m->m[2][3], m->m[3][3]}}};
 	return r;
 }
-void mat4Transpose(mat4 *m){
+void mat4Transpose(mat4 *const restrict m){
 	float swap = m->m[1][0];
 	m->m[1][0] = m->m[0][1];
 	m->m[0][1] = swap;
@@ -224,23 +224,23 @@ void mat4Transpose(mat4 *m){
 	m->m[3][2] = m->m[2][3];
 	m->m[2][3] = swap;
 }
-void mat4TransposeR(const mat4 *m, mat4 *r){
+void mat4TransposeR(const mat4 *const restrict m, mat4 *const restrict r){
 	r->m[0][0] = m->m[0][0]; r->m[0][1] = m->m[1][0]; r->m[0][2] = m->m[2][0]; r->m[0][3] = m->m[3][0];
 	r->m[1][0] = m->m[0][1]; r->m[1][1] = m->m[1][1]; r->m[1][2] = m->m[2][1]; r->m[1][3] = m->m[3][1];
 	r->m[2][0] = m->m[0][2]; r->m[2][1] = m->m[1][2]; r->m[2][2] = m->m[2][2]; r->m[2][3] = m->m[3][2];
 	r->m[3][0] = m->m[0][3]; r->m[3][1] = m->m[1][3]; r->m[3][2] = m->m[2][3]; r->m[3][3] = m->m[3][3];
 }
 
-return_t mat4Invert(mat4 *m){
+return_t mat4Invert(mat4 *const restrict m){
 	/* Find the inverse using Gauss-Jordan elimination. */
 	return 0;
 }
-return_t mat4InvertR(const mat4 *m, mat4 *r){
+return_t mat4InvertR(const mat4 *const restrict m, mat4 *const restrict r){
 	/* Find the inverse using Gauss-Jordan elimination. */
 	return 0;
 }
 
-return_t mat4Frustum(mat4 *m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar){
+return_t mat4Frustum(mat4 *const restrict m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar){
 	if(left == right || bottom == top || zNear == zFar){
 		return 0;
 	}
@@ -250,7 +250,7 @@ return_t mat4Frustum(mat4 *m, const float left, const float right, const float b
 	m->m[3][0] = 0.f;                       m->m[3][1] = 0.f;                       m->m[3][2] = 2.f*zFar*zNear/(zFar-zNear); m->m[3][3] = 0.f;
 	return 1;
 }
-return_t mat4Ortho(mat4 *m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar){
+return_t mat4Ortho(mat4 *const restrict m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar){
 	if(left == right || bottom == top || zNear == zFar){
 		return 0;
 	}
@@ -260,7 +260,7 @@ return_t mat4Ortho(mat4 *m, const float left, const float right, const float bot
 	m->m[3][0] = -((right+left)/(right-left)); m->m[3][1] = -((top+bottom)/(top-bottom)); m->m[3][2] = -((zFar+zNear)/(zFar-zNear)); m->m[3][3] = 1.f;
 	return 1;
 }
-return_t mat4Perspective(mat4 *m, const float fovy, const float aspectRatio, const float zNear, const float zFar){
+return_t mat4Perspective(mat4 *const restrict m, const float fovy, const float aspectRatio, const float zNear, const float zFar){
 	if(fovy == 0.f || aspectRatio == 0.f || zNear == zFar){
 		return 0;
 	}
@@ -272,7 +272,7 @@ return_t mat4Perspective(mat4 *m, const float fovy, const float aspectRatio, con
 	m->m[3][0] = 0.f;                     m->m[3][1] = 0.f;       m->m[3][2] = -2.f*zFar*zNear/(zFar-zNear); m->m[3][3] = 0.f;
 	return 1;
 }
-void mat4RotateToFace(mat4 *m, const vec3 *eye, const vec3 *target, const vec3 *up){
+void mat4RotateToFace(mat4 *const restrict m, const vec3 *const restrict eye, const vec3 *const restrict target, const vec3 *const restrict up){
 	vec3 zAxis = vec3VSubV(target, eye);
 	vec3NormalizeFast(&zAxis);
 	vec3 xAxis;
@@ -287,7 +287,7 @@ void mat4RotateToFace(mat4 *m, const vec3 *eye, const vec3 *target, const vec3 *
 	m->m[2][0] = -zAxis.x; m->m[2][1] = -zAxis.y; m->m[2][2] = -zAxis.z; m->m[2][3] = 0.f;
 	m->m[3][0] = 0.f;      m->m[3][1] = 0.f;      m->m[3][2] = 0.f;      m->m[3][3] = 1.f;
 }
-void mat4LookAt(mat4 *m, const vec3 *eye, const vec3 *target, const vec3 *up){
+void mat4LookAt(mat4 *const restrict m, const vec3 *const restrict eye, const vec3 *const restrict target, const vec3 *const restrict up){
 	vec3 zAxis = vec3VSubV(target, eye);
 	vec3NormalizeFast(&zAxis);
 	vec3 xAxis;
@@ -303,13 +303,13 @@ void mat4LookAt(mat4 *m, const vec3 *eye, const vec3 *target, const vec3 *up){
 	m->m[3][0] = -vec3Dot(&xAxis, eye); m->m[3][1] = -vec3Dot(&yAxis, eye); m->m[3][2] = vec3Dot(&zAxis, eye); m->m[3][3] = 1.f;
 }
 
-void mat4Translate(mat4 *m, const float x, const float y, const float z){
+void mat4Translate(mat4 *const restrict m, const float x, const float y, const float z){
 	m->m[3][0] = m->m[0][0] * x + m->m[1][0] * y + m->m[2][0] * z + m->m[3][0];
 	m->m[3][1] = m->m[0][1] * x + m->m[1][1] * y + m->m[2][1] * z + m->m[3][1];
 	m->m[3][2] = m->m[0][2] * x + m->m[1][2] * y + m->m[2][2] * z + m->m[3][2];
 	m->m[3][3] = m->m[0][3] * x + m->m[1][3] * y + m->m[2][3] * z + m->m[3][3];
 }
-void mat4TranslateR(const mat4 *m, const float x, const float y, const float z, mat4 *r){
+void mat4TranslateR(const mat4 *const restrict m, const float x, const float y, const float z, mat4 *const restrict r){
 	r->m[0][0] = m->m[0][0]; r->m[0][1] = m->m[0][1]; r->m[0][2] = m->m[0][2]; r->m[0][3] = m->m[0][3];
 	r->m[1][0] = m->m[1][0]; r->m[1][1] = m->m[1][1]; r->m[1][2] = m->m[1][2]; r->m[1][3] = m->m[1][3];
 	r->m[2][0] = m->m[2][0]; r->m[2][1] = m->m[2][1]; r->m[2][2] = m->m[2][2]; r->m[2][3] = m->m[2][3];
@@ -318,7 +318,7 @@ void mat4TranslateR(const mat4 *m, const float x, const float y, const float z, 
 	r->m[3][2] = m->m[0][2] * x + m->m[1][2] * y + m->m[2][2] * z + m->m[3][2];
 	r->m[3][3] = m->m[0][3] * x + m->m[1][3] * y + m->m[2][3] * z + m->m[3][3];
 }
-void mat4SetTranslationMatrix(mat4 *m, const float x, const float y, const float z){
+void mat4SetTranslationMatrix(mat4 *const restrict m, const float x, const float y, const float z){
 	m->m[0][0] = 1.f; m->m[0][1] = 0.f; m->m[0][2] = 0.f; m->m[0][3] = 0.f;
 	m->m[1][0] = 0.f; m->m[1][1] = 1.f; m->m[1][2] = 0.f; m->m[1][3] = 0.f;
 	m->m[2][0] = 0.f; m->m[2][1] = 0.f; m->m[2][2] = 1.f; m->m[2][3] = 0.f;
@@ -331,32 +331,32 @@ mat4 mat4TranslationMatrix(const float x, const float y, const float z){
 	                {  x,   y,   z, 1.f}}};
 	return r;
 }
-void mat4Rotate(mat4 *m, const quat *q){
+void mat4Rotate(mat4 *const restrict m, const quat *const restrict q){
 	mat4 r; mat4Quat(&r, q);
 	mat4MultMByM2(&r, m);
 }
-void mat4RotateR(const mat4 *m, const quat *q, mat4 *r){
+void mat4RotateR(const mat4 *const restrict m, const quat *const restrict q, mat4 *const restrict r){
 	mat4Quat(r, q);
 	mat4MultMByM1(r, m);
 }
-void mat4SetRotationMatrix(mat4 *m, const quat *q){
+void mat4SetRotationMatrix(mat4 *const restrict m, const quat *const restrict q){
 	mat4Quat(m, q);
 }
-mat4 mat4RotationMatrix(const quat *q){
+mat4 mat4RotationMatrix(const quat *const restrict q){
 	mat4 r; mat4Quat(&r, q);
 	return r;
 }
-void mat4Scale(mat4 *m, const float x, const float y, const float z){
+void mat4Scale(mat4 *const restrict m, const float x, const float y, const float z){
 	m->m[0][0] *= x; m->m[0][1] *= x; m->m[0][2] *= x; m->m[0][3] *= x;
 	m->m[1][0] *= y; m->m[1][1] *= y; m->m[1][2] *= y; m->m[1][3] *= y;
 	m->m[2][0] *= z; m->m[2][1] *= z; m->m[2][2] *= z; m->m[2][3] *= z;
 }
-void mat4ScaleR(const mat4 *m, const float x, const float y, const float z, mat4 *r){
+void mat4ScaleR(const mat4 *const restrict m, const float x, const float y, const float z, mat4 *r){
 	r->m[0][0] = m->m[0][0] * x; r->m[0][1] = m->m[0][1] * x; r->m[0][2] = m->m[0][2] * x; r->m[0][3] = m->m[0][3] * x;
 	r->m[1][0] = m->m[1][0] * y; r->m[1][1] = m->m[1][1] * y; r->m[1][2] = m->m[1][2] * y; r->m[1][3] = m->m[1][3] * y;
 	r->m[2][0] = m->m[2][0] * z; r->m[2][1] = m->m[2][1] * z; r->m[2][2] = m->m[2][2] * z; r->m[2][3] = m->m[2][3] * z;
 }
-void mat4SetScaleMatrix(mat4 *m, const float x, const float y, const float z){
+void mat4SetScaleMatrix(mat4 *const restrict m, const float x, const float y, const float z){
 	m->m[0][0] = x;   m->m[0][1] = 0.f; m->m[0][2] = 0.f; m->m[0][3] = 0.f;
 	m->m[1][0] = 0.f; m->m[1][1] = y;   m->m[1][2] = 0.f; m->m[1][3] = 0.f;
 	m->m[2][0] = 0.f; m->m[2][1] = 0.f; m->m[2][2] = z;   m->m[2][3] = 0.f;
@@ -370,7 +370,7 @@ mat4 mat4ScaleMatrix(const float x, const float y, const float z){
 	return r;
 }
 
-void mat4Quat(mat4 *m, const quat *q){
+void mat4Quat(mat4 *const restrict m, const quat *const restrict q){
 	const float xx = q->v.x*q->v.x;
 	const float yy = q->v.y*q->v.y;
 	const float zz = q->v.z*q->v.z;

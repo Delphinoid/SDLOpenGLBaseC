@@ -10,12 +10,12 @@
 
 typedef struct {
 
-	void *structure;
+	const void *structure;
 	uint_least8_t type;
 	float distance;
 
 } gfxRenderElement;
 
-return_t gfxRendererDrawScene(graphicsManager *gfxMngr, camera *cam, const scene *scn, const float interpT);
+return_t gfxRendererDrawScene(graphicsManager *const restrict gfxMngr, camera *const restrict cam, const scene *const restrict scn, const float interpT);
 
 #endif

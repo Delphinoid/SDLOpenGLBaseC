@@ -28,10 +28,10 @@ typedef struct {
 
 } physicsSolver;
 
-return_t physSolverInit(physicsSolver *solver, size_t bodyNum);
-void physSolverReset(physicsSolver *solver);
-physRBInstance **physSolverAllocate(physicsSolver *solver);
-void physSolverUpdate(physicsSolver *solver);
-void physSolverDelete(physicsSolver *solver);
+return_t physSolverInit(physicsSolver *const restrict solver, size_t bodyNum);
+void physSolverReset(physicsSolver *const restrict solver);
+physRBInstance **physSolverAllocate(physicsSolver *const restrict solver);
+void physSolverUpdate(physicsSolver *const restrict solver);
+void physSolverDelete(physicsSolver *const restrict solver);
 
 #endif

@@ -96,19 +96,19 @@ typedef struct {
 
 } graphicsManager;
 
-return_t gfxMngrInit(graphicsManager *gfxMngr, const char *prgPath);
-unsigned int gfxMngrWindowChanged(graphicsManager *gfxMngr);
-void gfxMngrUpdateWindow(graphicsManager *gfxMngr);
-int gfxMngrSetWindowMode(graphicsManager *gfxMngr, const Uint32 mode);
-void gfxMngrSetWindowFill(graphicsManager *gfxMngr, const unsigned int fill);
-void gfxMngrSetViewportAspectRatio(graphicsManager *gfxMngr, const float x, const float y);
-void gfxMngrSetViewportAspectX(graphicsManager *gfxMngr, const float x);
-void gfxMngrSetViewportAspectY(graphicsManager *gfxMngr, const float y);
-void gfxMngrSetViewportSize(graphicsManager *gfxMngr, const unsigned int width, const unsigned int height);
-void gfxMngrSetViewportWidth(graphicsManager *gfxMngr, const unsigned int width);
-void gfxMngrSetViewportHeight(graphicsManager *gfxMngr, const unsigned int height);
-void gfxMngrSwitchView(graphicsManager *gfxMngr, const gfxView *view);
-void gfxMngrBindTexture(graphicsManager *gfxMngr, const GLenum texture, const GLuint textureID);
-void gfxMngrDestroyProgram(graphicsManager *gfxMngr);
+return_t gfxMngrInit(graphicsManager *const restrict gfxMngr, const char *const restrict prgPath);
+unsigned int gfxMngrWindowChanged(graphicsManager *const restrict gfxMngr);
+void gfxMngrUpdateWindow(graphicsManager *const restrict gfxMngr);
+int gfxMngrSetWindowMode(graphicsManager *const restrict gfxMngr, const Uint32 mode);
+void gfxMngrSetWindowFill(graphicsManager *const restrict gfxMngr, const unsigned int fill);
+void gfxMngrSetViewportAspectRatio(graphicsManager *const restrict gfxMngr, const float x, const float y);
+void gfxMngrSetViewportAspectX(graphicsManager *const restrict gfxMngr, const float x);
+void gfxMngrSetViewportAspectY(graphicsManager *const restrict gfxMngr, const float y);
+void gfxMngrSetViewportSize(graphicsManager *const restrict gfxMngr, const unsigned int width, const unsigned int height);
+void gfxMngrSetViewportWidth(graphicsManager *const restrict gfxMngr, const unsigned int width);
+void gfxMngrSetViewportHeight(graphicsManager *const restrict gfxMngr, const unsigned int height);
+void gfxMngrSwitchView(graphicsManager *const restrict gfxMngr, const gfxView *const restrict view);
+void gfxMngrBindTexture(graphicsManager *const restrict gfxMngr, const GLenum texture, const GLuint textureID);
+void gfxMngrDestroyProgram(graphicsManager *const restrict gfxMngr);
 
 #endif

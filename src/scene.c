@@ -2,9 +2,7 @@
 #include "memoryManager.h"
 #include "inline.h"
 
-return_t scnInit(scene *scn, size_t objectNum, size_t bodyNum){
-
-	void *memory;
+return_t scnInit(scene *const restrict scn, size_t objectNum, size_t bodyNum){
 
 	scn->objectNum = 0;
 	memPoolInit(&scn->objects);
@@ -13,25 +11,26 @@ return_t scnInit(scene *scn, size_t objectNum, size_t bodyNum){
 		objectNum = SCENE_ZONE_DEFAULT_OBJECT_NUM;
 	}
 
-	memory = memAllocate(
-		memPoolAllocationSize(NULL, sizeof(objInstance *), objectNum)
-	);
-
-	if(memPoolCreate(&scn->objects, memory, sizeof(objInstance *), objectNum) == NULL){
-		return -1;
+	{
+		void *const memory = memAllocate(
+			memPoolAllocationSize(NULL, sizeof(objInstance *), objectNum)
+		);
+		if(memPoolCreate(&scn->objects, memory, sizeof(objInstance *), objectNum) == NULL){
+			return -1;
+		}
 	}
-	scn->objectNum = objectNum;
 
+	scn->objectNum = objectNum;
 	return physSolverInit(&scn->solver, 0);
 
 }
 
-__FORCE_INLINE__ objInstance **scnAllocate(scene *scn){
+__FORCE_INLINE__ objInstance **scnAllocate(scene *const restrict scn){
 	/** scn->objectNum is not correct here. We want fixed-size regions. **/
 	objInstance **r = memPoolAllocate(&scn->objects);
 	if(r == NULL){
 		// Attempt to extend the allocator.
-		void *memory = memAllocate(
+		void *const memory = memAllocate(
 			memPoolAllocationSize(NULL, sizeof(objInstance *), scn->objectNum)
 		);
 		if(memPoolExtend(&scn->objects, memory, sizeof(objInstance *), scn->objectNum)){
@@ -44,44 +43,31 @@ __FORCE_INLINE__ objInstance **scnAllocate(scene *scn){
 	return r;
 }
 
-__FORCE_INLINE__ void scnFree(scene *scn, objInstance **obji){
+__FORCE_INLINE__ void scnFree(scene *const restrict scn, objInstance **const restrict obji){
 	memPoolFree(&scn->objects, (void *)obji);
 }
 #include "moduleObject.h"
-void scnUpdate(scene *scn, const float elapsedTime, const float dt){
+void scnUpdate(scene *const restrict scn, const float elapsedTime, const float dt){
 
 	/*
 	** Update each object in the scene.
 	*/
 
-	memoryRegion *region = scn->objects.region;
-	objInstance **i;
-
 	physSolverReset(&scn->solver);
 
-	do {
-		i = memPoolFirst(region);
-		while(i < (objInstance **)memAllocatorEnd(region)){
-			const byte_t flag = memPoolBlockStatus(i);
-			if(flag == MEMORY_POOL_BLOCK_ACTIVE){
+	MEMORY_POOL_LOOP_BEGIN(scn->objects, i, objInstance **);
 
-				// Update each object in the scene.
-				objiUpdate(*i, &scn->solver, elapsedTime, dt);
+		// Update each object in the scene.
+		objiUpdate(*i, &scn->solver, elapsedTime, dt);
 
-			}else if(flag == MEMORY_POOL_BLOCK_INVALID){
-				goto UPDATE_PHYSICS_SOLVER;
-			}
-			i = memPoolBlockNext(scn->objects, i);
-		}
-		region = memAllocatorNext(region);
-	} while(region != NULL);
+	MEMORY_POOL_LOOP_END(scn->objects, i, goto UPDATE_PHYSICS_SOLVER;);
 
 	UPDATE_PHYSICS_SOLVER:
 	physSolverUpdate(&scn->solver);
 
 }
 
-void scnReset(scene *scn){
+void scnReset(scene *const restrict scn){
 
 	/*
 	** Free each of the scene's memory regions.
@@ -99,7 +85,7 @@ void scnReset(scene *scn){
 
 }
 
-void scnDelete(scene *scn){
+void scnDelete(scene *const restrict scn){
 
 	/*
 	** Free each of the scene's memory regions.

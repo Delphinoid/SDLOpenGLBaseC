@@ -10,10 +10,10 @@
 #define MODEL_RESOURCE_DIRECTORY_STRING "Resources\\Models\\"
 #define MODEL_RESOURCE_DIRECTORY_LENGTH 17
 
-return_t mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex **vertices, size_t *indexNum, vertexIndex_t **indices, size_t *lodNum, mdlLOD **lods, char *sklPath);
+return_t mdlWavefrontObjLoad(const char *const restrict filePath, size_t *const restrict vertexNum, vertex **const restrict vertices, size_t *const restrict indexNum, vertexIndex_t **const restrict indices, size_t *const restrict lodNum, mdlLOD **const restrict lods, char *const restrict sklPath);
 ///return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, size_t *indexNum, vertexIndex_t **indices);
 
-void mdlInit(model *mdl){
+void mdlInit(model *const restrict mdl){
 	mdl->name = NULL;
 	mdl->vertexNum = 0;
 	mdl->indexNum = 0;
@@ -43,7 +43,7 @@ static void mdlVertexAttributes(){
 	glEnableVertexAttribArray(4);
 }
 
-static return_t mdlGenBufferObjects(model *mdl, const char *filePath, const size_t vertexNum, const vertex *vertices, const size_t indexNum, const vertexIndex_t *indices){
+static return_t mdlGenBufferObjects(model *const restrict mdl, const char *const restrict filePath, const size_t vertexNum, const vertex *const restrict vertices, const size_t indexNum, const vertexIndex_t *const restrict indices){
 
 	if(vertexNum > 0){
 		if(indexNum > 0){
@@ -122,15 +122,15 @@ static return_t mdlGenBufferObjects(model *mdl, const char *filePath, const size
 
 }
 
-return_t mdlLoad(model *mdl, const char *prgPath, const char *filePath){
+return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, const char *const restrict filePath){
 
 	/** Create a proper model file that loads a specified mesh, a name and a skeleton. **/
 	return_t r;
 
 	size_t vertexNum;
-	vertex *vertices;
+	vertex *restrict vertices;
 	size_t indexNum;
-	vertexIndex_t *indices;
+	vertexIndex_t *restrict indices;
 	size_t lodNum;
 	mdlLOD *lods;
 
@@ -143,7 +143,7 @@ return_t mdlLoad(model *mdl, const char *prgPath, const char *filePath){
 
 	mdlInit(mdl);
 
-	r = mdlWavefrontObjLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, &lodNum, &lods, &sklPath[0]);
+	r = mdlWavefrontObjLoad(fullPath, &vertexNum, (vertex **const restrict)&vertices, &indexNum, (vertexIndex_t **const restrict)&indices, &lodNum, (mdlLOD **const restrict)&lods, &sklPath[0]);
 	//r = mdlSMDLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, allSkeletons);
 	/** Replace and move the loading function here. **/
 	if(r <= 0){
@@ -162,7 +162,7 @@ return_t mdlLoad(model *mdl, const char *prgPath, const char *filePath){
         mdl->skl = moduleSkeletonGetDefault();
 	}else{
 		/** Check if the skeleton already exists. If not, load it. **/
-		skeleton *tempSkl = moduleSkeletonAllocate();
+		skeleton *const tempSkl = moduleSkeletonAllocate();
 		if(tempSkl != NULL){
 			const return_t r2 = sklLoad(tempSkl, prgPath, &sklPath[0]);
 			if(r2 < 1){
@@ -213,7 +213,7 @@ return_t mdlLoad(model *mdl, const char *prgPath, const char *filePath){
 
 }
 
-return_t mdlDefault(model *mdl){
+return_t mdlDefault(model *const restrict mdl){
 
 	vertex vertices[24];
 	vertexIndex_t indices[36];
@@ -422,7 +422,7 @@ return_t mdlDefault(model *mdl){
 }
 
 /** Change this function later **/
-return_t mdlCreateSprite(model *mdl){
+return_t mdlCreateSprite(model *const restrict mdl){
 
 	GLenum glError;
 
@@ -483,7 +483,7 @@ return_t mdlCreateSprite(model *mdl){
 
 }
 
-__FORCE_INLINE__ void mdlFindCurrentLOD(model *mdl, GLsizei *indexNum, void **offset, const float distance, size_t bias){
+__FORCE_INLINE__ void mdlFindCurrentLOD(const model *const restrict mdl, GLsizei *const restrict indexNum, const void **const restrict offset, const float distance, size_t bias){
 
 	if(mdl->lods == NULL){
 		*indexNum = mdl->indexNum;
@@ -492,7 +492,7 @@ __FORCE_INLINE__ void mdlFindCurrentLOD(model *mdl, GLsizei *indexNum, void **of
 
 		// Find the current LOD based off the distance.
 		lodNum_t i = 1;
-		mdlLOD *lod = mdl->lods;
+		const mdlLOD *lod = mdl->lods;
 
 		// Loop through each LOD until one within
 		// the specified distance is found.
@@ -532,7 +532,7 @@ __FORCE_INLINE__ void mdlFindCurrentLOD(model *mdl, GLsizei *indexNum, void **of
 
 }
 
-void mdlDelete(model *mdl){
+void mdlDelete(model *const restrict mdl){
 	if(mdl->name != NULL){
 		memFree(mdl->name);
 	}

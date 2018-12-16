@@ -80,14 +80,57 @@ typedef struct {
 #define memPoolBlockStatus(block) memPoolDataGetFlags(block)
 #define memPoolBlockNext(pool, i) (void *)((byte_t *)i + (pool).block)
 
-void memPoolInit(memoryPool *pool);
-void *memPoolCreate(memoryPool *pool, void *start, const size_t bytes, const size_t length);
-void *memPoolAllocate(memoryPool *pool);
-void memPoolFree(memoryPool *pool, void *block);
+void memPoolInit(memoryPool *const restrict pool);
+void *memPoolCreate(memoryPool *const restrict pool, void *start, const size_t bytes, const size_t length);
+void *memPoolAllocate(memoryPool *const restrict pool);
+void memPoolFree(memoryPool *const restrict pool, void *const block);
 void *memPoolSetupMemory(void *start, const size_t bytes, const size_t length);
-void *memPoolIndex(memoryPool *pool, const size_t i);
-void memPoolClear(memoryPool *pool);
-void *memPoolExtend(memoryPool *pool, void *start, const size_t bytes, const size_t length);
-void memPoolDelete(memoryPool *pool);
+void *memPoolIndex(memoryPool *const restrict pool, const size_t i);
+void memPoolClear(memoryPool *const restrict pool);
+void *memPoolExtend(memoryPool *const restrict pool, void *const start, const size_t bytes, const size_t length);
+void memPoolDelete(memoryPool *const restrict pool);
+
+#define MEMORY_POOL_LOOP_BEGIN(allocator, n, type)                 \
+	{                                                              \
+		const memoryRegion *__region_##n = allocator.region;       \
+		type n;                                                    \
+		do {                                                       \
+			n = memPoolFirst(__region_##n);                        \
+			while(n < (type)memAllocatorEnd(__region_##n)){        \
+				const byte_t __flag_##n = memPoolBlockStatus(n);   \
+				if(__flag_##n == MEMORY_POOL_BLOCK_ACTIVE){
+
+#define MEMORY_POOL_LOOP_END(allocator, n, earlyexit)              \
+				}else if(__flag_##n == MEMORY_POOL_BLOCK_INVALID){ \
+					earlyexit                                      \
+				}                                                  \
+				n = memPoolBlockNext(allocator, n);                \
+			}                                                      \
+			__region_##n = memAllocatorNext(__region_##n);         \
+		} while(__region_##n != NULL);                             \
+	}
+
+#define MEMORY_POOL_OFFSET_LOOP_BEGIN(allocator, n, type, region, block) \
+	{                                                                    \
+		const memoryRegion *__region_##n = region;                       \
+		type n = (type)(block);                                          \
+		for(;;){                                                         \
+			while(n < (type)memAllocatorEnd(__region_##n)){              \
+				const byte_t __flag_##n = memPoolBlockStatus(n);         \
+				if(__flag_##n == MEMORY_POOL_BLOCK_ACTIVE){
+
+#define MEMORY_POOL_OFFSET_LOOP_END(allocator, n, earlyexit)             \
+				}else if(__flag_##n == MEMORY_POOL_BLOCK_INVALID){       \
+					earlyexit                                            \
+				}                                                        \
+				n = memPoolBlockNext(allocator, n);                      \
+			}                                                            \
+			__region_##n = memAllocatorNext(__region_##n);               \
+			if(__region_##n == NULL){                                    \
+				break;                                                   \
+			}                                                            \
+			n = memPoolFirst(__region_##n);                              \
+		}                                                                \
+	}
 
 #endif

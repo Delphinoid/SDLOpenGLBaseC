@@ -17,7 +17,7 @@ void *memHeapLowLevelAllocate(const size_t bytes){
 #endif
 }
 
-void *memHeapLowLevelReallocate(void *block, const size_t bytes){
+void *memHeapLowLevelReallocate(void *const restrict block, const size_t bytes){
 #ifdef _WIN32
 	return HeapReAlloc(GetProcessHeap(), 0x01, block, bytes);
 #else
@@ -28,7 +28,7 @@ void *memHeapLowLevelReallocate(void *block, const size_t bytes){
 #endif
 }
 
-int memHeapLowLevelFree(void *block){
+int memHeapLowLevelFree(void *const restrict block){
 #ifdef _WIN32
 	return HeapFree(GetProcessHeap(), 0x01, block);
 #else
@@ -47,7 +47,7 @@ int memHeapLowLevelFree(void *block){
 	region->next = *first; \
 	*first = region;
 
-__FORCE_INLINE__ void memRegionExtend(memoryRegion **first, memoryRegion *region, byte_t *data){
+__FORCE_INLINE__ void memRegionExtend(memoryRegion **first, memoryRegion *const region, byte_t *const data){
 	/*
 	** Extends a memory region.
 	** Same as memRegionAppend() unless
@@ -61,7 +61,7 @@ __FORCE_INLINE__ void memRegionExtend(memoryRegion **first, memoryRegion *region
 	region->start = data;
 }
 
-__FORCE_INLINE__ void memRegionAppend(memoryRegion **first, memoryRegion *region, byte_t *data){
+__FORCE_INLINE__ void memRegionAppend(memoryRegion **first, memoryRegion *const region, byte_t *const data){
 	/*
 	** Appends a new memory region
 	** to the list. Used when order
@@ -71,7 +71,7 @@ __FORCE_INLINE__ void memRegionAppend(memoryRegion **first, memoryRegion *region
 	region->start = data;
 }
 
-__FORCE_INLINE__ void memRegionPrepend(memoryRegion **first, memoryRegion *region, byte_t *data){
+__FORCE_INLINE__ void memRegionPrepend(memoryRegion **first, memoryRegion *const region, byte_t *const data){
 	/*
 	** Prepends a new memory region
 	** to the list. Used when order
@@ -81,13 +81,13 @@ __FORCE_INLINE__ void memRegionPrepend(memoryRegion **first, memoryRegion *regio
 	region->start = data;
 }
 
-__FORCE_INLINE__ void memRegionFree(memoryRegion *region){
+__FORCE_INLINE__ void memRegionFree(const memoryRegion *region){
 	/*
 	** Frees an allocator by looping through
 	** each of its memory regions.
 	*/
 	while(region != NULL){
-		memoryRegion *next = (memoryRegion *)region->next;
+		const memoryRegion *const next = (memoryRegion *)region->next;
 		memHeapLowLevelFree(region->start);
 		region = next;
 	}

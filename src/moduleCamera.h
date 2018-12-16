@@ -2,12 +2,12 @@
 #define MODULECAMERA_H
 
 #include "camera.h"
-#include "memoryList.h"
+#include "memoryPool.h"
 
 #define RESOURCE_DEFAULT_CAMERA_SIZE sizeof(camera)
 #define RESOURCE_DEFAULT_CAMERA_NUM 2
 
-extern memoryList __CameraResourceArray;  // Contains scenes.
+extern memoryPool __CameraResourceArray;  // Contains cameras.
 
 /** Support locals? Merge all module containers? **/
 
@@ -17,7 +17,8 @@ void moduleCameraResourcesDelete();
 
 camera *moduleCameraAllocateStatic();
 camera *moduleCameraAllocate();
-void moduleCameraFree(camera *resource);
+void moduleCameraPrepare();
+void moduleCameraFree(camera *const restrict resource);
 void moduleCameraClear();
 
 #endif

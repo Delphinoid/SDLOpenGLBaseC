@@ -7,7 +7,7 @@
 memoryPool __TextureResourceArray;  // Contains textures.
 
 return_t moduleTextureResourcesInit(){
-	void *memory = memAllocate(
+	void *const memory = memAllocate(
 		memPoolAllocationSize(
 			NULL,
 			RESOURCE_DEFAULT_TEXTURE_SIZE,
@@ -60,7 +60,7 @@ __FORCE_INLINE__ texture *moduleTextureAllocate(){
 	texture *r = memPoolAllocate(&__TextureResourceArray);
 	if(r == NULL){
 		// Attempt to extend the allocator.
-		void *memory = memAllocate(
+		void *const memory = memAllocate(
 			memPoolAllocationSize(
 				NULL,
 				RESOURCE_DEFAULT_TEXTURE_SIZE,
@@ -73,58 +73,34 @@ __FORCE_INLINE__ texture *moduleTextureAllocate(){
 	}
 	return r;
 }
-__FORCE_INLINE__ void moduleTextureFree(texture *resource){
+__FORCE_INLINE__ void moduleTextureFree(texture *const restrict resource){
 	tDelete(resource);
 	memPoolFree(&__TextureResourceArray, (void *)resource);
 }
-texture *moduleTextureFind(const char *name){
+texture *moduleTextureFind(const char *const restrict name){
 
-	memoryRegion *region = __TextureResourceArray.region;
-	texture *i;
-	do {
-		i = memPoolFirst(region);
-		while(i < (texture *)memAllocatorEnd(region)){
-			const byte_t flag = memPoolBlockStatus(i);
-			if(flag == MEMORY_POOL_BLOCK_ACTIVE){
+	MEMORY_POOL_LOOP_BEGIN(__TextureResourceArray, i, texture *);
 
-				// Compare the resources' names.
-				if(strcmp(name, i->name) == 0){
-					return i;
-				}
-
-			}else if(flag == MEMORY_POOL_BLOCK_INVALID){
-				return NULL;
-			}
-			i = memPoolBlockNext(__TextureResourceArray, i);
+		// Compare the resources' names.
+		if(strcmp(name, i->name) == 0){
+			return i;
 		}
-		region = memAllocatorNext(region);
-	} while(region != NULL);
+
+	MEMORY_POOL_LOOP_END(__TextureResourceArray, i, return NULL;);
 
 	return NULL;
 
 }
 void moduleTextureClear(){
 
-	memoryRegion *region = __TextureResourceArray.region;
-	// Start after the constant resources.
-	texture *i = (texture *)((byte_t *)memPoolFirst(region) + RESOURCE_TEXTURE_CONSTANTS * RESOURCE_TEXTURE_BLOCK_SIZE);
-	for(;;){
-		while(i < (texture *)memAllocatorEnd(region)){
-			const byte_t flag = memPoolBlockStatus(i);
-			if(flag == MEMORY_POOL_BLOCK_ACTIVE){
+	MEMORY_POOL_OFFSET_LOOP_BEGIN(
+		__TextureResourceArray, i, texture *,
+		__TextureResourceArray.region,
+		(byte_t *)memPoolFirst(__TextureResourceArray.region) + RESOURCE_TEXTURE_CONSTANTS * RESOURCE_TEXTURE_BLOCK_SIZE
+	);
 
-				moduleTextureFree(i);
+		moduleTextureFree(i);
 
-			}else if(flag == MEMORY_POOL_BLOCK_INVALID){
-				return;
-			}
-			i = memPoolBlockNext(__TextureResourceArray, i);
-		}
-		region = memAllocatorNext(region);
-		if(region == NULL){
-			return;
-		}
-		i = memPoolFirst(region);
-	}
+	MEMORY_POOL_OFFSET_LOOP_END(__TextureResourceArray, i, return;);
 
 }

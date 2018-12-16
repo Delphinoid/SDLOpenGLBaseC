@@ -7,7 +7,7 @@
 memoryPool __ModelResourceArray;  // Contains models.
 
 return_t moduleModelResourcesInit(){
-	void *memory = memAllocate(
+	void *const memory = memAllocate(
 		memPoolAllocationSize(
 			NULL,
 			RESOURCE_DEFAULT_MODEL_SIZE,
@@ -69,7 +69,7 @@ __FORCE_INLINE__ model *moduleModelAllocate(){
 	model *r = memPoolAllocate(&__ModelResourceArray);
 	if(r == NULL){
 		// Attempt to extend the allocator.
-		void *memory = memAllocate(
+		void *const memory = memAllocate(
 			memPoolAllocationSize(
 				NULL,
 				RESOURCE_DEFAULT_MODEL_SIZE,
@@ -82,58 +82,34 @@ __FORCE_INLINE__ model *moduleModelAllocate(){
 	}
 	return r;
 }
-__FORCE_INLINE__ void moduleModelFree(model *resource){
+__FORCE_INLINE__ void moduleModelFree(model *const restrict resource){
 	mdlDelete(resource);
 	memPoolFree(&__ModelResourceArray, (void *)resource);
 }
-model *moduleModelFind(const char *name){
+model *moduleModelFind(const char *const restrict name){
 
-	memoryRegion *region = __ModelResourceArray.region;
-	model *i;
-	do {
-		i = memPoolFirst(region);
-		while(i < (model *)memAllocatorEnd(region)){
-			const byte_t flag = memPoolBlockStatus(i);
-			if(flag == MEMORY_POOL_BLOCK_ACTIVE){
+	MEMORY_POOL_LOOP_BEGIN(__ModelResourceArray, i, model *);
 
-				// Compare the resources' names.
-				if(strcmp(name, i->name) == 0){
-					return i;
-				}
-
-			}else if(flag == MEMORY_POOL_BLOCK_INVALID){
-				return NULL;
-			}
-			i = memPoolBlockNext(__ModelResourceArray, i);
+		// Compare the resources' names.
+		if(strcmp(name, i->name) == 0){
+			return i;
 		}
-		region = memAllocatorNext(region);
-	} while(region != NULL);
+
+	MEMORY_POOL_LOOP_END(__ModelResourceArray, i, return NULL;);
 
 	return NULL;
 
 }
 void moduleModelClear(){
 
-	memoryRegion *region = __ModelResourceArray.region;
-	// Start after the constant resources.
-	model *i = (model *)((byte_t *)memPoolFirst(region) + RESOURCE_MODEL_CONSTANTS * RESOURCE_MODEL_BLOCK_SIZE);
-	for(;;){
-		while(i < (model *)memAllocatorEnd(region)){
-			const byte_t flag = memPoolBlockStatus(i);
-			if(flag == MEMORY_POOL_BLOCK_ACTIVE){
+	MEMORY_POOL_OFFSET_LOOP_BEGIN(
+		__ModelResourceArray, i, model *,
+		__ModelResourceArray.region,
+		(byte_t *)memPoolFirst(__ModelResourceArray.region) + RESOURCE_MODEL_CONSTANTS * RESOURCE_MODEL_BLOCK_SIZE
+	);
 
-				moduleModelFree(i);
+		moduleModelFree(i);
 
-			}else if(flag == MEMORY_POOL_BLOCK_INVALID){
-				return;
-			}
-			i = memPoolBlockNext(__ModelResourceArray, i);
-		}
-		region = memAllocatorNext(region);
-		if(region == NULL){
-			return;
-		}
-		i = memPoolFirst(region);
-	}
+	MEMORY_POOL_OFFSET_LOOP_END(__ModelResourceArray, i, return;);
 
 }

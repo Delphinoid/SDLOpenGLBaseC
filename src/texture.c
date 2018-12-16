@@ -16,7 +16,7 @@
 
 /** Maybe remove printf()s? **/
 
-void tInit(texture *tex){
+void tInit(texture *const restrict tex){
 	tex->id = 0;
 	tex->format = 0;
 	tex->width = 0;
@@ -76,7 +76,7 @@ static void tInitFiltering(int_least8_t filtering, const int_least8_t mips){
 
 }
 
-static SDL_Surface *tLoadImage(const char *path){
+static SDL_Surface *tLoadImage(const char *const restrict path){
 	return IMG_Load(path);
 }
 
@@ -87,7 +87,7 @@ static GLuint tCreate(){
 	return id;
 }
 
-return_t tLoad(texture *tex, const char *prgPath, const char *filePath){
+return_t tLoad(texture *const restrict tex, const char *const restrict prgPath, const char *const restrict filePath){
 
 	GLenum glError;
 	SDL_Surface *image = NULL;
@@ -158,7 +158,7 @@ return_t tLoad(texture *tex, const char *prgPath, const char *filePath){
 				if(mipNum < 32){
 					// Loads start and end textures, start and end subframes and the frame delays.
 					int i;
-					char *token = strtok(line+4, "/");
+					const char *token = strtok(line+4, "/");
 					for(i = 0; i < 4; ++i){
 						mips[mipNum][i] = strtol(token, NULL, 0);
 						token = strtok(NULL, "/");
@@ -241,10 +241,10 @@ return_t tLoad(texture *tex, const char *prgPath, const char *filePath){
 	}else{
 
 		GLint i = 0;
-		byte_t *pixels = (byte_t *)image->pixels;
+		const byte_t *pixels = (byte_t *)image->pixels;
 		byte_t *mipmap = memAllocate(mips[0][2] * mips[0][3] * bytes);
-		GLsizei *mipCurrent = &mips[0][0];
-		GLsizei *mipLast = &mips[mipNum][4];
+		const GLsizei *mipCurrent = &mips[0][0];
+		const GLsizei *const mipLast = &mips[mipNum][4];
 		int y;
 
 		tex->width = mips[0][2];
@@ -288,7 +288,7 @@ return_t tLoad(texture *tex, const char *prgPath, const char *filePath){
 
 }
 
-return_t tDefault(texture *tex){
+return_t tDefault(texture *const restrict tex){
 
 	GLenum glError;
 	GLsizei pixels[1024];
@@ -349,7 +349,7 @@ return_t tDefault(texture *tex){
 
 }
 
-void tDelete(texture *tex){
+void tDelete(texture *const restrict tex){
 	if(tex->id != 0){
 		glDeleteTextures(1, &tex->id);
 		tex->id = 0;

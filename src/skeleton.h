@@ -62,7 +62,7 @@ typedef struct {
 // Animation fragment, containing an animation pointer, an animator, a bone lookup and a blend.
 typedef struct {
 
-	sklAnim *animation;
+	const sklAnim *animation;
 	animationInstance animator;
 	/** Really need to move animBoneLookup. **/
 	//boneIndex_t animBoneLookup[SKELETON_MAX_BONE_NUM];  // Which bone in skeletonState each bone in currentAnim corresponds to.
@@ -92,40 +92,40 @@ typedef struct {
 typedef struct {
 	sklAnimInstance *animations;
 	float timeMod;
-	skeleton *skl;
+	const skeleton *skl;
 } sklInstance;
 
-void sklInit(skeleton *skl);
-return_t sklLoad(skeleton *skl, const char *prgPath, const char *filePath);
-return_t sklDefault(skeleton *skl);
+void sklInit(skeleton *const restrict skl);
+return_t sklLoad(skeleton *const restrict skl, const char *const restrict prgPath, const char *const restrict filePath);
+return_t sklDefault(skeleton *const restrict skl);
 /** If we're sticking with fixed bone lookups, change the return value to void. **/
 //return_t sklGenerateLookup(const skeleton *skl1, const skeleton *skl2, uint_least8_t *lookup);
-boneIndex_t sklFindBone(const skeleton *skl, const boneIndex_t id, const char *name);
-void sklDelete(skeleton *skl);
+boneIndex_t sklFindBone(const skeleton *const restrict skl, const boneIndex_t id, const char *const restrict name);
+void sklDelete(skeleton *const restrict skl);
 
-void sklaInit(sklAnim *skla);
-return_t sklaLoad(sklAnim *skla, const char *prgPath, const char *filePath);
-return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, const char *filePath);
-boneIndex_t sklaFindBone(const sklAnim *skla, const boneIndex_t id, const char *name);
-void sklaDelete(sklAnim *skla);
+void sklaInit(sklAnim *const restrict skla);
+return_t sklaLoad(sklAnim *const restrict skla, const char *const restrict prgPath, const char *const restrict filePath);
+return_t sklaLoadSMD(sklAnim *const restrict skla, const skeleton *const restrict skl, const char *const restrict prgPath, const char *const restrict filePath);
+boneIndex_t sklaFindBone(const sklAnim *const restrict skla, const boneIndex_t id, const char *const restrict name);
+void sklaDelete(sklAnim *const restrict skla);
 
-void sklaiInit(sklAnimInstance *sklai);
-void sklaiSetType(sklAnimInstance *sklai, const flags_t additive);
-return_t sklaiChange(sklAnimInstance *sklai, const skeleton *skl, sklAnim *anim, const frameIndex_t frame, const float blendTime);
-void sklaiClear(sklAnimInstance *sklai);
-void sklaiDelete(sklAnimInstance *sklai);
+void sklaiInit(sklAnimInstance *const restrict sklai);
+void sklaiSetType(sklAnimInstance *const restrict sklai, const flags_t additive);
+return_t sklaiChange(sklAnimInstance *const restrict sklai, const skeleton *const restrict skl, sklAnim *const restrict anim, const frameIndex_t frame, const float blendTime);
+void sklaiClear(sklAnimInstance *const restrict sklai);
+void sklaiDelete(sklAnimInstance *const restrict sklai);
 
-return_t skliInit(sklInstance *skli, skeleton *skl, const animIndex_t animationCapacity);
-return_t skliLoad(sklInstance *skli, const char *prgPath, const char *filePath);
-sklAnimInstance *skliAnimationNew(sklInstance *skli);
-void skliAnimationDelete(sklInstance *skli, sklAnimInstance *anim, sklAnimInstance *previous);
-void skliUpdateAnimations(sklInstance *skli, const float elapsedTime, const float interpT);
+return_t skliInit(sklInstance *const restrict skli, const skeleton *const restrict skl, const animIndex_t animationCapacity);
+return_t skliLoad(sklInstance *const restrict skli, const char *const restrict prgPath, const char *const restrict filePath);
+sklAnimInstance *skliAnimationNew(sklInstance *const restrict skli);
+void skliAnimationDelete(sklInstance *const restrict skli, sklAnimInstance *const restrict anim, sklAnimInstance *const restrict previous);
+void skliUpdateAnimations(sklInstance *const restrict skli, const float elapsedTime, const float interpT);
 //void skliGenerateBoneState(sklInstance *skli, bone *boneState, const boneIndex_t boneID);
-void skliGenerateBoneState(const sklInstance *skli, const boneIndex_t id, const char *name, bone *state);
+void skliGenerateBoneState(const sklInstance *const restrict skli, const boneIndex_t id, const char *const restrict name, bone *const restrict state);
 ///void skliSetAnimationType(sklInstance *skli, const animIndex_t slot, const flags_t additive);
 ///return_t skliChangeAnimation(sklInstance *skli, const animIndex_t slot, sklAnim *anim, const frameIndex_t frame, const float blendTime);
 ///void skliClearAnimation(sklInstance *skli, const animIndex_t slot);
 ///return_t skliStateCopy(sklInstance *o, sklInstance *c);
-void skliDelete(sklInstance *skli);
+void skliDelete(sklInstance *const restrict skli);
 
 #endif

@@ -96,17 +96,37 @@ typedef struct {
 #define memSLinkBlockStatus(block)  memSLinkDataGetActiveMasked(block)
 #define memSLinkBlockNext(array, i) (void *)((byte_t *)i + (array).block)
 
-void memSLinkInit(memorySLink *array);
-void *memSLinkCreate(memorySLink *array, void *start, const size_t bytes, const size_t length);
-void *memSLinkAllocate(memorySLink *array);
-void *memSLinkPrepend(memorySLink *array, void **start);
-void *memSLinkAppend(memorySLink *array, void **start);
-void *memSLinkInsertBefore(memorySLink *array, void **start, void *element, void *previous);
-void *memSLinkInsertAfter(memorySLink *array, void *element);
-void memSLinkFree(memorySLink *array, void **start, void *element, void *previous);
+void memSLinkInit(memorySLink *const restrict array);
+void *memSLinkCreate(memorySLink *const restrict array, void *const start, const size_t bytes, const size_t length);
+void *memSLinkAllocate(memorySLink *const restrict array);
+void *memSLinkPrepend(memorySLink *const restrict array, void **const restrict start);
+void *memSLinkAppend(memorySLink *const restrict array, const void **const start);
+void *memSLinkInsertBefore(memorySLink *const restrict array, const void **const restrict start, void *const element, const void *const restrict previous);
+void *memSLinkInsertAfter(memorySLink *const restrict array, void *const element);
+void memSLinkFree(memorySLink *const restrict array, const void **const restrict start, void *const element, const void *const restrict previous);
 void *memSLinkSetupMemory(void *start, const size_t bytes, const size_t length);
-void memSLinkClear(memorySLink *array);
-void *memSLinkExtend(memorySLink *array, void *start, const size_t bytes, const size_t length);
-void memSLinkDelete(memorySLink *array);
+void memSLinkClear(memorySLink *const restrict array);
+void *memSLinkExtend(memorySLink *const restrict array, void *const start, const size_t bytes, const size_t length);
+void memSLinkDelete(memorySLink *const restrict array);
+
+#define MEMORY_SLINK_LOOP_BEGIN(allocator, n, type)                 \
+	{                                                               \
+		const memoryRegion *__region_##n = allocator.region;        \
+		type n;                                                     \
+		do {                                                        \
+			n = memSLinkFirst(__region_##n);                        \
+			while(n < (type)memAllocatorEnd(__region_##n)){         \
+				const byte_t __flag_##n = memSLinkBlockStatus(n);   \
+				if(__flag_##n == MEMORY_SLINK_BLOCK_ACTIVE){
+
+#define MEMORY_SLINK_LOOP_END(allocator, n, earlyexit)              \
+				}else if(__flag_##n == MEMORY_SLINK_BLOCK_INVALID){ \
+					earlyexit                                       \
+				}                                                   \
+				n = memSLinkBlockNext(allocator, n);                \
+			}                                                       \
+			__region_##n = memAllocatorNext(__region_##n);          \
+		} while(__region_##n != NULL);                              \
+	}
 
 #endif

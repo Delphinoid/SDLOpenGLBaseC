@@ -13,14 +13,14 @@ typedef GLsizei vertexIndexNum_t;
 
 typedef struct {
 	float distance;
-	void *offset;
+	const void *offset;  // Technically a uintptr_t, but stored as a void pointer for OpenGL.
 	vertexIndexNum_t indexNum;
 } mdlLOD;
 
 typedef struct {
 
 	/* Skeleton associated with the model. */
-	skeleton *skl;
+	const skeleton *skl;
 
 	/* Model LODs. */
 	// The distance of the first LOD will be 0,
@@ -39,11 +39,11 @@ typedef struct {
 
 } model;
 
-void mdlInit(model *mdl);
-return_t mdlLoad(model *mdl, const char *prgPath, const char *filePath);
-return_t mdlDefault(model *mdl);
-return_t mdlCreateSprite(model *mdl);
-void mdlFindCurrentLOD(model *mdl, GLsizei *indexNum, void **offset, const float distance, size_t bias);
-void mdlDelete(model *mdl);
+void mdlInit(model *const restrict mdl);
+return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, const char *const restrict filePath);
+return_t mdlDefault(model *const restrict mdl);
+return_t mdlCreateSprite(model *const restrict mdl);
+void mdlFindCurrentLOD(const model *const restrict mdl, GLsizei *const restrict indexNum, const void **const restrict offset, const float distance, size_t bias);
+void mdlDelete(model *const restrict mdl);
 
 #endif

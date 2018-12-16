@@ -3,13 +3,13 @@
 
 /** Move and rename this when possible. Should implement collision pairing. **/
 
-void physIslandInit(physIsland *island){
+void physIslandInit(physIsland *const restrict island){
 	island->bodyNum = 0;
 	island->bodyCapacity = 0;
 	island->bodies = NULL;
 }
 
-return_t physIslandAddBody(physIsland *island, physRBInstance *prbi){
+return_t physIslandAddBody(physIsland *const restrict island, physRBInstance *const prbi){
 	if(prbi->local != NULL && prbi->local->colliders){
 		if(island->bodyNum >= island->bodyCapacity){
 			/* Allocate room for more bodies. */
@@ -40,7 +40,7 @@ return_t physIslandAddBody(physIsland *island, physRBInstance *prbi){
 	return 0;
 }
 
-/*return_t physIslandAddObject(physIsland *island, objInstance *obji){
+/*return_t physIslandAddObject(physIsland *const restrict island, objInstance *const restrict obji){
 	if(obji->skeletonBodies != NULL){
 		size_t i;
 		for(i = 0; i < obji->skl->boneNum; ++i){
@@ -61,7 +61,7 @@ return_t physIslandAddBody(physIsland *island, physRBInstance *prbi){
 	return 1;
 }*/
 
-void physIslandUpdate(physIsland *island, const float dt){
+void physIslandUpdate(physIsland *const restrict island, const float dt){
 
 	physicsBodyIndex_t i;
 	physicsBodyIndex_t del = 0;  // Number of bodies that have been deleted.
@@ -101,13 +101,13 @@ void physIslandUpdate(physIsland *island, const float dt){
 
 }
 
-void physIslandBroadPhase(physIsland *island, const float dt, physicsBodyIndex_t *pairArraySize, physRigidBody ***pairArray){
+void physIslandBroadPhase(physIsland *const restrict island, const float dt, physicsBodyIndex_t *const restrict pairArraySize, physRigidBody ***const restrict pairArray){
 
 
 
 }
 
-return_t physIslandSimulate(physIsland *island, const float dt){
+return_t physIslandSimulate(physIsland *const restrict island, const float dt){
 
 	//size_t pairArraySize = 0;
 	//physRigidBody **pairArray = memAllocate(2*sizeof(physRigidBody));
@@ -149,7 +149,7 @@ return_t physIslandSimulate(physIsland *island, const float dt){
 
 }
 
-void physIslandDelete(physIsland *island){
+void physIslandDelete(physIsland *const restrict island){
 	if(island->bodies != NULL){
 		memFree(island->bodies);
 	}

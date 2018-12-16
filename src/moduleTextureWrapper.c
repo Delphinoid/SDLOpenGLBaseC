@@ -7,7 +7,7 @@
 memoryPool __TextureWrapperResourceArray;  // Contains textureWrappers.
 
 return_t moduleTextureWrapperResourcesInit(){
-	void *memory = memAllocate(
+	void *const memory = memAllocate(
 		memPoolAllocationSize(
 			NULL,
 			RESOURCE_DEFAULT_TEXTURE_WRAPPER_SIZE,
@@ -60,7 +60,7 @@ __FORCE_INLINE__ textureWrapper *moduleTextureWrapperAllocate(){
 	textureWrapper *r = memPoolAllocate(&__TextureWrapperResourceArray);
 	if(r == NULL){
 		// Attempt to extend the allocator.
-		void *memory = memAllocate(
+		void *const memory = memAllocate(
 			memPoolAllocationSize(
 				NULL,
 				RESOURCE_DEFAULT_TEXTURE_WRAPPER_SIZE,
@@ -73,57 +73,35 @@ __FORCE_INLINE__ textureWrapper *moduleTextureWrapperAllocate(){
 	}
 	return r;
 }
-__FORCE_INLINE__ void moduleTextureWrapperFree(textureWrapper *resource){
+__FORCE_INLINE__ void moduleTextureWrapperFree(textureWrapper *const restrict resource){
 	twDelete(resource);
 	memPoolFree(&__TextureWrapperResourceArray, (void *)resource);
 }
-textureWrapper *moduleTextureWrapperFind(const char *name){
+textureWrapper *moduleTextureWrapperFind(const char *const restrict name){
 
-	memoryRegion *region = __TextureWrapperResourceArray.region;
-	textureWrapper *i;
-	do {
-		i = memPoolFirst(region);
-		while(i < (textureWrapper *)memAllocatorEnd(region)){
-			byte_t flag = memPoolBlockStatus(i);
-			if(flag == MEMORY_POOL_BLOCK_ACTIVE){
+	MEMORY_POOL_LOOP_BEGIN(__TextureWrapperResourceArray, i, textureWrapper *);
 
-				// Compare the resources' names.
-				if(strcmp(name, i->name) == 0){
-					return i;
-				}
-
-			}else if(flag == MEMORY_POOL_BLOCK_INVALID){
-				return NULL;
-			}
-			i = memPoolBlockNext(__TextureWrapperResourceArray, i);
+		// Compare the resources' names.
+		if(strcmp(name, i->name) == 0){
+			return i;
 		}
-		region = memAllocatorNext(region);
-	} while(region != NULL);
+
+	MEMORY_POOL_LOOP_END(__TextureWrapperResourceArray, i, return NULL;);
 
 	return NULL;
 
 }
 void moduleTextureWrapperClear(){
 
-	memoryRegion *region = __TextureWrapperResourceArray.region;
-	textureWrapper *i = (textureWrapper *)((byte_t *)memPoolFirst(region) + RESOURCE_TEXTURE_WRAPPER_CONSTANTS * RESOURCE_TEXTURE_WRAPPER_BLOCK_SIZE);
-	for(;;){
-		while(i < (textureWrapper *)memAllocatorEnd(region)){
-			byte_t flag = memPoolBlockStatus(i);
-			if(flag == MEMORY_POOL_BLOCK_ACTIVE){
+	MEMORY_POOL_OFFSET_LOOP_BEGIN(
+		__TextureWrapperResourceArray, i, textureWrapper *,
+		__TextureWrapperResourceArray.region,
+		(byte_t *)memPoolFirst(__TextureWrapperResourceArray.region) + RESOURCE_TEXTURE_WRAPPER_CONSTANTS * RESOURCE_TEXTURE_WRAPPER_BLOCK_SIZE
+	);
 
-				moduleTextureWrapperFree(i);
+		moduleTextureWrapperFree(i);
 
-			}else if(flag == MEMORY_POOL_BLOCK_INVALID){
-				return;
-			}
-			i = memPoolBlockNext(__TextureWrapperResourceArray, i);
-		}
-		region = memAllocatorNext(region);
-		if(region == NULL){
-			return;
-		}
-		i = memPoolFirst(region);
-	}
+	MEMORY_POOL_OFFSET_LOOP_END(__TextureWrapperResourceArray, i, return;);
+
 
 }

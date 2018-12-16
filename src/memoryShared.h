@@ -19,8 +19,8 @@ typedef unsigned char byte_t;
 typedef signed char   signed_byte_t;
 
 void *memHeapLowLevelAllocate(const size_t bytes);
-void *memHeapLowLevelReallocate(void *block, const size_t bytes);
-int memHeapLowLevelFree(void *block);
+void *memHeapLowLevelReallocate(void *const restrict block, const size_t bytes);
+int memHeapLowLevelFree(void *const restrict block);
 
 // Defines the region in memory that an
 // allocator consumes. The end of the
@@ -35,9 +35,9 @@ typedef struct memoryRegion {
 #define memAllocatorEnd(region)  ((byte_t *)(region))
 #define memAllocatorNext(region) (region)->next
 
-void memRegionExtend(memoryRegion **first, memoryRegion *region, byte_t *data);
-void memRegionAppend(memoryRegion **first, memoryRegion *region, byte_t *data);
-void memRegionPrepend(memoryRegion **first, memoryRegion *region, byte_t *data);
-void memRegionFree(memoryRegion *region);
+void memRegionExtend(memoryRegion **first, memoryRegion *const region, byte_t *const data);
+void memRegionAppend(memoryRegion **first, memoryRegion *const region, byte_t *const data);
+void memRegionPrepend(memoryRegion **first, memoryRegion *const region, byte_t *const data);
+void memRegionFree(const memoryRegion *region);
 
 #endif

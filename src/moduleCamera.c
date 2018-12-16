@@ -4,17 +4,17 @@
 #include "inline.h"
 #include <string.h>
 
-memoryList __CameraResourceArray;  // Contains scenes.
+memoryPool __CameraResourceArray;  // Contains cameras.
 
 return_t moduleCameraResourcesInit(){
-	void *memory = memAllocate(
-		memListAllocationSize(
+	void *const memory = memAllocate(
+		memPoolAllocationSize(
 			NULL,
 			RESOURCE_DEFAULT_CAMERA_SIZE,
 			RESOURCE_DEFAULT_CAMERA_NUM
 		)
 	);
-	if(memListCreate(&__CameraResourceArray, memory, RESOURCE_DEFAULT_CAMERA_SIZE, RESOURCE_DEFAULT_CAMERA_NUM) == NULL){
+	if(memPoolCreate(&__CameraResourceArray, memory, RESOURCE_DEFAULT_CAMERA_SIZE, RESOURCE_DEFAULT_CAMERA_NUM) == NULL){
 		return -1;
 	}
 	return 1;
@@ -42,42 +42,44 @@ void moduleCameraResourcesDelete(){
 }
 
 __FORCE_INLINE__ camera *moduleCameraAllocateStatic(){
-	return memListAllocate(&__CameraResourceArray);
+	return memPoolAllocate(&__CameraResourceArray);
 }
 __FORCE_INLINE__ camera *moduleCameraAllocate(){
-	camera *r = memListAllocate(&__CameraResourceArray);
+	camera *r = memPoolAllocate(&__CameraResourceArray);
 	if(r == NULL){
 		// Attempt to extend the allocator.
-		void *memory = memAllocate(
-			memListAllocationSize(
+		void *const memory = memAllocate(
+			memPoolAllocationSize(
 				NULL,
 				RESOURCE_DEFAULT_CAMERA_SIZE,
 				RESOURCE_DEFAULT_CAMERA_NUM
 			)
 		);
-		if(memListExtend(&__CameraResourceArray, memory, RESOURCE_DEFAULT_CAMERA_SIZE, RESOURCE_DEFAULT_CAMERA_NUM)){
-			r = memListAllocate(&__CameraResourceArray);
+		if(memPoolExtend(&__CameraResourceArray, memory, RESOURCE_DEFAULT_CAMERA_SIZE, RESOURCE_DEFAULT_CAMERA_NUM)){
+			r = memPoolAllocate(&__CameraResourceArray);
 		}
 	}
 	return r;
 }
-__FORCE_INLINE__ void moduleCameraFree(camera *resource){
+void moduleCameraPrepare(){
+
+	MEMORY_POOL_LOOP_BEGIN(__CameraResourceArray, i, camera *);
+
+		camResetInterpolation(i);
+
+	MEMORY_POOL_LOOP_END(__CameraResourceArray, i, return;);
+
+}
+__FORCE_INLINE__ void moduleCameraFree(camera *const restrict resource){
 	camDelete(resource);
-	memListFree(&__CameraResourceArray, (void *)resource);
+	memPoolFree(&__CameraResourceArray, (void *)resource);
 }
 void moduleCameraClear(){
 
-	memoryRegion *region = __CameraResourceArray.region;
-	camera *i;
-	do {
-		i = memListFirst(region);
-		while(i < (camera *)memAllocatorEnd(region)){
+	MEMORY_POOL_LOOP_BEGIN(__CameraResourceArray, i, camera *);
 
-			moduleCameraFree(i);
-			i = memListBlockNext(__CameraResourceArray, i);
+		moduleCameraFree(i);
 
-		}
-		region = memAllocatorNext(region);
-	} while(region != NULL);
+	MEMORY_POOL_LOOP_END(__CameraResourceArray, i, return;);
 
 }

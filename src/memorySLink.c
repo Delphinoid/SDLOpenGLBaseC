@@ -1,12 +1,12 @@
 #include "memorySLink.h"
 
-void memSLinkInit(memorySLink *array){
+void memSLinkInit(memorySLink *const restrict array){
 	array->block = 0;
 	array->free = NULL;
 	array->region = NULL;
 }
 
-void *memSLinkCreate(memorySLink *array, void *start, const size_t bytes, const size_t length){
+void *memSLinkCreate(memorySLink *const restrict array, void *const start, const size_t bytes, const size_t length){
 
 	/*
 	** Initialize an array allocator with "length"-many
@@ -30,7 +30,7 @@ void *memSLinkCreate(memorySLink *array, void *start, const size_t bytes, const 
 
 }
 
-void *memSLinkAllocate(memorySLink *array){
+void *memSLinkAllocate(memorySLink *const restrict array){
 
 	/*
 	** Retrieves a new block of memory from the array
@@ -38,7 +38,7 @@ void *memSLinkAllocate(memorySLink *array){
 	** Unspecified behaviour with variable element sizes.
 	*/
 
-	byte_t *r = array->free;
+	byte_t *const r = array->free;
 	if(r){
 		array->free = memSLinkDataGetNextFreeMasked(r);
 		memSLinkDataGetNext(r) = NULL;
@@ -47,13 +47,13 @@ void *memSLinkAllocate(memorySLink *array){
 
 }
 
-void *memSLinkPrepend(memorySLink *array, void **start){
+void *memSLinkPrepend(memorySLink *const restrict array, void **const restrict start){
 
 	/*
 	** Prepends a new block to the array.
 	*/
 
-	byte_t *r = array->free;
+	byte_t *const r = array->free;
 	if(r){
 		array->free = memSLinkDataGetNextFreeMasked(r);
 		// Set the new element's pointers.
@@ -65,13 +65,13 @@ void *memSLinkPrepend(memorySLink *array, void **start){
 
 }
 
-void *memSLinkAppend(memorySLink *array, void **start){
+void *memSLinkAppend(memorySLink *const restrict array, const void **const start){
 
 	/*
 	** Appends a new block to the array.
 	*/
 
-	byte_t *r = array->free;
+	byte_t *const r = array->free;
 	if(r){
 		byte_t **next = (byte_t **)start;
 		while(*next != NULL){
@@ -87,13 +87,13 @@ void *memSLinkAppend(memorySLink *array, void **start){
 
 }
 
-void *memSLinkInsertBefore(memorySLink *array, void **start, void *element, void *previous){
+void *memSLinkInsertBefore(memorySLink *const restrict array, const void **const restrict start, void *const element, const void *const restrict previous){
 
 	/*
 	** Inserts a new item before the specified element.
 	*/
 
-	byte_t *r = array->free;
+	byte_t *const r = array->free;
 	if(r){
 		array->free = memSLinkDataGetNextFreeMasked(r);
 		// Set the new element's next pointer.
@@ -109,13 +109,13 @@ void *memSLinkInsertBefore(memorySLink *array, void **start, void *element, void
 
 }
 
-void *memSLinkInsertAfter(memorySLink *array, void *element){
+void *memSLinkInsertAfter(memorySLink *const restrict array, void *const element){
 
 	/*
 	** Inserts a new item after the specified element.
 	*/
 
-	byte_t *r = array->free;
+	byte_t *const r = array->free;
 	if(r){
 		byte_t **next = memSLinkDataGetNextPointer(element);
 		array->free = memSLinkDataGetNextFreeMasked(r);
@@ -130,7 +130,7 @@ void *memSLinkInsertAfter(memorySLink *array, void *element){
 
 }
 
-void memSLinkFree(memorySLink *array, void **start, void *element, void *previous){
+void memSLinkFree(memorySLink *const restrict array, const void **const restrict start, void *const element, const void *const restrict previous){
 
 	/*
 	** Removes an element from an array
@@ -154,9 +154,8 @@ void *memSLinkSetupMemory(void *start, const size_t bytes, const size_t length){
 	const size_t blockSize = memSLinkBlockSize(bytes);
 	byte_t *block;
 	byte_t *next;
-	byte_t *end;
+	const byte_t *const end = (byte_t *)start + memSLinkAllocationSize(start, bytes, length) - sizeof(memoryRegion);
 
-	end = (byte_t *)start + memSLinkAllocationSize(start, bytes, length) - sizeof(memoryRegion);
 	start = memSLinkAlignStartData(start);
 
 	block = start;
@@ -177,7 +176,7 @@ void *memSLinkSetupMemory(void *start, const size_t bytes, const size_t length){
 
 }
 
-void memSLinkClear(memorySLink *array){
+void memSLinkClear(memorySLink *const restrict array){
 
 	byte_t *block = memSLinkAlignStartData(array->region->start);
 	byte_t *next = block + array->block;
@@ -197,7 +196,7 @@ void memSLinkClear(memorySLink *array){
 
 }
 
-void *memSLinkExtend(memorySLink *array, void *start, const size_t bytes, const size_t length){
+void *memSLinkExtend(memorySLink *const restrict array, void *const start, const size_t bytes, const size_t length){
 
 	/*
 	** Extends the memory allocator.
@@ -208,7 +207,7 @@ void *memSLinkExtend(memorySLink *array, void *start, const size_t bytes, const 
 
 	if(start){
 
-		memoryRegion *newRegion = (memoryRegion *)((byte_t *)start + memSLinkAllocationSize(start, bytes, length) - sizeof(memoryRegion));
+		memoryRegion *const newRegion = (memoryRegion *)((byte_t *)start + memSLinkAllocationSize(start, bytes, length) - sizeof(memoryRegion));
 		memRegionPrepend(&array->region, newRegion, start);
 
 		memSLinkSetupMemory(start, bytes, length);
@@ -220,6 +219,6 @@ void *memSLinkExtend(memorySLink *array, void *start, const size_t bytes, const 
 
 }
 
-void memSLinkDelete(memorySLink *array){
+void memSLinkDelete(memorySLink *const restrict array){
 	memRegionFree(array->region);
 }

@@ -6,12 +6,12 @@
 #include "vec4.h"
 #include "inline.h"
 
-void rndrInit(renderable *rndr){
+void rndrInit(renderable *const restrict rndr){
 	rndr->mdl = NULL;
 	rndr->tw = NULL;
 }
 
-void rndriInit(rndrInstance *rndri){
+void rndriInit(rndrInstance *const restrict rndri){
 	rndri->mdl = NULL;
 	twiInit(&rndri->twi, NULL);
 	rndri->alpha = 1.f;
@@ -19,7 +19,7 @@ void rndriInit(rndrInstance *rndri){
 	rndri->alphaPrevious = 1.f;
 }
 
-void rndriInstantiate(rndrInstance *rndri, const renderable *base){
+void rndriInstantiate(rndrInstance *const restrict rndri, const renderable *const base){
 	rndri->mdl = base->mdl;
 	twiInit(&rndri->twi, base->tw);
 	rndri->alpha = 1.f;
@@ -27,7 +27,7 @@ void rndriInstantiate(rndrInstance *rndri, const renderable *base){
 	rndri->alphaPrevious = 1.f;
 }
 
-__FORCE_INLINE__ void rndriUpdate(rndrInstance *rndri, const float elapsedTime){
+__FORCE_INLINE__ void rndriUpdate(rndrInstance *const restrict rndri, const float elapsedTime){
 	twiAnimate(&rndri->twi, elapsedTime);
 	rndri->alphaPrevious = rndri->alphaCurrent;
 	rndri->alphaCurrent = rndri->alpha;
@@ -85,7 +85,7 @@ return_t rndrCopy(renderable *o, renderable *c){
 
 }**/
 
-void rndriDelete(rndrInstance *rndri){
+void rndriDelete(rndrInstance *const restrict rndri){
 	/**size_t i;
 	if(rndr->parentBoneLookup != NULL){
 		memFree(rndr->parentBoneLookup);
@@ -108,7 +108,7 @@ void rndriDelete(rndrInstance *rndri){
 
 
 
-void rndrConfigInit(rndrConfig *rc){
+void rndrConfigInit(rndrConfig *const restrict rc){
 	//iVec3Init(&rc->position, 0.f, 0.f, 0.f);
 	//iQuatInit(&rc->orientation);
 	iVec3Init(&rc->pivot, 0.f, 0.f, 0.f);
@@ -120,7 +120,7 @@ void rndrConfigInit(rndrConfig *rc){
 	rc->flags = 0;
 }
 
-void rndrConfigStateCopy(rndrConfig *o, rndrConfig *c){
+void rndrConfigStateCopy(rndrConfig *const restrict o, rndrConfig *const restrict c){
 	//c->position = o->position;
 	//c->orientation = o->orientation;
 	c->pivot = o->pivot;
@@ -132,7 +132,7 @@ void rndrConfigStateCopy(rndrConfig *o, rndrConfig *c){
 	c->flags = o->flags;
 }
 
-void rndrConfigResetInterpolation(rndrConfig *rc){
+void rndrConfigResetInterpolation(rndrConfig *const restrict rc){
 	//iVec3ResetInterp(&rc->position);
 	//iQuatResetInterp(&rc->orientation);
 	iVec3ResetInterp(&rc->pivot);
@@ -142,7 +142,7 @@ void rndrConfigResetInterpolation(rndrConfig *rc){
 	iFloatResetInterp(&rc->alpha);
 }
 
-return_t rndrConfigRenderUpdate(rndrConfig *rc, const float interpT){
+return_t rndrConfigRenderUpdate(rndrConfig *const restrict rc, const float interpT){
 
 	// Return whether or not anything has changed.
 	/** Remove alpha updates from here once rndrRenderMethod() is being used by everything. **/

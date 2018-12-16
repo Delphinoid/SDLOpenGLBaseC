@@ -23,8 +23,8 @@ model *moduleModelGetDefault();
 model *moduleModelGetSprite();
 model *moduleModelAllocateStatic();
 model *moduleModelAllocate();
-void moduleModelFree(model *resource);
-model *moduleModelFind(const char *name);
+void moduleModelFree(model *const restrict resource);
+model *moduleModelFind(const char *const restrict name);
 void moduleModelClear();
 
 #endif

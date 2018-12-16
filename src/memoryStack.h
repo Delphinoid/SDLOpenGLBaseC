@@ -26,12 +26,12 @@ typedef struct {
 #define memStackBlockSize(bytes) bytes
 #define memStackAllocationSize(start, bytes, length) ((length > 0 ? memStackBlockSize(bytes) * length : bytes) + sizeof(memoryRegion))
 
-void memStackInit(memoryStack *stack);
-void *memStackCreate(memoryStack *stack, void *start, const size_t bytes, const size_t length);
-void *memStackPush(memoryStack *stack, const size_t bytes);
-void memStackPop(memoryStack *stack, const size_t bytes);
-//void memStackShrink(memoryStack *stack, const size_t bytes);
-void memStackClear(memoryStack *stack);
-void memStackDelete(memoryStack *stack);
+void memStackInit(memoryStack *const restrict stack);
+void *memStackCreate(memoryStack *const restrict stack, void *const start, const size_t bytes, const size_t length);
+void *memStackPush(memoryStack *const restrict stack, const size_t bytes);
+void memStackPop(memoryStack *const restrict stack, const size_t bytes);
+//void memStackShrink(memoryStack *const restrict stack, const size_t bytes);
+void memStackClear(memoryStack *const restrict stack);
+void memStackDelete(memoryStack *const restrict stack);
 
 #endif

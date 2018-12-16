@@ -74,7 +74,7 @@ __FORCE_INLINE__ object *moduleObjectAllocate(){
 	object *r = memPoolAllocate(&__ObjectResourceArray);
 	if(r == NULL){
 		// Attempt to extend the allocator.
-		void *memory = memAllocate(
+		void *const memory = memAllocate(
 			memPoolAllocationSize(
 				NULL,
 				RESOURCE_DEFAULT_OBJECT_SIZE,
@@ -87,55 +87,31 @@ __FORCE_INLINE__ object *moduleObjectAllocate(){
 	}
 	return r;
 }
-__FORCE_INLINE__ void moduleObjectFree(object *resource){
+__FORCE_INLINE__ void moduleObjectFree(object *const restrict resource){
 	objDelete(resource);
 	memPoolFree(&__ObjectResourceArray, (void *)resource);
 }
-object *moduleObjectFind(const char *name){
+object *moduleObjectFind(const char *const restrict name){
 
-	memoryRegion *region = __ObjectResourceArray.region;
-	object *i;
-	do {
-		i = memPoolFirst(region);
-		while(i < (object *)memAllocatorEnd(region)){
-			const byte_t flag = memPoolBlockStatus(i);
-			if(flag == MEMORY_POOL_BLOCK_ACTIVE){
+	MEMORY_POOL_LOOP_BEGIN(__ObjectResourceArray, i, object *);
 
-				// Compare the resources' names.
-				if(strcmp(name, i->name) == 0){
-					return i;
-				}
-
-			}else if(flag == MEMORY_POOL_BLOCK_INVALID){
-				return NULL;
-			}
-			i = memPoolBlockNext(__ObjectResourceArray, i);
+		// Compare the resources' names.
+		if(strcmp(name, i->name) == 0){
+			return i;
 		}
-		region = memAllocatorNext(region);
-	} while(region != NULL);
+
+	MEMORY_POOL_LOOP_END(__ObjectResourceArray, i, return NULL;);
 
 	return NULL;
 
 }
 void moduleObjectClear(){
 
-	memoryRegion *region = __ObjectResourceArray.region;
-	object *i;
-	do {
-		i = memPoolFirst(region);
-		while(i < (object *)memAllocatorEnd(region)){
-			const byte_t flag = memPoolBlockStatus(i);
-			if(flag == MEMORY_POOL_BLOCK_ACTIVE){
+	MEMORY_POOL_LOOP_BEGIN(__ObjectResourceArray, i, object *);
 
-				moduleObjectFree(i);
+		moduleObjectFree(i);
 
-			}else if(flag == MEMORY_POOL_BLOCK_INVALID){
-				return;
-			}
-			i = memPoolBlockNext(__ObjectResourceArray, i);
-		}
-		region = memAllocatorNext(region);
-	} while(region != NULL);
+	MEMORY_POOL_LOOP_END(__ObjectResourceArray, i, return;);
 
 }
 
@@ -146,7 +122,7 @@ __FORCE_INLINE__ objInstance *moduleObjectInstanceAllocate(){
 	objInstance *r = memPoolAllocate(&__ObjectInstanceResourceArray);
 	if(r == NULL){
 		// Attempt to extend the allocator.
-		void *memory = memAllocate(
+		void *const memory = memAllocate(
 			memPoolAllocationSize(
 				NULL,
 				RESOURCE_DEFAULT_OBJECT_INSTANCE_SIZE,
@@ -162,28 +138,16 @@ __FORCE_INLINE__ objInstance *moduleObjectInstanceAllocate(){
 __FORCE_INLINE__ objInstance *moduleObjectInstanceIndex(const size_t i){
 	return memPoolIndex(&__ObjectInstanceResourceArray, i);
 }
-__FORCE_INLINE__ void moduleObjectInstanceFree(objInstance *resource){
+__FORCE_INLINE__ void moduleObjectInstanceFree(objInstance *const restrict resource){
 	objiDelete(resource);
 	memPoolFree(&__ObjectInstanceResourceArray, (void *)resource);
 }
 void moduleObjectInstanceClear(){
 
-	memoryRegion *region = __ObjectInstanceResourceArray.region;
-	objInstance *i;
-	do {
-		i = memPoolFirst(region);
-		while(i < (objInstance *)memAllocatorEnd(region)){
-			const byte_t flag = memPoolBlockStatus(i);
-			if(flag == MEMORY_POOL_BLOCK_ACTIVE){
+	MEMORY_POOL_LOOP_BEGIN(__ObjectInstanceResourceArray, i, objInstance *);
 
-				moduleObjectInstanceFree(i);
+		moduleObjectInstanceFree(i);
 
-			}else if(flag == MEMORY_POOL_BLOCK_INVALID){
-				return;
-			}
-			i = memPoolBlockNext(__ObjectInstanceResourceArray, i);
-		}
-		region = memAllocatorNext(region);
-	} while(region != NULL);
+	MEMORY_POOL_LOOP_END(__ObjectInstanceResourceArray, i, return;);
 
 }

@@ -1,20 +1,21 @@
 #include "physicsCollision.h"
+#include "colliderConvexMesh.h"
 #include "mat3.h"
 #include "inline.h"
 
 #define PHYSICS_COLLIDER_DEFAULT_VERTEX_MASS 1
 
-static float physColliderGenerateMassMesh(physCollider *collider, float *vertexMassArray){
+static float physColliderGenerateMassMesh(physCollider *const restrict collider, const float *const vertexMassArray){
 
-	cMesh *cHull = (cMesh *)&collider->c.hull;
+	cMesh *const cHull = (cMesh *)&collider->c.hull;
 
 	float totalMass = 0.f;
 
 	if(cHull->vertexNum > 0){
 
-		float *m = vertexMassArray;
-		vec3 *v = cHull->vertices;
-		vec3 *vLast = &v[cHull->vertexNum];
+		const float *m = vertexMassArray;
+		const vec3 *v = cHull->vertices;
+		const vec3 *const vLast = &v[cHull->vertexNum];
 		float inverseTotalMass;
 		float vertexMass;
 
@@ -77,13 +78,13 @@ static float physColliderGenerateMassMesh(physCollider *collider, float *vertexM
 	return totalMass;
 
 }
-static void physColliderGenerateMomentMesh(const physCollider *collider, const vec3 *centroid, const float *vertexMassArray, float *inertiaTensor){
+static void physColliderGenerateMomentMesh(const physCollider *const restrict collider, const vec3 *const restrict centroid, const float *const vertexMassArray, float *const restrict inertiaTensor){
 
-	const cMesh *cHull = (const cMesh *)&collider->c.hull;
+	const cMesh *const cHull = (const cMesh *)&collider->c.hull;
 
 	const float *m = vertexMassArray;
-	vec3 *v = cHull->vertices;
-	vec3 *vLast = &v[cHull->vertexNum];
+	const vec3 *v = cHull->vertices;
+	const vec3 *const vLast = &v[cHull->vertexNum];
 
 	inertiaTensor[0] = 0.f; inertiaTensor[1] = 0.f; inertiaTensor[2] = 0.f;
 	inertiaTensor[3] = 0.f; inertiaTensor[4] = 0.f; inertiaTensor[5] = 0.f;
@@ -118,14 +119,14 @@ static void physColliderGenerateMomentMesh(const physCollider *collider, const v
 	}
 
 }
-static void physColliderUpdateMesh(physCollider *collider, const physCollider *local, const bone *configuration){
+static void physColliderUpdateMesh(physCollider *const restrict collider, const physCollider *const restrict local, const bone *const restrict configuration){
 
-	cMesh *cGlobal = (cMesh *)&collider->c.hull;
-	const cMesh *cLocal = (const cMesh *)&local->c.hull;
+	const cMesh *const cGlobal = (cMesh *)&collider->c.hull;
+	const cMesh *const cLocal = (const cMesh *)&local->c.hull;
 
-	vec3 *vLocal = cLocal->vertices;
+	const vec3 *vLocal = cLocal->vertices;
 	vec3 *vGlobal = cGlobal->vertices;
-	vec3 *vLast = &vGlobal[cGlobal->vertexNum];
+	const vec3 *vLast = &vGlobal[cGlobal->vertexNum];
 
 	// Update the collider's global centroid.
 	collider->centroid.x = local->centroid.x + configuration->position.x;
@@ -201,61 +202,78 @@ static void physColliderUpdateMesh(physCollider *collider, const physCollider *l
 
 }
 
-static float physColliderGenerateMassCapsule(physCollider *collider, float *vertexMassArray){
+static float physColliderGenerateMassCapsule(physCollider *const restrict collider, const float *const vertexMassArray){
 
 	//
 
 }
-static void physColliderGenerateMomentCapsule(const physCollider *collider, const vec3 *centroid, const float *vertexMassArray, float *inertiaTensor){
+static void physColliderGenerateMomentCapsule(const physCollider *const restrict collider, const vec3 *const restrict centroid, const float *const restrict vertexMassArray, float *const restrict inertiaTensor){
 
 	//
 
 }
-static void physColliderUpdateCapsule(physCollider *collider, const physCollider *local, const bone *configuration){
-
-	//
-
-}
-
-static float physColliderGenerateMassSphere(physCollider *collider, float *vertexMassArray){
-
-	//
-
-}
-static void physColliderGenerateMomentSphere(const physCollider *collider, const vec3 *centroid, const float *vertexMassArray, float *inertiaTensor){
-
-	//
-
-}
-static void physColliderUpdateSphere(physCollider *collider, const physCollider *local, const bone *configuration){
+static void physColliderUpdateCapsule(physCollider *const restrict collider, const physCollider *const restrict local, const bone *const restrict configuration){
 
 	//
 
 }
 
-static float physColliderGenerateMassAABB(physCollider *collider, float *vertexMassArray){
+static float physColliderGenerateMassSphere(physCollider *const restrict collider, const float *const vertexMassArray){
 
 	//
 
 }
-static void physColliderGenerateMomentAABB(const physCollider *collider, const vec3 *centroid, const float *vertexMassArray, float *inertiaTensor){
+static void physColliderGenerateMomentSphere(const physCollider *const restrict collider, const vec3 *const restrict centroid, const float *const restrict vertexMassArray, float *const restrict inertiaTensor){
 
 	//
 
 }
-static void physColliderUpdateAABB(physCollider *collider, const physCollider *local, const bone *configuration){
+static void physColliderUpdateSphere(physCollider *const restrict collider, const physCollider *const restrict local, const bone *const restrict configuration){
 
 	//
 
 }
 
-static float (* const physColliderGenerateMassJumpTable[4])(physCollider *, float *) = {
+static float physColliderGenerateMassAABB(physCollider *const restrict collider, const float *const vertexMassArray){
+
+	//
+
+}
+static void physColliderGenerateMomentAABB(const physCollider *const restrict collider, const vec3 *const restrict centroid, const float *const restrict vertexMassArray, float *const restrict inertiaTensor){
+
+	//
+
+}
+static void physColliderUpdateAABB(physCollider *const restrict collider, const physCollider *const restrict local, const bone *const restrict configuration){
+
+	//
+
+}
+
+static float physColliderGenerateMassPoint(physCollider *const restrict collider, const float *const vertexMassArray){
+
+	//
+
+}
+static void physColliderGenerateMomentPoint(const physCollider *const restrict collider, const vec3 *const restrict centroid, const float *const restrict vertexMassArray, float *const restrict inertiaTensor){
+
+	//
+
+}
+static void physColliderUpdatePoint(physCollider *const restrict collider, const physCollider *const restrict local, const bone *const restrict configuration){
+
+	//
+
+}
+
+static float (* const physColliderGenerateMassJumpTable[5])(physCollider *const restrict, const float *const) = {
 	physColliderGenerateMassMesh,
 	physColliderGenerateMassCapsule,
 	physColliderGenerateMassSphere,
-	physColliderGenerateMassAABB
+	physColliderGenerateMassAABB,
+	physColliderGenerateMassPoint
 };
-__FORCE_INLINE__ float physColliderGenerateMass(physCollider *collider, float *vertexMassArray){
+__FORCE_INLINE__ float physColliderGenerateMass(physCollider *const restrict collider, const float *const vertexMassArray){
 
 	/*
 	** Calculates the collider's center of mass
@@ -266,13 +284,14 @@ __FORCE_INLINE__ float physColliderGenerateMass(physCollider *collider, float *v
 
 }
 
-static void (* const physColliderGenerateMomentJumpTable[4])(const physCollider *, const vec3 *, const float *, float *) = {
+static void (* const physColliderGenerateMomentJumpTable[5])(const physCollider *const restrict, const vec3 *const restrict, const float *const restrict, float *const restrict) = {
 	physColliderGenerateMomentMesh,
 	physColliderGenerateMomentCapsule,
 	physColliderGenerateMomentSphere,
-	physColliderGenerateMomentAABB
+	physColliderGenerateMomentAABB,
+	physColliderGenerateMomentPoint
 };
-__FORCE_INLINE__ void physColliderGenerateMoment(const physCollider *collider, const vec3 *centroid, const float *vertexMassArray, float *inertiaTensor){
+__FORCE_INLINE__ void physColliderGenerateMoment(const physCollider *const restrict collider, const vec3 *const restrict centroid, const float *const restrict vertexMassArray, float *const restrict inertiaTensor){
 
 	/*
 	** Calculates the collider's moment of inertia tensor.
@@ -283,13 +302,14 @@ __FORCE_INLINE__ void physColliderGenerateMoment(const physCollider *collider, c
 }
 
 
-static void (* const physColliderUpdateJumpTable[4])(physCollider *, const physCollider *, const bone *) = {
+static void (* const physColliderUpdateJumpTable[5])(physCollider *const restrict, const physCollider *const restrict, const bone *const restrict) = {
 	physColliderUpdateMesh,
 	physColliderUpdateCapsule,
 	physColliderUpdateSphere,
-	physColliderUpdateAABB
+	physColliderUpdateAABB,
+	physColliderUpdatePoint
 };
-__FORCE_INLINE__ void physColliderUpdate(physCollider *collider, const physCollider *local, const bone *configuration){
+__FORCE_INLINE__ void physColliderUpdate(physCollider *const restrict collider, const physCollider *const restrict local, const bone *const restrict configuration){
 
 	/*
 	** Updates the collider for collision detection.
@@ -301,6 +321,6 @@ __FORCE_INLINE__ void physColliderUpdate(physCollider *collider, const physColli
 
 }
 
-void physColliderDelete(physCollider *collider){
+void physColliderDelete(physCollider *const restrict collider){
 	cDelete(&collider->c);
 }

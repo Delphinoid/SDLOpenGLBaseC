@@ -8,7 +8,7 @@
 #define RESOURCE_DEFAULT_SCENE_SIZE sizeof(scene)
 #define RESOURCE_DEFAULT_SCENE_NUM 2
 
-extern memoryList  __SceneResourceArray;      // Contains scenes.
+extern memoryPool  __SceneResourceArray;      // Contains scenes.
 extern memorySLink __SceneZoneResourceArray;  // Contains zones.
 
 /** Support locals? Merge all module containers? **/
@@ -19,7 +19,7 @@ void moduleSceneResourcesDelete();
 
 scene *moduleSceneAllocateStatic();
 scene *moduleSceneAllocate();
-void moduleSceneFree(scene *resource);
+void moduleSceneFree(scene *const restrict resource);
 void moduleSceneClear();
 
 void moduleSceneUpdate(const float elapsedTime, const float dt);

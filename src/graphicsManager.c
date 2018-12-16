@@ -7,12 +7,12 @@
 #include <string.h>
 #include <stdio.h>
 
-static return_t gfxMngrInitSDL(graphicsManager *gfxMngr);
-static return_t gfxMngrInitOGL(graphicsManager *gfxMngr);
-static return_t gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath);
-static return_t gfxMngrCreateBuffers(graphicsManager *gfxMngr);
+static return_t gfxMngrInitSDL(graphicsManager *const restrict gfxMngr);
+static return_t gfxMngrInitOGL(graphicsManager *const restrict gfxMngr);
+static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, const char *const restrict prgPath);
+static return_t gfxMngrCreateBuffers(graphicsManager *const restrict gfxMngr);
 
-return_t gfxMngrInit(graphicsManager *gfxMngr, const char *prgPath){
+return_t gfxMngrInit(graphicsManager *const restrict gfxMngr, const char *const restrict prgPath){
 
 	return_t r;
 
@@ -43,7 +43,7 @@ return_t gfxMngrInit(graphicsManager *gfxMngr, const char *prgPath){
 
 }
 
-static return_t gfxMngrInitSDL(graphicsManager *gfxMngr){
+static return_t gfxMngrInitSDL(graphicsManager *const restrict gfxMngr){
 
 	/* Initialize SDL */
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0){
@@ -82,7 +82,7 @@ static return_t gfxMngrInitSDL(graphicsManager *gfxMngr){
 
 }
 
-static return_t gfxMngrInitOGL(graphicsManager *gfxMngr){
+static return_t gfxMngrInitOGL(graphicsManager *const restrict gfxMngr){
 
 	/* Initialize GLEW */
 	glewExperimental = GL_TRUE;
@@ -114,13 +114,13 @@ static return_t gfxMngrInitOGL(graphicsManager *gfxMngr){
 
 }
 
-static return_t gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath){
+static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, const char *const restrict prgPath){
 
 	/* Vertex shader */
-	const char *vertexShaderExtra = "Resources\\Shaders\\s_vertex.gls";
+	const char *const restrict vertexShaderExtra = "Resources\\Shaders\\s_vertex.gls";
 	const size_t pathLen = strlen(prgPath);
 	const size_t vsExtraLen = strlen(vertexShaderExtra);
-	char *vertexShaderPath = memAllocate((pathLen+vsExtraLen+1)*sizeof(char));
+	char *const restrict vertexShaderPath = memAllocate((pathLen+vsExtraLen+1)*sizeof(char));
 	if(vertexShaderPath == NULL){
 		/** Memory allocation failure. **/
 		return -1;
@@ -130,11 +130,11 @@ static return_t gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath
 	vertexShaderPath[pathLen+vsExtraLen] = '\0';
 
 	/* Load vertex shader */
-	FILE *vertexShaderFile = fopen(vertexShaderPath, "rb");
+	FILE *const restrict vertexShaderFile = fopen(vertexShaderPath, "rb");
 	fseek(vertexShaderFile, 0, SEEK_END);
 	long size = ftell(vertexShaderFile);
 	rewind(vertexShaderFile);
-	char *vertexShaderCode = memAllocate((size+1)*sizeof(char));
+	char *const vertexShaderCode = memAllocate((size+1)*sizeof(char));
 	if(vertexShaderCode == NULL){
 		/** Memory allocation failure. **/
 		memFree(vertexShaderPath);
@@ -146,7 +146,7 @@ static return_t gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath
 
 	/* Compile vertex shader */
 	gfxMngr->vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-	const char *vertexShaderCodePointer = vertexShaderCode;
+	const char *const vertexShaderCodePointer = vertexShaderCode;
 	glShaderSource(gfxMngr->vertexShaderID, 1, &vertexShaderCodePointer, NULL);
 	glCompileShader(gfxMngr->vertexShaderID);
 	memFree(vertexShaderPath);
@@ -158,7 +158,7 @@ static return_t gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath
 	glGetShaderiv(gfxMngr->vertexShaderID, GL_COMPILE_STATUS, &compileStatus);
  	glGetShaderiv(gfxMngr->vertexShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
  	if(infoLogLength > 1){
-		char *vertexShaderError = memAllocate((infoLogLength+1)*sizeof(char));
+		char *const restrict vertexShaderError = memAllocate((infoLogLength+1)*sizeof(char));
 		if(vertexShaderError == NULL){
 			/** Memory allocation failure. **/
 			return -1;
@@ -171,9 +171,9 @@ static return_t gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath
 
 
 	/* Fragment shader */
-	const char *fragmentShaderExtra = "Resources\\Shaders\\s_fragment.gls";
+	const char *const restrict fragmentShaderExtra = "Resources\\Shaders\\s_fragment.gls";
 	const size_t fsExtraLen = strlen(fragmentShaderExtra);
-	char *fragmentShaderPath = memAllocate((pathLen+fsExtraLen+1)*sizeof(char));
+	char *const restrict fragmentShaderPath = memAllocate((pathLen+fsExtraLen+1)*sizeof(char));
 	if(fragmentShaderPath == NULL){
 		/** Memory allocation failure. **/
 		return -1;
@@ -183,11 +183,11 @@ static return_t gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath
 	fragmentShaderPath[pathLen+fsExtraLen] = '\0';
 
 	/* Load fragment shader */
-	FILE *fragmentShaderFile = fopen(fragmentShaderPath, "rb");
+	FILE *const restrict fragmentShaderFile = fopen(fragmentShaderPath, "rb");
 	fseek(fragmentShaderFile, 0, SEEK_END);
 	size = ftell(fragmentShaderFile);
 	rewind(fragmentShaderFile);
-	char *fragmentShaderCode = memAllocate((size+1)*sizeof(char));
+	char *const fragmentShaderCode = memAllocate((size+1)*sizeof(char));
 	if(fragmentShaderCode == NULL){
 		/** Memory allocation failure. **/
 		memFree(fragmentShaderPath);
@@ -199,7 +199,7 @@ static return_t gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath
 
 	/* Compile fragment shader */
 	gfxMngr->fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-	const char *fragmentShaderCodePointer = fragmentShaderCode;
+	const char *const fragmentShaderCodePointer = fragmentShaderCode;
 	glShaderSource(gfxMngr->fragmentShaderID, 1, &fragmentShaderCodePointer, NULL);
 	glCompileShader(gfxMngr->fragmentShaderID);
 	memFree(fragmentShaderPath);
@@ -209,7 +209,7 @@ static return_t gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath
 	glGetShaderiv(gfxMngr->fragmentShaderID, GL_COMPILE_STATUS, &compileStatus);
  	glGetShaderiv(gfxMngr->fragmentShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
  	if(infoLogLength > 1){
-		char *fragmentShaderError = memAllocate((infoLogLength+1)*sizeof(char));
+		char *const restrict fragmentShaderError = memAllocate((infoLogLength+1)*sizeof(char));
 		if(fragmentShaderError == NULL){
 			/** Memory allocation failure. **/
 			return -1;
@@ -293,7 +293,7 @@ static return_t gfxMngrLoadShaders(graphicsManager *gfxMngr, const char *prgPath
 
 }
 
-static return_t gfxMngrCreateBuffers(graphicsManager *gfxMngr){
+static return_t gfxMngrCreateBuffers(graphicsManager *const restrict gfxMngr){
 
 	/* Set lastTexID to 0 since we haven't rendered anything yet */
 	gfxMngr->lastTexID = 0;
@@ -326,7 +326,7 @@ static return_t gfxMngrCreateBuffers(graphicsManager *gfxMngr){
 
 }
 
-unsigned int gfxMngrWindowChanged(graphicsManager *gfxMngr){
+unsigned int gfxMngrWindowChanged(graphicsManager *const restrict gfxMngr){
 	int windowWidth, windowHeight;
 	SDL_GetWindowSize(gfxMngr->window, &windowWidth, &windowHeight);
 	if((int)gfxMngr->windowWidth != windowWidth || (int)gfxMngr->windowHeight != windowHeight){
@@ -337,7 +337,7 @@ unsigned int gfxMngrWindowChanged(graphicsManager *gfxMngr){
 	return gfxMngr->windowModified;
 }
 
-void gfxMngrUpdateViewport(graphicsManager *gfxMngr){
+void gfxMngrUpdateViewport(graphicsManager *const restrict gfxMngr){
 	if(gfxMngr->windowStretchToFit){
 		gfxMngr->viewport.x = 0;
 		gfxMngr->viewport.y = 0;
@@ -362,14 +362,14 @@ void gfxMngrUpdateViewport(graphicsManager *gfxMngr){
 	gfxViewReset(&gfxMngr->viewLast);
 }
 
-void gfxMngrUpdateWindow(graphicsManager *gfxMngr){
+void gfxMngrUpdateWindow(graphicsManager *const restrict gfxMngr){
 	if(gfxMngrWindowChanged(gfxMngr)){
 		gfxMngrUpdateViewport(gfxMngr);
 		gfxMngr->windowModified = 0;
 	}
 }
 
-int gfxMngrSetWindowMode(graphicsManager *gfxMngr, const Uint32 mode){
+int gfxMngrSetWindowMode(graphicsManager *const restrict gfxMngr, const Uint32 mode){
 	int r;
 	if(mode == SDL_WINDOW_FULLSCREEN){
 		SDL_DisplayMode displayMode;
@@ -385,44 +385,44 @@ int gfxMngrSetWindowMode(graphicsManager *gfxMngr, const Uint32 mode){
 	return r;
 }
 
-void gfxMngrSetWindowFill(graphicsManager *gfxMngr, const unsigned int fill){
+void gfxMngrSetWindowFill(graphicsManager *const restrict gfxMngr, const unsigned int fill){
 	gfxMngr->windowStretchToFit = fill;
 	gfxMngr->windowModified = 1;
 }
 
-void gfxMngrSetViewportAspectRatio(graphicsManager *gfxMngr, const float x, const float y){
+void gfxMngrSetViewportAspectRatio(graphicsManager *const restrict gfxMngr, const float x, const float y){
 	gfxMngr->windowAspectRatioX = x;
 	gfxMngr->windowAspectRatioY = y;
 	gfxMngr->windowModified = 1;
 }
 
-void gfxMngrSetViewportAspectX(graphicsManager *gfxMngr, const float x){
+void gfxMngrSetViewportAspectX(graphicsManager *const restrict gfxMngr, const float x){
 	gfxMngr->windowAspectRatioX = x;
 	gfxMngr->windowModified = 1;
 }
 
-void gfxMngrSetViewportAspectY(graphicsManager *gfxMngr, const float y){
+void gfxMngrSetViewportAspectY(graphicsManager *const restrict gfxMngr, const float y){
 	gfxMngr->windowAspectRatioY = y;
 	gfxMngr->windowModified = 1;
 }
 
-void gfxMngrSetViewportSize(graphicsManager *gfxMngr, const unsigned int width, const unsigned int height){
+void gfxMngrSetViewportSize(graphicsManager *const restrict gfxMngr, const unsigned int width, const unsigned int height){
 	gfxMngr->viewport.width = width;
 	gfxMngr->viewport.height = height;
 	gfxMngr->windowModified = 1;
 }
 
-void gfxMngrSetViewportWidth(graphicsManager *gfxMngr, const unsigned int width){
+void gfxMngrSetViewportWidth(graphicsManager *const restrict gfxMngr, const unsigned int width){
 	gfxMngr->viewport.width = width;
 	gfxMngr->windowModified = 1;
 }
 
-void gfxMngrSetViewportHeight(graphicsManager *gfxMngr, const unsigned int height){
+void gfxMngrSetViewportHeight(graphicsManager *const restrict gfxMngr, const unsigned int height){
 	gfxMngr->viewport.height = height;
 	gfxMngr->windowModified = 1;
 }
 
-__FORCE_INLINE__ void gfxMngrSwitchView(graphicsManager *gfxMngr, const gfxView *view){
+__FORCE_INLINE__ void gfxMngrSwitchView(graphicsManager *const restrict gfxMngr, const gfxView *const restrict view){
     if(memcmp(view, &gfxMngr->viewLast, sizeof(gfxView))){
 		glViewport(
 			gfxMngr->viewport.x + (int)(view->x * gfxMngr->viewport.width),
@@ -434,7 +434,7 @@ __FORCE_INLINE__ void gfxMngrSwitchView(graphicsManager *gfxMngr, const gfxView 
     }
 }
 
-__FORCE_INLINE__ void gfxMngrBindTexture(graphicsManager *gfxMngr, const GLenum texture, const GLuint textureID){
+__FORCE_INLINE__ void gfxMngrBindTexture(graphicsManager *const restrict gfxMngr, const GLenum texture, const GLuint textureID){
 	glActiveTexture(texture);
 	if(textureID != gfxMngr->lastTexID){
 		gfxMngr->lastTexID = textureID;
@@ -442,7 +442,7 @@ __FORCE_INLINE__ void gfxMngrBindTexture(graphicsManager *gfxMngr, const GLenum 
 	}
 }
 
-void gfxMngrDestroyProgram(graphicsManager *gfxMngr){
+void gfxMngrDestroyProgram(graphicsManager *const restrict gfxMngr){
 
 	IMG_Quit();
 	Mix_Quit();

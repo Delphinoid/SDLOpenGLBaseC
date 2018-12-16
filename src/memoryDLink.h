@@ -102,17 +102,37 @@ typedef struct {
 #define memDLinkBlockStatus(block)  memDLinkDataGetActiveMasked(block)
 #define memDLinkBlockNext(array, i) (void *)((byte_t *)i + (array).block)
 
-void memDLinkInit(memoryDLink *array);
-void *memDLinkCreate(memoryDLink *array, void *start, const size_t bytes, const size_t length);
-void *memDLinkAllocate(memoryDLink *array);
-void *memDLinkPrepend(memoryDLink *array, void **start);
-void *memDLinkAppend(memoryDLink *array, void **start);
-void *memDLinkInsertBefore(memoryDLink *array, void **start, void *element);
-void *memDLinkInsertAfter(memoryDLink *array, void *element);
-void memDLinkFree(memoryDLink *array, void **start, void *element);
+void memDLinkInit(memoryDLink *const restrict array);
+void *memDLinkCreate(memoryDLink *const restrict array, void *const start, const size_t bytes, const size_t length);
+void *memDLinkAllocate(memoryDLink *const restrict array);
+void *memDLinkPrepend(memoryDLink *const restrict array, void **const restrict start);
+void *memDLinkAppend(memoryDLink *const restrict array, const void **const start);
+void *memDLinkInsertBefore(memoryDLink *const restrict array, const void **const start, void *const element);
+void *memDLinkInsertAfter(memoryDLink *const restrict array, void *const element);
+void memDLinkFree(memoryDLink *const restrict array, const void **const start, void *const element);
 void *memDLinkSetupMemory(void *start, const size_t bytes, const size_t length);
-void memDLinkClear(memoryDLink *array);
-void *memDLinkExtend(memoryDLink *array, void *start, const size_t bytes, const size_t length);
-void memDLinkDelete(memoryDLink *array);
+void memDLinkClear(memoryDLink *const restrict array);
+void *memDLinkExtend(memoryDLink *const restrict array, void *const start, const size_t bytes, const size_t length);
+void memDLinkDelete(memoryDLink *const restrict array);
+
+#define MEMORY_DLINK_LOOP_BEGIN(allocator, n, type)                 \
+	{                                                               \
+		const memoryRegion *__region_##n = allocator.region;        \
+		type n;                                                     \
+		do {                                                        \
+			n = memDLinkFirst(__region_##n);                        \
+			while(n < (type)memAllocatorEnd(__region_##n)){         \
+				const byte_t __flag_##n = memDLinkBlockStatus(n);   \
+				if(__flag_##n == MEMORY_DLINK_BLOCK_ACTIVE){
+
+#define MEMORY_DLINK_LOOP_END(allocator, n, earlyexit)              \
+				}else if(__flag_##n == MEMORY_DLINK_BLOCK_INVALID){ \
+					earlyexit                                       \
+				}                                                   \
+				n = memDLinkBlockNext(allocator, n);                \
+			}                                                       \
+			__region_##n = memAllocatorNext(__region_##n);          \
+		} while(__region_##n != NULL);                              \
+	}
 
 #endif

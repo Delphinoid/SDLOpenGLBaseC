@@ -50,7 +50,7 @@ typedef struct {
 typedef struct {
 
 	/* The rigid body this instance is derived from, in local space. */
-	physRigidBody *local;
+	const physRigidBody *local;
 
 	/* Physical colliders. */
 	cAABB aabb;               // The body's global, transformed bounding box.
@@ -86,36 +86,36 @@ typedef struct {
 } physRBInstance;
 
 /* Physics rigid body functions. */
-void physRigidBodyInit(physRigidBody *body);
-void physRigidBodyGenerateMassProperties(physRigidBody *body, float **vertexMassArrays);
-return_t physRigidBodyLoad(physRigidBody **bodies, const skeleton *skl, const char *prgPath, const char *filePath);
-void physRigidBodyDelete(physRigidBody *body);
+void physRigidBodyInit(physRigidBody *const restrict body);
+void physRigidBodyGenerateMassProperties(physRigidBody *const restrict body, float **const vertexMassArrays);
+return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton *const restrict skl, const char *const restrict prgPath, const char *const restrict filePath);
+void physRigidBodyDelete(physRigidBody *const restrict body);
 
 /* Physics rigid body instance functions. */
-void physRBIInit(physRBInstance *prbi);
-return_t physRBIInstantiate(physRBInstance *prbi, physRigidBody *body, bone *configuration);
+void physRBIInit(physRBInstance *const restrict prbi);
+return_t physRBIInstantiate(physRBInstance *const restrict prbi, physRigidBody *const restrict body, bone *const restrict configuration);
 
-return_t physRBIAddConstraint(physRBInstance *prbi, physConstraint *c);
-return_t physRBICacheSeparation(physRBInstance *prbi, physCollisionInfo *c);
+return_t physRBIAddConstraint(physRBInstance *const restrict prbi, physConstraint *const c);
+return_t physRBICacheSeparation(physRBInstance *const restrict prbi, physCollisionInfo *const c);
 
-void physRBIUpdateCollisionMesh(physRBInstance *prbi);
+void physRBIUpdateCollisionMesh(physRBInstance *const restrict prbi);
 
-void physRBIApplyLinearForce(physRBInstance *prbi, const vec3 *F);
-void physRBIApplyAngularForceGlobal(physRBInstance *prbi, const vec3 *F, const vec3 *r);
-void physRBIApplyForceGlobal(physRBInstance *prbi, const vec3 *F, const vec3 *r);
-/*void physRBIApplyLinearImpulse(physRBInstance *prbi, const vec3 *j);
-void physRBIApplyAngularImpulse(physRBInstance *prbi, const vec3 *T);
-void physRBIApplyImpulseAtGlobalPoint(physRBInstance *prbi, const vec3 *F, const vec3 *r);*/
+void physRBIApplyLinearForce(physRBInstance *const restrict prbi, const vec3 *const restrict F);
+void physRBIApplyAngularForceGlobal(physRBInstance *const restrict prbi, const vec3 *const restrict F, const vec3 *const restrict r);
+void physRBIApplyForceGlobal(physRBInstance *const restrict prbi, const vec3 *const restrict F, const vec3 *const restrict r);
+/*void physRBIApplyLinearImpulse(physRBInstance *const restrict prbi, const vec3 *const restrict j);
+void physRBIApplyAngularImpulse(physRBInstance *const restrict prbi, const vec3 *const restrict T);
+void physRBIApplyImpulseAtGlobalPoint(physRBInstance *const restrict prbi, const vec3 *const restrict F, const vec3 *const restrict r);*/
 
-void physRBIBeginSimulation(physRBInstance *prbi);
+void physRBIBeginSimulation(physRBInstance *const restrict prbi);
 
-void physRBIIntegrateEuler(physRBInstance *prbi, const float dt);
-void physRBIIntegrateLeapfrog(physRBInstance *prbi, const float dt);
-void physRBIIntegrateLeapfrogVelocity(physRBInstance *prbi, const float dt);
-void physRBIIntegrateLeapfrogConstraints(physRBInstance *prbi, const float dt);
+void physRBIIntegrateEuler(physRBInstance *const restrict prbi, const float dt);
+void physRBIIntegrateLeapfrog(physRBInstance *const restrict prbi, const float dt);
+void physRBIIntegrateLeapfrogVelocity(physRBInstance *const restrict prbi, const float dt);
+void physRBIIntegrateLeapfrogConstraints(physRBInstance *const restrict prbi, const float dt);
 
-void physRBIResolveCollisionGS(physRBInstance *body1, physRBInstance *body2, const cCollisionContactManifold *cm);
+void physRBIResolveCollisionGS(physRBInstance *const restrict body1, physRBInstance *const restrict body2, const cCollisionContactManifold *const restrict cm);
 
-void physRBIDelete(physRBInstance *prbi);
+void physRBIDelete(physRBInstance *const restrict prbi);
 
 #endif

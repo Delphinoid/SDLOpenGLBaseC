@@ -52,14 +52,29 @@ typedef struct {
 #define memListFirst(list)        ((void *)memListAlignStartData((region)->start))
 #define memListBlockNext(list, i) (void *)((byte_t *)i + (list).block)
 
-void memListInit(memoryList *list);
-void *memListCreate(memoryList *list, void *start, const size_t bytes, const size_t length);
-void *memListAllocate(memoryList *list);
-void memListFree(memoryList *list, void *block);
+void memListInit(memoryList *const restrict list);
+void *memListCreate(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length);
+void *memListAllocate(memoryList *const restrict list);
+void memListFree(memoryList *const restrict list, void *const block);
 void *memListSetupMemory(void *start, const size_t bytes, const size_t length);
-void *memListIndex(memoryList *list, const size_t i);
-void memListClear(memoryList *list);
-void *memListExtend(memoryList *list, void *start, const size_t bytes, const size_t length);
-void memListDelete(memoryList *list);
+void *memListIndex(memoryList *const restrict list, const size_t i);
+void memListClear(memoryList *const restrict list);
+void *memListExtend(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length);
+void memListDelete(memoryList *const restrict list);
+
+#define MEMORY_LIST_LOOP_BEGIN(allocator, n, type)           \
+	{                                                        \
+		const memoryRegion *__region_##n = allocator.region; \
+		type n;                                              \
+		do {                                                 \
+			n = memListFirst(__region_##n);                  \
+			while(n < (type)memAllocatorEnd(__region_##n)){  \
+
+#define MEMORY_LIST_LOOP_END(allocator, n)                   \
+				n = memListBlockNext(allocator, n);          \
+			}                                                \
+			__region_##n = memAllocatorNext(__region_##n);   \
+		} while(__region_##n != NULL);                       \
+	}
 
 #endif

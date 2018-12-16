@@ -15,7 +15,7 @@
 #define OBJECT_RESOURCE_DIRECTORY_STRING "Resources\\Objects\\"
 #define OBJECT_RESOURCE_DIRECTORY_LENGTH 18
 
-void objInit(object *obj){
+void objInit(object *const restrict obj){
 	obj->name = NULL;
 	obj->skl = NULL;
 	obj->animationMax = 0;
@@ -27,12 +27,12 @@ void objInit(object *obj){
 	obj->stateMax = 0;
 }
 
-return_t objLoad(object *obj, const char *prgPath, const char *filePath){
+return_t objLoad(object *const restrict obj, const char *const restrict prgPath, const char *const restrict filePath){
 
 	char fullPath[FILE_MAX_PATH_LENGTH];
 	const size_t fileLength = strlen(filePath);
 
-	FILE *objInfo;
+	FILE *restrict objInfo;
 
 	objInit(obj);
 
@@ -216,7 +216,7 @@ return_t objLoad(object *obj, const char *prgPath, const char *filePath){
 
 				if(tempSkla != NULL){
 
-					sklAnim **tempBuffer = memReallocate(obj->animations, (obj->animationNum+1)*sizeof(sklAnim *));
+					sklAnim **const tempBuffer = memReallocate(obj->animations, (obj->animationNum+1)*sizeof(sklAnim *));
 					if(tempBuffer == NULL){
 						/** Memory allocation failure. **/
 						objDelete(obj);
@@ -428,7 +428,7 @@ return_t objLoad(object *obj, const char *prgPath, const char *filePath){
 
 }
 
-void objDelete(object *obj){
+void objDelete(object *const restrict obj){
 	if(obj->name != NULL){
 		memFree(obj->name);
 	}
@@ -441,7 +441,7 @@ void objDelete(object *obj){
 		}
 		if(obj->skeletonColliders != NULL){
 			colliderArray *ca = obj->skeletonColliders;
-			colliderArray *caLast = &ca[obj->skl->boneNum];
+			const colliderArray *const caLast = &ca[obj->skl->boneNum];
 			for(; ca < caLast; ++ca){
 				cArrayDelete(ca);
 			}
@@ -453,7 +453,7 @@ void objDelete(object *obj){
 	}
 }
 
-return_t objiInit(objInstance *obji){
+return_t objiInit(objInstance *const restrict obji){
 	obji->base = NULL;
 	obji->configuration = NULL;
 	obji->stateMax = 0;
@@ -467,7 +467,7 @@ return_t objiInit(objInstance *obji){
 	return skliInit(&obji->skeletonData, NULL, 0);
 }
 
-void objiDelete(objInstance *obji){
+void objiDelete(objInstance *const restrict obji){
 	objiState *state = obji->state.previous;
 	if(obji->configuration != NULL){
 		memFree(obji->configuration);
@@ -482,7 +482,7 @@ void objiDelete(objInstance *obji){
 	}
 	if(obji->skeletonColliders != NULL){
 		colliderArray *ca = obji->skeletonColliders;
-		colliderArray *caLast = &ca[obji->skeletonData.skl->boneNum];
+		const colliderArray *const caLast = &ca[obji->skeletonData.skl->boneNum];
 		for(; ca < caLast; ++ca){
 			cArrayDelete(ca);
 		}
@@ -494,7 +494,7 @@ void objiDelete(objInstance *obji){
 	skliDelete(&obji->skeletonData);
 }
 
-return_t objiInstantiate(objInstance *obji, object *base){
+return_t objiInstantiate(objInstance *const restrict obji, const object *const restrict base){
 
 	renderable *j;
 
@@ -504,9 +504,6 @@ return_t objiInstantiate(objInstance *obji, object *base){
 	}
 
 	if(base->skl->boneNum != 0){
-
-		bone *b;
-		bone *bLast;
 
 		/* Allocate memory for the object instance. */
 		obji->configuration = memAllocate(3 * base->skl->boneNum * sizeof(bone));
@@ -522,7 +519,7 @@ return_t objiInstantiate(objInstance *obji, object *base){
 
 			colliderArray *caBase = base->skeletonColliders;
 			colliderArray *ca = obji->skeletonColliders;
-			colliderArray *lastCA = &ca[base->skl->boneNum];
+			colliderArray *const lastCA = &ca[base->skl->boneNum];
 
 			obji->skeletonColliders = malloc(base->skl->boneNum * sizeof(colliderArray));
 			if(obji->skeletonColliders == NULL){
@@ -561,11 +558,13 @@ return_t objiInstantiate(objInstance *obji, object *base){
 			obji->skeletonColliders = NULL;
 		}
 
-		// Initialize each bone.
-		b = obji->configuration;
-		bLast = &b[base->skl->boneNum];
-		for(; b < bLast; ++b){
-			boneInit(b);
+		{
+			bone *b = obji->configuration;
+			const bone *const bLast = &b[base->skl->boneNum];
+			// Initialize each bone.
+			for(; b < bLast; ++b){
+				boneInit(b);
+			}
 		}
 
 		/* Allocate memory for and initialize the rigid bodies if necessary. */
@@ -606,7 +605,7 @@ return_t objiInstantiate(objInstance *obji, object *base){
 	// Instantiate each renderable.
 	j = base->renderables;
 	while(j != NULL){
-		rndrInstance *resource = moduleRenderableInstanceAppend(&obji->renderables);
+		rndrInstance *const resource = moduleRenderableInstanceAppend(&obji->renderables);
 		if(resource == NULL){
 			/** Memory allocation failure. **/
 			objiDelete(obji);
@@ -625,8 +624,8 @@ return_t objiInstantiate(objInstance *obji, object *base){
 
 }
 
-static __FORCE_INLINE__ return_t objiStateAllocate(objInstance *obji){
-	objiState *state = memAllocate(sizeof(objiState) + obji->skeletonData.skl->boneNum * sizeof(bone));
+static __FORCE_INLINE__ return_t objiStateAllocate(objInstance *const restrict obji){
+	objiState *const state = memAllocate(sizeof(objiState) + obji->skeletonData.skl->boneNum * sizeof(bone));
 	if(state != NULL){
 		state->skeleton = (bone *)((byte_t *)state + sizeof(objiState));
 		state->previous = NULL;
@@ -638,7 +637,7 @@ static __FORCE_INLINE__ return_t objiStateAllocate(objInstance *obji){
 	return -1;
 }
 
-return_t objiStatePreallocate(objInstance *obji){
+return_t objiStatePreallocate(objInstance *const restrict obji){
 	while(obji->stateNum < obji->stateMax){
 		if(objiStateAllocate(obji) == -1){
 			return -1;
@@ -647,7 +646,7 @@ return_t objiStatePreallocate(objInstance *obji){
 	return 1;
 }
 
-static __FORCE_INLINE__ void objiStateCopyBone(objInstance *obji, const boneIndex_t i){
+static __FORCE_INLINE__ void objiStateCopyBone(objInstance *const restrict obji, const boneIndex_t i){
 
 	objiState *state = &obji->state;
 	bone last = state->skeleton[i];
@@ -663,9 +662,9 @@ static __FORCE_INLINE__ void objiStateCopyBone(objInstance *obji, const boneInde
 
 }
 
-return_t objiNewRenderable(objInstance *obji, model *mdl, textureWrapper *tw){
+return_t objiNewRenderable(objInstance *const restrict obji, model *const restrict mdl, textureWrapper *const restrict tw){
 	/* Allocate room for a new renderable and initialize it. */
-	rndrInstance *rndr = moduleRenderableInstanceAppend(&obji->renderables);
+	rndrInstance *const rndr = moduleRenderableInstanceAppend(&obji->renderables);
 	if(rndr == NULL){
 		/** Memory allocation failure. **/
 		return -1;
@@ -675,9 +674,9 @@ return_t objiNewRenderable(objInstance *obji, model *mdl, textureWrapper *tw){
 	return 1;
 }
 
-return_t objiNewRenderableFromBase(objInstance *obji, const renderable *rndr){
+return_t objiNewRenderableFromBase(objInstance *const restrict obji, const renderable *const restrict rndr){
 	/* Allocate room for a new renderable and initialize it. */
-	rndrInstance *rndrNew = moduleRenderableInstanceAppend(&obji->renderables);
+	rndrInstance *const rndrNew = moduleRenderableInstanceAppend(&obji->renderables);
 	if(rndrNew == NULL){
 		/** Memory allocation failure. **/
 		return -1;
@@ -686,9 +685,9 @@ return_t objiNewRenderableFromBase(objInstance *obji, const renderable *rndr){
 	return 1;
 }
 
-return_t objiNewRenderableFromInstance(objInstance *obji, const rndrInstance *rndr){
+return_t objiNewRenderableFromInstance(objInstance *const restrict obji, const rndrInstance *rndr){
 	/* Allocate room for a new renderable and initialize it. */
-	rndrInstance *rndrNew = moduleRenderableInstanceAppend(&obji->renderables);
+	rndrInstance *const rndrNew = moduleRenderableInstanceAppend(&obji->renderables);
 	if(rndrNew == NULL){
 		/** Memory allocation failure. **/
 		return -1;
@@ -698,9 +697,9 @@ return_t objiNewRenderableFromInstance(objInstance *obji, const rndrInstance *rn
 	return 1;
 }
 
-return_t objiInitSkeleton(objInstance *obji, skeleton *skl){
-	bone *bLast;
+return_t objiInitSkeleton(objInstance *const restrict obji, const skeleton *const restrict skl){
 	bone *tempBuffer = memAllocate(3 * skl->boneNum * sizeof(bone));
+	const bone *const bLast = &tempBuffer[skl->boneNum];
 	if(tempBuffer == NULL){
 		/** Memory allocation failure. **/
 		return -1;
@@ -716,7 +715,6 @@ return_t objiInitSkeleton(objInstance *obji, skeleton *skl){
 	}
 	obji->configuration = tempBuffer;
 	obji->state.skeleton = &tempBuffer[skl->boneNum];
-	bLast = &tempBuffer[skl->boneNum];
 	for(; tempBuffer < bLast; ++tempBuffer){
 		boneInit(tempBuffer);
 	}
@@ -759,7 +757,7 @@ void objiBoneSetPhysicsFlags(objInstance *obji, const boneIndex_t boneID, const 
 
 }**/
 
-sklAnim *objiGetAnimation(const objInstance *obji, const animIndex_t id){
+sklAnim *objiGetAnimation(const objInstance *const restrict obji, const animIndex_t id){
 	if(obji->base != NULL){
 		if(obji->base->animationNum > id){
 			return obji->base->animations[id];
@@ -768,10 +766,10 @@ sklAnim *objiGetAnimation(const objInstance *obji, const animIndex_t id){
 	return NULL;
 }
 
-sklAnim *objiFindAnimation(const objInstance *obji, const char *name){
+sklAnim *objiFindAnimation(const objInstance *const restrict obji, const char *const restrict name){
 	if(obji->base != NULL){
 		sklAnim **anim = obji->base->animations;
-		sklAnim **animLast = &anim[obji->base->animationNum];
+		sklAnim **const animLast = &anim[obji->base->animationNum];
 		for(; anim < animLast; ++anim){
 			if(strcmp((*anim)->name, name) == 0){
 				return *anim;
@@ -818,7 +816,7 @@ void objiAddAngularVelocity(objInstance *obji, const size_t boneID, const float 
 	physRBIAddAngularVelocity(&obji->skeletonBodies[boneID], angle, x, y, z);
 }**/
 
-return_t objiUpdate(objInstance *obji, physicsSolver *solver, const float elapsedTime, const float dt){
+return_t objiUpdate(objInstance *const restrict obji, physicsSolver *const restrict solver, const float elapsedTime, const float dt){
 
 	boneIndex_t i;
 	rndrInstance *j;
@@ -878,14 +876,14 @@ return_t objiUpdate(objInstance *obji, physicsSolver *solver, const float elapse
 				// and add it to the solver if it is set
 				// to interact with other bodies.
 				/** Only update AABB? **/
-				physRBInstance **tempBody = physSolverAllocate(solver);
-				if(tempBody == NULL){
+				physRBInstance **solverBody = physSolverAllocate(solver);
+				if(solverBody == NULL){
 					/** Memory allocation failure. **/
 					return -1;
 				}
 				physRBIIntegrateLeapfrogVelocity(body, dt);
 				physRBIUpdateCollisionMesh(body);
-				*tempBody = body;
+				*solverBody = body;
 			}else{
 				// If the body is not interacting with any
 				// other bodies, integrate everything
@@ -926,13 +924,12 @@ return_t objiUpdate(objInstance *obji, physicsSolver *solver, const float elapse
 			boneTransformAppendPositionVec(sklState,
 			                               sklBone->defaultState.position.x,
 			                               sklBone->defaultState.position.y,
-			                               sklBone->defaultState.position.z,
-			                               &sklState->position);
+			                               sklBone->defaultState.position.z);
 
 			// Apply the parent's transformations to each bone.
 			if(!isRoot){
 				//boneTransformAppend(&obji->skeletonState[0][obji->skl->bones[i].parent], &obji->skeletonState[0][i], &obji->skeletonState[0][i]);
-				boneTransformAppend(&obji->state.skeleton[sklBone->parent], sklState, sklState);
+				boneTransformAppend2(&obji->state.skeleton[sklBone->parent], sklState);
 			}
 
 			if(body != NULL && body->local->id == i){
@@ -941,12 +938,13 @@ return_t objiUpdate(objInstance *obji, physicsSolver *solver, const float elapse
 					// and add it to the solver if it is set
 					// to interact with other bodies.
 					/** Only update AABB? **/
-					physRBInstance **tempBody = physSolverAllocate(solver);
-					if(tempBody == NULL){
+					physRBInstance **solverBody = physSolverAllocate(solver);
+					if(solverBody == NULL){
 						/** Memory allocation failure. **/
 						return -1;
 					}
-					*tempBody = body;
+					physRBIUpdateCollisionMesh(body);
+					*solverBody = body;
 				}
 				body = modulePhysicsRigidBodyInstanceNext(body);
 			}
@@ -1032,11 +1030,11 @@ return_t objiUpdate(objInstance *obji, physicsSolver *solver, const float elapse
 
 }
 
-void objiBoneLastState(objInstance *obji, const float dt){
+void objiBoneLastState(objInstance *const restrict obji, const float dt){
 	//
 }
 
-gfxRenderGroup_t objiRenderGroup(const objInstance *obji, const float interpT){
+gfxRenderGroup_t objiRenderGroup(const objInstance *const restrict obji, const float interpT){
 
 	/*
 	** Check if the object will have
@@ -1044,7 +1042,7 @@ gfxRenderGroup_t objiRenderGroup(const objInstance *obji, const float interpT){
 	*/
 
 	float totalAlpha = 0.f;
-	rndrInstance *i = obji->renderables;
+	const rndrInstance *i = obji->renderables;
 
 	while(i != NULL){
 
@@ -1078,7 +1076,7 @@ gfxRenderGroup_t objiRenderGroup(const objInstance *obji, const float interpT){
 
 }
 
-void objiGenerateSprite(const objInstance *obji, const rndrInstance *rndr, const float interpT, const float *texFrag, vertex *vertices){
+void objiGenerateSprite(const objInstance *const restrict obji, const rndrInstance *const restrict rndr, const float interpT, const float *const restrict texFrag, vertex *const restrict vertices){
 
 	/* Generate the base sprite. */
 	const float left   = -0.5f; /// - obji->tempRndrConfig.pivot.render.x;
@@ -1086,8 +1084,8 @@ void objiGenerateSprite(const objInstance *obji, const rndrInstance *rndr, const
 	const float right  =  0.5f; /// - obji->tempRndrConfig.pivot.render.x;
 	const float bottom =  0.5f; /// - obji->tempRndrConfig.pivot.render.y;
 	const float z      =  0.f;  /// - obji->tempRndrConfig.pivot.render.z;
-	const bone *current  = obji->state.skeleton;
-	const bone *previous = (obji->state.previous == NULL ? current : obji->state.previous->skeleton);
+	const bone *const current  = obji->state.skeleton;
+	const bone *const previous = (obji->state.previous == NULL ? current : obji->state.previous->skeleton);
 	bone transform;
 
 	// Create the top left vertex.
@@ -1165,7 +1163,7 @@ void objiGenerateSprite(const objInstance *obji, const rndrInstance *rndr, const
 	/* Generate a transformation for the sprite and transform each vertex. */
 	/** Optimize? **/
 	//boneInterpolate(&obji->skeletonState[1][0], &obji->skeletonState[0][0], interpT, &transform);
-	boneInterpolate(previous, current, interpT, &transform);
+	boneInterpolateR(previous, current, interpT, &transform);
 	transform.scale.x *= twiGetFrameWidth(&rndr->twi) * twiGetTexWidth(&rndr->twi);
 	transform.scale.y *= twiGetFrameHeight(&rndr->twi) * twiGetTexHeight(&rndr->twi);
 	vertTransform(&vertices[0], &transform.position, &transform.orientation, &transform.scale);

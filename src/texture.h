@@ -46,9 +46,9 @@ typedef struct {
 
 } texture;
 
-void tInit(texture *tex);
-return_t tLoad(texture *tex, const char *prgPath, const char *filePath);
-return_t tDefault(texture *tex);
-void tDelete(texture *tex);
+void tInit(texture *const restrict tex);
+return_t tLoad(texture *const restrict tex, const char *const restrict prgPath, const char *const restrict filePath);
+return_t tDefault(texture *const restrict tex);
+void tDelete(texture *const restrict tex);
 
 #endif

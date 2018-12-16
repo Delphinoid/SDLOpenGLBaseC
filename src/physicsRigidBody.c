@@ -1,5 +1,6 @@
 #include "modulePhysics.h"
 #include "memoryManager.h"
+#include "colliderConvexMesh.h"
 #include "helpersFileIO.h"
 #include "inline.h"
 #include <math.h>
@@ -15,7 +16,7 @@
 #define PHYSICS_RESTING_EPSILON 0.0001f
 #define PHYSICS_BAUMGARTE_TERM  0.0001f
 
-void physRigidBodyInit(physRigidBody *body){
+void physRigidBodyInit(physRigidBody *const restrict body){
 	body->id = (physicsBodyIndex_t)-1;
 	body->flags = PHYSICS_BODY_INACTIVE;
 	body->colliders = NULL;
@@ -27,7 +28,7 @@ void physRigidBodyInit(physRigidBody *body){
 	body->constraints = NULL;
 }
 
-void physRigidBodyGenerateMassProperties(physRigidBody *body, float **vertexMassArrays){
+void physRigidBodyGenerateMassProperties(physRigidBody *const restrict body, float **const vertexMassArrays){
 
 	/*
 	** Calculates the rigid body's total mass, inverse mass,
@@ -114,7 +115,7 @@ void physRigidBodyGenerateMassProperties(physRigidBody *body, float **vertexMass
 
 }
 
-static return_t physColliderResizeToFit(physCollider *collider, float **vertexMassArrays){
+static return_t physColliderResizeToFit(physCollider *const restrict collider, float **const vertexMassArrays){
 
 	cMesh *cHull = (cMesh *)&collider->c.hull;
 
@@ -186,8 +187,8 @@ static return_t physColliderResizeToFit(physCollider *collider, float **vertexMa
 
 }
 
-/** FIX CONSTRAINT LOADING. **/
-return_t physRigidBodyLoad(physRigidBody **bodies, const skeleton *skl, const char *prgPath, const char *filePath){
+/** FIX CONSTRAINT LOADING. MOSTLY TEMPORARY. **/
+return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton *const restrict skl, const char *const restrict prgPath, const char *const restrict filePath){
 
 	/*
 	** Loads a series of rigid bodies.
@@ -201,7 +202,7 @@ return_t physRigidBodyLoad(physRigidBody **bodies, const skeleton *skl, const ch
 	char fullPath[FILE_MAX_PATH_LENGTH];
 	const size_t fileLength = strlen(filePath);
 
-	FILE *rbInfo;
+	FILE *restrict rbInfo;
 
 	fileGenerateFullPath(fullPath, prgPath, strlen(prgPath), PHYSICS_RESOURCE_DIRECTORY_STRING, PHYSICS_RESOURCE_DIRECTORY_LENGTH, filePath, fileLength);
 	rbInfo = fopen(fullPath, "r");
@@ -443,8 +444,8 @@ return_t physRigidBodyLoad(physRigidBody **bodies, const skeleton *skl, const ch
 
 				if(currentBodyColliderNum > 0){
 
-					cMesh *cHull = (cMesh *)&currentCollider->c.hull;
-					char *token;
+					cMesh *const cHull = (cMesh *)&currentCollider->c.hull;
+					const char *token;
 
 					// Reallocate vertex array if necessary.
 					if(cHull->vertexNum == vertexCapacity){
@@ -511,10 +512,10 @@ return_t physRigidBodyLoad(physRigidBody **bodies, const skeleton *skl, const ch
 
 				if(currentBodyColliderNum > 0){
 
-					char *token = strtok(line+2, " ");
+					const char *token = strtok(line+2, " ");
 					if(token != NULL){
 
-						cMesh *cHull = (cMesh *)&currentCollider->c.hull;
+						cMesh *const cHull = (cMesh *)&currentCollider->c.hull;
 
 						cEdgeIndex_t i = 0;
 
@@ -553,7 +554,7 @@ return_t physRigidBodyLoad(physRigidBody **bodies, const skeleton *skl, const ch
 								}else{
 									edgeCapacity *= 2;
 								}
-								cMeshEdge *tempBuffer = memReallocate(cHull->edges, edgeCapacity*sizeof(cMeshEdge));
+								cMeshEdge *const tempBuffer = memReallocate(cHull->edges, edgeCapacity*sizeof(cMeshEdge));
 								if(tempBuffer == NULL){
 									/** Memory allocation failure. **/
 									if(vertexMassArrays != NULL){
@@ -640,12 +641,14 @@ return_t physRigidBodyLoad(physRigidBody **bodies, const skeleton *skl, const ch
 
 						// Reallocate normal and offset arrays if necessary.
 						if(cHull->faceNum == normalCapacity){
+							vec3 *tempBuffer1;
+							cMeshFace *tempBuffer2;
 							if(normalCapacity == 0){
 								normalCapacity = 1;
 							}else{
 								normalCapacity *= 2;
 							}
-							vec3 *tempBuffer1 = memReallocate(cHull->normals, normalCapacity*sizeof(vec3));
+							tempBuffer1 = memReallocate(cHull->normals, normalCapacity*sizeof(vec3));
 							if(tempBuffer1 == NULL){
 								/** Memory allocation failure. **/
 								if(vertexMassArrays != NULL){
@@ -661,7 +664,7 @@ return_t physRigidBodyLoad(physRigidBody **bodies, const skeleton *skl, const ch
 								fclose(rbInfo);
 								return -1;
 							}
-							cMeshFace *tempBuffer2 = memReallocate(cHull->faces, normalCapacity*sizeof(cMeshFace));
+							tempBuffer2 = memReallocate(cHull->faces, normalCapacity*sizeof(cMeshFace));
 							if(tempBuffer2 == NULL){
 								/** Memory allocation failure. **/
 								if(vertexMassArrays != NULL){
@@ -721,7 +724,7 @@ return_t physRigidBodyLoad(physRigidBody **bodies, const skeleton *skl, const ch
 			// Constraint
 			}else if(lineLength >= 12 && strncmp(line, "constraint ", 11) == 0){
 
-				char *end;
+				const char *end;
 				while(line[10] == ' ' || line[10] == '\t'){
 					++line;
 					--lineLength;
@@ -824,7 +827,7 @@ return_t physRigidBodyLoad(physRigidBody **bodies, const skeleton *skl, const ch
 			// Constraint offset bounds
 			}else if(lineLength >= 24 && strncmp(line, "offsetBounds ", 13) == 0){
 				if(currentCommand == 2){
-					char *token = strtok(line+13, "/");
+					const char *token = strtok(line+13, "/");
 					currentConstraint->constraintOffsetMin.x = strtod(token, NULL);
 					token = strtok(NULL, "/");
 					currentConstraint->constraintOffsetMin.y = strtod(token, NULL);
@@ -845,7 +848,7 @@ return_t physRigidBodyLoad(physRigidBody **bodies, const skeleton *skl, const ch
 			// Constraint rotation bounds
 			}else if(lineLength >= 26 && strncmp(line, "rotationBounds ", 15) == 0){
 				if(currentCommand == 2){
-					char *token = strtok(line+15, "/");
+					const char *token = strtok(line+15, "/");
 					currentConstraint->constraintRotationMin.x = strtod(token, NULL);
 					token = strtok(NULL, "/");
 					currentConstraint->constraintRotationMin.y = strtod(token, NULL);
@@ -953,7 +956,7 @@ return_t physRigidBodyLoad(physRigidBody **bodies, const skeleton *skl, const ch
 
 				}else if(currentCommand == 1){
 
-					cMesh *cHull = (cMesh *)&currentCollider->c.hull;
+					const cMesh *const cHull = (cMesh *)&currentCollider->c.hull;
 
 					if(cHull->vertexNum > 0 && cHull->faceNum > 0 && cHull->edgeNum > 0){
 
@@ -1013,7 +1016,7 @@ return_t physRigidBodyLoad(physRigidBody **bodies, const skeleton *skl, const ch
 
 		}else if(currentCommand == 1){
 
-			cMesh *cHull = (cMesh *)&currentCollider->c.hull;
+			const cMesh *const cHull = (cMesh *)&currentCollider->c.hull;
 
 			if(cHull->vertexNum > 0 && cHull->faceNum > 0 && cHull->edgeNum > 0){
 
@@ -1050,7 +1053,7 @@ return_t physRigidBodyLoad(physRigidBody **bodies, const skeleton *skl, const ch
 
 }
 
-void physRigidBodyDelete(physRigidBody *body){
+void physRigidBodyDelete(physRigidBody *const restrict body){
 	if(body->colliders != NULL){
 		modulePhysicsColliderFreeArray(&body->colliders);
 	}
@@ -1145,7 +1148,7 @@ void physRigidBodyDelete(physRigidBody *body){
 
 }*/
 
-void physRBIInit(physRBInstance *prbi){
+void physRBIInit(physRBInstance *const restrict prbi){
 	prbi->id = (physicsBodyIndex_t)-1;
 	prbi->flags = PHYSICS_BODY_INACTIVE;
 	prbi->local = NULL;
@@ -1159,7 +1162,7 @@ void physRBIInit(physRBInstance *prbi){
 	prbi->cache = NULL;
 }
 
-return_t physRBIInstantiate(physRBInstance *prbi, physRigidBody *body, bone *configuration){
+return_t physRBIInstantiate(physRBInstance *const restrict prbi, physRigidBody *const restrict body, bone *const restrict configuration){
 
 	cVertexIndex_t vertexArraySize;
 	cFaceIndex_t normalArraySize;
@@ -1236,7 +1239,7 @@ return_t physRBIInstantiate(physRBInstance *prbi, physRigidBody *body, bone *con
 
 }
 
-return_t physRBIAddConstraint(physRBInstance *prbi, physConstraint *c){
+return_t physRBIAddConstraint(physRBInstance *const restrict prbi, physConstraint *const c){
 
 	/*
 	** Sort a new constraint into the body.
@@ -1246,7 +1249,7 @@ return_t physRBIAddConstraint(physRBInstance *prbi, physConstraint *c){
 
 }
 
-return_t physRBICacheSeparation(physRBInstance *prbi, physCollisionInfo *c){
+return_t physRBICacheSeparation(physRBInstance *const restrict prbi, physCollisionInfo *const c){
 
 	/*
 	** Cache a separation after a failed narrowphase collision check.
@@ -1256,7 +1259,7 @@ return_t physRBICacheSeparation(physRBInstance *prbi, physCollisionInfo *c){
 
 }
 
-return_t physRBIAddCollision(physRBInstance *prbi, physCollisionInfo *c){
+return_t physRBIAddCollision(physRBInstance *const restrict prbi, physCollisionInfo *const c){
 
 	/*
 	** Caches the collision and creates an
@@ -1267,7 +1270,7 @@ return_t physRBIAddCollision(physRBInstance *prbi, physCollisionInfo *c){
 
 }
 
-static void physRBICentroidFromPosition(physRBInstance *prbi){
+static void physRBICentroidFromPosition(physRBInstance *const restrict prbi){
 	prbi->centroid = prbi->local->centroid;
 	quatGetRotatedVec3(&prbi->configuration->orientation, &prbi->centroid);
 	vec3AddVToV(&prbi->centroid, &prbi->configuration->position);
@@ -1281,7 +1284,7 @@ static void physRBICentroidFromPosition(physRBInstance *prbi){
 	vec3AddVToV(&prbi->configuration->position, &prbi->centroid);
 }*/
 
-static void physRBIGenerateGlobalInertia(physRBInstance *prbi){
+static void physRBIGenerateGlobalInertia(physRBInstance *const restrict prbi){
 
 	mat3 orientationMatrix, inverseOrientationMatrix;
 
@@ -1295,7 +1298,7 @@ static void physRBIGenerateGlobalInertia(physRBInstance *prbi){
 
 }
 
-void physRBIUpdateCollisionMesh(physRBInstance *prbi){
+void physRBIUpdateCollisionMesh(physRBInstance *const restrict prbi){
 
 	/*
 	** Transform the vertices of each body into global space.
@@ -1304,7 +1307,7 @@ void physRBIUpdateCollisionMesh(physRBInstance *prbi){
 	if(prbi->local != NULL){  /** Remove? **/
 
 		physCollider *i = prbi->colliders;
-		physCollider *j = prbi->local->colliders;
+		const physCollider *j = prbi->local->colliders;
 		while(i != NULL){
 
 			// Update the collider.
@@ -1349,14 +1352,14 @@ void physRBIUpdateCollisionMesh(physRBInstance *prbi){
 
 }
 
-void physRBIApplyLinearForce(physRBInstance *prbi, const vec3 *F){
+void physRBIApplyLinearForce(physRBInstance *const restrict prbi, const vec3 *const restrict F){
 	/* Apply a linear force. */
 	prbi->netForce.x += F->x;
 	prbi->netForce.y += F->y;
 	prbi->netForce.z += F->z;
 }
 
-void physRBIApplyAngularForceGlobal(physRBInstance *prbi, const vec3 *F, const vec3 *r){
+void physRBIApplyAngularForceGlobal(physRBInstance *const restrict prbi, const vec3 *const restrict F, const vec3 *const restrict r){
 	/* Apply an angular force. */
 	// T = r x F
 	vec3 rsR, rxF;
@@ -1365,7 +1368,7 @@ void physRBIApplyAngularForceGlobal(physRBInstance *prbi, const vec3 *F, const v
 	vec3AddVToV(&prbi->netTorque, &rxF);
 }
 
-void physRBIApplyForceGlobal(physRBInstance *prbi, const vec3 *F, const vec3 *r){
+void physRBIApplyForceGlobal(physRBInstance *const restrict prbi, const vec3 *const restrict F, const vec3 *const restrict r){
 
 	/*
 	** Accumulate the net force and torque.
@@ -1380,14 +1383,14 @@ void physRBIApplyForceGlobal(physRBInstance *prbi, const vec3 *F, const vec3 *r)
 
 }
 
-/*void physRBIApplyLinearImpulse(physRBInstance *prbi, const vec3 *j){
+/*void physRBIApplyLinearImpulse(physRBInstance *const restrict prbi, const vec3 *const restrict j){
 	* Apply a linear impulse. *
 	prbi->linearVelocity.x += j->x * prbi->local->inverseMass;
 	prbi->linearVelocity.y += j->y * prbi->local->inverseMass;
 	prbi->linearVelocity.z += j->z * prbi->local->inverseMass;
 }
 
-void physRBIApplyAngularImpulse(physRBInstance *prbi, const vec3 *T){
+void physRBIApplyAngularImpulse(physRBInstance *const restrict prbi, const vec3 *const restrict T){
 	* Apply an angular impulse. *
 	vec3 newTorque = *T;
 	mat3MultMByVRow(&prbi->inverseInertiaTensor, &newTorque);
@@ -1396,31 +1399,31 @@ void physRBIApplyAngularImpulse(physRBInstance *prbi, const vec3 *T){
 	prbi->angularVelocity.z += newTorque.z;
 }
 
-void physRBIApplyImpulseAtGlobalPoint(physRBInstance *prbi, const float j, const vec3 *r){
+void physRBIApplyImpulseAtGlobalPoint(physRBInstance *const restrict prbi, const vec3 *const restrict F, const vec3 *const restrict r){
 	vec3 T;
 	vec3Cross(r, F, &T);
 	physRBIApplyLinearImpulse(prbi, F->x, F->y, F->z);
 	physRBIApplyAngularImpulse(prbi, &T);
 }*/
 
-static void physRBIResetForceAccumulator(physRBInstance *prbi){
+static void physRBIResetForceAccumulator(physRBInstance *const restrict prbi){
 	prbi->netForce.x = 0.f;
 	prbi->netForce.y = 0.f;
 	prbi->netForce.z = 0.f;
 }
 
-static void physRBIResetTorqueAccumulator(physRBInstance *prbi){
+static void physRBIResetTorqueAccumulator(physRBInstance *const restrict prbi){
 	prbi->netTorque.x = 0.f;
 	prbi->netTorque.y = 0.f;
 	prbi->netTorque.z = 0.f;
 }
 
-void physRBIBeginSimulation(physRBInstance *prbi){
+void physRBIBeginSimulation(physRBInstance *const restrict prbi){
 	physRBIGenerateGlobalInertia(prbi);
 	physRBICentroidFromPosition(prbi);
 }
 
-void physRBIIntegrateEuler(physRBInstance *prbi, const float dt){
+void physRBIIntegrateEuler(physRBInstance *const restrict prbi, const float dt){
 
 	/* Euler integration scheme. */
 	if(prbi->local != NULL){  /** Remove? **/
@@ -1486,7 +1489,7 @@ void physRBIIntegrateEuler(physRBInstance *prbi, const float dt){
 
 }
 
-void physRBIIntegrateLeapfrog(physRBInstance *prbi, const float dt){
+void physRBIIntegrateLeapfrog(physRBInstance *const restrict prbi, const float dt){
 
 	/* Leapfrog integration scheme. */
 	if(prbi->local != NULL){  /** Remove? **/
@@ -1550,7 +1553,7 @@ void physRBIIntegrateLeapfrog(physRBInstance *prbi, const float dt){
 
 }
 
-void physRBIIntegrateLeapfrogVelocity(physRBInstance *prbi, const float dt){
+void physRBIIntegrateLeapfrogVelocity(physRBInstance *const restrict prbi, const float dt){
 
 	/* Leapfrog integration scheme. */
 	if(prbi->local != NULL && prbi->local->inverseMass > 0.f){  /** Remove? **/
@@ -1565,7 +1568,7 @@ void physRBIIntegrateLeapfrogVelocity(physRBInstance *prbi, const float dt){
 
 }
 
-void physRBIIntegrateLeapfrogConstraints(physRBInstance *prbi, const float dt){
+void physRBIIntegrateLeapfrogConstraints(physRBInstance *const restrict prbi, const float dt){
 
 	/* Leapfrog integration scheme. */
 	if(prbi->local != NULL){  /** Remove? **/
@@ -1623,20 +1626,20 @@ void physRBIIntegrateLeapfrogConstraints(physRBInstance *prbi, const float dt){
 
 }
 
-void physRBIIntegrateRungeKutta(physRBInstance *prbi, const float dt){
+void physRBIIntegrateRungeKutta(physRBInstance *const restrict prbi, const float dt){
 
 	/* RK4 integration scheme. */
 	//
 
 }
 
-static __FORCE_INLINE__ void physRBIPenetrationSlop(physRBInstance *body1, physRBInstance *body2, const cCollisionContactManifold *cm){
+static __FORCE_INLINE__ void physRBIPenetrationSlop(physRBInstance *const restrict body1, physRBInstance *const restrict body2, const cCollisionContactManifold *const restrict cm){
 
 	// Baumgarte stabilization.
 
 }
 
-static __FORCE_INLINE__ void physRBIResolveCollisionImpulse(physRBInstance *body1, physRBInstance *body2, const cCollisionContactManifold *cm){
+static __FORCE_INLINE__ void physRBIResolveCollisionImpulse(physRBInstance *const restrict body1, physRBInstance *const restrict body2, const cCollisionContactManifold *const restrict cm){
 
 	/**vec3 localContactPointA, localContactPointB;
 	vec3 contactVelocityA, contactVelocityB;
@@ -1718,7 +1721,7 @@ static __FORCE_INLINE__ void physRBIResolveCollisionImpulse(physRBInstance *body
 
 }
 
-void physRBIResolveCollisionGS(physRBInstance *body1, physRBInstance *body2, const cCollisionContactManifold *cm){
+void physRBIResolveCollisionGS(physRBInstance *const restrict body1, physRBInstance *const restrict body2, const cCollisionContactManifold *const restrict cm){
 
 	/*
 	** Uses the Gauss-Seidel method to solve the
@@ -1731,13 +1734,13 @@ void physRBIResolveCollisionGS(physRBInstance *body1, physRBInstance *body2, con
 
 }
 
-void physRBIUpdate(physRBInstance *prbi, const float dt){
+void physRBIUpdate(physRBInstance *const restrict prbi, const float dt){
 
 	//
 
 }
 
-void physRBIDelete(physRBInstance *prbi){
+void physRBIDelete(physRBInstance *const restrict prbi){
 	if(prbi->colliders != NULL){
 		modulePhysicsColliderRBIFreeArray(&prbi->colliders);
 	}

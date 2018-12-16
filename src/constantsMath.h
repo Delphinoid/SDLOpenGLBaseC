@@ -1,12 +1,18 @@
 #ifndef CONSTANTSMATH_H
 #define CONSTANTSMATH_H
 
+#include <math.h>
+
 #ifndef M_PI
 	#define M_PI 3.1415926535897932384626433832795028841971693993751058209749445923078164062
 #endif
 
 #ifndef INFINITY
-	#define INFINITY  0x7F800000
+	#define INFINITY 1.0/0.0
+#endif
+
+#ifndef NAN
+	#define NAN 0.0/0.0
 #endif
 
 // PI over 180, used for converting degrees to radians.

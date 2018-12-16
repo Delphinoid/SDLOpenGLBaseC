@@ -23,14 +23,14 @@ void moduleObjectResourcesDelete();
 
 object *moduleObjectAllocateStatic();
 object *moduleObjectAllocate();
-void moduleObjectFree(object *resource);
-object *moduleObjectFind(const char *name);
+void moduleObjectFree(object *const restrict resource);
+object *moduleObjectFind(const char *const restrict name);
 void moduleObjectClear();
 
 objInstance *moduleObjectInstanceAllocateStatic();
 objInstance *moduleObjectInstanceAllocate();
 objInstance *moduleObjectInstanceIndex(const size_t i);
-void moduleObjectInstanceFree(objInstance *resource);
+void moduleObjectInstanceFree(objInstance *const restrict resource);
 void moduleObjectInstanceClear();
 
 #endif

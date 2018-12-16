@@ -1,7 +1,7 @@
 #ifndef COLLIDERAABB_H
 #define COLLIDERAABB_H
 
-#include "return.h"
+#include "collision.h"
 
 typedef struct {
 	float left;
@@ -12,6 +12,6 @@ typedef struct {
 	float back;
 } cAABB;
 
-return_t cAABBCollision(const cAABB *c1, const cAABB *c2);
+return_t cAABBCollision(const cAABB *const restrict c1, const cAABB *const restrict c2);
 
 #endif

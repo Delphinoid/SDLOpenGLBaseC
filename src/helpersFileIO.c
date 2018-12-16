@@ -3,7 +3,7 @@
 #include "inline.h"
 #include <string.h>
 
-return_t fileParseNextLine(FILE *file, char *buffer, size_t bufferSize, char **line, size_t *lineLength){
+return_t fileParseNextLine(FILE *const restrict file, char *const restrict buffer, size_t bufferSize, char **const line, size_t *const restrict lineLength){
 
 	if(fgets(buffer, bufferSize, file)){
 
@@ -54,10 +54,10 @@ return_t fileParseNextLine(FILE *file, char *buffer, size_t bufferSize, char **l
 
 }
 
-__FORCE_INLINE__ void fileGenerateFullPath(char *fullPath,
-                                           const char *prgPath, const size_t prgLength,
-                                           const char *resPath, const size_t resLength,
-                                           const char *filePath, const size_t fileLength){
+__FORCE_INLINE__ void fileGenerateFullPath(char *const restrict fullPath,
+                                           const char *const restrict prgPath, const size_t prgLength,
+                                           const char *const restrict resPath, const size_t resLength,
+                                           const char *const restrict filePath, const size_t fileLength){
 
 	char *path = fullPath;
 
@@ -74,7 +74,7 @@ __FORCE_INLINE__ void fileGenerateFullPath(char *fullPath,
 
 }
 
-__FORCE_INLINE__ char *fileGenerateResourceName(const char *resource, const size_t length){
+__FORCE_INLINE__ char *fileGenerateResourceName(const char *const restrict resource, const size_t length){
 
 	char *name;
 

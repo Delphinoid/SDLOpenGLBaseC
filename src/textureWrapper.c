@@ -18,7 +18,7 @@
 
 /** Remove printf()s **/
 
-static void twfInit(twFrame *twf){
+static void twfInit(twFrame *const restrict twf){
 	twf->subframes = NULL;
 	twf->diffuse = NULL;
 	twf->normals = NULL;
@@ -26,7 +26,7 @@ static void twfInit(twFrame *twf){
 	twf->subframeNum = 0;
 }
 
-static return_t twfNew(twFrame *twf, const frameIndex_t subframeCapacity){
+static return_t twfNew(twFrame *const restrict twf, const frameIndex_t subframeCapacity){
 	twf->subframes = memAllocate(subframeCapacity*sizeof(rectangle));
 	if(twf->subframes == NULL){
 		/** Memory allocation failure. **/
@@ -35,7 +35,7 @@ static return_t twfNew(twFrame *twf, const frameIndex_t subframeCapacity){
 	return 1;
 }
 
-static return_t twfAddSubframe(twFrame *twf, const rectangle *sf, frameIndex_t *subframeCapacity){
+static return_t twfAddSubframe(twFrame *const restrict twf, const rectangle *const restrict sf, frameIndex_t *const restrict subframeCapacity){
 	if(twf->subframeNum == *subframeCapacity){
 		rectangle *tempBuffer;
 		if(*subframeCapacity > 0){
@@ -60,7 +60,7 @@ static return_t twfAddSubframe(twFrame *twf, const rectangle *sf, frameIndex_t *
 	return 1;
 }
 
-static return_t twfAddDefaultSubframe(twFrame *twf, const frameIndex_t subframeCapacity){
+static return_t twfAddDefaultSubframe(twFrame *const restrict twf, const frameIndex_t subframeCapacity){
 	if(subframeCapacity != twf->subframeNum+1){
 		rectangle *tempBuffer;
 		tempBuffer = memReallocate(twf->subframes, (twf->subframeNum+1)*sizeof(rectangle));
@@ -78,7 +78,7 @@ static return_t twfAddDefaultSubframe(twFrame *twf, const frameIndex_t subframeC
 	return 1;
 }
 
-static return_t twfResizeToFit(twFrame *twf, const frameIndex_t subframeCapacity){
+static return_t twfResizeToFit(twFrame *const restrict twf, const frameIndex_t subframeCapacity){
 	if(twf->subframeNum != subframeCapacity){
 		rectangle *tempBuffer;
 		tempBuffer = memReallocate(twf->subframes, twf->subframeNum*sizeof(rectangle));
@@ -91,18 +91,18 @@ static return_t twfResizeToFit(twFrame *twf, const frameIndex_t subframeCapacity
 	return 1;
 }
 
-static void twfDelete(twFrame *twf){
+static void twfDelete(twFrame *const restrict twf){
 	if(twf->subframes != NULL){
 		memFree(twf->subframes);
 	}
 }
 
-static void twaInit(twAnim *twa){
+static void twaInit(twAnim *const restrict twa){
 	twa->frames = NULL;
 	animDataInit(&twa->animData);
 }
 
-static return_t twaNew(twAnim *twa, const frameIndex_t animframeCapacity){
+static return_t twaNew(twAnim *const restrict twa, const frameIndex_t animframeCapacity){
 	twa->frames = memAllocate(animframeCapacity*sizeof(twFramePair));
 	if(twa->frames == NULL){
 		/** Memory allocation failure. **/
@@ -117,7 +117,7 @@ static return_t twaNew(twAnim *twa, const frameIndex_t animframeCapacity){
 	return 1;
 }
 
-static return_t twaAddFrame(twAnim *twa, const frameIndex_t f, const frameIndex_t sf, const float d, frameIndex_t *animframeCapacity){
+static return_t twaAddFrame(twAnim *const restrict twa, const frameIndex_t f, const frameIndex_t sf, const float d, frameIndex_t *animframeCapacity){
 	if(twa->animData.frameNum == *animframeCapacity){
 		twFramePair *tempBuffer1;
 		float *tempBuffer2;
@@ -148,7 +148,7 @@ static return_t twaAddFrame(twAnim *twa, const frameIndex_t f, const frameIndex_
 	return 1;
 }
 
-static return_t twaResizeToFit(twAnim *twa, const frameIndex_t animframeCapacity){
+static return_t twaResizeToFit(twAnim *const restrict twa, const frameIndex_t animframeCapacity){
 	if(twa->animData.frameNum != animframeCapacity){
 		twFramePair *tempBuffer1;
 		float *tempBuffer2;
@@ -169,14 +169,14 @@ static return_t twaResizeToFit(twAnim *twa, const frameIndex_t animframeCapacity
 	return 1;
 }
 
-static void twaDelete(twAnim *twa){
+static void twaDelete(twAnim *const restrict twa){
 	if(twa->frames != NULL){
 		memFree(twa->frames);
 	}
 	animDataDelete(&twa->animData);
 }
 
-static return_t twAddFrame(textureWrapper *tw, const twFrame *f, frameIndex_t *frameCapacity){
+static return_t twAddFrame(textureWrapper *const restrict tw, const twFrame *const restrict f, frameIndex_t *const restrict frameCapacity){
 	if(tw->frameNum == *frameCapacity){
 		twFrame *tempBuffer;
 		if(*frameCapacity > 0){
@@ -197,7 +197,7 @@ static return_t twAddFrame(textureWrapper *tw, const twFrame *f, frameIndex_t *f
 	return 1;
 }
 
-static return_t twAddAnim(textureWrapper *tw, const twAnim *a, animIndex_t *animCapacity){
+static return_t twAddAnim(textureWrapper *const restrict tw, const twAnim *const restrict a, animIndex_t *const restrict animCapacity){
 	if(tw->animationNum == *animCapacity){
 		twAnim *tempBuffer;
 		if(*animCapacity > 0){
@@ -218,16 +218,16 @@ static return_t twAddAnim(textureWrapper *tw, const twAnim *a, animIndex_t *anim
 	return 1;
 }
 
-static void twDefragment(textureWrapper *tw){
+static void twDefragment(textureWrapper *const restrict tw){
 	frameIndex_t i;
 	tw->frames     = memReallocate(tw->frames,     tw->frameNum    *sizeof(twFrame));
 	tw->animations = memReallocate(tw->animations, tw->animationNum*sizeof(twAnim ));
 	for(i = 0; i < tw->frameNum; ++i){
-		tw->frames[i].diffuse->name =
+		/**tw->frames[i].diffuse->name =
 		memReallocate(
 			tw->frames[i].diffuse->name,
 			strlen(tw->frames[i].diffuse->name)*sizeof(char)
-		);
+		);**/
 		tw->frames[i].subframes =
 		memReallocate(
 			tw->frames[i].subframes,
@@ -248,7 +248,7 @@ static void twDefragment(textureWrapper *tw){
 	}
 }
 
-static return_t twResizeToFit(textureWrapper *tw, const frameIndex_t frameCapacity, const animIndex_t animCapacity){
+static return_t twResizeToFit(textureWrapper *const restrict tw, const frameIndex_t frameCapacity, const animIndex_t animCapacity){
 	/*if(tw->frameNum != frameCapacity){
 		twFrame *tempBuffer1;
 		tempBuffer1 = memReallocate(tw->frames, tw->frameNum*sizeof(twFrame));
@@ -279,7 +279,7 @@ static return_t twResizeToFit(textureWrapper *tw, const frameIndex_t frameCapaci
 	return 1;
 }
 
-void twInit(textureWrapper *tw){
+void twInit(textureWrapper *const restrict tw){
 	tw->name = NULL;
 	tw->frameNum = 0;
 	tw->animationNum = 0;
@@ -287,7 +287,7 @@ void twInit(textureWrapper *tw){
 	tw->animations = NULL;
 }
 
-return_t twLoad(textureWrapper *tw, const char *prgPath, const char *filePath){
+return_t twLoad(textureWrapper *const restrict tw, const char *const restrict prgPath, const char *const restrict filePath){
 
 	twAnim tempAnim;
 	frameIndex_t animframeCapacity = 0;
@@ -481,7 +481,7 @@ return_t twLoad(textureWrapper *tw, const char *prgPath, const char *filePath){
 					frameIndex_t numberOfFrames = 0;
 					char macroDirection = ' ';
 					float dimensions[4];
-					char *token = strtok(line+7, "/");
+					const char *token = strtok(line+7, "/");
 					for(i = 0; i < 6; ++i){
 						switch(i){
 							case 0:
@@ -539,7 +539,7 @@ return_t twLoad(textureWrapper *tw, const char *prgPath, const char *filePath){
 					// Create a new subframe and add it to the current texture frame.
 					frameIndex_t i;
 					float dimensions[4];
-					char *token = strtok(line+9, "/");
+					const char *token = strtok(line+9, "/");
 					for(i = 0; i < 4; ++i){
 						dimensions[i] = strtod(token, NULL);
 						token = strtok(NULL, "/");
@@ -622,7 +622,7 @@ return_t twLoad(textureWrapper *tw, const char *prgPath, const char *filePath){
 					frameIndex_t textures[2];
 					frameIndex_t subframes[2];
 					float frameDelay = 0.f;
-					char *token = strtok(line+7, "/");
+					const char *token = strtok(line+7, "/");
 					for(i = 0; i < 5; ++i){
 						if(i < 2){
 							textures[i] = strtoul(token, NULL, 0);
@@ -675,7 +675,7 @@ return_t twLoad(textureWrapper *tw, const char *prgPath, const char *filePath){
 					frameIndex_t i;
 					size_t frameID = 0, subframeID = 0;
 					float frameDelay = 0.f;
-					char *token = strtok(line+6, "/");
+					const char *token = strtok(line+6, "/");
 					for(i = 0; i < 3; ++i){
 						switch(i){
 							case 0:
@@ -860,7 +860,7 @@ return_t twLoad(textureWrapper *tw, const char *prgPath, const char *filePath){
 
 }
 
-return_t twDefault(textureWrapper *tw){
+return_t twDefault(textureWrapper *const restrict tw){
 
 	twFrame tempFrame;
 	twAnim tempAnim;
@@ -928,10 +928,10 @@ return_t twDefault(textureWrapper *tw){
 
 }
 
-void twDelete(textureWrapper *tw){
+void twDelete(textureWrapper *const restrict tw){
 	if(tw->frames != NULL){
 		twFrame *f = tw->frames;
-		twFrame *fLast = &f[tw->frameNum];
+		twFrame *const fLast = &f[tw->frameNum];
 		for(; f < fLast; ++f){
 			twfDelete(f);
 		}
@@ -939,7 +939,7 @@ void twDelete(textureWrapper *tw){
 	}
 	if(tw->animations != NULL){
 		twAnim *a = tw->animations;
-		twAnim *aLast = &a[tw->animationNum];
+		twAnim *const aLast = &a[tw->animationNum];
 		for(; a < aLast; ++a){
 			twaDelete(a);
 		}
@@ -951,37 +951,37 @@ void twDelete(textureWrapper *tw){
 }
 
 
-static __FORCE_INLINE__ twAnim *twGetAnim(const textureWrapper *tw, const animIndex_t anim){
+static __FORCE_INLINE__ twAnim *twGetAnim(const textureWrapper *const restrict tw, const animIndex_t anim){
 	return &tw->animations[anim];
 }
 
-static __FORCE_INLINE__ twFrame *twGetAnimFrame(const textureWrapper *tw, const animIndex_t anim, const frameIndex_t frame){
+static __FORCE_INLINE__ twFrame *twGetAnimFrame(const textureWrapper *const restrict tw, const animIndex_t anim, const frameIndex_t frame){
 	/*size_t currentFrameID = *((size_t *)cvGet(&twGetAnim(tw, anim)->frameIDs, frame));*/
 	return &tw->frames[tw->animations[anim].frames[frame].frameID];
 }
 
-static __FORCE_INLINE__ rectangle *twGetAnimSubframe(const textureWrapper *tw, const animIndex_t anim, const frameIndex_t frame){
+static __FORCE_INLINE__ rectangle *twGetAnimSubframe(const textureWrapper *const restrict tw, const animIndex_t anim, const frameIndex_t frame){
 	/*size_t currentSubframeID = *((size_t *)cvGet(&twGetAnim(tw, anim)->subframeIDs, frame));*/
 	twFramePair *f = &tw->animations[anim].frames[frame];
 	return &tw->frames[f->frameID].subframes[f->subframeID];
 }
 
-static __FORCE_INLINE__ float *twGetAnimFrameDelay(const textureWrapper *tw, const animIndex_t anim, const frameIndex_t frame){
+static __FORCE_INLINE__ float *twGetAnimFrameDelay(const textureWrapper *const restrict tw, const animIndex_t anim, const frameIndex_t frame){
 	return &tw->animations[anim].animData.frameDelays[frame];
 }
 
-void twiInit(twInstance *twi, textureWrapper *tw){
+void twiInit(twInstance *const restrict twi, const textureWrapper *const tw){
 	twi->tw = tw;
 	twi->timeMod = 1.f;
 	twi->currentAnim = 0;
 	animInstInit(&twi->animator);
 }
 
-__FORCE_INLINE__ void twiAnimate(twInstance *twi, const float elapsedTime){
+__FORCE_INLINE__ void twiAnimate(twInstance *const restrict twi, const float elapsedTime){
 	animAdvance(&twi->animator, &twi->tw->animations[twi->currentAnim].animData, elapsedTime*twi->timeMod);
 }
 
-GLuint twiGetTexWidth(const twInstance *twi){
+GLuint twiGetTexWidth(const twInstance *const restrict twi){
 	// Make sure the current animation and frame are valid (within proper bounds)
 	//if(twi->currentAnim < twi->tw->animationNum &&
 	//   twi->animator.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum){
@@ -990,7 +990,7 @@ GLuint twiGetTexWidth(const twInstance *twi){
 	//return 0;
 }
 
-GLuint twiGetTexHeight(const twInstance *twi){
+GLuint twiGetTexHeight(const twInstance *const restrict twi){
 	// Make sure the current animation and frame are valid (within proper bounds)
 	//if(twi->currentAnim < twi->tw->animationNum &&
 	//   twi->animator.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum){
@@ -999,7 +999,7 @@ GLuint twiGetTexHeight(const twInstance *twi){
 	//return 0;
 }
 
-GLuint twiGetTexID(const twInstance *twi){
+GLuint twiGetTexID(const twInstance *const restrict twi){
 	// Make sure the current animation and frame are valid (within proper bounds)
 	//if(twi->currentAnim < twi->tw->animationNum &&
 	//   twi->animator.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum){
@@ -1008,15 +1008,15 @@ GLuint twiGetTexID(const twInstance *twi){
 	//return 0;
 }
 
-float twiGetFrameWidth(const twInstance *twi){
+float twiGetFrameWidth(const twInstance *const restrict twi){
 	return twGetAnimSubframe(twi->tw, twi->currentAnim, twi->animator.currentFrame)->w;
 }
 
-float twiGetFrameHeight(const twInstance *twi){
+float twiGetFrameHeight(const twInstance *const restrict twi){
 	return twGetAnimSubframe(twi->tw, twi->currentAnim, twi->animator.currentFrame)->h;
 }
 
-void twiGetFrameInfo(const twInstance *twi, float *x, float *y, float *w, float *h, GLuint *frameTexID, const float interpT){
+void twiGetFrameInfo(const twInstance *const restrict twi, float *const restrict x, float *const restrict y, float *const restrict w, float *const restrict h, GLuint *const restrict frameTexID, const float interpT){
 
 	// Make sure the current animation and frame are valid (within proper bounds)
 	//if(
@@ -1052,7 +1052,7 @@ void twiGetFrameInfo(const twInstance *twi, float *x, float *y, float *w, float 
 
 }
 
-return_t twiContainsTranslucency(const twInstance *twi){
+return_t twiContainsTranslucency(const twInstance *const restrict twi){
 	// Make sure the current animation and frame are valid (within proper bounds)
 	if(twi->currentAnim < twi->tw->animationNum &&
 	   twi->animator.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum){

@@ -1,12 +1,12 @@
 #include "memoryList.h"
 
-void memListInit(memoryList *list){
+void memListInit(memoryList *const restrict list){
 	list->block = 0;
 	list->free = NULL;
 	list->region = NULL;
 }
 
-void *memListCreate(memoryList *list, void *start, const size_t bytes, const size_t length){
+void *memListCreate(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length){
 
 	/*
 	** Initialize a memory list with "length"-many
@@ -30,7 +30,7 @@ void *memListCreate(memoryList *list, void *start, const size_t bytes, const siz
 
 }
 
-void *memListAllocate(memoryList *list){
+void *memListAllocate(memoryList *const restrict list){
 
 	/*
 	** Retrieves a new block of memory from the list
@@ -38,7 +38,7 @@ void *memListAllocate(memoryList *list){
 	** Unspecified behaviour with variable element sizes.
 	*/
 
-	byte_t *r = list->free;
+	byte_t *const r = list->free;
 	if(r){
 		list->free = *((byte_t **)r);
 	}
@@ -46,7 +46,7 @@ void *memListAllocate(memoryList *list){
 
 }
 
-void memListFree(memoryList *list, void *block){
+void memListFree(memoryList *const restrict list, void *const block){
 
 	/*
 	** Frees a block of memory from the list.
@@ -62,9 +62,8 @@ void *memListSetupMemory(void *start, const size_t bytes, const size_t length){
 	const size_t blockSize = memListBlockSize(bytes);
 	byte_t *block;
 	byte_t *next;
-	byte_t *end;
+	const byte_t *const end = (byte_t *)start + memListAllocationSize(start, bytes, length) - sizeof(memoryRegion);
 
-	end = (byte_t *)start + memListAllocationSize(start, bytes, length) - sizeof(memoryRegion);
 	start = memListAlignStartData(start);
 
 	block = start;
@@ -85,7 +84,7 @@ void *memListSetupMemory(void *start, const size_t bytes, const size_t length){
 
 }
 
-void *memListIndex(memoryList *list, const size_t i){
+void *memListIndex(memoryList *const restrict list, const size_t i){
 
 	/*
 	** Finds the element at index i.
@@ -93,7 +92,7 @@ void *memListIndex(memoryList *list, const size_t i){
 
 	size_t offset = list->block * i;
 
-	memoryRegion *region = list->region;
+	const memoryRegion *restrict region = list->region;
 	byte_t *regionStart  = memListFirst(region);
 	size_t  regionSize   = memAllocatorEnd(region) - regionStart;
 
@@ -108,7 +107,7 @@ void *memListIndex(memoryList *list, const size_t i){
 
 }
 
-void memListClear(memoryList *list){
+void memListClear(memoryList *const restrict list){
 
 	byte_t *block = memListAlignStartData(list->region->start);
 	byte_t *next = block + list->block;
@@ -128,7 +127,7 @@ void memListClear(memoryList *list){
 
 }
 
-void *memListExtend(memoryList *list, void *start, const size_t bytes, const size_t length){
+void *memListExtend(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length){
 
 	/*
 	** Extends the memory allocator.
@@ -139,7 +138,7 @@ void *memListExtend(memoryList *list, void *start, const size_t bytes, const siz
 
 	if(start){
 
-		memoryRegion *newRegion = (memoryRegion *)((byte_t *)start + memListAllocationSize(start, bytes, length) - sizeof(memoryRegion));
+		memoryRegion *const newRegion = (memoryRegion *)((byte_t *)start + memListAllocationSize(start, bytes, length) - sizeof(memoryRegion));
 		memRegionExtend(&list->region, newRegion, start);
 
 		memListSetupMemory(start, bytes, length);
@@ -151,6 +150,6 @@ void *memListExtend(memoryList *list, void *start, const size_t bytes, const siz
 
 }
 
-void memListDelete(memoryList *list){
+void memListDelete(memoryList *const restrict list){
 	memRegionFree(list->region);
 }

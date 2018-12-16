@@ -2,6 +2,7 @@
 #include "memoryManager.h"
 #include "collision.h"
 #include "helpersMath.h"
+#include "constantsMath.h"
 #include "inline.h"
 #include <string.h>
 #include <math.h>
@@ -19,7 +20,7 @@
 #define COLLISION_PARALLEL_THRESHOLD 0.0001f
 #define COLLISION_DISTANCE_THRESHOLD 0.0001f
 
-void cMeshInit(cMesh *cm){
+void cMeshInit(cMesh *const restrict cm){
 	cm->vertexNum = 0;
 	cm->vertices = NULL;
 	cm->faceNum = 0;
@@ -30,15 +31,15 @@ void cMeshInit(cMesh *cm){
 	cm->edges = NULL;
 }
 
-static __FORCE_INLINE__ vec3 *cMeshCollisionSupport(const cMesh *c, const vec3 *axis){
+static __FORCE_INLINE__ const vec3 *cMeshCollisionSupport(const cMesh *const restrict c, const vec3 *const restrict axis){
 	/*
 	** Finds the vertex in c that is farthest in
 	** the direction of axis by projecting each
 	** vertex onto axis.
 	*/
-	vec3 *r = c->vertices;
-	vec3 *v = &r[1];
-	const vec3 *vLast = &r[c->vertexNum];
+	const vec3 *r = c->vertices;
+	const vec3 *v = &r[1];
+	const vec3 *const vLast = &r[c->vertexNum];
 	float max = vec3Dot(r, axis);
 	for(; v < vLast; ++v){
 		const float s = vec3Dot(v, axis);
@@ -57,8 +58,8 @@ typedef struct {
 
 typedef struct {
 	float depthSquared;
-	cMeshEdge *edge1;
-	cMeshEdge *edge2;
+	const cMeshEdge *edge1;
+	const cMeshEdge *edge2;
 } cMeshSHEdgeHelper;
 
 typedef struct {
@@ -89,21 +90,21 @@ static __FORCE_INLINE__ void cMeshPenetrationPlanesInit(cMeshPenetrationPlanes *
 	cMeshSHEdgeInit(&planes->edge);
 }
 
-static return_t cMeshClipPatchRegion(const cMesh *reference, const cFaceIndex_t referenceFace,
-                                     const vec3 *incidentNormal, const vec3 *incidentVertex,
-                                     cMeshEdge *currentEdge, const cMeshEdge *endEdge,
-                                     cCollisionContactManifold *cm){
+static return_t cMeshClipPatchRegion(const cMesh *const reference, const cFaceIndex_t referenceFace,
+                                     const vec3 *const restrict incidentNormal, const vec3 *const restrict incidentVertex,
+                                     const cMeshEdge *currentEdge, const cMeshEdge *const endEdge,
+                                     const size_t offset, cCollisionContactManifold *cm){
 
 	/*
 	** Loops from currentEdge to endEdge, projecting the
-	** ending vertex of each edge onto the incident plane
-	** and adding it as a contact point. This function is
-	** invoked if multiple edges in a row lie outside the
-	** clipping region.
+	** ending vertex of each edge from the reference collider
+	** onto the incident plane and adding it as a contact
+	** point. This function is invoked if multiple edges in a
+	** row lie outside the clipping region.
 	*/
 
-	cCollisionContact *contact = &cm->contacts[cm->contactNum];
-	cMeshEdge *nextEdge;
+	cCollisionContact *restrict contact = &cm->contacts[cm->contactNum];
+	const cMeshEdge *nextEdge;
 	float depthSquared;
 
 	// Loop through the edges inbetween the start and end edges, adding the end vertices.
@@ -118,17 +119,17 @@ static return_t cMeshClipPatchRegion(const cMesh *reference, const cFaceIndex_t 
 		}
 		if(currentEdge->end == nextEdge->start || currentEdge->end == nextEdge->end){
 			// The ending vertex is currentEdge->end.
-			contact->position = reference->vertices[currentEdge->end];
+			*(&contact->positionA+offset) = reference->vertices[currentEdge->end];
 		}else{
 			// The ending vertex is currentEdge->start.
-			contact->position = reference->vertices[currentEdge->start];
+			*(&contact->positionA+offset) = reference->vertices[currentEdge->start];
 		}
 
 		// Only add the vertex if it is behind the incident face.
-		depthSquared = pointPlaneDistanceSquared(incidentNormal, incidentVertex, &contact->position);
+		depthSquared = pointPlaneDistanceSquared(incidentNormal, incidentVertex, &contact->positionA+offset);
 		if(depthSquared <= 0.f){
 			// If the vertex is behind the incident face, project it onto it.
-			pointPlaneProject(incidentNormal, incidentVertex, &contact->position);
+			pointPlaneProjectR(incidentNormal, incidentVertex, &contact->positionA+offset, &contact->positionB-offset);
 			contact->depthSquared = -depthSquared;
 			++cm->contactNum;
 			if(cm->contactNum == COLLISION_MAX_CONTACT_POINTS){
@@ -143,8 +144,7 @@ static return_t cMeshClipPatchRegion(const cMesh *reference, const cFaceIndex_t 
 	return 0;
 
 }
-
-static __FORCE_INLINE__ return_t cMeshClipEdge(const vec3 *normal, const vec3 *vertex, vec3 *start, vec3 *end){
+static __FORCE_INLINE__ return_t cMeshClipEdge(const vec3 *const restrict normal, const vec3 *const restrict vertex, vec3 *const restrict start, vec3 *const restrict end){
 	/*
 	** Clips an edge intersecting a plane. If there is
 	** no intersection, the function returns 0.
@@ -160,19 +160,20 @@ static __FORCE_INLINE__ return_t cMeshClipEdge(const vec3 *normal, const vec3 *v
 		// ending vertex. If both vertices are behind the
 		// plane, there is no need to clip anything.
 		if(endDistance > 0.f){
-			vec3Lerp(start, end, startDistance / (startDistance - endDistance), end);
+			vec3Lerp2(start, end, startDistance / (startDistance - endDistance));
 		}
 		return 2;
 	}else if(endDistance <= 0.f){
 		// If the starting vertex is in front of the plane
 		// and the ending vertex is behind it, clip the
 		// starting vertex.
-		vec3Lerp(start, end, startDistance / (startDistance - endDistance), start);
+		vec3Lerp1(start, end, startDistance / (startDistance - endDistance));
 		return 1;
 	}
 	return 0;
 }
-static __FORCE_INLINE__ return_t cMeshClipEdgeAlloc(const vec3 *normal, const vec3 *vertex, const vec3 *start, const vec3 *end, vec3 *clip){
+
+static __FORCE_INLINE__ return_t cMeshClipEdgeAlloc(const vec3 *const restrict normal, const vec3 *const restrict vertex, const vec3 *const restrict start, const vec3 *const restrict end, vec3 *const restrict clip){
 	/*
 	** Clips an edge intersecting a plane. If there is
 	** no intersection, the function returns 0.
@@ -188,7 +189,7 @@ static __FORCE_INLINE__ return_t cMeshClipEdgeAlloc(const vec3 *normal, const ve
 		// ending vertex. If both vertices are behind the
 		// plane, there is no need to clip anything.
 		if(endDistance > 0.f){
-			vec3Lerp(start, end, startDistance / (startDistance - endDistance), clip);
+			vec3LerpR(start, end, startDistance / (startDistance - endDistance), clip);
 		}else{
 			*clip = *end;
 		}
@@ -197,25 +198,27 @@ static __FORCE_INLINE__ return_t cMeshClipEdgeAlloc(const vec3 *normal, const ve
 		// If the starting vertex is in front of the plane
 		// and the ending vertex is behind it, clip the
 		// starting vertex.
-		vec3Lerp(start, end, startDistance / (startDistance - endDistance), clip);
+		vec3LerpR(start, end, startDistance / (startDistance - endDistance), clip);
 		return 1;
 	}
 	return 0;
 }
 
-static __FORCE_INLINE__ void cMeshClipEdgeContact(const cMesh *reference, const cMesh *incident,
-                                                  const cMeshEdge *referenceEdge, const cMeshEdge *incidentEdge,
-                                                  cCollisionContactManifold *cm){
+static __FORCE_INLINE__ void cMeshClipEdgeContact(const cMesh *const reference, const cMesh *const incident,
+                                                  const cMeshEdge *const restrict referenceEdge, const cMeshEdge *const restrict incidentEdge,
+                                                  cCollisionContactManifold *const restrict cm){
 
-	const vec3 *referenceEdgeStart = &reference->vertices[referenceEdge->start];
-	const vec3 *referenceEdgeEnd   = &reference->vertices[referenceEdge->end];
+	const vec3 *const restrict referenceEdgeStart = &reference->vertices[referenceEdge->start];
+	const vec3 *const restrict referenceEdgeEnd   = &reference->vertices[referenceEdge->end];
 	vec3 referenceContact;
 
-	const vec3 *incidentEdgeStart = &incident->vertices[incidentEdge->start];
-	const vec3 *incidentEdgeEnd   = &incident->vertices[incidentEdge->end];
+	const vec3 *const restrict incidentEdgeStart = &incident->vertices[incidentEdge->start];
+	const vec3 *const restrict incidentEdgeEnd   = &incident->vertices[incidentEdge->end];
 	vec3 incidentContact;
 
 	float depthSquared;
+
+	cCollisionContact *restrict contact = &cm->contacts[cm->contactNum];
 
 	// Get the closest points on the line segments.
 	segmentClosestPoints(referenceEdgeStart, referenceEdgeEnd, incidentEdgeStart, incidentEdgeEnd, &referenceContact, &incidentContact);
@@ -226,10 +229,11 @@ static __FORCE_INLINE__ void cMeshClipEdgeContact(const cMesh *reference, const 
 
 	// Add the contact point.
 	if(depthSquared >= 0.f){
-		cm->contacts[cm->contactNum].depthSquared = depthSquared;
-		cm->contacts[cm->contactNum].position.x = referenceContact.x + 0.5f * cm->normal.x;
-		cm->contacts[cm->contactNum].position.y = referenceContact.y + 0.5f * cm->normal.y;
-		cm->contacts[cm->contactNum].position.z = referenceContact.z + 0.5f * cm->normal.z;
+		contact->depthSquared = depthSquared;
+		contact->positionB.x = referenceContact.x + 0.5f * cm->normal.x;
+		contact->positionB.y = referenceContact.y + 0.5f * cm->normal.y;
+		contact->positionB.z = referenceContact.z + 0.5f * cm->normal.z;
+		pointPlaneProjectR(&cm->normal, referenceEdgeStart, &contact->positionB, &contact->positionA);
 		++cm->contactNum;
 	}
 
@@ -239,43 +243,52 @@ static __FORCE_INLINE__ void cMeshClipEdgeContact(const cMesh *reference, const 
 
 }
 
-static void cMeshClipFaceContact(const cMesh *reference, const cMesh *incident,
-                                 const cFaceIndex_t referenceFaceIndex, const cFaceIndex_t incidentFaceIndex,
-                                 cCollisionContactManifold *cm){
+static __FORCE_INLINE__ void cMeshClipFaceContact(const cMesh *const reference, const cMesh *const incident,
+                                                  const cFaceIndex_t referenceFaceIndex, const cFaceIndex_t incidentFaceIndex,
+                                                  const size_t offset, cCollisionContactManifold *const restrict cm){
 
 	/*
 	** Generates a contact manifold by clipping the edges of
 	** the incident face against the faces adjacent to the
 	** reference face.
+	**
+	** Offset is used to swap the positions of the points in
+	** the contact manifold when, for example, the first
+	** mesh is the incident collider and the second is the
+	** reference collider.
+	**
+	** No heap allocation is invoked.
 	*/
 
 	const cMeshFace referenceFace = reference->faces[referenceFaceIndex];
-	cMeshEdge *referenceFaceFirstEdge = &reference->edges[referenceFace];
-	cMeshEdge *referenceEdge;
+	const cMeshEdge *const referenceFaceFirstEdge = &reference->edges[referenceFace];
+	const cMeshEdge *referenceFaceEdge;
 
 	const cMeshFace incidentFace = incident->faces[incidentFaceIndex];
-	cMeshEdge *incidentFaceFirstEdge = &incident->edges[incidentFace];
-	cMeshEdge *incidentEdge = incidentFaceFirstEdge;
+	const cMeshEdge *const incidentFaceFirstEdge = &incident->edges[incidentFace];
+	const cMeshEdge *incidentFaceEdge = incidentFaceFirstEdge;
 
-	cMeshEdge *startRegion = NULL;
-	cMeshEdge *endRegionFinal = NULL;
+	const cMeshEdge *startRegion = NULL;
+	const cMeshEdge *endRegionFinal = NULL;
 	int swapEdgesFinal;
 
-	const vec3 *referenceVertex = &reference->vertices[referenceFaceFirstEdge->start];
-	const vec3 *incidentNormal = &incident->normals[incidentFaceIndex];
-	const vec3 *incidentVertex = &incident->vertices[incidentFaceFirstEdge->start];
+	const vec3 *const referenceFaceVertex = &reference->vertices[referenceFaceFirstEdge->start];
+	const vec3 *const restrict incidentNormal = &incident->normals[incidentFaceIndex];
+	const vec3 *const incidentVertex = &incident->vertices[incidentFaceFirstEdge->start];
 
-	cCollisionContact *contact = &cm->contacts[cm->contactNum];
+	cCollisionContact *restrict contact = &cm->contacts[cm->contactNum];
 
 	// Incident edge loop variables.
 	int startClipped;
 	float depthSquared;
 	vec3 start;
 	vec3 end;
-	cMeshEdge *startRegionOld;
-	cMeshEdge *endRegion = NULL;
+	const cMeshEdge *startRegionOld;
+	const cMeshEdge *endRegion = NULL;
 
 	// Calculate the contact normal.
+	// Used for calculating the distance of
+	// penetrating vertices from the reference face.
 	cm->normal.x = -reference->normals[referenceFaceIndex].x;
 	cm->normal.y = -reference->normals[referenceFaceIndex].y;
 	cm->normal.z = -reference->normals[referenceFaceIndex].z;
@@ -293,46 +306,46 @@ static void cMeshClipFaceContact(const cMesh *reference, const cMesh *incident,
 	endRegion = NULL;
 
 	// Add the edge's starting vertex and get the next edge.
-	if(incidentEdge->face == incidentFaceIndex){
+	if(incidentFaceEdge->face == incidentFaceIndex){
 		// The next edge associated with this face is not a twin.
-		start = incident->vertices[incidentEdge->start];
-		end = incident->vertices[incidentEdge->end];
-		incidentEdge = &incident->edges[incidentEdge->next];
+		start = incident->vertices[incidentFaceEdge->start];
+		end = incident->vertices[incidentFaceEdge->end];
+		incidentFaceEdge = &incident->edges[incidentFaceEdge->next];
 	}else{
 		// The next edge associated with this face is a twin.
 		// Swap the start and end vertices around to
 		// stay consistent with previous edges.
-		start = incident->vertices[incidentEdge->end];
-		end = incident->vertices[incidentEdge->start];
-		incidentEdge = &incident->edges[incidentEdge->twinNext];
+		start = incident->vertices[incidentFaceEdge->end];
+		end = incident->vertices[incidentFaceEdge->start];
+		incidentFaceEdge = &incident->edges[incidentFaceEdge->twinNext];
 	}
 
 	// Loop through every edge on the reference face
 	// to find its adjacent faces. Clip the edge of the
 	// incident mesh against each of the adjacent face's
 	// normals.
-	referenceEdge = referenceFaceFirstEdge;
+	referenceFaceEdge = referenceFaceFirstEdge;
 	do {
 
 		// Clip the vertex with the normal of the
 		// current twin edge's face.
 
-		cMeshEdge *referenceEdgeNext;
+		const cMeshEdge *referenceEdgeNext;
 
-		vec3 *adjacentFaceNormal;
-		vec3 *adjacentFaceVertex;
+		const vec3 *restrict adjacentFaceNormal;
+		const vec3 *restrict adjacentFaceVertex;
 
 		int clipped;
 
-		adjacentFaceVertex = &reference->vertices[referenceEdge->start];
-		if(referenceEdge->face == referenceFaceIndex){
+		adjacentFaceVertex = &reference->vertices[referenceFaceEdge->start];
+		if(referenceFaceEdge->face == referenceFaceIndex){
 			// The next edge associated with this face is not a twin.
-			adjacentFaceNormal = &reference->normals[referenceEdge->twinFace];
-			referenceEdgeNext = &reference->edges[referenceEdge->next];
+			adjacentFaceNormal = &reference->normals[referenceFaceEdge->twinFace];
+			referenceEdgeNext = &reference->edges[referenceFaceEdge->next];
 		}else{
 			// The next edge associated with this face is a twin.
-			adjacentFaceNormal = &reference->normals[referenceEdge->face];
-			referenceEdgeNext = &reference->edges[referenceEdge->twinNext];
+			adjacentFaceNormal = &reference->normals[referenceFaceEdge->face];
+			referenceEdgeNext = &reference->edges[referenceFaceEdge->twinNext];
 		}
 
 		clipped = cMeshClipEdge(adjacentFaceNormal, adjacentFaceVertex, &start, &end);
@@ -350,18 +363,18 @@ static void cMeshClipFaceContact(const cMesh *reference, const cMesh *incident,
 			// Save the final edge it was clipped
 			// on as somewhere to end when adding
 			// clipping region vertices.
-			endRegion = referenceEdge;
+			endRegion = referenceFaceEdge;
 		}else{
 			// The ending vertex was clipped, save
 			// the final edge it was clipped on as
 			// somewhere to start when adding
 			// clipping region vertices.
-			startRegion = referenceEdge;
+			startRegion = referenceFaceEdge;
 		}
 
-		referenceEdge = referenceEdgeNext;
+		referenceFaceEdge = referenceEdgeNext;
 
-	} while(referenceEdge != referenceFaceFirstEdge);
+	} while(referenceFaceEdge != referenceFaceFirstEdge);
 
 	// If new clipped faces were found but some were skipped,
 	// add vertices from the clipping region to patch the gap.
@@ -402,13 +415,13 @@ static void cMeshClipFaceContact(const cMesh *reference, const cMesh *incident,
 			// Check whether or not startRegion and
 			// endRegion should be swapped.
 			if(vec3Dot(&edgeNormal, &local) < 0.f){
-				cMeshEdge *swap = startRegion;
+				const cMeshEdge *const swap = startRegion;
 				startRegion = endRegion;
 				endRegion = swap;
 			}
 			// Add all the vertices between startRegion
 			// and endRegion as contact points.
-			if(cMeshClipPatchRegion(reference, referenceFaceIndex, incidentNormal, incidentVertex, startRegion, endRegion, cm)){
+			if(cMeshClipPatchRegion(reference, referenceFaceIndex, incidentNormal, incidentVertex, startRegion, endRegion, offset, cm)){
 				return;
 			}
 			startRegion = NULL;
@@ -420,10 +433,12 @@ static void cMeshClipFaceContact(const cMesh *reference, const cMesh *incident,
 	// are valid contact points. Check if the edge's
 	// vertices satisfy this condition.
 	// Begin by checking the ending vertex.
-	depthSquared = pointPlaneDistanceSquared(&cm->normal, referenceVertex, &end);
+	depthSquared = pointPlaneDistanceSquared(&cm->normal, referenceFaceVertex, &end);
 	if(depthSquared >= 0.f){
+		// Project the vertex onto the reference face.
+		pointPlaneProjectR(&cm->normal, referenceFaceVertex, &end, &contact->positionA+offset);
+		*(&contact->positionB-offset) = end;
 		contact->depthSquared = depthSquared;
-		contact->position = end;
 		++cm->contactNum;
 		if(cm->contactNum == COLLISION_MAX_CONTACT_POINTS){
 			return;
@@ -435,10 +450,12 @@ static void cMeshClipFaceContact(const cMesh *reference, const cMesh *incident,
 	// either has already been added or will be added later as an
 	// ending vertex, and we don't want duplicate contact points.
 	if(startClipped){
-		depthSquared = pointPlaneDistanceSquared(&cm->normal, referenceVertex, &start);
+		depthSquared = pointPlaneDistanceSquared(&cm->normal, referenceFaceVertex, &start);
 		if(depthSquared >= 0.f){
+			// Project the vertex onto the reference face.
+			pointPlaneProjectR(&cm->normal, referenceFaceVertex, &start, &contact->positionA+offset);
+			*(&contact->positionB-offset) = start;
 			contact->depthSquared = depthSquared;
-			contact->position = start;
 			++cm->contactNum;
 			if(cm->contactNum == COLLISION_MAX_CONTACT_POINTS){
 				return;
@@ -448,7 +465,7 @@ static void cMeshClipFaceContact(const cMesh *reference, const cMesh *incident,
 	}
 
 	MESH_CLIP_SKIP_CURRENT_EDGE:
-	if(incidentEdge != incidentFaceFirstEdge){
+	if(incidentFaceEdge != incidentFaceFirstEdge){
 		goto MESH_CLIP_INCIDENT_EDGE_LOOP;
 	}
 	//
@@ -460,60 +477,65 @@ static void cMeshClipFaceContact(const cMesh *reference, const cMesh *incident,
 	// still add the vertices between the start edge and it.
 	if(startRegion != NULL && endRegionFinal != NULL && startRegion != endRegionFinal){
 		if(swapEdgesFinal){
-			cMeshEdge *swap = startRegion;
+			const cMeshEdge *const swap = startRegion;
 			startRegion = endRegionFinal;
 			endRegionFinal = swap;
 		}
-		if(cMeshClipPatchRegion(reference, referenceFaceIndex, incidentNormal, incidentVertex, startRegion, endRegionFinal, cm)){
+		if(cMeshClipPatchRegion(reference, referenceFaceIndex, incidentNormal, incidentVertex, startRegion, endRegionFinal, offset, cm)){
 			return;
 		}
 	}
 
 	// If no contacts were added, just add the reference face vertices.
 	if(cm->contactNum == 0){
-		cMeshClipPatchRegion(reference, referenceFaceIndex, incidentNormal, incidentVertex, referenceFaceFirstEdge, referenceFaceFirstEdge, cm);
+		cMeshClipPatchRegion(reference, referenceFaceIndex, incidentNormal, incidentVertex, referenceFaceFirstEdge, referenceFaceFirstEdge, offset, cm);
 	}
 
 }
-static void cMeshClipFaceContactAlloc(const cMesh *reference, const cMesh *incident,
-                                      const cFaceIndex_t referenceFaceIndex, const cFaceIndex_t incidentFaceIndex,
-                                      cCollisionContactManifold *cm){
+static __FORCE_INLINE__ void cMeshClipFaceContactAlloc(const cMesh *const reference, const cMesh *const incident,
+                                                       const cFaceIndex_t referenceFaceIndex, const cFaceIndex_t incidentFaceIndex,
+                                                       const size_t offset, cCollisionContactManifold *const restrict cm){
 
 	/*
 	** Generates a contact manifold by clipping the edges of
 	** the incident face against the faces adjacent to the
 	** reference face.
+	**
+	** Offset is used to swap the positions of the points in
+	** the contact manifold when, for example, the first
+	** mesh is the incident collider and the second is the
+	** reference collider.
+	**
+	** Heap allocation is invoked.
 	*/
 
-	cMeshEdge *referenceFaceFirstEdge = &reference->edges[reference->faces[referenceFaceIndex]];
-	const cVertexIndex_t referenceVertexNum = reference->edgeNum;
-	cVertexIndex_t vertexNum = incident->edgeNum;
-
-	const cVertexIndex_t maxOutput = referenceVertexNum > vertexNum ?
-	                                 referenceVertexNum + referenceVertexNum : vertexNum + vertexNum;
-
-	//alloca(maxOutput * sizeof(vec3) * 2);
-	vec3 *vertices = memAllocate(maxOutput * sizeof(vec3) * 2);
+	//alloca(incident->edgeMax * 2 * sizeof(vec3) * 2);
+	vec3 *const vertices = memAllocate(incident->edgeMax * 2 * sizeof(vec3) * 2);
 
 	// Make sure the allocation didn't fail.
 	if(vertices != NULL){
 
-		const vec3 *referenceVertex = &reference->vertices[referenceFaceFirstEdge->start];
-		cCollisionContact *contact = &cm->contacts[cm->contactNum];
+		cCollisionContact *restrict contact = &cm->contacts[cm->contactNum];
+
+		const cMeshEdge *const referenceFaceFirstEdge = &reference->edges[reference->faces[referenceFaceIndex]];
+		const cMeshEdge *referenceFaceEdge;
+		const cMeshEdge *const incidentFaceFirstEdge = &incident->edges[incident->faces[incidentFaceIndex]];
+		const cMeshEdge *incidentFaceEdge;
+
+		const vec3 *const referenceFaceVertex = &reference->vertices[referenceFaceFirstEdge->start];
 
 		// Pointer to the array with the vertices to be clipped.
 		vec3 *vertexArray = vertices;
 		// Pointer to the array with the clipped vertices.
-		vec3 *vertexClipArray = &vertices[maxOutput];
+		vec3 *vertexClipArray;
 		vec3 *vertexArraySwap;
-
-		cMeshEdge *edgeFirst = referenceFaceFirstEdge;
-		cMeshEdge *edge = &incident->edges[incident->faces[incidentFaceIndex]];
 
 		vec3 *vertex;
 		vec3 *vertexLast;
 
 		// Calculate the contact normal.
+		// Used for calculating the distance of
+		// penetrating vertices from the reference face.
 		cm->normal.x = -reference->normals[referenceFaceIndex].x;
 		cm->normal.y = -reference->normals[referenceFaceIndex].y;
 		cm->normal.z = -reference->normals[referenceFaceIndex].z;
@@ -521,31 +543,39 @@ static void cMeshClipFaceContactAlloc(const cMesh *reference, const cMesh *incid
 		// Generate the contact tangents.
 		cCollisionGenerateContactTangents(&cm->normal, &cm->tangents[0], &cm->tangents[1]);
 
-		// Add the vertex positions to vertexArray.
-		vertex = vertexArray;
-		vertexLast = &vertexArray[vertexNum];
-		for(; vertex < vertexLast; ++vertex){
+		// Add the positions of all the vertices
+		// for the incident edges to vertexArray.
+		vertexLast = vertexArray;
+		incidentFaceEdge = incidentFaceFirstEdge;
+
+		do {
 
 			// Add the edge's starting vertex and get the next edge.
-			if(edge->face == incidentFaceIndex){
+			if(incidentFaceEdge->face == incidentFaceIndex){
 				// The next edge associated with this face is not a twin.
-				*vertex = incident->vertices[edge->start];
-				edge = &incident->edges[edge->next];
+				*vertexLast = incident->vertices[incidentFaceEdge->start];
+				incidentFaceEdge = &incident->edges[incidentFaceEdge->next];
 			}else{
 				// The next edge associated with this face is a twin.
 				// Swap the start and end vertices around to
 				// stay consistent with previous edges.
-				*vertex = incident->vertices[edge->end];
-				edge = &incident->edges[edge->twinNext];
+				*vertexLast = incident->vertices[incidentFaceEdge->end];
+				incidentFaceEdge = &incident->edges[incidentFaceEdge->twinNext];
 			}
 
-		}
+			++vertexLast;
+
+		} while(incidentFaceEdge != incidentFaceFirstEdge);
+
+		// Set the start of the clip array, which
+		// is the end of the vertex array.
+		vertexClipArray = vertexLast;
 
 
 		// Loop through every edge on the reference face
 		// to find its adjacent faces. Clip these against
 		// the incident face vertices.
-		edge = edgeFirst;
+		referenceFaceEdge = referenceFaceFirstEdge;
 		do {
 
 			// Clip the vertex with the normal of the
@@ -553,22 +583,23 @@ static void cMeshClipFaceContactAlloc(const cMesh *reference, const cMesh *incid
 
 			vec3 *vertexClip;
 			vec3 *vertexPrevious;
-			vec3 *vertexLastNew;
 
-			vec3 *adjacentFaceNormal;
-			vec3 *adjacentFaceVertex;
+			const vec3 *restrict adjacentFaceNormal;
+			const vec3 *restrict adjacentFaceVertex;
 
-			int clipped;
+			float startDistance;
+			float endDistance;
 
-			adjacentFaceVertex = &reference->vertices[edge->start];
-			if(edge->face == referenceFaceIndex){
+
+			adjacentFaceVertex = &reference->vertices[referenceFaceEdge->start];
+			if(referenceFaceEdge->face == referenceFaceIndex){
 				// The next edge associated with this face is not a twin.
-				adjacentFaceNormal = &reference->normals[edge->twinFace];
-				edge = &reference->edges[edge->next];
+				adjacentFaceNormal = &reference->normals[referenceFaceEdge->twinFace];
+				referenceFaceEdge = &reference->edges[referenceFaceEdge->next];
 			}else{
 				// The next edge associated with this face is a twin.
-				adjacentFaceNormal = &reference->normals[edge->face];
-				edge = &reference->edges[edge->twinNext];
+				adjacentFaceNormal = &reference->normals[referenceFaceEdge->face];
+				referenceFaceEdge = &reference->edges[referenceFaceEdge->twinNext];
 			}
 
 
@@ -578,15 +609,17 @@ static void cMeshClipFaceContactAlloc(const cMesh *reference, const cMesh *incid
 			vertex = vertexArray+1;
 			vertexClip = vertexClipArray;
 			vertexPrevious = vertexArray;
-			vertexLastNew = vertexClipArray;
+			startDistance = pointPlaneDistanceSquared(adjacentFaceNormal, adjacentFaceVertex, vertexPrevious);
+			incidentFaceEdge = incidentFaceFirstEdge;
 
-			for(; vertex < vertexLast; ++vertex, ++vertexPrevious){
+			do {
+
+				/*
 				clipped = cMeshClipEdgeAlloc(
 					adjacentFaceNormal, adjacentFaceVertex,
 					vertexPrevious, vertex, vertexClip
 				);
 				if(clipped > 0){
-					++vertexLastNew;
 					++vertexClip;
 					if(clipped == 1){
 						// The starting vertex is in front of the plane
@@ -594,18 +627,56 @@ static void cMeshClipFaceContactAlloc(const cMesh *reference, const cMesh *incid
 						// The clipped starting vertex has already been
 						// added, so add the ending vertex.
 						*vertexClip = *vertex;
-						++vertexLastNew;
 						++vertexClip;
 					}
 				}
-			}
+				++vertex;
+				++vertexPrevious;
+				*/
+
+				/*
+				** Clips an edge intersecting a plane. If there is
+				** no intersection, the function returns 0.
+				** If the starting vertex was clipped, it returns 1.
+				** If the ending vertex was clipped, it returns 2.
+				*/
+				endDistance = pointPlaneDistanceSquared(adjacentFaceNormal, adjacentFaceVertex, vertex);
+				// Check if the starting vertex is behind the plane.
+				if(startDistance <= 0.f){
+					// If the starting vertex is behind the plane and
+					// the ending vertex is in front of it, clip the
+					// ending vertex. If both vertices are behind the
+					// plane, there is no need to clip anything.
+					if(endDistance > 0.f){
+						vec3LerpR(vertexPrevious, vertex, startDistance / (startDistance - endDistance), vertexClip);
+					}else{
+						*vertexClip = *vertex;
+					}
+					++vertexClip;
+				}else if(endDistance <= 0.f){
+					// If the starting vertex is in front of the plane
+					// and the ending vertex is behind it, clip the
+					// starting vertex.
+					vec3LerpR(vertexPrevious, vertex, startDistance / (startDistance - endDistance), vertexClip);
+					// Now that the clipped starting vertex has been
+					// added, add the ending vertex.
+					++vertexClip;
+					*vertexClip = *vertex;
+					++vertexClip;
+				}
+				startDistance = endDistance;
+				++vertex;
+				++vertexPrevious;
+
+			} while(vertex != vertexLast);
+
 			// Final iteration between last and first vertices.
+			/*
 			clipped = cMeshClipEdgeAlloc(
 				adjacentFaceNormal, adjacentFaceVertex,
 				vertexPrevious, &vertexArray[0], vertexClip
 			);
 			if(clipped > 0){
-				++vertexLastNew;
 				++vertexClip;
 				if(clipped == 1){
 					// The starting vertex is in front of the plane
@@ -613,11 +684,45 @@ static void cMeshClipFaceContactAlloc(const cMesh *reference, const cMesh *incid
 					// The clipped starting vertex has already been
 					// added, so add the ending vertex.
 					*vertexClip = vertexArray[0];
-					++vertexLastNew;
 					++vertexClip;
 				}
 			}
+			*/
 
+			/*
+			** Final edge clip iteration between last and first vertices.
+			*/
+			endDistance = pointPlaneDistanceSquared(adjacentFaceNormal, adjacentFaceVertex, vertex);
+			// Check if the starting vertex is behind the plane.
+			if(startDistance <= 0.f){
+				// If the starting vertex is behind the plane and
+				// the ending vertex is in front of it, clip the
+				// ending vertex. If both vertices are behind the
+				// plane, there is no need to clip anything.
+				if(endDistance > 0.f){
+					vec3LerpR(vertexPrevious, &vertexArray[0], startDistance / (startDistance - endDistance), vertexClip);
+				}else{
+					*vertexClip = vertexArray[0];
+				}
+				++vertexClip;
+			}else if(endDistance <= 0.f){
+				// If the starting vertex is in front of the plane
+				// and the ending vertex is behind it, clip the
+				// starting vertex.
+				vec3LerpR(vertexPrevious, &vertexArray[0], startDistance / (startDistance - endDistance), vertexClip);
+				// Now that the clipped starting vertex has been
+				// added, add the ending vertex.
+				++vertexClip;
+				*vertexClip = vertexArray[0];
+				++vertexClip;
+			}
+
+
+			// Calculate the new last vertex.
+			// Since we increase vertexClip every time we add
+			// a new vertex and we swap vertexArray and vertexClip,
+			// vertexClip will be the new end of our array.
+			vertexLast = vertexClip;
 
 			// Swap vertexArray and vertexClipArray so that we clip
 			// the vertices that were clipped during this iteration.
@@ -625,21 +730,19 @@ static void cMeshClipFaceContactAlloc(const cMesh *reference, const cMesh *incid
 			vertexArray = vertexClipArray;
 			vertexClipArray = vertexArraySwap;
 
-			// Resize the array to represent our new,
-			// culled collection of potential contacts.
-			vertexLast = vertexLastNew;
-
-		} while(edge != edgeFirst);
+		} while(referenceFaceEdge != referenceFaceFirstEdge);
 
 
 		// Loop through every vertex of the incident face,
 		// checking which ones we can use as contact points.
 		vertex = vertexArray;
 		for(; vertex < vertexLast; ++vertex){
-			const float depthSquared = pointPlaneDistanceSquared(&cm->normal, referenceVertex, vertex);
+			const float depthSquared = pointPlaneDistanceSquared(&cm->normal, referenceFaceVertex, vertex);
 			if(depthSquared >= 0.f){
+				// Project the vertex onto the reference face.
+				*(&contact->positionB-offset) = *vertex;
+				pointPlaneProjectR(&cm->normal, referenceFaceVertex, vertex, &contact->positionA+offset);
 				contact->depthSquared = depthSquared;
-				contact->position = *vertex;
 				++cm->contactNum;
 				if(cm->contactNum == COLLISION_MAX_CONTACT_POINTS){
 					return;
@@ -648,13 +751,14 @@ static void cMeshClipFaceContactAlloc(const cMesh *reference, const cMesh *incid
 			}
 		}
 
+
 		memFree(vertices);
 
 	}
 
 }
 
-static __FORCE_INLINE__ void cMeshCollisionSHClipping(const cMesh *c1, const cMesh *c2, const cMeshPenetrationPlanes *planes, cCollisionContactManifold *cm){
+static __FORCE_INLINE__ void cMeshCollisionSHClipping(const cMesh *const restrict c1, const cMesh *const restrict c2, const cMeshPenetrationPlanes *const restrict planes, cCollisionContactManifold *const restrict cm){
 
 	/*
 	** Implementation of the Sutherland-Hodgman clipping
@@ -679,11 +783,13 @@ static __FORCE_INLINE__ void cMeshCollisionSHClipping(const cMesh *c1, const cMe
 		// as the incident collider.
 		if(planes->face2.depthSquared > planes->face1.depthSquared * 0.95f){
 
-			cMeshClipFaceContactAlloc(c2, c1, planes->face2.index, planes->face1.index, cm);
+			// Offset is sizeof(vec3) so positionA and
+			// positionB in the contact manifold are swapped.
+			cMeshClipFaceContactAlloc(c2, c1, planes->face2.index, planes->face1.index, sizeof(vec3), cm);
 
 		}else{
 
-			cMeshClipFaceContactAlloc(c1, c2, planes->face1.index, planes->face2.index, cm);
+			cMeshClipFaceContactAlloc(c1, c2, planes->face1.index, planes->face2.index, 0, cm);
 
 		}
 
@@ -691,7 +797,7 @@ static __FORCE_INLINE__ void cMeshCollisionSHClipping(const cMesh *c1, const cMe
 
 }
 
-static __FORCE_INLINE__ return_t cMeshCollisionSATFaceQuery(const cMesh *c1, const cMesh *c2, cMeshSHFaceHelper *r, void **feature){
+static __FORCE_INLINE__ return_t cMeshCollisionSATFaceQuery(const cMesh *const restrict c1, const cMesh *const restrict c2, cMeshSHFaceHelper *const restrict r, void **const restrict feature){
 
 	/*
 	** Find the maximum separation distance between
@@ -703,8 +809,8 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATFaceQuery(const cMesh *c1, con
 	/** Might not be worth it, as our physics colliders are very simple.  **/
 
 	cFaceIndex_t i;
-	vec3 *n = c1->normals;
-	cMeshFace *f = c1->faces;
+	const vec3 *restrict n = c1->normals;
+	const cMeshFace *f = c1->faces;
 
 	for(i = 0; i < c1->faceNum; ++i){
 
@@ -737,9 +843,9 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATFaceQuery(const cMesh *c1, con
 
 }
 
-static __FORCE_INLINE__ return_t cMeshCollisionSATMinkowskiFace(const cMesh *c1, const cMesh *c2,
-																const cMeshEdge *e1, const vec3 *e1InvDir,
-																const cMeshEdge *e2, const vec3 *e2InvDir){
+static __FORCE_INLINE__ return_t cMeshCollisionSATMinkowskiFace(const cMesh *const restrict c1, const cMesh *const restrict c2,
+																const cMeshEdge *const restrict e1, const vec3 *const restrict e1InvDir,
+																const cMeshEdge *const restrict e2, const vec3 *const restrict e2InvDir){
 
 	/*
 	** Tests if the specified edges overlap
@@ -811,9 +917,9 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATMinkowskiFace(const cMesh *c1,
 
 }
 
-static __FORCE_INLINE__ float cMeshCollisionSATEdgeSeparationSquared(const cMesh *c1, const cMesh *c2, const vec3 *centroid,
-                                                                     const cMeshEdge *e1, const vec3 *e1InvDir,
-                                                                     const cMeshEdge *e2, const vec3 *e2InvDir){
+static __FORCE_INLINE__ float cMeshCollisionSATEdgeSeparationSquared(const cMesh *const restrict c1, const cMesh *const restrict c2, const vec3 *const restrict centroid,
+                                                                     const cMeshEdge *const restrict e1, const vec3 *const restrict e1InvDir,
+                                                                     const cMeshEdge *const restrict e2, const vec3 *const restrict e2InvDir){
 
 	/*
 	** Check the distance between the two edges.
@@ -822,7 +928,7 @@ static __FORCE_INLINE__ float cMeshCollisionSATEdgeSeparationSquared(const cMesh
 	/** Should perform calculations in the second collider's local space? **/
 	/** Might not be worth it, as our physics colliders are very simple.  **/
 
-	const vec3 *pointA = &c1->vertices[e1->start];
+	const vec3 *const pointA = &c1->vertices[e1->start];
 	vec3 normal, offset;
 	float magnitudeSquared;
 
@@ -895,10 +1001,10 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATEdgeQuery(const cMesh *c1, con
 	** the edges of the first and second colliders.
 	*/
 
-	cMeshEdge *e1 = c1->edges;
-	cMeshEdge *e2;
-	cMeshEdge *eLast1 = &e1[c1->edgeNum];
-	cMeshEdge *eLast2 = &c2->edges[c2->edgeNum];
+	const cMeshEdge *e1 = c1->edges;
+	const cMeshEdge *e2;
+	const cMeshEdge *const eLast1 = &e1[c1->edgeNum];
+	const cMeshEdge *const eLast2 = &c2->edges[c2->edgeNum];
 	vec3 e1InvDir, e2InvDir;
 
 	for(; e1 < eLast1; ++e1){
@@ -942,7 +1048,7 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATEdgeQuery(const cMesh *c1, con
 
 }
 
-return_t cMeshCollisionSAT(const cMesh *c1, const cMesh *c2, const vec3 *centroid, cCollisionInfo *info, cCollisionContactManifold *cm){
+return_t cMeshCollisionSAT(const cMesh *const restrict c1, const cMesh *const restrict c2, const vec3 *const restrict centroid, cCollisionInfo *const restrict info, cCollisionContactManifold *const restrict cm){
 
 	/*
 	** Implementation of the separating axis theorem
@@ -955,11 +1061,11 @@ return_t cMeshCollisionSAT(const cMesh *c1, const cMesh *c2, const vec3 *centroi
 
 	cMeshPenetrationPlanes planes;
 	cMeshPenetrationPlanesInit(&planes);
-	void *feature = NULL;  // Separating feature.
+	const void *restrict feature = NULL;  // Separating feature.
 
-	if(cMeshCollisionSATFaceQuery(c1, c2, &planes.face1, &feature)){
-		if(cMeshCollisionSATFaceQuery(c2, c1, &planes.face2, &feature)){
-			if(cMeshCollisionSATEdgeQuery(c1, c2, centroid, &planes.edge, &feature)){
+	if(cMeshCollisionSATFaceQuery(c1, c2, &planes.face1, (void **const restrict)&feature)){
+		if(cMeshCollisionSATFaceQuery(c2, c1, &planes.face2, (void **const restrict)&feature)){
+			if(cMeshCollisionSATEdgeQuery(c1, c2, centroid, &planes.edge, (void **const restrict)&feature)){
 				if(cm != NULL){
 					cMeshCollisionSHClipping(c1, c2, &planes, cm);
 				}
@@ -985,8 +1091,8 @@ typedef struct {
 	// The Minkowski "difference" of the two support points.
 	vec3 v;
 	// The support points used to generate v.
-	vec3 *s1;
-	vec3 *s2;
+	const vec3 *s1;
+	const vec3 *s2;
 } cMeshSupportVertex;
 
 typedef struct {
@@ -1000,7 +1106,7 @@ typedef struct {
 	cMeshSupportVertex vertex[2];
 } cMeshEPAEdgeHelper;
 
-static __FORCE_INLINE__ void cMeshEPAFaceInit(cMeshEPAFaceHelper *face, const cMeshSupportVertex *v0, const cMeshSupportVertex *v1, const cMeshSupportVertex *v2){
+static __FORCE_INLINE__ void cMeshEPAFaceInit(cMeshEPAFaceHelper *const restrict face, const cMeshSupportVertex *const restrict v0, const cMeshSupportVertex *const restrict v1, const cMeshSupportVertex *const restrict v2){
 	// Create a new face.
 	face->vertex[0] = *v0;
 	face->vertex[1] = *v1;
@@ -1009,13 +1115,13 @@ static __FORCE_INLINE__ void cMeshEPAFaceInit(cMeshEPAFaceHelper *face, const cM
 	vec3NormalizeFastAccurate(&face->normal);
 }
 
-static __FORCE_INLINE__ void cMeshEPAEdgeInit(cMeshEPAEdgeHelper *edge, const cMeshSupportVertex *v0, const cMeshSupportVertex *v1){
+static __FORCE_INLINE__ void cMeshEPAEdgeInit(cMeshEPAEdgeHelper *const restrict edge, const cMeshSupportVertex *const restrict v0, const cMeshSupportVertex *const restrict v1){
 	// Create a new face.
 	edge->vertex[0] = *v0;
 	edge->vertex[1] = *v1;
 }
 
-static __FORCE_INLINE__ void cMeshCollisionMinkowskiSupport(const cMesh *c1, const cMesh *c2, const vec3 *axis, cMeshSupportVertex *r){
+static __FORCE_INLINE__ void cMeshCollisionMinkowskiSupport(const cMesh *const restrict c1, const cMesh *const restrict c2, const vec3 *const restrict axis, cMeshSupportVertex *const restrict r){
 	/*
 	** Returns a point in Minkowski space on the edge of
 	** the polygons' "Minkowski difference".
@@ -1035,7 +1141,7 @@ static __FORCE_INLINE__ void cMeshCollisionMinkowskiSupport(const cMesh *c1, con
 	vec3SubVFromVR(r->s1, r->s2, &r->v);
 }
 
-static __FORCE_INLINE__ void cMeshCollisionEPA(const cMesh *c1, const cMesh *c2, cMeshSupportVertex *simplex, cCollisionContactManifold *cm){
+static __FORCE_INLINE__ void cMeshCollisionEPA(const cMesh *const restrict c1, const cMesh *const restrict c2, cMeshSupportVertex *const restrict simplex, cCollisionContactManifold *const restrict cm){
 
 	/*
 	** Implementation of the expanding polytope algorithm. Extrapolates
@@ -1046,7 +1152,7 @@ static __FORCE_INLINE__ void cMeshCollisionEPA(const cMesh *c1, const cMesh *c2,
 	int i, j;
 	cMeshEPAFaceHelper *f;
 	cMeshEPAEdgeHelper *e;
-	cMeshEPAFaceHelper *closestFace;
+	const cMeshEPAFaceHelper *closestFace;
 	float distance;
 	cMeshSupportVertex point;
 
@@ -1226,7 +1332,7 @@ static __FORCE_INLINE__ void cMeshCollisionEPA(const cMesh *c1, const cMesh *c2,
 		vec3MultVByS(&contact, distance);
 
 		// Calculate the Barycentric coordinates of the projected origin.
-		barycentric(&closestFace->vertex[0].v, &closestFace->vertex[1].v, &closestFace->vertex[2].v, &contact, &contact);
+		barycentric(&closestFace->vertex[0].v, &closestFace->vertex[1].v, &closestFace->vertex[2].v, &contact);
 
 		// The contact point on c1 is the linear combination of the original
 		// vertices in c1 used to generate the support vertices for the
@@ -1234,10 +1340,7 @@ static __FORCE_INLINE__ void cMeshCollisionEPA(const cMesh *c1, const cMesh *c2,
 		vec3CombineLinear(closestFace->vertex[0].s1,
 						  closestFace->vertex[1].s1,
 						  closestFace->vertex[2].s1,
-						  contact.x, contact.y, contact.z, &cm->contacts[cm->contactNum].position);
-
-		cm->contacts[cm->contactNum].depthSquared = depthSquared;
-		++cm->contactNum;
+						  contact.x, contact.y, contact.z, &cm->contacts[cm->contactNum].positionA);
 
 		// The contact point on c2 is the linear combination of the original
 		// vertices in c2 used to generate the support vertices for the
@@ -1245,7 +1348,7 @@ static __FORCE_INLINE__ void cMeshCollisionEPA(const cMesh *c1, const cMesh *c2,
 		vec3CombineLinear(closestFace->vertex[0].s2,
 						  closestFace->vertex[1].s2,
 						  closestFace->vertex[2].s2,
-						  contact.x, contact.y, contact.z, &cm->contacts[cm->contactNum].position);
+						  contact.x, contact.y, contact.z, &cm->contacts[cm->contactNum].positionB);
 
 		cm->contacts[cm->contactNum].depthSquared = depthSquared;
 		++cm->contactNum;
@@ -1254,7 +1357,7 @@ static __FORCE_INLINE__ void cMeshCollisionEPA(const cMesh *c1, const cMesh *c2,
 
 }
 
-static __FORCE_INLINE__ void cMeshCollisionGJKTriangle(int *simplexVertices, cMeshSupportVertex simplex[4], vec3 *axis){
+static __FORCE_INLINE__ void cMeshCollisionGJKTriangle(int *const restrict simplexVertices, cMeshSupportVertex simplex[4], vec3 *const restrict axis){
 
 	const vec3 AO = {.x = -simplex[0].v.x,
 	                 .y = -simplex[0].v.y,
@@ -1319,7 +1422,7 @@ static __FORCE_INLINE__ void cMeshCollisionGJKTriangle(int *simplexVertices, cMe
 
 }
 
-static __FORCE_INLINE__ return_t cMeshCollisionGJKTetrahedron(int *simplexVertices, cMeshSupportVertex *simplex, vec3 *axis){
+static __FORCE_INLINE__ return_t cMeshCollisionGJKTetrahedron(int *const restrict simplexVertices, cMeshSupportVertex *const restrict simplex, vec3 *const restrict axis){
 
 	// Check if the normal of ABC is crossing the origin.
 	const vec3 AO = {.x = -simplex[0].v.x,
@@ -1371,7 +1474,7 @@ static __FORCE_INLINE__ return_t cMeshCollisionGJKTetrahedron(int *simplexVertic
 
 }
 
-return_t cMeshCollisionGJK(const cMesh *c1, const vec3 *c1c, const cMesh *c2, const vec3 *c2c, cCollisionContactManifold *cm){
+return_t cMeshCollisionGJK(const cMesh *const restrict c1, const vec3 *const restrict c1c, const cMesh *const restrict c2, const vec3 *const restrict c2c, cCollisionContactManifold *const restrict cm){
 
 	/*
 	** Implementation of the Gilbert-Johnson-Keerthi distance algorithm,
@@ -1460,7 +1563,7 @@ return_t cMeshCollisionGJK(const cMesh *c1, const vec3 *c1c, const cMesh *c2, co
 
 }
 
-void cMeshDelete(cMesh *cm){
+void cMeshDelete(cMesh *const restrict cm){
 	if(cm->vertices != NULL){
 		memFree(cm->vertices);
 	}

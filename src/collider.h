@@ -2,10 +2,6 @@
 #define COLLIDER_H
 
 #include "memoryShared.h"
-#include "colliderConvexMesh.h"
-#include "colliderCapsule.h"
-#include "colliderSphere.h"
-#include "colliderAABB.h"
 
 #define COLLIDER_TYPE_INVALID -1
 #define COLLIDER_TYPE_MESH 0
@@ -17,7 +13,7 @@
 
 // The size of the largest collider type.
 // In this case, it is the capsule at 28 bytes.
-#define COLLIDER_MAX_SIZE sizeof(cCapsule)
+#define COLLIDER_MAX_SIZE 28
 
 #define COLLIDER_ARRAY_MAX_SIZE 256
 
@@ -35,9 +31,9 @@ typedef struct {
 	colliderIndex_t colliderNum;
 } colliderArray;
 
-void cInit(collider *c, const colliderType_t type);
-void cDelete(collider *c);
+void cInit(collider *const restrict c, const colliderType_t type);
+void cDelete(collider *const restrict c);
 
-void cArrayDelete(colliderArray *ca);
+void cArrayDelete(colliderArray *const restrict ca);
 
 #endif

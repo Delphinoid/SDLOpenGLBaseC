@@ -41,9 +41,9 @@
 		memFree(tempBoneWeights); \
 	}
 
-return_t mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex **vertices, size_t *indexNum, size_t **indices, size_t *lodNum, mdlLOD **lods, char *sklPath){
+return_t mdlWavefrontObjLoad(const char *const restrict filePath, size_t *const restrict vertexNum, vertex **const restrict vertices, size_t *const restrict indexNum, size_t **const restrict indices, size_t *const restrict lodNum, mdlLOD **const restrict lods, char *const restrict sklPath){
 
-	FILE *mdlInfo = fopen(filePath, "r");
+	FILE *const restrict mdlInfo = fopen(filePath, "r");
 
 	if(mdlInfo != NULL){
 
@@ -211,13 +211,13 @@ return_t mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex **v
 					}
 					// Start the next LOD.
 					lodTemp.distance = lodNewDistance;
-					lodTemp.offset = (void *)(*indexNum * sizeof(vertexIndex_t));
+					lodTemp.offset = (void *)((uintptr_t)*indexNum * sizeof(vertexIndex_t));
 					lodTemp.indexNum = *indexNum;
 				}
 
 			// Vertex data
 			}else if(lineLength >= 7 && strncmp(line, "v ", 2) == 0){
-				char *token = strtok(line+2, " ");
+				const char *token = strtok(line+2, " ");
 				float curVal = strtod(token, NULL);
 				if(pushDynamicArray((void **)&tempPositions, &curVal, sizeof(curVal), &tempPositionsSize, &tempPositionsCapacity) == -1){
 					/** Memory allocation failure. **/
@@ -324,7 +324,7 @@ return_t mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex **v
 
 			// UV data
 			}else if(lineLength >= 6 && strncmp(line, "vt ", 3) == 0){
-				char *token = strtok(line+3, " ");
+				const char *token = strtok(line+3, " ");
 				float curVal = strtod(token, NULL);
 				if(pushDynamicArray((void **)&tempTexCoords, &curVal, sizeof(curVal), &tempTexCoordsSize, &tempTexCoordsCapacity) == -1){
 					/** Memory allocation failure. **/
@@ -345,7 +345,7 @@ return_t mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex **v
 
 			// Normal data
 			}else if(lineLength >= 8 && strncmp(line, "vn ", 3) == 0){
-				char *token = strtok(line+3, " ");
+				const char *token = strtok(line+3, " ");
 				float curVal = strtod(token, NULL);
 				if(pushDynamicArray((void **)&tempNormals, &curVal, sizeof(curVal), &tempNormalsSize, &tempNormalsCapacity) == -1){
 					/** Memory allocation failure. **/
@@ -375,7 +375,7 @@ return_t mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex **v
 
 			// Face data
 			}else if(lineLength >= 19 && strncmp(line, "f ", 2) == 0){
-				char *token = strtok(line+2, " /");
+				const char *token = strtok(line+2, " /");
 				for(i = 0; i < 3; ++i){
 
 					int foundVertex = 0;
@@ -450,7 +450,7 @@ return_t mdlWavefrontObjLoad(const char *filePath, size_t *vertexNum, vertex **v
 
 					// Check if the vertex has already been loaded, and if so add an index
 					for(j = 0; j < *vertexNum; ++j){
-						vertex *checkVert = &(*vertices)[j];
+						const vertex *const checkVert = &(*vertices)[j];
 						/** CHECK BONE DATA HERE **/
 						if(memcmp(checkVert, &tempVert, sizeof(vertex)) == 0){
 							// Resize indices if there's not enough room

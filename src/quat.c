@@ -40,20 +40,20 @@ quat quatNewEuler(const float x, const float y, const float z){
 	r.v.z = cx*cy*sz-sx*sy*cz;
 	return r;
 }
-void quatSet(quat *q, const float w, const float x, const float y, const float z){
+void quatSet(quat *const restrict q, const float w, const float x, const float y, const float z){
 	q->w = w; q->v.x = x; q->v.y = y; q->v.z = z;
 }
-void quatSetS(quat *q, const float s){
+void quatSetS(quat *const restrict q, const float s){
 	q->w = s; q->v.x = s; q->v.y = s; q->v.z = s;
 }
-void quatSetAxisAngle(quat *q, const float angle, const float axisX, const float axisY, const float axisZ){
+void quatSetAxisAngle(quat *const restrict q, const float angle, const float axisX, const float axisY, const float axisZ){
 	const float t = sinf(angle/2.f);
 	q->w = cosf(angle/2.f);
 	q->v.x = axisX * t;
 	q->v.y = axisY * t;
 	q->v.z = axisZ * t;
 }
-void quatSetEuler(quat *q, const float x, const float y, const float z){
+void quatSetEuler(quat *const restrict q, const float x, const float y, const float z){
 	const float hx = x*0.5f;
 	const float hy = y*0.5f;
 	const float hz = z*0.5f;
@@ -69,78 +69,78 @@ void quatSetEuler(quat *q, const float x, const float y, const float z){
 	q->v.z = cx*cy*sz-sx*sy*cz;
 }
 
-quat quatQAddQ(const quat *q1, const quat *q2){
+quat quatQAddQ(const quat *const restrict q1, const quat *const restrict q2){
 	quat r = {.w   = q1->w   + q2->w,
 	          .v.x = q1->v.x + q2->v.x,
 	          .v.y = q1->v.y + q2->v.y,
 	          .v.z = q1->v.z + q2->v.z};
 	return r;
 }
-quat quatQAddS(const quat *q, const float s){
+quat quatQAddS(const quat *const restrict q, const float s){
 	quat r = {.w   = q->w   + s,
 	          .v.x = q->v.x + s,
 	          .v.y = q->v.y + s,
 	          .v.z = q->v.z + s};
 	return r;
 }
-quat quatQAddW(const quat *q, const float w){
+quat quatQAddW(const quat *const restrict q, const float w){
 	quat r = {.w   = q->w + w,
 	          .v.x = q->v.x,
 	          .v.y = q->v.y,
 	          .v.z = q->v.z};
 	return r;
 }
-void quatAddQToQ(quat *q1, const quat *q2){
+void quatAddQToQ(quat *const restrict q1, const quat *const restrict q2){
 	q1->w += q2->w; q1->v.x += q2->v.x; q1->v.y += q2->v.y; q1->v.z += q2->v.z;
 }
-void quatAddQToQR(const quat *q1, const quat *q2, quat *r){
+void quatAddQToQR(const quat *const restrict q1, const quat *const restrict q2, quat *const restrict r){
 	r->w = q1->w + q2->w; r->v.x = q1->v.x + q2->v.x; r->v.y = q1->v.y + q2->v.y; r->v.z = q1->v.z + q2->v.z;
 }
-void quatAddSToQ(quat *q, const float s){
+void quatAddSToQ(quat *const restrict q, const float s){
 	q->w += s; q->v.x += s; q->v.y += s; q->v.z += s;
 }
-void quatAddWToQ(quat *q, const float w){
+void quatAddWToQ(quat *const restrict q, const float w){
 	q->w += w;
 }
 
-quat quatQSubQ(const quat *q1, const quat *q2){
+quat quatQSubQ(const quat *const restrict q1, const quat *const restrict q2){
 	quat r = {.w   = q1->w   - q2->w,
 	          .v.x = q1->v.x - q2->v.x,
 	          .v.y = q1->v.y - q2->v.y,
 	          .v.z = q1->v.z - q2->v.z};
 	return r;
 }
-quat quatQSubS(const quat *q, const float s){
+quat quatQSubS(const quat *const restrict q, const float s){
 	quat r = {.w   = q->w   - s,
 	          .v.x = q->v.x - s,
 	          .v.y = q->v.y - s,
 	          .v.z = q->v.z - s};
 	return r;
 }
-quat quatQSubW(const quat *q, const float w){
+quat quatQSubW(const quat *const restrict q, const float w){
 	quat r = {.w   = q->w - w,
 	          .v.x = q->v.x,
 	          .v.y = q->v.y,
 	          .v.z = q->v.z};
 	return r;
 }
-void quatSubQFromQ1(quat *q1, const quat *q2){
+void quatSubQFromQ1(quat *const restrict q1, const quat *const restrict q2){
 	q1->w -= q2->w; q1->v.x -= q2->v.x; q1->v.y -= q2->v.y; q1->v.z -= q2->v.z;
 }
-void quatSubQFromQ2(const quat *q1, quat *q2){
+void quatSubQFromQ2(const quat *const restrict q1, quat *const restrict q2){
 	q2->w = q1->w - q2->w; q2->v.x = q1->v.x - q2->v.x; q2->v.y = q1->v.y - q2->v.y; q2->v.z = q1->v.z - q2->v.z;
 }
-void quatSubQFromQR(const quat *q1, const quat *q2, quat *r){
+void quatSubQFromQR(const quat *const restrict q1, const quat *const restrict q2, quat *const restrict r){
 	r->w = q1->w - q2->w; r->v.x = q1->v.x - q2->v.x; r->v.y = q1->v.y - q2->v.y; r->v.z = q1->v.z - q2->v.z;
 }
-void quatSubSFromQ(quat *q, const float s){
+void quatSubSFromQ(quat *const restrict q, const float s){
 	q->w -= s; q->v.x -= s; q->v.y -= s; q->v.z -= s;
 }
-void quatSubWFromQ(quat *q, const float w){
+void quatSubWFromQ(quat *const restrict q, const float w){
 	q->w -= w;
 }
 
-quat quatQMultQ(const quat *q1, const quat *q2){
+quat quatQMultQ(const quat *const restrict q1, const quat *const restrict q2){
 	/*float prodW = q1.w * q2.w - vec3Dot(q1.v, q2.v);
 	vec3 prodV = vec3VMultS(q2.v, q1.w);
 	vec3AddVToV(&prodV, vec3VMultS(q1.v, q2.w));
@@ -156,14 +156,14 @@ quat quatQMultQ(const quat *q1, const quat *q2){
 	r.v.z = q1->w * q2->v.z + q1->v.z * q2->w   + q1->v.x * q2->v.y - q1->v.y * q2->v.x;
 	return r;
 }
-quat quatQMultS(const quat *q, const float s){
+quat quatQMultS(const quat *const restrict q, const float s){
 	quat r = {.w   = q->w   * s,
 	          .v.x = q->v.x * s,
 	          .v.y = q->v.y * s,
 	          .v.z = q->v.z * s};
 	return r;
 }
-void quatMultQByQ1(quat *q1, const quat *q2){
+void quatMultQByQ1(quat *const restrict q1, const quat *const restrict q2){
 	/*float prodW = q1->w * q2.w - vec3Dot(q1->v, q2.v);
 	vec3 prodV = vec3VMultS(q2.v, q1->w);
 	vec3AddVToV(&prodV, vec3VMultS(q1->v, q2.w));
@@ -179,7 +179,7 @@ void quatMultQByQ1(quat *q1, const quat *q2){
 	r.v.z = q1->w * q2->v.z + q1->v.z * q2->w   + q1->v.x * q2->v.y - q1->v.y * q2->v.x;
 	*q1 = r;
 }
-void quatMultQByQ2(const quat *q1, quat *q2){
+void quatMultQByQ2(const quat *const restrict q1, quat *const restrict q2){
 	/*float prodW = q1.w * q2->w - vec3Dot(q1.v, q2->v);
 	vec3 prodV = vec3VMultS(q2->v, q1.w);
 	vec3AddVToV(&prodV, vec3VMultS(q1.v, q2->w));
@@ -195,7 +195,7 @@ void quatMultQByQ2(const quat *q1, quat *q2){
 	r.v.z = q1->w * q2->v.z + q1->v.z * q2->w   + q1->v.x * q2->v.y - q1->v.y * q2->v.x;
 	*q2 = r;
 }
-void quatMultQByQR(const quat *q1, const quat *q2, quat *r){
+void quatMultQByQR(const quat *const restrict q1, const quat *const restrict q2, quat *const restrict r){
 	/*
 	** Calculates the Grassmann product of two quaternions.
 	*/
@@ -204,12 +204,12 @@ void quatMultQByQR(const quat *q1, const quat *q2, quat *r){
 	r->v.y = q1->w * q2->v.y + q1->v.y * q2->w   + q1->v.z * q2->v.x - q1->v.x * q2->v.z;
 	r->v.z = q1->w * q2->v.z + q1->v.z * q2->w   + q1->v.x * q2->v.y - q1->v.y * q2->v.x;
 }
-void quatMultQByS(quat *q, const float s){
+void quatMultQByS(quat *const restrict q, const float s){
 	q->w *= s;
 	vec3MultVByS(&q->v, s);
 }
 
-quat quatQDivQ(const quat *q1, const quat *q2){
+quat quatQDivQ(const quat *const restrict q1, const quat *const restrict q2){
 	if(q2->w != 0.f && q2->v.x != 0.f && q2->v.y != 0.f && q2->v.z != 0.f){
 		quat r = {.w   = q1->w   / q2->w,
 		          .v.x = q1->v.x / q2->v.x,
@@ -219,7 +219,7 @@ quat quatQDivQ(const quat *q1, const quat *q2){
 	}
 	return quatNewS(0.f);
 }
-quat quatQDivS(const quat *q, const float s){
+quat quatQDivS(const quat *const restrict q, const float s){
 	if(s != 0.f){
 		const float invS = 1.f / s;
 		quat r = {.w   = q->w   * invS,
@@ -230,7 +230,7 @@ quat quatQDivS(const quat *q, const float s){
 	}
 	return quatNewS(0.f);
 }
-void quatDivQByQ1(quat *q1, const quat *q2){
+void quatDivQByQ1(quat *const restrict q1, const quat *const restrict q2){
 	if(q2->w != 0.f && q2->v.x != 0.f && q2->v.y != 0.f && q2->v.z != 0.f){
 		q1->w   /= q2->w;
 		q1->v.x /= q2->v.x;
@@ -240,7 +240,7 @@ void quatDivQByQ1(quat *q1, const quat *q2){
 		quatSetS(q1, 0.f);
 	}
 }
-void quatDivQByQ2(const quat *q1, quat *q2){
+void quatDivQByQ2(const quat *const restrict q1, quat *const restrict q2){
 	if(q2->w != 0.f && q2->v.x != 0.f && q2->v.y != 0.f && q2->v.z != 0.f){
 		q2->w   = q1->w   / q2->w;
 		q2->v.x = q1->v.x / q2->v.x;
@@ -250,7 +250,7 @@ void quatDivQByQ2(const quat *q1, quat *q2){
 		quatSetS(q2, 0.f);
 	}
 }
-void quatDivQByQR(const quat *q1, const quat *q2, quat *r){
+void quatDivQByQR(const quat *const restrict q1, const quat *const restrict q2, quat *const restrict r){
 	if(q2->w != 0.f && q2->v.x != 0.f && q2->v.y != 0.f && q2->v.z != 0.f){
 		r->w   = q1->w   / q2->w;
 		r->v.x = q1->v.x / q2->v.x;
@@ -260,7 +260,7 @@ void quatDivQByQR(const quat *q1, const quat *q2, quat *r){
 		quatSetS(r, 0.f);
 	}
 }
-void quatDivQByS(quat *q, const float s){
+void quatDivQByS(quat *const restrict q, const float s){
 	if(s != 0.f){
 		const float invS = 1.f / s;
 		q->w   *= invS;
@@ -272,86 +272,86 @@ void quatDivQByS(quat *q, const float s){
 	}
 }
 
-float quatGetMagnitude(const quat *q){
+float quatGetMagnitude(const quat *const restrict q){
 	return sqrtf(q->w*q->w + q->v.x*q->v.x + q->v.y*q->v.y + q->v.z*q->v.z);
 }
 
-quat quatGetConjugate(const quat *q){
+quat quatGetConjugate(const quat *const restrict q){
 	return quatNew(q->w, -q->v.x, -q->v.y, -q->v.z);
 }
-quat quatGetConjugateFast(const quat *q){
+quat quatGetConjugateFast(const quat *const restrict q){
 	return quatNew(-q->w, q->v.x, q->v.y, q->v.z);
 }
-void quatConjugate(quat *q){
+void quatConjugate(quat *const restrict q){
 	q->v.x = -q->v.x;
 	q->v.y = -q->v.y;
 	q->v.z = -q->v.z;
 }
-void quatConjugateFast(quat *q){
+void quatConjugateFast(quat *const restrict q){
 	q->w = -q->w;
 }
-void quatConjugateR(const quat *q, quat *r){
+void quatConjugateR(const quat *const restrict q, quat *const restrict r){
 	quatSet(r, q->w, -q->v.x, -q->v.y, -q->v.z);
 }
-void quatConjugateFastR(const quat *q, quat *r){
+void quatConjugateFastR(const quat *const restrict q, quat *const restrict r){
 	quatSet(r, -q->w, q->v.x, q->v.y, q->v.z);
 }
 
-quat quatGetNegative(const quat *q){
+quat quatGetNegative(const quat *const restrict q){
 	return quatNew(-q->w, q->v.x, q->v.y, q->v.z);
 }
-void quatNegate(quat *q){
+void quatNegate(quat *const restrict q){
 	q->w = -q->w;
 }
-void quatNegateR(const quat *q, quat *r){
+void quatNegateR(const quat *const restrict q, quat *const restrict r){
 	quatSet(r, -q->w, q->v.x, q->v.y, q->v.z);
 }
 
-quat quatGetInverse(const quat *q){
+quat quatGetInverse(const quat *const restrict q){
 	quat c;
 	quatConjugateFastR(q, &c);
 	return quatQMultQ(q, &c);
 }
-void quatInvert(quat *q){
+void quatInvert(quat *const restrict q){
 	quat c;
 	quatConjugateFastR(q, &c);
 	quatMultQByQ1(q, &c);
 }
-void quatInvertR(const quat *q, quat *r){
+void quatInvertR(const quat *const restrict q, quat *const restrict r){
 	quatConjugateFastR(q, r);
 	quatMultQByQ2(q, r);
 }
 
-quat quatGetDifference(const quat *q1, const quat *q2){
+quat quatGetDifference(const quat *const restrict q1, const quat *const restrict q2){
 	quat r;
 	quatInvertR(q1, &r);
 	quatMultQByQ1(&r, q2);
 	return r;
 }
-void quatDifference(const quat *q1, const quat *q2, quat *r){
+void quatDifference(const quat *const restrict q1, const quat *const restrict q2, quat *const restrict r){
 	quatInvertR(q1, r);
 	quatMultQByQ1(r, q2);
 }
 
-quat quatGetUnit(const quat *q){
+quat quatGetUnit(const quat *const restrict q){
 	const float magnitude = quatGetMagnitude(q);
 	if(magnitude != 0.f){
 		return quatQDivS(q, magnitude);
 	}
 	return *q;
 }
-quat quatGetUnitFast(const quat *q){
+quat quatGetUnitFast(const quat *const restrict q){
 	const float magnitudeSquared = q->w*q->w + q->v.x*q->v.x + q->v.y*q->v.y + q->v.z*q->v.z;
 	const float invSqrt = fastInvSqrt(magnitudeSquared);
 	return quatQMultS(q, invSqrt);
 }
-void quatNormalize(quat *q){
+void quatNormalize(quat *const restrict q){
 	const float magnitude = quatGetMagnitude(q);
 	if(magnitude != 0.f){
 		quatDivQByS(q, magnitude);
 	}
 }
-void quatNormalizeFast(quat *q){
+void quatNormalizeFast(quat *const restrict q){
 	const float magnitudeSquared = q->w*q->w + q->v.x*q->v.x + q->v.y*q->v.y + q->v.z*q->v.z;
 	const float invSqrt = fastInvSqrt(magnitudeSquared);
 	quatMultQByS(q, invSqrt);
@@ -361,11 +361,11 @@ quat quatIdentity(){
 	quat r = {.w = 1.f, .v.x = 0.f, .v.y = 0.f, .v.z = 0.f};
 	return r;
 }
-void quatSetIdentity(quat *q){
+void quatSetIdentity(quat *const restrict q){
 	q->w = 1.f; q->v.x = 0.f; q->v.y = 0.f; q->v.z = 0.f;
 }
 
-void quatAxisAngle(const quat *q, float *angle, float *axisX, float *axisY, float *axisZ){
+void quatAxisAngle(const quat *const restrict q, float *angle, float *axisX, float *axisY, float *axisZ){
 	float scale = sqrtf(1.f-q->w*q->w);  /* Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1. */
 	if(scale != 0.f){  /* We don't want to risk a potential divide-by-zero error. */
 		scale = 1.f/scale;
@@ -375,7 +375,7 @@ void quatAxisAngle(const quat *q, float *angle, float *axisX, float *axisY, floa
 		*axisZ = q->v.z*scale;
 	}
 }
-void quatAxisAngleFast(const quat *q, float *angle, float *axisX, float *axisY, float *axisZ){
+void quatAxisAngleFast(const quat *const restrict q, float *angle, float *axisX, float *axisY, float *axisZ){
 	float scale = fastInvSqrt(1.f-q->w*q->w);  /* Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1. */
 	*angle = 2.f*acosf(q->w);
 	*axisX = q->v.x*scale;
@@ -383,14 +383,14 @@ void quatAxisAngleFast(const quat *q, float *angle, float *axisX, float *axisY, 
 	*axisZ = q->v.z*scale;
 }
 
-float quatDot(const quat *q1, const quat *q2){
+float quatDot(const quat *const restrict q1, const quat *const restrict q2){
 	return q1->w   * q2->w +
 	       q1->v.x * q2->v.x +
 	       q1->v.y * q2->v.y +
 	       q1->v.z * q2->v.z;
 }
 
-vec3 quatGetRotatedVec3(const quat *q, const vec3 *v){
+vec3 quatGetRotatedVec3(const quat *const restrict q, const vec3 *v){
 
 	vec3 r;
 
@@ -417,7 +417,7 @@ vec3 quatGetRotatedVec3(const quat *q, const vec3 *v){
 	return r;
 
 }
-vec3 quatGetRotatedVec3Fast(const quat *q, const vec3 *v){
+vec3 quatGetRotatedVec3Fast(const quat *const restrict q, const vec3 *v){
 
 	vec3 r;
 	vec3 crossQV, crossQQV;
@@ -433,7 +433,7 @@ vec3 quatGetRotatedVec3Fast(const quat *q, const vec3 *v){
 	return r;
 
 }
-void quatRotateVec3(const quat *q, vec3 *v){
+void quatRotateVec3(const quat *const restrict q, vec3 *v){
 
 	const float dotQV = vec3Dot(&q->v, v);
 	const float dotQQ = vec3Dot(&q->v, &q->v);
@@ -456,7 +456,7 @@ void quatRotateVec3(const quat *q, vec3 *v){
 	v->z += m * crossQV.z;
 
 }
-void quatRotateVec3R(const quat *q, const vec3 *v, vec3 *r){
+void quatRotateVec3R(const quat *const restrict q, const vec3 *v, vec3 *r){
 
 	const float dotQV = vec3Dot(&q->v, v);
 	const float dotQQ = vec3Dot(&q->v, &q->v);
@@ -479,7 +479,7 @@ void quatRotateVec3R(const quat *q, const vec3 *v, vec3 *r){
 	r->z += m * crossQV.z;
 
 }
-void quatRotateVec3Fast(const quat *q, vec3 *v){
+void quatRotateVec3Fast(const quat *const restrict q, vec3 *v){
 
 	vec3 crossQV, crossQQV;
 	vec3Cross(&q->v, v, &crossQV);
@@ -493,7 +493,7 @@ void quatRotateVec3Fast(const quat *q, vec3 *v){
 	v->z = crossQQV.z + crossQQV.z + v->z;
 
 }
-void quatRotateVec3FastR(const quat *q, const vec3 *v, vec3 *r){
+void quatRotateVec3FastR(const quat *const restrict q, const vec3 *v, vec3 *r){
 
 	vec3 crossQV, crossQQV;
 	vec3Cross(&q->v, v, &crossQV);
@@ -538,7 +538,7 @@ quat quatLookingAt(const vec3 *eye, const vec3 *target, const vec3 *up){
 
 }
 
-void quatLookAt(quat *q, const vec3 *eye, const vec3 *target, const vec3 *up){
+void quatLookAt(quat *const restrict q, const vec3 *eye, const vec3 *target, const vec3 *up){
 
 	const float dot = vec3Dot(eye, target);
 
@@ -564,7 +564,7 @@ void quatLookAt(quat *q, const vec3 *eye, const vec3 *target, const vec3 *up){
 
 }
 
-quat quatGetLerp(const quat *q1, const quat *q2, const float t){
+quat quatGetLerp(const quat *const restrict q1, const quat *const restrict q2, const float t){
 	/*
 	**               ^
 	** r = (q1 + (q2 - q1) * t)
@@ -576,7 +576,27 @@ quat quatGetLerp(const quat *q1, const quat *q2, const float t){
 	r.v.z = q1->v.z + (q2->v.z - q1->v.z) * t;
 	return r;
 }
-void quatLerp(const quat *q1, const quat *q2, const float t, quat *r){
+void quatLerp1(quat *const restrict q1, const quat *const restrict q2, const float t){
+	/*
+	**               ^
+	** r = (q1 + (q2 - q1) * t)
+	*/
+	q1->w   += (q2->w   - q1->w)   * t;
+	q1->v.x += (q2->v.x - q1->v.x) * t;
+	q1->v.y += (q2->v.y - q1->v.y) * t;
+	q1->v.z += (q2->v.z - q1->v.z) * t;
+}
+void quatLerp2(const quat *const restrict q1, quat *const restrict q2, const float t){
+	/*
+	**               ^
+	** r = (q1 + (q2 - q1) * t)
+	*/
+	q2->w   = q1->w   + (q2->w   - q1->w)   * t;
+	q2->v.x = q1->v.x + (q2->v.x - q1->v.x) * t;
+	q2->v.y = q1->v.y + (q2->v.y - q1->v.y) * t;
+	q2->v.z = q1->v.z + (q2->v.z - q1->v.z) * t;
+}
+void quatLerpR(const quat *const restrict q1, const quat *const restrict q2, const float t, quat *const restrict r){
 	/*
 	**               ^
 	** r = (q1 + (q2 - q1) * t)
@@ -586,7 +606,8 @@ void quatLerp(const quat *q1, const quat *q2, const float t, quat *r){
 	r->v.y = q1->v.y + (q2->v.y - q1->v.y) * t;
 	r->v.z = q1->v.z + (q2->v.z - q1->v.z) * t;
 }
-quat quatGetSlerp(const quat *q1, const quat *q2, const float t){
+
+quat quatGetSlerp(const quat *const restrict q1, const quat *const restrict q2, const float t){
 
 	quat r;
 
@@ -596,7 +617,7 @@ quat quatGetSlerp(const quat *q1, const quat *q2, const float t){
 
 	if(cosThetaAbs > QUAT_LERP_ANGLE){
 		/* If the angle is small enough, we can just use linear interpolation. */
-		quatLerp(q1, q2, t, &r);
+		quatLerpR(q1, q2, t, &r);
 	}else{
 
 		/*
@@ -635,7 +656,7 @@ quat quatGetSlerp(const quat *q1, const quat *q2, const float t){
 	return r;
 
 }
-void quatSlerp(const quat *q1, const quat *q2, const float t, quat *r){
+void quatSlerp1(quat *const restrict q1, const quat *const restrict q2, const float t){
 
 	/* Cosine of the angle between the two quaternions. */
 	const float cosTheta = quatDot(q1, q2);
@@ -643,7 +664,99 @@ void quatSlerp(const quat *q1, const quat *q2, const float t, quat *r){
 
 	if(cosThetaAbs > QUAT_LERP_ANGLE){
 		/* If the angle is small enough, we can just use linear interpolation. */
-		quatLerp(q1, q2, t, r);
+		quatLerp1(q1, q2, t);
+	}else{
+
+		/*
+		** sin(x)^2 + cos(x)^2 = 1
+		** sin(x)^2 = 1 - cos(x)^2
+		** 1 / sin(x) = fastInvSqrt(1 - cos(x)^2)
+		**
+		** Calculating the reciprocal of sin(x) allows us to do
+		** multiplications instead of divisions below, as the
+		** following holds true:
+		**
+		** x * (1 / y) = x / y
+		*/
+
+		const float theta = acosf(cosThetaAbs);
+		const float sinThetaInv = fastInvSqrt(1.f - cosThetaAbs * cosThetaAbs);
+		const float sinThetaInvT = sinf(theta * (1.f - t)) * sinThetaInv;
+
+		/* If q1 and q2 are > 90 degrees apart (cosTheta < 0), negate */
+		/* sinThetaT so it doesn't go the long way around.            */
+		float sinThetaT;
+		if(cosTheta >= 0.f){
+			sinThetaT = sinf(theta * t) * sinThetaInv;
+		}else{
+			sinThetaT = -(sinf(theta * t) * sinThetaInv);
+		}
+
+		q1->w   = q1->w   * sinThetaInvT + q2->w   * sinThetaT;
+		q1->v.x = q1->v.x * sinThetaInvT + q2->v.x * sinThetaT;
+		q1->v.y = q1->v.y * sinThetaInvT + q2->v.y * sinThetaT;
+		q1->v.z = q1->v.z * sinThetaInvT + q2->v.z * sinThetaT;
+
+	}
+
+	quatNormalizeFast(q1);
+
+}
+void quatSlerp2(const quat *const restrict q1, quat *const restrict q2, const float t){
+
+	/* Cosine of the angle between the two quaternions. */
+	const float cosTheta = quatDot(q1, q2);
+	const float cosThetaAbs = fabs(cosTheta);
+
+	if(cosThetaAbs > QUAT_LERP_ANGLE){
+		/* If the angle is small enough, we can just use linear interpolation. */
+		quatLerp2(q1, q2, t);
+	}else{
+
+		/*
+		** sin(x)^2 + cos(x)^2 = 1
+		** sin(x)^2 = 1 - cos(x)^2
+		** 1 / sin(x) = fastInvSqrt(1 - cos(x)^2)
+		**
+		** Calculating the reciprocal of sin(x) allows us to do
+		** multiplications instead of divisions below, as the
+		** following holds true:
+		**
+		** x * (1 / y) = x / y
+		*/
+
+		const float theta = acosf(cosThetaAbs);
+		const float sinThetaInv = fastInvSqrt(1.f - cosThetaAbs * cosThetaAbs);
+		const float sinThetaInvT = sinf(theta * (1.f - t)) * sinThetaInv;
+
+		/* If q1 and q2 are > 90 degrees apart (cosTheta < 0), negate */
+		/* sinThetaT so it doesn't go the long way around.            */
+		float sinThetaT;
+		if(cosTheta >= 0.f){
+			sinThetaT = sinf(theta * t) * sinThetaInv;
+		}else{
+			sinThetaT = -(sinf(theta * t) * sinThetaInv);
+		}
+
+		q2->w   = q1->w   * sinThetaInvT + q2->w   * sinThetaT;
+		q2->v.x = q1->v.x * sinThetaInvT + q2->v.x * sinThetaT;
+		q2->v.y = q1->v.y * sinThetaInvT + q2->v.y * sinThetaT;
+		q2->v.z = q1->v.z * sinThetaInvT + q2->v.z * sinThetaT;
+
+	}
+
+	quatNormalizeFast(q2);
+
+}
+void quatSlerpR(const quat *const restrict q1, const quat *const restrict q2, const float t, quat *const restrict r){
+
+	/* Cosine of the angle between the two quaternions. */
+	const float cosTheta = quatDot(q1, q2);
+	const float cosThetaAbs = fabs(cosTheta);
+
+	if(cosThetaAbs > QUAT_LERP_ANGLE){
+		/* If the angle is small enough, we can just use linear interpolation. */
+		quatLerpR(q1, q2, t, r);
 	}else{
 
 		/*
@@ -682,9 +795,9 @@ void quatSlerp(const quat *q1, const quat *q2, const float t, quat *r){
 
 }
 
-void quatRotate(const quat *q1, const quat *q2, const float t, quat *r){
+void quatRotateR(const quat *const restrict q1, const quat *const restrict q2, const float t, quat *const restrict r){
 	quat temp;
 	quatMultQByQR(q1, q2, &temp);
 	/* *r = temp; */
-	quatSlerp(q1, &temp, t, r);
+	quatSlerpR(q1, &temp, t, r);
 }

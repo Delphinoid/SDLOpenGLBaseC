@@ -7,22 +7,24 @@
 float fastInvSqrt(float x);
 float fastInvSqrtAccurate(float x);
 
-vec3 getPointLineProjection(const vec3 *a, const vec3 *b, const vec3 *p);
-void pointLineProject(const vec3 *a, const vec3 *b, const vec3 *p, vec3 *r);
+vec3 getPointLineProjection(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict p);
+void pointLineProject(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict p, vec3 *const restrict r);
 
-vec3 getFaceNormal(const vec3 *a, const vec3 *b, const vec3 *c);
-void faceNormal(const vec3 *a, const vec3 *b, const vec3 *c, vec3 *r);
+vec3 getFaceNormal(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict c);
+void faceNormal(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict c, vec3 *const restrict r);
 
-vec3 getBarycentric(const vec3 *a, const vec3 *b, const vec3 *c, const vec3 *p);
-void barycentric(const vec3 *a, const vec3 *b, const vec3 *c, const vec3 *p, vec3 *r);
+vec3 getBarycentric(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict c, const vec3 *const restrict p);
+void barycentric(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict c, vec3 *const restrict p);
+void barycentricR(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict c, const vec3 *const restrict p, vec3 *const restrict r);
 
-float pointPlaneDistanceSquared(const vec3 *normal, const vec3 *vertex, const vec3 *point);
-void pointPlaneProject(const vec3 *normal, const vec3 *vertex, vec3 *point);
+float pointPlaneDistanceSquared(const vec3 *const restrict normal, const vec3 *const restrict vertex, const vec3 *const restrict point);
+void pointPlaneProject(const vec3 *const restrict normal, const vec3 *const restrict vertex, vec3 *const restrict point);
+void pointPlaneProjectR(const vec3 *const restrict normal, const vec3 *const restrict vertex, const vec3 *const restrict point, vec3 *const restrict r);
 
-void linePlaneIntersection(const vec3 *normal, const vec3 *vertex, const vec3 *line, vec3 *point);
-return_t segmentPlaneIntersection(const vec3 *normal, const vec3 *vertex, const vec3 *start, const vec3 *end, vec3 *point);
+void linePlaneIntersection(const vec3 *const restrict normal, const vec3 *const restrict vertex, const vec3 *const restrict line, vec3 *const restrict point);
+return_t segmentPlaneIntersection(const vec3 *const restrict normal, const vec3 *const restrict vertex, const vec3 *const restrict start, const vec3 *const restrict end, vec3 *const restrict point);
 
-void segmentClosestPoints(const vec3 *s1, const vec3 *e1, const vec3 *s2, const vec3 *e2, vec3 *p1, vec3 *p2);
+void segmentClosestPoints(const vec3 *const restrict s1, const vec3 *const restrict e1, const vec3 *const restrict s2, const vec3 *const restrict e2, vec3 *const restrict p1, vec3 *const restrict p2);
 
 float floatLerp(const float f1, const float f2, const float t);
 
