@@ -9,7 +9,9 @@ typedef uint_least16_t cVertexIndex_t;
 typedef uint_least16_t cFaceIndex_t;
 typedef uint_least16_t cEdgeIndex_t;
 
-typedef cEdgeIndex_t cMeshFace;
+typedef struct {
+	cEdgeIndex_t edge;
+} cMeshFace;
 
 typedef struct {
 	// The indices of the half-edge's vertices.
@@ -51,8 +53,8 @@ typedef struct {
 } cMesh;
 
 void cMeshInit(cMesh *const restrict cm);
-return_t cMeshCollisionSAT(const cMesh *const restrict c1, const cMesh *const restrict c2, const vec3 *const restrict centroid, cCollisionInfo *const restrict info, cCollisionContactManifold *const restrict cm);
-return_t cMeshCollisionGJK(const cMesh *const restrict c1, const vec3 *const restrict c1c, const cMesh *const restrict c2, const vec3 *const restrict c2c, cCollisionContactManifold *const restrict cm);
+return_t cMeshCollisionSAT(const cMesh *const restrict c1, const cMesh *const restrict c2, const vec3 *const restrict centroid, cSeparationCache *const restrict info, cContactManifold *const restrict cm);
+return_t cMeshCollisionGJK(const cMesh *const restrict c1, const vec3 *const restrict c1c, const cMesh *const restrict c2, const vec3 *const restrict c2c, cContactManifold *const restrict cm);
 void cMeshDelete(cMesh *const restrict cm);
 
 #endif

@@ -37,7 +37,7 @@ typedef struct {
 
 } camera;
 
-return_t camInit(camera *const restrict cam);
+void camInit(camera *const restrict cam);
 void camResetInterpolation(camera *const restrict cam);
 
 void camCalculateUp(camera *const restrict cam);

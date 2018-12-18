@@ -7,7 +7,7 @@
 memorySLink __PhysicsRigidBodyResourceArray;           // Contains physRigidBodies.
 memorySLink __PhysicsRigidBodyInstanceResourceArray;   // Contains physRBInstances.
 memorySLink __PhysicsColliderResourceArray;            // Contains physColliders.
-memorySLink __PhysicsCollisionInstanceResourceArray;   // Contains physCollisionInfos.
+memorySLink __PhysicsCollisionInstanceResourceArray;   // Contains physSeparationCaches.
 memorySLink __PhysicsConstraintResourceArray;          // Contains physConstraints.
 
 return_t modulePhysicsResourcesInit(){
@@ -351,11 +351,11 @@ void modulePhysicsColliderClear(){
 
 }
 
-__FORCE_INLINE__ physCollisionInfo *modulePhysicsCollisionInstanceAppendStatic(physCollisionInfo **const restrict array){
+__FORCE_INLINE__ physSeparationCache *modulePhysicsCollisionInstanceAppendStatic(physSeparationCache **const restrict array){
 	return memSLinkAppend(&__PhysicsCollisionInstanceResourceArray, (const void **)array);
 }
-__FORCE_INLINE__ physCollisionInfo *modulePhysicsCollisionInstanceAppend(physCollisionInfo **const restrict array){
-	physCollisionInfo *r = memSLinkAppend(&__PhysicsCollisionInstanceResourceArray, (const void **)array);
+__FORCE_INLINE__ physSeparationCache *modulePhysicsCollisionInstanceAppend(physSeparationCache **const restrict array){
+	physSeparationCache *r = memSLinkAppend(&__PhysicsCollisionInstanceResourceArray, (const void **)array);
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -371,11 +371,11 @@ __FORCE_INLINE__ physCollisionInfo *modulePhysicsCollisionInstanceAppend(physCol
 	}
 	return r;
 }
-__FORCE_INLINE__ physCollisionInfo *modulePhysicsCollisionInstanceInsertAfterStatic(physCollisionInfo *const restrict resource){
+__FORCE_INLINE__ physSeparationCache *modulePhysicsCollisionInstanceInsertAfterStatic(physSeparationCache *const restrict resource){
 	return memSLinkInsertAfter(&__PhysicsCollisionInstanceResourceArray, resource);
 }
-__FORCE_INLINE__ physCollisionInfo *modulePhysicsCollisionInstanceInsertAfter(physCollisionInfo *const restrict resource){
-	physCollisionInfo *r = memSLinkInsertAfter(&__PhysicsCollisionInstanceResourceArray, resource);
+__FORCE_INLINE__ physSeparationCache *modulePhysicsCollisionInstanceInsertAfter(physSeparationCache *const restrict resource){
+	physSeparationCache *r = memSLinkInsertAfter(&__PhysicsCollisionInstanceResourceArray, resource);
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -391,14 +391,14 @@ __FORCE_INLINE__ physCollisionInfo *modulePhysicsCollisionInstanceInsertAfter(ph
 	}
 	return r;
 }
-__FORCE_INLINE__ physCollisionInfo *modulePhysicsCollisionInstanceNext(const physCollisionInfo *const restrict i){
-	return (physCollisionInfo *)memSLinkDataGetNext(i);
+__FORCE_INLINE__ physSeparationCache *modulePhysicsCollisionInstanceNext(const physSeparationCache *const restrict i){
+	return (physSeparationCache *)memSLinkDataGetNext(i);
 }
-__FORCE_INLINE__ void modulePhysicsCollisionInstanceFree(physCollisionInfo **const restrict array, physCollisionInfo *const restrict resource, physCollisionInfo *const restrict previous){
+__FORCE_INLINE__ void modulePhysicsCollisionInstanceFree(physSeparationCache **const restrict array, physSeparationCache *const restrict resource, physSeparationCache *const restrict previous){
 	memSLinkFree(&__PhysicsCollisionInstanceResourceArray, (const void **)array, (void *)resource, (const void *)previous);
 }
-void modulePhysicsCollisionInstanceFreeArray(physCollisionInfo **const restrict array){
-	physCollisionInfo *resource = *array;
+void modulePhysicsCollisionInstanceFreeArray(physSeparationCache **const restrict array){
+	physSeparationCache *resource = *array;
 	while(resource != NULL){
 		memSLinkFree(&__PhysicsCollisionInstanceResourceArray, (const void **)array, (void *)resource, NULL);
 		resource = *array;
@@ -406,7 +406,7 @@ void modulePhysicsCollisionInstanceFreeArray(physCollisionInfo **const restrict 
 }
 void modulePhysicsCollisionInstanceClear(){
 
-	MEMORY_SLINK_LOOP_BEGIN(__PhysicsCollisionInstanceResourceArray, i, physCollisionInfo *);
+	MEMORY_SLINK_LOOP_BEGIN(__PhysicsCollisionInstanceResourceArray, i, physSeparationCache *);
 
 		modulePhysicsCollisionInstanceFree(NULL, i, NULL);
 

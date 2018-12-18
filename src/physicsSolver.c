@@ -69,8 +69,10 @@ void physSolverUpdate(physicsSolver *const restrict solver){
 	** something simulation islands.
 	*/
 
-	cCollisionInfo separationInfo;
-	cCollisionContactManifold collisionData;
+	cSeparationCache separationInfo;
+	cContactManifold collisionData;
+	cSeparationCacheInit(&separationInfo);
+	cContactManifoldInit(&collisionData);
 
 	MEMORY_POOL_LOOP_BEGIN(solver->bodies, i, const physRBInstance **);
 
@@ -93,8 +95,10 @@ void physSolverUpdate(physicsSolver *const restrict solver){
 					//island->bodies[j]->blah=1;
 					//exit(0);
 				//}
+				cContactManifoldInit(&collisionData);
 			}else{
 				//physRBICacheSeparation()
+				cSeparationCacheInit(&separationInfo);
 			}
 
 		MEMORY_POOL_OFFSET_LOOP_END(solver->bodies, j, goto PHYSICS_SOLVER_END_LOOP;);
@@ -106,8 +110,8 @@ void physSolverUpdate(physicsSolver *const restrict solver){
 	/** TEMPORARY **/
 
 	/**physicsBodyIndex_t i, j;
-	cCollisionInfo separationInfo;
-	cCollisionContactManifold collisionData;
+	cSeparationCache separationInfo;
+	cContactManifold collisionData;
 	for(i = 0; i < solver->bodyNum; i=solver->bodyNum){
 		for(j = 2; j < solver->bodyNum; j=solver->bodyNum){
 			if(cCollision(&solver->bodies[i].body->colliders[0].c, &solver->bodies[i].body->centroid,

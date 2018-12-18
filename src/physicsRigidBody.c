@@ -710,7 +710,7 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 							// Update the maximum edge num.
 							cHull->edgeMax = addNum;
 						}
-						cHull->faces[cHull->faceNum] = first;
+						cHull->faces[cHull->faceNum].edge = first;
 
 						++cHull->faceNum;
 
@@ -1250,7 +1250,7 @@ return_t physRBIAddConstraint(physRBInstance *const restrict prbi, physConstrain
 
 }
 
-return_t physRBICacheSeparation(physRBInstance *const restrict prbi, physCollisionInfo *const c){
+return_t physRBICacheSeparation(physRBInstance *const restrict prbi, physSeparationCache *const c){
 
 	/*
 	** Cache a separation after a failed narrowphase collision check.
@@ -1260,7 +1260,7 @@ return_t physRBICacheSeparation(physRBInstance *const restrict prbi, physCollisi
 
 }
 
-return_t physRBIAddCollision(physRBInstance *const restrict prbi, physCollisionInfo *const c){
+return_t physRBIAddCollision(physRBInstance *const restrict prbi, physSeparationCache *const c){
 
 	/*
 	** Caches the collision and creates an
@@ -1634,13 +1634,13 @@ void physRBIIntegrateRungeKutta(physRBInstance *const restrict prbi, const float
 
 }
 
-static __FORCE_INLINE__ void physRBIPenetrationSlop(physRBInstance *const restrict body1, physRBInstance *const restrict body2, const cCollisionContactManifold *const restrict cm){
+static __FORCE_INLINE__ void physRBIPenetrationSlop(physRBInstance *const restrict body1, physRBInstance *const restrict body2, const cContactManifold *const restrict cm){
 
 	// Baumgarte stabilization.
 
 }
 
-static __FORCE_INLINE__ void physRBIResolveCollisionImpulse(physRBInstance *const restrict body1, physRBInstance *const restrict body2, const cCollisionContactManifold *const restrict cm){
+static __FORCE_INLINE__ void physRBIResolveCollisionImpulse(physRBInstance *const restrict body1, physRBInstance *const restrict body2, const cContactManifold *const restrict cm){
 
 	/**vec3 localContactPointA, localContactPointB;
 	vec3 contactVelocityA, contactVelocityB;
@@ -1722,7 +1722,7 @@ static __FORCE_INLINE__ void physRBIResolveCollisionImpulse(physRBInstance *cons
 
 }
 
-void physRBIResolveCollisionGS(physRBInstance *const restrict body1, physRBInstance *const restrict body2, const cCollisionContactManifold *const restrict cm){
+void physRBIResolveCollisionGS(physRBInstance *const restrict body1, physRBInstance *const restrict body2, const cContactManifold *const restrict cm){
 
 	/*
 	** Uses the Gauss-Seidel method to solve the

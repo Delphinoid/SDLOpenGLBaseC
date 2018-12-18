@@ -2,7 +2,7 @@
 #include "constantsMath.h"
 #include <math.h>
 
-return_t camInit(camera *const restrict cam){
+void camInit(camera *const restrict cam){
 	iVec3Init(&cam->position, 0.f, 0.f, 0.f);
 	iQuatInit(&cam->orientation);
 	vec3Set(&cam->rotation, 0.f, 0.f, 0.f);
@@ -15,7 +15,6 @@ return_t camInit(camera *const restrict cam){
 	mat4Identity(&cam->projectionMatrix);
 	mat4Identity(&cam->viewProjectionMatrix);
 	cam->flags = CAM_UPDATE_VIEW | CAM_UPDATE_PROJECTION;
-	return 1;
 }
 void camResetInterpolation(camera *const restrict cam){
 	iVec3ResetInterp(&cam->position);

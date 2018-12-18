@@ -14,7 +14,7 @@
 #define RESOURCE_DEFAULT_COLLIDER_SIZE sizeof(physCollider)
 #define RESOURCE_DEFAULT_COLLIDER_NUM 4096
 
-#define RESOURCE_DEFAULT_COLLISION_SIZE sizeof(physCollisionInfo)
+#define RESOURCE_DEFAULT_COLLISION_SIZE sizeof(physSeparationCache)
 #define RESOURCE_DEFAULT_COLLISION_NUM RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_NUM
 
 #define RESOURCE_DEFAULT_CONSTRAINT_SIZE sizeof(physConstraint)
@@ -23,7 +23,7 @@
 extern memorySLink __PhysicsRigidBodyResourceArray;           // Contains physRigidBodies.
 extern memorySLink __PhysicsRigidBodyInstanceResourceArray;   // Contains physRBInstances.
 extern memorySLink __PhysicsColliderResourceArray;            // Contains physColliders.
-extern memorySLink __PhysicsCollisionInstanceResourceArray;   // Contains physCollisionInfos.
+extern memorySLink __PhysicsCollisionInstanceResourceArray;   // Contains physSeparationCaches.
 extern memorySLink __PhysicsConstraintResourceArray;          // Contains physConstraints.
 
 /** Support locals? Merge all module containers? **/
@@ -60,13 +60,13 @@ void modulePhysicsColliderFreeArray(physCollider **const restrict array);
 void modulePhysicsColliderRBIFreeArray(physCollider **const restrict array);
 void modulePhysicsColliderClear();
 
-physCollisionInfo *modulePhysicsCollisionInstanceAppendStatic(physCollisionInfo **const restrict array);
-physCollisionInfo *modulePhysicsCollisionInstanceAppend(physCollisionInfo **const restrict array);
-physCollisionInfo *modulePhysicsCollisionInstanceInsertAfterStatic(physCollisionInfo *const restrict resource);
-physCollisionInfo *modulePhysicsCollisionInstanceInsertAfter(physCollisionInfo *const restrict resource);
-physCollisionInfo *modulePhysicsCollisionInstanceNext(const physCollisionInfo *const restrict i);
-void modulePhysicsCollisionInstanceFree(physCollisionInfo **const restrict array, physCollisionInfo *const restrict resource, physCollisionInfo *const restrict previous);
-void modulePhysicsCollisionInstanceFreeArray(physCollisionInfo **const restrict array);
+physSeparationCache *modulePhysicsCollisionInstanceAppendStatic(physSeparationCache **const restrict array);
+physSeparationCache *modulePhysicsCollisionInstanceAppend(physSeparationCache **const restrict array);
+physSeparationCache *modulePhysicsCollisionInstanceInsertAfterStatic(physSeparationCache *const restrict resource);
+physSeparationCache *modulePhysicsCollisionInstanceInsertAfter(physSeparationCache *const restrict resource);
+physSeparationCache *modulePhysicsCollisionInstanceNext(const physSeparationCache *const restrict i);
+void modulePhysicsCollisionInstanceFree(physSeparationCache **const restrict array, physSeparationCache *const restrict resource, physSeparationCache *const restrict previous);
+void modulePhysicsCollisionInstanceFreeArray(physSeparationCache **const restrict array);
 void modulePhysicsCollisionInstanceClear();
 
 physConstraint *modulePhysicsConstraintAppendStatic(physConstraint **const restrict array);

@@ -74,8 +74,8 @@ typedef struct {
 	                              // chain, ordered by constraintID.
 
 	/* Separation caching. */
-	physCollisionInfo *cache;  // An array of separations from previous
-	                           // frames, ordered by collisionID.
+	physSeparationCache *cache;  // An array of separations from previous
+	                             // frames, ordered by collisionID.
 
 	/* Various flags for the rigid body. */
 	flags_t flags;
@@ -96,7 +96,7 @@ void physRBIInit(physRBInstance *const restrict prbi);
 return_t physRBIInstantiate(physRBInstance *const restrict prbi, physRigidBody *const restrict body, bone *const restrict configuration);
 
 return_t physRBIAddConstraint(physRBInstance *const restrict prbi, physConstraint *const c);
-return_t physRBICacheSeparation(physRBInstance *const restrict prbi, physCollisionInfo *const c);
+return_t physRBICacheSeparation(physRBInstance *const restrict prbi, physSeparationCache *const c);
 
 void physRBIUpdateCollisionMesh(physRBInstance *const restrict prbi);
 
@@ -114,7 +114,7 @@ void physRBIIntegrateLeapfrog(physRBInstance *const restrict prbi, const float d
 void physRBIIntegrateLeapfrogVelocity(physRBInstance *const restrict prbi, const float dt);
 void physRBIIntegrateLeapfrogConstraints(physRBInstance *const restrict prbi, const float dt);
 
-void physRBIResolveCollisionGS(physRBInstance *const restrict body1, physRBInstance *const restrict body2, const cCollisionContactManifold *const restrict cm);
+void physRBIResolveCollisionGS(physRBInstance *const restrict body1, physRBInstance *const restrict body2, const cContactManifold *const restrict cm);
 
 void physRBIDelete(physRBInstance *const restrict prbi);
 

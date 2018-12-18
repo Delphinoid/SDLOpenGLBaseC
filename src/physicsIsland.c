@@ -128,8 +128,8 @@ return_t physIslandSimulate(physIsland *const restrict island, const float dt){
 	//memFree(pairArray);
 
 	physicsBodyIndex_t i, j;
-	cCollisionInfo separationInfo;
-	cCollisionContactManifold collisionData;
+	cSeparationCache separationInfo;
+	cContactManifold collisionData;
 	for(i = 0; i < island->bodyNum; ++i){
 		for(j = i+1; j < island->bodyNum; ++j){
 			if(cCollision(&island->bodies[i]->colliders[0].c, &island->bodies[i]->colliders[0].centroid,

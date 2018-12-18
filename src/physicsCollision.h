@@ -17,8 +17,8 @@ typedef struct {
 
 typedef struct {
 	physicsBodyIndex_t collisionID;  // An identifier for the other body involved in the collision.
-	cCollisionInfo info;
-} physCollisionInfo;
+	cSeparationCache info;
+} physSeparationCache;
 
 float physColliderGenerateMass(physCollider *const restrict collider, const float *const vertexMassArray);
 void physColliderGenerateMoment(const physCollider *const restrict collider, const vec3 *const restrict centroid, const float *const restrict vertexMassArray, float *const restrict inertiaTensor);
