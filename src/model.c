@@ -10,7 +10,7 @@
 #define MODEL_RESOURCE_DIRECTORY_STRING "Resources\\Models\\"
 #define MODEL_RESOURCE_DIRECTORY_LENGTH 17
 
-return_t mdlWavefrontObjLoad(const char *const restrict filePath, size_t *const restrict vertexNum, vertex **const restrict vertices, size_t *const restrict indexNum, vertexIndex_t **const restrict indices, size_t *const restrict lodNum, mdlLOD **const restrict lods, char *const restrict sklPath);
+return_t mdlWavefrontObjLoad(const char *const restrict filePath, size_t *const vertexNum, vertex **const vertices, size_t *const restrict indexNum, vertexIndex_t **const indices, size_t *const restrict lodNum, mdlLOD **const lods, char *const restrict sklPath);
 ///return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, size_t *indexNum, vertexIndex_t **indices);
 
 void mdlInit(model *const restrict mdl){
@@ -128,9 +128,9 @@ return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, 
 	return_t r;
 
 	size_t vertexNum;
-	vertex *restrict vertices;
+	vertex *vertices;
 	size_t indexNum;
-	vertexIndex_t *restrict indices;
+	vertexIndex_t *indices;
 	size_t lodNum;
 	mdlLOD *lods;
 
@@ -143,7 +143,7 @@ return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, 
 
 	mdlInit(mdl);
 
-	r = mdlWavefrontObjLoad(fullPath, &vertexNum, (vertex **const restrict)&vertices, &indexNum, (vertexIndex_t **const restrict)&indices, &lodNum, (mdlLOD **const restrict)&lods, &sklPath[0]);
+	r = mdlWavefrontObjLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, &lodNum, &lods, &sklPath[0]);
 	//r = mdlSMDLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, allSkeletons);
 	/** Replace and move the loading function here. **/
 	if(r <= 0){

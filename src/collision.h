@@ -25,9 +25,9 @@ typedef struct {
 } cCollisionInfo;
 
 typedef struct {
-	vec3 positionA;  // Contact point on collider A's surface.
-	vec3 positionB;  // Contact point on collider B's surface.
-	float depthSquared;
+	vec3 pointA;  // Contact point on collider A's surface.
+	vec3 pointB;  // Contact point on collider B's surface.
+	float depth;
 } cCollisionContact;
 
 typedef struct {

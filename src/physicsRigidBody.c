@@ -517,8 +517,6 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 
 						cMesh *const cHull = (cMesh *)&currentCollider->c.hull;
 
-						cEdgeIndex_t i = 0;
-
 						cEdgeIndex_t start;
 						cEdgeIndex_t end = strtoul(token, NULL, 0)-1;
 
@@ -538,6 +536,8 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 
 						// Recursively add the face's edges.
 						for(;;){
+
+							cEdgeIndex_t i = 0;
 
 							token = strtok(NULL, " ");
 							if(token == NULL){
@@ -605,6 +605,7 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 							}
 
 							if(i >= oldNum){
+								// No twin was found.
 								if(first == (cEdgeIndex_t)-1){
 									// If this is the first vertex, set it.
 									first = cHull->edgeNum;

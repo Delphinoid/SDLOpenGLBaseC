@@ -26,7 +26,7 @@ void animAdvance(animationInstance *const restrict animInst, const animationData
 	if(animData->frameNum > 1){
 
 		const float animationLength = animData->frameDelays[animData->frameNum-1];
-		const float *restrict currentDelay;
+		const float *currentDelay;
 
 		animInst->prevElapsedTime = elapsedTime;
 		if(animationLength > 0.f && elapsedTime != 0.f){

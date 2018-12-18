@@ -95,7 +95,7 @@ void *memPoolIndex(memoryPool *const restrict pool, const size_t i){
 
 	size_t offset = pool->block * i;
 
-	const memoryRegion *restrict region = pool->region;
+	const memoryRegion *region = pool->region;
 	byte_t *regionStart  = memPoolFirst(region);
 	size_t  regionSize   = memAllocatorEnd(region) - regionStart;
 

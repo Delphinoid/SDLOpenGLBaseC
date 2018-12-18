@@ -17,7 +17,7 @@ vec3 getBarycentric(const vec3 *const restrict a, const vec3 *const restrict b, 
 void barycentric(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict c, vec3 *const restrict p);
 void barycentricR(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict c, const vec3 *const restrict p, vec3 *const restrict r);
 
-float pointPlaneDistanceSquared(const vec3 *const restrict normal, const vec3 *const restrict vertex, const vec3 *const restrict point);
+float pointPlaneDistance(const vec3 *const restrict normal, const vec3 *const restrict vertex, const vec3 *const restrict point);
 void pointPlaneProject(const vec3 *const restrict normal, const vec3 *const restrict vertex, vec3 *const restrict point);
 void pointPlaneProjectR(const vec3 *const restrict normal, const vec3 *const restrict vertex, const vec3 *const restrict point, vec3 *const restrict r);
 

@@ -176,7 +176,7 @@ static __FORCE_INLINE__ void gfxRendererDrawElement(gfxRenderElement *const rest
 return_t gfxRendererDrawScene(graphicsManager *const restrict gfxMngr, camera *const restrict cam, const scene *const restrict scn, const float interpT){
 
 	size_t i;
-	gfxRenderElement *restrict queue;
+	gfxRenderElement *queue;
 
 	gfxRenderer renderer;
 	gfxRendererInit(&renderer, interpT);

@@ -168,7 +168,7 @@ void barycentricR(const vec3 *const restrict a, const vec3 *const restrict b, co
 	r->x = 1.f - r->y - r->z;
 }
 
-float pointPlaneDistanceSquared(const vec3 *const restrict normal, const vec3 *const restrict vertex, const vec3 *const restrict point){
+float pointPlaneDistance(const vec3 *const restrict normal, const vec3 *const restrict vertex, const vec3 *const restrict point){
 	/*
 	** Calculates the squared distance
 	** between a point and a plane.
@@ -209,7 +209,7 @@ void linePlaneIntersection(const vec3 *const restrict normal, const vec3 *const 
 	** a line and a plane.
 	*/
 	const float startDistance = vec3Dot(normal, vertex);
-	const float t = startDistance / (startDistance + pointPlaneDistanceSquared(normal, vertex, line));
+	const float t = startDistance / (startDistance + pointPlaneDistance(normal, vertex, line));
 	// Lerp
 	point->x = line->x * t;
 	point->y = line->y * t;
@@ -220,8 +220,8 @@ return_t segmentPlaneIntersection(const vec3 *const restrict normal, const vec3 
 	** Finds the intersection between
 	** a line segment and a plane.
 	*/
-	const float startDistance = pointPlaneDistanceSquared(normal, vertex, start);
-	const float endDistance = pointPlaneDistanceSquared(normal, vertex, end);
+	const float startDistance = pointPlaneDistance(normal, vertex, start);
+	const float endDistance = pointPlaneDistance(normal, vertex, end);
 	if(startDistance <= 0.f){
 		if(endDistance <= 0.f){
 			return 0;

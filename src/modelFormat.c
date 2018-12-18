@@ -41,7 +41,7 @@
 		memFree(tempBoneWeights); \
 	}
 
-return_t mdlWavefrontObjLoad(const char *const restrict filePath, size_t *const restrict vertexNum, vertex **const restrict vertices, size_t *const restrict indexNum, size_t **const restrict indices, size_t *const restrict lodNum, mdlLOD **const restrict lods, char *const restrict sklPath){
+return_t mdlWavefrontObjLoad(const char *const restrict filePath, size_t *const restrict vertexNum, vertex **const vertices, size_t *const restrict indexNum, size_t **const indices, size_t *const restrict lodNum, mdlLOD **const lods, char *const restrict sklPath){
 
 	FILE *const restrict mdlInfo = fopen(filePath, "r");
 

@@ -92,7 +92,7 @@ void *memListIndex(memoryList *const restrict list, const size_t i){
 
 	size_t offset = list->block * i;
 
-	const memoryRegion *restrict region = list->region;
+	const memoryRegion *region = list->region;
 	byte_t *regionStart  = memListFirst(region);
 	size_t  regionSize   = memAllocatorEnd(region) - regionStart;
 
