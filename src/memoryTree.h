@@ -192,6 +192,9 @@
 #define memTreeNodeGetParent(node)        *((byte_t **)((byte_t *)node + MEMORY_TREE_PARENT_OFFSET_FROM_DATA))
 #define memTreeNodeGetParentPointer(node)  ((byte_t **)((byte_t *)node + MEMORY_TREE_PARENT_OFFSET_FROM_DATA))
 
+#define memTreeNodeIsBlack(node, parent) (node == NULL || memTreeNodeGetParent(node) == parent)
+#define memTreeNodeIsRed(node, parent)   (node != NULL && memTreeNodeGetParent(node) != parent)
+
 #define memTreeNodeGetParentColourless(node) \
 	((byte_t *)(memTreeNodeGetColour(node) & MEMORY_TREE_NODE_COLOURLESS_MASK))
 

@@ -22,7 +22,7 @@
 
 static void sklDefragment(skeleton *const restrict skl){
 	frameIndex_t i;
-	skl->bones = memReallocate(skl->bones, skl->boneNum     *sizeof(sklNode));
+	skl->bones = memReallocate(skl->bones, skl->boneNum*sizeof(sklNode));
 	for(i = 0; i < skl->boneNum; ++i){
 		skl->bones[i].name =
 		memReallocate(
@@ -157,6 +157,17 @@ return_t sklLoad(skeleton *const restrict skl, const char *const restrict prgPat
 		return 0;
 	}
 
+	/**
+	***
+	***
+	***
+	***
+	***
+	**/
+	if(sklResizeToFit(skl) == -1){
+		return -1;
+	}
+
 	// Generate a name based off the file path.
 	skl->name = fileGenerateResourceName(filePath, fileLength);
 	if(skl->name == NULL){
@@ -165,7 +176,7 @@ return_t sklLoad(skeleton *const restrict skl, const char *const restrict prgPat
 		return -1;
 	}
 
-	return sklResizeToFit(skl);
+	return 1;
 
 }
 return_t sklDefault(skeleton *const restrict skl){

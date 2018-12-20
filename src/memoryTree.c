@@ -31,30 +31,32 @@ void *memTreeCreate(memoryTree *const restrict tree, void *const start, const si
 
 }
 
-static __FORCE_INLINE__ void memTreeRotateTreeLeft(memoryTree *const restrict tree, byte_t *const node){
+static __FORCE_INLINE__ void memTreeRotateLeft(memoryTree *const restrict tree, byte_t *const node){
 
 	/*
 	** Rotate the red-black tree to the left.
 	*/
 
-	byte_t *parent = memTreeNodeGetParentColourless(node);
-	byte_t *right = memTreeNodeGetRight(node);
-	byte_t *rightleft = memTreeNodeGetLeft(right);
+	byte_t *const right = memTreeNodeGetRight(node);
+	// Temp initially stores the right node's left
+	// child, but later stores the parent node.
+	byte_t *temp = memTreeNodeGetLeft(right);
 
-	memTreeNodeGetRight(node) = rightleft;
+	memTreeNodeGetRight(node) = temp;
 
-	if(rightleft != NULL){
-		memTreeNodeSetParentKeepColour(rightleft, node);
+	if(temp != NULL){
+		memTreeNodeSetParentKeepColour(temp, node);
 	}
 
-	memTreeNodeSetParentKeepColour(right, parent);
+	temp = memTreeNodeGetParentColourless(node);
+	memTreeNodeSetParentKeepColour(right, temp);
 
-	if(parent == NULL){
+	if(temp == NULL){
 		tree->root = right;
-	}else if(node == memTreeNodeGetLeft(parent)){
-		memTreeNodeGetLeft(parent) = right;
+	}else if(node == memTreeNodeGetLeft(temp)){
+		memTreeNodeGetLeft(temp) = right;
 	}else{
-		memTreeNodeGetRight(parent) = right;
+		memTreeNodeGetRight(temp) = right;
 	}
 
 	memTreeNodeGetLeft(right) = node;
@@ -62,30 +64,32 @@ static __FORCE_INLINE__ void memTreeRotateTreeLeft(memoryTree *const restrict tr
 
 }
 
-static __FORCE_INLINE__ void memTreeRotateTreeRight(memoryTree *const restrict tree, byte_t *const node){
+static __FORCE_INLINE__ void memTreeRotateRight(memoryTree *const restrict tree, byte_t *const node){
 
 	/*
 	** Rotate the red-black tree to the right.
 	*/
 
-	byte_t *parent = memTreeNodeGetParentColourless(node);
-	byte_t *left = memTreeNodeGetLeft(node);
-	byte_t *leftright = memTreeNodeGetRight(left);
+	byte_t *const left = memTreeNodeGetLeft(node);
+	// Temp initially stores the left node's right
+	// child, but later stores the parent node.
+	byte_t *temp = memTreeNodeGetRight(left);
 
-	memTreeNodeGetLeft(node) = leftright;
+	memTreeNodeGetLeft(node) = temp;
 
-	if(leftright != NULL){
-		memTreeNodeSetParentKeepColour(leftright, node);
+	if(temp != NULL){
+		memTreeNodeSetParentKeepColour(temp, node);
 	}
 
-	memTreeNodeSetParentKeepColour(left, parent);
+	temp = memTreeNodeGetParentColourless(node);
+	memTreeNodeSetParentKeepColour(left, temp);
 
-	if(parent == NULL){
+	if(temp == NULL){
 		tree->root = left;
-	}else if(node == memTreeNodeGetLeft(parent)){
-		memTreeNodeGetLeft(parent) = left;
+	}else if(node == memTreeNodeGetLeft(temp)){
+		memTreeNodeGetLeft(temp) = left;
 	}else{
-		memTreeNodeGetRight(parent) = left;
+		memTreeNodeGetRight(temp) = left;
 	}
 
 	memTreeNodeGetRight(left) = node;
@@ -93,25 +97,20 @@ static __FORCE_INLINE__ void memTreeRotateTreeRight(memoryTree *const restrict t
 
 }
 
-static __FORCE_INLINE__ void memTreeRepairTree(memoryTree *const restrict tree, const byte_t *node){
+static __FORCE_INLINE__ void memTreeRepairTree(memoryTree *const restrict tree, byte_t *node, byte_t *parent){
 
 	/*
 	** Fix any violations of the red-black
 	** tree's rules, starting at "node".
 	*/
 
-	byte_t *parent = memTreeNodeGetParentColourless(node);
+	byte_t *grandparent = memTreeNodeGetParentColourless(parent);
 
 	// Continue looping while the current node
 	// and its parent are both red. If the root
 	// node is reached, the loop will terminate.
-	while(
-		node != tree->root &&
-		memTreeNodeGetColourMasked(node)   != MEMORY_TREE_NODE_COLOUR_BLACK &&
-		memTreeNodeGetColourMasked(parent) != MEMORY_TREE_NODE_COLOUR_BLACK
-	){
+	while(memTreeNodeIsRed(parent, grandparent)){
 
-		byte_t *grandparent = memTreeNodeGetParentColourless(parent);
 		byte_t *uncle = memTreeNodeGetLeft(grandparent);
 
 		if(parent == uncle){
@@ -119,7 +118,7 @@ static __FORCE_INLINE__ void memTreeRepairTree(memoryTree *const restrict tree, 
 			// The uncle is to the right of the grandparent.
 			uncle = memTreeNodeGetRight(grandparent);
 
-			if(uncle != NULL && memTreeNodeGetColourMasked(uncle) != MEMORY_TREE_NODE_COLOUR_BLACK){
+			if(memTreeNodeIsRed(uncle, grandparent)){
 
 				// The uncle is red, all we need to
 				// do is some recolouring.
@@ -132,35 +131,29 @@ static __FORCE_INLINE__ void memTreeRepairTree(memoryTree *const restrict tree, 
 
 			}else{
 
-				uintptr_t tempParentColour;
-
 				if(node == memTreeNodeGetRight(parent)){
 
 					// Current node is the right child of its parent.
 					// Rotate the tree to the left.
-					memTreeRotateTreeLeft(tree, parent);
-					node = parent;
-					parent = memTreeNodeGetParentColourless(node);
+					memTreeRotateLeft(tree, parent);
+					parent = node;
+					node = memTreeNodeGetLeft(parent);
 
 				}
 
-				// Rotate the tree to the right.
-				memTreeRotateTreeRight(tree, grandparent);
-
 				// Swap the parent and grandparent's colours.
-				tempParentColour = memTreeNodeGetColour(parent);
-				memTreeNodeSetColourKeepParent(parent, memTreeNodeGetColour(grandparent));
-				memTreeNodeSetColourKeepParent(grandparent, tempParentColour);
+				memTreeNodeSetColourBlack(parent);
+				memTreeNodeSetColourRed(grandparent);
 
-				// Continue climbing the tree.
-				node = parent;
+				// Rotate the tree to the right.
+				memTreeRotateRight(tree, grandparent);
 
 			}
 
 		}else{
 
 			// The uncle is to the left of the grandparent.
-			if(uncle != NULL && memTreeNodeGetColourMasked(uncle) != MEMORY_TREE_NODE_COLOUR_BLACK){
+			if(memTreeNodeIsRed(uncle, grandparent)){
 
 				// The uncle is red, all we need to
 				// do is some recolouring.
@@ -173,39 +166,39 @@ static __FORCE_INLINE__ void memTreeRepairTree(memoryTree *const restrict tree, 
 
 			}else{
 
-				uintptr_t tempParentColour;
-
 				if(node == memTreeNodeGetLeft(parent)){
 
 					// Current node is the left child of its parent.
 					// Rotate the tree to the right.
-					memTreeRotateTreeRight(tree, parent);
-					node = parent;
-					parent = memTreeNodeGetParentColourless(node);
+					memTreeRotateRight(tree, parent);
+					parent = node;
+					node = memTreeNodeGetRight(parent);
 
 				}
 
-				// Rotate the tree to the left.
-				memTreeRotateTreeLeft(tree, grandparent);
-
 				// Swap the parent and grandparent's colours.
-				tempParentColour = memTreeNodeGetColour(parent);
-				memTreeNodeSetColourKeepParent(parent, memTreeNodeGetColour(grandparent));
-				memTreeNodeSetColourKeepParent(grandparent, tempParentColour);
+				memTreeNodeSetColourBlack(parent);
+				memTreeNodeSetColourRed(grandparent);
 
-				// Continue climbing the tree.
-				node = parent;
+				// Rotate the tree to the left.
+				memTreeRotateLeft(tree, grandparent);
 
 			}
 
 		}
 
-		// Get the new parent node.
+		// If the current node is the root, break from the loop.
+		if(node == tree->root){
+			break;
+		}
+
+		// Get the new parent and grandparent nodes.
 		parent = memTreeNodeGetParentColourless(node);
+		grandparent = memTreeNodeGetParentColourless(parent);
 
 	}
 
-	memTreeNodeSetColourBlack(tree->root);
+	memTreeNodeGetParent(tree->root) = NULL;
 
 }
 
@@ -215,10 +208,7 @@ static __FORCE_INLINE__ void memTreeInsert(memoryTree *const restrict tree, void
 	** Add a free block to the red-black tree.
 	*/
 
-	byte_t *const node = memTreeBlockGetData(block);
-
-	byte_t **address;
-	uintptr_t parent;
+	byte_t *node = memTreeBlockGetData(block);
 
 	// Reset the active flag.
 	memTreeBlockSetInactive(block);
@@ -227,42 +217,44 @@ static __FORCE_INLINE__ void memTreeInsert(memoryTree *const restrict tree, void
 	memTreeNodeGetLeft(node) = NULL;
 	memTreeNodeGetRight(node) = NULL;
 
-	// If the root node is free, we can exit early.
 	if(tree->root == NULL){
+		// If the root node is free, we can exit early.
 		tree->root = node;
 		memTreeNodeGetParent(node) = NULL;
-		return;
+	}else{
+
+		byte_t **address = &tree->root;
+		byte_t *parent;
+
+		// Begin by performing a BST insertion.
+		do {
+
+			parent = *address;
+
+			if(bytes <= memTreeNodeGetCurrent(parent)){
+
+				// The new block is smaller than
+				// the current block. Go to its left.
+				address = memTreeNodeGetLeftPointer(parent);
+
+			}else{
+
+				// The new block is larger than
+				// the current block. Go to its right.
+				address = memTreeNodeGetRightPointer(parent);
+
+			}
+
+		} while(*address != NULL);
+
+		// Insert the free block.
+		*address = node;
+		memTreeNodeGetColour(node) = (uintptr_t)parent | MEMORY_TREE_NODE_COLOUR_MASK;
+
+		// Fix any red-black tree rule violations.
+		memTreeRepairTree(tree, node, parent);
+
 	}
-
-	address = &tree->root;
-
-	// Begin by performing a BST insertion.
-	do {
-
-		parent = *((uintptr_t *)address);
-
-		if(bytes <= memTreeNodeGetCurrent(parent)){
-
-			// The new block is smaller than
-			// the current block. Go to its left.
-			address = memTreeNodeGetLeftPointer(parent);
-
-		}else{
-
-			// The new block is larger than
-			// the current block. Go to its right.
-			address = memTreeNodeGetRightPointer(parent);
-
-		}
-
-	} while(*address != NULL);
-
-	// Insert the free block.
-	*address = node;
-	memTreeNodeGetColour(node) = parent | MEMORY_TREE_NODE_COLOUR_RED_MASK;
-
-	// Fix red-black tree rule violations.
-	memTreeRepairTree(tree, node);
 
 }
 
@@ -274,12 +266,12 @@ static __FORCE_INLINE__ void memTreeRemove(memoryTree *const restrict tree, void
 
 	byte_t *const node = memTreeBlockGetNode(block);
 
+	byte_t *successor;
 	byte_t *child;
-	uintptr_t childColour;
 
-	byte_t *parent = memTreeNodeGetParentColourless(node);
-	byte_t *left   = memTreeNodeGetLeft(node);
-	byte_t *right  = memTreeNodeGetRight(node);
+	byte_t *parent;
+	byte_t *left = memTreeNodeGetLeft(node);
+	byte_t *right = memTreeNodeGetRight(node);
 
 	// Set the active flag.
 	memTreeBlockSetActive(block);
@@ -289,280 +281,177 @@ static __FORCE_INLINE__ void memTreeRemove(memoryTree *const restrict tree, void
 
 			// The node has two children.
 			// Swap it with its in-order successor.
-			byte_t *newParent;
-			byte_t *next = memTreeNodeGetLeft(right);
-			byte_t *successor = right;
-
-			// Find the in-order successor.
-			while(next != NULL){
+			byte_t *next;
+			successor = right;
+			while((next = memTreeNodeGetLeft(successor)) != NULL){
 				successor = next;
-				next = memTreeNodeGetLeft(successor);
 			}
-			newParent = memTreeNodeGetParentColourless(successor);
 			child = memTreeNodeGetRight(successor);
 
-			// Swap the parents.
-			if(newParent == node){
-				// If the successor is a direct child
-				// of the node, set the new parent to
-				// the successor.
-				newParent = successor;
-				// Also swap the right child.
-				right = node;
-			}
-			memTreeNodeSetParentKeepColour(node, newParent);
-			// Set the parent's child pointer.
-			memTreeNodeGetLeft(newParent) = node;
-			if(parent != NULL){
-				byte_t **parentLeft = memTreeNodeGetLeftPointer(parent);
-				memTreeNodeSetParentKeepColour(successor, parent);
-				// Set the parent's child pointer.
-				if(*parentLeft == node){
-					*parentLeft = successor;
-				}else{
-					memTreeNodeGetRight(parent) = successor;
-				}
-			}else{
-				// Set the parent to NULL but keep its colour.
-				memTreeNodeGetColour(successor) &= MEMORY_TREE_NODE_COLOUR_MASK;
-				tree->root = successor;
-			}
-
-			// Swap the left children.
-			memTreeNodeGetLeft(node) = NULL;
-			memTreeNodeGetLeft(successor) = left;
-			if(left != NULL){
-				memTreeNodeSetParentKeepColour(left, successor);
-			}
-
-			// Swap the right children.
-			if(child != NULL){
-				memTreeNodeGetRight(node) = child;
-				childColour = memTreeNodeGetColourMasked(child);
-			}else{
-				memTreeNodeGetRight(node) = NULL;
-				childColour = MEMORY_TREE_NODE_COLOUR_BLACK;
-			}
-			memTreeNodeGetRight(successor) = right;
-			if(right != NULL){
-				memTreeNodeSetParentKeepColour(right, successor);
-			}
-
-			parent = newParent;
-			left = next;
-			right = child;
-
 		}else{
+			successor = node;
 			child = left;
-			childColour = memTreeNodeGetColourMasked(left);
 		}
-	}else if(right != NULL){
-		child = right;
-		childColour = memTreeNodeGetColourMasked(right);
 	}else{
-		child = NULL;
-		childColour = MEMORY_TREE_NODE_COLOUR_BLACK;
+		successor = node;
+		child = right;
+	}
+
+	// Replace the successor's parent's child with the child node.
+	parent = memTreeNodeGetParentColourless(successor);
+	if(parent == NULL){
+		tree->root = child;
+	}else if(memTreeNodeGetLeft(parent) == successor){
+		memTreeNodeGetLeft(parent) = child;
+	}else{
+		memTreeNodeGetRight(parent) = child;
+	}
+	// Replace the child's parent with the successor's.
+	if(child != NULL){
+		memTreeNodeSetParentKeepColour(child, parent);
 	}
 
 	// The node should now have one or zero children.
-	if(memTreeNodeGetColourMasked(node) == MEMORY_TREE_NODE_COLOUR_BLACK){
+	if(memTreeNodeIsBlack(successor, parent)){
 
-		const byte_t *current = node;
+		while(child != tree->root && memTreeNodeIsBlack(child, parent)){
 
-		// If the node is black, have it
-		// assume the colour of its child.
-		memTreeNodeGetColour(node) |= childColour;
-
-		while(parent != NULL){
-
-			uintptr_t parentColour;
-			uintptr_t siblingColour;
-			uintptr_t siblingLeftColour;
-			uintptr_t siblingRightColour;
-
-			byte_t *sibling;
+			byte_t *sibling = memTreeNodeGetLeft(parent);
 			byte_t *siblingLeft;
 			byte_t *siblingRight;
-			byte_t *parentLeft = memTreeNodeGetLeft(parent);
 
-			if(parentLeft == current){
+			if(child == sibling){
+
 				sibling = memTreeNodeGetRight(parent);
-			}else{
-				sibling = parentLeft;
-			}
 
-			if(sibling != NULL){
-
-				// If the node's sibling is red, do
-				// some recolours and a rotation.
-				siblingColour = memTreeNodeGetColourMasked(sibling);
-				if(siblingColour != MEMORY_TREE_NODE_COLOUR_BLACK){
-
-					memTreeNodeSetColourRed(parent);
+				// If the node's sibling is red, swap its colour
+				// with its parent and rotate it to the left.
+				if(memTreeNodeIsRed(sibling, parent)){
 					memTreeNodeSetColourBlack(sibling);
+					memTreeNodeSetColourRed(parent);
+					memTreeRotateLeft(tree, parent);
+					sibling = memTreeNodeGetRight(parent);
+				}
 
-					if(current == parentLeft){
-						memTreeRotateTreeLeft(tree, parent);
-					}else{
-						memTreeRotateTreeRight(tree, parent);
-					}
+				// Keep track of the sibling's child pointers.
+				siblingLeft = memTreeNodeGetLeft(sibling);
+				siblingRight = memTreeNodeGetRight(sibling);
 
-					// Update variables.
-					sibling = memTreeNodeGetLeft(parent);
-					if(sibling == current){
+				// If both of the sibling's children are black,
+				// change the sibling's colour to red.
+				if(memTreeNodeIsBlack(siblingLeft, sibling) && memTreeNodeIsBlack(siblingRight, sibling)){
+					memTreeNodeSetColourRed(sibling);
+					child = parent;
+					parent = memTreeNodeGetParentColourless(parent);
+				}else{
+
+					// Right-right case.
+					if(memTreeNodeIsBlack(siblingRight, sibling)){
+						memTreeNodeSetColourBlack(siblingLeft);
+						memTreeNodeSetColourRed(sibling);
+						memTreeRotateRight(tree, sibling);
+						siblingRight = sibling;
 						sibling = memTreeNodeGetRight(parent);
 					}
-					if(sibling == NULL){
-						goto NULL_SIBLING;
-					}
-					parent        = memTreeNodeGetParentColourless(current);
-					parentLeft    = memTreeNodeGetLeft(parent);
-					siblingColour = memTreeNodeGetColourMasked(sibling);
 
-				}
-
-				siblingLeft = memTreeNodeGetLeft(sibling);
-				if(siblingLeft == NULL){
-					siblingLeftColour = MEMORY_TREE_NODE_COLOUR_BLACK;
-				}else{
-					siblingLeftColour  = memTreeNodeGetColourMasked(siblingLeft);
-				}
-
-				siblingRight = memTreeNodeGetRight(sibling);
-				if(siblingRight == NULL){
-					siblingRightColour = MEMORY_TREE_NODE_COLOUR_BLACK;
-				}else{
-					siblingRightColour = memTreeNodeGetColourMasked(siblingRight);
-				}
-
-				parentColour = memTreeNodeGetColourMasked(parent);
-
-				if(siblingColour      == MEMORY_TREE_NODE_COLOUR_BLACK &&
-				   siblingLeftColour  == MEMORY_TREE_NODE_COLOUR_BLACK &&
-				   siblingRightColour == MEMORY_TREE_NODE_COLOUR_BLACK){
-
-					memTreeNodeSetColourRed(sibling);
-
-					if(parentColour != MEMORY_TREE_NODE_COLOUR_BLACK){
-						memTreeNodeSetColourBlack(parent);
-						break;
-					}else{
-						current = parent;
-						parent = memTreeNodeGetParentColourless(current);
-					}
-
-				}else{
-
-					if(current == parentLeft &&
-					   siblingColour      == MEMORY_TREE_NODE_COLOUR_BLACK &&
-					   siblingLeftColour  != MEMORY_TREE_NODE_COLOUR_BLACK &&
-					   siblingRightColour == MEMORY_TREE_NODE_COLOUR_BLACK){
-
-						memTreeNodeSetColourRed(sibling);
-						memTreeNodeSetColourBlack(siblingLeft);
-						memTreeRotateTreeRight(tree, sibling);
-
-						// Update variables.
-						sibling = memTreeNodeGetLeft(parent);
-						if(sibling == current){
-							sibling = memTreeNodeGetRight(parent);
-						}
-						parent     = memTreeNodeGetParentColourless(current);
-						parentLeft = memTreeNodeGetLeft(parent);
-						if(sibling == NULL){
-							siblingLeft  = NULL;
-							siblingRight = NULL;
-						}else{
-							siblingLeft  = memTreeNodeGetLeft(sibling);
-							siblingRight = memTreeNodeGetRight(sibling);
-						}
-
-					}else if(current != parentLeft &&
-					         siblingColour      == MEMORY_TREE_NODE_COLOUR_BLACK &&
-					         siblingLeftColour  == MEMORY_TREE_NODE_COLOUR_BLACK &&
-					         siblingRightColour != MEMORY_TREE_NODE_COLOUR_BLACK){
-
-						memTreeNodeSetColourRed(sibling);
-						memTreeNodeSetColourBlack(siblingRight);
-						memTreeRotateTreeLeft(tree, sibling);
-
-						// Update variables.
-						sibling = memTreeNodeGetLeft(parent);
-						if(sibling == current){
-							sibling = memTreeNodeGetRight(parent);
-						}
-						parent     = memTreeNodeGetParentColourless(current);
-						parentLeft = memTreeNodeGetLeft(parent);
-						if(sibling == NULL){
-							siblingLeft  = NULL;
-							siblingRight = NULL;
-						}else{
-							siblingLeft  = memTreeNodeGetLeft(sibling);
-							siblingRight = memTreeNodeGetRight(sibling);
-						}
-
-						siblingRight = memTreeNodeGetRight(sibling);
-						if(siblingRight == NULL){
-							siblingRightColour = MEMORY_TREE_NODE_COLOUR_BLACK;
-						}else{
-							siblingRightColour = memTreeNodeGetColourMasked(siblingRight);
-						}
-
-					}
-
-					// Set the sibling to the parent's colour.
-					memTreeNodeSetColourKeepParent(sibling, (uintptr_t)parent);
+					// Right-left case.
+					memTreeNodeSetColourKeepParent(sibling, memTreeNodeGetColour(parent));
 					memTreeNodeSetColourBlack(parent);
+					memTreeNodeSetColourBlack(siblingRight);
+					memTreeRotateLeft(tree, parent);
 
-					if(current == parentLeft){
-						if(siblingRight != NULL){
-							memTreeNodeSetColourBlack(siblingRight);
-						}
-						memTreeRotateTreeLeft(tree, parent);
-					}else{
-						if(siblingLeft != NULL){
-							memTreeNodeSetColourBlack(siblingLeft);
-						}
-						memTreeRotateTreeRight(tree, parent);
-					}
-
-					break;
+					// Break from the loop.
+					child = tree->root;
 
 				}
 
 			}else{
-				NULL_SIBLING:
-				if(memTreeNodeGetColourMasked(parent) != MEMORY_TREE_NODE_COLOUR_BLACK){
-					memTreeNodeSetColourBlack(parent);
-					break;
-				}else{
-					current = parent;
-					parent = memTreeNodeGetParentColourless(current);
+
+				// If the node's sibling is red, swap its colour
+				// with its parent and rotate it to the right.
+				if(memTreeNodeIsRed(sibling, parent)){
+					memTreeNodeSetColourBlack(sibling);
+					memTreeNodeSetColourRed(parent);
+					memTreeRotateRight(tree, parent);
+					sibling = memTreeNodeGetLeft(parent);
 				}
+
+				// Keep track of the sibling's child pointers.
+				siblingLeft = memTreeNodeGetLeft(sibling);
+				siblingRight = memTreeNodeGetRight(sibling);
+
+				// If both of the sibling's children are black,
+				// change the sibling's colour to red.
+				if(memTreeNodeIsBlack(siblingLeft, sibling) && memTreeNodeIsBlack(siblingRight, sibling)){
+					memTreeNodeSetColourRed(sibling);
+					child = parent;
+					parent = memTreeNodeGetParentColourless(parent);
+				}else{
+
+					// Left-left case.
+					if(memTreeNodeIsBlack(siblingLeft, sibling)){
+						memTreeNodeSetColourBlack(siblingRight);
+						memTreeNodeSetColourRed(sibling);
+						memTreeRotateLeft(tree, sibling);
+						siblingLeft = sibling;
+						sibling = memTreeNodeGetLeft(parent);
+					}
+
+					// Left-right case.
+					memTreeNodeSetColourKeepParent(sibling, memTreeNodeGetColour(parent));
+					memTreeNodeSetColourBlack(parent);
+					memTreeNodeSetColourBlack(siblingLeft);
+					memTreeRotateRight(tree, parent);
+
+					// Break from the loop.
+					child = tree->root;
+
+				}
+
 			}
 
+		}
+
+		// Make sure the child is black.
+		if(child != NULL){
+			memTreeNodeSetColourBlack(child);
 		}
 
 	}
 
-	// Replace the node with its original child.
-	parent = memTreeNodeGetParentColourless(node);
-	if(parent == NULL){
-		tree->root = child;
-		if(child != NULL){
-			memTreeNodeGetParent(child) = NULL;
+	// If the node was not replaced by
+	// its successor, do that now.
+	if(node != successor){
+
+		parent = memTreeNodeGetParentColourless(node);
+		left = memTreeNodeGetLeft(node);
+		right = memTreeNodeGetRight(node);
+
+		// Set the left child's parent to the successor.
+		if(left != NULL){
+			memTreeNodeSetParentKeepColour(left, successor);
 		}
-	}else{
-		// Set the parent's child.
-		byte_t **parentLeft = memTreeNodeGetLeftPointer(parent);
-		if(node == *parentLeft){
-			*parentLeft = child;
+		// Set the successor's left child.
+		memTreeNodeGetLeft(successor) = left;
+
+		// Set the right child's parent to the successor.
+		if(right != NULL){
+			memTreeNodeSetParentKeepColour(right, successor);
+		}
+		// Set the successor's right child.
+		memTreeNodeGetRight(successor) = right;
+
+		// Make the node's parent point to the successor.
+		if(parent == NULL){
+			tree->root = successor;
+		}else if(memTreeNodeGetLeft(parent) == node){
+			memTreeNodeGetLeft(parent) = successor;
 		}else{
-			memTreeNodeGetRight(parent) = child;
+			memTreeNodeGetRight(parent) = successor;
 		}
-		if(child != NULL){
-			memTreeNodeSetParentKeepColour(child, parent);
-		}
+		// Set the successor's parent.
+		memTreeNodeGetParent(successor) = memTreeNodeGetParent(node);
+
 	}
 
 }
