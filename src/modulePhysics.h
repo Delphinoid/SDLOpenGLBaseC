@@ -14,17 +14,17 @@
 #define RESOURCE_DEFAULT_COLLIDER_SIZE sizeof(physCollider)
 #define RESOURCE_DEFAULT_COLLIDER_NUM 4096
 
-#define RESOURCE_DEFAULT_COLLISION_SIZE sizeof(physSeparationCache)
+#define RESOURCE_DEFAULT_COLLISION_SIZE sizeof(physSeparation)
 #define RESOURCE_DEFAULT_COLLISION_NUM RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_NUM
 
 #define RESOURCE_DEFAULT_CONSTRAINT_SIZE sizeof(physConstraint)
 #define RESOURCE_DEFAULT_CONSTRAINT_NUM RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_NUM
 
-extern memorySLink __PhysicsRigidBodyResourceArray;           // Contains physRigidBodies.
-extern memorySLink __PhysicsRigidBodyInstanceResourceArray;   // Contains physRBInstances.
-extern memorySLink __PhysicsColliderResourceArray;            // Contains physColliders.
-extern memorySLink __PhysicsCollisionInstanceResourceArray;   // Contains physSeparationCaches.
-extern memorySLink __PhysicsConstraintResourceArray;          // Contains physConstraints.
+extern memorySLink __PhysicsRigidBodyResourceArray;          // Contains physRigidBodies.
+extern memorySLink __PhysicsRigidBodyInstanceResourceArray;  // Contains physRBInstances.
+extern memorySLink __PhysicsColliderResourceArray;           // Contains physColliders.
+extern memorySLink __PhysicsSeparationResourceArray;         // Contains physSeparations.
+extern memorySLink __PhysicsConstraintResourceArray;         // Contains physConstraints.
 
 /** Support locals? Merge all module containers? **/
 
@@ -34,47 +34,47 @@ void modulePhysicsResourcesDelete();
 
 physRigidBody *modulePhysicsRigidBodyAppendStatic(physRigidBody **const restrict array);
 physRigidBody *modulePhysicsRigidBodyAppend(physRigidBody **const restrict array);
-physRigidBody *modulePhysicsRigidBodyInsertAfterStatic(physRigidBody *const restrict resource);
-physRigidBody *modulePhysicsRigidBodyInsertAfter(physRigidBody *const restrict resource);
+physRigidBody *modulePhysicsRigidBodyInsertAfterStatic(physRigidBody **const restrict array, physRigidBody *const restrict resource);
+physRigidBody *modulePhysicsRigidBodyInsertAfter(physRigidBody **const restrict array, physRigidBody *const restrict resource);
 physRigidBody *modulePhysicsRigidBodyNext(const physRigidBody *const restrict i);
-void modulePhysicsRigidBodyFree(physRigidBody **const restrict array, physRigidBody *const restrict resource, physRigidBody *const restrict previous);
+void modulePhysicsRigidBodyFree(physRigidBody **const restrict array, physRigidBody *const restrict resource, const physRigidBody *const restrict previous);
 void modulePhysicsRigidBodyFreeArray(physRigidBody **const restrict array);
 void modulePhysicsRigidBodyClear();
 
 physRBInstance *modulePhysicsRigidBodyInstanceAppendStatic(physRBInstance **const restrict array);
 physRBInstance *modulePhysicsRigidBodyInstanceAppend(physRBInstance **const restrict array);
-physRBInstance *modulePhysicsRigidBodyInstanceInsertAfterStatic(physRBInstance *const restrict resource);
-physRBInstance *modulePhysicsRigidBodyInstanceInsertAfter(physRBInstance *const restrict resource);
+physRBInstance *modulePhysicsRigidBodyInstanceInsertAfterStatic(physRBInstance **const restrict array, physRBInstance *const restrict resource);
+physRBInstance *modulePhysicsRigidBodyInstanceInsertAfter(physRBInstance **const restrict array, physRBInstance *const restrict resource);
 physRBInstance *modulePhysicsRigidBodyInstanceNext(const physRBInstance *const restrict i);
-void modulePhysicsRigidBodyInstanceFree(physRBInstance **const restrict array, physRBInstance *const restrict resource, physRBInstance *const restrict previous);
+void modulePhysicsRigidBodyInstanceFree(physRBInstance **const restrict array, physRBInstance *const restrict resource, const physRBInstance *const restrict previous);
 void modulePhysicsRigidBodyInstanceFreeArray(physRBInstance **const restrict array);
 void modulePhysicsRigidBodyInstanceClear();
 
 physCollider *modulePhysicsColliderAppendStatic(physCollider **const restrict array);
 physCollider *modulePhysicsColliderAppend(physCollider **const restrict array);
-physCollider *modulePhysicsColliderInsertAfterStatic(physCollider *const restrict resource);
-physCollider *modulePhysicsColliderInsertAfter(physCollider *const restrict resource);
+physCollider *modulePhysicsColliderInsertAfterStatic(physCollider **const restrict array, physCollider *const restrict resource);
+physCollider *modulePhysicsColliderInsertAfter(physCollider **const restrict array, physCollider *const restrict resource);
 physCollider *modulePhysicsColliderNext(const physCollider *const restrict i);
-void modulePhysicsColliderFree(physCollider **const restrict array, physCollider *const restrict resource, physCollider *const restrict previous);
+void modulePhysicsColliderFree(physCollider **const restrict array, physCollider *const restrict resource, const physCollider *const restrict previous);
 void modulePhysicsColliderFreeArray(physCollider **const restrict array);
 void modulePhysicsColliderRBIFreeArray(physCollider **const restrict array);
 void modulePhysicsColliderClear();
 
-physSeparationCache *modulePhysicsCollisionInstanceAppendStatic(physSeparationCache **const restrict array);
-physSeparationCache *modulePhysicsCollisionInstanceAppend(physSeparationCache **const restrict array);
-physSeparationCache *modulePhysicsCollisionInstanceInsertAfterStatic(physSeparationCache *const restrict resource);
-physSeparationCache *modulePhysicsCollisionInstanceInsertAfter(physSeparationCache *const restrict resource);
-physSeparationCache *modulePhysicsCollisionInstanceNext(const physSeparationCache *const restrict i);
-void modulePhysicsCollisionInstanceFree(physSeparationCache **const restrict array, physSeparationCache *const restrict resource, physSeparationCache *const restrict previous);
-void modulePhysicsCollisionInstanceFreeArray(physSeparationCache **const restrict array);
-void modulePhysicsCollisionInstanceClear();
+physSeparation *modulePhysicsSeparationAppendStatic(physSeparation **const restrict array);
+physSeparation *modulePhysicsSeparationAppend(physSeparation **const restrict array);
+physSeparation *modulePhysicsSeparationInsertAfterStatic(physSeparation **const restrict array, physSeparation *const restrict resource);
+physSeparation *modulePhysicsSeparationInsertAfter(physSeparation **const restrict array, physSeparation *const restrict resource);
+physSeparation *modulePhysicsSeparationNext(const physSeparation *const restrict i);
+void modulePhysicsSeparationFree(physSeparation **const restrict array, physSeparation *const restrict resource, const physSeparation *const restrict previous);
+void modulePhysicsSeparationFreeArray(physSeparation **const restrict array);
+void modulePhysicsSeparationClear();
 
 physConstraint *modulePhysicsConstraintAppendStatic(physConstraint **const restrict array);
 physConstraint *modulePhysicsConstraintAppend(physConstraint **const restrict array);
-physConstraint *modulePhysicsConstraintInsertAfterStatic(physConstraint *const restrict resource);
-physConstraint *modulePhysicsConstraintInsertAfter(physConstraint *const restrict resource);
+physConstraint *modulePhysicsConstraintInsertAfterStatic(physConstraint **const restrict array, physConstraint *const restrict resource);
+physConstraint *modulePhysicsConstraintInsertAfter(physConstraint **const restrict array, physConstraint *const restrict resource);
 physConstraint *modulePhysicsConstraintNext(const physConstraint *const restrict i);
-void modulePhysicsConstraintFree(physConstraint **const restrict array, physConstraint *const restrict resource, physConstraint *const restrict previous);
+void modulePhysicsConstraintFree(physConstraint **const restrict array, physConstraint *const restrict resource, const physConstraint *const restrict previous);
 void modulePhysicsConstraintFreeArray(physConstraint **const restrict array);
 void modulePhysicsConstraintClear();
 

@@ -224,9 +224,10 @@ typedef struct {
 #define memTreeAllocationSize(start, bytes, length) \
 	((length > 0 ? memTreeBlockSize(bytes) * length : bytes) + (uintptr_t)memTreeAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 
-#define memTreeFirst(region)      ((void *)memTreeAlignStartData((region)->start))
-#define memTreeBlockStatus(block) memTreeBlockGetActiveMasked(block)
-#define memTreeBlockNext(tree, i) (void *)((byte_t *)i + memTreeDataGetCurrent(i));
+#define memTreeFirst(region)          ((void *)memTreeAlignStartData((region)->start))
+#define memTreeBlockStatus(block)     memTreeBlockGetActiveMasked(block)
+#define memTreeBlockNext(tree, i)     (void *)((byte_t *)i + memTreeDataGetCurrent(i));
+#define memTreeBlockPrevious(tree, i) (void *)((byte_t *)i - memTreeDataGetCurrent(i));
 
 void memTreeInit(memoryTree *const restrict tree);
 void *memTreeCreate(memoryTree *const restrict tree, void *const start, const size_t bytes, const size_t length);

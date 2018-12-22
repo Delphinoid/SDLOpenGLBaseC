@@ -96,20 +96,21 @@ typedef struct {
 	// The following can save small amounts of memory but can't be predicted as easily:
 	//(memDLinkBlockSize(bytes) * (length - 1) + memDLinkBlockSizeUnaligned(bytes) + (uintptr_t)memDLinkAlignStartBlock(start) - (uintptr_t)start)
 
-#define memDLinkFirst(region)       ((void *)memDLinkAlignStartData((region)->start))
-#define memDLinkPrev(i)             memDLinkDataGetPrev(i)
-#define memDLinkNext(i)             memDLinkDataGetNext(i)
-#define memDLinkBlockStatus(block)  memDLinkDataGetActiveMasked(block)
-#define memDLinkBlockNext(array, i) (void *)((byte_t *)i + (array).block)
+#define memDLinkFirst(region)           ((void *)memDLinkAlignStartData((region)->start))
+#define memDLinkPrev(i)                 memDLinkDataGetPrev(i)
+#define memDLinkNext(i)                 memDLinkDataGetNext(i)
+#define memDLinkBlockStatus(block)      memDLinkDataGetActiveMasked(block)
+#define memDLinkBlockNext(array, i)     (void *)((byte_t *)i + (array).block)
+#define memDLinkBlockPrevious(array, i) (void *)((byte_t *)i - (array).block)
 
 void memDLinkInit(memoryDLink *const restrict array);
 void *memDLinkCreate(memoryDLink *const restrict array, void *const start, const size_t bytes, const size_t length);
 void *memDLinkAllocate(memoryDLink *const restrict array);
-void *memDLinkPrepend(memoryDLink *const restrict array, void **const restrict start);
-void *memDLinkAppend(memoryDLink *const restrict array, const void **const start);
-void *memDLinkInsertBefore(memoryDLink *const restrict array, const void **const start, void *const element);
-void *memDLinkInsertAfter(memoryDLink *const restrict array, void *const element);
-void memDLinkFree(memoryDLink *const restrict array, const void **const start, void *const element);
+void *memDLinkPrepend(memoryDLink *const restrict array, void **const start);
+void *memDLinkAppend(memoryDLink *const restrict array, void **const start);
+void *memDLinkInsertBefore(memoryDLink *const restrict array, void **const start, void *const element);
+void *memDLinkInsertAfter(memoryDLink *const restrict array, void **const start, void *const element);
+void memDLinkFree(memoryDLink *const restrict array, void **const start, void *const element);
 void *memDLinkSetupMemory(void *start, const size_t bytes, const size_t length);
 void memDLinkClear(memoryDLink *const restrict array);
 void *memDLinkExtend(memoryDLink *const restrict array, void *const start, const size_t bytes, const size_t length);
@@ -118,9 +119,8 @@ void memDLinkDelete(memoryDLink *const restrict array);
 #define MEMORY_DLINK_LOOP_BEGIN(allocator, n, type)                 \
 	{                                                               \
 		const memoryRegion *__region_##n = allocator.region;        \
-		type n;                                                     \
 		do {                                                        \
-			n = memDLinkFirst(__region_##n);                        \
+			type n = memDLinkFirst(__region_##n);                   \
 			while(n < (type)memAllocatorEnd(__region_##n)){         \
 				const byte_t __flag_##n = memDLinkBlockStatus(n);   \
 				if(__flag_##n == MEMORY_DLINK_BLOCK_ACTIVE){

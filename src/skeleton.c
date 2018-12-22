@@ -164,7 +164,7 @@ return_t sklLoad(skeleton *const restrict skl, const char *const restrict prgPat
 	***
 	***
 	**/
-	if(sklResizeToFit(skl) == -1){
+	if(sklResizeToFit(skl) < 0){
 		return -1;
 	}
 
@@ -549,7 +549,7 @@ return_t sklaLoad(sklAnim *const restrict skla, const char *const restrict prgPa
 	***
 	***
 	**/
-	if(sklaResizeToFit(skla, boneCapacity, frameCapacity) == -1){
+	if(sklaResizeToFit(skla, boneCapacity, frameCapacity) < 0){
 		return -1;
 	}
 
@@ -930,7 +930,7 @@ static __FORCE_INLINE__ void sklaiUpdateFragments(sklAnimInstance *const restric
 		sklAnimFragment *previous = NULL;
 		sklAnimFragment *next = moduleSkeletonAnimationFragmentNext(frag);
 
-		/* Loop through each sklAnimFragment, updating them. */
+		// Loop through each sklAnimFragment, updating them.
 		while(next != NULL){
 
 			/** **/
@@ -1089,7 +1089,7 @@ return_t sklaiChange(sklAnimInstance *const restrict sklai, const skeleton *cons
 		lastFragment->animBlendProgress = 0.f;
 
 		// Create a new fragment.
-		newFragment = moduleSkeletonAnimationFragmentInsertAfter(lastFragment);
+		newFragment = moduleSkeletonAnimationFragmentInsertAfter(&sklai->fragments, lastFragment);
 
 	}
 

@@ -50,13 +50,13 @@ void moduleTextureResourcesDelete(){
 	}
 }
 
-__FORCE_INLINE__ texture *moduleTextureGetDefault(){
+__HINT_INLINE__ texture *moduleTextureGetDefault(){
 	return memPoolFirst(__TextureResourceArray.region);
 }
-__FORCE_INLINE__ texture *moduleTextureAllocateStatic(){
+__HINT_INLINE__ texture *moduleTextureAllocateStatic(){
 	return memPoolAllocate(&__TextureResourceArray);
 }
-__FORCE_INLINE__ texture *moduleTextureAllocate(){
+__HINT_INLINE__ texture *moduleTextureAllocate(){
 	texture *r = memPoolAllocate(&__TextureResourceArray);
 	if(r == NULL){
 		// Attempt to extend the allocator.
@@ -73,7 +73,7 @@ __FORCE_INLINE__ texture *moduleTextureAllocate(){
 	}
 	return r;
 }
-__FORCE_INLINE__ void moduleTextureFree(texture *const restrict resource){
+__HINT_INLINE__ void moduleTextureFree(texture *const restrict resource){
 	tDelete(resource);
 	memPoolFree(&__TextureResourceArray, (void *)resource);
 }

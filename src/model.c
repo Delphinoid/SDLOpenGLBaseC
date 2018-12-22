@@ -168,7 +168,7 @@ return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, 
 			if(r2 < 1){
 				// The load failed. Clean up.
 				moduleSkeletonFree(tempSkl);
-				if(r2 == -1){
+				if(r2 < 0){
 					/** Memory allocation failure. **/
 					mdlDelete(mdl);
 					return -1;

@@ -26,10 +26,10 @@ void renderModel(const objInstance *const restrict obji, const float distance, c
 	bone *bPrevious = (obji->state.previous == NULL ? bCurrent : obji->state.previous->skeleton);
 	bone *bLast = &bCurrent[obji->skeletonData.skl->boneNum];
 
-	/* Update the object's configuration for rendering. */
+	// Update the object's configuration for rendering.
 	//rndrConfigRenderUpdate(&obji->tempRndrConfig, interpT);  /** Only line that requires non-const object. **/
 
-	/* Interpolate between the previous and last skeleton states. */
+	// Interpolate between the previous and last skeleton states.
 	for(; bCurrent < bLast; ++bCurrent, ++bPrevious, ++transform){
 
 		// Interpolate between bone states.
@@ -49,10 +49,10 @@ void renderModel(const objInstance *const restrict obji, const float distance, c
 
 	}
 
-	/* Draw each renderable. */
+	// Draw each renderable.
 	while(currentRndr != NULL){
 
-		/* Get texture information for rendering and feed it to the shader. */
+		// Get texture information for rendering and feed it to the shader.
 		float texFrag[4];  // The x, y, width and height of the fragment of the texture being rendered.
 		GLuint frameTexID;
 		twiGetFrameInfo(&currentRndr->twi, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &frameTexID, interpT);
@@ -132,10 +132,10 @@ void renderModel(const objInstance *const restrict obji, const float distance, c
 
 				}
 
-				/* Feed the translucency multiplier to the shader */
+				// Feed the translucency multiplier to the shader
 				glUniform1f(gfxMngr->alphaID, alpha);
 
-				/* Render the model. */
+				// Render the model.
 				glBindVertexArray(currentRndr->mdl->vaoID);
 				if(currentRndr->mdl->indexNum > 0){
 					GLsizei indexNum;

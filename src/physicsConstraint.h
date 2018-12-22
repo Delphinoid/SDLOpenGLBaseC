@@ -12,13 +12,13 @@
 typedef uint_least8_t physConstraintIndex_t;
 
 typedef struct {
-	flags_t flags;
-	physicsBodyIndex_t ownerID;       // An identifier for the body that owns the constraint.
-	physicsBodyIndex_t constraintID;  // An identifier for the other body being constrained.
+	physicsBodyIndex_t id;       // An identifier for the other body being constrained.
+	physicsBodyIndex_t ownerID;  // An identifier for the body that owns the constraint.
 	vec3 constraintOffsetMin;
 	vec3 constraintOffsetMax;
 	vec3 constraintRotationMin;
 	vec3 constraintRotationMax;
+	flags_t flags;
 } physConstraint;
 
 void physConstraintInit(physConstraint *const restrict constraint);

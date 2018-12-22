@@ -41,10 +41,10 @@ void moduleCameraResourcesDelete(){
 	}
 }
 
-__FORCE_INLINE__ camera *moduleCameraAllocateStatic(){
+__HINT_INLINE__ camera *moduleCameraAllocateStatic(){
 	return memPoolAllocate(&__CameraResourceArray);
 }
-__FORCE_INLINE__ camera *moduleCameraAllocate(){
+__HINT_INLINE__ camera *moduleCameraAllocate(){
 	camera *r = memPoolAllocate(&__CameraResourceArray);
 	if(r == NULL){
 		// Attempt to extend the allocator.
@@ -70,7 +70,7 @@ void moduleCameraPrepare(){
 	MEMORY_POOL_LOOP_END(__CameraResourceArray, i, return;);
 
 }
-__FORCE_INLINE__ void moduleCameraFree(camera *const restrict resource){
+__HINT_INLINE__ void moduleCameraFree(camera *const restrict resource){
 	camDelete(resource);
 	memPoolFree(&__CameraResourceArray, (void *)resource);
 }

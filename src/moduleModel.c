@@ -56,16 +56,16 @@ void moduleModelResourcesDelete(){
 	}
 }
 
-__FORCE_INLINE__ model *moduleModelGetDefault(){
+__HINT_INLINE__ model *moduleModelGetDefault(){
 	return memPoolFirst(__ModelResourceArray.region);
 }
-__FORCE_INLINE__ model *moduleModelGetSprite(){
+__HINT_INLINE__ model *moduleModelGetSprite(){
 	return (model *)((byte_t *)memPoolFirst(__ModelResourceArray.region) + RESOURCE_MODEL_BLOCK_SIZE);
 }
-__FORCE_INLINE__ model *moduleModelAllocateStatic(){
+__HINT_INLINE__ model *moduleModelAllocateStatic(){
 	return memPoolAllocate(&__ModelResourceArray);
 }
-__FORCE_INLINE__ model *moduleModelAllocate(){
+__HINT_INLINE__ model *moduleModelAllocate(){
 	model *r = memPoolAllocate(&__ModelResourceArray);
 	if(r == NULL){
 		// Attempt to extend the allocator.
@@ -82,7 +82,7 @@ __FORCE_INLINE__ model *moduleModelAllocate(){
 	}
 	return r;
 }
-__FORCE_INLINE__ void moduleModelFree(model *const restrict resource){
+__HINT_INLINE__ void moduleModelFree(model *const restrict resource){
 	mdlDelete(resource);
 	memPoolFree(&__ModelResourceArray, (void *)resource);
 }

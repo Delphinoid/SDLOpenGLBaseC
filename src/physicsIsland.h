@@ -5,12 +5,12 @@
 
 typedef struct {
 
-	/* Physics body storage. */
+	// Physics body storage.
 	physicsBodyIndex_t bodyNum;
 	physicsBodyIndex_t bodyCapacity;
-	physRBInstance **bodies;  /* An array of pointers to bodies. */
+	physRBInstance **bodies;  // An array of pointers to bodies.
 
-	/* Collision pair storage. */
+	// Collision pair storage.
 	/*size_t pairNum;
 	size_t pairCapacity;
 	physCollisionPair *pairs;*/

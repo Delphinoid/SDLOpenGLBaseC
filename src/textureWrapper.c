@@ -351,7 +351,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 					if(currentCommand == 0){
 						// If a textureFrame was being worked on and has no subframes, add the default one.
 						if(tw->frames[tw->frameNum-1].subframeNum == 0){
-							if(twfAddDefaultSubframe(&tw->frames[tw->frameNum-1], subframeCapacity) == -1){
+							if(twfAddDefaultSubframe(&tw->frames[tw->frameNum-1], subframeCapacity) < 0){
 								/** Memory allocation failure. **/
 								twaDelete(&tempAnim);
 								twDelete(tw);
@@ -360,7 +360,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 							}
 						}else{
 							// twfAddDefaultSubframe() automatically resizes to fit.
-							if(twfResizeToFit(&tw->frames[tw->frameNum-1], subframeCapacity) == -1){
+							if(twfResizeToFit(&tw->frames[tw->frameNum-1], subframeCapacity) < 0){
 								/** Memory allocation failure. **/
 								twaDelete(&tempAnim);
 								twDelete(tw);
@@ -372,13 +372,13 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 					}else if(currentCommand == 1){
 						// If a valid animation is being worked on, save it and continue.
 						if(tempAnim.animData.frameNum > 0){
-							if(twaResizeToFit(&tempAnim, animframeCapacity) == -1){
+							if(twaResizeToFit(&tempAnim, animframeCapacity) < 0){
 								/** Memory allocation failure. **/
 								twDelete(tw);
 								fclose(texInfo);
 								return -1;
 							}
-							if(twAddAnim(tw, &tempAnim, &animCapacity) == -1){
+							if(twAddAnim(tw, &tempAnim, &animCapacity) < 0){
 								/** Memory allocation failure. **/
 								twaDelete(&tempAnim);
 								fclose(texInfo);
@@ -422,7 +422,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 						if(r < 1){
 							// The load failed. Clean up.
 							moduleTextureFree(tempTex);
-							if(r == -1){
+							if(r < 0){
 								/** Memory allocation failure. **/
 								twaDelete(&tempAnim);
 								fclose(texInfo);
@@ -451,7 +451,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 				}else{
 					subframeCapacity = 1;
 					twfNew(&tempFrame, subframeCapacity);
-					if(twfAddDefaultSubframe(&tempFrame, subframeCapacity) == -1){
+					if(twfAddDefaultSubframe(&tempFrame, subframeCapacity) < 0){
 						/** Memory allocation failure. **/
 						twfDelete(&tempFrame);
 						twaDelete(&tempAnim);
@@ -462,7 +462,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 
 				}
 				// Add the frame to tw->frames.
-				if(twAddFrame(tw, &tempFrame, &frameCapacity) == -1){
+				if(twAddFrame(tw, &tempFrame, &frameCapacity) < 0){
 					/** Memory allocation failure. **/
 					twfDelete(&tempFrame);
 					twaDelete(&tempAnim);
@@ -503,7 +503,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 					for(i = 1; i <= numberOfFrames; ++i){
 						if(dimensions[0] + dimensions[2] <= currentTexW && dimensions[1] + dimensions[3] <= currentTexH){
 							rectangle baseSubframe = {.x = dimensions[0], .y = dimensions[1], .w = dimensions[2], .h = dimensions[3]};
-							if(twfAddSubframe(&tw->frames[tw->frameNum-1], &baseSubframe, &subframeCapacity) == -1){
+							if(twfAddSubframe(&tw->frames[tw->frameNum-1], &baseSubframe, &subframeCapacity) < 0){
 								/** Memory allocation failure. **/
 								twaDelete(&tempAnim);
 								twDelete(tw);
@@ -545,7 +545,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 						token = strtok(NULL, "/");
 					}
 					rectangle baseSubframe = {.x = dimensions[0], .y = dimensions[1], .w = dimensions[2], .h = dimensions[3]};
-					if(twfAddSubframe(&tw->frames[tw->frameNum-1], &baseSubframe, &subframeCapacity) == -1){
+					if(twfAddSubframe(&tw->frames[tw->frameNum-1], &baseSubframe, &subframeCapacity) < 0){
 						/** Memory allocation failure. **/
 						twaDelete(&tempAnim);
 						twDelete(tw);
@@ -590,7 +590,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 				if(strrchr(line+9, '{')){
 					twaInit(&tempAnim);
 					animframeCapacity = ANIMFRAME_START_CAPACITY;
-					if(twaNew(&tempAnim, animframeCapacity) == -1){
+					if(twaNew(&tempAnim, animframeCapacity) < 0){
 						/** Memory allocation failure. **/
 						twDelete(tw);
 						fclose(texInfo);
@@ -645,7 +645,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 										if(tempAnim.animData.frameNum > 0){
 											frameEnd += tempAnim.animData.frameDelays[tempAnim.animData.frameNum-1];
 										}
-										if(twaAddFrame(&tempAnim, i, j, frameEnd, &animframeCapacity) == -1){
+										if(twaAddFrame(&tempAnim, i, j, frameEnd, &animframeCapacity) < 0){
 											/** Memory allocation failure. **/
 											twDelete(tw);
 											fclose(texInfo);
@@ -696,7 +696,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 						if(tempAnim.animData.frameNum > 0){
 							frameDelay += tempAnim.animData.frameDelays[tempAnim.animData.frameNum-1];
 						}
-						if(twaAddFrame(&tempAnim, frameID, subframeID, frameDelay, &animframeCapacity) == -1){
+						if(twaAddFrame(&tempAnim, frameID, subframeID, frameDelay, &animframeCapacity) < 0){
 							/** Memory allocation failure. **/
 							twDelete(tw);
 							fclose(texInfo);
@@ -715,7 +715,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 				if(currentCommand == 0){
 					// If a textureFrame was being worked on and has no subframes, add the default one.
 					if(tw->frames[tw->frameNum-1].subframeNum == 0){
-						if(twfAddDefaultSubframe(&tw->frames[tw->frameNum-1], subframeCapacity) == -1){
+						if(twfAddDefaultSubframe(&tw->frames[tw->frameNum-1], subframeCapacity) < 0){
 							/** Memory allocation failure. **/
 							twaDelete(&tempAnim);
 							twDelete(tw);
@@ -724,7 +724,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 						}
 					}else{
 						// twfAddDefaultSubframe() automatically resizes to fit.
-						if(twfResizeToFit(&tw->frames[tw->frameNum-1], subframeCapacity) == -1){
+						if(twfResizeToFit(&tw->frames[tw->frameNum-1], subframeCapacity) < 0){
 							/** Memory allocation failure. **/
 							twaDelete(&tempAnim);
 							twDelete(tw);
@@ -735,13 +735,13 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 				}else if(currentCommand == 1){
 					// If a valid animation was being worked on, save it and continue.
 					if(tempAnim.animData.frameNum > 0){
-						if(twaResizeToFit(&tempAnim, animframeCapacity) == -1){
+						if(twaResizeToFit(&tempAnim, animframeCapacity) < 0){
 							/** Memory allocation failure. **/
 							twDelete(tw);
 							fclose(texInfo);
 							return -1;
 						}
-						if(twAddAnim(tw, &tempAnim, &animCapacity) == -1){
+						if(twAddAnim(tw, &tempAnim, &animCapacity) < 0){
 							/** Memory allocation failure. **/
 							twaDelete(&tempAnim);
 							fclose(texInfo);
@@ -773,9 +773,9 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 		printf("Error loading texture wrapper \"%s\": No textures were loaded.\n", fullPath);
 
 		if(
-			twfNew(&tempFrame, subframeCapacity) == -1 ||
-			twfAddDefaultSubframe(&tempFrame, subframeCapacity) == -1 ||
-			twAddFrame(tw, &tempFrame, &frameCapacity) == -1
+			twfNew(&tempFrame, subframeCapacity) < 0 ||
+			twfAddDefaultSubframe(&tempFrame, subframeCapacity) < 0 ||
+			twAddFrame(tw, &tempFrame, &frameCapacity) < 0
 		){
 			/** Memory allocation failure. **/
 			twfDelete(&tempFrame);
@@ -787,14 +787,14 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 
 	// If they were, check if the last texture added has any subframes. If it doesn't, add the default one.
 	}else if(tw->frames[tw->frameNum-1].subframeNum == 0){
-		if(twfAddDefaultSubframe(&tw->frames[tw->frameNum-1], subframeCapacity) == -1){
+		if(twfAddDefaultSubframe(&tw->frames[tw->frameNum-1], subframeCapacity) < 0){
 			/** Memory allocation failure. **/
 			twDelete(tw);
 			return -1;
 		}
 	// If the last texture added has subframes, shrink the subframe vector to fit the amount of elements in it.
 	}else{
-		if(twfResizeToFit(&tw->frames[tw->frameNum-1], subframeCapacity) == -1){
+		if(twfResizeToFit(&tw->frames[tw->frameNum-1], subframeCapacity) < 0){
 			/** Memory allocation failure. **/
 			twDelete(tw);
 			return -1;
@@ -805,7 +805,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 	if(tw->animationNum == 0){
 		if(tempAnim.animData.frameNum > 0){
 			// If an animation was being worked on, just resize it before adding it.
-			if(twaResizeToFit(&tempAnim, animframeCapacity) == -1){
+			if(twaResizeToFit(&tempAnim, animframeCapacity) < 0){
 				/** Memory allocation failure. **/
 				twaDelete(&tempAnim);
 				twDelete(tw);
@@ -815,8 +815,8 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 			// Otherwise build the default animation.
 			animframeCapacity = 1;
 			if(
-				twaNew(&tempAnim, animframeCapacity) == -1 ||
-				twaAddFrame(&tempAnim, 0, 0, 0.f, &animframeCapacity) == -1
+				twaNew(&tempAnim, animframeCapacity) < 0 ||
+				twaAddFrame(&tempAnim, 0, 0, 0.f, &animframeCapacity) < 0
 			){
 				/** Memory allocation failure. **/
 				twaDelete(&tempAnim);
@@ -825,7 +825,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 			}
 		}
 		// Add the new tempAnim to tw->animations.
-		if(twAddAnim(tw, &tempAnim, &animCapacity) == -1){
+		if(twAddAnim(tw, &tempAnim, &animCapacity) < 0){
 			/** Memory allocation failure. **/
 			twaDelete(&tempAnim);
 			twDelete(tw);
@@ -844,7 +844,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 	***
 	***
 	**/
-	if(twResizeToFit(tw, frameCapacity, animCapacity) == -1){
+	if(twResizeToFit(tw, frameCapacity, animCapacity) < 0){
 		return -1;
 	}
 
@@ -894,9 +894,9 @@ return_t twDefault(textureWrapper *const restrict tw){
 	twaInit(&tempAnim);
 
 	if(
-		twfNew(&tempFrame, 1) == -1 ||
-		twfAddDefaultSubframe(&tempFrame, 1) == -1 ||
-		twAddFrame(tw, &tempFrame, &frameCapacity) == -1
+		twfNew(&tempFrame, 1) < 0 ||
+		twfAddDefaultSubframe(&tempFrame, 1) < 0 ||
+		twAddFrame(tw, &tempFrame, &frameCapacity) < 0
 	){
 		/** Memory allocation failure. **/
 		twfDelete(&tempFrame);
@@ -905,9 +905,9 @@ return_t twDefault(textureWrapper *const restrict tw){
 	}
 
 	if(
-		twaNew(&tempAnim, 1) == -1 ||
-		twaAddFrame(&tempAnim, 0, 0, 0.f, &frameCapacity) == -1 ||
-		twAddAnim(tw, &tempAnim, &animCapacity) == -1
+		twaNew(&tempAnim, 1) < 0 ||
+		twaAddFrame(&tempAnim, 0, 0, 0.f, &frameCapacity) < 0 ||
+		twAddAnim(tw, &tempAnim, &animCapacity) < 0
 	){
 		/** Memory allocation failure. **/
 		twaDelete(&tempAnim);

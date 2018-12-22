@@ -66,11 +66,11 @@ void moduleRenderableResourcesDelete(){
 	}
 }
 
-__FORCE_INLINE__ renderable *moduleRenderableAppendStatic(renderable **const restrict array){
-	return memSLinkAppend(&__RenderableResourceArray, (const void **)array);
+__HINT_INLINE__ renderable *moduleRenderableAppendStatic(renderable **const restrict array){
+	return memSLinkAppend(&__RenderableResourceArray, (void **)array);
 }
-__FORCE_INLINE__ renderable *moduleRenderableAppend(renderable **const restrict array){
-	renderable *r = memSLinkAppend(&__RenderableResourceArray, (const void **)array);
+__HINT_INLINE__ renderable *moduleRenderableAppend(renderable **const restrict array){
+	renderable *r = memSLinkAppend(&__RenderableResourceArray, (void **)array);
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -81,16 +81,16 @@ __FORCE_INLINE__ renderable *moduleRenderableAppend(renderable **const restrict 
 			)
 		);
 		if(memSLinkExtend(&__RenderableResourceArray, memory, RESOURCE_DEFAULT_RENDERABLE_SIZE, RESOURCE_DEFAULT_RENDERABLE_NUM)){
-			r = memSLinkAppend(&__RenderableResourceArray, (const void **)array);
+			r = memSLinkAppend(&__RenderableResourceArray, (void **)array);
 		}
 	}
 	return r;
 }
-__FORCE_INLINE__ renderable *moduleRenderableInsertAfterStatic(renderable *const restrict resource){
-	return memSLinkInsertAfter(&__RenderableResourceArray, resource);
+__HINT_INLINE__ renderable *moduleRenderableInsertAfterStatic(renderable **const restrict array, renderable *const restrict resource){
+	return memSLinkInsertAfter(&__RenderableResourceArray, (void **)array, (void *)resource);
 }
-__FORCE_INLINE__ renderable *moduleRenderableInsertAfter(renderable *const restrict resource){
-	renderable *r = memSLinkInsertAfter(&__RenderableResourceArray, resource);
+__HINT_INLINE__ renderable *moduleRenderableInsertAfter(renderable **const restrict array, renderable *const restrict resource){
+	renderable *r = memSLinkInsertAfter(&__RenderableResourceArray, (void **)array, (void *)resource);
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -101,21 +101,21 @@ __FORCE_INLINE__ renderable *moduleRenderableInsertAfter(renderable *const restr
 			)
 		);
 		if(memSLinkExtend(&__RenderableResourceArray, memory, RESOURCE_DEFAULT_RENDERABLE_SIZE, RESOURCE_DEFAULT_RENDERABLE_NUM)){
-			r = memSLinkInsertAfter(&__RenderableResourceArray, resource);
+			r = memSLinkInsertAfter(&__RenderableResourceArray, (void **)array, resource);
 		}
 	}
 	return r;
 }
-__FORCE_INLINE__ renderable *moduleRenderableNext(const renderable *const restrict i){
+__HINT_INLINE__ renderable *moduleRenderableNext(const renderable *const restrict i){
 	return (renderable *)memSLinkDataGetNext(i);
 }
-__FORCE_INLINE__ void moduleRenderableFree(renderable **const restrict array, renderable *const restrict resource, renderable *const restrict previous){
-	memSLinkFree(&__RenderableResourceArray, (const void **)array, (void *)resource, (const void *)previous);
+__HINT_INLINE__ void moduleRenderableFree(renderable **const restrict array, renderable *const restrict resource, const renderable *const restrict previous){
+	memSLinkFree(&__RenderableResourceArray, (void **)array, (void *)resource, (const void *)previous);
 }
 void moduleRenderableFreeArray(renderable **const restrict array){
 	renderable *resource = *array;
 	while(resource != NULL){
-		memSLinkFree(&__RenderableResourceArray, (const void **)array, (void *)resource, NULL);
+		memSLinkFree(&__RenderableResourceArray, (void **)array, (void *)resource, NULL);
 		resource = *array;
 	}
 }
@@ -129,11 +129,11 @@ void moduleRenderableClear(){
 
 }
 
-__FORCE_INLINE__ rndrInstance *moduleRenderableInstanceAppendStatic(rndrInstance **const restrict array){
-	return memSLinkAppend(&__RenderableInstanceResourceArray, (const void **)array);
+__HINT_INLINE__ rndrInstance *moduleRenderableInstanceAppendStatic(rndrInstance **const restrict array){
+	return memSLinkAppend(&__RenderableInstanceResourceArray, (void **)array);
 }
-__FORCE_INLINE__ rndrInstance *moduleRenderableInstanceAppend(rndrInstance **const restrict array){
-	rndrInstance *r = memSLinkAppend(&__RenderableInstanceResourceArray, (const void **)array);
+__HINT_INLINE__ rndrInstance *moduleRenderableInstanceAppend(rndrInstance **const restrict array){
+	rndrInstance *r = memSLinkAppend(&__RenderableInstanceResourceArray, (void **)array);
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -144,16 +144,16 @@ __FORCE_INLINE__ rndrInstance *moduleRenderableInstanceAppend(rndrInstance **con
 			)
 		);
 		if(memSLinkExtend(&__RenderableInstanceResourceArray, memory, RESOURCE_DEFAULT_RENDERABLE_INSTANCE_SIZE, RESOURCE_DEFAULT_RENDERABLE_INSTANCE_NUM)){
-			r = memSLinkAppend(&__RenderableInstanceResourceArray, (const void **)array);
+			r = memSLinkAppend(&__RenderableInstanceResourceArray, (void **)array);
 		}
 	}
 	return r;
 }
-__FORCE_INLINE__ rndrInstance *moduleRenderableInstanceInsertAfterStatic(rndrInstance *const restrict resource){
-	return memSLinkInsertAfter(&__RenderableInstanceResourceArray, resource);
+__HINT_INLINE__ rndrInstance *moduleRenderableInstanceInsertAfterStatic(rndrInstance **const restrict array, rndrInstance *const restrict resource){
+	return memSLinkInsertAfter(&__RenderableInstanceResourceArray, (void **)array, (void *)resource);
 }
-__FORCE_INLINE__ rndrInstance *moduleRenderableInstanceInsertAfter(rndrInstance *const restrict resource){
-	rndrInstance *r = memSLinkInsertAfter(&__RenderableInstanceResourceArray, resource);
+__HINT_INLINE__ rndrInstance *moduleRenderableInstanceInsertAfter(rndrInstance **const restrict array, rndrInstance *const restrict resource){
+	rndrInstance *r = memSLinkInsertAfter(&__RenderableInstanceResourceArray, (void **)array, (void *)resource);
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -164,21 +164,21 @@ __FORCE_INLINE__ rndrInstance *moduleRenderableInstanceInsertAfter(rndrInstance 
 			)
 		);
 		if(memSLinkExtend(&__RenderableInstanceResourceArray, memory, RESOURCE_DEFAULT_RENDERABLE_INSTANCE_SIZE, RESOURCE_DEFAULT_RENDERABLE_INSTANCE_NUM)){
-			r = memSLinkInsertAfter(&__RenderableInstanceResourceArray, resource);
+			r = memSLinkInsertAfter(&__RenderableInstanceResourceArray, (void **)array, (void *)resource);
 		}
 	}
 	return r;
 }
-__FORCE_INLINE__ rndrInstance *moduleRenderableInstanceNext(const rndrInstance *const restrict i){
+__HINT_INLINE__ rndrInstance *moduleRenderableInstanceNext(const rndrInstance *const restrict i){
 	return (rndrInstance *)memSLinkDataGetNext(i);
 }
-__FORCE_INLINE__ void moduleRenderableInstanceFree(rndrInstance **const restrict array, rndrInstance *const restrict resource, rndrInstance *const restrict previous){
-	memSLinkFree(&__RenderableInstanceResourceArray, (const void **)array, (void *)resource, (const void *)previous);
+__HINT_INLINE__ void moduleRenderableInstanceFree(rndrInstance **const restrict array, rndrInstance *const restrict resource, const rndrInstance *const restrict previous){
+	memSLinkFree(&__RenderableInstanceResourceArray, (void **)array, (void *)resource, (const void *)previous);
 }
 void moduleRenderableInstanceFreeArray(rndrInstance **const restrict array){
 	rndrInstance *resource = *array;
 	while(resource != NULL){
-		memSLinkFree(&__RenderableInstanceResourceArray, (const void **)array, (void *)resource, NULL);
+		memSLinkFree(&__RenderableInstanceResourceArray, (void **)array, (void *)resource, NULL);
 		resource = *array;
 	}
 }

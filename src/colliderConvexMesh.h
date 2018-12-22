@@ -5,9 +5,23 @@
 
 #define COLLIDER_MESH_MAX_ARRAY_SIZE 256
 
+#define COLLIDER_MESH_SEPARATION_FEATURE_NULL   0
+#define COLLIDER_MESH_SEPARATION_FEATURE_FACE_1 1  // cMeshSeparation contains a face from the first
+                                                   // collider and a vertex from the second collider.
+#define COLLIDER_MESH_SEPARATION_FEATURE_FACE_2 2  // cMeshSeparation contains a face from the second
+                                                   // collider and a vertex from the first collider.
+#define COLLIDER_MESH_SEPARATION_FEATURE_EDGE   3  // cMeshSeparation contains two edges.
+
+typedef uint_least8_t  cSeparationFeature_t;
 typedef uint_least16_t cVertexIndex_t;
 typedef uint_least16_t cFaceIndex_t;
 typedef uint_least16_t cEdgeIndex_t;
+
+typedef struct {
+	cSeparationFeature_t type;
+	size_t featureA;
+	size_t featureB;
+} cMeshSeparation;
 
 typedef struct {
 	cEdgeIndex_t edge;
@@ -53,8 +67,12 @@ typedef struct {
 } cMesh;
 
 void cMeshInit(cMesh *const restrict cm);
-return_t cMeshCollisionSAT(const cMesh *const restrict c1, const cMesh *const restrict c2, const vec3 *const restrict centroid, cSeparationCache *const restrict info, cContactManifold *const restrict cm);
+
+return_t cMeshCollisionSAT(const cMesh *const restrict c1, const cMesh *const restrict c2, const vec3 *const restrict centroid, cMeshSeparation *const restrict sc, cContactManifold *const restrict cm);
+return_t cMeshSeparationSAT(const cMesh *const restrict c1, const cMesh *const restrict c2, const vec3 *const restrict centroid, const cMeshSeparation *const restrict sc);
+
 return_t cMeshCollisionGJK(const cMesh *const restrict c1, const vec3 *const restrict c1c, const cMesh *const restrict c2, const vec3 *const restrict c2c, cContactManifold *const restrict cm);
+
 void cMeshDelete(cMesh *const restrict cm);
 
 #endif

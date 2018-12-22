@@ -45,7 +45,9 @@ return_t gfxMngrInit(graphicsManager *const restrict gfxMngr, const char *const 
 
 static return_t gfxMngrInitSDL(graphicsManager *const restrict gfxMngr){
 
-	/* Initialize SDL */
+	/*
+	** Initialize SDL.
+	*/
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0){
 		printf("Error initializing SDL library: %s\n", SDL_GetError());
 		return 0;
@@ -58,17 +60,17 @@ static return_t gfxMngrInitSDL(graphicsManager *const restrict gfxMngr){
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
-	// Create the window and context
+	// Create the window and context.
 	gfxMngr->window = SDL_CreateWindow("Luna", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, GFX_DEFAULT_WINDOW_WIDTH, GFX_DEFAULT_WINDOW_HEIGHT, GFX_DEFAULT_WINDOW_FLAGS);
 	if(!gfxMngr->window || !(gfxMngr->context = SDL_GL_CreateContext(gfxMngr->window))){
 		printf("Error initializing SDL library: %s\n", SDL_GetError());
 		return 0;
 	}
 
-	// Disable VSync
+	// Disable VSync.
 	SDL_GL_SetSwapInterval(0);
 
-	// Initialize SDL extension libraries SDL_image and SDL_mixer
+	// Initialize SDL extension libraries SDL_image and SDL_mixer.
 	if(!IMG_Init(IMG_INIT_PNG || IMG_INIT_JPG)){
 		printf("Error initializing SDL extension library SDL_image: %s\n", IMG_GetError());
 		return 0;
@@ -84,7 +86,9 @@ static return_t gfxMngrInitSDL(graphicsManager *const restrict gfxMngr){
 
 static return_t gfxMngrInitOGL(graphicsManager *const restrict gfxMngr){
 
-	/* Initialize GLEW */
+	/*
+	** Initialize GLEW.
+	*/
 	glewExperimental = GL_TRUE;
 
 	GLenum glewError = glewInit();
@@ -92,10 +96,13 @@ static return_t gfxMngrInitOGL(graphicsManager *const restrict gfxMngr){
 		printf("Error initializing GLEW: %s\n", glewGetErrorString(glewError));
 		return 0;
 	}
-	glGetError();  // Flush the error buffer. glewInit() sets it to 1280 (invalid context) with GL versions 3.2 and up
+	// Flush the error buffer. glewInit() sets it to 1280 (invalid context) with GL versions 3.2 and up.
+	glGetError();
 
 
-	/* Initialize OpenGL */
+	/*
+	** Initialize OpenGL.
+	*/
 	glClearColor(0.f, 0.f, 0.f, 0.f);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -116,7 +123,9 @@ static return_t gfxMngrInitOGL(graphicsManager *const restrict gfxMngr){
 
 static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, const char *const restrict prgPath){
 
-	/* Vertex shader */
+	/*
+	** Vertex shader.
+	*/
 	const char *const restrict vertexShaderExtra = "Resources\\Shaders\\s_vertex.gls";
 	const size_t pathLen = strlen(prgPath);
 	const size_t vsExtraLen = strlen(vertexShaderExtra);
@@ -129,7 +138,7 @@ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, cons
 	memcpy(vertexShaderPath+pathLen, vertexShaderExtra, vsExtraLen);
 	vertexShaderPath[pathLen+vsExtraLen] = '\0';
 
-	/* Load vertex shader */
+	// Load vertex shader.
 	FILE *const restrict vertexShaderFile = fopen(vertexShaderPath, "rb");
 	fseek(vertexShaderFile, 0, SEEK_END);
 	long size = ftell(vertexShaderFile);
@@ -144,7 +153,7 @@ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, cons
 	vertexShaderCode[size] = '\0';
 	fclose(vertexShaderFile);
 
-	/* Compile vertex shader */
+	// Compile vertex shader.
 	gfxMngr->vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
 	const char *const vertexShaderCodePointer = vertexShaderCode;
 	glShaderSource(gfxMngr->vertexShaderID, 1, &vertexShaderCodePointer, NULL);
@@ -152,7 +161,7 @@ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, cons
 	memFree(vertexShaderPath);
 	memFree(vertexShaderCode);
 
-	/* Validate vertex shader */
+	// Validate vertex shader.
 	GLint compileStatus = GL_FALSE;
  	int infoLogLength;
 	glGetShaderiv(gfxMngr->vertexShaderID, GL_COMPILE_STATUS, &compileStatus);
@@ -170,7 +179,9 @@ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, cons
  	}
 
 
-	/* Fragment shader */
+	/*
+	** Fragment shader.
+	*/
 	const char *const restrict fragmentShaderExtra = "Resources\\Shaders\\s_fragment.gls";
 	const size_t fsExtraLen = strlen(fragmentShaderExtra);
 	char *const restrict fragmentShaderPath = memAllocate((pathLen+fsExtraLen+1)*sizeof(char));
@@ -182,7 +193,7 @@ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, cons
 	memcpy(fragmentShaderPath+pathLen, fragmentShaderExtra, fsExtraLen);
 	fragmentShaderPath[pathLen+fsExtraLen] = '\0';
 
-	/* Load fragment shader */
+	// Load fragment shader.
 	FILE *const restrict fragmentShaderFile = fopen(fragmentShaderPath, "rb");
 	fseek(fragmentShaderFile, 0, SEEK_END);
 	size = ftell(fragmentShaderFile);
@@ -197,7 +208,7 @@ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, cons
 	fragmentShaderCode[size] = '\0';
 	fclose(fragmentShaderFile);
 
-	/* Compile fragment shader */
+	// Compile fragment shader.
 	gfxMngr->fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
 	const char *const fragmentShaderCodePointer = fragmentShaderCode;
 	glShaderSource(gfxMngr->fragmentShaderID, 1, &fragmentShaderCodePointer, NULL);
@@ -205,7 +216,7 @@ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, cons
 	memFree(fragmentShaderPath);
 	memFree(fragmentShaderCode);
 
-	/* Validate fragment shader */
+	// Validate fragment shader.
 	glGetShaderiv(gfxMngr->fragmentShaderID, GL_COMPILE_STATUS, &compileStatus);
  	glGetShaderiv(gfxMngr->fragmentShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
  	if(infoLogLength > 1){
@@ -221,7 +232,9 @@ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, cons
  	}
 
 
-	/* Link the program */
+	/*
+	** Link the program.
+	*/
 	gfxMngr->shaderProgramID = glCreateProgram();
  	glAttachShader(gfxMngr->shaderProgramID, gfxMngr->vertexShaderID);
  	glAttachShader(gfxMngr->shaderProgramID, gfxMngr->fragmentShaderID);
@@ -232,17 +245,19 @@ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, cons
  	glDeleteShader(gfxMngr->vertexShaderID);
  	glDeleteShader(gfxMngr->fragmentShaderID);
 
-	/* Use the program */
+	// Use the program.
 	glUseProgram(gfxMngr->shaderProgramID);
 
 
-	/* Link the uniform variables */
+	/*
+	** Link the uniform variables.
+	*/
 	gfxMngr->vpMatrixID        = glGetUniformLocation(gfxMngr->shaderProgramID, "vpMatrix");
 	gfxMngr->textureFragmentID = glGetUniformLocation(gfxMngr->shaderProgramID, "textureFragment");
 	gfxMngr->alphaID           = glGetUniformLocation(gfxMngr->shaderProgramID, "alpha");
 	gfxMngr->mipID             = glGetUniformLocation(gfxMngr->shaderProgramID, "mip");
 
-	/* Create references to each bone  */
+	// Create references to each bone.
 	boneIndex_t i;
 	for(i = 0; i < SKELETON_MAX_BONE_NUM; ++i){
 
@@ -267,7 +282,7 @@ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, cons
 
 	}
 
-	/* Create references to each texture sampler */
+	// Create references to each texture sampler.
 	for(i = 0; i < GFX_TEXTURE_SAMPLER_NUM; ++i){
 
 		char num[LTOSTR_MAX_LENGTH];
@@ -295,11 +310,13 @@ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, cons
 
 static return_t gfxMngrCreateBuffers(graphicsManager *const restrict gfxMngr){
 
-	/* Set lastTexID to 0 since we haven't rendered anything yet */
+	// Set lastTexID to 0 since we haven't rendered anything yet.
 	gfxMngr->lastTexID = 0;
 
-	/* VAO and VBO for rendering sprites */
-	// Create and bind the sprite VAO
+	/*
+	** VAO and VBO for rendering sprites.
+	*/
+	// Create and bind the sprite VAO.
 	/**glGenVertexArrays(1, &gfxMngr->spriteVaoID);
 	glBindVertexArray(gfxMngr->spriteVaoID);
 	// Create and bind the sprite VBO

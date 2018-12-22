@@ -34,7 +34,9 @@ void animAdvance(animationInstance *const restrict animInst, const animationData
 			animInst->totalElapsedTime += elapsedTime;
 			if(elapsedTime >= 0.f){
 
-				/* Animation is going forwards. */
+				/*
+				** Animation is going forwards.
+				*/
 				// Handle loops if totalElapsedTime indicates the end of the animation has been passed.
 				if(animInst->totalElapsedTime > animationLength){
 					// Iteratively reset totalElapsedTime so it is once again within the bounds of 0 and animationLength.
@@ -78,7 +80,9 @@ void animAdvance(animationInstance *const restrict animInst, const animationData
 
 			}else{
 
-				/* Animation is going backwards. */
+				/*
+				** Animation is going backwards.
+				*/
 				frameIndex_t currentFrameStart;
 
 				// Handle loops if totalElapsedTime indicates the end of the animation has been passed.

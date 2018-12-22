@@ -88,7 +88,7 @@ return_t objLoad(object *const restrict obj, const char *const restrict prgPath,
 						if(r < 1){
 							// The load failed. Clean up.
 							moduleSkeletonFree(tempSkl);
-							if(r == -1){
+							if(r < 0){
 								/** Memory allocation failure. **/
 								objDelete(obj);
 								fclose(objInfo);
@@ -140,7 +140,7 @@ return_t objLoad(object *const restrict obj, const char *const restrict prgPath,
 					// Load the rigid body from a file.
 					r = physRigidBodyLoad(&obj->skeletonBodies, obj->skl, prgPath, loadPath);
 
-					if(r == -1){
+					if(r < 0){
 						/** Memory allocation failure. **/
 						objDelete(obj);
 						fclose(objInfo);
@@ -198,7 +198,7 @@ return_t objLoad(object *const restrict obj, const char *const restrict prgPath,
 						if(r < 1){
 							// The load failed. Clean up.
 							moduleSkeletonAnimationFree(tempSkla);
-							if(r == -1){
+							if(r < 0){
 								/** Memory allocation failure. **/
 								objDelete(obj);
 								fclose(objInfo);
@@ -250,7 +250,7 @@ return_t objLoad(object *const restrict obj, const char *const restrict prgPath,
 
 				rndrInit(&rndr);
 
-				/* Get the model path. */
+				// Get the model path.
 				if(line[mdlPathBegin] == '"'){
 					++mdlPathBegin;
 					mdlSecondQuote = strchr(line+mdlPathBegin, '"');
@@ -272,7 +272,7 @@ return_t objLoad(object *const restrict obj, const char *const restrict prgPath,
 					size_t texPathLength = 0;
 					const char *texSecondQuote = NULL;
 
-					/* Get the texture wrapper path. */
+					// Get the texture wrapper path.
 					if(line[texPathBegin] == ' '){
 						++texPathBegin;
 					}
@@ -289,7 +289,7 @@ return_t objLoad(object *const restrict obj, const char *const restrict prgPath,
 						texPathLength = texSecondQuote-line-texPathBegin;
 					}
 
-					/* Load the model. */
+					// Load the model.
 					strncpy(&loadPath[0], line+mdlPathBegin, mdlPathLength);
 					loadPath[mdlPathLength] = '\0';
 
@@ -303,7 +303,7 @@ return_t objLoad(object *const restrict obj, const char *const restrict prgPath,
 						tempMdl = moduleModelAllocate();
 						if(tempMdl != NULL){
 							const return_t r = mdlLoad(tempMdl, prgPath, &loadPath[0]);
-							if(r == -1){
+							if(r < 0){
 								/** Memory allocation failure. **/
 								moduleModelFree(tempMdl);
 								objDelete(obj);
@@ -329,7 +329,7 @@ return_t objLoad(object *const restrict obj, const char *const restrict prgPath,
 
 						textureWrapper *tempTw = NULL;
 
-						/* Load the texture wrapper. */
+						// Load the texture wrapper.
 						strncpy(&loadPath[0], line+texPathBegin, texPathLength);
 						loadPath[texPathLength] = '\0';
 
@@ -343,7 +343,7 @@ return_t objLoad(object *const restrict obj, const char *const restrict prgPath,
 							tempTw = moduleTextureWrapperAllocate();
 							if(tempTw != NULL){
 								const return_t r = twLoad(tempTw, prgPath, &loadPath[0]);
-								if(r == -1){
+								if(r < 0){
 									/** Memory allocation failure. **/
 									moduleTextureWrapperFree(tempTw);
 									objDelete(obj);
@@ -376,7 +376,7 @@ return_t objLoad(object *const restrict obj, const char *const restrict prgPath,
 					rndr.tw = moduleTextureWrapperGetDefault();
 				}
 
-				/* Add the renderable. */
+				// Add the renderable.
 				rndrNew = moduleRenderableAppend(&obj->renderables);
 				if(rndrNew == NULL){
 					/** Memory allocation failure. **/
@@ -498,14 +498,14 @@ return_t objiInstantiate(objInstance *const restrict obji, const object *const r
 
 	renderable *j;
 
-	if(skliInit(&obji->skeletonData, base->skl, base->animationMax) == -1){
+	if(skliInit(&obji->skeletonData, base->skl, base->animationMax) < 0){
 		/** Memory allocation failure. **/
 		return -1;
 	}
 
 	if(base->skl->boneNum != 0){
 
-		/* Allocate memory for the object instance. */
+		// Allocate memory for the object instance.
 		obji->configuration = memAllocate(3 * base->skl->boneNum * sizeof(bone));
 		if(obji->configuration == NULL){
 			/** Memory allocation failure. **/
@@ -514,7 +514,7 @@ return_t objiInstantiate(objInstance *const restrict obji, const object *const r
 		}
 		obji->state.skeleton = &obji->configuration[base->skl->boneNum];
 
-		/* Allocate memory for and initialize the colliders if necessary. */
+		// Allocate memory for and initialize the colliders if necessary.
 		if(base->skeletonColliders != NULL){
 
 			colliderArray *caBase = base->skeletonColliders;
@@ -567,7 +567,7 @@ return_t objiInstantiate(objInstance *const restrict obji, const object *const r
 			}
 		}
 
-		/* Allocate memory for and initialize the rigid bodies if necessary. */
+		// Allocate memory for and initialize the rigid bodies if necessary.
 		if(base->skeletonBodies != NULL){
 
 			physRigidBody *bodyBase = base->skeletonBodies;
@@ -578,7 +578,7 @@ return_t objiInstantiate(objInstance *const restrict obji, const object *const r
 				bodyInstance = modulePhysicsRigidBodyInstanceAppend(&obji->skeletonBodies);
 				if(
 					bodyInstance == NULL ||
-					physRBIInstantiate(bodyInstance, bodyBase, &obji->state.skeleton[bodyBase->id]) == -1
+					physRBIInstantiate(bodyInstance, bodyBase, &obji->state.skeleton[bodyBase->id]) < 0
 				){
 					/** Memory allocation failure. **/
 					memFree(obji->configuration);
@@ -639,7 +639,7 @@ static __FORCE_INLINE__ return_t objiStateAllocate(objInstance *const restrict o
 
 return_t objiStatePreallocate(objInstance *const restrict obji){
 	while(obji->stateNum < obji->stateMax){
-		if(objiStateAllocate(obji) == -1){
+		if(objiStateAllocate(obji) < 0){
 			return -1;
 		}
 	}
@@ -663,7 +663,9 @@ static __FORCE_INLINE__ void objiStateCopyBone(objInstance *const restrict obji,
 }
 
 return_t objiNewRenderable(objInstance *const restrict obji, model *const restrict mdl, textureWrapper *const restrict tw){
-	/* Allocate room for a new renderable and initialize it. */
+	/*
+	** Allocate room for a new renderable and initialize it.
+	*/
 	rndrInstance *const rndr = moduleRenderableInstanceAppend(&obji->renderables);
 	if(rndr == NULL){
 		/** Memory allocation failure. **/
@@ -675,7 +677,9 @@ return_t objiNewRenderable(objInstance *const restrict obji, model *const restri
 }
 
 return_t objiNewRenderableFromBase(objInstance *const restrict obji, const renderable *const restrict rndr){
-	/* Allocate room for a new renderable and initialize it. */
+	/*
+	** Allocate room for a new renderable and initialize it.
+	*/
 	rndrInstance *const rndrNew = moduleRenderableInstanceAppend(&obji->renderables);
 	if(rndrNew == NULL){
 		/** Memory allocation failure. **/
@@ -686,7 +690,9 @@ return_t objiNewRenderableFromBase(objInstance *const restrict obji, const rende
 }
 
 return_t objiNewRenderableFromInstance(objInstance *const restrict obji, const rndrInstance *rndr){
-	/* Allocate room for a new renderable and initialize it. */
+	/*
+	** Allocate room for a new renderable and initialize it.
+	*/
 	rndrInstance *const rndrNew = moduleRenderableInstanceAppend(&obji->renderables);
 	if(rndrNew == NULL){
 		/** Memory allocation failure. **/
@@ -827,7 +833,7 @@ return_t objiUpdate(objInstance *const restrict obji, physicsSolver *const restr
 
 	// If we can create a new previous state, do so.
 	if(obji->stateNum < obji->stateMax){
-		if(objiStateAllocate(obji) == -1){
+		if(objiStateAllocate(obji) < 0){
 			return -1;
 		}
 	}
@@ -835,7 +841,7 @@ return_t objiUpdate(objInstance *const restrict obji, physicsSolver *const restr
 	// Update each skeletal animation.
 	skliUpdateAnimations(&obji->skeletonData, elapsedTime, 1.f);
 
-	/* Update the object's skeleton. */
+	// Update the object's skeleton.
 	for(i = 0; i < obji->skeletonData.skl->boneNum; ++i, ++sklBone, ++sklState, ++configuration){
 
 		const return_t isRoot = (i == sklBone->parent) || (sklBone->parent >= obji->skeletonData.skl->boneNum);
@@ -876,14 +882,12 @@ return_t objiUpdate(objInstance *const restrict obji, physicsSolver *const restr
 				// and add it to the solver if it is set
 				// to interact with other bodies.
 				/** Only update AABB? **/
-				physRBInstance **solverBody = physSolverAllocate(solver);
-				if(solverBody == NULL){
+				if(physSolverAllocate(solver, body) < 0){
 					/** Memory allocation failure. **/
 					return -1;
 				}
 				physRBIIntegrateLeapfrogVelocity(body, dt);
 				physRBIUpdateCollisionMesh(body);
-				*solverBody = body;
 			}else{
 				// If the body is not interacting with any
 				// other bodies, integrate everything
@@ -938,13 +942,11 @@ return_t objiUpdate(objInstance *const restrict obji, physicsSolver *const restr
 					// and add it to the solver if it is set
 					// to interact with other bodies.
 					/** Only update AABB? **/
-					physRBInstance **solverBody = physSolverAllocate(solver);
-					if(solverBody == NULL){
+					if(physSolverAllocate(solver, body) < 0){
 						/** Memory allocation failure. **/
 						return -1;
 					}
 					physRBIUpdateCollisionMesh(body);
-					*solverBody = body;
 				}
 				body = modulePhysicsRigidBodyInstanceNext(body);
 			}
@@ -1019,7 +1021,7 @@ return_t objiUpdate(objInstance *const restrict obji, physicsSolver *const restr
 
 	}
 
-	/* Update each of the object's renderables. */
+	// Update each of the object's renderables.
 	j = obji->renderables;
 	while(j != NULL){
 		rndriUpdate(j, elapsedTime);
@@ -1078,7 +1080,9 @@ gfxRenderGroup_t objiRenderGroup(const objInstance *const restrict obji, const f
 
 void objiGenerateSprite(const objInstance *const restrict obji, const rndrInstance *const restrict rndr, const float interpT, const float *const restrict texFrag, vertex *const restrict vertices){
 
-	/* Generate the base sprite. */
+	/*
+	** Generate the base sprite.
+	*/
 	const float left   = -0.5f; /// - obji->tempRndrConfig.pivot.render.x;
 	const float top    = -0.5f; /// - obji->tempRndrConfig.pivot.render.y;
 	const float right  =  0.5f; /// - obji->tempRndrConfig.pivot.render.x;
@@ -1160,7 +1164,9 @@ void objiGenerateSprite(const objInstance *const restrict obji, const rndrInstan
 	vertices[3].bWeights[2] = 0.f;
 	vertices[3].bWeights[3] = 0.f;
 
-	/* Generate a transformation for the sprite and transform each vertex. */
+	/*
+	** Generate a transformation for the sprite and transform each vertex.
+	*/
 	/** Optimize? **/
 	//boneInterpolate(&obji->skeletonState[1][0], &obji->skeletonState[0][0], interpT, &transform);
 	boneInterpolateR(previous, current, interpT, &transform);

@@ -47,19 +47,19 @@ void moduleSkeletonAnimationClear();
 
 sklAnimInstance *moduleSkeletonAnimationInstanceAppendStatic(sklAnimInstance **const restrict array);
 sklAnimInstance *moduleSkeletonAnimationInstanceAppend(sklAnimInstance **const restrict array);
-sklAnimInstance *moduleSkeletonAnimationInstanceInsertAfterStatic(sklAnimInstance *const restrict resource);
-sklAnimInstance *moduleSkeletonAnimationInstanceInsertAfter(sklAnimInstance *const restrict resource);
+sklAnimInstance *moduleSkeletonAnimationInstanceInsertAfterStatic(sklAnimInstance **const restrict array, sklAnimInstance *const restrict resource);
+sklAnimInstance *moduleSkeletonAnimationInstanceInsertAfter(sklAnimInstance **const restrict array, sklAnimInstance *const restrict resource);
 sklAnimInstance *moduleSkeletonAnimationInstanceNext(const sklAnimInstance *const restrict i);
-void moduleSkeletonAnimationInstanceFree(sklAnimInstance **const restrict array, sklAnimInstance *const restrict resource, sklAnimInstance *const restrict previous);
+void moduleSkeletonAnimationInstanceFree(sklAnimInstance **const restrict array, sklAnimInstance *const restrict resource, const sklAnimInstance *const restrict previous);
 void moduleSkeletonAnimationInstanceFreeArray(sklAnimInstance **const restrict array);
 void moduleSkeletonAnimationInstanceClear();
 
 sklAnimFragment *moduleSkeletonAnimationFragmentAppendStatic(sklAnimFragment **const restrict array);
 sklAnimFragment *moduleSkeletonAnimationFragmentAppend(sklAnimFragment **const restrict array);
-sklAnimFragment *moduleSkeletonAnimationFragmentInsertAfterStatic(sklAnimFragment *const restrict resource);
-sklAnimFragment *moduleSkeletonAnimationFragmentInsertAfter(sklAnimFragment *const restrict resource);
+sklAnimFragment *moduleSkeletonAnimationFragmentInsertAfterStatic(sklAnimFragment **const restrict array, sklAnimFragment *const restrict resource);
+sklAnimFragment *moduleSkeletonAnimationFragmentInsertAfter(sklAnimFragment **const restrict array, sklAnimFragment *const restrict resource);
 sklAnimFragment *moduleSkeletonAnimationFragmentNext(const sklAnimFragment *const restrict i);
-void moduleSkeletonAnimationFragmentFree(sklAnimFragment **const restrict array, sklAnimFragment *const restrict resource, sklAnimFragment *const restrict previous);
+void moduleSkeletonAnimationFragmentFree(sklAnimFragment **const restrict array, sklAnimFragment *const restrict resource, const sklAnimFragment *const restrict previous);
 void moduleSkeletonAnimationFragmentFreeArray(sklAnimFragment **const restrict array);
 void moduleSkeletonAnimationFragmentClear();
 

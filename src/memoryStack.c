@@ -37,6 +37,28 @@ __FORCE_INLINE__ void memStackClear(memoryStack *const restrict stack){
 	stack->free = stack->region->start;
 }
 
+void *memStackExtend(memoryStack *const restrict stack, void *const start, const size_t bytes, const size_t length){
+
+	/*
+	** Extends the memory allocator.
+	** Its logical function is similar to a
+	** realloc, but it creates a new chunk
+	** and links it.
+	*/
+
+	if(start){
+
+		memoryRegion *const newRegion = (memoryRegion *)((byte_t *)start + memStackAllocationSize(start, bytes, length) - sizeof(memoryRegion));
+		memRegionExtend(&stack->region, newRegion, start);
+
+		stack->free = start;
+
+	}
+
+	return start;
+
+}
+
 void memStackDelete(memoryStack *const restrict stack){
 	memRegionFree(stack->region);
 }

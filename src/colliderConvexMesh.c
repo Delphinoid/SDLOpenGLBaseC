@@ -881,7 +881,7 @@ static __FORCE_INLINE__ void cMeshCollisionSHClipping(const cMesh *const restric
 }
 
 
-static __FORCE_INLINE__ return_t cMeshCollisionSATFaceQuery(const cMesh *const restrict c1, const cMesh *const restrict c2, cMeshSHFaceHelper *const restrict r, cSeparationCache *const restrict sc, const separationType_t type){
+static __FORCE_INLINE__ return_t cMeshCollisionSATFaceQuery(const cMesh *const restrict c1, const cMesh *const restrict c2, cMeshSHFaceHelper *const restrict r, cMeshSeparation *const restrict sc, const cSeparationFeature_t type){
 
 	/*
 	** Find the maximum separation distance between
@@ -1080,7 +1080,7 @@ static __FORCE_INLINE__ float cMeshCollisionSATEdgeSeparation(const cMesh *const
 
 }
 
-static __FORCE_INLINE__ return_t cMeshCollisionSATEdgeQuery(const cMesh *c1, const cMesh *c2, const vec3 *centroid, cMeshSHEdgeHelper *r, cSeparationCache *const restrict sc){
+static __FORCE_INLINE__ return_t cMeshCollisionSATEdgeQuery(const cMesh *c1, const cMesh *c2, const vec3 *centroid, cMeshSHEdgeHelper *r, cMeshSeparation *const restrict sc){
 
 	/*
 	** Find the maximum separation distance between
@@ -1116,7 +1116,7 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATEdgeQuery(const cMesh *c1, con
 					// Early exit, a separating axis has been found.
 					// Cache the separating axis.
 					if(sc != NULL){
-						sc->type = COLLISION_CACHE_SEPARATION_TYPE_EDGE;
+						sc->type = COLLIDER_MESH_SEPARATION_FEATURE_EDGE;
 						sc->featureA = i;
 						sc->featureB = j;
 					}
@@ -1140,20 +1140,7 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATEdgeQuery(const cMesh *c1, con
 
 }
 
-static __FORCE_INLINE__ return_t cMeshCollisionSATFaceCache(const cMesh *const restrict c1, const cMesh *const restrict c2, const cSeparationCache *const restrict sc){
-	return pointPlaneDistance(&c1->normals[sc->featureA], &c1->vertices[c1->edges[c1->faces[sc->featureA].edge].start], &c2->vertices[sc->featureB]) <= 0.f;
-}
-
-static __FORCE_INLINE__ return_t cMeshCollisionSATEdgeCache(const cMesh *const restrict c1, const cMesh *const restrict c2, const vec3 *const restrict centroid, const cSeparationCache *const restrict sc){
-	const cMeshEdge *const e1 = &c1->edges[sc->featureA];
-	const cMeshEdge *const e2 = &c2->edges[sc->featureB];
-	vec3 e1InvDir, e2InvDir;
-	vec3SubVFromVR(&c1->vertices[e1->start], &c1->vertices[e1->end], &e1InvDir);
-	vec3SubVFromVR(&c2->vertices[e2->start], &c2->vertices[e2->end], &e2InvDir);
-	return cMeshCollisionSATMinkowskiFace(c1, c2, e1, &e1InvDir, e2, &e2InvDir) == 0 || cMeshCollisionSATEdgeSeparation(c1, c2, centroid, e1, &e1InvDir, e2, &e2InvDir) <= 0.f;
-}
-
-return_t cMeshCollisionSAT(const cMesh *const restrict c1, const cMesh *const restrict c2, const vec3 *const restrict centroid, cSeparationCache *const restrict sc, cContactManifold *const restrict cm){
+return_t cMeshCollisionSAT(const cMesh *const restrict c1, const cMesh *const restrict c2, const vec3 *const restrict centroid, cMeshSeparation *const restrict sc, cContactManifold *const restrict cm){
 
 	/*
 	** Implementation of the separating axis theorem
@@ -1165,32 +1152,10 @@ return_t cMeshCollisionSAT(const cMesh *const restrict c1, const cMesh *const re
 	*/
 
 	cMeshPenetrationPlanes planes;
-
-	// Check the separation cache for possible early exits.
-	if(sc != NULL && sc->type != COLLISION_CACHE_SEPARATION_TYPE_NULL){
-		switch(sc->type){
-			case COLLISION_CACHE_SEPARATION_TYPE_FACE_1:
-				if(cMeshCollisionSATFaceCache(c1, c2, sc) == 0){
-					return 0;
-				}
-			break;
-			case COLLISION_CACHE_SEPARATION_TYPE_FACE_2:
-				if(cMeshCollisionSATFaceCache(c2, c1, sc) == 0){
-					return 0;
-				}
-			break;
-			case COLLISION_CACHE_SEPARATION_TYPE_EDGE:
-				if(cMeshCollisionSATEdgeCache(c1, c2, centroid, sc) == 0){
-					return 0;
-				}
-			break;
-		}
-	}
-
 	cMeshPenetrationPlanesInit(&planes);
 
-	if(cMeshCollisionSATFaceQuery(c1, c2, &planes.face1, sc, COLLISION_CACHE_SEPARATION_TYPE_FACE_1)){
-		if(cMeshCollisionSATFaceQuery(c2, c1, &planes.face2, sc, COLLISION_CACHE_SEPARATION_TYPE_FACE_2)){
+	if(cMeshCollisionSATFaceQuery(c1, c2, &planes.face1, sc, COLLIDER_MESH_SEPARATION_FEATURE_FACE_1)){
+		if(cMeshCollisionSATFaceQuery(c2, c1, &planes.face2, sc, COLLIDER_MESH_SEPARATION_FEATURE_FACE_2)){
 			if(cMeshCollisionSATEdgeQuery(c1, c2, centroid, &planes.edge, sc)){
 				if(cm != NULL){
 					cMeshCollisionSHClipping(c1, c2, &planes, cm);
@@ -1202,6 +1167,43 @@ return_t cMeshCollisionSAT(const cMesh *const restrict c1, const cMesh *const re
 
 	return 0;
 
+}
+
+static __FORCE_INLINE__ return_t cMeshSeparationSATFaceQuery(const cMesh *const restrict c1, const cMesh *const restrict c2, const cMeshSeparation *const restrict sc){
+	return pointPlaneDistance(&c1->normals[sc->featureA], &c1->vertices[c1->edges[c1->faces[sc->featureA].edge].start], &c2->vertices[sc->featureB]) <= 0.f;
+}
+
+static __FORCE_INLINE__ return_t cMeshSeparationSATEdgeQuery(const cMesh *const restrict c1, const cMesh *const restrict c2, const vec3 *const restrict centroid, const cMeshSeparation *const restrict sc){
+	const cMeshEdge *const e1 = &c1->edges[sc->featureA];
+	const cMeshEdge *const e2 = &c2->edges[sc->featureB];
+	vec3 e1InvDir, e2InvDir;
+	vec3SubVFromVR(&c1->vertices[e1->start], &c1->vertices[e1->end], &e1InvDir);
+	vec3SubVFromVR(&c2->vertices[e2->start], &c2->vertices[e2->end], &e2InvDir);
+	return cMeshCollisionSATMinkowskiFace(c1, c2, e1, &e1InvDir, e2, &e2InvDir) == 0 || cMeshCollisionSATEdgeSeparation(c1, c2, centroid, e1, &e1InvDir, e2, &e2InvDir) <= 0.f;
+}
+
+return_t cMeshSeparationSAT(const cMesh *const restrict c1, const cMesh *const restrict c2, const vec3 *const restrict centroid, const cMeshSeparation *const restrict sc){
+	// Check the separation cache for possible early exits.
+	if(sc->type != COLLIDER_MESH_SEPARATION_FEATURE_NULL){
+		switch(sc->type){
+			case COLLIDER_MESH_SEPARATION_FEATURE_FACE_1:
+				if(cMeshSeparationSATFaceQuery(c1, c2, sc) == 0){
+					return 1;
+				}
+			break;
+			case COLLIDER_MESH_SEPARATION_FEATURE_FACE_2:
+				if(cMeshSeparationSATFaceQuery(c2, c1, sc) == 0){
+					return 1;
+				}
+			break;
+			case COLLIDER_MESH_SEPARATION_FEATURE_EDGE:
+				if(cMeshSeparationSATEdgeQuery(c1, c2, centroid, sc) == 0){
+					return 1;
+				}
+			break;
+		}
+	}
+	return 0;
 }
 
 typedef struct {

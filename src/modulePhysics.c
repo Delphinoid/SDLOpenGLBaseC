@@ -4,11 +4,11 @@
 #include "colliderConvexMesh.h"
 #include "inline.h"
 
-memorySLink __PhysicsRigidBodyResourceArray;           // Contains physRigidBodies.
-memorySLink __PhysicsRigidBodyInstanceResourceArray;   // Contains physRBInstances.
-memorySLink __PhysicsColliderResourceArray;            // Contains physColliders.
-memorySLink __PhysicsCollisionInstanceResourceArray;   // Contains physSeparationCaches.
-memorySLink __PhysicsConstraintResourceArray;          // Contains physConstraints.
+memorySLink __PhysicsRigidBodyResourceArray;          // Contains physRigidBodies.
+memorySLink __PhysicsRigidBodyInstanceResourceArray;  // Contains physRBInstances.
+memorySLink __PhysicsColliderResourceArray;           // Contains physColliders.
+memorySLink __PhysicsSeparationResourceArray;         // Contains physSeparations.
+memorySLink __PhysicsConstraintResourceArray;         // Contains physConstraints.
 
 return_t modulePhysicsResourcesInit(){
 	void *memory = memAllocate(
@@ -48,7 +48,7 @@ return_t modulePhysicsResourcesInit(){
 			RESOURCE_DEFAULT_COLLISION_NUM
 		)
 	);
-	if(memSLinkCreate(&__PhysicsCollisionInstanceResourceArray, memory, RESOURCE_DEFAULT_COLLISION_SIZE, RESOURCE_DEFAULT_COLLISION_NUM) == NULL){
+	if(memSLinkCreate(&__PhysicsSeparationResourceArray, memory, RESOURCE_DEFAULT_COLLISION_SIZE, RESOURCE_DEFAULT_COLLISION_NUM) == NULL){
 		return -1;
 	}
 	memory = memAllocate(
@@ -89,14 +89,14 @@ void modulePhysicsResourcesReset(){
 		region = next;
 	}
 	__PhysicsColliderResourceArray.region->next = NULL;
-	modulePhysicsCollisionInstanceClear();
-	region = __PhysicsCollisionInstanceResourceArray.region->next;
+	modulePhysicsSeparationClear();
+	region = __PhysicsSeparationResourceArray.region->next;
 	while(region != NULL){
 		memoryRegion *next = (memoryRegion *)region->next;
 		memFree(region->start);
 		region = next;
 	}
-	__PhysicsCollisionInstanceResourceArray.region->next = NULL;
+	__PhysicsSeparationResourceArray.region->next = NULL;
 	modulePhysicsConstraintClear();
 	region = __PhysicsConstraintResourceArray.region->next;
 	while(region != NULL){
@@ -129,8 +129,8 @@ void modulePhysicsResourcesDelete(){
 		memFree(region->start);
 		region = next;
 	}
-	modulePhysicsCollisionInstanceClear();
-	region = __PhysicsCollisionInstanceResourceArray.region;
+	modulePhysicsSeparationClear();
+	region = __PhysicsSeparationResourceArray.region;
 	while(region != NULL){
 		memoryRegion *next = (memoryRegion *)region->next;
 		memFree(region->start);
@@ -145,11 +145,11 @@ void modulePhysicsResourcesDelete(){
 	}
 }
 
-__FORCE_INLINE__ physRigidBody *modulePhysicsRigidBodyAppendStatic(physRigidBody **const restrict array){
-	return memSLinkAppend(&__PhysicsRigidBodyResourceArray, (const void **)array);
+__HINT_INLINE__ physRigidBody *modulePhysicsRigidBodyAppendStatic(physRigidBody **const restrict array){
+	return memSLinkAppend(&__PhysicsRigidBodyResourceArray, (void **)array);
 }
-__FORCE_INLINE__ physRigidBody *modulePhysicsRigidBodyAppend(physRigidBody **const restrict array){
-	physRigidBody *r = memSLinkAppend(&__PhysicsRigidBodyResourceArray, (const void **)array);
+__HINT_INLINE__ physRigidBody *modulePhysicsRigidBodyAppend(physRigidBody **const restrict array){
+	physRigidBody *r = memSLinkAppend(&__PhysicsRigidBodyResourceArray, (void **)array);
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -160,16 +160,16 @@ __FORCE_INLINE__ physRigidBody *modulePhysicsRigidBodyAppend(physRigidBody **con
 			)
 		);
 		if(memSLinkExtend(&__PhysicsRigidBodyResourceArray, memory, RESOURCE_DEFAULT_RIGID_BODY_SIZE, RESOURCE_DEFAULT_RIGID_BODY_NUM)){
-			r = memSLinkAppend(&__PhysicsRigidBodyResourceArray, (const void **)array);
+			r = memSLinkAppend(&__PhysicsRigidBodyResourceArray, (void **)array);
 		}
 	}
 	return r;
 }
-__FORCE_INLINE__ physRigidBody *modulePhysicsRigidBodyInsertAfterStatic(physRigidBody *const restrict resource){
-	return memSLinkInsertAfter(&__PhysicsRigidBodyResourceArray, resource);
+__HINT_INLINE__ physRigidBody *modulePhysicsRigidBodyInsertAfterStatic(physRigidBody **const restrict array, physRigidBody *const restrict resource){
+	return memSLinkInsertAfter(&__PhysicsRigidBodyResourceArray, (void **)array, (void *)resource);
 }
-__FORCE_INLINE__ physRigidBody *modulePhysicsRigidBodyInsertAfter(physRigidBody *const restrict resource){
-	physRigidBody *r = memSLinkInsertAfter(&__PhysicsRigidBodyResourceArray, resource);
+__HINT_INLINE__ physRigidBody *modulePhysicsRigidBodyInsertAfter(physRigidBody **const restrict array, physRigidBody *const restrict resource){
+	physRigidBody *r = memSLinkInsertAfter(&__PhysicsRigidBodyResourceArray, (void **)array, (void *)resource);
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -180,23 +180,23 @@ __FORCE_INLINE__ physRigidBody *modulePhysicsRigidBodyInsertAfter(physRigidBody 
 			)
 		);
 		if(memSLinkExtend(&__PhysicsRigidBodyResourceArray, memory, RESOURCE_DEFAULT_RIGID_BODY_SIZE, RESOURCE_DEFAULT_RIGID_BODY_NUM)){
-			r = memSLinkInsertAfter(&__PhysicsRigidBodyResourceArray, resource);
+			r = memSLinkInsertAfter(&__PhysicsRigidBodyResourceArray, (void **)array, (void *)resource);
 		}
 	}
 	return r;
 }
-__FORCE_INLINE__ physRigidBody *modulePhysicsRigidBodyNext(const physRigidBody *const restrict i){
+__HINT_INLINE__ physRigidBody *modulePhysicsRigidBodyNext(const physRigidBody *const restrict i){
 	return (physRigidBody *)memSLinkDataGetNext(i);
 }
-__FORCE_INLINE__ void modulePhysicsRigidBodyFree(physRigidBody **const restrict array, physRigidBody *const restrict resource, physRigidBody *const restrict previous){
+__HINT_INLINE__ void modulePhysicsRigidBodyFree(physRigidBody **const restrict array, physRigidBody *const restrict resource, const physRigidBody *const restrict previous){
 	physRigidBodyDelete(resource);
-	memSLinkFree(&__PhysicsRigidBodyResourceArray, (const void **)array, (void *)resource, (const void *)previous);
+	memSLinkFree(&__PhysicsRigidBodyResourceArray, (void **)array, (void *)resource, (const void *)previous);
 }
 void modulePhysicsRigidBodyFreeArray(physRigidBody **const restrict array){
 	physRigidBody *resource = *array;
 	while(resource != NULL){
 		physRigidBodyDelete(resource);
-		memSLinkFree(&__PhysicsRigidBodyResourceArray, (const void **)array, (void *)resource, NULL);
+		memSLinkFree(&__PhysicsRigidBodyResourceArray, (void **)array, (void *)resource, NULL);
 		resource = *array;
 	}
 }
@@ -210,11 +210,11 @@ void modulePhysicsRigidBodyClear(){
 
 }
 
-__FORCE_INLINE__ physRBInstance *modulePhysicsRigidBodyInstanceAppendStatic(physRBInstance **const restrict array){
-	return memSLinkAppend(&__PhysicsRigidBodyInstanceResourceArray, (const void **)array);
+__HINT_INLINE__ physRBInstance *modulePhysicsRigidBodyInstanceAppendStatic(physRBInstance **const restrict array){
+	return memSLinkAppend(&__PhysicsRigidBodyInstanceResourceArray, (void **)array);
 }
-__FORCE_INLINE__ physRBInstance *modulePhysicsRigidBodyInstanceAppend(physRBInstance **const restrict array){
-	physRBInstance *r = memSLinkAppend(&__PhysicsRigidBodyInstanceResourceArray, (const void **)array);
+__HINT_INLINE__ physRBInstance *modulePhysicsRigidBodyInstanceAppend(physRBInstance **const restrict array){
+	physRBInstance *r = memSLinkAppend(&__PhysicsRigidBodyInstanceResourceArray, (void **)array);
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -225,16 +225,16 @@ __FORCE_INLINE__ physRBInstance *modulePhysicsRigidBodyInstanceAppend(physRBInst
 			)
 		);
 		if(memSLinkExtend(&__PhysicsRigidBodyInstanceResourceArray, memory, RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_SIZE, RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_NUM)){
-			r = memSLinkAppend(&__PhysicsRigidBodyInstanceResourceArray, (const void **)array);
+			r = memSLinkAppend(&__PhysicsRigidBodyInstanceResourceArray, (void **)array);
 		}
 	}
 	return r;
 }
-__FORCE_INLINE__ physRBInstance *modulePhysicsRigidBodyInstanceInsertAfterStatic(physRBInstance *const restrict resource){
-	return memSLinkInsertAfter(&__PhysicsRigidBodyInstanceResourceArray, resource);
+__HINT_INLINE__ physRBInstance *modulePhysicsRigidBodyInstanceInsertAfterStatic(physRBInstance **const restrict array, physRBInstance *const restrict resource){
+	return memSLinkInsertAfter(&__PhysicsRigidBodyInstanceResourceArray, (void **)array, (void *)resource);
 }
-__FORCE_INLINE__ physRBInstance *modulePhysicsRigidBodyInstanceInsertAfter(physRBInstance *resource){
-	physRBInstance *r = memSLinkInsertAfter(&__PhysicsRigidBodyInstanceResourceArray, resource);
+__HINT_INLINE__ physRBInstance *modulePhysicsRigidBodyInstanceInsertAfter(physRBInstance **const restrict array, physRBInstance *const restrict resource){
+	physRBInstance *r = memSLinkInsertAfter(&__PhysicsRigidBodyInstanceResourceArray, (void **)array, (void *)resource);
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -245,23 +245,23 @@ __FORCE_INLINE__ physRBInstance *modulePhysicsRigidBodyInstanceInsertAfter(physR
 			)
 		);
 		if(memSLinkExtend(&__PhysicsRigidBodyInstanceResourceArray, memory, RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_SIZE, RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_NUM)){
-			r = memSLinkInsertAfter(&__PhysicsRigidBodyInstanceResourceArray, resource);
+			r = memSLinkInsertAfter(&__PhysicsRigidBodyInstanceResourceArray, (void **)array, (void *)resource);
 		}
 	}
 	return r;
 }
-__FORCE_INLINE__ physRBInstance *modulePhysicsRigidBodyInstanceNext(const physRBInstance *const restrict i){
+__HINT_INLINE__ physRBInstance *modulePhysicsRigidBodyInstanceNext(const physRBInstance *const restrict i){
 	return (physRBInstance *)memSLinkDataGetNext(i);
 }
-__FORCE_INLINE__ void modulePhysicsRigidBodyInstanceFree(physRBInstance **const restrict array, physRBInstance *const restrict resource, physRBInstance *const restrict previous){
+__HINT_INLINE__ void modulePhysicsRigidBodyInstanceFree(physRBInstance **const restrict array, physRBInstance *const restrict resource, const physRBInstance *const restrict previous){
 	physRBIDelete(resource);
-	memSLinkFree(&__PhysicsRigidBodyInstanceResourceArray, (const void **)array, (void *)resource, (const void *)previous);
+	memSLinkFree(&__PhysicsRigidBodyInstanceResourceArray, (void **)array, (void *)resource, (const void *)previous);
 }
 void modulePhysicsRigidBodyInstanceFreeArray(physRBInstance **const restrict array){
 	physRBInstance *resource = *array;
 	while(resource != NULL){
 		physRBIDelete(resource);
-		memSLinkFree(&__PhysicsRigidBodyInstanceResourceArray, (const void **)array, (void *)resource, NULL);
+		memSLinkFree(&__PhysicsRigidBodyInstanceResourceArray, (void **)array, (void *)resource, NULL);
 		resource = *array;
 	}
 }
@@ -275,11 +275,11 @@ void modulePhysicsRigidBodyInstanceClear(){
 
 }
 
-__FORCE_INLINE__ physCollider *modulePhysicsColliderAppendStatic(physCollider **const restrict array){
-	return memSLinkAppend(&__PhysicsColliderResourceArray, (const void **)array);
+__HINT_INLINE__ physCollider *modulePhysicsColliderAppendStatic(physCollider **const restrict array){
+	return memSLinkAppend(&__PhysicsColliderResourceArray, (void **)array);
 }
-__FORCE_INLINE__ physCollider *modulePhysicsColliderAppend(physCollider **const restrict array){
-	physCollider *r = memSLinkAppend(&__PhysicsColliderResourceArray, (const void **)array);
+__HINT_INLINE__ physCollider *modulePhysicsColliderAppend(physCollider **const restrict array){
+	physCollider *r = memSLinkAppend(&__PhysicsColliderResourceArray, (void **)array);
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -290,16 +290,16 @@ __FORCE_INLINE__ physCollider *modulePhysicsColliderAppend(physCollider **const 
 			)
 		);
 		if(memSLinkExtend(&__PhysicsColliderResourceArray, memory, RESOURCE_DEFAULT_COLLIDER_SIZE, RESOURCE_DEFAULT_COLLIDER_NUM)){
-			r = memSLinkAppend(&__PhysicsColliderResourceArray, (const void **)array);
+			r = memSLinkAppend(&__PhysicsColliderResourceArray, (void **)array);
 		}
 	}
 	return r;
 }
-__FORCE_INLINE__ physCollider *modulePhysicsColliderInsertAfterStatic(physCollider *const restrict resource){
-	return memSLinkInsertAfter(&__PhysicsColliderResourceArray, resource);
+__HINT_INLINE__ physCollider *modulePhysicsColliderInsertAfterStatic(physCollider **const restrict array, physCollider *const restrict resource){
+	return memSLinkInsertAfter(&__PhysicsColliderResourceArray, (void **)array, (void *)resource);
 }
-__FORCE_INLINE__ physCollider *modulePhysicsColliderInsertAfter(physCollider *const restrict resource){
-	physCollider *r = memSLinkInsertAfter(&__PhysicsColliderResourceArray, resource);
+__HINT_INLINE__ physCollider *modulePhysicsColliderInsertAfter(physCollider **const restrict array, physCollider *const restrict resource){
+	physCollider *r = memSLinkInsertAfter(&__PhysicsColliderResourceArray, (void **)array, (void *)resource);
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -310,23 +310,23 @@ __FORCE_INLINE__ physCollider *modulePhysicsColliderInsertAfter(physCollider *co
 			)
 		);
 		if(memSLinkExtend(&__PhysicsColliderResourceArray, memory, RESOURCE_DEFAULT_COLLIDER_SIZE, RESOURCE_DEFAULT_COLLIDER_NUM)){
-			r = memSLinkInsertAfter(&__PhysicsColliderResourceArray, resource);
+			r = memSLinkInsertAfter(&__PhysicsColliderResourceArray, (void **)array, (void *)resource);
 		}
 	}
 	return r;
 }
-__FORCE_INLINE__ physCollider *modulePhysicsColliderNext(const physCollider *const restrict i){
+__HINT_INLINE__ physCollider *modulePhysicsColliderNext(const physCollider *const restrict i){
 	return (physCollider *)memSLinkDataGetNext(i);
 }
-__FORCE_INLINE__ void modulePhysicsColliderFree(physCollider **const restrict array, physCollider *const restrict resource, physCollider *const restrict previous){
+__HINT_INLINE__ void modulePhysicsColliderFree(physCollider **const restrict array, physCollider *const restrict resource, const physCollider *const restrict previous){
 	physColliderDelete(resource);
-	memSLinkFree(&__PhysicsColliderResourceArray, (const void **)array, (void *)resource, (const void *)previous);
+	memSLinkFree(&__PhysicsColliderResourceArray, (void **)array, (void *)resource, (const void *)previous);
 }
 void modulePhysicsColliderFreeArray(physCollider **const restrict array){
 	physCollider *resource = *array;
 	while(resource != NULL){
 		physColliderDelete(resource);
-		memSLinkFree(&__PhysicsColliderResourceArray, (const void **)array, (void *)resource, NULL);
+		memSLinkFree(&__PhysicsColliderResourceArray, (void **)array, (void *)resource, NULL);
 		resource = *array;
 	}
 }
@@ -337,7 +337,7 @@ void modulePhysicsColliderRBIFreeArray(physCollider **const restrict array){
 		cHull = (cMesh *)&resource->c.hull;
 		memFree(cHull->vertices);
 		memFree(cHull->normals);
-		memSLinkFree(&__PhysicsColliderResourceArray, (const void **)array, (void *)resource, NULL);
+		memSLinkFree(&__PhysicsColliderResourceArray, (void **)array, (void *)resource, NULL);
 		resource = *array;
 	}
 }
@@ -351,11 +351,11 @@ void modulePhysicsColliderClear(){
 
 }
 
-__FORCE_INLINE__ physSeparationCache *modulePhysicsCollisionInstanceAppendStatic(physSeparationCache **const restrict array){
-	return memSLinkAppend(&__PhysicsCollisionInstanceResourceArray, (const void **)array);
+__HINT_INLINE__ physSeparation *modulePhysicsSeparationAppendStatic(physSeparation **const restrict array){
+	return memSLinkAppend(&__PhysicsSeparationResourceArray, (void **)array);
 }
-__FORCE_INLINE__ physSeparationCache *modulePhysicsCollisionInstanceAppend(physSeparationCache **const restrict array){
-	physSeparationCache *r = memSLinkAppend(&__PhysicsCollisionInstanceResourceArray, (const void **)array);
+__HINT_INLINE__ physSeparation *modulePhysicsSeparationAppend(physSeparation **const restrict array){
+	physSeparation *r = memSLinkAppend(&__PhysicsSeparationResourceArray, (void **)array);
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -365,17 +365,17 @@ __FORCE_INLINE__ physSeparationCache *modulePhysicsCollisionInstanceAppend(physS
 				RESOURCE_DEFAULT_COLLISION_NUM
 			)
 		);
-		if(memSLinkExtend(&__PhysicsCollisionInstanceResourceArray, memory, RESOURCE_DEFAULT_COLLISION_SIZE, RESOURCE_DEFAULT_COLLISION_NUM)){
-			r = memSLinkAppend(&__PhysicsCollisionInstanceResourceArray, (const void **)array);
+		if(memSLinkExtend(&__PhysicsSeparationResourceArray, memory, RESOURCE_DEFAULT_COLLISION_SIZE, RESOURCE_DEFAULT_COLLISION_NUM)){
+			r = memSLinkAppend(&__PhysicsSeparationResourceArray, (void **)array);
 		}
 	}
 	return r;
 }
-__FORCE_INLINE__ physSeparationCache *modulePhysicsCollisionInstanceInsertAfterStatic(physSeparationCache *const restrict resource){
-	return memSLinkInsertAfter(&__PhysicsCollisionInstanceResourceArray, resource);
+__HINT_INLINE__ physSeparation *modulePhysicsSeparationInsertAfterStatic(physSeparation **const restrict array, physSeparation *const restrict resource){
+	return memSLinkInsertAfter(&__PhysicsSeparationResourceArray, (void **)array, (void *)resource);
 }
-__FORCE_INLINE__ physSeparationCache *modulePhysicsCollisionInstanceInsertAfter(physSeparationCache *const restrict resource){
-	physSeparationCache *r = memSLinkInsertAfter(&__PhysicsCollisionInstanceResourceArray, resource);
+__HINT_INLINE__ physSeparation *modulePhysicsSeparationInsertAfter(physSeparation **const restrict array, physSeparation *const restrict resource){
+	physSeparation *r = memSLinkInsertAfter(&__PhysicsSeparationResourceArray, (void **)array, (void *)resource);
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -385,40 +385,40 @@ __FORCE_INLINE__ physSeparationCache *modulePhysicsCollisionInstanceInsertAfter(
 				RESOURCE_DEFAULT_COLLISION_NUM
 			)
 		);
-		if(memSLinkExtend(&__PhysicsCollisionInstanceResourceArray, memory, RESOURCE_DEFAULT_COLLISION_SIZE, RESOURCE_DEFAULT_COLLISION_NUM)){
-			r = memSLinkInsertAfter(&__PhysicsCollisionInstanceResourceArray, resource);
+		if(memSLinkExtend(&__PhysicsSeparationResourceArray, memory, RESOURCE_DEFAULT_COLLISION_SIZE, RESOURCE_DEFAULT_COLLISION_NUM)){
+			r = memSLinkInsertAfter(&__PhysicsSeparationResourceArray, (void **)array, (void *)resource);
 		}
 	}
 	return r;
 }
-__FORCE_INLINE__ physSeparationCache *modulePhysicsCollisionInstanceNext(const physSeparationCache *const restrict i){
-	return (physSeparationCache *)memSLinkDataGetNext(i);
+__HINT_INLINE__ physSeparation *modulePhysicsSeparationNext(const physSeparation *const restrict i){
+	return (physSeparation *)memSLinkDataGetNext(i);
 }
-__FORCE_INLINE__ void modulePhysicsCollisionInstanceFree(physSeparationCache **const restrict array, physSeparationCache *const restrict resource, physSeparationCache *const restrict previous){
-	memSLinkFree(&__PhysicsCollisionInstanceResourceArray, (const void **)array, (void *)resource, (const void *)previous);
+__HINT_INLINE__ void modulePhysicsSeparationFree(physSeparation **const restrict array, physSeparation *const restrict resource, const physSeparation *const restrict previous){
+	memSLinkFree(&__PhysicsSeparationResourceArray, (void **)array, (void *)resource, (const void *)previous);
 }
-void modulePhysicsCollisionInstanceFreeArray(physSeparationCache **const restrict array){
-	physSeparationCache *resource = *array;
+void modulePhysicsSeparationFreeArray(physSeparation **const restrict array){
+	physSeparation *resource = *array;
 	while(resource != NULL){
-		memSLinkFree(&__PhysicsCollisionInstanceResourceArray, (const void **)array, (void *)resource, NULL);
+		memSLinkFree(&__PhysicsSeparationResourceArray, (void **)array, (void *)resource, NULL);
 		resource = *array;
 	}
 }
-void modulePhysicsCollisionInstanceClear(){
+void modulePhysicsSeparationClear(){
 
-	MEMORY_SLINK_LOOP_BEGIN(__PhysicsCollisionInstanceResourceArray, i, physSeparationCache *);
+	MEMORY_SLINK_LOOP_BEGIN(__PhysicsSeparationResourceArray, i, physSeparation *);
 
-		modulePhysicsCollisionInstanceFree(NULL, i, NULL);
+		modulePhysicsSeparationFree(NULL, i, NULL);
 
-	MEMORY_SLINK_LOOP_END(__PhysicsCollisionInstanceResourceArray, i, return;);
+	MEMORY_SLINK_LOOP_END(__PhysicsSeparationResourceArray, i, return;);
 
 }
 
-__FORCE_INLINE__ physConstraint *modulePhysicsConstraintAppendStatic(physConstraint **const restrict array){
-	return memSLinkAppend(&__PhysicsConstraintResourceArray, (const void **)array);
+__HINT_INLINE__ physConstraint *modulePhysicsConstraintAppendStatic(physConstraint **const restrict array){
+	return memSLinkAppend(&__PhysicsConstraintResourceArray, (void **)array);
 }
-__FORCE_INLINE__ physConstraint *modulePhysicsConstraintAppend(physConstraint **const restrict array){
-	physConstraint *r = memSLinkAppend(&__PhysicsConstraintResourceArray, (const void **)array);
+__HINT_INLINE__ physConstraint *modulePhysicsConstraintAppend(physConstraint **const restrict array){
+	physConstraint *r = memSLinkAppend(&__PhysicsConstraintResourceArray, (void **)array);
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -429,16 +429,16 @@ __FORCE_INLINE__ physConstraint *modulePhysicsConstraintAppend(physConstraint **
 			)
 		);
 		if(memSLinkExtend(&__PhysicsConstraintResourceArray, memory, RESOURCE_DEFAULT_CONSTRAINT_SIZE, RESOURCE_DEFAULT_CONSTRAINT_NUM)){
-			r = memSLinkAppend(&__PhysicsConstraintResourceArray, (const void **)array);
+			r = memSLinkAppend(&__PhysicsConstraintResourceArray, (void **)array);
 		}
 	}
 	return r;
 }
-__FORCE_INLINE__ physConstraint *modulePhysicsConstraintInsertAfterStatic(physConstraint *const restrict resource){
-	return memSLinkInsertAfter(&__PhysicsConstraintResourceArray, resource);
+__HINT_INLINE__ physConstraint *modulePhysicsConstraintInsertAfterStatic(physConstraint **const restrict array, physConstraint *const restrict resource){
+	return memSLinkInsertAfter(&__PhysicsConstraintResourceArray, (void **)array, (void *)resource);
 }
-__FORCE_INLINE__ physConstraint *modulePhysicsConstraintInsertAfter(physConstraint *const restrict resource){
-	physConstraint *r = memSLinkInsertAfter(&__PhysicsConstraintResourceArray, resource);
+__HINT_INLINE__ physConstraint *modulePhysicsConstraintInsertAfter(physConstraint **const restrict array, physConstraint *const restrict resource){
+	physConstraint *r = memSLinkInsertAfter(&__PhysicsConstraintResourceArray, (void **)array, (void *)resource);
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -449,21 +449,21 @@ __FORCE_INLINE__ physConstraint *modulePhysicsConstraintInsertAfter(physConstrai
 			)
 		);
 		if(memSLinkExtend(&__PhysicsConstraintResourceArray, memory, RESOURCE_DEFAULT_CONSTRAINT_SIZE, RESOURCE_DEFAULT_CONSTRAINT_NUM)){
-			r = memSLinkInsertAfter(&__PhysicsConstraintResourceArray, resource);
+			r = memSLinkInsertAfter(&__PhysicsConstraintResourceArray, (void **)array, (void *)resource);
 		}
 	}
 	return r;
 }
-__FORCE_INLINE__ physConstraint *modulePhysicsConstraintNext(const physConstraint *const restrict i){
+__HINT_INLINE__ physConstraint *modulePhysicsConstraintNext(const physConstraint *const restrict i){
 	return (physConstraint *)memSLinkDataGetNext(i);
 }
-__FORCE_INLINE__ void modulePhysicsConstraintFree(physConstraint **const restrict array, physConstraint *const restrict resource, physConstraint *const restrict previous){
-	memSLinkFree(&__PhysicsConstraintResourceArray, (const void **)array, (void *)resource, (const void *)previous);
+__HINT_INLINE__ void modulePhysicsConstraintFree(physConstraint **const restrict array, physConstraint *const restrict resource, const physConstraint *const restrict previous){
+	memSLinkFree(&__PhysicsConstraintResourceArray, (void **)array, (void *)resource, (const void *)previous);
 }
 void modulePhysicsConstraintFreeArray(physConstraint **const restrict array){
 	physConstraint *resource = *array;
 	while(resource != NULL){
-		memSLinkFree(&__PhysicsConstraintResourceArray, (const void **)array, (void *)resource, NULL);
+		memSLinkFree(&__PhysicsConstraintResourceArray, (void **)array, (void *)resource, NULL);
 		resource = *array;
 	}
 }

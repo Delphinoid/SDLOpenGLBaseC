@@ -32,6 +32,7 @@ void *memStackPush(memoryStack *const restrict stack, const size_t bytes);
 void memStackPop(memoryStack *const restrict stack, const size_t bytes);
 //void memStackShrink(memoryStack *const restrict stack, const size_t bytes);
 void memStackClear(memoryStack *const restrict stack);
+void *memStackExtend(memoryStack *const restrict stack, void *const start, const size_t bytes, const size_t length);
 void memStackDelete(memoryStack *const restrict stack);
 
 #endif

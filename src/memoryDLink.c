@@ -48,7 +48,7 @@ void *memDLinkAllocate(memoryDLink *const restrict array){
 
 }
 
-void *memDLinkPrepend(memoryDLink *const restrict array, void **const restrict start){
+void *memDLinkPrepend(memoryDLink *const restrict array, void **const start){
 
 	/*
 	** Prepends a new block to the array.
@@ -71,7 +71,7 @@ void *memDLinkPrepend(memoryDLink *const restrict array, void **const restrict s
 
 }
 
-void *memDLinkAppend(memoryDLink *const restrict array, const void **const start){
+void *memDLinkAppend(memoryDLink *const restrict array, void **const start){
 
 	/*
 	** Appends a new block to the array.
@@ -96,7 +96,7 @@ void *memDLinkAppend(memoryDLink *const restrict array, const void **const start
 
 }
 
-void *memDLinkInsertBefore(memoryDLink *const restrict array, const void **const restrict start, void *const element){
+void *memDLinkInsertBefore(memoryDLink *const restrict array, void **const start, void *const element){
 
 	/*
 	** Inserts a new item before the specified element.
@@ -122,7 +122,7 @@ void *memDLinkInsertBefore(memoryDLink *const restrict array, const void **const
 
 }
 
-void *memDLinkInsertAfter(memoryDLink *const restrict array, void *const element){
+void *memDLinkInsertAfter(memoryDLink *const restrict array, void **const start, void *const element){
 
 	/*
 	** Inserts a new item after the specified element.
@@ -130,14 +130,20 @@ void *memDLinkInsertAfter(memoryDLink *const restrict array, void *const element
 
 	byte_t *const r = array->free;
 	if(r){
-		byte_t **const next = memDLinkDataGetNextPointer(element);
 		array->free = memDLinkDataGetNextFreeMasked(r);
-		// Set the new element's pointers.
-		memDLinkDataGetNext(r) = *next;
-		memDLinkDataGetPrev(r) = element;
-		if(*next != NULL){
-			// Set the next element's previous pointer.
-			memDLinkDataGetPrev(*next) = r;
+		if(element == NULL){
+			memDLinkDataGetNext(r) = NULL;
+			memDLinkDataGetPrev(r) = NULL;
+			*start = r;
+		}else{
+			byte_t **const next = memDLinkDataGetNextPointer(element);
+			// Set the new element's pointers.
+			memDLinkDataGetNext(r) = *next;
+			memDLinkDataGetPrev(r) = element;
+			if(*next != NULL){
+				// Set the next element's previous pointer.
+				memDLinkDataGetPrev(*next) = r;
+			}
 			// Set the previous element's next pointer.
 			*next = r;
 		}
@@ -146,7 +152,7 @@ void *memDLinkInsertAfter(memoryDLink *const restrict array, void *const element
 
 }
 
-void memDLinkFree(memoryDLink *const restrict array, const void **const restrict start, void *const element){
+void memDLinkFree(memoryDLink *const restrict array, void **const start, void *const element){
 
 	/*
 	** Removes an element from an array

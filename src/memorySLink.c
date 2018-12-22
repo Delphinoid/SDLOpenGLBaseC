@@ -47,7 +47,7 @@ void *memSLinkAllocate(memorySLink *const restrict array){
 
 }
 
-void *memSLinkPrepend(memorySLink *const restrict array, void **const restrict start){
+void *memSLinkPrepend(memorySLink *const restrict array, void **const start){
 
 	/*
 	** Prepends a new block to the array.
@@ -65,7 +65,7 @@ void *memSLinkPrepend(memorySLink *const restrict array, void **const restrict s
 
 }
 
-void *memSLinkAppend(memorySLink *const restrict array, const void **const start){
+void *memSLinkAppend(memorySLink *const restrict array, void **const start){
 
 	/*
 	** Appends a new block to the array.
@@ -87,7 +87,7 @@ void *memSLinkAppend(memorySLink *const restrict array, const void **const start
 
 }
 
-void *memSLinkInsertBefore(memorySLink *const restrict array, const void **const restrict start, void *const element, const void *const restrict previous){
+void *memSLinkInsertBefore(memorySLink *const restrict array, void **const start, void *const element, const void *const previous){
 
 	/*
 	** Inserts a new item before the specified element.
@@ -98,18 +98,18 @@ void *memSLinkInsertBefore(memorySLink *const restrict array, const void **const
 		array->free = memSLinkDataGetNextFreeMasked(r);
 		// Set the new element's next pointer.
 		memSLinkDataGetNext(r) = element;
-		if(previous != NULL){
+		if(previous == NULL){
+			*start = r;
+		}else{
 			// Set the previous element's next pointer.
 			memSLinkDataGetNext(previous) = r;
-		}else{
-			*start = r;
 		}
 	}
 	return r;
 
 }
 
-void *memSLinkInsertAfter(memorySLink *const restrict array, void *const element){
+void *memSLinkInsertAfter(memorySLink *const restrict array, void **const start, void *const element){
 
 	/*
 	** Inserts a new item after the specified element.
@@ -117,11 +117,14 @@ void *memSLinkInsertAfter(memorySLink *const restrict array, void *const element
 
 	byte_t *const r = array->free;
 	if(r){
-		byte_t **next = memSLinkDataGetNextPointer(element);
 		array->free = memSLinkDataGetNextFreeMasked(r);
-		// Set the new element's next pointer.
-		memSLinkDataGetNext(r) = *next;
-		if(*next != NULL){
+		if(element == NULL){
+			memSLinkDataGetNext(r) = NULL;
+			*start = r;
+		}else{
+			byte_t **next = memSLinkDataGetNextPointer(element);
+			// Set the new element's next pointer.
+			memSLinkDataGetNext(r) = *next;
 			// Set the previous element's next pointer.
 			*next = r;
 		}
@@ -130,7 +133,7 @@ void *memSLinkInsertAfter(memorySLink *const restrict array, void *const element
 
 }
 
-void memSLinkFree(memorySLink *const restrict array, const void **const restrict start, void *const element, const void *const restrict previous){
+void memSLinkFree(memorySLink *const restrict array, void **const start, void *const element, const void *const previous){
 
 	/*
 	** Removes an element from an array

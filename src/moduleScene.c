@@ -41,10 +41,10 @@ void moduleSceneResourcesDelete(){
 	}
 }
 
-__FORCE_INLINE__ scene *moduleSceneAllocateStatic(){
+__HINT_INLINE__ scene *moduleSceneAllocateStatic(){
 	return memPoolAllocate(&__SceneResourceArray);
 }
-__FORCE_INLINE__ scene *moduleSceneAllocate(){
+__HINT_INLINE__ scene *moduleSceneAllocate(){
 	scene *r = memPoolAllocate(&__SceneResourceArray);
 	if(r == NULL){
 		// Attempt to extend the allocator.
@@ -61,7 +61,7 @@ __FORCE_INLINE__ scene *moduleSceneAllocate(){
 	}
 	return r;
 }
-__FORCE_INLINE__ void moduleSceneFree(scene *const restrict resource){
+__HINT_INLINE__ void moduleSceneFree(scene *const restrict resource){
 	scnDelete(resource);
 	memPoolFree(&__SceneResourceArray, (void *)resource);
 }

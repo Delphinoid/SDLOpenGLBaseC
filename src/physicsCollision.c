@@ -134,7 +134,9 @@ static void physColliderUpdateMesh(physCollider *const restrict collider, const 
 	collider->centroid.z = local->centroid.z + configuration->position.z;
 
 
-	/* First iteration. */
+	/*
+	** First iteration.
+	*/
 	// Transform the vertex.
 	// Subtract the local centroid from the vertex.
 	vec3SubVFromVR(vLocal, &local->centroid, vGlobal);
@@ -154,7 +156,9 @@ static void physColliderUpdateMesh(physCollider *const restrict collider, const 
 	collider->aabb.back = vGlobal->z;
 
 
-	/* Other iterations. */
+	/*
+	** Other iterations.
+	*/
 	// Update each vertex.
 	for(++vLocal, ++vGlobal; vGlobal < vLast; ++vLocal, ++vGlobal){
 

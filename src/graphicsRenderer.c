@@ -180,13 +180,13 @@ return_t gfxRendererDrawScene(graphicsManager *const restrict gfxMngr, camera *c
 
 	gfxRenderer renderer;
 	gfxRendererInit(&renderer, interpT);
-	if(gfxRendererInitQueues(&renderer, scn->objectNum) == -1){
+	if(gfxRendererInitQueues(&renderer, scn->objectNum) < 0){
 		return -1;
 	}
 
 	/// Generate camera render data. Don't store it with the camera.
 
-	/* Update the camera's VP matrix. */
+	// Update the camera's VP matrix.
 	camUpdateViewProjectionMatrix(
 		cam,
 		gfxMngr->windowModified,
@@ -195,20 +195,20 @@ return_t gfxRendererDrawScene(graphicsManager *const restrict gfxMngr, camera *c
 		interpT
 	);
 
-	/* Switch to the camera's view. */
+	// Switch to the camera's view.
 	gfxMngrSwitchView(gfxMngr, &cam->view);
 
-	/* Feed the camera's view-projection matrix into the shader. */
+	// Feed the camera's view-projection matrix into the shader.
 	glUniformMatrix4fv(gfxMngr->vpMatrixID, 1, GL_FALSE, &cam->viewProjectionMatrix.m[0][0]);
 
-	/* Find which zones should be rendered. */
+	// Find which zones should be rendered.
 	/** For each zone: **/
 	gfxRendererGenerateQueuesList(&renderer, scn->objectNum, scn->objects);
 
-	/* Depth-sort the scene's translucent objects. */
+	// Depth-sort the scene's translucent objects.
 	gfxRenderQueueDepthSort(&renderer.qTranslucent);
 
-	/* Render the scene's objects. */
+	// Render the scene's objects.
 	queue = renderer.qOpaque.elements;
 	for(i = renderer.qOpaque.elementNum; i > 0; --i){
 		gfxRendererDrawElement(queue, cam, interpT, gfxMngr);

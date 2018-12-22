@@ -1,7 +1,8 @@
 #include "helpersMath.h"
+#include "inline.h"
 
-float fastInvSqrt(float x){
-	/* Black magic perfected by some very clever people. */
+__HINT_INLINE__ float fastInvSqrt(float x){
+	// Black magic perfected by some very clever people.
 	const float halfX = x*0.5f;
 	const int *const ir = (int *)&x;      // Dereferenced on next line to avoid warnings.
 	const int i = 0x5f3759df - (*ir>>1);
@@ -11,9 +12,9 @@ float fastInvSqrt(float x){
 	return x;
 }
 
-float fastInvSqrtAccurate(float x){
+__HINT_INLINE__ float fastInvSqrtAccurate(float x){
 
-	/* Black magic perfected by some very clever people. */
+	// Black magic perfected by some very clever people.
 	const float halfX = x*0.5f;
 	const int *const ir = (int *)&x;      // Dereferenced on next line to avoid warnings.
 	const int i = 0x5f3759df - (*ir>>1);
@@ -33,7 +34,7 @@ float fastInvSqrtAccurate(float x){
 
 }
 
-vec3 getPointLineProjection(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict p){
+__HINT_INLINE__ vec3 getPointLineProjection(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict p){
 	/*
 	** Project a point onto a line.
 	*/
@@ -49,7 +50,7 @@ vec3 getPointLineProjection(const vec3 *const restrict a, const vec3 *const rest
 	          .z = a->z + d * ba.z};
 	return r;
 }
-void pointLineProject(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict p, vec3 *const restrict r){
+__HINT_INLINE__ void pointLineProject(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict p, vec3 *const restrict r){
 	/*
 	** Project a point onto a line.
 	*/
@@ -65,7 +66,7 @@ void pointLineProject(const vec3 *const restrict a, const vec3 *const restrict b
 	r->z = a->z + d * ba.z;
 }
 
-vec3 getFaceNormal(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict c){
+__HINT_INLINE__ vec3 getFaceNormal(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict c){
 	/*
 	** r = (b - a) X (c - a)
 	*/
@@ -79,7 +80,7 @@ vec3 getFaceNormal(const vec3 *const restrict a, const vec3 *const restrict b, c
 	vec3Cross(&f1, &f2, &r);
 	return r;
 }
-void faceNormal(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict c, vec3 *const restrict r){
+__HINT_INLINE__ void faceNormal(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict c, vec3 *const restrict r){
 	/*
 	** r = (b - a) X (c - a)
 	*/
@@ -92,7 +93,7 @@ void faceNormal(const vec3 *const restrict a, const vec3 *const restrict b, cons
 	vec3Cross(&f1, &f2, r);
 }
 
-vec3 getBarycentric(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict c, const vec3 *const restrict p){
+__HINT_INLINE__ vec3 getBarycentric(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict c, const vec3 *const restrict p){
 	/*
 	** Calculate the barycentric coordinates of
 	** point p in triangle abc.
@@ -117,7 +118,7 @@ vec3 getBarycentric(const vec3 *const restrict a, const vec3 *const restrict b, 
 	          .x = 1.f - r.y - r.z};
 	return r;
 }
-void barycentric(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict c, vec3 *const restrict p){
+__HINT_INLINE__ void barycentric(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict c, vec3 *const restrict p){
 	/*
 	** Calculate the barycentric coordinates of
 	** point p in triangle abc.
@@ -142,7 +143,7 @@ void barycentric(const vec3 *const restrict a, const vec3 *const restrict b, con
 	p->z = (d11 * d32 - d12 * d31) * denomInv;
 	p->x = 1.f - p->y - p->z;
 }
-void barycentricR(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict c, const vec3 *const restrict p, vec3 *const restrict r){
+__HINT_INLINE__ void barycentricR(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict c, const vec3 *const restrict p, vec3 *const restrict r){
 	/*
 	** Calculate the barycentric coordinates of
 	** point p in triangle abc.
@@ -168,7 +169,7 @@ void barycentricR(const vec3 *const restrict a, const vec3 *const restrict b, co
 	r->x = 1.f - r->y - r->z;
 }
 
-float pointPlaneDistance(const vec3 *const restrict normal, const vec3 *const restrict vertex, const vec3 *const restrict point){
+__HINT_INLINE__ float pointPlaneDistance(const vec3 *const restrict normal, const vec3 *const restrict vertex, const vec3 *const restrict point){
 	/*
 	** Calculates the squared distance
 	** between a point and a plane.
@@ -178,7 +179,7 @@ float pointPlaneDistance(const vec3 *const restrict normal, const vec3 *const re
 	                     .z = point->z - vertex->z};
 	return vec3Dot(normal, &offset);
 }
-void pointPlaneProject(const vec3 *const restrict normal, const vec3 *const restrict vertex, vec3 *const restrict point){
+__HINT_INLINE__ void pointPlaneProject(const vec3 *const restrict normal, const vec3 *const restrict vertex, vec3 *const restrict point){
 	/*
 	** Projects a point onto a plane.
 	*/
@@ -190,7 +191,7 @@ void pointPlaneProject(const vec3 *const restrict normal, const vec3 *const rest
 	point->y -= dot * normal->y;
 	point->z -= dot * normal->z;
 }
-void pointPlaneProjectR(const vec3 *const restrict normal, const vec3 *const restrict vertex, const vec3 *const restrict point, vec3 *const restrict r){
+__HINT_INLINE__ void pointPlaneProjectR(const vec3 *const restrict normal, const vec3 *const restrict vertex, const vec3 *const restrict point, vec3 *const restrict r){
 	/*
 	** Projects a point onto a plane.
 	*/
@@ -203,7 +204,7 @@ void pointPlaneProjectR(const vec3 *const restrict normal, const vec3 *const res
 	r->z = point->z - dot * normal->z;
 }
 
-void linePlaneIntersection(const vec3 *const restrict normal, const vec3 *const restrict vertex, const vec3 *const restrict line, vec3 *const restrict point){
+__HINT_INLINE__ void linePlaneIntersection(const vec3 *const restrict normal, const vec3 *const restrict vertex, const vec3 *const restrict line, vec3 *const restrict point){
 	/*
 	** Finds the intersection between
 	** a line and a plane.
@@ -215,7 +216,7 @@ void linePlaneIntersection(const vec3 *const restrict normal, const vec3 *const 
 	point->y = line->y * t;
 	point->z = line->z * t;
 }
-return_t segmentPlaneIntersection(const vec3 *const restrict normal, const vec3 *const restrict vertex, const vec3 *const restrict start, const vec3 *const restrict end, vec3 *const restrict point){
+__HINT_INLINE__ return_t segmentPlaneIntersection(const vec3 *const restrict normal, const vec3 *const restrict vertex, const vec3 *const restrict start, const vec3 *const restrict end, vec3 *const restrict point){
 	/*
 	** Finds the intersection between
 	** a line segment and a plane.
@@ -233,7 +234,7 @@ return_t segmentPlaneIntersection(const vec3 *const restrict normal, const vec3 
 	return 1;
 }
 
-void segmentClosestPoints(const vec3 *const restrict s1, const vec3 *const restrict e1, const vec3 *const restrict s2, const vec3 *const restrict e2, vec3 *const restrict p1, vec3 *const restrict p2){
+__HINT_INLINE__ void segmentClosestPoints(const vec3 *const restrict s1, const vec3 *const restrict e1, const vec3 *const restrict s2, const vec3 *const restrict e2, vec3 *const restrict p1, vec3 *const restrict p2){
 	/*
 	** Finds the closest points that
 	** lie on the two line segments.
@@ -268,7 +269,7 @@ void segmentClosestPoints(const vec3 *const restrict s1, const vec3 *const restr
 	p2->z = s2->z + m2 * (e2->z - s2->z);
 }
 
-float floatLerp(const float f1, const float f2, const float t){
+__HINT_INLINE__ float floatLerp(const float f1, const float f2, const float t){
 	if(t == 0.f){
 		return f1;
 	}else if(t == 1.f){

@@ -309,7 +309,7 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 								break;
 							}
 						}else if(currentCommand == 1){
-							if(physColliderResizeToFit(currentCollider, &vertexMassArrays[currentBodyColliderNum-1]) == -1){
+							if(physColliderResizeToFit(currentCollider, &vertexMassArrays[currentBodyColliderNum-1]) < 0){
 								/** Memory allocation failure. **/
 								if(vertexMassArrays != NULL){
 									physColliderIndex_t k;
@@ -364,7 +364,7 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 							printf("Error loading rigid bodies \"%s\": Trying to start a multiline command at line %u "
 							       "while another is already in progress. Closing the current command.\n", fullPath, currentLine);
 							if(currentCommand == 1){
-								if(physColliderResizeToFit(currentCollider, &vertexMassArrays[currentBodyColliderNum-1]) == -1){
+								if(physColliderResizeToFit(currentCollider, &vertexMassArrays[currentBodyColliderNum-1]) < 0){
 									/** Memory allocation failure. **/
 									if(vertexMassArrays != NULL){
 										physColliderIndex_t k;
@@ -741,7 +741,7 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 							printf("Error loading rigid bodies \"%s\": Trying to start a multiline command at line %u "
 							       "while another is already in progress. Closing the current command.\n", fullPath, currentLine);
 							if(currentCommand == 1){
-								if(physColliderResizeToFit(currentCollider, &vertexMassArrays[currentBodyColliderNum-1]) == -1){
+								if(physColliderResizeToFit(currentCollider, &vertexMassArrays[currentBodyColliderNum-1]) < 0){
 									/** Memory allocation failure. **/
 									if(vertexMassArrays != NULL){
 										physColliderIndex_t k;
@@ -804,8 +804,8 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 									return -1;
 								}
 								physConstraintInit(currentConstraint);
+								currentConstraint->id = constrainedBodyID;
 								currentConstraint->ownerID = currentBody->id;
-								currentConstraint->constraintID = constrainedBodyID;
 								currentCommand = 2;
 								success = 1;
 							}
@@ -961,7 +961,7 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 
 					if(cHull->vertexNum > 0 && cHull->faceNum > 0 && cHull->edgeNum > 0){
 
-						if(physColliderResizeToFit(currentCollider, &vertexMassArrays[currentBodyColliderNum-1]) == -1){
+						if(physColliderResizeToFit(currentCollider, &vertexMassArrays[currentBodyColliderNum-1]) < 0){
 							/** Memory allocation failure. **/
 							if(vertexMassArrays != NULL){
 								physColliderIndex_t k;
@@ -1021,7 +1021,7 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 
 			if(cHull->vertexNum > 0 && cHull->faceNum > 0 && cHull->edgeNum > 0){
 
-				if(physColliderResizeToFit(currentCollider, &vertexMassArrays[currentBodyColliderNum-1]) == -1){
+				if(physColliderResizeToFit(currentCollider, &vertexMassArrays[currentBodyColliderNum-1]) < 0){
 					/** Memory allocation failure. **/
 					if(vertexMassArrays != NULL){
 						physColliderIndex_t k;
@@ -1250,17 +1250,56 @@ return_t physRBIAddConstraint(physRBInstance *const restrict prbi, physConstrain
 
 }
 
-return_t physRBICacheSeparation(physRBInstance *const restrict prbi, physSeparationCache *const c){
+physSeparation *physRBIFindSeparation(physRBInstance *const restrict prbi, const physicsBodyIndex_t id, physSeparation **const previous){
+
+	/*
+	** Find a separation from a previous failed narrowphase collision check.
+	**
+	** Separations are cached in increasing order of id, so once we find an
+	** id greater than the supplied id we can perform an early exit.
+	**
+	** We also need to return the separation directly before it in the SLink
+	** so we can perform an insertion or removal later on if we need to.
+	*/
+
+	physSeparation *i = prbi->cache;
+	physSeparation *p = NULL;
+
+	while(i != NULL && id >= i->id){
+		if(id == i->id){
+			*previous = p;
+			return i;
+		}
+		p = i;
+		i = (physSeparation *)memSLinkNext(i);
+	}
+
+	*previous = p;
+	return NULL;
+
+}
+
+physSeparation *physRBICacheSeparation(physRBInstance *const restrict prbi, physSeparation *const restrict previous){
 
 	/*
 	** Cache a separation after a failed narrowphase collision check.
 	*/
 
-	///
+	return modulePhysicsSeparationInsertAfter(&prbi->cache, previous);
 
 }
 
-return_t physRBIAddCollision(physRBInstance *const restrict prbi, physSeparationCache *const c){
+void physRBIRemoveSeparation(physRBInstance *const restrict prbi, physSeparation *const restrict separation, const physSeparation *const restrict previous){
+
+	/*
+	** Cache a separation after a failed narrowphase collision check.
+	*/
+
+	modulePhysicsSeparationFree(&prbi->cache, separation, previous);
+
+}
+
+return_t physRBIAddCollision(physRBInstance *const restrict prbi, physSeparation *const c){
 
 	/*
 	** Caches the collision and creates an
@@ -1354,14 +1393,18 @@ void physRBIUpdateCollisionMesh(physRBInstance *const restrict prbi){
 }
 
 void physRBIApplyLinearForce(physRBInstance *const restrict prbi, const vec3 *const restrict F){
-	/* Apply a linear force. */
+	/*
+	** Apply a linear force.
+	*/
 	prbi->netForce.x += F->x;
 	prbi->netForce.y += F->y;
 	prbi->netForce.z += F->z;
 }
 
 void physRBIApplyAngularForceGlobal(physRBInstance *const restrict prbi, const vec3 *const restrict F, const vec3 *const restrict r){
-	/* Apply an angular force. */
+	/*
+	** Apply an angular force.
+	*/
 	// T = r x F
 	vec3 rsR, rxF;
 	vec3SubVFromVR(r, &prbi->centroid, &rsR);
@@ -1376,10 +1419,10 @@ void physRBIApplyForceGlobal(physRBInstance *const restrict prbi, const vec3 *co
 	** r is where the force F is applied, in world space.
 	*/
 
-	/* Accumulate torque. */
+	// Accumulate torque.
 	physRBIApplyAngularForceGlobal(prbi, F, r);
 
-	/* Accumulate force. */
+	// Accumulate force.
 	physRBIApplyLinearForce(prbi, F);
 
 }
@@ -1424,142 +1467,120 @@ void physRBIBeginSimulation(physRBInstance *const restrict prbi){
 	physRBICentroidFromPosition(prbi);
 }
 
+void physBeginIntegration(physRBInstance *const restrict prbi){
+	// Update moment of inertia.
+	physRBIGenerateGlobalInertia(prbi);
+}
+
 void physRBIIntegrateEuler(physRBInstance *const restrict prbi, const float dt){
 
-	/* Euler integration scheme. */
-	if(prbi->local != NULL){  /** Remove? **/
+	/*
+	** Euler integration scheme.
+	*/
 
-		/* Update moment of inertia. */
-		physRBIGenerateGlobalInertia(prbi);
+	// Update moment of inertia.
+	physRBIGenerateGlobalInertia(prbi);
 
-		if(prbi->local->inverseMass > 0.f){
+	if(prbi->local->inverseMass > 0.f){
 
-			const float dtStep = dt/PHYSICS_INTEGRATION_STEPS_EULER;
-			vec3 tempVec3;
-			float tempFloat;
-			quat tempQuat;
-			int i;
+		int i;
 
-			for(i = 0; i < PHYSICS_INTEGRATION_STEPS_EULER; ++i){
+		const float dtStep = dt/PHYSICS_INTEGRATION_STEPS_EULER;
+		const float modifier = prbi->local->inverseMass * dtStep;
 
-				/* Calculate linear velocity. */
-				// a = F/m
-				// dv = a * dt
-				prbi->linearVelocity.x += prbi->netForce.x * prbi->local->inverseMass * dtStep;
-				prbi->linearVelocity.y += prbi->netForce.y * prbi->local->inverseMass * dtStep;
-				prbi->linearVelocity.z += prbi->netForce.z * prbi->local->inverseMass * dtStep;
+		// a = F/m
+		// dv = a * dt
+		const vec3 accelerationStep = {.x = prbi->netForce.x * modifier,
+		                               .y = prbi->netForce.y * modifier,
+		                               .z = prbi->netForce.z * modifier};
 
-				/* Update position. */
-				prbi->configuration->position.x += prbi->linearVelocity.x * dtStep;
-				prbi->configuration->position.y += prbi->linearVelocity.y * dtStep;
-				prbi->configuration->position.z += prbi->linearVelocity.z * dtStep;
+		for(i = 0; i < PHYSICS_INTEGRATION_STEPS_EULER; ++i){
 
-				/* Calculate angular velocity. */
-				tempVec3.x = prbi->netTorque.x * dtStep;
-				tempVec3.y = prbi->netTorque.y * dtStep;
-				tempVec3.z = prbi->netTorque.z * dtStep;
-				mat3MultMByVRow(&prbi->inverseInertiaTensor, &tempVec3);
-				prbi->angularVelocity.x += tempVec3.x;
-				prbi->angularVelocity.y += tempVec3.y;
-				prbi->angularVelocity.z += tempVec3.z;
+			vec3 momentum;
 
-				/* Update orientation. */
-				// Angle
-				tempFloat = vec3Magnitude(&prbi->angularVelocity) * dtStep;
-				// Axis
-				tempVec3 = prbi->angularVelocity;
-				vec3NormalizeFast(&tempVec3);
-				// Convert axis-angle rotation to a quaternion.
-				quatSetAxisAngle(&tempQuat, tempFloat, tempVec3.x, tempVec3.y, tempVec3.z);
-				quatMultQByQ2(&tempQuat, &prbi->configuration->orientation);
-				// Normalize the orientation.
-				quatNormalizeFast(&prbi->configuration->orientation);
+			// Integrate linear velocity.
+			prbi->linearVelocity.x += accelerationStep.x;
+			prbi->linearVelocity.y += accelerationStep.y;
+			prbi->linearVelocity.z += accelerationStep.z;
 
-			}
+			// Integrate position.
+			prbi->configuration->position.x += prbi->linearVelocity.x * dtStep;
+			prbi->configuration->position.y += prbi->linearVelocity.y * dtStep;
+			prbi->configuration->position.z += prbi->linearVelocity.z * dtStep;
+
+			// Integrate angular velocity.
+			mat3MultMByVRowR(&prbi->inverseInertiaTensor, &prbi->netTorque, &momentum);
+			prbi->angularVelocity.x += momentum.x * dtStep;
+			prbi->angularVelocity.y += momentum.y * dtStep;
+			prbi->angularVelocity.z += momentum.z * dtStep;
+
+			// Integrate orientation.
+			quatIntegrate(&prbi->configuration->orientation, &prbi->angularVelocity, dtStep);
 
 		}
 
-		/* Update global centroid. */
-		physRBICentroidFromPosition(prbi);
-
-		/* Reset force and torque accumulators. */
-		physRBIResetForceAccumulator(prbi);
-		physRBIResetTorqueAccumulator(prbi);
-
 	}
+
+	// Update global centroid.
+	physRBICentroidFromPosition(prbi);
+
+	// Reset force and torque accumulators.
+	physRBIResetForceAccumulator(prbi);
+	physRBIResetTorqueAccumulator(prbi);
 
 }
 
 void physRBIIntegrateLeapfrog(physRBInstance *const restrict prbi, const float dt){
 
-	/* Leapfrog integration scheme. */
-	if(prbi->local != NULL){  /** Remove? **/
+	/*
+	** Leapfrog integration scheme.
+	*/
 
-		/* Update moment of inertia. */
-		physRBIGenerateGlobalInertia(prbi);
+	// Update moment of inertia.
+	physRBIGenerateGlobalInertia(prbi);
 
-		if(prbi->local->inverseMass > 0.f){
+	if(prbi->local->inverseMass > 0.f){
 
-			vec3 tempVec3;
-			float tempFloat;
-			quat tempQuat;
+		const float dtStep = dt*0.5f;
+		const float modifier = prbi->local->inverseMass * dtStep;
 
-			/* Integrate position and linear velocity. */
-			tempFloat = prbi->local->inverseMass * dt * 0.5f;
-			tempVec3.x = prbi->netForce.x * tempFloat;
-			tempVec3.y = prbi->netForce.y * tempFloat;
-			tempVec3.z = prbi->netForce.z * tempFloat;
-			prbi->linearVelocity.x += tempVec3.x;
-			prbi->linearVelocity.y += tempVec3.y;
-			prbi->linearVelocity.z += tempVec3.z;
-			prbi->configuration->position.x += prbi->linearVelocity.x * dt;
-			prbi->configuration->position.y += prbi->linearVelocity.y * dt;
-			prbi->configuration->position.z += prbi->linearVelocity.z * dt;
-			/**polygonResetForce(polygon);**/
-			prbi->linearVelocity.x += tempVec3.x;
-			prbi->linearVelocity.y += tempVec3.y;
-			prbi->linearVelocity.z += tempVec3.z;
+		vec3 momentum;
 
-			/* Calculate angular velocity. */
-			tempVec3.x = prbi->netTorque.x * dt;
-			tempVec3.y = prbi->netTorque.y * dt;
-			tempVec3.z = prbi->netTorque.z * dt;
-			mat3MultMByVRow(&prbi->inverseInertiaTensor, &tempVec3);
-			prbi->angularVelocity.x += tempVec3.x;
-			prbi->angularVelocity.y += tempVec3.y;
-			prbi->angularVelocity.z += tempVec3.z;
+		// Integrate linear velocity.
+		prbi->linearVelocity.x += prbi->netForce.x * modifier;
+		prbi->linearVelocity.y += prbi->netForce.y * modifier;
+		prbi->linearVelocity.z += prbi->netForce.z * modifier;
 
-			/* Update orientation. */
-			// Axis
-			tempVec3 = prbi->angularVelocity;
-			vec3NormalizeFast(&tempVec3);
-			// Angle
-			tempFloat = vec3Magnitude(&prbi->angularVelocity) * dt;
-			// Convert axis-angle rotation to a quaternion.
-			quatSetAxisAngle(&tempQuat, tempFloat, tempVec3.x, tempVec3.y, tempVec3.z);
-			quatMultQByQ2(&tempQuat, &prbi->configuration->orientation);
-			// Normalize the orientation.
-			quatNormalizeFast(&prbi->configuration->orientation);
+		// Integrate position.
+		prbi->configuration->position.x += prbi->linearVelocity.x * dtStep;
+		prbi->configuration->position.y += prbi->linearVelocity.y * dtStep;
+		prbi->configuration->position.z += prbi->linearVelocity.z * dtStep;
 
-		}
+		// Integrate angular velocity.
+		mat3MultMByVRowR(&prbi->inverseInertiaTensor, &prbi->netTorque, &momentum);
+		prbi->angularVelocity.x += momentum.x * dtStep;
+		prbi->angularVelocity.y += momentum.y * dtStep;
+		prbi->angularVelocity.z += momentum.z * dtStep;
 
-		/* Update centroid. */
-		physRBICentroidFromPosition(prbi);
-
-		/* Reset force and torque accumulators. */
-		physRBIResetForceAccumulator(prbi);
-		physRBIResetTorqueAccumulator(prbi);
+		// Integrate orientation.
+		quatIntegrate(&prbi->configuration->orientation, &prbi->angularVelocity, dtStep);
 
 	}
+
+	// Update centroid.
+	physRBICentroidFromPosition(prbi);
 
 }
 
 void physRBIIntegrateLeapfrogVelocity(physRBInstance *const restrict prbi, const float dt){
 
-	/* Leapfrog integration scheme. */
+	/*
+	** Leapfrog integration scheme.
+	*/
+
 	if(prbi->local != NULL && prbi->local->inverseMass > 0.f){  /** Remove? **/
 
-		/* Integrate linear velocity half-step. */
+		// Integrate linear velocity half-step.
 		const float tempFloat = prbi->local->inverseMass * dt * 0.5f;
 		prbi->linearVelocity.x += prbi->netForce.x * tempFloat;
 		prbi->linearVelocity.y += prbi->netForce.y * tempFloat;
@@ -1571,10 +1592,13 @@ void physRBIIntegrateLeapfrogVelocity(physRBInstance *const restrict prbi, const
 
 void physRBIIntegrateLeapfrogConstraints(physRBInstance *const restrict prbi, const float dt){
 
-	/* Leapfrog integration scheme. */
-	if(prbi->local != NULL){  /** Remove? **/
+	/*
+	** Leapfrog integration scheme.
+	*/
 
-		/* Update moment of inertia. */
+	/*if(prbi->local != NULL){  ** Remove? **
+
+		// Update moment of inertia.
 		physRBIGenerateGlobalInertia(prbi);
 
 		if(prbi->local->inverseMass > 0.f){
@@ -1583,17 +1607,17 @@ void physRBIIntegrateLeapfrogConstraints(physRBInstance *const restrict prbi, co
 			float tempFloat;
 			quat tempQuat;
 
-			/* Integrate position and final half of linear velocity. */
+			// Integrate position and final half of linear velocity.
 			prbi->configuration->position.x += prbi->linearVelocity.x * dt;
 			prbi->configuration->position.y += prbi->linearVelocity.y * dt;
 			prbi->configuration->position.z += prbi->linearVelocity.z * dt;
-			/**polygonResetForce(polygon);**/
+			**polygonResetForce(polygon);**
 			tempFloat = prbi->local->inverseMass * dt * 0.5f;
 			prbi->linearVelocity.x += prbi->netForce.x * tempFloat;
 			prbi->linearVelocity.y += prbi->netForce.y * tempFloat;
 			prbi->linearVelocity.z += prbi->netForce.z * tempFloat;
 
-			/* Calculate angular velocity. */
+			// Calculate angular velocity.
 			tempVec3.x = prbi->netTorque.x * dt;
 			tempVec3.y = prbi->netTorque.y * dt;
 			tempVec3.z = prbi->netTorque.z * dt;
@@ -1602,7 +1626,7 @@ void physRBIIntegrateLeapfrogConstraints(physRBInstance *const restrict prbi, co
 			prbi->angularVelocity.y += tempVec3.y;
 			prbi->angularVelocity.z += tempVec3.z;
 
-			/* Update orientation. */
+			// Update orientation.
 			// Axis
 			tempVec3 = prbi->angularVelocity;
 			vec3NormalizeFast(&tempVec3);
@@ -1616,20 +1640,22 @@ void physRBIIntegrateLeapfrogConstraints(physRBInstance *const restrict prbi, co
 
 		}
 
-		/* Update centroid. */
+		// Update centroid.
 		physRBICentroidFromPosition(prbi);
 
-		/* Reset force and torque accumulators. */
+		// Reset force and torque accumulators.
 		physRBIResetForceAccumulator(prbi);
 		physRBIResetTorqueAccumulator(prbi);
 
-	}
+	}*/
 
 }
 
 void physRBIIntegrateRungeKutta(physRBInstance *const restrict prbi, const float dt){
 
-	/* RK4 integration scheme. */
+	/*
+	** RK4 integration scheme.
+	*/
 	//
 
 }

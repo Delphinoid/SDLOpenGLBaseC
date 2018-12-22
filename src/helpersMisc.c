@@ -31,7 +31,9 @@
 }*/
 
 return_t pushDynamicArray(void **const restrict vector, const void *const restrict element, const size_t bytes, size_t *const restrict size, size_t *const restrict capacity){
-	/* Push an element into a dynamic array. */
+	/*
+	** Push an element into a dynamic array.
+	*/
 	if(*size == *capacity){
 		void *tempBuffer;
 		if(*capacity == 0){
@@ -52,7 +54,9 @@ return_t pushDynamicArray(void **const restrict vector, const void *const restri
 }
 
 size_t ltostr(long n, char *const restrict s){
-	/* Converts a long to a C-string. */
+	/*
+	** Converts a long to a C-string.
+	*/
 	size_t l;  // Length of the ouput (discluding null terminator).
 	if(n == 0){
 		s[0] = '0';

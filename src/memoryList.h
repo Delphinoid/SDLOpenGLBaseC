@@ -49,8 +49,9 @@ typedef struct {
 	// The following can save small amounts of memory but can't be predicted as easily:
 	//(memListBlockSize(bytes) * (length - 1) + memListBlockSizeUnaligned(bytes) + (uintptr_t)memListAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 
-#define memListFirst(list)        ((void *)memListAlignStartData((region)->start))
-#define memListBlockNext(list, i) (void *)((byte_t *)i + (list).block)
+#define memListFirst(list)            ((void *)memListAlignStartData((region)->start))
+#define memListBlockNext(list, i)     (void *)((byte_t *)i + (list).block)
+#define memListBlockPrevious(list, i) (void *)((byte_t *)i - (list).block)
 
 void memListInit(memoryList *const restrict list);
 void *memListCreate(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length);
@@ -65,9 +66,8 @@ void memListDelete(memoryList *const restrict list);
 #define MEMORY_LIST_LOOP_BEGIN(allocator, n, type)           \
 	{                                                        \
 		const memoryRegion *__region_##n = allocator.region; \
-		type n;                                              \
 		do {                                                 \
-			n = memListFirst(__region_##n);                  \
+			type n = memListFirst(__region_##n);             \
 			while(n < (type)memAllocatorEnd(__region_##n)){  \
 
 #define MEMORY_LIST_LOOP_END(allocator, n)                   \

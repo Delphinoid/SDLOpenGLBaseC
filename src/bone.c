@@ -30,7 +30,9 @@ void boneInvertR(const bone *const restrict b, bone *const restrict r){
 
 void boneInterpolate1(bone *const restrict b1, const bone *const restrict b2, const float t){
 
-	/* Calculate the interpolated delta transform for the bone. */
+	/*
+	** Calculate the interpolated delta transform for the bone.
+	*/
 	if(t >= 1.f){
 
 		// Only use the end frame if t exceeds the upper bounds.
@@ -55,7 +57,9 @@ void boneInterpolate1(bone *const restrict b1, const bone *const restrict b2, co
 
 void boneInterpolate2(const bone *const restrict b1, bone *const restrict b2, const float t){
 
-	/* Calculate the interpolated delta transform for the bone. */
+	/*
+	** Calculate the interpolated delta transform for the bone.
+	*/
 	if(t <= 0.f){
 
 		// Only use the start frame if t exceeds the lower bounds.
@@ -80,7 +84,9 @@ void boneInterpolate2(const bone *const restrict b1, bone *const restrict b2, co
 
 void boneInterpolateR(const bone *const restrict b1, const bone *const restrict b2, const float t, bone *const restrict r){
 
-	/* Calculate the interpolated delta transform for the bone. */
+	/*
+	** Calculate the interpolated delta transform for the bone.
+	*/
 	if(t <= 0.f){
 
 		// Only use the start frame if t exceeds the lower bounds.

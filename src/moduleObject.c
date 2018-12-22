@@ -67,10 +67,10 @@ void moduleObjectResourcesDelete(){
 	}
 }
 
-__FORCE_INLINE__ object *moduleObjectAllocateStatic(){
+__HINT_INLINE__ object *moduleObjectAllocateStatic(){
 	return memPoolAllocate(&__ObjectResourceArray);
 }
-__FORCE_INLINE__ object *moduleObjectAllocate(){
+__HINT_INLINE__ object *moduleObjectAllocate(){
 	object *r = memPoolAllocate(&__ObjectResourceArray);
 	if(r == NULL){
 		// Attempt to extend the allocator.
@@ -87,7 +87,7 @@ __FORCE_INLINE__ object *moduleObjectAllocate(){
 	}
 	return r;
 }
-__FORCE_INLINE__ void moduleObjectFree(object *const restrict resource){
+__HINT_INLINE__ void moduleObjectFree(object *const restrict resource){
 	objDelete(resource);
 	memPoolFree(&__ObjectResourceArray, (void *)resource);
 }
@@ -115,10 +115,10 @@ void moduleObjectClear(){
 
 }
 
-__FORCE_INLINE__ objInstance *moduleObjectInstanceAllocateStatic(){
+__HINT_INLINE__ objInstance *moduleObjectInstanceAllocateStatic(){
 	return memPoolAllocate(&__ObjectInstanceResourceArray);
 }
-__FORCE_INLINE__ objInstance *moduleObjectInstanceAllocate(){
+__HINT_INLINE__ objInstance *moduleObjectInstanceAllocate(){
 	objInstance *r = memPoolAllocate(&__ObjectInstanceResourceArray);
 	if(r == NULL){
 		// Attempt to extend the allocator.
@@ -135,10 +135,10 @@ __FORCE_INLINE__ objInstance *moduleObjectInstanceAllocate(){
 	}
 	return r;
 }
-__FORCE_INLINE__ objInstance *moduleObjectInstanceIndex(const size_t i){
+__HINT_INLINE__ objInstance *moduleObjectInstanceIndex(const size_t i){
 	return memPoolIndex(&__ObjectInstanceResourceArray, i);
 }
-__FORCE_INLINE__ void moduleObjectInstanceFree(objInstance *const restrict resource){
+__HINT_INLINE__ void moduleObjectInstanceFree(objInstance *const restrict resource){
 	objiDelete(resource);
 	memPoolFree(&__ObjectInstanceResourceArray, (void *)resource);
 }

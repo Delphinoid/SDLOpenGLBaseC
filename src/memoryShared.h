@@ -40,4 +40,30 @@ void memRegionAppend(memoryRegion **first, memoryRegion *const region, byte_t *c
 void memRegionPrepend(memoryRegion **first, memoryRegion *const region, byte_t *const data);
 void memRegionFree(const memoryRegion *region);
 
+#define MEMORY_REGION_LOOP_BEGIN(region, n, type)  \
+	{                                              \
+		const memoryRegion *__region_##n = region; \
+		do {                                       \
+			type n = (type)__region_##n->start;    \
+			for(; n < (type)__region_##n; ++n){    \
+
+#define MEMORY_REGION_LOOP_END(n)                          \
+			}                                              \
+			__region_##n = memAllocatorNext(__region_##n); \
+		} while(__region_##n != NULL);                     \
+	}
+
+#define MEMORY_REGION_OFFSET_LOOP_BEGIN(region, n, type, start) \
+	{                                                           \
+		const memoryRegion *__region_##n = region;              \
+		do {                                                    \
+			type n = (type)(start);                             \
+			for(; n < (type)__region_##n; ++n){                 \
+
+#define MEMORY_REGION_OFFSET_LOOP_END(n)                   \
+			}                                              \
+			__region_##n = memAllocatorNext(__region_##n); \
+		} while(__region_##n != NULL);                     \
+	}
+
 #endif

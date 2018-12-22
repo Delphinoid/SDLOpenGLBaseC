@@ -20,12 +20,12 @@
 
 typedef struct {
 
-	/* Physical colliders. */
+	// Physical colliders.
 	/** Update functions for single collider. **/
 	physCollider *colliders;  // The body's convex colliders.
 	//hbMesh hull;
 
-	/* Physical mass properties. */
+	// Physical mass properties.
 	float mass;                       // The body's mass.
 	float inverseMass;                // The reciprocal of the body's mass.
 	/** The following property is awaiting implementation. **/
@@ -33,13 +33,13 @@ typedef struct {
 	vec3 centroid;                    // The body's center of mass.
 	mat3 inertiaTensor;               // The body's local inertia tensor.
 
-	/* Physical constraints. */
+	// Physical constraints.
 	physConstraint *constraints;  // Default constraints.
 
-	/* Default flags. */
+	// Default flags.
 	flags_t flags;
 
-	/* The bone the body is associated with. */
+	// The bone the body is associated with.
 	physicsBodyIndex_t id;
 
 	/** char *name; **/
@@ -49,54 +49,57 @@ typedef struct {
 /** Finish physRBIStateCopy(). **/
 typedef struct {
 
-	/* The rigid body this instance is derived from, in local space. */
+	// The rigid body this instance is derived from, in local space.
 	const physRigidBody *local;
 
-	/* Physical colliders. */
+	// Physical colliders.
 	cAABB aabb;               // The body's global, transformed bounding box.
 	physCollider *colliders;  // The body's global, transformed convex colliders.
 	                          // Their hulls re-use indices allocated for the local colliders.
 
-	/* Physical mass properties. */
+	// Physical mass properties.
 	vec3 centroid;              // The body's global center of mass.
 	mat3 inertiaTensor;         // The body's global inertia tensor.
 	mat3 inverseInertiaTensor;  // The inverse of the body's global inertia tensor.
 
-	/* Physical space properties. */
+	// Physical space properties.
 	bone *configuration;   // Pointer to the current configuration of the body.
 	vec3 linearVelocity;   // Current linear velocity.
 	vec3 angularVelocity;  // Current angular velocity.
 	vec3 netForce;         // Force accumulator.
 	vec3 netTorque;        // Torque accumulator.
 
-	/* Physical constraints. */
-	physConstraint *constraints;  // An array of constraints for the kinematics
-	                              // chain, ordered by constraintID.
+	// Physical constraints.
+	physConstraint *constraints;  // An SLink of constraints for the kinematics
+	                              // chain, ordered by id in increasing order.
 
-	/* Separation caching. */
-	physSeparationCache *cache;  // An array of separations from previous
-	                             // frames, ordered by collisionID.
+	// Separation caching.
+	physSeparation *cache;  // An SLink of separations from previous
+	                        // frames, ordered by id in increasing order.
 
-	/* Various flags for the rigid body. */
+	// Various flags for the rigid body.
 	flags_t flags;
 
-	/* The body's ID in the physics solver. */
+	// The body's ID in the physics solver.
 	physicsBodyIndex_t id;
 
 } physRBInstance;
 
-/* Physics rigid body functions. */
+// Physics rigid body functions.
 void physRigidBodyInit(physRigidBody *const restrict body);
 void physRigidBodyGenerateMassProperties(physRigidBody *const restrict body, float **const vertexMassArrays);
 return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton *const restrict skl, const char *const restrict prgPath, const char *const restrict filePath);
 void physRigidBodyDelete(physRigidBody *const restrict body);
 
-/* Physics rigid body instance functions. */
+// Physics rigid body instance functions.
 void physRBIInit(physRBInstance *const restrict prbi);
 return_t physRBIInstantiate(physRBInstance *const restrict prbi, physRigidBody *const restrict body, bone *const restrict configuration);
 
 return_t physRBIAddConstraint(physRBInstance *const restrict prbi, physConstraint *const c);
-return_t physRBICacheSeparation(physRBInstance *const restrict prbi, physSeparationCache *const c);
+
+physSeparation *physRBIFindSeparation(physRBInstance *const restrict prbi, const physicsBodyIndex_t id, physSeparation **const previous);
+physSeparation *physRBICacheSeparation(physRBInstance *const restrict prbi, physSeparation *const restrict previous);
+void physRBIRemoveSeparation(physRBInstance *const restrict prbi, physSeparation *const restrict separation, const physSeparation *const restrict previous);
 
 void physRBIUpdateCollisionMesh(physRBInstance *const restrict prbi);
 

@@ -7,4 +7,6 @@
 	#define __FORCE_INLINE__ __attribute__((always_inline)) inline
 #endif
 
+#define __HINT_INLINE__ inline
+
 #endif

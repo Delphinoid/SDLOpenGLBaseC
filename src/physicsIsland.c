@@ -12,7 +12,7 @@ void physIslandInit(physIsland *const restrict island){
 return_t physIslandAddBody(physIsland *const restrict island, physRBInstance *const prbi){
 	if(prbi->local != NULL && prbi->local->colliders){
 		if(island->bodyNum >= island->bodyCapacity){
-			/* Allocate room for more bodies. */
+			// Allocate room for more bodies.
 			physicsBodyIndex_t i;
 			physicsBodyIndex_t tempCapacity;
 			physRBInstance **tempBuffer;
@@ -45,7 +45,7 @@ return_t physIslandAddBody(physIsland *const restrict island, physRBInstance *co
 		size_t i;
 		for(i = 0; i < obji->skl->boneNum; ++i){
 			** Memory allocation failure. **
-			if(physIslandAddBody(island, &obji->skeletonBodies[i]) == -1){
+			if(physIslandAddBody(island, &obji->skeletonBodies[i]) < 0){
 				break;
 			}
 		}
@@ -113,21 +113,21 @@ return_t physIslandSimulate(physIsland *const restrict island, const float dt){
 	//physRigidBody **pairArray = memAllocate(2*sizeof(physRigidBody));
 	//pairArray[0] = NULL; pairArray[1] = NULL;
 
-	/* Resolve deletions, integrate, solve constraints and update collision meshes. */
+	// Resolve deletions, integrate, solve constraints and update collision meshes.
 	//physIslandUpdate(island, dt);
 
-	/* Broad-phase collision pair generation. */
+	// Broad-phase collision pair generation.
 	//physIslandBroadPhase(island, dt, &pairArraySize, &pairArray);
 
-	/* Narrow-phase collision pair generation. */
+	// Narrow-phase collision pair generation.
 	//
 
-	/* Resolve collision pairs. */
+	// Resolve collision pairs.
 
 
 	//memFree(pairArray);
 
-	physicsBodyIndex_t i, j;
+	/*physicsBodyIndex_t i, j;
 	cSeparationCache separationInfo;
 	cContactManifold collisionData;
 	for(i = 0; i < island->bodyNum; ++i){
@@ -143,7 +143,7 @@ return_t physIslandSimulate(physIsland *const restrict island, const float dt){
 				//}
 			}
 		}
-	}
+	}*/
 
 	return 1;
 

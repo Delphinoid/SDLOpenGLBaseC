@@ -50,13 +50,13 @@ void moduleTextureWrapperResourcesDelete(){
 	}
 }
 
-__FORCE_INLINE__ textureWrapper *moduleTextureWrapperGetDefault(){
+__HINT_INLINE__ textureWrapper *moduleTextureWrapperGetDefault(){
 	return memPoolFirst(__TextureWrapperResourceArray.region);
 }
-__FORCE_INLINE__ textureWrapper *moduleTextureWrapperAllocateStatic(){
+__HINT_INLINE__ textureWrapper *moduleTextureWrapperAllocateStatic(){
 	return memPoolAllocate(&__TextureWrapperResourceArray);
 }
-__FORCE_INLINE__ textureWrapper *moduleTextureWrapperAllocate(){
+__HINT_INLINE__ textureWrapper *moduleTextureWrapperAllocate(){
 	textureWrapper *r = memPoolAllocate(&__TextureWrapperResourceArray);
 	if(r == NULL){
 		// Attempt to extend the allocator.
@@ -73,7 +73,7 @@ __FORCE_INLINE__ textureWrapper *moduleTextureWrapperAllocate(){
 	}
 	return r;
 }
-__FORCE_INLINE__ void moduleTextureWrapperFree(textureWrapper *const restrict resource){
+__HINT_INLINE__ void moduleTextureWrapperFree(textureWrapper *const restrict resource){
 	twDelete(resource);
 	memPoolFree(&__TextureWrapperResourceArray, (void *)resource);
 }

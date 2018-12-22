@@ -30,13 +30,13 @@ void camCalculateUp(camera *const restrict cam){  /** Probably not entirely nece
 	** Finds the relative up direction based off where the camera is looking
 	*/
 
-	/* Normalize the target vector. *
+	/*// Normalize the target vector.
 	float magnitude = sqrt(cam->targetPosition.x * cam->targetPosition.x +
 	                       cam->targetPosition.y * cam->targetPosition.y +
 	                       cam->targetPosition.z * cam->targetPosition.z);
 
-	* If thetarget is (0, 0, 0), the magnitude will be 0 and */
-	/* we'll get a divide by zero error *
+	// If thetarget is (0, 0, 0), the magnitude will be 0 and
+	// we'll get a divide by zero error.
 	if(magnitude != 0){
 
 		vec3 targetUnit = cam->targetPosition;
@@ -44,15 +44,15 @@ void camCalculateUp(camera *const restrict cam){  /** Probably not entirely nece
 		targetUnit.y /= magnitude;
 		targetUnit.z /= magnitude;
 
-		* Calculate the cross product of the normalized target vector and the */
-		/* vector (0, 1, 0). The result is a vector pointing to the right *
+		// Calculate the cross product of the normalized target vector and the
+		// vector (0, 1, 0). The result is a vector pointing to the right.
 		vec3 rightVector;
 		rightVector.x = targetUnit.z;
 		rightVector.y = 0.f;
 		rightVector.z = targetUnit.x;
 
-		* Calculate the cross product of the normalized target vector and the */
-		/* right vector. This is the vector we need *
+		// Calculate the cross product of the normalized target vector and the
+		// right vector. This is the vector we need.
 		cam->up.x = targetUnit.y * rightVector.z;
 		cam->up.y = targetUnit.z * rightVector.x - targetUnit.x * rightVector.z;
 		cam->up.z = -targetUnit.y * rightVector.x;
@@ -86,22 +86,22 @@ void camUpdateViewMatrix(camera *const restrict cam, const float interpT){
 		/**cam->previousRotation = cam->rotation;
 	}**/
 
-	/* Only generate a new view matrix if the camera viewport has changed in any way. */
+	// Only generate a new view matrix if the camera viewport has changed in any way.
 	if(iVec3Update(&cam->position,       interpT) |
 	   iQuatUpdate(&cam->orientation,    interpT) |
 	   iVec3Update(&cam->targetPosition, interpT) |
 	   iVec3Update(&cam->up,             interpT) ||
 	   flagsAreSet(cam->flags, CAM_UPDATE_VIEW)){
 
-		/* Calculate the up vector */
+		// Calculate the up vector.
 		/**camCalculateUp(cam);**/
 
-		/* Set the camera to look at something */
+		// Set the camera to look at something.
 		mat4LookAt(&cam->viewMatrix, &cam->position.render,
 		                             &cam->targetPosition.render,
 		                             &cam->up.render);
 
-		/* Rotate the camera */
+		// Rotate the camera.
 		mat4Rotate(&cam->viewMatrix, &cam->orientation.render);
 
 		flagsUnset(cam->flags, CAM_UPDATE_VIEW);

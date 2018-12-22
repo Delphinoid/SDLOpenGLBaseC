@@ -67,6 +67,8 @@ void vec4NormalizeFastAccurate(vec4 *const restrict v);
 
 float vec4Dot(const vec4 *const restrict v1, const vec4 *const restrict v2);
 
-void vec4Lerp(const vec4 *const restrict v1, const vec4 *const restrict v2, const float t, vec4 *const restrict r);
+void vec4Lerp1(vec4 *const restrict v1, const vec4 *const restrict v2, const float t);
+void vec4Lerp2(const vec4 *const restrict v1, vec4 *const restrict v2, const float t);
+void vec4LerpR(const vec4 *const restrict v1, const vec4 *const restrict v2, const float t, vec4 *const restrict r);
 
 #endif

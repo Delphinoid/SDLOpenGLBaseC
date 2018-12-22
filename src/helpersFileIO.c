@@ -54,10 +54,10 @@ return_t fileParseNextLine(FILE *const restrict file, char *const restrict buffe
 
 }
 
-__FORCE_INLINE__ void fileGenerateFullPath(char *const restrict fullPath,
-                                           const char *const restrict prgPath, const size_t prgLength,
-                                           const char *const restrict resPath, const size_t resLength,
-                                           const char *const restrict filePath, const size_t fileLength){
+__HINT_INLINE__ void fileGenerateFullPath(char *const restrict fullPath,
+                                          const char *const restrict prgPath, const size_t prgLength,
+                                          const char *const restrict resPath, const size_t resLength,
+                                          const char *const restrict filePath, const size_t fileLength){
 
 	char *path = fullPath;
 
@@ -74,7 +74,7 @@ __FORCE_INLINE__ void fileGenerateFullPath(char *const restrict fullPath,
 
 }
 
-__FORCE_INLINE__ char *fileGenerateResourceName(const char *const restrict resource, const size_t length){
+__HINT_INLINE__ char *fileGenerateResourceName(const char *const restrict resource, const size_t length){
 
 	char *name;
 

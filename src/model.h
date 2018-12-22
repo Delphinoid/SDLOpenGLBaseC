@@ -19,16 +19,16 @@ typedef struct {
 
 typedef struct {
 
-	/* Skeleton associated with the model. */
+	// Skeleton associated with the model.
 	const skeleton *skl;
 
-	/* Model LODs. */
+	// Model LODs.
 	// The distance of the first LOD will be 0,
 	// If there is only one LOD, the array will be NULL.
 	lodNum_t lodNum;
 	mdlLOD *lods;
 
-	/* Model data for rendering. */
+	// Model data for rendering.
 	vertexIndex_t vertexNum;
 	vertexIndexNum_t indexNum;
 	GLuint vaoID;  // Vertex array object ID
