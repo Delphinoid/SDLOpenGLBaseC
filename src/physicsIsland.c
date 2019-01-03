@@ -84,7 +84,7 @@ void physIslandUpdate(physIsland *const restrict island, const float dt){
 
 			// Integrate the body and solve constraints if desired.
 			if(flagsAreSet(island->bodies[index]->flags, PHYSICS_BODY_SIMULATE)){
-				physRBIIntegrateEuler(island->bodies[index], dt);
+				//physRBIIntegrateEuler(island->bodies[index], dt);
 			}
 
 			// If the body can collide, update its collision mesh.

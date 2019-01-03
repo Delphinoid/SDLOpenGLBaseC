@@ -2,6 +2,7 @@
 #define PHYSICSRIGIDBODY_H
 
 #include "physicsBodyShared.h"
+#include "physicsCollider.h"
 #include "physicsCollision.h"
 #include "physicsConstraint.h"
 #include "skeleton.h"
@@ -9,11 +10,13 @@
 #include <stdlib.h>
 
 /** Remove PHYSICS_BODY_INITIALIZE? **/
-#define PHYSICS_BODY_INACTIVE   0x00
-#define PHYSICS_BODY_INITIALIZE 0x01  // Whether or not the simulation has just begun on this frame.
-#define PHYSICS_BODY_SIMULATE   0x02  // Whether or not the body is active. Still listens for collisions.
-#define PHYSICS_BODY_COLLIDE    0x04  // Whether or not the body will listen for collisions.
-#define PHYSICS_BODY_DELETE     0x08  // Set by an object's deletion function so the body can be freed by the physics handler.
+#define PHYSICS_BODY_ASLEEP           0x00
+#define PHYSICS_BODY_INITIALIZE       0x01  // Whether or not the simulation has just begun on this frame.
+#define PHYSICS_BODY_SIMULATE_LINEAR  0x02  // Simulate linear velocity.
+#define PHYSICS_BODY_SIMULATE_ANGULAR 0x04  // Simulate angular velocity. Disabling this is useful for certain entities, such as players.
+#define PHYSICS_BODY_SIMULATE         0x06  // Whether or not the body is active. Still listens for collisions.
+#define PHYSICS_BODY_COLLIDE          0x08  // Whether or not the body will listen for collisions.
+#define PHYSICS_BODY_DELETE           0x10  // Set by an object's deletion function so the body can be freed by the physics handler.
 
 /**#define PHYSICS_BODY_MAX_CONSTRAINTS 256
 #define PHYSICS_BODY_MAX_CACHE_SIZE  256**/
@@ -21,32 +24,28 @@
 typedef struct {
 
 	// Physical colliders.
-	/** Update functions for single collider. **/
 	physCollider *colliders;  // The body's convex colliders.
-	//hbMesh hull;
 
 	// Physical mass properties.
-	float mass;                       // The body's mass.
-	float inverseMass;                // The reciprocal of the body's mass.
-	/** The following property is awaiting implementation. **/
-	float coefficientOfRestitution;   // The ratio of energy kept after a collision.
-	vec3 centroid;                    // The body's center of mass.
-	mat3 inertiaTensor;               // The body's local inertia tensor.
+	float mass;                      // The body's mass.
+	float inverseMass;               // The reciprocal of the body's mass.
+	float coefficientOfRestitution;  // The ratio of energy kept after a collision.
+	vec3 centroid;                   // The body's center of mass.
+	mat3 inertiaTensor;              // The body's local inertia tensor.
 
 	// Physical constraints.
 	physConstraint *constraints;  // Default constraints.
 
-	// Default flags.
-	flags_t flags;
-
 	// The bone the body is associated with.
 	physicsBodyIndex_t id;
+
+	// Default flags.
+	flags_t flags;
 
 	/** char *name; **/
 
 } physRigidBody;
 
-/** Finish physRBIStateCopy(). **/
 typedef struct {
 
 	// The rigid body this instance is derived from, in local space.
@@ -76,6 +75,8 @@ typedef struct {
 	// Separation caching.
 	physSeparation *cache;  // An SLink of separations from previous
 	                        // frames, ordered by id in increasing order.
+	                        // Freed if the rigid body doesn't pass the
+	                        // collision broadphase.
 
 	// Various flags for the rigid body.
 	flags_t flags;
@@ -110,12 +111,8 @@ void physRBIApplyForceGlobal(physRBInstance *const restrict prbi, const vec3 *co
 void physRBIApplyAngularImpulse(physRBInstance *const restrict prbi, const vec3 *const restrict T);
 void physRBIApplyImpulseAtGlobalPoint(physRBInstance *const restrict prbi, const vec3 *const restrict F, const vec3 *const restrict r);*/
 
-void physRBIBeginSimulation(physRBInstance *const restrict prbi);
-
-void physRBIIntegrateEuler(physRBInstance *const restrict prbi, const float dt);
-void physRBIIntegrateLeapfrog(physRBInstance *const restrict prbi, const float dt);
-void physRBIIntegrateLeapfrogVelocity(physRBInstance *const restrict prbi, const float dt);
-void physRBIIntegrateLeapfrogConstraints(physRBInstance *const restrict prbi, const float dt);
+void physRBIIntegrateVelocity(physRBInstance *const restrict prbi, const float dt);
+void physRBIIntegrateConfiguration(physRBInstance *const restrict prbi, const float dt);
 
 void physRBIResolveCollisionGS(physRBInstance *const restrict body1, physRBInstance *const restrict body2, const cContactManifold *const restrict cm);
 

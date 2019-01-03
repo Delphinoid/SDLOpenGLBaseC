@@ -1,4 +1,5 @@
 #include "physicsSolver.h"
+#include "modulePhysics.h"
 #include "memoryManager.h"
 
 /**
@@ -102,14 +103,17 @@ return_t physSolverUpdate(physicsSolver *const restrict solver){
 	MEMORY_REGION_LOOP_BEGIN(solver->bodies, i, physRBInstance **);
 		if(*i != NULL){
 
-			MEMORY_REGION_OFFSET_LOOP_BEGIN(__region_i, j, const physRBInstance **, i+1);
+			MEMORY_REGION_OFFSET_LOOP_BEGIN(__region_i, j, physRBInstance **, i+1);
 			if(*j != NULL){
 
 					/**
-					*** Move the below into one function and
-					*** handle bodies with multiple colliders.
+					*** Move the below into one function.
+					*** Handle bodies with multiple colliders.
+					*** Make sure j is not constrained to i
+					*** with a PHYSICS_CONSTRAINT_NO_COLLISION
+					*** constraint.
 					**/
-					cContactManifold collisionData;
+					physContact contactContainer;
 					physSeparation separationContainer;
 
 					// The previous separation in the SLink,
@@ -137,33 +141,30 @@ return_t physSolverUpdate(physicsSolver *const restrict solver){
 					}else{
 						// The first body has no separation data
 						// for the current collision in its cache.
-						// Set up pointers to a
-						///cSeparationContainerInit(&separationContainer.separation);
+						// Set up a new separation cache.
 						last = &separationContainer;
 						separationContainer.id = (*j)->id;
 					}
 
-					cContactManifoldInit(&collisionData);
 					if(
 						cCollision(
 							&(*i)->colliders[0].c, &(*i)->centroid,
 							&(*j)->colliders[0].c, &(*j)->centroid,
-							&last->separation, &collisionData
+							&last->separation, &contactContainer.manifold
 						)
 					){
 
+						// If a separation had been added on the
+						// last frame, remove it from the cache.
 						if(last != &separationContainer){
-							// If a separation had been added on the
-							// last frame, remove it from the cache.
 							physRBIRemoveSeparation(*i, last, previous);
 						}
-						//
-						//physRBIResolveCollision(island->bodies[i], island->bodies[j], &collisionData);
-						//if(j==island->bodyNum-1){
-							//island->bodies[i]->blah=1;
-							//island->bodies[j]->blah=1;
-							//exit(0);
-						//}
+
+						// Set up the contact container and
+						// add it to the contacts array.
+						contactContainer.bodyA = *i;
+						contactContainer.bodyB = *j;
+						*modulePhysicsContactAllocate() = contactContainer;
 
 					}else{
 
@@ -178,8 +179,6 @@ return_t physSolverUpdate(physicsSolver *const restrict solver){
 							/** Memory allocation failure. **/
 							return -1;
 						}
-
-						//
 
 					}
 

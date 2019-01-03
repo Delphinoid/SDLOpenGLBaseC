@@ -18,6 +18,8 @@
 typedef unsigned char byte_t;
 typedef signed char   signed_byte_t;
 
+typedef byte_t padding_t;
+
 void *memHeapLowLevelAllocate(const size_t bytes);
 void *memHeapLowLevelReallocate(void *const restrict block, const size_t bytes);
 int memHeapLowLevelFree(void *const restrict block);

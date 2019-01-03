@@ -101,8 +101,10 @@ void quatSlerp1(quat *const restrict q1, const quat *const restrict q2, const fl
 void quatSlerp2(const quat *const restrict q1, quat *const restrict q2, const float t);
 void quatSlerpR(const quat *const restrict q1, const quat *const restrict q2, const float t, quat *const restrict r);
 
-void quatIntegrate(quat *const restrict q, const vec3 *const restrict w, const float dt);
-void quatIntegrateR(const quat *const restrict q, const vec3 *const restrict w, const float dt, quat *const restrict r);
+void quatDifferentiate(quat *const restrict q, const vec3 *const restrict w);
+void quatDifferentiateR(const quat *const restrict q, const vec3 *const restrict w, quat *const restrict r);
+void quatIntegrate(quat *const restrict q, const vec3 *const restrict w, float dt);
+void quatIntegrateR(const quat *const restrict q, const vec3 *const restrict w, float dt, quat *const restrict r);
 
 void quatRotateR(const quat *const restrict q1, const quat *const restrict q2, const float t, quat *const restrict r);
 

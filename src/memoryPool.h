@@ -87,6 +87,7 @@ void *memPoolAllocate(memoryPool *const restrict pool);
 void memPoolFree(memoryPool *const restrict pool, void *const block);
 void *memPoolSetupMemory(void *start, const size_t bytes, const size_t length);
 void *memPoolIndex(memoryPool *const restrict pool, const size_t i);
+void *memPoolIndexRegion(memoryPool *const restrict pool, const size_t i, memoryRegion **const container);
 void memPoolClear(memoryPool *const restrict pool);
 void *memPoolExtend(memoryPool *const restrict pool, void *const start, const size_t bytes, const size_t length);
 void memPoolDelete(memoryPool *const restrict pool);

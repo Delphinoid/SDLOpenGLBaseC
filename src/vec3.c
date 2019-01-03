@@ -385,7 +385,21 @@ __HINT_INLINE__ vec3 vec3GetCross(const vec3 *const restrict v1, const vec3 *con
 	          .z = v1->x * v2->y - v1->y * v2->x};
     return r;
 }
-__HINT_INLINE__ void vec3Cross(const vec3 *const restrict v1, const vec3 *const restrict v2, vec3 *const restrict r){
+__HINT_INLINE__ void vec3Cross1(vec3 *const restrict v1, const vec3 *const restrict v2){
+	vec3 r;
+	r.x = v1->y * v2->z - v1->z * v2->y;
+	r.y = v1->z * v2->x - v1->x * v2->z;
+	r.z = v1->x * v2->y - v1->y * v2->x;
+	*v1 = r;
+}
+__HINT_INLINE__ void vec3Cross2(const vec3 *const restrict v1, vec3 *const restrict v2){
+	vec3 r;
+	r.x = v1->y * v2->z - v1->z * v2->y;
+	r.y = v1->z * v2->x - v1->x * v2->z;
+	r.z = v1->x * v2->y - v1->y * v2->x;
+	*v2 = r;
+}
+__HINT_INLINE__ void vec3CrossR(const vec3 *const restrict v1, const vec3 *const restrict v2, vec3 *const restrict r){
 	r->x = v1->y * v2->z - v1->z * v2->y;
 	r->y = v1->z * v2->x - v1->x * v2->z;
 	r->z = v1->x * v2->y - v1->y * v2->x;

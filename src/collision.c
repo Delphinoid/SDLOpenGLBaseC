@@ -53,7 +53,7 @@ static return_t (* const cCollisionJumpTable[COLLIDER_TYPE_NUM][COLLIDER_TYPE_NU
 	{cCollisionPointMesh,   cCollisionPointCapsule,  cCollisionPointSphere,   cCollisionPointAABB,   cCollisionPoint}
 };
 __FORCE_INLINE__ return_t cCollision(const collider *const restrict c1, const vec3 *const restrict c1c, const collider *const restrict c2, const vec3 *const restrict c2c, cSeparationContainer *const restrict sc, cContactManifold *const restrict cm){
-	return cCollisionJumpTable[c1->type][c2->type](c1->hull, c1c, c2->hull, c2c, sc, cm);
+	return cCollisionJumpTable[c1->type][c2->type](c1->data, c1c, c2->data, c2c, sc, cm);
 }
 
 
@@ -106,26 +106,17 @@ static return_t (* const cSeparationJumpTable[COLLIDER_TYPE_NUM][COLLIDER_TYPE_N
 	{cSeparationPointMesh,   cSeparationPointCapsule,  cSeparationPointSphere,   cSeparationPointAABB,   cSeparationPoint}
 };
 __FORCE_INLINE__ return_t cSeparation(const collider *const restrict c1, const vec3 *const restrict c1c, const collider *const restrict c2, const vec3 *const restrict c2c, const cSeparationContainer *const restrict sc){
-	return cSeparationJumpTable[c1->type][c2->type](c1->hull, c1c, c2->hull, c2c, sc);
-}
-
-
-void cSeparationContainerInit(cSeparationContainer *const restrict sc){
-	memset(sc, 0, sizeof(cSeparationContainer));
-}
-
-void cContactManifoldInit(cContactManifold *const restrict cm){
-	cm->contactNum = 0;
+	return cSeparationJumpTable[c1->type][c2->type](c1->data, c1c, c2->data, c2c, sc);
 }
 
 void cGenerateContactTangents(const vec3 *const restrict normal, vec3 *const restrict tangentA, vec3 *const restrict tangentB){
 	// Generate the contact tangents, perpendicular to each other and the contact normal.
 	// Used for frictional calculations.
-	if(fabsf(normal->x) >= 0.57735f){
+	if(fabsf(normal->x) >= 0x3F13CD3A){  // Floating-point approximation of sqrtf(1.f / 3.f).
 		vec3Set(tangentA, normal->y, -normal->x, 0.f);
 	}else{
 		vec3Set(tangentA, 0.f, normal->z, -normal->y);
 	}
 	vec3NormalizeFast(tangentA);
-	vec3Cross(normal, tangentA, tangentB);
+	vec3CrossR(normal, tangentA, tangentB);
 }

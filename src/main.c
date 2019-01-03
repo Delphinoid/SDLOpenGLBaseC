@@ -55,7 +55,7 @@ int main(int argc, char *argv[]){
 	moduleSkeletonResourcesInitConstants();
 	moduleModelResourcesInitConstants();
 
-	/* Textures */
+	// Textures.
 	texture *tempTex = moduleTextureAllocate();
 	tDefault(tempTex);
 	tempTex = moduleTextureAllocate();
@@ -63,11 +63,11 @@ int main(int argc, char *argv[]){
 	tempTex = moduleTextureAllocate();
 	tLoad(tempTex, prgPath, "Misc\\Avatar.tdt");
 
-	/* Skeletons */
+	// Skeletons.
 	skeleton *tempSkl = moduleSkeletonAllocate();
 	sklDefault(tempSkl);
 
-	/* Texture Wrappers */
+	// Texture Wrappers.
 	textureWrapper *tempTexWrap = moduleTextureWrapperAllocate();
 	twDefault(tempTexWrap);
 	tempTexWrap = moduleTextureWrapperAllocate();
@@ -75,17 +75,17 @@ int main(int argc, char *argv[]){
 	tempTexWrap = moduleTextureWrapperAllocate();
 	twLoad(tempTexWrap, prgPath, "Static\\KoboldStatic.tdw");
 
-	/* Models */
+	// Models.
 	model *tempMdl = moduleModelAllocate();
 	mdlDefault(tempMdl);
 	tempMdl = moduleModelAllocate();
 	mdlCreateSprite(tempMdl);
 
-	/* Objects */
+	// Objects.
 	object *tempObj = moduleObjectAllocate();
 	objLoad(tempObj, prgPath, "CubeTest.tdo");
 
-	/* Object Instances */
+	// Object Instances.
 	objInstance *tempObji = moduleObjectInstanceAllocate();
 	objiInstantiate(tempObji, moduleObjectFind("CubeTest.tdo"));
 	sklaiChange(skliAnimationNew(&tempObji->skeletonData), tempObji->skeletonData.skl, tempObji->base->animations[0], 0, 0.f);
@@ -110,7 +110,7 @@ int main(int argc, char *argv[]){
 	quatMultQByQ2(&changeRotation, &tempObji->configuration[0].orientation);
 	tempObji->renderables[0].alpha = 0.5f;
 
-	/* Sprite Object Instances */
+	// Sprite Object Instances.
 	tempObji = moduleObjectInstanceAllocate();
 	objiInit(tempObji);
 	objiNewRenderable(tempObji, tempMdl, moduleTextureWrapperFind("Static\\AvatarStatic.tdw"));
@@ -152,7 +152,7 @@ int main(int argc, char *argv[]){
 	tempObji->configuration[0].scale.x = 0.0085f;
 	tempObji->configuration[0].scale.y = 0.0065f;
 
-	/* Scenes */
+	// Scenes.
 	scene *scnMain = moduleSceneAllocate();
 	scnInit(scnMain, 4, 4);
 	*scnAllocate(scnMain) = moduleObjectInstanceIndex(0);
@@ -165,7 +165,7 @@ int main(int argc, char *argv[]){
 	*scnAllocate(scnHUD) = moduleObjectInstanceIndex(1);
 	*scnAllocate(scnHUD) = moduleObjectInstanceIndex(3);
 
-	/* Cameras */
+	// Cameras.
 	camera *camMain = moduleCameraAllocate();
 	camInit(camMain);
 	vec3Set(&camMain->position.value, 0.f, 2.f, 7.f);
@@ -218,17 +218,17 @@ int main(int argc, char *argv[]){
 		gfxMngrUpdateWindow(&gfxMngr);
 
 
-		/* Take input */
+		// Take input.
 		/** Use command queuing system and poll input on another thread. **/
-		// Detect input
+		// Detect input.
 		SDL_PollEvent(&prgEventHandler);
 
-		// Exit
+		// Exit.
 		if(prgEventHandler.type == SDL_QUIT){
 			prgRunning = 0;
 		}
 
-		// Key presses
+		// Key presses.
 		if(prgEventHandler.type == SDL_KEYDOWN){
 			if(prgEventHandler.key.keysym.sym == SDLK_ESCAPE){
 				prgRunning = 0;
@@ -251,7 +251,7 @@ int main(int argc, char *argv[]){
 			}
 		}
 
-		// Key releases
+		// Key releases.
 		if(prgEventHandler.type == SDL_KEYUP){
 			if(prgEventHandler.key.keysym.sym == SDLK_UP){
 				UP = 0;
@@ -267,19 +267,19 @@ int main(int argc, char *argv[]){
 			}
 		}
 
-		// Get mouse position relative to its position in the last call
+		// Get mouse position relative to its position in the last call.
 		SDL_GetRelativeMouseState(&mouseRelX, &mouseRelY);
 
 
 		startUpdate = (float)SDL_GetTicks();
 		while(startUpdate >= nextUpdate){
 
-			/* Prepare the next game state. */
+			// Prepare the next game state.
 			/**smPrepareNextState(&gameStateManager);**/
 			camResetInterpolation((void *)camMain);
 			camResetInterpolation((void *)camHUD);
 
-			/* Handle inputs */
+			// Handle inputs.
 			if(UP){
 				timeMod = 1.f;
 				tickrateTimeMod = tickrate*timeMod;
@@ -319,34 +319,37 @@ int main(int argc, char *argv[]){
 				//objGetState(&gameStateManager, 4, 0)->tempRndrConfig.targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
 			}
 
-			/* Update. */
+			// Update.
 			moduleSceneUpdate(tickrateTimeMod, tickratioTimeMod);
 
-			/* Next frame */
+			// Solve constraints.
+			modulePhysicsSolve(tickratioTimeMod);
+
+			// Next frame.
 			nextUpdate += tickrateUpdateMod;
 			++updates;
 
 		}
 
 
-		/* Render the scene */
+		// Render the scene.
 		startRender = (float)SDL_GetTicks();
 		if(startRender >= nextRender){
 
-			/* Progress between current and next frame. */
+			// Progress between current and next frame.
 			const float interpT = (startRender - (nextUpdate - tickrateUpdateMod)) / tickrateUpdateMod;
 
-			/* Render */
+			// Render.
 			/** Remove later **/
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			// Render the scene
+			// Render the scene.
 			gfxRendererDrawScene(&gfxMngr, camMain, scnMain, interpT);
-			// Render the HUD
+			// Render the HUD.
 			gfxRendererDrawScene(&gfxMngr, camHUD, scnHUD, interpT);
-			// Update the window
+			// Update the window.
 			SDL_GL_SwapWindow(gfxMngr.window);
 
-			/* Next frame */
+			// Next frame.
 			//nextRender = startRender + framerate;
 			nextRender += framerate;
 			++renders;

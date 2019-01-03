@@ -2,22 +2,30 @@
 #define PHYSICSCONSTRAINT_H
 
 #include "physicsBodyShared.h"
+#include "memoryShared.h"
 #include "vec3.h"
 #include "flags.h"
 
-#define PHYSICS_CONSTRAINT_TYPE_1  0x01
-#define PHYSICS_CONSTRAINT_TYPE_2  0x02
-#define PHYSICS_CONSTRAINT_COLLIDE 0x04
+#define PHYSICS_CONSTRAINT_TYPE_MASK    0x0F
+#define PHYSICS_CONSTRAINT_TYPE_UNKNOWN 0x0F
+#define PHYSICS_CONSTRAINT_TYPE_CONTACT 0x01
 
-typedef uint_least8_t physConstraintIndex_t;
+#define PHYSICS_CONSTRAINT_FLAGS_MASK   0xF0
+#define PHYSICS_CONSTRAINT_NO_COLLISION 0x10
+
+// The size of the largest constraint type.
+// In this case, it is the ???? at ? bytes.
+#define PHYSICS_CONSTRAINT_MAX_SIZE 1
+
+typedef int_least8_t physConstraintType_t;
+
+// Forward declaration of physRBInstance.
+//typedef struct physRBInstance physRBInstance;
 
 typedef struct {
-	physicsBodyIndex_t id;       // An identifier for the other body being constrained.
-	physicsBodyIndex_t ownerID;  // An identifier for the body that owns the constraint.
-	vec3 constraintOffsetMin;
-	vec3 constraintOffsetMax;
-	vec3 constraintRotationMin;
-	vec3 constraintRotationMax;
+	//physRBInstance *bodyA;
+	//physRBInstance *bodyB;
+	byte_t data[PHYSICS_CONSTRAINT_MAX_SIZE];
 	flags_t flags;
 } physConstraint;
 

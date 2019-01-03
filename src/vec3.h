@@ -66,7 +66,9 @@ void vec3NormalizeFastAccurate(vec3 *const restrict v);
 
 float vec3Dot(const vec3 *const restrict v1, const vec3 *const restrict v2);
 vec3 vec3GetCross(const vec3 *const restrict v1, const vec3 *const restrict v2);
-void vec3Cross(const vec3 *const restrict v1, const vec3 *const restrict v2, vec3 *const restrict r);
+void vec3Cross1(vec3 *const restrict v1, const vec3 *const restrict v2);
+void vec3Cross2(const vec3 *const restrict v1, vec3 *const restrict v2);
+void vec3CrossR(const vec3 *const restrict v1, const vec3 *const restrict v2, vec3 *const restrict r);
 
 void vec3Lerp1(vec3 *const restrict v1, const vec3 *const restrict v2, const float t);
 void vec3Lerp2(const vec3 *const restrict v1, vec3 *const restrict v2, const float t);

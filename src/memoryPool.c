@@ -101,11 +101,45 @@ void *memPoolIndex(memoryPool *const restrict pool, const size_t i){
 
 	while(offset >= regionSize){
 		region      = memAllocatorNext(region);
+		#ifndef MEMORY_POOL_INDEX_UNSAFE
+			if(region == NULL){
+				return NULL;
+			}
+		#endif
 		regionStart = memPoolFirst(region);
 		regionSize  = memAllocatorEnd(region) - regionStart;
 		offset -= regionSize;
 	}
 
+	return (void *)(regionStart + offset);
+
+}
+
+void *memPoolIndexRegion(memoryPool *const restrict pool, const size_t i, memoryRegion **const container){
+
+	/*
+	** Finds the element at index i.
+	*/
+
+	size_t offset = pool->block * i;
+
+	memoryRegion *region = pool->region;
+	byte_t *regionStart  = memPoolFirst(region);
+	size_t  regionSize   = memAllocatorEnd(region) - regionStart;
+
+	while(offset >= regionSize){
+		region      = memAllocatorNext(region);
+		#ifndef MEMORY_POOL_INDEX_UNSAFE
+			if(region == NULL){
+				return NULL;
+			}
+		#endif
+		regionStart = memPoolFirst(region);
+		regionSize  = memAllocatorEnd(region) - regionStart;
+		offset -= regionSize;
+	}
+
+	*container = region;
 	return (void *)(regionStart + offset);
 
 }

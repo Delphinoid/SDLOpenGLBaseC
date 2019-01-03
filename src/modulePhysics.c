@@ -4,9 +4,13 @@
 #include "colliderConvexMesh.h"
 #include "inline.h"
 
+void *__PhysicsContactResourceFreeBlock;
+memoryRegion *__PhysicsContactResourceFreeRegion;
+
 memorySLink __PhysicsRigidBodyResourceArray;          // Contains physRigidBodies.
 memorySLink __PhysicsRigidBodyInstanceResourceArray;  // Contains physRBInstances.
 memorySLink __PhysicsColliderResourceArray;           // Contains physColliders.
+memoryArray __PhysicsContactResourceArray;            // Contains physContacts.
 memorySLink __PhysicsSeparationResourceArray;         // Contains physSeparations.
 memorySLink __PhysicsConstraintResourceArray;         // Contains physConstraints.
 
@@ -42,13 +46,24 @@ return_t modulePhysicsResourcesInit(){
 		return -1;
 	}
 	memory = memAllocate(
-		memSLinkAllocationSize(
+		memArrayAllocationSize(
 			NULL,
-			RESOURCE_DEFAULT_COLLISION_SIZE,
-			RESOURCE_DEFAULT_COLLISION_NUM
+			RESOURCE_DEFAULT_CONTACT_SIZE,
+			RESOURCE_DEFAULT_CONTACT_NUM
 		)
 	);
-	if(memSLinkCreate(&__PhysicsSeparationResourceArray, memory, RESOURCE_DEFAULT_COLLISION_SIZE, RESOURCE_DEFAULT_COLLISION_NUM) == NULL){
+	if(memArrayCreate(&__PhysicsContactResourceArray, memory, RESOURCE_DEFAULT_CONTACT_SIZE, RESOURCE_DEFAULT_CONTACT_NUM) == NULL){
+		return -1;
+	}
+	modulePhysicsContactClear();
+	memory = memAllocate(
+		memSLinkAllocationSize(
+			NULL,
+			RESOURCE_DEFAULT_SEPARATION_SIZE,
+			RESOURCE_DEFAULT_SEPARATION_NUM
+		)
+	);
+	if(memSLinkCreate(&__PhysicsSeparationResourceArray, memory, RESOURCE_DEFAULT_SEPARATION_SIZE, RESOURCE_DEFAULT_SEPARATION_NUM) == NULL){
 		return -1;
 	}
 	memory = memAllocate(
@@ -97,6 +112,14 @@ void modulePhysicsResourcesReset(){
 		region = next;
 	}
 	__PhysicsSeparationResourceArray.region->next = NULL;
+	modulePhysicsContactClear();
+	region = __PhysicsContactResourceArray.region->next;
+	while(region != NULL){
+		memoryRegion *next = (memoryRegion *)region->next;
+		memFree(region->start);
+		region = next;
+	}
+	__PhysicsContactResourceArray.region->next = NULL;
 	modulePhysicsConstraintClear();
 	region = __PhysicsConstraintResourceArray.region->next;
 	while(region != NULL){
@@ -124,6 +147,13 @@ void modulePhysicsResourcesDelete(){
 	}
 	modulePhysicsColliderClear();
 	region = __PhysicsColliderResourceArray.region;
+	while(region != NULL){
+		memoryRegion *next = (memoryRegion *)region->next;
+		memFree(region->start);
+		region = next;
+	}
+	modulePhysicsContactClear();
+	region = __PhysicsContactResourceArray.region;
 	while(region != NULL){
 		memoryRegion *next = (memoryRegion *)region->next;
 		memFree(region->start);
@@ -334,7 +364,7 @@ void modulePhysicsColliderRBIFreeArray(physCollider **const restrict array){
 	physCollider *resource = *array;
 	cMesh *cHull;
 	while(resource != NULL){
-		cHull = (cMesh *)&resource->c.hull;
+		cHull = (cMesh *)&resource->c.data;
 		memFree(cHull->vertices);
 		memFree(cHull->normals);
 		memSLinkFree(&__PhysicsColliderResourceArray, (void **)array, (void *)resource, NULL);
@@ -351,6 +381,32 @@ void modulePhysicsColliderClear(){
 
 }
 
+__HINT_INLINE__ physContact *modulePhysicsContactAllocateStatic(){
+	return memArrayPushFast(&__PhysicsContactResourceArray, &__PhysicsContactResourceFreeBlock, &__PhysicsContactResourceFreeRegion);
+}
+__HINT_INLINE__ physContact *modulePhysicsContactAllocate(){
+	physContact *r = memArrayPushFast(&__PhysicsContactResourceArray, &__PhysicsContactResourceFreeBlock, &__PhysicsContactResourceFreeRegion);
+	if(r == NULL){
+		// Attempt to extend the allocator.
+		void *const memory = memAllocate(
+			memArrayAllocationSize(
+				NULL,
+				RESOURCE_DEFAULT_CONTACT_SIZE,
+				RESOURCE_DEFAULT_CONTACT_NUM
+			)
+		);
+		if(memArrayExtend(&__PhysicsContactResourceArray, memory, RESOURCE_DEFAULT_CONTACT_SIZE, RESOURCE_DEFAULT_CONTACT_NUM)){
+			r = memArrayPushFast(&__PhysicsContactResourceArray, &__PhysicsContactResourceFreeBlock, &__PhysicsContactResourceFreeRegion);
+		}
+	}
+	return r;
+}
+void modulePhysicsContactClear(){
+	memArrayClear(&__PhysicsContactResourceArray);
+	__PhysicsContactResourceFreeBlock = memArrayFirst(__PhysicsContactResourceArray.region);
+	__PhysicsContactResourceFreeRegion = __PhysicsContactResourceArray.region;
+}
+
 __HINT_INLINE__ physSeparation *modulePhysicsSeparationAppendStatic(physSeparation **const restrict array){
 	return memSLinkAppend(&__PhysicsSeparationResourceArray, (void **)array);
 }
@@ -361,11 +417,11 @@ __HINT_INLINE__ physSeparation *modulePhysicsSeparationAppend(physSeparation **c
 		void *const memory = memAllocate(
 			memSLinkAllocationSize(
 				NULL,
-				RESOURCE_DEFAULT_COLLISION_SIZE,
-				RESOURCE_DEFAULT_COLLISION_NUM
+				RESOURCE_DEFAULT_SEPARATION_SIZE,
+				RESOURCE_DEFAULT_SEPARATION_NUM
 			)
 		);
-		if(memSLinkExtend(&__PhysicsSeparationResourceArray, memory, RESOURCE_DEFAULT_COLLISION_SIZE, RESOURCE_DEFAULT_COLLISION_NUM)){
+		if(memSLinkExtend(&__PhysicsSeparationResourceArray, memory, RESOURCE_DEFAULT_SEPARATION_SIZE, RESOURCE_DEFAULT_SEPARATION_NUM)){
 			r = memSLinkAppend(&__PhysicsSeparationResourceArray, (void **)array);
 		}
 	}
@@ -381,11 +437,11 @@ __HINT_INLINE__ physSeparation *modulePhysicsSeparationInsertAfter(physSeparatio
 		void *const memory = memAllocate(
 			memSLinkAllocationSize(
 				NULL,
-				RESOURCE_DEFAULT_COLLISION_SIZE,
-				RESOURCE_DEFAULT_COLLISION_NUM
+				RESOURCE_DEFAULT_SEPARATION_SIZE,
+				RESOURCE_DEFAULT_SEPARATION_NUM
 			)
 		);
-		if(memSLinkExtend(&__PhysicsSeparationResourceArray, memory, RESOURCE_DEFAULT_COLLISION_SIZE, RESOURCE_DEFAULT_COLLISION_NUM)){
+		if(memSLinkExtend(&__PhysicsSeparationResourceArray, memory, RESOURCE_DEFAULT_SEPARATION_SIZE, RESOURCE_DEFAULT_SEPARATION_NUM)){
 			r = memSLinkInsertAfter(&__PhysicsSeparationResourceArray, (void **)array, (void *)resource);
 		}
 	}
@@ -477,6 +533,32 @@ void modulePhysicsConstraintClear(){
 
 }
 
-void modulePhysicsSolve(){
+__FORCE_INLINE__ void modulePhysicsIntegrate(const float dt){
+
+	MEMORY_SLINK_LOOP_BEGIN(__PhysicsRigidBodyInstanceResourceArray, i, physRBInstance *);
+
+		physRBIIntegrateConfiguration(i, dt);
+
+	MEMORY_SLINK_LOOP_END(__PhysicsRigidBodyInstanceResourceArray, i, return;);
+
+}
+void modulePhysicsSolve(const float dt){
+
+	/*
+	** Solves the constraints, followed by the contacts,
+	** for all systems being simulated.
+	*/
+
+	// Solve constraints.
 	///
+
+	// Solve contacts.
+	///
+
+	// Integrate positions and orientations.
+	modulePhysicsIntegrate(dt);
+
+	// Clear the contact array once we've finished.
+	modulePhysicsContactClear();
+
 }

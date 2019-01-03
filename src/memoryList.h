@@ -59,6 +59,7 @@ void *memListAllocate(memoryList *const restrict list);
 void memListFree(memoryList *const restrict list, void *const block);
 void *memListSetupMemory(void *start, const size_t bytes, const size_t length);
 void *memListIndex(memoryList *const restrict list, const size_t i);
+void *memListIndexRegion(memoryList *const restrict list, const size_t i, memoryRegion **const container);
 void memListClear(memoryList *const restrict list);
 void *memListExtend(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length);
 void memListDelete(memoryList *const restrict list);

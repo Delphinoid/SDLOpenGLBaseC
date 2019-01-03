@@ -849,33 +849,35 @@ return_t objiUpdate(objInstance *const restrict obji, physicsSolver *const restr
 		// Update the previous states.
 		objiStateCopyBone(obji, i);
 
-		if(body != NULL && body->local->id == i && flagsAreSet(body->flags, (PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_SIMULATE))){
+		if(body != NULL && body->local->id == i && flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE)){
 
 			/*
 			** Simulate the body attached to the bone.
 			*/
 
+			/** TEMPORARILY ADD GRAVITY. **/
+			const vec3 gravity = {.x = 0.f, .y = -98.0665f, .z = 0.f};
+			physRBIApplyLinearForce(body, &gravity);
+
 			if(flagsAreSet(body->flags, PHYSICS_BODY_INITIALIZE)){
 
 				// Generate a new animated bone state.
-				//obji->skeletonState[0][i] = obji->configuration[i];
 				*sklState = *configuration;
 				skliGenerateBoneState(&obji->skeletonData, i, sklBone->name, sklState);
-				//skliGenerateBoneState(&obji->skeletonData, &obji->skeletonState[i2], i);
-				//skliGenerateBoneState(&obji->animationData, &obji->skeletonState[0][i], i);
 
-				// Set the body's state to that of its bone when the bone starts being simulated.
-				/** This should be removed eventually if possible. **/
+				// Only integrate half of the first step
+				// for the leapfrog integration scheme.
+				physRBIIntegrateVelocity(body, dt*0.5f);
+
+				// The body has been initialized.
 				flagsUnset(body->flags, PHYSICS_BODY_INITIALIZE);
-				flagsSet(body->flags, PHYSICS_BODY_SIMULATE);
-				//body->configuration[0] = obji->skeletonState[0][i];
-				//body->configuration[1] = obji->skeletonState[1][i];
+
+			}else{
+
+				// Integrate the body's velocities.
+				physRBIIntegrateVelocity(body, dt);
 
 			}
-
-			/** TEMPORARILY ADD GRAVITY. **/
-			vec3 force; vec3Set(&force, 0.f, -98.0665f, 0.f);
-			physRBIApplyLinearForce(body, &force);
 
 			if(flagsAreSet(body->flags, PHYSICS_BODY_COLLIDE)){
 				// Only update the body's collision mesh
@@ -886,13 +888,7 @@ return_t objiUpdate(objInstance *const restrict obji, physicsSolver *const restr
 					/** Memory allocation failure. **/
 					return -1;
 				}
-				physRBIIntegrateLeapfrogVelocity(body, dt);
 				physRBIUpdateCollisionMesh(body);
-			}else{
-				// If the body is not interacting with any
-				// other bodies, integrate everything
-				// instead of just the velocity.
-				physRBIIntegrateLeapfrog(body, dt);
 			}
 
 			/** TEMPORARILY SET THE BONE STATE. **/
@@ -906,25 +902,12 @@ return_t objiUpdate(objInstance *const restrict obji, physicsSolver *const restr
 			** Apply animation transformations.
 			*/
 
-			// Apply the object skeleton's bind offsets.
-			/*obji->skeletonState[0][i].position.x += obji->skl->bones[i].defaultState.position.x;
-			obji->skeletonState[0][i].position.y += obji->skl->bones[i].defaultState.position.y;
-			obji->skeletonState[0][i].position.z += obji->skl->bones[i].defaultState.position.z;*/
-
 			// Generate a new animated bone state.
-			//obji->skeletonState[0][i] = obji->configuration[i];
 			/** Should configurations be optional? **/
 			*sklState = *configuration;
 			skliGenerateBoneState(&obji->skeletonData, i, sklBone->name, sklState);
-			//skliGenerateBoneState(&obji->skeletonData, &obji->skeletonState[i2], i);
-			//skliGenerateBoneState(&obji->animationData, &obji->skeletonState[0][i], i);
 
 			// Apply the object skeleton's bind offsets.
-			/*boneTransformAppendPositionVec(&obji->skeletonState[0][i],
-			                               obji->skl->bones[i].defaultState.position.x,
-			                               obji->skl->bones[i].defaultState.position.y,
-			                               obji->skl->bones[i].defaultState.position.z,
-			                               &obji->skeletonState[0][i].position);*/
 			boneTransformAppendPositionVec(sklState,
 			                               sklBone->defaultState.position.x,
 			                               sklBone->defaultState.position.y,
@@ -932,7 +915,6 @@ return_t objiUpdate(objInstance *const restrict obji, physicsSolver *const restr
 
 			// Apply the parent's transformations to each bone.
 			if(!isRoot){
-				//boneTransformAppend(&obji->skeletonState[0][obji->skl->bones[i].parent], &obji->skeletonState[0][i], &obji->skeletonState[0][i]);
 				boneTransformAppend2(&obji->state.skeleton[sklBone->parent], sklState);
 			}
 

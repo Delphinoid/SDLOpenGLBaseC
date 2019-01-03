@@ -3,34 +3,38 @@
 
 __HINT_INLINE__ float fastInvSqrt(float x){
 	// Black magic perfected by some very clever people.
-	const float halfX = x*0.5f;
-	const int *const ir = (int *)&x;      // Dereferenced on next line to avoid warnings.
-	const int i = 0x5f3759df - (*ir>>1);
-	const float *const xr = (float *)&i;  // Dereferenced on next line to avoid warnings.
-	x = *xr;
-	x *= 1.5f-halfX*x*x;  // Initial Newton-Raphson iteration (repeat this line for more accurate results).
-	return x;
+	const float halfx = x*0.5f;
+	union {
+		float f;
+		uint32_t l;
+	} i;
+	i.f = x;
+	i.l = 0x5F3504F3 - (i.l>>1);  // Floating-point approximation of sqrtf(powf(2.f, 127.f)).
+	i.f *= 1.5f - halfx*i.f*i.f;  // Initial Newton-Raphson iteration (repeat this line for more accurate results).
+	return i.f;
 }
 
 __HINT_INLINE__ float fastInvSqrtAccurate(float x){
 
 	// Black magic perfected by some very clever people.
-	const float halfX = x*0.5f;
-	const int *const ir = (int *)&x;      // Dereferenced on next line to avoid warnings.
-	const int i = 0x5f3759df - (*ir>>1);
-	const float *const xr = (float *)&i;  // Dereferenced on next line to avoid warnings.
-	x = *xr;
-	x *= 1.5f-halfX*x*x;  // Initial Newton-Raphson iteration (repeat this line for more accurate results).
+	const float halfx = x*0.5f;
+	union {
+		float f;
+		uint32_t l;
+	} i;
+	i.f = x;
+	i.l = 0x5F3504F3 - (i.l>>1);  // Floating-point approximation of sqrtf(powf(2.f, 127.f)).
+	i.f *= 1.5f - halfx*i.f*i.f;  // Initial Newton-Raphson iteration (repeat this line for more accurate results).
 
 	// Second and third iterations.
 	// The engine primarily uses this function for contact normal generation.
 	// Highly accurate unit vectors are required for contact normals in order
 	// to prevent as much energy loss as possible during contact resolution.
 	// Three iterations seems to give the best ratio of accuracy to performance.
-	x *= 1.5f-halfX*x*x;
-	x *= 1.5f-halfX*x*x;
+	i.f *= 1.5f - halfx*i.f*i.f;
+	i.f *= 1.5f - halfx*i.f*i.f;
 
-	return x;
+	return i.f;
 
 }
 
@@ -68,7 +72,7 @@ __HINT_INLINE__ void pointLineProject(const vec3 *const restrict a, const vec3 *
 
 __HINT_INLINE__ vec3 getFaceNormal(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict c){
 	/*
-	** r = (b - a) X (c - a)
+	** r = (b - a) x (c - a)
 	*/
 	vec3 r;
 	const vec3 f1 = {.x = b->x - a->x,
@@ -77,12 +81,12 @@ __HINT_INLINE__ vec3 getFaceNormal(const vec3 *const restrict a, const vec3 *con
 	const vec3 f2 = {.x = c->x - a->x,
 	                 .y = c->y - a->y,
 	                 .z = c->z - a->z};
-	vec3Cross(&f1, &f2, &r);
+	vec3CrossR(&f1, &f2, &r);
 	return r;
 }
 __HINT_INLINE__ void faceNormal(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict c, vec3 *const restrict r){
 	/*
-	** r = (b - a) X (c - a)
+	** r = (b - a) x (c - a)
 	*/
 	const vec3 f1 = {.x = b->x - a->x,
 	                 .y = b->y - a->y,
@@ -90,7 +94,7 @@ __HINT_INLINE__ void faceNormal(const vec3 *const restrict a, const vec3 *const 
 	const vec3 f2 = {.x = c->x - a->x,
 	                 .y = c->y - a->y,
 	                 .z = c->z - a->z};
-	vec3Cross(&f1, &f2, r);
+	vec3CrossR(&f1, &f2, r);
 }
 
 __HINT_INLINE__ vec3 getBarycentric(const vec3 *const restrict a, const vec3 *const restrict b, const vec3 *const restrict c, const vec3 *const restrict p){
@@ -171,7 +175,7 @@ __HINT_INLINE__ void barycentricR(const vec3 *const restrict a, const vec3 *cons
 
 __HINT_INLINE__ float pointPlaneDistance(const vec3 *const restrict normal, const vec3 *const restrict vertex, const vec3 *const restrict point){
 	/*
-	** Calculates the squared distance
+	** Calculates the distance
 	** between a point and a plane.
 	*/
 	const vec3 offset = {.x = point->x - vertex->x,

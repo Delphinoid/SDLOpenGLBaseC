@@ -3,6 +3,7 @@
 
 #include "physicsRigidBody.h"
 #include "skeleton.h"
+#include "memoryArray.h"
 #include "memorySLink.h"
 
 #define RESOURCE_DEFAULT_RIGID_BODY_SIZE sizeof(physRigidBody)
@@ -14,15 +15,22 @@
 #define RESOURCE_DEFAULT_COLLIDER_SIZE sizeof(physCollider)
 #define RESOURCE_DEFAULT_COLLIDER_NUM 4096
 
-#define RESOURCE_DEFAULT_COLLISION_SIZE sizeof(physSeparation)
-#define RESOURCE_DEFAULT_COLLISION_NUM RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_NUM
+#define RESOURCE_DEFAULT_CONTACT_SIZE sizeof(physContact)
+#define RESOURCE_DEFAULT_CONTACT_NUM RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_NUM
+
+#define RESOURCE_DEFAULT_SEPARATION_SIZE sizeof(physSeparation)
+#define RESOURCE_DEFAULT_SEPARATION_NUM RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_NUM
 
 #define RESOURCE_DEFAULT_CONSTRAINT_SIZE sizeof(physConstraint)
 #define RESOURCE_DEFAULT_CONSTRAINT_NUM RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_NUM
 
+extern void *__PhysicsContactResourceFreeBlock;
+extern memoryRegion *__PhysicsContactResourceFreeRegion;
+
 extern memorySLink __PhysicsRigidBodyResourceArray;          // Contains physRigidBodies.
 extern memorySLink __PhysicsRigidBodyInstanceResourceArray;  // Contains physRBInstances.
 extern memorySLink __PhysicsColliderResourceArray;           // Contains physColliders.
+extern memoryArray __PhysicsContactResourceArray;            // Contains physContacts.
 extern memorySLink __PhysicsSeparationResourceArray;         // Contains physSeparations.
 extern memorySLink __PhysicsConstraintResourceArray;         // Contains physConstraints.
 
@@ -60,6 +68,10 @@ void modulePhysicsColliderFreeArray(physCollider **const restrict array);
 void modulePhysicsColliderRBIFreeArray(physCollider **const restrict array);
 void modulePhysicsColliderClear();
 
+physContact *modulePhysicsContactAllocateStatic();
+physContact *modulePhysicsContactAllocate();
+void modulePhysicsContactClear();
+
 physSeparation *modulePhysicsSeparationAppendStatic(physSeparation **const restrict array);
 physSeparation *modulePhysicsSeparationAppend(physSeparation **const restrict array);
 physSeparation *modulePhysicsSeparationInsertAfterStatic(physSeparation **const restrict array, physSeparation *const restrict resource);
@@ -78,6 +90,7 @@ void modulePhysicsConstraintFree(physConstraint **const restrict array, physCons
 void modulePhysicsConstraintFreeArray(physConstraint **const restrict array);
 void modulePhysicsConstraintClear();
 
-void modulePhysicsSolve();
+void modulePhysicsIntegrate(const float dt);
+void modulePhysicsSolve(const float dt);
 
 #endif

@@ -98,11 +98,45 @@ void *memListIndex(memoryList *const restrict list, const size_t i){
 
 	while(offset >= regionSize){
 		region      = memAllocatorNext(region);
+		#ifndef MEMORY_LIST_INDEX_UNSAFE
+			if(region == NULL){
+				return NULL;
+			}
+		#endif
 		regionStart = memListFirst(region);
 		regionSize  = memAllocatorEnd(region) - regionStart;
 		offset -= regionSize;
 	}
 
+	return (void *)(regionStart + offset);
+
+}
+
+void *memListIndexRegion(memoryList *const restrict list, const size_t i, memoryRegion **const container){
+
+	/*
+	** Finds the element at index i.
+	*/
+
+	size_t offset = list->block * i;
+
+	memoryRegion *region = list->region;
+	byte_t *regionStart  = memListFirst(region);
+	size_t  regionSize   = memAllocatorEnd(region) - regionStart;
+
+	while(offset >= regionSize){
+		region      = memAllocatorNext(region);
+		#ifndef MEMORY_LIST_INDEX_UNSAFE
+			if(region == NULL){
+				return NULL;
+			}
+		#endif
+		regionStart = memListFirst(region);
+		regionSize  = memAllocatorEnd(region) - regionStart;
+		offset -= regionSize;
+	}
+
+	*container = region;
 	return (void *)(regionStart + offset);
 
 }

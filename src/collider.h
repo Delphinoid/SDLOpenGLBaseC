@@ -3,13 +3,13 @@
 
 #include "memoryShared.h"
 
-#define COLLIDER_TYPE_INVALID -1
-#define COLLIDER_TYPE_MESH 0
-#define COLLIDER_TYPE_CAPSULE 1
-#define COLLIDER_TYPE_SPHERE 2
-#define COLLIDER_TYPE_AABB 3
-#define COLLIDER_TYPE_POINT 4
-#define COLLIDER_TYPE_NUM 5
+#define COLLIDER_TYPE_UNKNOWN -1
+#define COLLIDER_TYPE_MESH     0
+#define COLLIDER_TYPE_CAPSULE  1
+#define COLLIDER_TYPE_SPHERE   2
+#define COLLIDER_TYPE_AABB     3
+#define COLLIDER_TYPE_POINT    4
+#define COLLIDER_TYPE_NUM      5
 
 // The size of the largest collider type.
 // In this case, it is the capsule at 28 bytes.
@@ -21,7 +21,7 @@ typedef int_least8_t  colliderType_t;
 typedef uint_least8_t colliderIndex_t;
 
 typedef struct {
-	byte_t hull[COLLIDER_MAX_SIZE];  // Stores a collider of the type specified by "type". Needs to be casted.
+	byte_t data[COLLIDER_MAX_SIZE];  // Stores a collider of the type specified by "type". Needs to be casted.
 	                                 // May be affected by translation, rotation and scaling, depending on the type.
 	colliderType_t type;  // -1 = invalid, 0 = mesh, 1 = capsule, 2 = sphere, 3 = AABB, 4 = point
 } collider;

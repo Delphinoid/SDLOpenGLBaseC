@@ -283,10 +283,10 @@ __HINT_INLINE__ void mat4RotateToFace(mat4 *const restrict m, const vec3 *const 
 	vec3 zAxis = vec3VSubV(target, eye);
 	vec3NormalizeFast(&zAxis);
 	vec3 xAxis;
-	vec3Cross(&zAxis, up, &xAxis);
+	vec3CrossR(&zAxis, up, &xAxis);
 	vec3NormalizeFast(&xAxis);
 	vec3 yAxis;
-	vec3Cross(&xAxis, &zAxis, &yAxis);
+	vec3CrossR(&xAxis, &zAxis, &yAxis);
 	vec3NormalizeFast(&yAxis);
 	// Currently right-handed for OpenGL. For left-handed, use the additive inverses of the values in the third row.
 	m->m[0][0] =  xAxis.x; m->m[0][1] =  xAxis.y; m->m[0][2] =  xAxis.z; m->m[0][3] = 0.f;
@@ -298,10 +298,10 @@ __HINT_INLINE__ void mat4LookAt(mat4 *const restrict m, const vec3 *const restri
 	vec3 zAxis = vec3VSubV(target, eye);
 	vec3NormalizeFast(&zAxis);
 	vec3 xAxis;
-	vec3Cross(&zAxis, up, &xAxis);
+	vec3CrossR(&zAxis, up, &xAxis);
 	vec3NormalizeFast(&xAxis);
 	vec3 yAxis;
-	vec3Cross(&xAxis, &zAxis, &yAxis);
+	vec3CrossR(&xAxis, &zAxis, &yAxis);
 	vec3NormalizeFast(&yAxis);
 	// Currently right-handed for OpenGL. For left-handed, use the additive inverses of the values in the third column.
 	m->m[0][0] = xAxis.x;               m->m[0][1] = yAxis.x;               m->m[0][2] = -zAxis.x;             m->m[0][3] = 0.f;

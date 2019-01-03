@@ -2,27 +2,28 @@
 #define PHYSICSCOLLISION_H
 
 #include "physicsBodyShared.h"
-#include "colliderAABB.h"
-#include "bone.h"
+#include "collision.h"
 
-typedef uint_least8_t physColliderIndex_t;
-typedef uint_least8_t physCollisionIndex_t;
-
-/** Allow more than just convex meshes? **/
+// Contact constraints are separated from other constraints
+// solely because of their size. The size of contact manifolds
+// significantly exceeds the size of all other types of
+// constraints, which would lead to an unacceptable amount of
+// internal fragmentation.
+// This, however, has an additional bonus of allowing contacts
+// to be more conveniently solved separately to constraints.
+// This means we can solve them after solving all regular joints,
+// giving them "priority".
 typedef struct {
-	cAABB aabb;     // The hull's bounding box.
-	collider c;     // The collision mesh in local space.
-	vec3 centroid;  // The collider's center of mass.
-} physCollider;
+	void *bodyA;  // Pointer to the reference body.
+	void *bodyB;  // Pointer to the incident body.
+	cContactManifold manifold;
+} physContact;
 
 typedef struct {
 	physicsBodyIndex_t id;  // An identifier for the other body involved in the collision.
 	cSeparationContainer separation;
 } physSeparation;
 
-float physColliderGenerateMass(physCollider *const restrict collider, const float *const vertexMassArray);
-void physColliderGenerateMoment(const physCollider *const restrict collider, const vec3 *const restrict centroid, const float *const restrict vertexMassArray, float *const restrict inertiaTensor);
-void physColliderUpdate(physCollider *const restrict collider, const physCollider *const restrict local, const bone *const restrict configuration);
-void physColliderDelete(physCollider *const restrict collider);
+void physContactSolve(physContact *contact);
 
 #endif

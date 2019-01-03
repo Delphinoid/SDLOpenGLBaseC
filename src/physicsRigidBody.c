@@ -10,15 +10,11 @@
 #define PHYSICS_RESOURCE_DIRECTORY_STRING "Resources\\Skeletons\\Physics\\"
 #define PHYSICS_RESOURCE_DIRECTORY_LENGTH 28
 
-#define PHYSICS_INTEGRATION_STEPS_EULER      2
-#define PHYSICS_INTEGRATION_STEPS_RUNGEKUTTA 4
-
 #define PHYSICS_RESTING_EPSILON 0.0001f
-#define PHYSICS_BAUMGARTE_TERM  0.0001f
 
 void physRigidBodyInit(physRigidBody *const restrict body){
 	body->id = (physicsBodyIndex_t)-1;
-	body->flags = PHYSICS_BODY_INACTIVE;
+	body->flags = PHYSICS_BODY_ASLEEP;
 	body->colliders = NULL;
 	body->mass = 0.f;
 	body->inverseMass = 0.f;
@@ -117,7 +113,7 @@ void physRigidBodyGenerateMassProperties(physRigidBody *const restrict body, flo
 
 static return_t physColliderResizeToFit(physCollider *const restrict collider, float **const vertexMassArrays){
 
-	cMesh *cHull = (cMesh *)&collider->c.hull;
+	cMesh *cHull = (cMesh *)&collider->c.data;
 
 	if(cHull->vertexNum != 0){
 		float *tempBuffer2;
@@ -346,7 +342,7 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 					physRigidBodyInit(currentBody);
 					currentBody->id = currentBodyID;
 					currentBodyColliderNum = 0;
-					currentBody->flags = PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE;
+					currentBody->flags = PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_SIMULATE | PHYSICS_BODY_COLLIDE;
 					currentCommand = 0;
 
 				}
@@ -423,7 +419,7 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 						edgeCapacity = 0;
 
 						cInit(&currentCollider->c, COLLIDER_TYPE_MESH);
-						cMeshInit((cMesh *)&currentCollider->c.hull);
+						cMeshInit((cMesh *)&currentCollider->c.data);
 						++currentBodyColliderNum;
 
 						currentCommand = 1;
@@ -444,7 +440,7 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 
 				if(currentBodyColliderNum > 0){
 
-					cMesh *const cHull = (cMesh *)&currentCollider->c.hull;
+					cMesh *const cHull = (cMesh *)&currentCollider->c.data;
 					const char *token;
 
 					// Reallocate vertex array if necessary.
@@ -515,7 +511,7 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 					const char *token = strtok(line+2, " ");
 					if(token != NULL){
 
-						cMesh *const cHull = (cMesh *)&currentCollider->c.hull;
+						cMesh *const cHull = (cMesh *)&currentCollider->c.data;
 
 						cEdgeIndex_t start;
 						cEdgeIndex_t end = strtoul(token, NULL, 0)-1;
@@ -702,7 +698,7 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 								vec3SubVFromVR(&cHull->vertices[cHull->edges[last].start], &cHull->vertices[cHull->edges[first].start], &CsA);
 							}
 						}
-						vec3Cross(&BsA, &CsA, &cHull->normals[cHull->faceNum]);
+						vec3CrossR(&BsA, &CsA, &cHull->normals[cHull->faceNum]);
 						vec3NormalizeFastAccurate(&cHull->normals[cHull->faceNum]);
 
 						//cHull->faces[cHull->faceNum].edgeNum = addNum;
@@ -804,8 +800,9 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 									return -1;
 								}
 								physConstraintInit(currentConstraint);
-								currentConstraint->id = constrainedBodyID;
-								currentConstraint->ownerID = currentBody->id;
+								#warning FIX THIS
+								///currentConstraint->id = constrainedBodyID;
+								///currentConstraint->ownerID = currentBody->id;
 								currentCommand = 2;
 								success = 1;
 							}
@@ -828,7 +825,7 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 			// Constraint offset bounds
 			}else if(lineLength >= 24 && strncmp(line, "offsetBounds ", 13) == 0){
 				if(currentCommand == 2){
-					const char *token = strtok(line+13, "/");
+					/**const char *token = strtok(line+13, "/");
 					currentConstraint->constraintOffsetMin.x = strtod(token, NULL);
 					token = strtok(NULL, "/");
 					currentConstraint->constraintOffsetMin.y = strtod(token, NULL);
@@ -839,7 +836,7 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 					token = strtok(NULL, "/");
 					currentConstraint->constraintOffsetMax.y = strtod(token, NULL);
 					token = strtok(NULL, " ");
-					currentConstraint->constraintOffsetMax.z = strtod(token, NULL);
+					currentConstraint->constraintOffsetMax.z = strtod(token, NULL);**/
 				}else{
 					printf("Error loading rigid bodies \"%s\": Constraint sub-command \"offsetBounds\" invoked on line %u "
 					       "without specifying a constraint.\n", fullPath, currentLine);
@@ -849,7 +846,7 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 			// Constraint rotation bounds
 			}else if(lineLength >= 26 && strncmp(line, "rotationBounds ", 15) == 0){
 				if(currentCommand == 2){
-					const char *token = strtok(line+15, "/");
+					/**const char *token = strtok(line+15, "/");
 					currentConstraint->constraintRotationMin.x = strtod(token, NULL);
 					token = strtok(NULL, "/");
 					currentConstraint->constraintRotationMin.y = strtod(token, NULL);
@@ -860,7 +857,7 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 					token = strtok(NULL, "/");
 					currentConstraint->constraintRotationMax.y = strtod(token, NULL);
 					token = strtok(NULL, " ");
-					currentConstraint->constraintRotationMax.z = strtod(token, NULL);
+					currentConstraint->constraintRotationMax.z = strtod(token, NULL);**/
 				}else{
 					printf("Error loading rigid bodies \"%s\": Constraint sub-command \"rotationBounds\" invoked on line %u "
 					       "without specifying a constraint.\n", fullPath, currentLine);
@@ -895,9 +892,9 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 					}
 				}else if(currentCommand == 1){
 					if(strtoul(line+10, NULL, 0)){
-						flagsSet(currentConstraint->flags, PHYSICS_CONSTRAINT_COLLIDE);
+						flagsUnset(currentConstraint->flags, PHYSICS_CONSTRAINT_NO_COLLISION);
 					}else{
-						flagsUnset(currentConstraint->flags, PHYSICS_CONSTRAINT_COLLIDE);
+						flagsSet(currentConstraint->flags, PHYSICS_CONSTRAINT_NO_COLLISION);
 					}
 				}else if(currentCommand > 1){
 					printf("Error loading rigid bodies \"%s\": Rigid body and constraint sub-command \"collision\" at line %u does not belong "
@@ -912,9 +909,9 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 			}else if(lineLength >= 8 && strncmp(line, "active ", 7) == 0){
 				if(currentCommand == 0){
 					if(strtoul(line+7, NULL, 0)){
-						flagsSet(currentBody->flags, PHYSICS_BODY_INITIALIZE);
+						flagsSet(currentBody->flags, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_SIMULATE);
 					}else{
-						flagsUnset(currentBody->flags, PHYSICS_BODY_INITIALIZE);
+						flagsUnset(currentBody->flags, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_SIMULATE);
 					}
 				}else if(currentCommand > 0){
 					printf("Error loading rigid bodies \"%s\": Rigid body sub-command \"active\" at line %u does not belong "
@@ -957,7 +954,7 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 
 				}else if(currentCommand == 1){
 
-					const cMesh *const cHull = (cMesh *)&currentCollider->c.hull;
+					const cMesh *const cHull = (cMesh *)&currentCollider->c.data;
 
 					if(cHull->vertexNum > 0 && cHull->faceNum > 0 && cHull->edgeNum > 0){
 
@@ -1017,7 +1014,7 @@ return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton
 
 		}else if(currentCommand == 1){
 
-			const cMesh *const cHull = (cMesh *)&currentCollider->c.hull;
+			const cMesh *const cHull = (cMesh *)&currentCollider->c.data;
 
 			if(cHull->vertexNum > 0 && cHull->faceNum > 0 && cHull->edgeNum > 0){
 
@@ -1151,7 +1148,7 @@ void physRigidBodyDelete(physRigidBody *const restrict body){
 
 void physRBIInit(physRBInstance *const restrict prbi){
 	prbi->id = (physicsBodyIndex_t)-1;
-	prbi->flags = PHYSICS_BODY_INACTIVE;
+	prbi->flags = PHYSICS_BODY_ASLEEP;
 	prbi->local = NULL;
 	prbi->colliders = NULL;
 	prbi->configuration = NULL;
@@ -1183,8 +1180,8 @@ return_t physRBIInstantiate(physRBInstance *const restrict prbi, physRigidBody *
 
 		if(colliderInstance != NULL){
 
-			cHull = (cMesh *)&colliderBase->c.hull;
-			cTemp = (cMesh *)&colliderInstance->c.hull;
+			cHull = (cMesh *)&colliderBase->c.data;
+			cTemp = (cMesh *)&colliderInstance->c.data;
 
 			vertexArraySize = cHull->vertexNum * sizeof(vec3);
 			cTemp->vertices = memAllocate(vertexArraySize);
@@ -1299,17 +1296,6 @@ void physRBIRemoveSeparation(physRBInstance *const restrict prbi, physSeparation
 
 }
 
-return_t physRBIAddCollision(physRBInstance *const restrict prbi, physSeparation *const c){
-
-	/*
-	** Caches the collision and creates an
-	** inequality constraint representing it.
-	*/
-
-	///
-
-}
-
 static void physRBICentroidFromPosition(physRBInstance *const restrict prbi){
 	prbi->centroid = prbi->local->centroid;
 	quatGetRotatedVec3(&prbi->configuration->orientation, &prbi->centroid);
@@ -1408,7 +1394,7 @@ void physRBIApplyAngularForceGlobal(physRBInstance *const restrict prbi, const v
 	// T = r x F
 	vec3 rsR, rxF;
 	vec3SubVFromVR(r, &prbi->centroid, &rsR);
-	vec3Cross(&rsR, F, &rxF);
+	vec3CrossR(&rsR, F, &rxF);
 	vec3AddVToV(&prbi->netTorque, &rxF);
 }
 
@@ -1445,7 +1431,7 @@ void physRBIApplyAngularImpulse(physRBInstance *const restrict prbi, const vec3 
 
 void physRBIApplyImpulseAtGlobalPoint(physRBInstance *const restrict prbi, const vec3 *const restrict F, const vec3 *const restrict r){
 	vec3 T;
-	vec3Cross(r, F, &T);
+	vec3CrossR(r, F, &T);
 	physRBIApplyLinearImpulse(prbi, F->x, F->y, F->z);
 	physRBIApplyAngularImpulse(prbi, &T);
 }*/
@@ -1462,20 +1448,10 @@ static void physRBIResetTorqueAccumulator(physRBInstance *const restrict prbi){
 	prbi->netTorque.z = 0.f;
 }
 
-void physRBIBeginSimulation(physRBInstance *const restrict prbi){
-	physRBIGenerateGlobalInertia(prbi);
-	physRBICentroidFromPosition(prbi);
-}
-
-void physBeginIntegration(physRBInstance *const restrict prbi){
-	// Update moment of inertia.
-	physRBIGenerateGlobalInertia(prbi);
-}
-
-void physRBIIntegrateEuler(physRBInstance *const restrict prbi, const float dt){
+void physRBIIntegrateVelocity(physRBInstance *const restrict prbi, const float dt){
 
 	/*
-	** Euler integration scheme.
+	** Integrate one full timestep.
 	*/
 
 	// Update moment of inertia.
@@ -1483,46 +1459,25 @@ void physRBIIntegrateEuler(physRBInstance *const restrict prbi, const float dt){
 
 	if(prbi->local->inverseMass > 0.f){
 
-		int i;
+		const float modifier = prbi->local->inverseMass * dt;
 
-		const float dtStep = dt/PHYSICS_INTEGRATION_STEPS_EULER;
-		const float modifier = prbi->local->inverseMass * dtStep;
+		// Integrate linear velocity.
+		if(flagsAreSet(prbi->flags, PHYSICS_BODY_SIMULATE_LINEAR)){
+			prbi->linearVelocity.x += prbi->netForce.x * modifier;
+			prbi->linearVelocity.y += prbi->netForce.y * modifier;
+			prbi->linearVelocity.z += prbi->netForce.z * modifier;
+		}
 
-		// a = F/m
-		// dv = a * dt
-		const vec3 accelerationStep = {.x = prbi->netForce.x * modifier,
-		                               .y = prbi->netForce.y * modifier,
-		                               .z = prbi->netForce.z * modifier};
-
-		for(i = 0; i < PHYSICS_INTEGRATION_STEPS_EULER; ++i){
-
+		// Integrate angular velocity.
+		if(flagsAreSet(prbi->flags, PHYSICS_BODY_SIMULATE_ANGULAR)){
 			vec3 momentum;
-
-			// Integrate linear velocity.
-			prbi->linearVelocity.x += accelerationStep.x;
-			prbi->linearVelocity.y += accelerationStep.y;
-			prbi->linearVelocity.z += accelerationStep.z;
-
-			// Integrate position.
-			prbi->configuration->position.x += prbi->linearVelocity.x * dtStep;
-			prbi->configuration->position.y += prbi->linearVelocity.y * dtStep;
-			prbi->configuration->position.z += prbi->linearVelocity.z * dtStep;
-
-			// Integrate angular velocity.
 			mat3MultMByVRowR(&prbi->inverseInertiaTensor, &prbi->netTorque, &momentum);
-			prbi->angularVelocity.x += momentum.x * dtStep;
-			prbi->angularVelocity.y += momentum.y * dtStep;
-			prbi->angularVelocity.z += momentum.z * dtStep;
-
-			// Integrate orientation.
-			quatIntegrate(&prbi->configuration->orientation, &prbi->angularVelocity, dtStep);
-
+			prbi->angularVelocity.x += momentum.x * dt;
+			prbi->angularVelocity.y += momentum.y * dt;
+			prbi->angularVelocity.z += momentum.z * dt;
 		}
 
 	}
-
-	// Update global centroid.
-	physRBICentroidFromPosition(prbi);
 
 	// Reset force and torque accumulators.
 	physRBIResetForceAccumulator(prbi);
@@ -1530,139 +1485,22 @@ void physRBIIntegrateEuler(physRBInstance *const restrict prbi, const float dt){
 
 }
 
-void physRBIIntegrateLeapfrog(physRBInstance *const restrict prbi, const float dt){
+void physRBIIntegrateConfiguration(physRBInstance *const restrict prbi, const float dt){
 
-	/*
-	** Leapfrog integration scheme.
-	*/
-
-	// Update moment of inertia.
-	physRBIGenerateGlobalInertia(prbi);
-
-	if(prbi->local->inverseMass > 0.f){
-
-		const float dtStep = dt*0.5f;
-		const float modifier = prbi->local->inverseMass * dtStep;
-
-		vec3 momentum;
-
-		// Integrate linear velocity.
-		prbi->linearVelocity.x += prbi->netForce.x * modifier;
-		prbi->linearVelocity.y += prbi->netForce.y * modifier;
-		prbi->linearVelocity.z += prbi->netForce.z * modifier;
-
-		// Integrate position.
-		prbi->configuration->position.x += prbi->linearVelocity.x * dtStep;
-		prbi->configuration->position.y += prbi->linearVelocity.y * dtStep;
-		prbi->configuration->position.z += prbi->linearVelocity.z * dtStep;
-
-		// Integrate angular velocity.
-		mat3MultMByVRowR(&prbi->inverseInertiaTensor, &prbi->netTorque, &momentum);
-		prbi->angularVelocity.x += momentum.x * dtStep;
-		prbi->angularVelocity.y += momentum.y * dtStep;
-		prbi->angularVelocity.z += momentum.z * dtStep;
-
-		// Integrate orientation.
-		quatIntegrate(&prbi->configuration->orientation, &prbi->angularVelocity, dtStep);
-
+	// Integrate position.
+	if(flagsAreSet(prbi->flags, PHYSICS_BODY_SIMULATE_LINEAR)){
+		prbi->configuration->position.x += prbi->linearVelocity.x * dt;
+		prbi->configuration->position.y += prbi->linearVelocity.y * dt;
+		prbi->configuration->position.z += prbi->linearVelocity.z * dt;
 	}
 
-	// Update centroid.
+	// Integrate orientation.
+	if(flagsAreSet(prbi->flags, PHYSICS_BODY_SIMULATE_ANGULAR)){
+		quatIntegrate(&prbi->configuration->orientation, &prbi->angularVelocity, dt);
+	}
+
+	// Update global centroid.
 	physRBICentroidFromPosition(prbi);
-
-}
-
-void physRBIIntegrateLeapfrogVelocity(physRBInstance *const restrict prbi, const float dt){
-
-	/*
-	** Leapfrog integration scheme.
-	*/
-
-	if(prbi->local != NULL && prbi->local->inverseMass > 0.f){  /** Remove? **/
-
-		// Integrate linear velocity half-step.
-		const float tempFloat = prbi->local->inverseMass * dt * 0.5f;
-		prbi->linearVelocity.x += prbi->netForce.x * tempFloat;
-		prbi->linearVelocity.y += prbi->netForce.y * tempFloat;
-		prbi->linearVelocity.z += prbi->netForce.z * tempFloat;
-
-	}
-
-}
-
-void physRBIIntegrateLeapfrogConstraints(physRBInstance *const restrict prbi, const float dt){
-
-	/*
-	** Leapfrog integration scheme.
-	*/
-
-	/*if(prbi->local != NULL){  ** Remove? **
-
-		// Update moment of inertia.
-		physRBIGenerateGlobalInertia(prbi);
-
-		if(prbi->local->inverseMass > 0.f){
-
-			vec3 tempVec3;
-			float tempFloat;
-			quat tempQuat;
-
-			// Integrate position and final half of linear velocity.
-			prbi->configuration->position.x += prbi->linearVelocity.x * dt;
-			prbi->configuration->position.y += prbi->linearVelocity.y * dt;
-			prbi->configuration->position.z += prbi->linearVelocity.z * dt;
-			**polygonResetForce(polygon);**
-			tempFloat = prbi->local->inverseMass * dt * 0.5f;
-			prbi->linearVelocity.x += prbi->netForce.x * tempFloat;
-			prbi->linearVelocity.y += prbi->netForce.y * tempFloat;
-			prbi->linearVelocity.z += prbi->netForce.z * tempFloat;
-
-			// Calculate angular velocity.
-			tempVec3.x = prbi->netTorque.x * dt;
-			tempVec3.y = prbi->netTorque.y * dt;
-			tempVec3.z = prbi->netTorque.z * dt;
-			mat3MultMByVRow(&prbi->inverseInertiaTensor, &tempVec3);
-			prbi->angularVelocity.x += tempVec3.x;
-			prbi->angularVelocity.y += tempVec3.y;
-			prbi->angularVelocity.z += tempVec3.z;
-
-			// Update orientation.
-			// Axis
-			tempVec3 = prbi->angularVelocity;
-			vec3NormalizeFast(&tempVec3);
-			// Angle
-			tempFloat = vec3Magnitude(&prbi->angularVelocity) * dt;
-			// Convert axis-angle rotation to a quaternion.
-			quatSetAxisAngle(&tempQuat, tempFloat, tempVec3.x, tempVec3.y, tempVec3.z);
-			quatMultQByQ2(&tempQuat, &prbi->configuration->orientation);
-			// Normalize the orientation.
-			quatNormalizeFast(&prbi->configuration->orientation);
-
-		}
-
-		// Update centroid.
-		physRBICentroidFromPosition(prbi);
-
-		// Reset force and torque accumulators.
-		physRBIResetForceAccumulator(prbi);
-		physRBIResetTorqueAccumulator(prbi);
-
-	}*/
-
-}
-
-void physRBIIntegrateRungeKutta(physRBInstance *const restrict prbi, const float dt){
-
-	/*
-	** RK4 integration scheme.
-	*/
-	//
-
-}
-
-static __FORCE_INLINE__ void physRBIPenetrationSlop(physRBInstance *const restrict body1, physRBInstance *const restrict body2, const cContactManifold *const restrict cm){
-
-	// Baumgarte stabilization.
 
 }
 
@@ -1678,13 +1516,13 @@ static __FORCE_INLINE__ void physRBIResolveCollisionImpulse(physRBInstance *cons
 	// Find the velocity of contact point A.
 	// The velocity of a point is V + cross(w, r), where V is the linear velocity,
 	// w is the angular velocity and r is the local contact point.
-	vec3Cross(&body1->angularVelocity, &localContactPointA, &contactVelocityA);
+	vec3CrossR(&body1->angularVelocity, &localContactPointA, &contactVelocityA);
 	vec3AddVToV(&contactVelocityA, &body1->linearVelocity);
 
 	// Convert contact point B from global space to local space.
 	vec3SubVFromVR(&cd->contacts[0].pointB, &body2->centroid, &localContactPointB);
 	// Find the velocity of contact point B.
-	vec3Cross(&body2->angularVelocity, &localContactPointB, &contactVelocityB);
+	vec3CrossR(&body2->angularVelocity, &localContactPointB, &contactVelocityB);
 	vec3AddVToV(&contactVelocityB, &body2->linearVelocity);
 
 	// Find the velocity of point A relative to the velocity of point B.
@@ -1704,18 +1542,18 @@ static __FORCE_INLINE__ void physRBIResolveCollisionImpulse(physRBInstance *cons
 		float impulseMagnitudeOverMass;
 
 		// Calculate contact point A's new torque.
-		vec3Cross(&localContactPointA, &cd->normal, &angularDeltaA);
+		vec3CrossR(&localContactPointA, &cd->normal, &angularDeltaA);
 		// Calculate contact point A's new angular velocity.
 		mat3MultMByVRow(&body1->inverseInertiaTensor, &angularDeltaA);
 		// Calculate contact point A's change in linear velocity due to its rotation.
-		vec3Cross(&angularDeltaA, &localContactPointA, &angularDeltaLinear);
+		vec3CrossR(&angularDeltaA, &localContactPointA, &angularDeltaLinear);
 
 		// Calculate contact point B's new torque.
-		vec3Cross(&localContactPointB, &cd->normal, &angularDeltaB);
+		vec3CrossR(&localContactPointB, &cd->normal, &angularDeltaB);
 		// Calculate contact point B's new angular velocity.
 		mat3MultMByVRow(&body2->inverseInertiaTensor, &angularDeltaB);
 		// Calculate contact point B's change in linear velocity due to its rotation.
-		vec3Cross(&angularDeltaB, &localContactPointB, &angularDeltaLinearB);
+		vec3CrossR(&angularDeltaB, &localContactPointB, &angularDeltaLinearB);
 		vec3AddVToV(&angularDeltaLinear, &angularDeltaLinearB);
 
 		// Calculate the impulse magnitude.
