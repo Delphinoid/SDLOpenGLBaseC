@@ -33,8 +33,8 @@ __FORCE_INLINE__ void physRigidBodyLocalGenerateMassProperties(physRigidBodyLoca
 	** properties for each of its colliders.
 	*/
 
-	physColliderGenerateMass(local, vertexMassArray);
-	physColliderGenerateMoment(local, vertexMassArray);
+	physColliderGenerateMass(&local->hull, &local->mass, &local->inverseMass, &local->centroid, vertexMassArray);
+	physColliderGenerateMoment(&local->hull, &local->inertiaTensor, &local->centroid, vertexMassArray);
 
 }
 
@@ -1000,7 +1000,7 @@ void physRigidBodyRemoveSeparation(physRigidBody *const restrict body, physSepar
 
 static __FORCE_INLINE__ void physRigidBodyCentroidFromPosition(physRigidBody *const restrict body){
 	body->centroid = body->local->centroid;
-	quatGetRotatedVec3(&body->configuration->orientation, &body->centroid);
+	quatRotateVec3Fast(&body->configuration->orientation, &body->centroid);
 	vec3AddVToV(&body->centroid, &body->configuration->position);
 }
 
@@ -1008,7 +1008,7 @@ static __FORCE_INLINE__ void physRigidBodyPositionFromCentroid(physRigidBody *co
 	body->configuration->position.x = -body->local->centroid.x;
 	body->configuration->position.y = -body->local->centroid.y;
 	body->configuration->position.z = -body->local->centroid.z;
-	quatGetRotatedVec3(&body->configuration->orientation, &body->configuration->position);
+	quatRotateVec3Fast(&body->configuration->orientation, &body->configuration->position);
 	vec3AddVToV(&body->configuration->position, &body->centroid);
 }
 
@@ -1155,6 +1155,7 @@ __FORCE_INLINE__ void physRigidBodyUpdateCollisionMesh(physRigidBody *const rest
 	** Calculates the body's center of mass from its configuration.
 	*/
 
+	/** Centroid calculations are done unnecessarily in cTransformMesh. **/
 	physRigidBodyCentroidFromPosition(body);
 	cTransform(&body->hull, &body->centroid, &body->local->hull, &body->local->centroid, &body->aabb, body->configuration);
 

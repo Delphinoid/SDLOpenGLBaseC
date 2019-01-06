@@ -74,7 +74,7 @@ void physColliderGenerateMassComposite(void *const local, float *const restrict 
 		float colliderInverseMass;
 		vec3 colliderCentroid;
 
-		physColliderGenerateMassJumpTable[c->type](&c->data, &colliderMass, &colliderInverseMass, &colliderCentroid, m);
+		physColliderGenerateMass(c, &colliderMass, &colliderInverseMass, &colliderCentroid, m);
 
 		tempCentroid.x += colliderCentroid.x * colliderMass;
 		tempCentroid.y += colliderCentroid.y * colliderMass;
@@ -117,14 +117,14 @@ void (* const physColliderGenerateMassJumpTable[COLLIDER_TYPE_NUM])(
 	physColliderGenerateMassPoint,
 	physColliderGenerateMassComposite
 };
-__FORCE_INLINE__ void physColliderGenerateMass(physRigidBodyLocal *const restrict local, const float **const vertexMassArray){
+__FORCE_INLINE__ void physColliderGenerateMass(collider *const local, float *const restrict mass, float *const restrict inverseMass, vec3 *const restrict centroid, const float **const vertexMassArray){
 
 	/*
 	** Calculates the collider's center of mass
 	** and default AABB. Returns the total mass.
 	*/
 
-	physColliderGenerateMassJumpTable[local->hull.type](&local->hull.data, &local->mass, &local->inverseMass, &local->centroid, vertexMassArray);
+	physColliderGenerateMassJumpTable[local->type](&local->data, mass, inverseMass, centroid, vertexMassArray);
 
 }
 
@@ -189,7 +189,7 @@ void physColliderGenerateMomentComposite(void *const local, mat3 *const restrict
 	for(; c < cLast; ++c, ++m){
 
 		mat3 colliderInertiaTensor;
-		physColliderGenerateMomentJumpTable[c->type](&c->data, &colliderInertiaTensor, centroid, m);
+		physColliderGenerateMoment(c, &colliderInertiaTensor, centroid, m);
 
 		tempInertiaTensor[0] += colliderInertiaTensor.m[0][0];
 		tempInertiaTensor[1] += colliderInertiaTensor.m[1][1];
@@ -232,13 +232,13 @@ void (* const physColliderGenerateMomentJumpTable[COLLIDER_TYPE_NUM])(
 	physColliderGenerateMomentPoint,
 	physColliderGenerateMomentComposite
 };
-__FORCE_INLINE__ void physColliderGenerateMoment(physRigidBodyLocal *const restrict local, const float **const vertexMassArray){
+__FORCE_INLINE__ void physColliderGenerateMoment(collider *const local, mat3 *const restrict inertiaTensor, vec3 *const restrict centroid, const float **const vertexMassArray){
 
 	/*
 	** Calculates the collider's moment of inertia tensor.
 	*/
 
-	physColliderGenerateMomentJumpTable[local->hull.type](&local->hull.data, &local->inertiaTensor, &local->centroid, vertexMassArray);
+	physColliderGenerateMomentJumpTable[local->type](&local->data, inertiaTensor, centroid, vertexMassArray);
 
 }
 

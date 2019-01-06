@@ -127,6 +127,11 @@ void cTransformMesh(void *const instance, const vec3 *const instanceCentroid, co
 	// Update each collider and find the total bounding box.
 	if(vGlobal < vLast){
 
+		// Extrapolate the collider's centroid from its position.
+		cInstance->centroid = cLocal->centroid;
+		quatRotateVec3Fast(&configuration->orientation, &cInstance->centroid);
+		vec3AddVToV(&cInstance->centroid, &configuration->position);
+
 		/*
 		** First iteration.
 		*/
@@ -197,8 +202,6 @@ void cTransformMesh(void *const instance, const vec3 *const instanceCentroid, co
 		quatRotateVec3FastR(&configuration->orientation, vLocal, vGlobal);
 	}
 
-	cInstance->centroid = *instanceCentroid;
-
 	if(aabb != NULL){
 		*aabb = tempAABB;
 	}
@@ -222,7 +225,7 @@ void cTransformComposite(void *const instance, const vec3 *const instanceCentroi
 		/*
 		** First iteration.
 		*/
-		cTransformJumpTable[c1->type](&c1->data, instanceCentroid, &c2->data, localCentroid, &tempAABB, configuration);
+		cTransform(c1, instanceCentroid, c2, localCentroid, &tempAABB, configuration);
 
 		/*
 		** Remaining iterations.
@@ -230,7 +233,7 @@ void cTransformComposite(void *const instance, const vec3 *const instanceCentroi
 		for(++c1, ++c2; c1 < cLast; ++c1, ++c2){
 
 			cAABB colliderAABB;
-			cTransformJumpTable[c1->type](&c1->data, instanceCentroid, &c2->data, localCentroid, &colliderAABB, configuration);
+			cTransform(c1, instanceCentroid, c2, localCentroid, &colliderAABB, configuration);
 
 			// Update collider minima and maxima.
 			// Update aabb.left and aabb.right.
