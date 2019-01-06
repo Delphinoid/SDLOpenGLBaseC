@@ -9,19 +9,19 @@ void physIslandInit(physIsland *const restrict island){
 	island->bodies = NULL;
 }
 
-return_t physIslandAddBody(physIsland *const restrict island, physRBInstance *const prbi){
-	if(prbi->local != NULL && prbi->local->colliders){
+return_t physIslandAddBody(physIsland *const restrict island, physRigidBody *const body){
+	if(body->local != NULL){
 		if(island->bodyNum >= island->bodyCapacity){
 			// Allocate room for more bodies.
 			physicsBodyIndex_t i;
 			physicsBodyIndex_t tempCapacity;
-			physRBInstance **tempBuffer;
+			physRigidBody **tempBuffer;
 			if(island->bodyCapacity == 0){
 				tempCapacity = 1;
-				tempBuffer = memAllocate(tempCapacity*sizeof(physRBInstance *));
+				tempBuffer = memAllocate(tempCapacity*sizeof(physRigidBody *));
 			}else{
 				tempCapacity = island->bodyCapacity*2;
-				tempBuffer = memReallocate(island->bodies, tempCapacity*sizeof(physRBInstance *));
+				tempBuffer = memReallocate(island->bodies, tempCapacity*sizeof(physRigidBody *));
 			}
 			if(tempBuffer == NULL){
 				/** Memory allocation failure. **/
@@ -33,23 +33,23 @@ return_t physIslandAddBody(physIsland *const restrict island, physRBInstance *co
 				island->bodies[i] = NULL;
 			}
 		}
-		island->bodies[island->bodyNum] = prbi;
+		island->bodies[island->bodyNum] = body;
 		++island->bodyNum;
 		return 1;
 	}
 	return 0;
 }
 
-/*return_t physIslandAddObject(physIsland *const restrict island, objInstance *const restrict obji){
-	if(obji->skeletonBodies != NULL){
+/*return_t physIslandAddObject(physIsland *const restrict island, object *const restrict obj){
+	if(obj->skeletonBodies != NULL){
 		size_t i;
-		for(i = 0; i < obji->skl->boneNum; ++i){
+		for(i = 0; i < obj->skl->boneNum; ++i){
 			** Memory allocation failure. **
-			if(physIslandAddBody(island, &obji->skeletonBodies[i]) < 0){
+			if(physIslandAddBody(island, &obj->skeletonBodies[i]) < 0){
 				break;
 			}
 		}
-		if(i < obji->skl->boneNum){
+		if(i < obj->skl->boneNum){
 			** Memory allocation failure. **
 			while(i > 0){
 				--i;
@@ -76,7 +76,7 @@ void physIslandUpdate(physIsland *const restrict island, const float dt){
 
 			// The body's owner has been deleted, free the body and
 			// increase del so future bodies will be shifted over.
-			physRBIDelete(island->bodies[index]);
+			physRigidBodyDelete(island->bodies[index]);
 			memFree(island->bodies[index]);
 			++del;
 
@@ -84,12 +84,12 @@ void physIslandUpdate(physIsland *const restrict island, const float dt){
 
 			// Integrate the body and solve constraints if desired.
 			if(flagsAreSet(island->bodies[index]->flags, PHYSICS_BODY_SIMULATE)){
-				//physRBIIntegrateEuler(island->bodies[index], dt);
+				//physRigidBodyIntegrateEuler(island->bodies[index], dt);
 			}
 
 			// If the body can collide, update its collision mesh.
 			if(flagsAreSet(island->bodies[index]->flags, PHYSICS_BODY_COLLIDE)){
-				physRBIUpdateCollisionMesh(island->bodies[index]);
+				physRigidBodyUpdateCollisionMesh(island->bodies[index]);
 			}
 
 		}
@@ -101,7 +101,7 @@ void physIslandUpdate(physIsland *const restrict island, const float dt){
 
 }
 
-void physIslandBroadPhase(physIsland *const restrict island, const float dt, physicsBodyIndex_t *const restrict pairArraySize, physRigidBody ***const restrict pairArray){
+void physIslandBroadPhase(physIsland *const restrict island, const float dt, physicsBodyIndex_t *const restrict pairArraySize, physRigidBodyLocal ***const restrict pairArray){
 
 
 
@@ -129,13 +129,13 @@ return_t physIslandSimulate(physIsland *const restrict island, const float dt){
 
 	/*physicsBodyIndex_t i, j;
 	cSeparationCache separationInfo;
-	cContactManifold collisionData;
+	cContact collisionData;
 	for(i = 0; i < island->bodyNum; ++i){
 		for(j = i+1; j < island->bodyNum; ++j){
 			if(cCollision(&island->bodies[i]->colliders[0].c, &island->bodies[i]->colliders[0].centroid,
 			              &island->bodies[j]->colliders[0].c, &island->bodies[j]->colliders[0].centroid,
 			              &separationInfo, &collisionData)){
-				//physRBIResolveCollision(island->bodies[i], island->bodies[j], &collisionData);
+				//physRigidBodyResolveCollision(island->bodies[i], island->bodies[j], &collisionData);
 				//if(j==island->bodyNum-1){
 					//island->bodies[i]->blah=1;
 					//island->bodies[j]->blah=1;

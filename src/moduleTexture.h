@@ -10,6 +10,7 @@
 #define RESOURCE_TEXTURE_CONSTANTS 1
 #define RESOURCE_TEXTURE_BLOCK_SIZE memPoolBlockSize(sizeof(texture))
 
+// Forward declaration for inlining.
 extern memoryPool __TextureResourceArray;  // Contains textures.
 
 /** Support locals? Merge all module containers? **/

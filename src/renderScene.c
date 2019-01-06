@@ -16,24 +16,24 @@
 /** THIS FILE IS TEMPORARY **/
 
 /** This should not be necessary! **/
-void renderModel(const objInstance *const restrict obji, const float distance, const camera *const restrict cam, const float interpT, graphicsManager *const restrict gfxMngr){
+void renderModel(const object *const restrict obj, const float distance, const camera *const restrict cam, const float interpT, graphicsManager *const restrict gfxMngr){
 
 	bone interpBone;
-	rndrInstance *currentRndr = obji->renderables;
+	rndrInstance *currentRndr = obj->renderables;
 
 	mat4 *transform = gfxMngr->sklTransformState;
-	bone *bCurrent = obji->state.skeleton;
-	bone *bPrevious = (obji->state.previous == NULL ? bCurrent : obji->state.previous->skeleton);
-	bone *bLast = &bCurrent[obji->skeletonData.skl->boneNum];
+	bone *bCurrent = obj->state.skeleton;
+	bone *bPrevious = (obj->state.previous == NULL ? bCurrent : obj->state.previous->skeleton);
+	bone *bLast = &bCurrent[obj->skeletonData.skl->boneNum];
 
 	// Update the object's configuration for rendering.
-	//rndrConfigRenderUpdate(&obji->tempRndrConfig, interpT);  /** Only line that requires non-const object. **/
+	//rndrConfigRenderUpdate(&obj->tempRndrConfig, interpT);  /** Only line that requires non-const object. **/
 
 	// Interpolate between the previous and last skeleton states.
 	for(; bCurrent < bLast; ++bCurrent, ++bPrevious, ++transform){
 
 		// Interpolate between bone states.
-		//boneInterpolate(&obji->skeletonState[1][i], &obji->skeletonState[0][i], interpT, &interpBone);
+		//boneInterpolate(&obj->skeletonState[1][i], &obj->skeletonState[0][i], interpT, &interpBone);
 		boneInterpolateR(bPrevious, bCurrent, interpT, &interpBone);
 
 		// Convert the bone to a matrix.
@@ -102,8 +102,8 @@ void renderModel(const objInstance *const restrict obji, const float distance, c
 
 					// If the animated bone is in the model, pass in its animation transforms.
 					/** Use a lookup, same in object.c. **/
-					rndrBone = sklFindBone(obji->skeletonData.skl, i, nLayout->name);
-					if(rndrBone < obji->skeletonData.skl->boneNum){
+					rndrBone = sklFindBone(obj->skeletonData.skl, i, nLayout->name);
+					if(rndrBone < obj->skeletonData.skl->boneNum){
 
 						transform = gfxMngr->sklTransformState[rndrBone];
 
@@ -161,7 +161,7 @@ void renderModel(const objInstance *const restrict obji, const float distance, c
 /** Clean this up! **/
 /**void batchRenderSprites(cVector *allSprites, const camera *cam, const float interpT, graphicsManager *gfxMngr){
 
-	objInstance *currentSpr;
+	object *currentSpr;
 	rndrInstance *currentRndr;
 	size_t i;
 	float texFrag[4];
@@ -182,7 +182,7 @@ void renderModel(const objInstance *const restrict obji, const float distance, c
 	// Find the first sprite with a valid renderable.
 	// Bind its VAO and use its VBO to draw every other sprite.
 	for(i = 0; i < allSprites->size; ++i){
-		currentSpr = *((objInstance **)cvGet(allSprites, i));
+		currentSpr = *((object **)cvGet(allSprites, i));
 		if(currentSpr != NULL){  ** Remove? **
 			currentRndr = currentSpr->renderables;
 			while(currentRndr != NULL){
@@ -223,7 +223,7 @@ void renderModel(const objInstance *const restrict obji, const float distance, c
 
 					// Add sprite to the current batch.
 					gfxMngr->lastTexID = currentTexID;
-					objiGenerateSprite(currentSpr, currentRndr, interpT, texFrag, (vertex *)(&gfxMngr->sprVertexBatchBuffer[currentVertexBatchSize]));
+					objGenerateSprite(currentSpr, currentRndr, interpT, texFrag, (vertex *)(&gfxMngr->sprVertexBatchBuffer[currentVertexBatchSize]));
 					// Copy duplicates, since IBOs aren't working.
 					gfxMngr->sprVertexBatchBuffer[currentVertexBatchSize+5] = gfxMngr->sprVertexBatchBuffer[currentVertexBatchSize];
 					gfxMngr->sprVertexBatchBuffer[currentVertexBatchSize+4] = gfxMngr->sprVertexBatchBuffer[currentVertexBatchSize+2];
@@ -239,7 +239,7 @@ void renderModel(const objInstance *const restrict obji, const float distance, c
 		}
 
 		++i;
-		currentSpr = *((objInstance **)cvGet(allSprites, i));
+		currentSpr = *((object **)cvGet(allSprites, i));
 		currentRndr = currentSpr->renderables;
 
 	}
@@ -266,13 +266,13 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *c
 	size_t i;
 	for(i = 0; i < allModels->size; ++i){
 
-		objInstance *curMdl = *((objInstance **)cvGet(allModels, i));
-		const gfxRenderGroup_t currentRenderGroup = 1;//objiRenderGroup(curMdl);
+		object *curMdl = *((object **)cvGet(allModels, i));
+		const gfxRenderGroup_t currentRenderGroup = 1;//objRenderGroup(curMdl);
 
 		if(currentRenderGroup == GFX_RENDER_GROUP_OPAQUE){
-			cvPush(mdlRenderList, (void *)&curMdl, sizeof(objInstance *));
+			cvPush(mdlRenderList, (void *)&curMdl, sizeof(object *));
 		}else if(currentRenderGroup == GFX_RENDER_GROUP_TRANSLUCENT){
-			cvPush(&translucentModels, (void *)&curMdl, sizeof(objInstance *));
+			cvPush(&translucentModels, (void *)&curMdl, sizeof(object *));
 			float tempDistance = camDistance(cam, &curMdl->state.skeleton[0].position);
 			cvPush(&distances, (void *)&tempDistance, sizeof(float));
 		}
@@ -293,9 +293,9 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *c
 				cvSet(&distances, j-1, cvGet(&distances, j), sizeof(float));
 				cvSet(&distances, j, (void *)&tempDistance, sizeof(float));
 
-				objInstance *tempModel = *((objInstance **)cvGet(&translucentModels, j-1));
-				cvSet(&translucentModels, j-1, cvGet(&translucentModels, j), sizeof(objInstance *));
-				cvSet(&translucentModels, j, (void *)&tempModel, sizeof(objInstance *));
+				object *tempModel = *((object **)cvGet(&translucentModels, j-1));
+				cvSet(&translucentModels, j-1, cvGet(&translucentModels, j), sizeof(object *));
+				cvSet(&translucentModels, j, (void *)&tempModel, sizeof(object *));
 
 			}
 
@@ -306,7 +306,7 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *c
 	// Combine the three vectors
 	cvResize(mdlRenderList, mdlRenderList->size + translucentModels.size);
 	for(i = 0; i < translucentModels.size; ++i){
-		cvPush(mdlRenderList, cvGet(&translucentModels, i), sizeof(objInstance *));
+		cvPush(mdlRenderList, cvGet(&translucentModels, i), sizeof(object *));
 	}
 	cvClear(&translucentModels);
 	cvClear(&distances);
@@ -328,19 +328,19 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *c
 	for(i = 0; i < gameStateManager->objectType[SM_TYPE_CAMERA].capacity; ++i){
 		if(camGetState(gameStateManager, i, stateID) != NULL){
 			for(j = 0; j < camGetState(gameStateManager, i, stateID)->targetScene->objectNum; ++j){
-				objInstance *curObj = objGetState(gameStateManager, camGetState(gameStateManager, i, stateID)->targetScene->objectIDs[j], stateID);
+				object *curObj = objGetState(gameStateManager, camGetState(gameStateManager, i, stateID)->targetScene->objectIDs[j], stateID);
 				if(curObj != NULL){
 					if(!curObj->tempRndrConfig.sprite){
 						if(i == 0){
-							cvPush(modelsScene, (void *)&curObj, sizeof(objInstance *));
+							cvPush(modelsScene, (void *)&curObj, sizeof(object *));
 						}else{
-							cvPush(modelsHUD, (void *)&curObj, sizeof(objInstance *));
+							cvPush(modelsHUD, (void *)&curObj, sizeof(object *));
 						}
 					}else{
 						if(i == 0){
-							cvPush(spritesScene, (void *)&curObj, sizeof(objInstance *));
+							cvPush(spritesScene, (void *)&curObj, sizeof(object *));
 						}else{
-							cvPush(spritesHUD, (void *)&curObj, sizeof(objInstance *));
+							cvPush(spritesHUD, (void *)&curObj, sizeof(object *));
 						}
 					}
 				}
@@ -351,7 +351,7 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *c
 
 }
 
-void rndrSortObjects(const size_t objectNum, objInstance **objects){
+void rndrSortObjects(const size_t objectNum, object **objects){
 
 	//
 
@@ -421,7 +421,7 @@ void renderScene(graphicsManager *gfxMngr, scene *scn, camera *cam, const float 
 		depthSortModels(&modelsScene, &renderList, camGetState(gameStateManager, 0, stateID));
 		// Render scene models.
 		for(i = 0; i < renderList.size; ++i){
-			renderModel(*((objInstance **)cvGet(&renderList, i)), camGetState(gameStateManager, 0, stateID), interpT, gfxMngr);
+			renderModel(*((object **)cvGet(&renderList, i)), camGetState(gameStateManager, 0, stateID), interpT, gfxMngr);
 		}
 		// Batch render scene sprites.
 		batchRenderSprites(&spritesScene, camGetState(gameStateManager, 0, stateID), interpT, gfxMngr);
@@ -437,7 +437,7 @@ void renderScene(graphicsManager *gfxMngr, scene *scn, camera *cam, const float 
 		// Render HUD models.
 		** HUD camera? Streamline this to make handling different cameras easily **
 		for(i = 0; i < modelsHUD.size; ++i){
-			renderModel(*((objInstance **)cvGet(&modelsHUD, i)), camGetState(gameStateManager, 1, stateID), interpT, gfxMngr);
+			renderModel(*((object **)cvGet(&modelsHUD, i)), camGetState(gameStateManager, 1, stateID), interpT, gfxMngr);
 		}
 		// Batch render HUD sprites.
 		batchRenderSprites(&spritesHUD, camGetState(gameStateManager, 1, stateID), interpT, gfxMngr);

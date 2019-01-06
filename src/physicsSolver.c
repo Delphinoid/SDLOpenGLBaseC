@@ -11,7 +11,7 @@
 static void physSolverClear(memoryRegion *const region){
 
 	/** Temporary. **/
-	MEMORY_REGION_LOOP_BEGIN(region, i, physRBInstance **);
+	MEMORY_REGION_LOOP_BEGIN(region, i, physRigidBody **);
 		*i = NULL;
 	MEMORY_REGION_LOOP_END(i);
 
@@ -26,7 +26,7 @@ return_t physSolverInit(physicsSolver *const restrict solver, size_t bodyNum){
 	}
 
 	{
-		const size_t bytes = bodyNum * sizeof(physRBInstance *);
+		const size_t bytes = bodyNum * sizeof(physRigidBody *);
 		void *const memory = memAllocate(bytes + sizeof(memoryRegion));
 		if(memory == NULL){
 			/** Memory allocation failure. **/
@@ -46,13 +46,13 @@ return_t physSolverInit(physicsSolver *const restrict solver, size_t bodyNum){
 void physSolverReset(physicsSolver *const restrict solver){
 
 	/** Temporary: This will later be done during solving. **/
-	MEMORY_REGION_LOOP_BEGIN(solver->bodies, i, physRBInstance **);
+	MEMORY_REGION_LOOP_BEGIN(solver->bodies, i, physRigidBody **);
 		*i = NULL;
 	MEMORY_REGION_LOOP_END(i);
 
 }
 
-return_t physSolverAllocate(physicsSolver *const restrict solver, physRBInstance *const body){
+return_t physSolverAllocate(physicsSolver *const restrict solver, physRigidBody *const body){
 
 	/*
 	** Add a new body to the solver, resizing the
@@ -61,7 +61,7 @@ return_t physSolverAllocate(physicsSolver *const restrict solver, physRBInstance
 
 	/** Temporary. **/
 	physicsBodyIndex_t id = 0;
-	MEMORY_REGION_LOOP_BEGIN(solver->bodies, i, physRBInstance **);
+	MEMORY_REGION_LOOP_BEGIN(solver->bodies, i, physRigidBody **);
 
 		if(id == body->id || (*i == NULL || (*i)->id == (physicsBodyIndex_t)-1)){
 			*i = body;
@@ -73,7 +73,7 @@ return_t physSolverAllocate(physicsSolver *const restrict solver, physRBInstance
 	MEMORY_REGION_LOOP_END(i);
 
 	{
-		const size_t bytes = solver->bodyNum * sizeof(physRBInstance *);
+		const size_t bytes = solver->bodyNum * sizeof(physRigidBody *);
 		void *const memory = memAllocate(bytes + sizeof(memoryRegion));
 		if(memory == NULL){
 			/** Memory allocation failure. **/
@@ -100,10 +100,10 @@ return_t physSolverUpdate(physicsSolver *const restrict solver){
 	*/
 
 	/** Temporary. **/
-	MEMORY_REGION_LOOP_BEGIN(solver->bodies, i, physRBInstance **);
+	MEMORY_REGION_LOOP_BEGIN(solver->bodies, i, physRigidBody **);
 		if(*i != NULL){
 
-			MEMORY_REGION_OFFSET_LOOP_BEGIN(__region_i, j, physRBInstance **, i+1);
+			MEMORY_REGION_OFFSET_LOOP_BEGIN(__region_i, j, physRigidBody **, i+1);
 			if(*j != NULL){
 
 					/**
@@ -122,18 +122,12 @@ return_t physSolverUpdate(physicsSolver *const restrict solver){
 
 					// Find the last frame's separation for
 					// this pair, if it exists.
-					physSeparation *last = physRBIFindSeparation(*i, (*j)->id, &previous);
+					physSeparation *last = physRigidBodyFindSeparation(*i, (*j)->id, &previous);
 
 					if(last != NULL){
 
 						// Check the last frame's separation.
-						if(
-							cSeparation(
-								&(*i)->colliders[0].c, &(*i)->centroid,
-								&(*j)->colliders[0].c, &(*j)->centroid,
-								&last->separation
-							)
-						){
+						if(cCheckSeparation(&(*i)->hull, &(*j)->hull, &last->separation)){
 							// The separation still exists, continue.
 							continue;
 						}
@@ -146,18 +140,12 @@ return_t physSolverUpdate(physicsSolver *const restrict solver){
 						separationContainer.id = (*j)->id;
 					}
 
-					if(
-						cCollision(
-							&(*i)->colliders[0].c, &(*i)->centroid,
-							&(*j)->colliders[0].c, &(*j)->centroid,
-							&last->separation, &contactContainer.manifold
-						)
-					){
+					if(cCheckCollision(&(*i)->hull, &(*j)->hull, &last->separation, &contactContainer.manifold)){
 
 						// If a separation had been added on the
 						// last frame, remove it from the cache.
 						if(last != &separationContainer){
-							physRBIRemoveSeparation(*i, last, previous);
+							physRigidBodyRemoveSeparation(*i, last, previous);
 						}
 
 						// Set up the contact container and
@@ -172,7 +160,7 @@ return_t physSolverUpdate(physicsSolver *const restrict solver){
 						// add it to the first body's cache.
 						// If it has been added previously, it will
 						// have been modified in cCollision.
-						last = physRBICacheSeparation(*i, previous);
+						last = physRigidBodyCacheSeparation(*i, previous);
 						if(last != NULL){
 							*last = separationContainer;
 						}else{
@@ -189,14 +177,14 @@ return_t physSolverUpdate(physicsSolver *const restrict solver){
 	MEMORY_REGION_LOOP_END(i);
 
 
-	/**MEMORY_POOL_LOOP_BEGIN(solver->bodies, i, physRBInstance **);
+	/**MEMORY_POOL_LOOP_BEGIN(solver->bodies, i, physRigidBody **);
 
 		MEMORY_POOL_OFFSET_LOOP_BEGIN(
-			solver->bodies, j, const physRBInstance **,
+			solver->bodies, j, const physRigidBody **,
 			__region_i, memPoolBlockNext(solver->bodies, i)
 		);
 
-			cContactManifold collisionData;
+			cContact collisionData;
 			physSeparation separationCache;
 
 			// The previous separation in the SLink,
@@ -205,9 +193,9 @@ return_t physSolverUpdate(physicsSolver *const restrict solver){
 
 			// Find the last frame's separation for
 			// this pair, if it exists.
-			physSeparation *last = physRBIFindSeparation(*i, (*j)->id, &previous);
+			physSeparation *last = physRigidBodyFindSeparation(*i, (*j)->id, &previous);
 
-			cContactManifoldInit(&collisionData);
+			cContactInit(&collisionData);
 			if(last == NULL){
 				// The first body has no separation data
 				// for the current collision in its cache.
@@ -228,10 +216,10 @@ return_t physSolverUpdate(physicsSolver *const restrict solver){
 				if(last != &separationCache){
 					// If a separation was added,
 					// remove it from the cache.
-					physRBIRemoveSeparation(*i, last, previous);
+					physRigidBodyRemoveSeparation(*i, last, previous);
 				}
 				//
-				//physRBIResolveCollision(island->bodies[i], island->bodies[j], &collisionData);
+				//physRigidBodyResolveCollision(island->bodies[i], island->bodies[j], &collisionData);
 				//if(j==island->bodyNum-1){
 					//island->bodies[i]->blah=1;
 					//island->bodies[j]->blah=1;
@@ -243,7 +231,7 @@ return_t physSolverUpdate(physicsSolver *const restrict solver){
 				// add it to the first body's cache.
 				// If it has been added previously, it will
 				// have been modified in cCollision.
-				last = physRBICacheSeparation(*i, previous);
+				last = physRigidBodyCacheSeparation(*i, previous);
 				if(last != NULL){
 					*last = separationCache;
 				}else{
@@ -262,21 +250,21 @@ return_t physSolverUpdate(physicsSolver *const restrict solver){
 
 	/**physicsBodyIndex_t i, j;
 	cSeparationCache separationInfo;
-	cContactManifold collisionData;
+	cContact collisionData;
 	for(i = 0; i < solver->bodyNum; i=solver->bodyNum){
 		for(j = 2; j < solver->bodyNum; j=solver->bodyNum){
 			if(cCollision(&solver->bodies[i].body->colliders[0].c, &solver->bodies[i].body->centroid,
 			              &solver->bodies[j].body->colliders[0].c, &solver->bodies[j].body->centroid,
 			              &separationInfo, &collisionData)){
 			    //
-				//physRBIResolveCollision(island->bodies[i], island->bodies[j], &collisionData);
+				//physRigidBodyResolveCollision(island->bodies[i], island->bodies[j], &collisionData);
 				//if(j==island->bodyNum-1){
 					//island->bodies[i]->blah=1;
 					//island->bodies[j]->blah=1;
 					//exit(0);
 				//}
 			}else{
-				//physRBICacheSeparation()
+				//physRigidBodyCacheSeparation()
 			}
 		}
 	}**/

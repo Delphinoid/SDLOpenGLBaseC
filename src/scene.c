@@ -13,9 +13,9 @@ return_t scnInit(scene *const restrict scn, size_t objectNum, size_t bodyNum){
 
 	{
 		void *const memory = memAllocate(
-			memPoolAllocationSize(NULL, sizeof(objInstance *), objectNum)
+			memPoolAllocationSize(NULL, sizeof(object *), objectNum)
 		);
-		if(memPoolCreate(&scn->objects, memory, sizeof(objInstance *), objectNum) == NULL){
+		if(memPoolCreate(&scn->objects, memory, sizeof(object *), objectNum) == NULL){
 			return -1;
 		}
 	}
@@ -25,15 +25,15 @@ return_t scnInit(scene *const restrict scn, size_t objectNum, size_t bodyNum){
 
 }
 
-__FORCE_INLINE__ objInstance **scnAllocate(scene *const restrict scn){
+__FORCE_INLINE__ object **scnAllocate(scene *const restrict scn){
 	/** scn->objectNum is not correct here. We want fixed-size regions. **/
-	objInstance **r = memPoolAllocate(&scn->objects);
+	object **r = memPoolAllocate(&scn->objects);
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
-			memPoolAllocationSize(NULL, sizeof(objInstance *), scn->objectNum)
+			memPoolAllocationSize(NULL, sizeof(object *), scn->objectNum)
 		);
-		if(memPoolExtend(&scn->objects, memory, sizeof(objInstance *), scn->objectNum)){
+		if(memPoolExtend(&scn->objects, memory, sizeof(object *), scn->objectNum)){
 			r = memPoolAllocate(&scn->objects);
 		}
 	}
@@ -43,8 +43,8 @@ __FORCE_INLINE__ objInstance **scnAllocate(scene *const restrict scn){
 	return r;
 }
 
-__FORCE_INLINE__ void scnFree(scene *const restrict scn, objInstance **const restrict obji){
-	memPoolFree(&scn->objects, (void *)obji);
+__FORCE_INLINE__ void scnFree(scene *const restrict scn, object **const restrict obj){
+	memPoolFree(&scn->objects, (void *)obj);
 }
 #include "moduleObject.h"
 void scnUpdate(scene *const restrict scn, const float elapsedTime, const float dt){
@@ -55,10 +55,10 @@ void scnUpdate(scene *const restrict scn, const float elapsedTime, const float d
 
 	physSolverReset(&scn->solver);
 
-	MEMORY_POOL_LOOP_BEGIN(scn->objects, i, objInstance **);
+	MEMORY_POOL_LOOP_BEGIN(scn->objects, i, object **);
 
 		// Update each object in the scene.
-		objiUpdate(*i, &scn->solver, elapsedTime, dt);
+		objUpdate(*i, &scn->solver, elapsedTime, dt);
 
 	MEMORY_POOL_LOOP_END(scn->objects, i, goto UPDATE_PHYSICS_SOLVER;);
 

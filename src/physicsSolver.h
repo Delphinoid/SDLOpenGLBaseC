@@ -16,14 +16,14 @@
 **/
 
 /**typedef struct {
-	physRBInstance *body;
+	physRigidBody *body;
 	flags_t active;
 } physBodyReference;**/
 
 typedef struct {
 
 	// Array of pointers to object physics bodies.
-	memoryRegion *bodies;  // Contains physRBInstance pointers.
+	memoryRegion *bodies;  // Contains physRigidBody pointers.
 	size_t bodyNum;
 
 	/** Constraints? **/
@@ -37,7 +37,7 @@ typedef struct {
 
 return_t physSolverInit(physicsSolver *const restrict solver, size_t bodyNum);
 void physSolverReset(physicsSolver *const restrict solver);
-return_t physSolverAllocate(physicsSolver *const restrict solver, physRBInstance *const body);
+return_t physSolverAllocate(physicsSolver *const restrict solver, physRigidBody *const body);
 return_t physSolverUpdate(physicsSolver *const restrict solver);
 void physSolverDelete(physicsSolver *const restrict solver);
 

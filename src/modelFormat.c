@@ -2,6 +2,7 @@
 #include "memoryManager.h"
 #include "helpersFileIO.h"
 #include "helpersMisc.h"
+#include <stdlib.h>
 #include <string.h>
 #include <float.h>
 
@@ -106,7 +107,7 @@ return_t mdlWavefrontObjLoad(const char *const restrict filePath, size_t *const 
 		if(generatePhysProperties){
 			*mass = 0.f;
 			*area = 0.f;
-			vec3SetS(centroid, 0.f);
+			vec3Zero(centroid);
 		}**/
 		*vertexNum = 0;
 		*indexNum = 0;
@@ -397,9 +398,7 @@ return_t mdlWavefrontObjLoad(const char *const restrict filePath, size_t *const 
 						tempVert.position.y = tempPositions[pos+1];
 						tempVert.position.z = tempPositions[pos+2];
 					}else{
-						tempVert.position.x = 0.f;
-						tempVert.position.y = 0.f;
-						tempVert.position.z = 0.f;
+						vec3Zero(&tempVert.position);
 					}
 					// Vertex UV data
 					pos = uvIndex[i]<<1;
@@ -417,9 +416,7 @@ return_t mdlWavefrontObjLoad(const char *const restrict filePath, size_t *const 
 						tempVert.normal.y = tempNormals[pos+1];
 						tempVert.normal.z = tempNormals[pos+2];
 					}else{
-						tempVert.normal.x = 0.f;
-						tempVert.normal.y = 0.f;
-						tempVert.normal.z = 0.f;
+						vec3Zero(&tempVert.normal);
 					}
 					/****/
 					pos = positionIndex[i]*4;

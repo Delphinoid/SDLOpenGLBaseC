@@ -19,13 +19,17 @@
 
 typedef int_least8_t physConstraintType_t;
 
-// Forward declaration of physRBInstance.
-//typedef struct physRBInstance physRBInstance;
+// Forward declaration of physRigidBody.
+//typedef struct physRigidBody physRigidBody;
+
+typedef union {
+	int temp;
+} physConstraintData;
 
 typedef struct {
-	//physRBInstance *bodyA;
-	//physRBInstance *bodyB;
-	byte_t data[PHYSICS_CONSTRAINT_MAX_SIZE];
+	//physRigidBody *bodyA;
+	//physRigidBody *bodyB;
+	physConstraintData data;
 	flags_t flags;
 } physConstraint;
 

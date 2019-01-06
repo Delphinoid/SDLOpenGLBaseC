@@ -4,6 +4,7 @@
 #include "inline.h"
 #include <math.h>
 #include <float.h>
+#include <string.h>
 
 #define QUAT_LERP_ANGLE cos(RADIAN_RATIO)
 
@@ -68,6 +69,9 @@ __HINT_INLINE__ void quatSetEuler(quat *const restrict q, const float x, const f
 	q->v.x = sx*cy*cz-cx*sy*sz;
 	q->v.y = cx*sy*cz+sx*cy*sz;
 	q->v.z = cx*cy*sz-sx*sy*cz;
+}
+void quatZero(quat *const restrict q){
+	memset(q, 0, sizeof(quat));
 }
 
 __HINT_INLINE__ quat quatQAddQ(const quat *const restrict q1, const quat *const restrict q2){
@@ -228,7 +232,7 @@ __HINT_INLINE__ void quatDivQByQ1(quat *const restrict q1, const quat *const res
 		q1->v.y /= q2->v.y;
 		q1->v.z /= q2->v.z;
 	}else{
-		quatSetS(q1, 0.f);
+		quatZero(q1);
 	}
 }
 __HINT_INLINE__ void quatDivQByQ2(const quat *const restrict q1, quat *const restrict q2){
@@ -238,7 +242,7 @@ __HINT_INLINE__ void quatDivQByQ2(const quat *const restrict q1, quat *const res
 		q2->v.y = q1->v.y / q2->v.y;
 		q2->v.z = q1->v.z / q2->v.z;
 	}else{
-		quatSetS(q2, 0.f);
+		quatZero(q2);
 	}
 }
 __HINT_INLINE__ void quatDivQByQR(const quat *const restrict q1, const quat *const restrict q2, quat *const restrict r){
@@ -248,7 +252,7 @@ __HINT_INLINE__ void quatDivQByQR(const quat *const restrict q1, const quat *con
 		r->v.y = q1->v.y / q2->v.y;
 		r->v.z = q1->v.z / q2->v.z;
 	}else{
-		quatSetS(r, 0.f);
+		quatZero(r);
 	}
 }
 __HINT_INLINE__ void quatDivQByS(quat *const restrict q, const float s){
@@ -259,7 +263,7 @@ __HINT_INLINE__ void quatDivQByS(quat *const restrict q, const float s){
 		q->v.y *= invS;
 		q->v.z *= invS;
 	}else{
-		quatSetS(q, 0.f);
+		quatZero(q);
 	}
 }
 

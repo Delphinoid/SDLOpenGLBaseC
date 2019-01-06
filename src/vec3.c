@@ -1,6 +1,7 @@
 #include "helpersMath.h"
 #include "inline.h"
 #include <math.h>
+#include <string.h>
 
 __HINT_INLINE__ vec3 vec3New(const float x, const float y, const float z){
 	const vec3 v = {.x = x, .y = y, .z = z};
@@ -35,6 +36,10 @@ __HINT_INLINE__ vec3 vec3VAddS(const vec3 *const restrict v, const float s){
 	          .z = v->z + s};
 	return r;
 }
+__HINT_INLINE__ void vec3Zero(vec3 *const restrict v){
+	memset(v, 0, sizeof(vec3));
+}
+
 __HINT_INLINE__ void vec3AddVToV(vec3 *const restrict v1, const vec3 *const restrict v2){
 	v1->x += v2->x; v1->y += v2->y; v1->z += v2->z;
 }

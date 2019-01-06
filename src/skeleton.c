@@ -6,6 +6,7 @@
 #include "inline.h"
 #include "helpersFileIO.h"
 #include "helpersMisc.h"
+#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -33,7 +34,7 @@ static void sklDefragment(skeleton *const restrict skl){
 }
 
 static return_t sklResizeToFit(skeleton *const restrict skl){
-	/*bone *tempBuffer = memReallocate(skl->bones, skl->boneNum*sizeof(sklNode));
+	/*bone *const tempBuffer = memReallocate(skl->bones, skl->boneNum*sizeof(sklNode));
 	if(tempBuffer == NULL){
 		** Memory allocation failure. **
 		sklDelete(skl);
@@ -374,7 +375,7 @@ return_t sklaLoad(sklAnim *const restrict skla, const char *const restrict prgPa
 					// Resize the bone name array if necessary.
 					if(skla->boneNum == boneCapacity){
 						boneCapacity *= 2;
-						char **tempBuffer = memReallocate(skla->bones, boneCapacity*sizeof(char *));
+						char **const tempBuffer = memReallocate(skla->bones, boneCapacity*sizeof(char *));
 						if(tempBuffer == NULL){
 							/** Memory allocation failure. **/
 							sklaDelete(skla);

@@ -10,6 +10,7 @@
 #define RESOURCE_MODEL_CONSTANTS 2
 #define RESOURCE_MODEL_BLOCK_SIZE memPoolBlockSize(sizeof(model))
 
+// Forward declaration for inlining.
 extern memoryPool __ModelResourceArray;  // Contains models.
 
 /** Support locals? Merge all module containers? **/

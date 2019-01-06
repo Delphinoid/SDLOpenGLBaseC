@@ -6,14 +6,11 @@
 #include "memoryArray.h"
 #include "memorySLink.h"
 
-#define RESOURCE_DEFAULT_RIGID_BODY_SIZE sizeof(physRigidBody)
-#define RESOURCE_DEFAULT_RIGID_BODY_NUM 1024*SKELETON_MAX_BONE_NUM
+#define RESOURCE_DEFAULT_RIGID_BODY_LOCAL_SIZE sizeof(physRigidBodyLocal)
+#define RESOURCE_DEFAULT_RIGID_BODY_LOCAL_NUM 1024*SKELETON_MAX_BONE_NUM
 
-#define RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_SIZE sizeof(physRBInstance)
+#define RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_SIZE sizeof(physRigidBody)
 #define RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_NUM SKELETON_MAX_BONE_NUM*4096
-
-#define RESOURCE_DEFAULT_COLLIDER_SIZE sizeof(physCollider)
-#define RESOURCE_DEFAULT_COLLIDER_NUM 4096
 
 #define RESOURCE_DEFAULT_CONTACT_SIZE sizeof(physContact)
 #define RESOURCE_DEFAULT_CONTACT_NUM RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_NUM
@@ -24,21 +21,30 @@
 #define RESOURCE_DEFAULT_CONSTRAINT_SIZE sizeof(physConstraint)
 #define RESOURCE_DEFAULT_CONSTRAINT_NUM RESOURCE_DEFAULT_RIGID_BODY_INSTANCE_NUM
 
+// Forward declarations for inlining.
+extern memorySLink __PhysicsRigidBodyLocalResourceArray;  // Contains physRigidBodyLocals.
+extern memorySLink __PhysicsRigidBodyResourceArray;       // Contains physRigidBodies.
+extern memoryArray __PhysicsContactResourceArray;         // Contains physContacts.
+extern memorySLink __PhysicsSeparationResourceArray;      // Contains physSeparations.
+extern memorySLink __PhysicsConstraintResourceArray;      // Contains physConstraints.
+
 extern void *__PhysicsContactResourceFreeBlock;
 extern memoryRegion *__PhysicsContactResourceFreeRegion;
-
-extern memorySLink __PhysicsRigidBodyResourceArray;          // Contains physRigidBodies.
-extern memorySLink __PhysicsRigidBodyInstanceResourceArray;  // Contains physRBInstances.
-extern memorySLink __PhysicsColliderResourceArray;           // Contains physColliders.
-extern memoryArray __PhysicsContactResourceArray;            // Contains physContacts.
-extern memorySLink __PhysicsSeparationResourceArray;         // Contains physSeparations.
-extern memorySLink __PhysicsConstraintResourceArray;         // Contains physConstraints.
 
 /** Support locals? Merge all module containers? **/
 
 return_t modulePhysicsResourcesInit();
 void modulePhysicsResourcesReset();
 void modulePhysicsResourcesDelete();
+
+physRigidBodyLocal *modulePhysicsRigidBodyLocalAppendStatic(physRigidBodyLocal **const restrict array);
+physRigidBodyLocal *modulePhysicsRigidBodyLocalAppend(physRigidBodyLocal **const restrict array);
+physRigidBodyLocal *modulePhysicsRigidBodyLocalInsertAfterStatic(physRigidBodyLocal **const restrict array, physRigidBodyLocal *const restrict resource);
+physRigidBodyLocal *modulePhysicsRigidBodyLocalInsertAfter(physRigidBodyLocal **const restrict array, physRigidBodyLocal *const restrict resource);
+physRigidBodyLocal *modulePhysicsRigidBodyLocalNext(const physRigidBodyLocal *const restrict i);
+void modulePhysicsRigidBodyLocalFree(physRigidBodyLocal **const restrict array, physRigidBodyLocal *const restrict resource, const physRigidBodyLocal *const restrict previous);
+void modulePhysicsRigidBodyLocalFreeArray(physRigidBodyLocal **const restrict array);
+void modulePhysicsRigidBodyLocalClear();
 
 physRigidBody *modulePhysicsRigidBodyAppendStatic(physRigidBody **const restrict array);
 physRigidBody *modulePhysicsRigidBodyAppend(physRigidBody **const restrict array);
@@ -48,25 +54,6 @@ physRigidBody *modulePhysicsRigidBodyNext(const physRigidBody *const restrict i)
 void modulePhysicsRigidBodyFree(physRigidBody **const restrict array, physRigidBody *const restrict resource, const physRigidBody *const restrict previous);
 void modulePhysicsRigidBodyFreeArray(physRigidBody **const restrict array);
 void modulePhysicsRigidBodyClear();
-
-physRBInstance *modulePhysicsRigidBodyInstanceAppendStatic(physRBInstance **const restrict array);
-physRBInstance *modulePhysicsRigidBodyInstanceAppend(physRBInstance **const restrict array);
-physRBInstance *modulePhysicsRigidBodyInstanceInsertAfterStatic(physRBInstance **const restrict array, physRBInstance *const restrict resource);
-physRBInstance *modulePhysicsRigidBodyInstanceInsertAfter(physRBInstance **const restrict array, physRBInstance *const restrict resource);
-physRBInstance *modulePhysicsRigidBodyInstanceNext(const physRBInstance *const restrict i);
-void modulePhysicsRigidBodyInstanceFree(physRBInstance **const restrict array, physRBInstance *const restrict resource, const physRBInstance *const restrict previous);
-void modulePhysicsRigidBodyInstanceFreeArray(physRBInstance **const restrict array);
-void modulePhysicsRigidBodyInstanceClear();
-
-physCollider *modulePhysicsColliderAppendStatic(physCollider **const restrict array);
-physCollider *modulePhysicsColliderAppend(physCollider **const restrict array);
-physCollider *modulePhysicsColliderInsertAfterStatic(physCollider **const restrict array, physCollider *const restrict resource);
-physCollider *modulePhysicsColliderInsertAfter(physCollider **const restrict array, physCollider *const restrict resource);
-physCollider *modulePhysicsColliderNext(const physCollider *const restrict i);
-void modulePhysicsColliderFree(physCollider **const restrict array, physCollider *const restrict resource, const physCollider *const restrict previous);
-void modulePhysicsColliderFreeArray(physCollider **const restrict array);
-void modulePhysicsColliderRBIFreeArray(physCollider **const restrict array);
-void modulePhysicsColliderClear();
 
 physContact *modulePhysicsContactAllocateStatic();
 physContact *modulePhysicsContactAllocate();

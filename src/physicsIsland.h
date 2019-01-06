@@ -8,7 +8,7 @@ typedef struct {
 	// Physics body storage.
 	physicsBodyIndex_t bodyNum;
 	physicsBodyIndex_t bodyCapacity;
-	physRBInstance **bodies;  // An array of pointers to bodies.
+	physRigidBody **bodies;  // An array of pointers to bodies.
 
 	// Collision pair storage.
 	/*size_t pairNum;
@@ -18,10 +18,10 @@ typedef struct {
 } physIsland;
 
 void physIslandInit(physIsland *const restrict island);
-return_t physIslandAddBody(physIsland *const restrict island, physRBInstance *const prbi);
-/*return_t physIslandAddObject(physIsland *const restrict island, objInstance *const restrict obji);*/
+return_t physIslandAddBody(physIsland *const restrict island, physRigidBody *const body);
+/*return_t physIslandAddObject(physIsland *const restrict island, object *const restrict obj);*/
 void physIslandUpdate(physIsland *const restrict island, const float dt);
-void physIslandBroadPhase(physIsland *const restrict island, const float dt, physicsBodyIndex_t *const restrict pairArraySize, physRigidBody ***const restrict pairArray);
+void physIslandBroadPhase(physIsland *const restrict island, const float dt, physicsBodyIndex_t *const restrict pairArraySize, physRigidBodyLocal ***const restrict pairArray);
 return_t physIslandSimulate(physIsland *const restrict island, const float dt);
 void physIslandDelete(physIsland *const restrict island);
 

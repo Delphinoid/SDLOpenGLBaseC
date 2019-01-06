@@ -10,6 +10,7 @@
 #define RESOURCE_TEXTURE_WRAPPER_CONSTANTS 1
 #define RESOURCE_TEXTURE_WRAPPER_BLOCK_SIZE memPoolBlockSize(sizeof(textureWrapper))
 
+// Forward declaration for inlining.
 extern memoryPool __TextureWrapperResourceArray;  // Contains textureWrappers.
 
 /** Support locals? Merge all module containers? **/

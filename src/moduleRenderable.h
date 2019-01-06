@@ -10,6 +10,7 @@
 #define RESOURCE_DEFAULT_RENDERABLE_INSTANCE_SIZE sizeof(rndrInstance)
 #define RESOURCE_DEFAULT_RENDERABLE_INSTANCE_NUM 4096
 
+// Forward declarations for inlining.
 extern memorySLink __RenderableResourceArray;          // Contains renderable.
 extern memorySLink __RenderableInstanceResourceArray;  // Contains rndrInstances.
 

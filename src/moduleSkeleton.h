@@ -20,6 +20,7 @@
 #define RESOURCE_SKELETON_CONSTANTS 1
 #define RESOURCE_SKELETON_BLOCK_SIZE memPoolBlockSize(sizeof(skeleton))
 
+// Forward declarations for inlining.
 extern memoryPool  __SkeletonResourceArray;                   // Contains skeletons.
 extern memoryPool  __SkeletonAnimationResourceArray;          // Contains sklAnims.
 extern memorySLink __SkeletonAnimationFragmentResourceArray;  // Contains sklAnimFragments.

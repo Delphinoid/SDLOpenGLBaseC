@@ -1,9 +1,9 @@
-#ifndef COLLIDERCONVEXMESH_H
-#define COLLIDERCONVEXMESH_H
+#ifndef COLLIDERMESH_H
+#define COLLIDERMESH_H
 
-#include "collision.h"
-
-#define COLLIDER_MESH_MAX_ARRAY_SIZE 256
+#include <stddef.h>
+#include "manifold.h"
+#include "return.h"
 
 #define COLLIDER_MESH_SEPARATION_FEATURE_NULL   0
 #define COLLIDER_MESH_SEPARATION_FEATURE_FACE_1 1  // cMeshSeparation contains a face from the first
@@ -43,7 +43,6 @@ typedef struct {
 
 typedef struct {
 
-	//vec3 centroid;  /** Update HB_MAX_COLLIDER_SIZE **/
 	vec3 *vertices;
 
 	vec3 *normals;
@@ -64,14 +63,16 @@ typedef struct {
 	// certain collision functions.
 	cEdgeIndex_t edgeMax;
 
+	vec3 centroid;
+
 } cMesh;
 
 void cMeshInit(cMesh *const restrict cm);
 
-return_t cMeshCollisionSAT(const cMesh *const restrict c1, const cMesh *const restrict c2, const vec3 *const restrict centroid, cMeshSeparation *const restrict sc, cContactManifold *const restrict cm);
-return_t cMeshSeparationSAT(const cMesh *const restrict c1, const cMesh *const restrict c2, const vec3 *const restrict centroid, const cMeshSeparation *const restrict sc);
+return_t cMeshCollisionSAT(const cMesh *const restrict c1, const cMesh *const restrict c2, cMeshSeparation *const restrict sc, cContact *const restrict cm);
+return_t cMeshSeparationSAT(const cMesh *const restrict c1, const cMesh *const restrict c2, const cMeshSeparation *const restrict sc);
 
-return_t cMeshCollisionGJK(const cMesh *const restrict c1, const vec3 *const restrict c1c, const cMesh *const restrict c2, const vec3 *const restrict c2c, cContactManifold *const restrict cm);
+return_t cMeshCollisionGJK(const cMesh *const restrict c1, const cMesh *const restrict c2, cContact *const restrict cm);
 
 void cMeshDelete(cMesh *const restrict cm);
 

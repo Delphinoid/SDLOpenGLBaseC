@@ -4,14 +4,15 @@
 #include "object.h"
 #include "memoryPool.h"
 
+#define RESOURCE_DEFAULT_OBJECT_LOCAL_SIZE sizeof(objectBase)
+#define RESOURCE_DEFAULT_OBJECT_LOCAL_NUM 1024
+
 #define RESOURCE_DEFAULT_OBJECT_SIZE sizeof(object)
-#define RESOURCE_DEFAULT_OBJECT_NUM 1024
+#define RESOURCE_DEFAULT_OBJECT_NUM 4096
 
-#define RESOURCE_DEFAULT_OBJECT_INSTANCE_SIZE sizeof(objInstance)
-#define RESOURCE_DEFAULT_OBJECT_INSTANCE_NUM 4096
-
-extern memoryPool __ObjectResourceArray;          // Contains objects.
-extern memoryPool __ObjectInstanceResourceArray;  // Contains object instances.
+// Forward declarations for inlining.
+extern memoryPool __ObjectBaseResourceArray;      // Contains objectBases.
+extern memoryPool __ObjectInstanceResourceArray;  // Contains objects.
 
 /** Support locals? Merge all module containers? **/
 
@@ -21,16 +22,16 @@ return_t moduleObjectResourcesInit();
 void moduleObjectResourcesReset();
 void moduleObjectResourcesDelete();
 
+objectBase *moduleObjectBaseAllocateStatic();
+objectBase *moduleObjectBaseAllocate();
+void moduleObjectBaseFree(objectBase *const restrict resource);
+objectBase *moduleObjectBaseFind(const char *const restrict name);
+void moduleObjectBaseClear();
+
 object *moduleObjectAllocateStatic();
 object *moduleObjectAllocate();
+object *moduleObjectIndex(const size_t i);
 void moduleObjectFree(object *const restrict resource);
-object *moduleObjectFind(const char *const restrict name);
 void moduleObjectClear();
-
-objInstance *moduleObjectInstanceAllocateStatic();
-objInstance *moduleObjectInstanceAllocate();
-objInstance *moduleObjectInstanceIndex(const size_t i);
-void moduleObjectInstanceFree(objInstance *const restrict resource);
-void moduleObjectInstanceClear();
 
 #endif

@@ -60,7 +60,7 @@ static __FORCE_INLINE__ return_t gfxRendererInitQueues(gfxRenderer *const restri
 
 }
 
-static __FORCE_INLINE__ void gfxRendererGenerateQueuesArray(gfxRenderer *const restrict renderer, const size_t objectNum, const objInstance **const restrict objects){
+static __FORCE_INLINE__ void gfxRendererGenerateQueuesArray(gfxRenderer *const restrict renderer, const size_t objectNum, const object **const restrict objects){
 
 	/*
 	** Generates opaque and translucent render
@@ -69,12 +69,12 @@ static __FORCE_INLINE__ void gfxRendererGenerateQueuesArray(gfxRenderer *const r
 
 	gfxRenderElement *array = &renderer->qOpaque.elements[renderer->qOpaque.elementNum];
 
-	const objInstance **o;
-	const objInstance **const oLast = &objects[objectNum];
+	const object **o;
+	const object **const oLast = &objects[objectNum];
 
 	for(o = objects; o < oLast; ++o){
 
-		const gfxRenderGroup_t group = objiRenderGroup(*o, renderer->interpT);
+		const gfxRenderGroup_t group = objRenderGroup(*o, renderer->interpT);
 
 		if(group == GFX_RENDER_GROUP_OPAQUE){
 
@@ -112,21 +112,21 @@ static __FORCE_INLINE__ void gfxRendererGenerateQueuesList(gfxRenderer *const re
 	gfxRenderElement *array = &renderer->qOpaque.elements[renderer->qOpaque.elementNum];
 
 	const memoryRegion *region = objects.region;
-	const objInstance **i;
+	const object **i;
 
 	do {
 		i = memPoolFirst(region);
-		while(i < (const objInstance **)memAllocatorEnd(region)){
+		while(i < (const object **)memAllocatorEnd(region)){
 			const byte_t flag = memPoolBlockStatus(i);
 			if(flag == MEMORY_POOL_BLOCK_ACTIVE){
 
-				const objInstance *const obji = *i;
-				const gfxRenderGroup_t group = objiRenderGroup(obji, renderer->interpT);
+				const object *const obj = *i;
+				const gfxRenderGroup_t group = objRenderGroup(obj, renderer->interpT);
 
 				if(group == GFX_RENDER_GROUP_OPAQUE){
 
 					// The object is fully opaque.
-					array->structure = (const void *)obji;
+					array->structure = (const void *)obj;
 					array->type = GFX_RNDR_ELEMENT_TYPE_OBJECT;
 					array->distance = 0.f;
 					++array;
@@ -138,7 +138,7 @@ static __FORCE_INLINE__ void gfxRendererGenerateQueuesList(gfxRenderer *const re
 					// It will have to be depth-sorted and
 					// rendered after the opaque objects.
 					--renderer->qTranslucent.elements;
-					renderer->qTranslucent.elements->structure = (const void *)obji;
+					renderer->qTranslucent.elements->structure = (const void *)obj;
 					renderer->qTranslucent.elements->type = GFX_RNDR_ELEMENT_TYPE_OBJECT;
 					renderer->qTranslucent.elements->distance = 0.f;
 					++renderer->qTranslucent.elementNum;
@@ -160,15 +160,15 @@ static __FORCE_INLINE__ void gfxRendererDelete(const gfxRenderer *const restrict
 }
 
 /** MOVE AND RENAME renderModel!!!! **/
-void renderModel(const objInstance *const restrict obji, const float distance, const camera *const restrict cam, const float interpT, const graphicsManager *const restrict gfxMngr);
+void renderModel(const object *const restrict obj, const float distance, const camera *const restrict cam, const float interpT, const graphicsManager *const restrict gfxMngr);
 /** MOVE AND RENAME renderModel!!!! **/
 
 static __FORCE_INLINE__ void gfxRendererDrawElement(gfxRenderElement *const restrict element, const camera *const restrict cam, const float interpT, const graphicsManager *const restrict gfxMngr){
 	switch(element->type){
 		case GFX_RNDR_ELEMENT_TYPE_OBJECT:
 			/// REMOVE THIS LINE EVENTUALLY
-			element->distance = camDistance(cam, &((const objInstance *const)element->structure)->state.skeleton[0].position);
-			renderModel((const objInstance *const)element->structure, element->distance, cam, interpT, gfxMngr);
+			element->distance = camDistance(cam, &((const object *const)element->structure)->state.skeleton[0].position);
+			renderModel((const object *const)element->structure, element->distance, cam, interpT, gfxMngr);
 		break;
 	}
 }

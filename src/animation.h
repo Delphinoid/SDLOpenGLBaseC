@@ -1,7 +1,7 @@
 #ifndef ANIMATION_H
 #define ANIMATION_H
 
-#include <stdlib.h>
+#include <stddef.h>
 #include <stdint.h>
 
 /*

@@ -32,7 +32,7 @@ typedef struct {
 typedef struct scnZone {
 
 	// Objects in the zone.
-	memoryPool objects;  // Contains objInstance pointers.
+	memoryPool objects;  // Contains object pointers.
 	size_t objectNum;    // The number of objects in each region.
 	                     // Allows preallocations when rendering.
 
@@ -45,7 +45,7 @@ typedef struct scnZone {
 	// Zone collider.
 	// Used to find which zone the
 	// camera is in, if any.
-	colliderArray bounds;
+	collider bounds;
 
 	// Flags for the zone.
 	flags_t flags;
@@ -60,7 +60,7 @@ typedef struct {
 	**/
 
 	// Objects in the zone.
-	memoryPool objects;  // Contains objInstance pointers.
+	memoryPool objects;  // Contains object pointers.
 	size_t objectNum;    // The number of objects in each region.
 	                     // Allows preallocations when rendering.
 
@@ -71,8 +71,8 @@ typedef struct {
 
 return_t scnInit(scene *scn, size_t objectNum, size_t bodyNum);
 
-objInstance **scnAllocate(scene *scn);
-void scnFree(scene *scn, objInstance **obji);
+object **scnAllocate(scene *scn);
+void scnFree(scene *scn, object **obj);
 
 void scnUpdate(scene *scn, const float elapsedTime, const float dt);
 

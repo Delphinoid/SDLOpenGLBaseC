@@ -2,7 +2,7 @@
 #define MEMORYSHARED_H
 
 #include "memorySettings.h"
-#include <stdlib.h>
+#include <stddef.h>
 #include <stdint.h>
 
 // Use 8 byte alignment for improved

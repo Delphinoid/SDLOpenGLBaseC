@@ -1,7 +1,8 @@
 #ifndef COLLIDERSPHERE_H
 #define COLLIDERSPHERE_H
 
-#include "collision.h"
+#include "manifold.h"
+#include "return.h"
 
 typedef struct {
 	//vec3 centroid;

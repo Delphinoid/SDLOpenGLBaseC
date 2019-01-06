@@ -1,7 +1,8 @@
 #ifndef COLLIDERCAPSULE_H
 #define COLLIDERCAPSULE_H
 
-#include "collision.h"
+#include "manifold.h"
+#include "return.h"
 
 typedef struct {
 	vec3 a;

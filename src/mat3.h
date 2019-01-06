@@ -4,12 +4,14 @@
 #include "quat.h"
 #include "return.h"
 
+/** Use an alias? **/
 typedef struct {
 	float m[3][3];
 } mat3;
 
-void mat3Identity(mat3 *const restrict m);
 mat3 mat3GetIdentity();
+void mat3Identity(mat3 *const restrict m);
+void mat3Zero(mat3 *const restrict m);
 
 mat3 mat3MMultM(const mat3 *const restrict m1, const mat3 *const restrict m2);
 void mat3MultMByM1(mat3 *const restrict m1, const mat3 *const restrict m2);

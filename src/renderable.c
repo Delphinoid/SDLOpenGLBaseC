@@ -92,7 +92,7 @@ void rndriDelete(rndrInstance *const restrict rndri){
 	}
 	if(rndr->physicsState != NULL){
 		for(i = 0; i < rndr->mdl->skl->boneNum; ++i){
-			prbiDelete(&rndr->physicsState[i]);
+			bodyDelete(&rndr->physicsState[i]);
 		}
 		memFree(rndr->physicsState);
 	}*/

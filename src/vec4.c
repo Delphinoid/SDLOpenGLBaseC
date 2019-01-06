@@ -2,6 +2,7 @@
 #include "helpersMath.h"
 #include "inline.h"
 #include <math.h>
+#include <string.h>
 
 __HINT_INLINE__ vec4 vec4New(const float x, const float y, const float z, const float w){
 	vec4 v;
@@ -24,6 +25,9 @@ __HINT_INLINE__ void vec4Set(vec4 *const restrict v, const float x, const float 
 }
 __HINT_INLINE__ void vec4SetS(vec4 *const restrict v, const float s){
 	v->x = s; v->y = s; v->z = s; v->w = s;
+}
+__HINT_INLINE__ void vec4Zero(vec4 *const restrict v){
+	memset(v, 0, sizeof(vec4));
 }
 
 __HINT_INLINE__ vec4 vec4VAddV(const vec4 *const restrict v1, const vec4 *const restrict v2){
@@ -219,7 +223,7 @@ __HINT_INLINE__ vec4 vec4VDivS(const vec4 *const restrict v, const float s){
 		r.z = v->z * invS;
 		r.w = v->z * invS;
 	}else{
-		vec4SetS(&r, 0.f);
+		vec4Zero(&r);
 	}
 	return r;
 }

@@ -7,6 +7,7 @@
 #define RESOURCE_DEFAULT_CAMERA_SIZE sizeof(camera)
 #define RESOURCE_DEFAULT_CAMERA_NUM 2
 
+// Forward declaration for inlining.
 extern memoryPool __CameraResourceArray;  // Contains cameras.
 
 /** Support locals? Merge all module containers? **/

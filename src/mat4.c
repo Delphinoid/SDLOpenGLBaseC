@@ -2,19 +2,23 @@
 #include "inline.h"
 #include <stddef.h>
 #include <math.h>
+#include <string.h>
 
-__HINT_INLINE__ void mat4Identity(mat4 *const restrict m){
-	m->m[0][0] = 1.f; m->m[0][1] = 0.f; m->m[0][2] = 0.f; m->m[0][3] = 0.f;
-	m->m[1][0] = 0.f; m->m[1][1] = 1.f; m->m[1][2] = 0.f; m->m[1][3] = 0.f;
-	m->m[2][0] = 0.f; m->m[2][1] = 0.f; m->m[2][2] = 1.f; m->m[2][3] = 0.f;
-	m->m[3][0] = 0.f; m->m[3][1] = 0.f; m->m[3][2] = 0.f; m->m[3][3] = 1.f;
-}
 __HINT_INLINE__ mat4 mat4GetIdentity(){
 	mat4 r = {.m = {{1.f, 0.f, 0.f, 0.f},
 	                {0.f, 1.f, 0.f, 0.f},
 	                {0.f, 0.f, 1.f, 0.f},
 	                {0.f, 0.f, 0.f, 1.f}}};
 	return r;
+}
+__HINT_INLINE__ void mat4Identity(mat4 *const restrict m){
+	m->m[0][0] = 1.f; m->m[0][1] = 0.f; m->m[0][2] = 0.f; m->m[0][3] = 0.f;
+	m->m[1][0] = 0.f; m->m[1][1] = 1.f; m->m[1][2] = 0.f; m->m[1][3] = 0.f;
+	m->m[2][0] = 0.f; m->m[2][1] = 0.f; m->m[2][2] = 1.f; m->m[2][3] = 0.f;
+	m->m[3][0] = 0.f; m->m[3][1] = 0.f; m->m[3][2] = 0.f; m->m[3][3] = 1.f;
+}
+__HINT_INLINE__ void mat4Zero(mat4 *const restrict m){
+	memset(m->m, 0, sizeof(mat4));
 }
 
 __HINT_INLINE__ mat4 mat4MMultM(const mat4 *const restrict m1, const mat4 *const restrict m2){

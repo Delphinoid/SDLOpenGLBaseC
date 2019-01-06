@@ -30,8 +30,8 @@ typedef struct {
 	animIndex_t animationNum;  // Number of animations.
 	sklAnim **animations;      // Array of pointers to animations associated with the object.
 
-	physRigidBody *skeletonBodies;     // Rigid bodies for each bone.
-	colliderArray *skeletonColliders;  // Collider arrays for each bone.
+	physRigidBodyLocal *skeletonBodies;  // Rigid bodies for each bone.
+	collider *skeletonColliders;         // Collider arrays for each bone.
 
 	renderable *renderables;  // Default renderable array.
 
@@ -39,15 +39,15 @@ typedef struct {
 
 	char *name;
 
-} object;
+} objectBase;
 
-typedef struct objiState objiState;
-typedef struct objiState {
+typedef struct objState objState;
+typedef struct objState {
 
-	bone *skeleton;       // Skeleton state.
-	objiState *previous;  // Previous state.
+	bone *skeleton;      // Skeleton state.
+	objState *previous;  // Previous state.
 
-} objiState;
+} objState;
 
 /** Store pointer to previous bones / hitboxes. **/
 typedef struct {
@@ -63,55 +63,55 @@ typedef struct {
 	stateIndex_t stateMax;  // Maximum number of previous states.
 
 	stateIndex_t stateNum;  // Number of previous states.
-	objiState state;
-	objiState **oldestStatePrevious;  // The oldest state's previous pointer.
+	objState state;
+	objState **oldestStatePrevious;  // The oldest state's previous pointer.
 
-	physRBInstance *skeletonBodies;    // Rigid body instances for each bone.
-	colliderArray *skeletonColliders;  // Collider arrays for each bone.
+	physRigidBody *skeletonBodies;  // Rigid body instances for each bone.
+	collider *skeletonColliders;    // Collider arrays for each bone.
 
 	rndrInstance *renderables;  // Renderable instance array.
 
-	const object *base;
+	const objectBase *base;
 
-} objInstance;
+} object;
 
-void objInit(object *const restrict obj);
-return_t objLoad(object *const restrict obj, const char *const restrict prgPath, const char *const restrict filePath);
+void objBaseInit(objectBase *const restrict base);
+return_t objBaseLoad(objectBase *const restrict base, const char *const restrict prgPath, const char *const restrict filePath);
+void objBaseDelete(objectBase *const restrict base);
+
+return_t objInit(object *const restrict obj);
 void objDelete(object *const restrict obj);
 
-return_t objiInit(objInstance *const restrict obj);
-void objiDelete(objInstance *const restrict obj);
+return_t objInstantiate(object *const restrict obj, const objectBase *const restrict base);
 
-return_t objiInstantiate(objInstance *const restrict obji, const object *const restrict base);
+return_t objStatePreallocate(object *const restrict obj);
 
-return_t objiStatePreallocate(objInstance *const restrict obji);
-
-return_t objiNewRenderable(objInstance *const restrict obji, model *const mdl, textureWrapper *const tw);
-return_t objiNewRenderableFromBase(objInstance *const restrict obji, const renderable *const rndr);
-return_t objiNewRenderableFromInstance(objInstance *const restrict obji, const rndrInstance *const rndr);
-return_t objiInitSkeleton(objInstance *const restrict obji, const skeleton *const skl);
+return_t objNewRenderable(object *const restrict obj, model *const mdl, textureWrapper *const tw);
+return_t objNewRenderableFromBase(object *const restrict obj, const renderable *const rndr);
+return_t objNewRenderableFromInstance(object *const restrict obj, const rndrInstance *const rndr);
+return_t objInitSkeleton(object *const restrict obj, const skeleton *const skl);
 ///return_t objInitPhysics(object *obj);
 
-///void objiBoneSetPhysicsFlags(objInstance *obji, const boneIndex_t boneID, const flags_t flags);
+///void objBoneSetPhysicsFlags(object *obj, const boneIndex_t boneID, const flags_t flags);
 
-sklAnim *objiGetAnimation(const objInstance *const restrict obji, const animIndex_t id);
-sklAnim *objiFindAnimation(const objInstance *const restrict obji, const char *const restrict name);
-/**void objiSetAnimationType(objInstance *obji, const animIndex_t slot, const flags_t additive);
-return_t objiChangeAnimation(objInstance *obji, const animIndex_t slot, sklAnim *anim, const frameIndex_t frame, const float blendTime);
-void objiClearAnimation(objInstance *obji, const animIndex_t slot);
+sklAnim *objGetAnimation(const object *const restrict obj, const animIndex_t id);
+sklAnim *objFindAnimation(const object *const restrict obj, const char *const restrict name);
+/**void objSetAnimationType(object *obj, const animIndex_t slot, const flags_t additive);
+return_t objChangeAnimation(object *obj, const animIndex_t slot, sklAnim *anim, const frameIndex_t frame, const float blendTime);
+void objClearAnimation(object *obj, const animIndex_t slot);
 
-void objiApplyLinearForce(objInstance *obji, const boneIndex_t boneID, const vec3 *F);
-void objiApplyAngularForceGlobal(objInstance *obji, const boneIndex_t boneID, const vec3 *F, const vec3 *r);
-void objiApplyForceGlobal(objInstance *obji, const boneIndex_t boneID, const vec3 *F, const vec3 *r);
+void objApplyLinearForce(object *obj, const boneIndex_t boneID, const vec3 *F);
+void objApplyAngularForceGlobal(object *obj, const boneIndex_t boneID, const vec3 *F, const vec3 *r);
+void objApplyForceGlobal(object *obj, const boneIndex_t boneID, const vec3 *F, const vec3 *r);
 
-void objiApplyForceAtGlobalPoint(objInstance *obji, const size_t boneID, const vec3 *F, const vec3 *r);
-void objiAddLinearVelocity(objInstance *obji, const size_t boneID, const float x, const float y, const float z);
-void objiApplyLinearImpulse(objInstance *obji, const size_t boneID, const float x, const float y, const float z);
-void objiAddAngularVelocity(objInstance *obji, const size_t boneID, const float angle, const float x, const float y, const float z);**/
+void objApplyForceAtGlobalPoint(object *obj, const size_t boneID, const vec3 *F, const vec3 *r);
+void objAddLinearVelocity(object *obj, const size_t boneID, const float x, const float y, const float z);
+void objApplyLinearImpulse(object *obj, const size_t boneID, const float x, const float y, const float z);
+void objAddAngularVelocity(object *obj, const size_t boneID, const float angle, const float x, const float y, const float z);**/
 
-return_t objiUpdate(objInstance *const restrict obji, physicsSolver *const restrict solver, const float elapsedTime, const float dt);
+return_t objUpdate(object *const restrict obj, physicsSolver *const restrict solver, const float elapsedTime, const float dt);
 
-gfxRenderGroup_t objiRenderGroup(const objInstance *const restrict obji, const float interpT);
-void objiGenerateSprite(const objInstance *const restrict obji, const rndrInstance *const restrict rndr, const float interpT, const float *const restrict texFrag, vertex *const restrict vertices);
+gfxRenderGroup_t objRenderGroup(const object *const restrict obj, const float interpT);
+void objGenerateSprite(const object *const restrict obj, const rndrInstance *const restrict rndr, const float interpT, const float *const restrict texFrag, vertex *const restrict vertices);
 
 #endif

@@ -5,6 +5,7 @@
 #include "helpersFileIO.h"
 #include "inline.h"
 #include <SDL2/SDL_image.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 

@@ -16,6 +16,7 @@ void quatSet(quat *const restrict q, const float w, const float x, const float y
 void quatSetS(quat *const restrict q, const float s);
 void quatSetAxisAngle(quat *const restrict q, const float angle, const float axisX, const float axisY, const float axisZ);
 void quatSetEuler(quat *const restrict q, const float x, const float y, const float z);
+void quatZero(quat *const restrict q);
 
 quat quatQAddQ(const quat *const restrict q1, const quat *const restrict q2);
 quat quatQAddS(const quat *const restrict q, const float s);

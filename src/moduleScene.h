@@ -8,6 +8,7 @@
 #define RESOURCE_DEFAULT_SCENE_SIZE sizeof(scene)
 #define RESOURCE_DEFAULT_SCENE_NUM 2
 
+// Forward declarations for inlining.
 extern memoryPool  __SceneResourceArray;      // Contains scenes.
 extern memorySLink __SceneZoneResourceArray;  // Contains zones.
 

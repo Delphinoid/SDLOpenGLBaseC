@@ -2,12 +2,11 @@
 #define PHYSICSRIGIDBODY_H
 
 #include "physicsBodyShared.h"
-#include "physicsCollider.h"
 #include "physicsCollision.h"
 #include "physicsConstraint.h"
 #include "skeleton.h"
 #include "mat3.h"
-#include <stdlib.h>
+#include <stddef.h>
 
 /** Remove PHYSICS_BODY_INITIALIZE? **/
 #define PHYSICS_BODY_ASLEEP           0x00
@@ -23,8 +22,8 @@
 
 typedef struct {
 
-	// Physical colliders.
-	physCollider *colliders;  // The body's convex colliders.
+	// Physical collider.
+	collider hull;  // The body's convex collider.
 
 	// Physical mass properties.
 	float mass;                      // The body's mass.
@@ -44,17 +43,16 @@ typedef struct {
 
 	/** char *name; **/
 
-} physRigidBody;
+} physRigidBodyLocal;
 
-typedef struct {
+typedef struct physRigidBody {
 
 	// The rigid body this instance is derived from, in local space.
-	const physRigidBody *local;
+	const physRigidBodyLocal *local;
 
-	// Physical colliders.
-	cAABB aabb;               // The body's global, transformed bounding box.
-	physCollider *colliders;  // The body's global, transformed convex colliders.
-	                          // Their hulls re-use indices allocated for the local colliders.
+	// Physical collider.
+	collider hull;  // The body's global, transformed collider.
+	cAABB aabb;     // The body's global, transformed bounding box.
 
 	// Physical mass properties.
 	vec3 centroid;              // The body's global center of mass.
@@ -78,44 +76,44 @@ typedef struct {
 	                        // Freed if the rigid body doesn't pass the
 	                        // collision broadphase.
 
-	// Various flags for the rigid body.
-	flags_t flags;
-
 	// The body's ID in the physics solver.
 	physicsBodyIndex_t id;
 
-} physRBInstance;
+	// Various flags for the rigid body.
+	flags_t flags;
+
+} physRigidBody;
 
 // Physics rigid body functions.
-void physRigidBodyInit(physRigidBody *const restrict body);
-void physRigidBodyGenerateMassProperties(physRigidBody *const restrict body, float **const vertexMassArrays);
-return_t physRigidBodyLoad(physRigidBody **const restrict bodies, const skeleton *const restrict skl, const char *const restrict prgPath, const char *const restrict filePath);
-void physRigidBodyDelete(physRigidBody *const restrict body);
+void physRigidBodyLocalInit(physRigidBodyLocal *const restrict local);
+void physRigidBodyLocalGenerateMassProperties(physRigidBodyLocal *const restrict local, const float **const vertexMassArray);
+return_t physRigidBodyLocalLoad(physRigidBodyLocal **const restrict bodies, const skeleton *const restrict skl, const char *const restrict prgPath, const char *const restrict filePath);
+void physRigidBodyLocalDelete(physRigidBodyLocal *const restrict local);
 
 // Physics rigid body instance functions.
-void physRBIInit(physRBInstance *const restrict prbi);
-return_t physRBIInstantiate(physRBInstance *const restrict prbi, physRigidBody *const restrict body, bone *const restrict configuration);
+void physRigidBodyInit(physRigidBody *const restrict body);
+return_t physRigidBodyInstantiate(physRigidBody *const restrict body, physRigidBodyLocal *const restrict local, bone *const restrict configuration);
 
-return_t physRBIAddConstraint(physRBInstance *const restrict prbi, physConstraint *const c);
+return_t physRigidBodyAddConstraint(physRigidBody *const restrict body, physConstraint *const c);
 
-physSeparation *physRBIFindSeparation(physRBInstance *const restrict prbi, const physicsBodyIndex_t id, physSeparation **const previous);
-physSeparation *physRBICacheSeparation(physRBInstance *const restrict prbi, physSeparation *const restrict previous);
-void physRBIRemoveSeparation(physRBInstance *const restrict prbi, physSeparation *const restrict separation, const physSeparation *const restrict previous);
+physSeparation *physRigidBodyFindSeparation(physRigidBody *const restrict body, const physicsBodyIndex_t id, physSeparation **const previous);
+physSeparation *physRigidBodyCacheSeparation(physRigidBody *const restrict body, physSeparation *const restrict previous);
+void physRigidBodyRemoveSeparation(physRigidBody *const restrict body, physSeparation *const restrict separation, const physSeparation *const restrict previous);
 
-void physRBIUpdateCollisionMesh(physRBInstance *const restrict prbi);
+void physRigidBodyUpdateCollisionMesh(physRigidBody *const restrict body);
 
-void physRBIApplyLinearForce(physRBInstance *const restrict prbi, const vec3 *const restrict F);
-void physRBIApplyAngularForceGlobal(physRBInstance *const restrict prbi, const vec3 *const restrict F, const vec3 *const restrict r);
-void physRBIApplyForceGlobal(physRBInstance *const restrict prbi, const vec3 *const restrict F, const vec3 *const restrict r);
-/*void physRBIApplyLinearImpulse(physRBInstance *const restrict prbi, const vec3 *const restrict j);
-void physRBIApplyAngularImpulse(physRBInstance *const restrict prbi, const vec3 *const restrict T);
-void physRBIApplyImpulseAtGlobalPoint(physRBInstance *const restrict prbi, const vec3 *const restrict F, const vec3 *const restrict r);*/
+void physRigidBodyApplyLinearForce(physRigidBody *const restrict body, const vec3 *const restrict F);
+void physRigidBodyApplyAngularForceGlobal(physRigidBody *const restrict body, const vec3 *const restrict F, const vec3 *const restrict r);
+void physRigidBodyApplyForceGlobal(physRigidBody *const restrict body, const vec3 *const restrict F, const vec3 *const restrict r);
+/*void physRigidBodyApplyLinearImpulse(physRigidBody *const restrict body, const vec3 *const restrict j);
+void physRigidBodyApplyAngularImpulse(physRigidBody *const restrict body, const vec3 *const restrict T);
+void physRigidBodyApplyImpulseAtGlobalPoint(physRigidBody *const restrict body, const vec3 *const restrict F, const vec3 *const restrict r);*/
 
-void physRBIIntegrateVelocity(physRBInstance *const restrict prbi, const float dt);
-void physRBIIntegrateConfiguration(physRBInstance *const restrict prbi, const float dt);
+void physRigidBodyIntegrateVelocity(physRigidBody *const restrict body, const float dt);
+void physRigidBodyIntegrateConfiguration(physRigidBody *const restrict body, const float dt);
 
-void physRBIResolveCollisionGS(physRBInstance *const restrict body1, physRBInstance *const restrict body2, const cContactManifold *const restrict cm);
+void physRigidBodyResolveCollisionGS(physRigidBody *const restrict body1, physRigidBody *const restrict body2, const cContact *const restrict cm);
 
-void physRBIDelete(physRBInstance *const restrict prbi);
+void physRigidBodyDelete(physRigidBody *const restrict body);
 
 #endif
