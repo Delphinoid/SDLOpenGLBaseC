@@ -1,13 +1,66 @@
 #include "collision.h"
 #include "memoryManager.h"
 
-void cCompositeInit(cComposite *const restrict cc){
-	cc->colliders = NULL;
-	cc->colliderNum = 0;
+void cCompositeInit(cComposite *const restrict c){
+	c->colliders = NULL;
+	c->colliderNum = 0;
 }
 
-void cCompositeDelete(cComposite *const restrict cc){
-	if(cc->colliders != NULL){
-		memFree(cc->colliders);
+return_t cCompositeInstantiate(cComposite *const restrict instance, const cComposite *const restrict local){
+
+	const size_t bufferSize = sizeof(collider)*local->colliderNum;
+	collider *tempBuffer = memAllocate(bufferSize);
+	if(tempBuffer != NULL){
+
+		collider *c1 = tempBuffer;
+		const collider *c2 = local->colliders;
+		const collider *const cLast = (const collider *)((const byte_t *)&tempBuffer + bufferSize);
+
+		// Loop through each collider, instantiating them.
+		for(; c1 < cLast; ++c1, ++c2){
+			if(cInstantiate(c1, c2) < 0){
+				/** Memory allocation failure. **/
+				while(c1 > tempBuffer){
+					--c1;
+					cDelete(c1);
+				}
+				return -1;
+			}
+		}
+
+		instance->colliders = tempBuffer;
+		instance->colliderNum = local->colliderNum;
+		return 1;
+
+	}
+
+	/** Memory allocation failure. **/
+	return -1;
+
+}
+
+void cCompositeDeleteBase(cComposite *const restrict c){
+	if(c->colliders != NULL){
+		// Delete every collider that composes
+		// the composite collider.
+		collider *cCurrent = c->colliders;
+		const collider *const cLast = &cCurrent[c->colliderNum];
+		for(; cCurrent < cLast; ++cCurrent){
+			cDelete(cCurrent);
+		}
+		memFree(c->colliders);
+	}
+}
+
+void cCompositeDelete(cComposite *const restrict c){
+	if(c->colliders != NULL){
+		// Delete every collider that composes
+		// the composite collider.
+		collider *cCurrent = c->colliders;
+		const collider *const cLast = &cCurrent[c->colliderNum];
+		for(; cCurrent < cLast; ++cCurrent){
+			cDelete(cCurrent);
+		}
+		memFree(c->colliders);
 	}
 }

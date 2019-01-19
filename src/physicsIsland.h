@@ -1,28 +1,30 @@
 #ifndef PHYSICSISLAND_H
 #define PHYSICSISLAND_H
 
-#include "physicsRigidBody.h"
+#include "physicsShared.h"
+#include "aabbTree.h"
 
-typedef struct {
+#ifndef PHYSICS_ISLAND_COLLIDER_AABB_ADDEND
+	#define PHYSICS_ISLAND_COLLIDER_AABB_ADDEND 0.2f
+#endif
+#ifndef PHYSICS_ISLAND_COLLIDER_AABB_VELOCITY_FACTOR
+	#define PHYSICS_ISLAND_COLLIDER_AABB_VELOCITY_FACTOR 1.f
+#endif
 
-	// Physics body storage.
-	physicsBodyIndex_t bodyNum;
-	physicsBodyIndex_t bodyCapacity;
-	physRigidBody **bodies;  // An array of pointers to bodies.
+#ifndef PHYSICS_ISLAND_QUERY_STACK_SIZE
+	#define PHYSICS_ISLAND_QUERY_STACK_SIZE AABB_TREE_QUERY_STACK_SIZE
+#endif
 
-	// Collision pair storage.
-	/*size_t pairNum;
-	size_t pairCapacity;
-	physCollisionPair *pairs;*/
+typedef struct physCollider physCollider;
 
+typedef struct physIsland {
+	aabbTree tree;
 } physIsland;
 
 void physIslandInit(physIsland *const restrict island);
-return_t physIslandAddBody(physIsland *const restrict island, physRigidBody *const body);
-/*return_t physIslandAddObject(physIsland *const restrict island, object *const restrict obj);*/
-void physIslandUpdate(physIsland *const restrict island, const float dt);
-void physIslandBroadPhase(physIsland *const restrict island, const float dt, physicsBodyIndex_t *const restrict pairArraySize, physRigidBodyLocal ***const restrict pairArray);
-return_t physIslandSimulate(physIsland *const restrict island, const float dt);
+return_t physIslandUpdateCollider(physIsland *const restrict island, physCollider *const restrict c);
+void physIslandRemoveCollider(physIsland *const restrict island, physCollider *const restrict c);
+return_t physIslandQuery(const physIsland *const restrict island, const float dt);
 void physIslandDelete(physIsland *const restrict island);
 
 #endif

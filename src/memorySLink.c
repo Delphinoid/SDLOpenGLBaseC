@@ -30,6 +30,30 @@ void *memSLinkCreate(memorySLink *const restrict array, void *const start, const
 
 }
 
+void *memSLinkCreateInit(memorySLink *const restrict array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
+
+	/*
+	** Initialize an array allocator with "length"-many
+	** elements of "bytes" size.
+	*/
+
+	if(start){
+
+		// Clamp the block size upwards to
+		// match the minimum block size.
+		array->block = memSLinkBlockSize(bytes);
+		array->region = (memoryRegion *)((byte_t *)start + memSLinkAllocationSize(start, bytes, length) - sizeof(memoryRegion));
+		array->region->start = start;
+		array->region->next = NULL;
+
+		memSLinkClearInit(array, func);
+
+	}
+
+	return start;
+
+}
+
 void *memSLinkAllocate(memorySLink *const restrict array){
 
 	/*
@@ -179,6 +203,35 @@ void *memSLinkSetupMemory(void *start, const size_t bytes, const size_t length){
 
 }
 
+void *memSLinkSetupMemoryInit(void *start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
+
+	const size_t blockSize = memSLinkBlockSize(bytes);
+	byte_t *block;
+	byte_t *next;
+	const byte_t *const end = (byte_t *)start + memSLinkAllocationSize(start, bytes, length) - sizeof(memoryRegion);
+
+	start = memSLinkAlignStartData(start);
+
+	block = start;
+	next = block + blockSize;
+
+	// Loop through every block, making it
+	// point to the next free block.
+	while(next < end){
+		(*func)(block);
+		memSLinkDataGetFlags(block) = (uintptr_t)next | MEMORY_SLINK_BLOCK_INVALID;
+		block = next;
+		next += blockSize;
+	}
+
+	// Final block contains a null pointer.
+	(*func)(block);
+	memSLinkDataGetFlags(block) = MEMORY_SLINK_BLOCK_INVALID;
+
+	return start;
+
+}
+
 void memSLinkClear(memorySLink *const restrict array){
 
 	byte_t *block = memSLinkAlignStartData(array->region->start);
@@ -199,6 +252,28 @@ void memSLinkClear(memorySLink *const restrict array){
 
 }
 
+void memSLinkClearInit(memorySLink *const restrict array, void (*func)(void *const restrict block)){
+
+	byte_t *block = memSLinkAlignStartData(array->region->start);
+	byte_t *next = block + array->block;
+
+	array->free = block;
+
+	// Loop through every block, making it
+	// point to the next free block.
+	while(next < (byte_t *)array->region){
+		(*func)(block);
+		memSLinkDataGetFlags(block) = (uintptr_t)next | MEMORY_SLINK_BLOCK_INVALID;
+		block = next;
+		next += array->block;
+	}
+
+	// Final block contains a null pointer.
+	(*func)(block);
+	memSLinkDataGetFlags(block) = MEMORY_SLINK_BLOCK_INVALID;
+
+}
+
 void *memSLinkExtend(memorySLink *const restrict array, void *const start, const size_t bytes, const size_t length){
 
 	/*
@@ -214,6 +289,29 @@ void *memSLinkExtend(memorySLink *const restrict array, void *const start, const
 		memRegionPrepend(&array->region, newRegion, start);
 
 		memSLinkSetupMemory(start, bytes, length);
+		array->free = memSLinkAlignStartData(start);
+
+	}
+
+	return start;
+
+}
+
+void *memSLinkExtendInit(memorySLink *const restrict array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
+
+	/*
+	** Extends the memory allocator.
+	** Its logical function is similar to a
+	** realloc, but it creates a new chunk
+	** and links it.
+	*/
+
+	if(start){
+
+		memoryRegion *const newRegion = (memoryRegion *)((byte_t *)start + memSLinkAllocationSize(start, bytes, length) - sizeof(memoryRegion));
+		memRegionPrepend(&array->region, newRegion, start);
+
+		memSLinkSetupMemoryInit(start, bytes, length, func);
 		array->free = memSLinkAlignStartData(start);
 
 	}

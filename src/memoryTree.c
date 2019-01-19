@@ -217,11 +217,7 @@ static __FORCE_INLINE__ void memTreeInsert(memoryTree *const restrict tree, void
 	memTreeNodeGetLeft(node) = NULL;
 	memTreeNodeGetRight(node) = NULL;
 
-	if(tree->root == NULL){
-		// If the root node is free, we can exit early.
-		tree->root = node;
-		memTreeNodeGetParent(node) = NULL;
-	}else{
+	if(tree->root != NULL){
 
 		byte_t **address = &tree->root;
 		byte_t *parent;
@@ -254,6 +250,10 @@ static __FORCE_INLINE__ void memTreeInsert(memoryTree *const restrict tree, void
 		// Fix any red-black tree rule violations.
 		memTreeRepairTree(tree, node, parent);
 
+	}else{
+		// If the root node is free, we can exit early.
+		tree->root = node;
+		memTreeNodeGetParent(node) = NULL;
 	}
 
 }
@@ -868,19 +868,20 @@ void memTreeDelete(memoryTree *const restrict tree){
 void memTreePrintFreeBlocks(memoryTree *const restrict tree, const unsigned int recursions){
 
 	/*
-	** In-order tree traversal where
+	** Inorder tree traversal where
 	** each node's size is printed.
 	*/
 
 	const byte_t *node = tree->root;
-	const byte_t *nodeLeft;
-	const byte_t *nodeRight;
-	const byte_t *nodeParent;
-	unsigned int i = 0;
 
 	fputs("MEMORY_DEBUG: Free Blocks\n~~~~~~~~~~~~~~~~~~~~~~~~~\n", stdout);
 
 	if(node != NULL){
+
+		const byte_t *nodeLeft;
+		const byte_t *nodeRight;
+		const byte_t *nodeParent;
+		unsigned int i = 0;
 
 		// Start on the left-most node.
 		while((nodeLeft = memTreeNodeGetLeft(node)) != NULL){
@@ -900,8 +901,7 @@ void memTreePrintFreeBlocks(memoryTree *const restrict tree, const unsigned int 
 			       memTreeBlockIsLast(memTreeNodeGetFlags(node)) > 0
 			);
 
-			nodeRight = memTreeNodeGetRight(node);
-			if(nodeRight != NULL){
+			if((nodeRight = memTreeNodeGetRight(node)) != NULL){
 				// If we can go right, go right and
 				// then try to go left again.
 				node = nodeRight;

@@ -19,12 +19,12 @@
 void renderModel(const object *const restrict obj, const float distance, const camera *const restrict cam, const float interpT, graphicsManager *const restrict gfxMngr){
 
 	bone interpBone;
-	rndrInstance *currentRndr = obj->renderables;
+	const rndrInstance *currentRndr = obj->renderables;
 
 	mat4 *transform = gfxMngr->sklTransformState;
-	bone *bCurrent = obj->state.skeleton;
-	bone *bPrevious = (obj->state.previous == NULL ? bCurrent : obj->state.previous->skeleton);
-	bone *bLast = &bCurrent[obj->skeletonData.skl->boneNum];
+	const bone *bCurrent = obj->state.skeleton;
+	const bone *bPrevious = (obj->state.previous == NULL ? bCurrent : obj->state.previous->skeleton);
+	const bone *const bLast = &bCurrent[obj->skeletonData.skl->boneNum];
 
 	// Update the object's configuration for rendering.
 	//rndrConfigRenderUpdate(&obj->tempRndrConfig, interpT);  /** Only line that requires non-const object. **/

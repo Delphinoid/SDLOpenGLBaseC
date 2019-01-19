@@ -1,7 +1,7 @@
 #ifndef COLLIDERCAPSULE_H
 #define COLLIDERCAPSULE_H
 
-#include "manifold.h"
+#include "vec3.h"
 #include "return.h"
 
 typedef struct {

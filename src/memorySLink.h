@@ -30,11 +30,15 @@
 #define MEMORY_SLINK_BLOCK_POINTER_SIZE sizeof(byte_t *)
 #define MEMORY_SLINK_BLOCK_FLAGS_SIZE   sizeof(uintptr_t)
 #define MEMORY_SLINK_BLOCK_NEXT_SIZE    MEMORY_SLINK_BLOCK_POINTER_SIZE
-#define MEMORY_SLINK_BLOCK_HEADER_SIZE  MEMORY_SLINK_BLOCK_NEXT_SIZE
+#ifdef MEMORY_SLINK_ALIGN_HEADER
+	#define MEMORY_SLINK_BLOCK_HEADER_SIZE MEMORY_ALIGN(MEMORY_SLINK_BLOCK_NEXT_SIZE)
+#else
+	#define MEMORY_SLINK_BLOCK_HEADER_SIZE MEMORY_SLINK_BLOCK_NEXT_SIZE
+#endif
 
-#define MEMORY_SLINK_NEXT_OFFSET_FROM_BLOCK 0
+#define MEMORY_SLINK_NEXT_OFFSET_FROM_BLOCK  0
 #define MEMORY_SLINK_FLAGS_OFFSET_FROM_BLOCK MEMORY_SLINK_NEXT_OFFSET_FROM_BLOCK
-#define MEMORY_SLINK_DATA_OFFSET_FROM_BLOCK MEMORY_SLINK_BLOCK_HEADER_SIZE
+#define MEMORY_SLINK_DATA_OFFSET_FROM_BLOCK  MEMORY_SLINK_BLOCK_HEADER_SIZE
 #define MEMORY_SLINK_NEXT_OFFSET_FROM_DATA  -MEMORY_SLINK_BLOCK_NEXT_SIZE
 #define MEMORY_SLINK_FLAGS_OFFSET_FROM_DATA  MEMORY_SLINK_NEXT_OFFSET_FROM_DATA
 #define MEMORY_SLINK_BLOCK_OFFSET_FROM_DATA -MEMORY_SLINK_BLOCK_HEADER_SIZE
@@ -91,13 +95,18 @@ typedef struct {
 	// The following can save small amounts of memory but can't be predicted as easily:
 	//(memSLinkBlockSize(bytes) * (length - 1) + memSLinkBlockSizeUnaligned(bytes) + (uintptr_t)memSLinkAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 
-#define memSLinkFirst(region)       ((void *)memSLinkAlignStartData((region)->start))
+#ifdef MEMORY_SLINK_ALIGN_HEADER
+	#define memSLinkFirst(region) ((void *)(region)->start)
+#else
+	#define memSLinkFirst(region) ((void *)memSLinkAlignStartData((region)->start))
+#endif
 #define memSLinkNext(i)             memSLinkDataGetNext(i)
 #define memSLinkBlockStatus(block)  memSLinkDataGetActiveMasked(block)
 #define memSLinkBlockNext(array, i) (void *)((byte_t *)i + (array).block)
 
 void memSLinkInit(memorySLink *const restrict array);
 void *memSLinkCreate(memorySLink *const restrict array, void *const start, const size_t bytes, const size_t length);
+void *memSLinkCreateInit(memorySLink *const restrict array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
 void *memSLinkAllocate(memorySLink *const restrict array);
 void *memSLinkPrepend(memorySLink *const restrict array, void **const start);
 void *memSLinkAppend(memorySLink *const restrict array, void **const start);
@@ -105,8 +114,11 @@ void *memSLinkInsertBefore(memorySLink *const restrict array, void **const start
 void *memSLinkInsertAfter(memorySLink *const restrict array, void **const start, void *const element);
 void memSLinkFree(memorySLink *const restrict array, void **const start, void *const element, const void *const previous);
 void *memSLinkSetupMemory(void *start, const size_t bytes, const size_t length);
+void *memSLinkSetupMemoryInit(void *start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
 void memSLinkClear(memorySLink *const restrict array);
+void memSLinkClearInit(memorySLink *const restrict array, void (*func)(void *const restrict block));
 void *memSLinkExtend(memorySLink *const restrict array, void *const start, const size_t bytes, const size_t length);
+void *memSLinkExtendInit(memorySLink *const restrict array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
 void memSLinkDelete(memorySLink *const restrict array);
 
 #define MEMORY_SLINK_LOOP_BEGIN(allocator, n, type)                 \

@@ -49,19 +49,23 @@ typedef struct {
 	// The following can save small amounts of memory but can't be predicted as easily:
 	//(memListBlockSize(bytes) * (length - 1) + memListBlockSizeUnaligned(bytes) + (uintptr_t)memListAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 
-#define memListFirst(list)            ((void *)memListAlignStartData((region)->start))
+#define memListFirst(region)          ((void *)memListAlignStartData((region)->start))
 #define memListBlockNext(list, i)     (void *)((byte_t *)i + (list).block)
 #define memListBlockPrevious(list, i) (void *)((byte_t *)i - (list).block)
 
 void memListInit(memoryList *const restrict list);
 void *memListCreate(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length);
+void *memListCreateInit(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
 void *memListAllocate(memoryList *const restrict list);
 void memListFree(memoryList *const restrict list, void *const block);
 void *memListSetupMemory(void *start, const size_t bytes, const size_t length);
+void *memListSetupMemoryInit(void *start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
 void *memListIndex(memoryList *const restrict list, const size_t i);
 void *memListIndexRegion(memoryList *const restrict list, const size_t i, memoryRegion **const container);
 void memListClear(memoryList *const restrict list);
+void memListClearInit(memoryList *const restrict list, void (*func)(void *const restrict block));
 void *memListExtend(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length);
+void *memListExtendInit(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
 void memListDelete(memoryList *const restrict list);
 
 #define MEMORY_LIST_LOOP_BEGIN(allocator, n, type)           \
@@ -76,6 +80,20 @@ void memListDelete(memoryList *const restrict list);
 			}                                                \
 			__region_##n = memAllocatorNext(__region_##n);   \
 		} while(__region_##n != NULL);                       \
+	}
+
+#define MEMORY_LIST_OFFSET_LOOP_BEGIN(allocator, n, type, region) \
+	{                                                             \
+		const memoryRegion *__region_##n = region;                \
+		do {                                                      \
+			type n = memListFirst(__region_##n);                  \
+			while(n < (type)memAllocatorEnd(__region_##n)){       \
+
+#define MEMORY_LIST_OFFSET_LOOP_END(allocator, n)                 \
+				n = memListBlockNext(allocator, n);               \
+			}                                                     \
+			__region_##n = memAllocatorNext(__region_##n);        \
+		} while(__region_##n != NULL);                            \
 	}
 
 #endif

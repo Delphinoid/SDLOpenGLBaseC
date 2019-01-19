@@ -15,6 +15,7 @@ extern memorySLink __RenderableResourceArray;          // Contains renderable.
 extern memorySLink __RenderableInstanceResourceArray;  // Contains rndrInstances.
 
 /** Support locals? Merge all module containers? **/
+/** Use compiler constants for loop offsets?     **/
 
 return_t moduleRenderableResourcesInit();
 void moduleRenderableResourcesReset();

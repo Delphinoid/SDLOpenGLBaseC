@@ -1,8 +1,6 @@
 #ifndef VEC4_H
 #define VEC4_H
 
-#include "vec3.h"
-
 typedef struct {
 	float x, y, z, w;
 } vec4;
@@ -54,6 +52,12 @@ void vec4DivVByN(vec4 *const restrict v, const float x, const float y, const flo
 void vec4DivVByS(vec4 *const restrict v, const float s);
 void vec4DivNByV(const float x, const float y, const float z, const float w, vec4 *const restrict v);
 void vec4DivSByV(const float s, vec4 *const restrict v);
+
+void vec4Min(const vec4 *const restrict v1, const vec4 *const restrict v2, vec4 *const restrict r);
+void vec4Max(const vec4 *const restrict v1, const vec4 *const restrict v2, vec4 *const restrict r);
+
+void vec4Negate(vec4 *const restrict v);
+void vec4NegateR(const vec4 *const restrict v, vec4 *const restrict r);
 
 float vec4Magnitude(const vec4 *const restrict v);
 float vec4MagnitudeSquared(const vec4 *const restrict v);

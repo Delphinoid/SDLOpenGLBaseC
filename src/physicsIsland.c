@@ -1,156 +1,85 @@
-#include "physicsIsland.h"
-#include "memoryManager.h"
-
-/** Move and rename this when possible. Should implement collision pairing. **/
+#include "modulePhysics.h"
+#include "inline.h"
 
 void physIslandInit(physIsland *const restrict island){
-	island->bodyNum = 0;
-	island->bodyCapacity = 0;
-	island->bodies = NULL;
+	aabbTreeInit(&island->tree);
 }
 
-return_t physIslandAddBody(physIsland *const restrict island, physRigidBody *const body){
-	if(body->local != NULL){
-		if(island->bodyNum >= island->bodyCapacity){
-			// Allocate room for more bodies.
-			physicsBodyIndex_t i;
-			physicsBodyIndex_t tempCapacity;
-			physRigidBody **tempBuffer;
-			if(island->bodyCapacity == 0){
-				tempCapacity = 1;
-				tempBuffer = memAllocate(tempCapacity*sizeof(physRigidBody *));
-			}else{
-				tempCapacity = island->bodyCapacity*2;
-				tempBuffer = memReallocate(island->bodies, tempCapacity*sizeof(physRigidBody *));
-			}
-			if(tempBuffer == NULL){
-				/** Memory allocation failure. **/
-				return -1;
-			}
-			island->bodyCapacity = tempCapacity;
-			island->bodies = tempBuffer;
-			for(i = island->bodyNum+1; i < island->bodyCapacity; ++i){
-				island->bodies[i] = NULL;
-			}
-		}
-		island->bodies[island->bodyNum] = body;
-		++island->bodyNum;
-		return 1;
-	}
-	return 0;
-}
-
-/*return_t physIslandAddObject(physIsland *const restrict island, object *const restrict obj){
-	if(obj->skeletonBodies != NULL){
-		size_t i;
-		for(i = 0; i < obj->skl->boneNum; ++i){
-			** Memory allocation failure. **
-			if(physIslandAddBody(island, &obj->skeletonBodies[i]) < 0){
-				break;
-			}
-		}
-		if(i < obj->skl->boneNum){
-			** Memory allocation failure. **
-			while(i > 0){
-				--i;
-				island->bodies[island->bodyNum+i] = NULL;
+__FORCE_INLINE__ return_t physIslandUpdateCollider(physIsland *const restrict island, physCollider *const restrict c){
+	if(c->node == NULL){
+		// Insert a collider into the island.
+		if(aabbTreeInsert(&island->tree, &c->node, (void *)c, &c->aabb, &modulePhysicsAABBNodeAllocate) < 0){
+			/** Memory allocation failure. **/
+			if(c->node != NULL){
+				modulePhysicsAABBNodeFree(c->node);
 			}
 			return -1;
 		}
+	}else if(!cAABBEncapsulates(&c->node->aabb, &c->aabb)){
+		// Update the collider.
+		c->node->aabb = c->aabb;
+		cAABBExpandVelocity(&c->node->aabb, &((physRigidBody *)c->body)->linearVelocity, PHYSICS_ISLAND_COLLIDER_AABB_VELOCITY_FACTOR);
+		cAABBExpand(&c->node->aabb, PHYSICS_ISLAND_COLLIDER_AABB_ADDEND);
+		aabbTreeUpdate(&island->tree, c->node);
 	}
 	return 1;
-}*/
+}
 
-void physIslandUpdate(physIsland *const restrict island, const float dt){
+__FORCE_INLINE__ void physIslandRemoveCollider(physIsland *const restrict island, physCollider *const restrict c){
+	if(c->node != NULL){
+		aabbTreeRemove(&island->tree, c->node, &modulePhysicsAABBNodeFree);
+	}
+}
 
-	physicsBodyIndex_t i;
-	physicsBodyIndex_t del = 0;  // Number of bodies that have been deleted.
+__FORCE_INLINE__ return_t physIslandQuery(const physIsland *const restrict island, const float dt){
 
-	for(i = 0; i < island->bodyNum; ++i){
+	/*
+	** Maintain contact and separation pairs for each collider.
+	*/
 
-		physicsBodyIndex_t index = i-del;
-		island->bodies[index] = island->bodies[i];
+	const float frequency = 1.f/dt;
 
-		// Check if the body's owner has been deleted.
-		if(flagsAreSet(island->bodies[index]->flags, PHYSICS_BODY_DELETE)){
+	aabbNode *node = island->tree.leaves;
 
-			// The body's owner has been deleted, free the body and
-			// increase del so future bodies will be shifted over.
-			physRigidBodyDelete(island->bodies[index]);
-			memFree(island->bodies[index]);
-			++del;
+	while(node != NULL){
 
-		}else{
+		// Manage any overlaps with this node.
+		aabbNode *stack[PHYSICS_ISLAND_QUERY_STACK_SIZE];
+		size_t i = 1;
 
-			// Integrate the body and solve constraints if desired.
-			if(flagsAreSet(island->bodies[index]->flags, PHYSICS_BODY_SIMULATE)){
-				//physRigidBodyIntegrateEuler(island->bodies[index], dt);
+		stack[0] = island->tree.root;
+
+		do {
+
+			aabbNode *test = stack[--i];
+
+			if(AABB_TREE_NODE_IS_LEAF(test)){
+				const return_t r = physCollisionQuery(node, test, frequency);
+				if(r < 0){
+					/** Memory allocation failure. **/
+					return r;
+				}
+			}else if(cAABBCollision(&node->aabb, &test->aabb)){
+				stack[i] = test->data.children.left;
+				++i;
+				stack[i] = test->data.children.right;
+				++i;
 			}
 
-			// If the body can collide, update its collision mesh.
-			if(flagsAreSet(island->bodies[index]->flags, PHYSICS_BODY_COLLIDE)){
-				physRigidBodyUpdateCollisionMesh(island->bodies[index]);
-			}
+		} while(i);
 
-		}
+		// Remove any outdated contacts and separations.
+		physColliderRemoveContacts(node->data.leaf.value);
+		physColliderRemoveSeparations(node->data.leaf.value);
+
+		node = node->data.leaf.next;
 
 	}
-
-	// Decrease the array size by the number of bodies that were deleted.
-	island->bodyNum -= del;
-
-}
-
-void physIslandBroadPhase(physIsland *const restrict island, const float dt, physicsBodyIndex_t *const restrict pairArraySize, physRigidBodyLocal ***const restrict pairArray){
-
-
-
-}
-
-return_t physIslandSimulate(physIsland *const restrict island, const float dt){
-
-	//size_t pairArraySize = 0;
-	//physRigidBody **pairArray = memAllocate(2*sizeof(physRigidBody));
-	//pairArray[0] = NULL; pairArray[1] = NULL;
-
-	// Resolve deletions, integrate, solve constraints and update collision meshes.
-	//physIslandUpdate(island, dt);
-
-	// Broad-phase collision pair generation.
-	//physIslandBroadPhase(island, dt, &pairArraySize, &pairArray);
-
-	// Narrow-phase collision pair generation.
-	//
-
-	// Resolve collision pairs.
-
-
-	//memFree(pairArray);
-
-	/*physicsBodyIndex_t i, j;
-	cSeparationCache separationInfo;
-	cContact collisionData;
-	for(i = 0; i < island->bodyNum; ++i){
-		for(j = i+1; j < island->bodyNum; ++j){
-			if(cCollision(&island->bodies[i]->colliders[0].c, &island->bodies[i]->colliders[0].centroid,
-			              &island->bodies[j]->colliders[0].c, &island->bodies[j]->colliders[0].centroid,
-			              &separationInfo, &collisionData)){
-				//physRigidBodyResolveCollision(island->bodies[i], island->bodies[j], &collisionData);
-				//if(j==island->bodyNum-1){
-					//island->bodies[i]->blah=1;
-					//island->bodies[j]->blah=1;
-					//exit(0);
-				//}
-			}
-		}
-	}*/
 
 	return 1;
 
 }
 
 void physIslandDelete(physIsland *const restrict island){
-	if(island->bodies != NULL){
-		memFree(island->bodies);
-	}
+	aabbTreeTraverse(&island->tree, &modulePhysicsAABBNodeFree);
 }

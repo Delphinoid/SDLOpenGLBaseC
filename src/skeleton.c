@@ -260,7 +260,7 @@ void sklDelete(skeleton *const restrict skl){
 	}
 	if(skl->bones != NULL){
 		sklNode *n = skl->bones;
-		sklNode *const nLast = &n[skl->boneNum];
+		const sklNode *const nLast = &n[skl->boneNum];
 		for(; n < nLast; ++n){
 			if(n->name != NULL){
 				memFree(n->name);

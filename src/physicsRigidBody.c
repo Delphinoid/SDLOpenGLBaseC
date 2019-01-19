@@ -1,6 +1,5 @@
 #include "modulePhysics.h"
 #include "memoryManager.h"
-#include "physicsCollider.h"
 #include "helpersFileIO.h"
 #include "inline.h"
 #include <string.h>
@@ -11,21 +10,18 @@
 #define PHYSICS_RESOURCE_DIRECTORY_STRING "Resources\\Skeletons\\Physics\\"
 #define PHYSICS_RESOURCE_DIRECTORY_LENGTH 28
 
-#define PHYSICS_RESTING_EPSILON 0.0001f
-
-void physRigidBodyLocalInit(physRigidBodyLocal *const restrict local){
+void physRigidBodyBaseInit(physRigidBodyBase *const restrict local){
 	local->id = (physicsBodyIndex_t)-1;
 	local->flags = PHYSICS_BODY_ASLEEP;
-	cInit(&local->hull, COLLIDER_TYPE_UNKNOWN);
-	local->mass = 0.f;
+	local->hull = NULL;
 	local->inverseMass = 0.f;
-	local->coefficientOfRestitution = 1.f;
+	local->linearDamping = 0.f;
+	local->angularDamping = 0.f;
 	vec3Zero(&local->centroid);
-	mat3Identity(&local->inertiaTensor);
-	local->constraints = NULL;
+	mat3Identity(&local->inverseInertiaTensor);
 }
 
-__FORCE_INLINE__ void physRigidBodyLocalGenerateMassProperties(physRigidBodyLocal *const restrict local, const float **const vertexMassArray){
+__FORCE_INLINE__ void physRigidBodyBaseGenerateProperties(physRigidBodyBase *const restrict local, const float **const vertexMassArray){
 
 	/*
 	** Calculates the rigid body's total mass, inverse mass,
@@ -33,73 +29,154 @@ __FORCE_INLINE__ void physRigidBodyLocalGenerateMassProperties(physRigidBodyLoca
 	** properties for each of its colliders.
 	*/
 
-	physColliderGenerateMass(&local->hull, &local->mass, &local->inverseMass, &local->centroid, vertexMassArray);
-	physColliderGenerateMoment(&local->hull, &local->inertiaTensor, &local->centroid, vertexMassArray);
+	physCollider *c;
+	const float **m;
+
+	float tempMass = 0.f;
+	vec3 tempCentroid = {.x = 0.f, .y = 0.f, .z = 0.f};
+	float tempInertiaTensor[6] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f};
+
+
+	// Generate the mass properites of each collider, as
+	// well as the total, weighted centroid of the body.
+	c = local->hull;
+	m = vertexMassArray;
+	while(c != NULL){
+
+		float colliderMass;
+		float colliderInverseMass;
+		vec3 colliderCentroid;
+
+		physColliderGenerateMass(&c->c, &colliderMass, &colliderInverseMass, &colliderCentroid, m);
+
+		tempCentroid.x += colliderCentroid.x * colliderMass;
+		tempCentroid.y += colliderCentroid.y * colliderMass;
+		tempCentroid.z += colliderCentroid.z * colliderMass;
+		tempMass += colliderMass;
+
+		c = (physCollider *)memSLinkNext(c);
+		if(m != NULL){
+			++m;
+		}
+
+	}
+
+	if(tempMass != 0.f){
+		const float tempInverseMass = 1.f / tempMass;
+		tempCentroid.x *= tempInverseMass;
+		tempCentroid.y *= tempInverseMass;
+		tempCentroid.z *= tempInverseMass;
+		local->inverseMass = tempInverseMass;
+	}else{
+		local->inverseMass = 0.f;
+	}
+	local->centroid = tempCentroid;
+
+
+	// Calculate the combined moment of inertia for the
+	// collider as the sum of its collider's moments.
+	c = local->hull;
+	m = vertexMassArray;
+	while(c != NULL){
+
+		mat3 colliderInertiaTensor;
+		physColliderGenerateMoment(&c->c, &colliderInertiaTensor, &tempCentroid, m);
+
+		tempInertiaTensor[0] += colliderInertiaTensor.m[0][0];
+		tempInertiaTensor[1] += colliderInertiaTensor.m[1][1];
+		tempInertiaTensor[2] += colliderInertiaTensor.m[2][2];
+		tempInertiaTensor[3] += colliderInertiaTensor.m[0][1];
+		tempInertiaTensor[4] += colliderInertiaTensor.m[0][2];
+		tempInertiaTensor[5] += colliderInertiaTensor.m[1][2];
+
+		c = (physCollider *)memSLinkNext(c);
+		if(m != NULL){
+			++m;
+		}
+
+	}
+
+	local->inverseInertiaTensor.m[0][0] = tempInertiaTensor[0];
+	local->inverseInertiaTensor.m[1][1] = tempInertiaTensor[1];
+	local->inverseInertiaTensor.m[2][2] = tempInertiaTensor[2];
+	local->inverseInertiaTensor.m[0][1] = tempInertiaTensor[3];
+	local->inverseInertiaTensor.m[0][2] = tempInertiaTensor[4];
+	local->inverseInertiaTensor.m[1][2] = tempInertiaTensor[5];
+	// No point calculating the same numbers twice.
+	local->inverseInertiaTensor.m[1][0] = tempInertiaTensor[3];
+	local->inverseInertiaTensor.m[2][0] = tempInertiaTensor[4];
+	local->inverseInertiaTensor.m[2][1] = tempInertiaTensor[5];
+
+	mat3Invert(&local->inverseInertiaTensor);
 
 }
 
-static return_t physColliderResizeToFit(collider *const restrict local){
+/** TEMPORARY **/
+static return_t physColliderResizeToFit(physCollider *const restrict local){
 
-	cMesh *const cHull = (cMesh *)&local->data;
+	if(local->c.type == COLLIDER_TYPE_MESH){
 
-	if(cHull->vertexNum != 0){
-		vec3 *const tempBuffer = memReallocate(cHull->vertices, cHull->vertexNum*sizeof(vec3));
-		if(tempBuffer == NULL){
-			/** Memory allocation failure. **/
-			return -1;
-		}
-		cHull->vertices = tempBuffer;
-	}else{
-		if(cHull->vertices != NULL){
-			memFree(cHull->vertices);
-			cHull->vertices = NULL;
-		}
-	}
+		cMesh *const cHull = (cMesh *)&local->c.data;
 
-	if(cHull->faceNum != 0){
-		cMeshFace *tempBuffer2;
-		vec3 *tempBuffer1 = memReallocate(cHull->normals, cHull->faceNum*sizeof(vec3));
-		if(tempBuffer1 == NULL){
-			/** Memory allocation failure. **/
-			return -1;
+		if(cHull->vertexNum != 0){
+			vec3 *const tempBuffer = memReallocate(cHull->vertices, cHull->vertexNum*sizeof(vec3));
+			if(tempBuffer == NULL){
+				/** Memory allocation failure. **/
+				return -1;
+			}
+			cHull->vertices = tempBuffer;
+		}else{
+			if(cHull->vertices != NULL){
+				memFree(cHull->vertices);
+				cHull->vertices = NULL;
+			}
 		}
-		tempBuffer2 = memReallocate(cHull->faces, cHull->faceNum*sizeof(cMeshFace));
-		if(tempBuffer2 == NULL){
-			/** Memory allocation failure. **/
-			memFree(tempBuffer1);
-			return -1;
-		}
-		cHull->normals = tempBuffer1;
-		cHull->faces = tempBuffer2;
-	}else{
-		if(cHull->normals != NULL){
-			memFree(cHull->normals);
-			cHull->normals = NULL;
-		}
-		if(cHull->faces != NULL){
-			memFree(cHull->faces);
-			cHull->faces = NULL;
-		}
-	}
 
-	if(cHull->edgeNum != 0){
-		cMeshEdge *const tempBuffer = memReallocate(cHull->edges, cHull->edgeNum*sizeof(cMeshEdge));
-		if(tempBuffer == NULL){
-			/** Memory allocation failure. **/
-			return -1;
+		if(cHull->faceNum != 0){
+			cMeshFace *tempBuffer2;
+			vec3 *tempBuffer1 = memReallocate(cHull->normals, cHull->faceNum*sizeof(vec3));
+			if(tempBuffer1 == NULL){
+				/** Memory allocation failure. **/
+				return -1;
+			}
+			tempBuffer2 = memReallocate(cHull->faces, cHull->faceNum*sizeof(cMeshFace));
+			if(tempBuffer2 == NULL){
+				/** Memory allocation failure. **/
+				memFree(tempBuffer1);
+				return -1;
+			}
+			cHull->normals = tempBuffer1;
+			cHull->faces = tempBuffer2;
+		}else{
+			if(cHull->normals != NULL){
+				memFree(cHull->normals);
+				cHull->normals = NULL;
+			}
+			if(cHull->faces != NULL){
+				memFree(cHull->faces);
+				cHull->faces = NULL;
+			}
 		}
-		cHull->edges = tempBuffer;
-	}else if(cHull->edges != NULL){
-		memFree(cHull->edges);
-		cHull->edges = NULL;
+
+		if(cHull->edgeNum != 0){
+			cMeshEdge *const tempBuffer = memReallocate(cHull->edges, cHull->edgeNum*sizeof(cMeshEdge));
+			if(tempBuffer == NULL){
+				/** Memory allocation failure. **/
+				return -1;
+			}
+			cHull->edges = tempBuffer;
+		}else if(cHull->edges != NULL){
+			memFree(cHull->edges);
+			cHull->edges = NULL;
+		}
+
 	}
 
 	return 1;
 
 }
 
-/** FIX CONSTRAINT LOADING. MOSTLY TEMPORARY. **/
-return_t physRigidBodyLocalLoad(physRigidBodyLocal **const restrict bodies, const skeleton *const restrict skl, const char *const restrict prgPath, const char *const restrict filePath){
+return_t physRigidBodyBaseLoad(physRigidBodyBase **const restrict bodies, const skeleton *const restrict skl, const char *const restrict prgPath, const char *const restrict filePath){
 
 	/*
 	** Loads a series of rigid bodies.
@@ -127,14 +204,15 @@ return_t physRigidBodyLocalLoad(physRigidBodyLocal **const restrict bodies, cons
 		cVertexIndex_t vertexCapacity = 0;
 		cFaceIndex_t normalCapacity = 0;
 		cEdgeIndex_t edgeCapacity = 0;
-		float *vertexMassArray = NULL;  // Array of vertex masses for each collider.
+		float **vertexMassArrays = NULL;  // Array of vertex masses for each collider.
 
 		int isSkeleton = -1;         // Whether or not a skeleton is being described.
-		int currentCommand = -1;     // The current multiline command type (-1 = none, 0 = rigid body, 1 = collider, 2 = constraint).
+		int currentCommand = -1;     // The current multiline command type (-1 = none, 0 = rigid body, 1 = collider).
 		fileLine_t currentLine = 0;  // Current file line being read.
 
-		physRigidBodyLocal *currentBody = NULL;
-		physConstraint *currentConstraint = NULL;
+		physRigidBodyBase *currentBody = NULL;
+		physCollider *currentCollider = NULL;
+		size_t currentBodyColliderNum = 0;
 
 		while(fileParseNextLine(rbInfo, lineFeed, sizeof(lineFeed), &line, &lineLength)){
 
@@ -202,41 +280,63 @@ return_t physRigidBodyLocalLoad(physRigidBodyLocal **const restrict bodies, cons
 							   "while another is already in progress. Closing the current command.\n", fullPath, currentLine);
 						if(currentCommand == 0){
 							// Generate various mass properties for the rigid body.
-							physRigidBodyLocalGenerateMassProperties(currentBody, &vertexMassArray);
+							physRigidBodyBaseGenerateProperties(currentBody, (const float **)vertexMassArrays);
 							// Free the collider mass arrays.
-							if(vertexMassArray != NULL){
-								memFree(vertexMassArray);
-								vertexMassArray = NULL;
+							if(vertexMassArrays != NULL){
+								float **array = vertexMassArrays;
+								float **const arrayLast = &vertexMassArrays[currentBodyColliderNum];
+								for(; array < arrayLast; ++array){
+									if(array != NULL){
+										memFree(*array);
+									}
+								}
+								memFree(vertexMassArrays);
+								vertexMassArrays = NULL;
 							}
 							if(!isSkeleton){
 								break;
 							}
 						}else if(currentCommand == 1){
-							if(physColliderResizeToFit(&currentBody->hull) < 0){
+							if(physColliderResizeToFit(currentCollider) < 0){
 								/** Memory allocation failure. **/
-								if(vertexMassArray != NULL){
-									memFree(vertexMassArray);
+								if(vertexMassArrays != NULL){
+									float **array = vertexMassArrays;
+									float **const arrayLast = &vertexMassArrays[currentBodyColliderNum];
+									for(; array < arrayLast; ++array){
+										if(array != NULL){
+											memFree(*array);
+										}
+									}
+									memFree(vertexMassArrays);
 								}
-								modulePhysicsRigidBodyLocalFreeArray(bodies);
+								modulePhysicsRigidBodyBaseFreeArray(bodies);
 								fclose(rbInfo);
 								return -1;
 							}
 						}
 					}
 					// Initialize a new rigid body.
-					currentBody = modulePhysicsRigidBodyLocalAppend(bodies);
+					currentBody = modulePhysicsRigidBodyBaseAppend(bodies);
 					if(currentBody == NULL){
 						/** Memory allocation failure. **/
-						if(vertexMassArray != NULL){
-							memFree(vertexMassArray);
+						if(vertexMassArrays != NULL){
+							float **array = vertexMassArrays;
+							float **const arrayLast = &vertexMassArrays[currentBodyColliderNum];
+							for(; array < arrayLast; ++array){
+								if(array != NULL){
+									memFree(*array);
+								}
+							}
+							memFree(vertexMassArrays);
 						}
-						modulePhysicsRigidBodyLocalFreeArray(bodies);
+						modulePhysicsRigidBodyBaseFreeArray(bodies);
 						fclose(rbInfo);
 						return -1;
 					}
-					physRigidBodyLocalInit(currentBody);
+					physRigidBodyBaseInit(currentBody);
 					currentBody->id = currentBodyID;
-					currentBody->flags = PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_SIMULATE | PHYSICS_BODY_COLLIDE;
+					currentBodyColliderNum = 0;
+					currentBody->flags = PHYSICS_BODY_DEFAULT_STATE;
 					currentCommand = 0;
 
 				}
@@ -247,29 +347,76 @@ return_t physRigidBodyLocalLoad(physRigidBodyLocal **const restrict bodies, cons
 				if(strchr(line+9, '{')){
 					if(currentCommand >= 0){
 
+						float **tempBuffer;
+
 						// Close any current commands.
 						if(currentCommand > 0){
 							printf("Error loading rigid bodies \"%s\": Trying to start a multiline command at line %u "
 							       "while another is already in progress. Closing the current command.\n", fullPath, currentLine);
 							if(currentCommand == 1){
-								if(physColliderResizeToFit(&currentBody->hull) < 0){
+								if(physColliderResizeToFit(currentCollider) < 0){
 									/** Memory allocation failure. **/
-									if(vertexMassArray != NULL){
-										memFree(vertexMassArray);
+									if(vertexMassArrays != NULL){
+										float **array = vertexMassArrays;
+										float **const arrayLast = &vertexMassArrays[currentBodyColliderNum];
+										for(; array < arrayLast; ++array){
+											if(array != NULL){
+												memFree(*array);
+											}
+										}
+										memFree(vertexMassArrays);
 									}
-									modulePhysicsRigidBodyLocalFreeArray(bodies);
+									modulePhysicsRigidBodyBaseFreeArray(bodies);
 									fclose(rbInfo);
 									return -1;
 								}
 							}
 						}
 
+						// Allocate memory for the new collider.
+						currentCollider = modulePhysicsColliderAppend(&currentBody->hull);
+						if(currentCollider == NULL){
+							/** Memory allocation failure. **/
+							if(vertexMassArrays != NULL){
+								float **array = vertexMassArrays;
+								float **const arrayLast = &vertexMassArrays[currentBodyColliderNum];
+								for(; array < arrayLast; ++array){
+									if(array != NULL){
+										memFree(*array);
+									}
+								}
+								memFree(vertexMassArrays);
+							}
+							modulePhysicsRigidBodyBaseFreeArray(bodies);
+							fclose(rbInfo);
+							return -1;
+						}
+						tempBuffer = memReallocate(vertexMassArrays, (currentBodyColliderNum+1)*sizeof(float *));
+						if(tempBuffer == NULL){
+							/** Memory allocation failure. **/
+							if(vertexMassArrays != NULL){
+								float **array = vertexMassArrays;
+								float **const arrayLast = &vertexMassArrays[currentBodyColliderNum];
+								for(; array < arrayLast; ++array){
+									if(array != NULL){
+										memFree(*array);
+									}
+								}
+								memFree(vertexMassArrays);
+							}
+							modulePhysicsRigidBodyBaseFreeArray(bodies);
+							fclose(rbInfo);
+							return -1;
+						}
+
+						vertexMassArrays = tempBuffer;
+						vertexMassArrays[currentBodyColliderNum] = NULL;
 						vertexCapacity = 0;
 						normalCapacity = 0;
 						edgeCapacity = 0;
 
-						cInit(&currentBody->hull, COLLIDER_TYPE_MESH);
-						cMeshInit((cMesh *)&currentBody->hull.data);
+						physColliderInit(currentCollider, COLLIDER_TYPE_MESH, currentBody);
+						++currentBodyColliderNum;
 
 						currentCommand = 1;
 
@@ -287,397 +434,332 @@ return_t physRigidBodyLocalLoad(physRigidBodyLocal **const restrict bodies, cons
 			// Collider vertex
 			}else if(lineLength >= 7 && strncmp(line, "v ", 2) == 0){
 
-				cMesh *const cHull = (cMesh *)&currentBody->hull.data;
-				const char *token;
+				if(currentBodyColliderNum > 0){
 
-				// Reallocate vertex array if necessary.
-				if(cHull->vertexNum == vertexCapacity){
-					if(vertexCapacity == 0){
-						vertexCapacity = 1;
-					}else{
-						vertexCapacity *= 2;
-					}
-					float *tempBuffer2;
-					vec3 *tempBuffer1 = memReallocate(cHull->vertices, vertexCapacity*sizeof(vec3));
-					if(tempBuffer1 == NULL){
-						/** Memory allocation failure. **/
-						if(vertexMassArray != NULL){
-							memFree(vertexMassArray);
-						}
-						modulePhysicsRigidBodyLocalFreeArray(bodies);
-						fclose(rbInfo);
-						return -1;
-					}
-					tempBuffer2 = memReallocate(vertexMassArray, vertexCapacity*sizeof(float));
-					if(tempBuffer2 == NULL){
-						/** Memory allocation failure. **/
-						if(vertexMassArray != NULL){
-							memFree(vertexMassArray);
-						}
-						modulePhysicsRigidBodyLocalFreeArray(bodies);
-						fclose(rbInfo);
-						memFree(tempBuffer1);
-						return -1;
-					}
-					cHull->vertices = tempBuffer1;
-					vertexMassArray = tempBuffer2;
-				}
+					cMesh *const cHull = (cMesh *)&currentCollider->c.data;
+					const char *token;
 
-				token = strtok(line+2, " ");
-				cHull->vertices[cHull->vertexNum].x = strtod(token, NULL);
-				token = strtok(NULL, " ");
-				cHull->vertices[cHull->vertexNum].y = strtod(token, NULL);
-				token = strtok(NULL, " ");
-				cHull->vertices[cHull->vertexNum].z = strtod(token, NULL);
-				token = strtok(NULL, " ");
-				if(token != NULL){
-					vertexMassArray[cHull->vertexNum] = strtod(token, NULL);
+					// Reallocate vertex array if necessary.
+					if(cHull->vertexNum == vertexCapacity){
+						if(vertexCapacity == 0){
+							vertexCapacity = 1;
+						}else{
+							vertexCapacity *= 2;
+						}
+						float *tempBuffer2;
+						vec3 *tempBuffer1 = memReallocate(cHull->vertices, vertexCapacity*sizeof(vec3));
+						if(tempBuffer1 == NULL){
+							/** Memory allocation failure. **/
+							if(vertexMassArrays != NULL){
+								float **array = vertexMassArrays;
+								float **const arrayLast = &vertexMassArrays[currentBodyColliderNum];
+								for(; array < arrayLast; ++array){
+									if(array != NULL){
+										memFree(*array);
+									}
+								}
+								memFree(vertexMassArrays);
+							}
+							modulePhysicsRigidBodyBaseFreeArray(bodies);
+							fclose(rbInfo);
+							return -1;
+						}
+						tempBuffer2 = memReallocate(vertexMassArrays[currentBodyColliderNum-1], vertexCapacity*sizeof(float));
+						if(tempBuffer2 == NULL){
+							/** Memory allocation failure. **/
+							if(vertexMassArrays != NULL){
+								float **array = vertexMassArrays;
+								float **const arrayLast = &vertexMassArrays[currentBodyColliderNum];
+								for(; array < arrayLast; ++array){
+									if(array != NULL){
+										memFree(*array);
+									}
+								}
+								memFree(vertexMassArrays);
+							}
+							modulePhysicsRigidBodyBaseFreeArray(bodies);
+							fclose(rbInfo);
+							memFree(tempBuffer1);
+							return -1;
+						}
+						cHull->vertices = tempBuffer1;
+						vertexMassArrays[currentBodyColliderNum-1] = tempBuffer2;
+					}
+
+					token = strtok(line+2, " ");
+					cHull->vertices[cHull->vertexNum].x = strtod(token, NULL);
+					token = strtok(NULL, " ");
+					cHull->vertices[cHull->vertexNum].y = strtod(token, NULL);
+					token = strtok(NULL, " ");
+					cHull->vertices[cHull->vertexNum].z = strtod(token, NULL);
+					token = strtok(NULL, " ");
+					if(token != NULL){
+						vertexMassArrays[currentBodyColliderNum-1][cHull->vertexNum] = strtod(token, NULL);
+					}
+					++cHull->vertexNum;
+
 				}
-				++cHull->vertexNum;
 
 
 			// Collider face
 			}else if(lineLength >= 7 && strncmp(line, "f ", 2) == 0){
 
-				const char *token = strtok(line+2, " ");
-				if(token != NULL){
+				if(currentBodyColliderNum > 0){
 
-					cMesh *const cHull = (cMesh *)&currentBody->hull.data;
+					const char *token = strtok(line+2, " ");
+					if(token != NULL){
 
-					cEdgeIndex_t start;
-					cEdgeIndex_t end = strtoul(token, NULL, 0)-1;
+						cMesh *const cHull = (cMesh *)&currentCollider->c.data;
 
-					cEdgeIndex_t oldNum = cHull->edgeNum;
-					cEdgeIndex_t addNum = 0;
+						cEdgeIndex_t start;
+						cEdgeIndex_t end = strtoul(token, NULL, 0)-1;
 
-					cEdgeIndex_t first = (cEdgeIndex_t)-1;
-					cEdgeIndex_t last = oldNum;
+						cEdgeIndex_t oldNum = cHull->edgeNum;
+						cEdgeIndex_t addNum = 0;
 
-					byte_t firstTwin = 0;
-					byte_t lastTwin = 0;
+						cEdgeIndex_t first = (cEdgeIndex_t)-1;
+						cEdgeIndex_t last = oldNum;
 
-					byte_t exit = 0;
+						byte_t firstTwin = 0;
+						byte_t lastTwin = 0;
 
-					vec3 BsA;
-					vec3 CsA;
+						byte_t exit = 0;
 
-					// Recursively add the face's edges.
-					for(;;){
+						vec3 BsA;
+						vec3 CsA;
 
-						cEdgeIndex_t i = 0;
+						// Recursively add the face's edges.
+						for(;;){
 
-						token = strtok(NULL, " ");
-						if(token == NULL){
-							// If this was the last vertex, loop back
-							// to the first one and create an edge with it.
-							token = strtok(line+2, " ");
-							exit = 1;
-						}
+							cEdgeIndex_t i = 0;
 
-						// Reallocate edge array if necessary.
-						if(cHull->edgeNum == edgeCapacity){
-							if(edgeCapacity == 0){
-								edgeCapacity = 3;
-							}else{
-								edgeCapacity *= 2;
+							token = strtok(NULL, " ");
+							if(token == NULL){
+								// If this was the last vertex, loop back
+								// to the first one and create an edge with it.
+								token = strtok(line+2, " ");
+								exit = 1;
 							}
-							cMeshEdge *const tempBuffer = memReallocate(cHull->edges, edgeCapacity*sizeof(cMeshEdge));
-							if(tempBuffer == NULL){
-								/** Memory allocation failure. **/
-								if(vertexMassArray != NULL){
-									memFree(vertexMassArray);
+
+							// Reallocate edge array if necessary.
+							if(cHull->edgeNum == edgeCapacity){
+								if(edgeCapacity == 0){
+									edgeCapacity = 3;
+								}else{
+									edgeCapacity *= 2;
 								}
-								modulePhysicsRigidBodyLocalFreeArray(bodies);
-								fclose(rbInfo);
-								return -1;
+								cMeshEdge *const tempBuffer = memReallocate(cHull->edges, edgeCapacity*sizeof(cMeshEdge));
+								if(tempBuffer == NULL){
+									/** Memory allocation failure. **/
+									if(vertexMassArrays != NULL){
+										float **array = vertexMassArrays;
+										float **const arrayLast = &vertexMassArrays[currentBodyColliderNum];
+										for(; array < arrayLast; ++array){
+											if(array != NULL){
+												memFree(*array);
+											}
+										}
+										memFree(vertexMassArrays);
+									}
+									modulePhysicsRigidBodyBaseFreeArray(bodies);
+									fclose(rbInfo);
+									return -1;
+								}
+								cHull->edges = tempBuffer;
 							}
-							cHull->edges = tempBuffer;
-						}
 
-						start = end;
-						end = strtoul(token, NULL, 0)-1;
+							start = end;
+							end = strtoul(token, NULL, 0)-1;
 
-						// Look for a twin edge. If it is found,
-						// the current edge will be stored directly
-						// after it.
-						while(i < oldNum){
-							// Check if the current edge is the next edge or a twin.
-							if(start == cHull->edges[i].end && end == cHull->edges[i].start){
-								// If the new edge is a twin, don't add it.
-								// Instead, set the current edge's twin.
+							// Look for a twin edge. If it is found,
+							// the current edge will be stored directly
+							// after it.
+							while(i < oldNum){
+								// Check if the current edge is the next edge or a twin.
+								if(start == cHull->edges[i].end && end == cHull->edges[i].start){
+									// If the new edge is a twin, don't add it.
+									// Instead, set the current edge's twin.
+									if(first == (cEdgeIndex_t)-1){
+										// If this is the first vertex, set it.
+										first = i;
+										firstTwin = 1;
+									}else{
+										// Set this edge as the last edge's next.
+										if(lastTwin){
+											cHull->edges[last].twinNext = i;
+										}else{
+											cHull->edges[last].next = i;
+										}
+									}
+									cHull->edges[i].twinFace = cHull->faceNum;
+									last = i;
+									lastTwin = 1;
+									break;
+								}
+								++i;
+							}
+
+							if(i >= oldNum){
+								// No twin was found.
 								if(first == (cEdgeIndex_t)-1){
 									// If this is the first vertex, set it.
-									first = i;
-									firstTwin = 1;
+									first = cHull->edgeNum;
+									firstTwin = 0;
 								}else{
 									// Set this edge as the last edge's next.
 									if(lastTwin){
-										cHull->edges[last].twinNext = i;
+										cHull->edges[last].twinNext = cHull->edgeNum;
 									}else{
-										cHull->edges[last].next = i;
+										cHull->edges[last].next = cHull->edgeNum;
 									}
 								}
-								cHull->edges[i].twinFace = cHull->faceNum;
-								last = i;
-								lastTwin = 1;
+								last = cHull->edgeNum;
+								lastTwin = 0;
+								cHull->edges[last].start = start;
+								cHull->edges[last].end = end;
+								cHull->edges[last].face = cHull->faceNum;
+								cHull->edges[last].twinFace = cHull->faceNum;
+								++cHull->edgeNum;
+							}
+
+							++addNum;
+
+							if(exit){
+								if(lastTwin){
+									cHull->edges[last].twinNext = first;
+								}else{
+									cHull->edges[last].next = first;
+								}
 								break;
 							}
-							++i;
+
 						}
 
-						if(i >= oldNum){
-							// No twin was found.
-							if(first == (cEdgeIndex_t)-1){
-								// If this is the first vertex, set it.
-								first = cHull->edgeNum;
-								firstTwin = 0;
+						// Reallocate normal and offset arrays if necessary.
+						if(cHull->faceNum == normalCapacity){
+							vec3 *tempBuffer1;
+							cMeshFace *tempBuffer2;
+							if(normalCapacity == 0){
+								normalCapacity = 1;
 							}else{
-								// Set this edge as the last edge's next.
-								if(lastTwin){
-									cHull->edges[last].twinNext = cHull->edgeNum;
-								}else{
-									cHull->edges[last].next = cHull->edgeNum;
-								}
+								normalCapacity *= 2;
 							}
-							last = cHull->edgeNum;
-							lastTwin = 0;
-							cHull->edges[last].start = start;
-							cHull->edges[last].end = end;
-							cHull->edges[last].face = cHull->faceNum;
-							cHull->edges[last].twinFace = cHull->faceNum;
-							++cHull->edgeNum;
+							tempBuffer1 = memReallocate(cHull->normals, normalCapacity*sizeof(vec3));
+							if(tempBuffer1 == NULL){
+								/** Memory allocation failure. **/
+								if(vertexMassArrays != NULL){
+									float **array = vertexMassArrays;
+									float **const arrayLast = &vertexMassArrays[currentBodyColliderNum];
+									for(; array < arrayLast; ++array){
+										if(array != NULL){
+											memFree(*array);
+										}
+									}
+									memFree(vertexMassArrays);
+								}
+								modulePhysicsRigidBodyBaseFreeArray(bodies);
+								fclose(rbInfo);
+								return -1;
+							}
+							tempBuffer2 = memReallocate(cHull->faces, normalCapacity*sizeof(cMeshFace));
+							if(tempBuffer2 == NULL){
+								/** Memory allocation failure. **/
+								if(vertexMassArrays != NULL){
+									float **array = vertexMassArrays;
+									float **const arrayLast = &vertexMassArrays[currentBodyColliderNum];
+									for(; array < arrayLast; ++array){
+										if(array != NULL){
+											memFree(*array);
+										}
+									}
+									memFree(vertexMassArrays);
+								}
+								modulePhysicsRigidBodyBaseFreeArray(bodies);
+								fclose(rbInfo);
+								memFree(tempBuffer1);
+								return -1;
+							}
+							cHull->normals = tempBuffer1;
+							cHull->faces = tempBuffer2;
 						}
 
-						++addNum;
-
-						if(exit){
+						// Generate a normal for the face.
+						if(firstTwin){
+							vec3SubVFromVR(&cHull->vertices[cHull->edges[first].start], &cHull->vertices[cHull->edges[first].end], &BsA);
 							if(lastTwin){
-								cHull->edges[last].twinNext = first;
+								vec3SubVFromVR(&cHull->vertices[cHull->edges[last].end], &cHull->vertices[cHull->edges[first].end], &CsA);
 							}else{
-								cHull->edges[last].next = first;
+								vec3SubVFromVR(&cHull->vertices[cHull->edges[last].start], &cHull->vertices[cHull->edges[first].end], &CsA);
 							}
-							break;
-						}
-
-					}
-
-					// Reallocate normal and offset arrays if necessary.
-					if(cHull->faceNum == normalCapacity){
-						vec3 *tempBuffer1;
-						cMeshFace *tempBuffer2;
-						if(normalCapacity == 0){
-							normalCapacity = 1;
 						}else{
-							normalCapacity *= 2;
-						}
-						tempBuffer1 = memReallocate(cHull->normals, normalCapacity*sizeof(vec3));
-						if(tempBuffer1 == NULL){
-							/** Memory allocation failure. **/
-							if(vertexMassArray != NULL){
-								memFree(vertexMassArray);
-							}
-							modulePhysicsRigidBodyLocalFreeArray(bodies);
-							fclose(rbInfo);
-							return -1;
-						}
-						tempBuffer2 = memReallocate(cHull->faces, normalCapacity*sizeof(cMeshFace));
-						if(tempBuffer2 == NULL){
-							/** Memory allocation failure. **/
-							if(vertexMassArray != NULL){
-								memFree(vertexMassArray);
-							}
-							modulePhysicsRigidBodyLocalFreeArray(bodies);
-							fclose(rbInfo);
-							memFree(tempBuffer1);
-							return -1;
-						}
-						cHull->normals = tempBuffer1;
-						cHull->faces = tempBuffer2;
-					}
-
-					// Generate a normal for the face.
-					if(firstTwin){
-						vec3SubVFromVR(&cHull->vertices[cHull->edges[first].start], &cHull->vertices[cHull->edges[first].end], &BsA);
-						if(lastTwin){
-							vec3SubVFromVR(&cHull->vertices[cHull->edges[last].end], &cHull->vertices[cHull->edges[first].end], &CsA);
-						}else{
-							vec3SubVFromVR(&cHull->vertices[cHull->edges[last].start], &cHull->vertices[cHull->edges[first].end], &CsA);
-						}
-					}else{
-						vec3SubVFromVR(&cHull->vertices[cHull->edges[first].end], &cHull->vertices[cHull->edges[first].start], &BsA);
-						if(lastTwin){
-							vec3SubVFromVR(&cHull->vertices[cHull->edges[last].end], &cHull->vertices[cHull->edges[first].start], &CsA);
-						}else{
-							vec3SubVFromVR(&cHull->vertices[cHull->edges[last].start], &cHull->vertices[cHull->edges[first].start], &CsA);
-						}
-					}
-					vec3CrossR(&BsA, &CsA, &cHull->normals[cHull->faceNum]);
-					vec3NormalizeFastAccurate(&cHull->normals[cHull->faceNum]);
-
-					//cHull->faces[cHull->faceNum].edgeNum = addNum;
-					if(addNum > cHull->edgeMax){
-						// Update the maximum edge num.
-						cHull->edgeMax = addNum;
-					}
-					cHull->faces[cHull->faceNum].edge = first;
-
-					++cHull->faceNum;
-
-				}else{
-					printf("Error loading rigid bodies \"%s\": Collider face at line %u "
-						   "must have at least three vertices.\n", fullPath, currentLine);
-				}
-
-
-			// Constraint
-			}else if(lineLength >= 12 && strncmp(line, "constraint ", 11) == 0){
-
-				const char *end;
-				while(line[10] == ' ' || line[10] == '\t'){
-					++line;
-					--lineLength;
-				}
-
-				// Make sure a brace exists.
-				end = strrchr(line+10, '{');
-				if(end){
-					if(currentCommand >= 0){
-
-						// Close any current commands.
-						if(currentCommand > 0){
-							printf("Error loading rigid bodies \"%s\": Trying to start a multiline command at line %u "
-							       "while another is already in progress. Closing the current command.\n", fullPath, currentLine);
-							if(currentCommand == 1){
-								if(physColliderResizeToFit(&currentBody->hull) < 0){
-									/** Memory allocation failure. **/
-									if(vertexMassArray != NULL){
-										memFree(vertexMassArray);
-									}
-									modulePhysicsRigidBodyLocalFreeArray(bodies);
-									fclose(rbInfo);
-									return -1;
-								}
+							vec3SubVFromVR(&cHull->vertices[cHull->edges[first].end], &cHull->vertices[cHull->edges[first].start], &BsA);
+							if(lastTwin){
+								vec3SubVFromVR(&cHull->vertices[cHull->edges[last].end], &cHull->vertices[cHull->edges[first].start], &CsA);
+							}else{
+								vec3SubVFromVR(&cHull->vertices[cHull->edges[last].start], &cHull->vertices[cHull->edges[first].start], &CsA);
 							}
 						}
+						vec3CrossR(&BsA, &CsA, &cHull->normals[cHull->faceNum]);
+						vec3NormalizeFastAccurate(&cHull->normals[cHull->faceNum]);
 
-						// Check if the rigid body has a name.
-						if(end != &line[10] && skl != NULL && isSkeleton){
-
-							physicsBodyIndex_t constrainedBodyID;
-
-							// Parse the name.
-							while(*end == ' ' || *end == '\t'){
-								--end;
-							}
-							lineLength = end-line;
-							if(line[10] == '"'){
-								while(*end != '"'){
-									--end;
-								}
-								if(end != &line[10]){
-									++line;
-									lineLength = end-line;
-								}
-							}
-
-							// Loop through the skeleton to find a bone with the given name.
-							for(constrainedBodyID = 0; constrainedBodyID < skl->boneNum; ++constrainedBodyID){
-								if(strncmp(line, skl->bones[constrainedBodyID].name, lineLength) == 0){
-									break;
-								}
-							}
-							// Add the new constraint if possible.
-							if(constrainedBodyID < skl->boneNum){
-								currentConstraint = modulePhysicsConstraintAppend(&currentBody->constraints);
-								if(currentConstraint == NULL){
-									/** Memory allocation failure. **/
-									if(vertexMassArray != NULL){
-										memFree(vertexMassArray);
-									}
-									modulePhysicsRigidBodyLocalFreeArray(bodies);
-									fclose(rbInfo);
-									return -1;
-								}
-								physConstraintInit(currentConstraint);
-								#warning FIX THIS
-								///currentConstraint->id = constrainedBodyID;
-								///currentConstraint->ownerID = currentBody->id;
-								currentCommand = 2;
-								success = 1;
-							}
-
-						}else{
-							printf("Error loading rigid bodies \"%s\": The \"constraint\" command at like %u may only be used by. "
-							       "physics skeletons. Ignoring.\n", fullPath, currentLine);
+						//cHull->faces[cHull->faceNum].edgeNum = addNum;
+						if(addNum > cHull->edgeMax){
+							// Update the maximum edge num.
+							cHull->edgeMax = addNum;
 						}
+						cHull->faces[cHull->faceNum].edge = first;
+
+						++cHull->faceNum;
 
 					}else{
-						printf("Error loading rigid bodies \"%s\": Rigid body sub-command \"constraint\" invoked on line %u "
-						       "without specifying a rigid body.\n", fullPath, currentLine);
+						printf("Error loading rigid bodies \"%s\": Collider face at line %u "
+						       "must have at least three vertices.\n", fullPath, currentLine);
 					}
-				}else{
-					printf("Error loading rigid bodies \"%s\": Rigid body sub-command \"constraint\" at line %u "
-					       "does not contain a brace.\n", fullPath, currentLine);
+
 				}
 
 
-			// Constraint offset bounds
-			}else if(lineLength >= 24 && strncmp(line, "offsetBounds ", 13) == 0){
-				if(currentCommand == 2){
-					/**const char *token = strtok(line+13, "/");
-					currentConstraint->constraintOffsetMin.x = strtod(token, NULL);
-					token = strtok(NULL, "/");
-					currentConstraint->constraintOffsetMin.y = strtod(token, NULL);
-					token = strtok(NULL, " ");
-					currentConstraint->constraintOffsetMin.z = strtod(token, NULL);
-					token = strtok(NULL, "/");
-					currentConstraint->constraintOffsetMax.x = strtod(token, NULL);
-					token = strtok(NULL, "/");
-					currentConstraint->constraintOffsetMax.y = strtod(token, NULL);
-					token = strtok(NULL, " ");
-					currentConstraint->constraintOffsetMax.z = strtod(token, NULL);**/
+			// Density
+			}else if(lineLength >= 9 && strncmp(line, "density ", 8) == 0){
+				if(currentCommand == 1){
+					currentCollider->density = strtof(line+8, NULL);
+				}else if(currentCommand <= 0){
+					printf("Error loading rigid bodies \"%s\": Collider sub-command \"density\" at line %u does not belong "
+					       "in any other multiline command.\n", fullPath, currentLine);
 				}else{
-					printf("Error loading rigid bodies \"%s\": Constraint sub-command \"offsetBounds\" invoked on line %u "
-					       "without specifying a constraint.\n", fullPath, currentLine);
+					printf("Error loading rigid bodies \"%s\": Collider sub-command \"density\" invoked on line %u without "
+					       "specifying a collider.\n", fullPath, currentLine);
 				}
 
 
-			// Constraint rotation bounds
-			}else if(lineLength >= 26 && strncmp(line, "rotationBounds ", 15) == 0){
-				if(currentCommand == 2){
-					/**const char *token = strtok(line+15, "/");
-					currentConstraint->constraintRotationMin.x = strtod(token, NULL);
-					token = strtok(NULL, "/");
-					currentConstraint->constraintRotationMin.y = strtod(token, NULL);
-					token = strtok(NULL, " ");
-					currentConstraint->constraintRotationMin.z = strtod(token, NULL);
-					token = strtok(NULL, "/");
-					currentConstraint->constraintRotationMax.x = strtod(token, NULL);
-					token = strtok(NULL, "/");
-					currentConstraint->constraintRotationMax.y = strtod(token, NULL);
-					token = strtok(NULL, " ");
-					currentConstraint->constraintRotationMax.z = strtod(token, NULL);**/
+			// Friction
+			}else if(lineLength >= 10 && strncmp(line, "friction ", 9) == 0){
+				if(currentCommand == 1){
+					currentCollider->friction = strtof(line+9, NULL);
+				}else if(currentCommand <= 0){
+					printf("Error loading rigid bodies \"%s\": Collider sub-command \"friction\" at line %u does not belong "
+					       "in any other multiline command.\n", fullPath, currentLine);
 				}else{
-					printf("Error loading rigid bodies \"%s\": Constraint sub-command \"rotationBounds\" invoked on line %u "
-					       "without specifying a constraint.\n", fullPath, currentLine);
+					printf("Error loading rigid bodies \"%s\": Collider sub-command \"friction\" invoked on line %u without "
+					       "specifying a collider.\n", fullPath, currentLine);
 				}
 
 
 			// Coefficient of restitution
-			}else if(lineLength >= 13 && strncmp(line, "energyratio ", 12) == 0){
-				if(currentCommand == 0){
-					currentBody->coefficientOfRestitution = strtof(line+12, NULL);
-					if(currentBody->coefficientOfRestitution > 1.f){
-						currentBody->coefficientOfRestitution = 1.f;
-					}else if(currentBody->coefficientOfRestitution < 0.f){
-						currentBody->coefficientOfRestitution = 0.f;
+			}else if(lineLength >= 13 && strncmp(line, "restitution ", 12) == 0){
+				if(currentCommand == 1){
+					currentCollider->restitution = strtof(line+12, NULL);
+					if(currentCollider->restitution > 1.f){
+						currentCollider->restitution = 1.f;
+					}else if(currentCollider->restitution < 0.f){
+						currentCollider->restitution = 0.f;
 					}
-				}else if(currentCommand > 0){
-					printf("Error loading rigid bodies \"%s\": Rigid body sub-command \"energyratio\" at line %u does not belong "
+				}else if(currentCommand <= 0){
+					printf("Error loading rigid bodies \"%s\": Collider sub-command \"restitution\" at line %u does not belong "
 					       "in any other multiline command.\n", fullPath, currentLine);
 				}else{
-					printf("Error loading rigid bodies \"%s\": Rigid body sub-command \"energyratio\" invoked on line %u without "
-					       "specifying a rigid body.\n", fullPath, currentLine);
+					printf("Error loading rigid bodies \"%s\": Collider sub-command \"restitution\" invoked on line %u without "
+					       "specifying a collider.\n", fullPath, currentLine);
 				}
 
 
@@ -690,17 +772,10 @@ return_t physRigidBodyLocalLoad(physRigidBodyLocal **const restrict bodies, cons
 						flagsUnset(currentBody->flags, PHYSICS_BODY_COLLIDE);
 					}
 				}else if(currentCommand == 1){
-					if(strtoul(line+10, NULL, 0)){
-						flagsUnset(currentConstraint->flags, PHYSICS_CONSTRAINT_NO_COLLISION);
-					}else{
-						flagsSet(currentConstraint->flags, PHYSICS_CONSTRAINT_NO_COLLISION);
-					}
-				}else if(currentCommand > 1){
-					printf("Error loading rigid bodies \"%s\": Rigid body and constraint sub-command \"collision\" at line %u does not belong "
-					       "in any other multiline commands.\n", fullPath, currentLine);
+					currentCollider->layers = strtoul(line+10, NULL, 0);
 				}else{
-					printf("Error loading rigid bodies \"%s\": Rigid body and constraint sub-command \"collision\" invoked on line %u without "
-					       "specifying a rigid body or constraint.\n", fullPath, currentLine);
+					printf("Error loading rigid bodies \"%s\": Rigid body and collider sub-command \"collision\" invoked on line %u without "
+					       "specifying a rigid body or collider.\n", fullPath, currentLine);
 				}
 
 
@@ -708,9 +783,9 @@ return_t physRigidBodyLocalLoad(physRigidBodyLocal **const restrict bodies, cons
 			}else if(lineLength >= 8 && strncmp(line, "active ", 7) == 0){
 				if(currentCommand == 0){
 					if(strtoul(line+7, NULL, 0)){
-						flagsSet(currentBody->flags, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_SIMULATE);
+						flagsSet(currentBody->flags, PHYSICS_BODY_DEFAULT_STATE);
 					}else{
-						flagsUnset(currentBody->flags, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_SIMULATE);
+						flagsUnset(currentBody->flags, PHYSICS_BODY_DEFAULT_STATE);
 					}
 				}else if(currentCommand > 0){
 					printf("Error loading rigid bodies \"%s\": Rigid body sub-command \"active\" at line %u does not belong "
@@ -724,46 +799,63 @@ return_t physRigidBodyLocalLoad(physRigidBodyLocal **const restrict bodies, cons
 			if(lineLength > 0 && line[lineLength-1] == '}'){
 				if(currentCommand == 0){
 
-					// Generate various mass properties for the rigid body.
-					physRigidBodyLocalGenerateMassProperties(currentBody, &vertexMassArray);
+					if(currentBodyColliderNum > 0){
 
-					// Free the collider mass arrays.
-					if(vertexMassArray != NULL){
-						memFree(vertexMassArray);
-						vertexMassArray = NULL;
-					}
+						// Generate various mass properties for the rigid body.
+						physRigidBodyBaseGenerateProperties(currentBody, (const float **)vertexMassArrays);
 
-					success = 1;
+						// Free the collider mass arrays.
+						if(vertexMassArrays != NULL){
+							float **array = vertexMassArrays;
+							float **const arrayLast = &vertexMassArrays[currentBodyColliderNum];
+							for(; array < arrayLast; ++array){
+								if(array != NULL){
+									memFree(*array);
+								}
+							}
+							memFree(vertexMassArrays);
+							vertexMassArrays = NULL;
+						}
 
-					if(!isSkeleton){
-						break;
+						success = 1;
+
+						if(!isSkeleton){
+							break;
+						}
+
 					}
 
 					currentCommand = -1;
 
 				}else if(currentCommand == 1){
 
-					const cMesh *const cHull = (cMesh *)&currentBody->hull.data;
+					const cMesh *const cHull = (cMesh *)&currentCollider->c.data;
 
 					if(cHull->vertexNum > 0 && cHull->faceNum > 0 && cHull->edgeNum > 0){
 
-						if(physColliderResizeToFit(&currentBody->hull) < 0){
+						if(physColliderResizeToFit(currentCollider) < 0){
 							/** Memory allocation failure. **/
-							if(vertexMassArray != NULL){
-								memFree(vertexMassArray);
+							if(vertexMassArrays != NULL){
+								float **array = vertexMassArrays;
+								float **const arrayLast = &vertexMassArrays[currentBodyColliderNum];
+								for(; array < arrayLast; ++array){
+									if(array != NULL){
+										memFree(*array);
+									}
+								}
+								memFree(vertexMassArrays);
 							}
-							modulePhysicsRigidBodyLocalFreeArray(bodies);
+							modulePhysicsRigidBodyBaseFreeArray(bodies);
 							return -1;
 						}
 
 					}else{
 						printf("Error loading rigid bodies \"%s\": Collider has no vertices or faces.\n", fullPath);
-						physColliderResizeToFit(&currentBody->hull);
+						--currentBodyColliderNum;
+						physColliderResizeToFit(currentCollider);
 					}
 					currentCommand = 0;
 
-				}else if(currentCommand == 2){
-					currentCommand = 0;
 				}else{
 					printf("Error loading rigid bodies \"%s\": Stray brace on line %u.\n", fullPath, currentLine);
 				}
@@ -775,33 +867,52 @@ return_t physRigidBodyLocalLoad(physRigidBodyLocal **const restrict bodies, cons
 
 		if(currentCommand == 0){
 
-			// Generate various mass properties for the rigid body.
-			physRigidBodyLocalGenerateMassProperties(currentBody, &vertexMassArray);
+			if(currentBodyColliderNum > 0){
 
-			// Free the collider mass arrays.
-			if(vertexMassArray != NULL){
-				memFree(vertexMassArray);
-				vertexMassArray = NULL;
+				// Generate various mass properties for the rigid body.
+				physRigidBodyBaseGenerateProperties(currentBody, (const float **)vertexMassArrays);
+
+				// Free the collider mass arrays.
+				if(vertexMassArrays != NULL){
+					float **array = vertexMassArrays;
+					float **const arrayLast = &vertexMassArrays[currentBodyColliderNum];
+					for(; array < arrayLast; ++array){
+						if(array != NULL){
+							memFree(*array);
+						}
+					}
+					memFree(vertexMassArrays);
+					vertexMassArrays = NULL;
+				}
+
 			}
 
 		}else if(currentCommand == 1){
 
-			const cMesh *const cHull = (cMesh *)&currentBody->hull.data;
+			const cMesh *const cHull = (cMesh *)&currentCollider->c.data;
 
 			if(cHull->vertexNum > 0 && cHull->faceNum > 0 && cHull->edgeNum > 0){
 
-				if(physColliderResizeToFit(&currentBody->hull) < 0){
+				if(physColliderResizeToFit(currentCollider) < 0){
 					/** Memory allocation failure. **/
-					if(vertexMassArray != NULL){
-						memFree(vertexMassArray);
+					if(vertexMassArrays != NULL){
+						float **array = vertexMassArrays;
+						float **const arrayLast = &vertexMassArrays[currentBodyColliderNum];
+						for(; array < arrayLast; ++array){
+							if(array != NULL){
+								memFree(*array);
+							}
+						}
+						memFree(vertexMassArrays);
 					}
-					modulePhysicsRigidBodyLocalFreeArray(bodies);
+					modulePhysicsRigidBodyBaseFreeArray(bodies);
 					return -1;
 				}
 
 			}else{
 				printf("Error loading rigid bodies \"%s\": Collider has no vertices or faces.\n", fullPath);
-				physColliderResizeToFit(&currentBody->hull);
+				--currentBodyColliderNum;
+				physColliderResizeToFit(currentCollider);
 			}
 			currentCommand = 0;
 
@@ -816,122 +927,43 @@ return_t physRigidBodyLocalLoad(physRigidBodyLocal **const restrict bodies, cons
 
 }
 
-void physRigidBodyLocalDelete(physRigidBodyLocal *const restrict local){
-	cDelete(&local->hull);
-	if(local->constraints != NULL){
-		modulePhysicsConstraintFreeArray(&local->constraints);
-	}
+void physRigidBodyBaseDelete(physRigidBodyBase *const restrict local){
+	modulePhysicsColliderFreeArray(&local->hull);
 }
 
-/*void physRigidBodyGenerateMassProperties(physRigidBody *body){
-
-	vec3 *v0;
-	vec3 *v1;
-	float temp;
-	float doubleVolume = 0.f;
-	size_t i;
-
-	vec3Zero(&body->localCentroid);
-	mat3Zero(&body->localInverseInertiaTensor);
-
-	if(body->hull.vertexNum > 0){
-
-		const float avgVertexMass = body->mass * body->hull.vertexNum;
-
-		// Recursively calculate the center of mass.
-		for(i = 0; i < body->hull.vertexNum; ++i){
-
-			v0 = &body->hull.vertices[i-1];
-			v1 = &body->hull.vertices[i];
-			temp = v0->x * v1->y - v0->y * v1->x;
-			body->localCentroid.x += (v0->x + v1->x) * temp;
-			body->localCentroid.y += (v0->y + v1->y) * temp;
-			body->localCentroid.z += (v0->z + v1->z) * temp;
-			doubleVolume += temp;
-		}
-
-		// Final iteration with the last and first vertices.
-		v0 = &body->hull.vertices[body->hull.vertexNum-1];
-		v1 = &body->hull.vertices[0];
-		temp = v0->x * v1->y - v0->y * v1->x;
-		body->localCentroid.x += (v0->x + v1->x) * temp;
-		body->localCentroid.y += (v0->y + v1->y) * temp;
-		body->localCentroid.z += (v0->z + v1->z) * temp;
-		doubleVolume += temp;
-
-		// Calculate the mesh's final center of mass.
-		temp = 1.f / (3.f * doubleVolume);
-		body->localCentroid.x *= temp;
-		body->localCentroid.y *= temp;
-		body->localCentroid.z *= temp;
-
-		// Calculate the moment of inertia tensor.
-		for(i = 0; i < body->hull.vertexNum; ++i){
-
-			const float x = body->hull.vertices[i].x - body->localCentroid.x;  // Is this correct?
-			const float y = body->hull.vertices[i].y - body->localCentroid.y;
-			const float z = body->hull.vertices[i].z - body->localCentroid.z;
-			const float sqrX = x*x;
-			const float sqrY = y*y;
-			const float sqrZ = z*z;
-			// xx
-			body->localInertiaTensor.m[0][0] += (sqrY + sqrZ);// * avgVertexMass;
-			// yy
-			body->localInertiaTensor.m[1][1] += (sqrX + sqrZ);// * avgVertexMass;
-			// zz
-			body->localInertiaTensor.m[2][2] += (sqrX + sqrY);// * avgVertexMass;
-			// xy yx
-			body->localInertiaTensor.m[0][1] -= x * y;// * avgVertexMass;
-			// xz zx
-			body->localInertiaTensor.m[0][2] -= x * z;// * avgVertexMass;
-			// yz zy
-			body->localInertiaTensor.m[1][2] -= y * z;// * avgVertexMass;
-		}
-
-		// Since every vertex has the same mass, we can simplify our calculations by moving the multiplications out of the loop.
-		body->localInertiaTensor.m[0][0] *= avgVertexMass;
-		body->localInertiaTensor.m[1][1] *= avgVertexMass;
-		body->localInertiaTensor.m[2][2] *= avgVertexMass;
-		body->localInertiaTensor.m[0][1] *= avgVertexMass;
-		body->localInertiaTensor.m[0][2] *= avgVertexMass;
-		body->localInertiaTensor.m[1][2] *= avgVertexMass;
-
-		// No point calculating the same numbers twice.
-		body->localInertiaTensor.m[1][0] = body->localInertiaTensor.m[0][1];
-		body->localInertiaTensor.m[2][0] = body->localInertiaTensor.m[0][2];
-		body->localInertiaTensor.m[2][1] = body->localInertiaTensor.m[1][2];
-
-		//mat3Invert(&body->localInverseInertiaTensor);
-
-	}
-
-}*/
-
 void physRigidBodyInit(physRigidBody *const restrict body){
-	body->id = (physicsBodyIndex_t)-1;
 	body->flags = PHYSICS_BODY_ASLEEP;
-	body->local = NULL;
-	cInit(&body->hull, COLLIDER_TYPE_UNKNOWN);
+	body->base = NULL;
+	body->hull = NULL;
 	body->configuration = NULL;
 	vec3Zero(&body->linearVelocity);
 	vec3Zero(&body->angularVelocity);
 	vec3Zero(&body->netForce);
 	vec3Zero(&body->netTorque);
-	body->constraints = NULL;
-	body->cache = NULL;
 }
 
-return_t physRigidBodyInstantiate(physRigidBody *const restrict body, physRigidBodyLocal *const restrict local, bone *const restrict configuration){
+return_t physRigidBodyInstantiate(physRigidBody *const restrict body, physRigidBodyBase *const restrict local, bone *const restrict configuration){
+
+	physCollider *cBody = NULL;
+	physCollider *cLocal = local->hull;
 
 	physRigidBodyInit(body);
 
-	// Copy the collider so we can transform it into global space.
-	cInstantiate(&body->hull, &local->hull);
+	// Copy the colliders so we can transform them into global space.
+	while(cLocal != NULL){
+		cBody = modulePhysicsColliderInsertAfter(&body->hull, cBody);
+		physColliderInstantiate(cBody, cLocal, body);
+		cLocal = (physCollider *)memSLinkNext(cLocal);
+	}
 
-	// Copy each constraint.
-	///
+	// Copy physical properties.
+	body->inverseMass = local->inverseMass;
+	body->linearDamping = local->linearDamping;
+	body->angularDamping = local->angularDamping;
+	body->centroidLocal = local->centroid;
+	body->inverseInertiaTensorLocal = local->inverseInertiaTensor;
 
-	body->local = local;
+	body->base = local;
 	body->configuration = configuration;
 	body->flags = local->flags;
 
@@ -939,90 +971,88 @@ return_t physRigidBodyInstantiate(physRigidBody *const restrict body, physRigidB
 
 }
 
-return_t physRigidBodyAddConstraint(physRigidBody *const restrict body, physConstraint *const c){
-
-	/*
-	** Sort a new constraint into the body.
-	*/
-
-	///
-
+__FORCE_INLINE__ void physRigidBodySetInitialized(physRigidBody *const restrict body){
+	flagsUnset(body->flags, PHYSICS_BODY_UNINITIALIZED);
+}
+__FORCE_INLINE__ void physRigidBodySetAsleep(physRigidBody *const restrict body){
+	body->flags = 0;
+}
+__FORCE_INLINE__ void physRigidBodySetAwake(physRigidBody *const restrict body, const flags_t flags){
+	body->flags = flags;
 }
 
-physSeparation *physRigidBodyFindSeparation(physRigidBody *const restrict body, const physicsBodyIndex_t id, physSeparation **const previous){
+__FORCE_INLINE__ void physRigidBodySimulateCollisions(physRigidBody *const restrict body){
+	flagsSet(body->flags, PHYSICS_BODY_COLLIDE | PHYSICS_BODY_COLLISION_MODIFIED);
+}
+__FORCE_INLINE__ void physRigidBodySimulateLinear(physRigidBody *const restrict body){
+	flagsSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR);
+}
+__FORCE_INLINE__ void physRigidBodySimulateAngular(physRigidBody *const restrict body){
+	flagsSet(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR);
+}
+
+__FORCE_INLINE__ void physRigidBodyIgnoreCollisions(physRigidBody *const restrict body){
+	flagsUnset(body->flags, PHYSICS_BODY_COLLIDE);
+	flagsSet(body->flags, PHYSICS_BODY_COLLISION_MODIFIED);
+}
+__FORCE_INLINE__ void physRigidBodyIgnoreLinear(physRigidBody *const restrict body){
+	flagsUnset(body->flags, PHYSICS_BODY_SIMULATE_LINEAR);
+}
+__FORCE_INLINE__ void physRigidBodyIgnoreAngular(physRigidBody *const restrict body){
+	flagsUnset(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR);
+}
+
+__FORCE_INLINE__ return_t physRigidBodyIsUninitialized(const physRigidBody *const restrict body){
+	return flagsAreSet(body->flags, PHYSICS_BODY_UNINITIALIZED);
+}
+
+__FORCE_INLINE__ return_t physRigidBodyIsSimulated(const physRigidBody *const restrict body){
+	return flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE);
+}
+
+__FORCE_INLINE__ return_t physRigidBodyIsCollidable(const physRigidBody *const restrict body){
+	return flagsAreSet(body->flags, PHYSICS_BODY_COLLIDE);
+}
+__FORCE_INLINE__ return_t physRigidBodyIsAsleep(physRigidBody *const restrict body){
+	return body->flags;
+}
+
+__FORCE_INLINE__ return_t physRigidBodyUpdateColliders(physRigidBody *const restrict body, physIsland *const restrict island){
 
 	/*
-	** Find a separation from a previous failed narrowphase collision check.
-	**
-	** Separations are cached in increasing order of id, so once we find an
-	** id greater than the supplied id we can perform an early exit.
-	**
-	** We also need to return the separation directly before it in the SLink
-	** so we can perform an insertion or removal later on if we need to.
+	** Transform the vertices of each body into global space.
+	** If the body is set to not collide, remove the colliders
+	** from the island that they are a part of.
 	*/
 
-	physSeparation *i = body->cache;
-	physSeparation *p = NULL;
+	if(physRigidBodyIsCollidable(body)){
 
-	while(i != NULL && id >= i->id){
-		if(id == i->id){
-			*previous = p;
-			return i;
+		// Update each collider.
+		physCollider *c = body->hull;
+		while(c != NULL){
+			if(physColliderTransform(c, island) < 0){
+				/** Memory allocation failure. **/
+				return -1;
+			}
+			c = (physCollider *)memSLinkNext(c);
 		}
-		p = i;
-		i = (physSeparation *)memSLinkNext(i);
+
+		flagsUnset(body->flags, PHYSICS_BODY_COLLISION_MODIFIED);
+
+	}else if(flagsAreSet(body->flags, PHYSICS_BODY_COLLISION_MODIFIED)){
+
+		// Remove each collider.
+		physCollider *c = body->hull;
+		while(c != NULL){
+			physIslandRemoveCollider(island, c);
+			c = (physCollider *)memSLinkNext(c);
+		}
+
+		flagsUnset(body->flags, PHYSICS_BODY_COLLISION_MODIFIED);
+
 	}
 
-	*previous = p;
-	return NULL;
-
-}
-
-physSeparation *physRigidBodyCacheSeparation(physRigidBody *const restrict body, physSeparation *const restrict previous){
-
-	/*
-	** Cache a separation after a failed narrowphase collision check.
-	*/
-
-	return modulePhysicsSeparationInsertAfter(&body->cache, previous);
-
-}
-
-void physRigidBodyRemoveSeparation(physRigidBody *const restrict body, physSeparation *const restrict separation, const physSeparation *const restrict previous){
-
-	/*
-	** Cache a separation after a failed narrowphase collision check.
-	*/
-
-	modulePhysicsSeparationFree(&body->cache, separation, previous);
-
-}
-
-static __FORCE_INLINE__ void physRigidBodyCentroidFromPosition(physRigidBody *const restrict body){
-	body->centroid = body->local->centroid;
-	quatRotateVec3Fast(&body->configuration->orientation, &body->centroid);
-	vec3AddVToV(&body->centroid, &body->configuration->position);
-}
-
-static __FORCE_INLINE__ void physRigidBodyPositionFromCentroid(physRigidBody *const restrict body){
-	body->configuration->position.x = -body->local->centroid.x;
-	body->configuration->position.y = -body->local->centroid.y;
-	body->configuration->position.z = -body->local->centroid.z;
-	quatRotateVec3Fast(&body->configuration->orientation, &body->configuration->position);
-	vec3AddVToV(&body->configuration->position, &body->centroid);
-}
-
-static __FORCE_INLINE__ void physRigidBodyGenerateGlobalInertia(physRigidBody *const restrict body){
-
-	mat3 orientationMatrix, inverseOrientationMatrix;
-
-	// Generate 3x3 matrices for the orientation and the inverse orientation.
-	mat3Quat(&orientationMatrix, &body->configuration->orientation);
-	mat3TransposeR(&orientationMatrix, &inverseOrientationMatrix);
-
-	// Multiply them against the local inertia tensor to get the global inverse moment of inertia.
-	mat3MultMByMR(&orientationMatrix, &body->local->inertiaTensor, &body->inverseInertiaTensor);
-	mat3MultMByM1(&body->inverseInertiaTensor, &inverseOrientationMatrix);
+	return 1;
 
 }
 
@@ -1041,7 +1071,7 @@ void physRigidBodyApplyAngularForceGlobal(physRigidBody *const restrict body, co
 	*/
 	// T = r x F
 	vec3 rsR, rxF;
-	vec3SubVFromVR(r, &body->centroid, &rsR);
+	vec3SubVFromVR(r, &body->centroidGlobal, &rsR);
 	vec3CrossR(&rsR, F, &rxF);
 	vec3AddVToV(&body->netTorque, &rxF);
 }
@@ -1061,213 +1091,122 @@ void physRigidBodyApplyForceGlobal(physRigidBody *const restrict body, const vec
 
 }
 
-/*void physRigidBodyApplyLinearImpulse(physRigidBody *const restrict body, const vec3 *const restrict j){
-	* Apply a linear impulse. *
-	body->linearVelocity.x += j->x * body->local->inverseMass;
-	body->linearVelocity.y += j->y * body->local->inverseMass;
-	body->linearVelocity.z += j->z * body->local->inverseMass;
+static __FORCE_INLINE__ void physRigidBodyCentroidFromPosition(physRigidBody *const restrict body){
+	quatRotateVec3FastR(&body->configuration->orientation, &body->centroidLocal, &body->centroidGlobal);
+	vec3AddVToV(&body->centroidGlobal, &body->configuration->position);
 }
 
-void physRigidBodyApplyAngularImpulse(physRigidBody *const restrict body, const vec3 *const restrict T){
-	* Apply an angular impulse. *
-	vec3 newTorque = *T;
-	mat3MultMByVRow(&body->inverseInertiaTensor, &newTorque);
-	body->angularVelocity.x += newTorque.x;
-	body->angularVelocity.y += newTorque.y;
-	body->angularVelocity.z += newTorque.z;
+static __FORCE_INLINE__ void physRigidBodyPositionFromCentroid(physRigidBody *const restrict body){
+	body->configuration->position.x = -body->centroidLocal.x;
+	body->configuration->position.y = -body->centroidLocal.y;
+	body->configuration->position.z = -body->centroidLocal.z;
+	quatRotateVec3Fast(&body->configuration->orientation, &body->configuration->position);
+	vec3AddVToV(&body->configuration->position, &body->centroidGlobal);
 }
 
-void physRigidBodyApplyImpulseAtGlobalPoint(physRigidBody *const restrict body, const vec3 *const restrict F, const vec3 *const restrict r){
-	vec3 T;
-	vec3CrossR(r, F, &T);
-	physRigidBodyApplyLinearImpulse(body, F->x, F->y, F->z);
-	physRigidBodyApplyAngularImpulse(body, &T);
-}*/
+static __FORCE_INLINE__ void physRigidBodyGenerateGlobalInertia(physRigidBody *const restrict body){
 
-static __FORCE_INLINE__ void physRigidBodyResetForceAccumulator(physRigidBody *const restrict body){
-	vec3Zero(&body->netForce);
-}
+	mat3 orientationMatrix, inverseOrientationMatrix;
 
-static __FORCE_INLINE__ void physRigidBodyResetTorqueAccumulator(physRigidBody *const restrict body){
-	vec3Zero(&body->netTorque);
+	// Generate 3x3 matrices for the orientation and the inverse orientation.
+	mat3Quat(&orientationMatrix, &body->configuration->orientation);
+	mat3TransposeR(&orientationMatrix, &inverseOrientationMatrix);
+
+	// Multiply them against the local inertia tensor to get the global inverse moment of inertia.
+	mat3MultMByMR(&orientationMatrix, &body->inverseInertiaTensorLocal, &body->inverseInertiaTensorGlobal);
+	mat3MultMByM1(&body->inverseInertiaTensorGlobal, &inverseOrientationMatrix);
+
 }
 
 void physRigidBodyIntegrateVelocity(physRigidBody *const restrict body, const float dt){
 
-	/*
-	** Integrate one full timestep.
-	*/
-
 	// Update moment of inertia.
 	physRigidBodyGenerateGlobalInertia(body);
 
-	if(body->local->inverseMass > 0.f){
+	if(body->inverseMass > 0.f){
 
-		const float modifier = body->local->inverseMass * dt;
+		const float modifier = body->inverseMass * dt;
 
 		// Integrate linear velocity.
 		if(flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR)){
 			body->linearVelocity.x += body->netForce.x * modifier;
 			body->linearVelocity.y += body->netForce.y * modifier;
 			body->linearVelocity.z += body->netForce.z * modifier;
+			// Apply damping.
+			vec3MultVByS(&body->linearVelocity,  1.f / (1.f + dt * body->linearDamping));
+		}else{
+			vec3Zero(&body->linearVelocity);
 		}
 
 		// Integrate angular velocity.
 		if(flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR)){
 			vec3 momentum;
-			mat3MultMByVRowR(&body->inverseInertiaTensor, &body->netTorque, &momentum);
+			mat3MultMByVBraR(&body->inverseInertiaTensorGlobal, &body->netTorque, &momentum);
 			body->angularVelocity.x += momentum.x * dt;
 			body->angularVelocity.y += momentum.y * dt;
 			body->angularVelocity.z += momentum.z * dt;
+			// Apply damping.
+			vec3MultVByS(&body->angularVelocity, 1.f / (1.f + dt * body->angularDamping));
+		}else{
+			vec3Zero(&body->angularVelocity);
 		}
 
 	}
 
 	// Reset force and torque accumulators.
-	physRigidBodyResetForceAccumulator(body);
-	physRigidBodyResetTorqueAccumulator(body);
+	vec3Zero(&body->netForce);
+	vec3Zero(&body->netTorque);
+
+	// Update the centroid from the position.
+	if(flagsAreSet(body->flags, PHYSICS_BODY_UNINITIALIZED | PHYSICS_BODY_TRANSFORMED)){
+		physRigidBodyCentroidFromPosition(body);
+	}
 
 }
 
 void physRigidBodyIntegrateConfiguration(physRigidBody *const restrict body, const float dt){
 
 	// Integrate position.
-	if(flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR)){
-		body->centroid.x += body->linearVelocity.x * dt;
-		body->centroid.y += body->linearVelocity.y * dt;
-		body->centroid.z += body->linearVelocity.z * dt;
+	if(
+		flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR) &&
+		(body->linearVelocity.y != 0.f || body->linearVelocity.x != 0.f || body->linearVelocity.z != 0.f)
+	){
+		body->centroidGlobal.x += body->linearVelocity.x * dt;
+		body->centroidGlobal.y += body->linearVelocity.y * dt;
+		body->centroidGlobal.z += body->linearVelocity.z * dt;
+		flagsSet(body->flags, PHYSICS_BODY_TRANSLATED);
+	}else{
+		flagsUnset(body->flags, PHYSICS_BODY_TRANSLATED);
 	}
 
 	// Integrate orientation.
-	if(flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR)){
+	if(
+		flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR) &&
+		(body->angularVelocity.y != 0.f || body->angularVelocity.z != 0.f || body->angularVelocity.x != 0.f)
+	){
 		quatIntegrate(&body->configuration->orientation, &body->angularVelocity, dt);
+		flagsSet(body->flags, PHYSICS_BODY_ROTATED);
+	}else{
+		flagsUnset(body->flags, PHYSICS_BODY_ROTATED);
 	}
 
 	// Update the position from the centroid.
-	physRigidBodyPositionFromCentroid(body);
+	if(flagsAreSet(body->flags, PHYSICS_BODY_TRANSFORMED)){
+		physRigidBodyPositionFromCentroid(body);
+	}
 
 }
 
-__FORCE_INLINE__ void physRigidBodyUpdateCollisionMesh(physRigidBody *const restrict body){
+return_t physRigidBodyAddConstraint(physRigidBody *const restrict body, physConstraint *const c){
 
 	/*
-	** Transform the vertices of each body into global space.
-	** Calculates the body's center of mass from its configuration.
+	** Sort a new constraint into the body.
 	*/
 
-	/** Centroid calculations are done unnecessarily in cTransformMesh. **/
-	physRigidBodyCentroidFromPosition(body);
-	cTransform(&body->hull, &body->centroid, &body->local->hull, &body->local->centroid, &body->aabb, body->configuration);
-
-}
-
-static __FORCE_INLINE__ void physRigidBodyResolveCollisionImpulse(physRigidBody *const restrict body1, physRigidBody *const restrict body2, const cContact *const restrict cm){
-
-	/**vec3 localContactPointA, localContactPointB;
-	vec3 contactVelocityA, contactVelocityB;
-	vec3 relativeVelocity;
-	float normalVelocity;
-
-	// Convert contact point A from global space to local space.
-	vec3SubVFromVR(&cd->contacts[0].pointA, &body1->centroid, &localContactPointA);
-	// Find the velocity of contact point A.
-	// The velocity of a point is V + cross(w, r), where V is the linear velocity,
-	// w is the angular velocity and r is the local contact point.
-	vec3CrossR(&body1->angularVelocity, &localContactPointA, &contactVelocityA);
-	vec3AddVToV(&contactVelocityA, &body1->linearVelocity);
-
-	// Convert contact point B from global space to local space.
-	vec3SubVFromVR(&cd->contacts[0].pointB, &body2->centroid, &localContactPointB);
-	// Find the velocity of contact point B.
-	vec3CrossR(&body2->angularVelocity, &localContactPointB, &contactVelocityB);
-	vec3AddVToV(&contactVelocityB, &body2->linearVelocity);
-
-	// Find the velocity of point A relative to the velocity of point B.
-	vec3SubVFromVR(&contactVelocityA, &contactVelocityB, &relativeVelocity);
-
-	// Find how much of relative velocity is in the direction of the contact normal.
-	normalVelocity = vec3Dot(&cd->normal, &relativeVelocity);
-
-	// If the velocity in the direction of the contact normal does not pass the
-	// threshold, assume a resting collision.
-	if(normalVelocity > PHYSICS_RESTING_EPSILON){
-
-		vec3 angularDeltaA, angularDeltaB;
-		vec3 angularDeltaLinear, angularDeltaLinearB;
-
-		float impulseMagnitude;
-		float impulseMagnitudeOverMass;
-
-		// Calculate contact point A's new torque.
-		vec3CrossR(&localContactPointA, &cd->normal, &angularDeltaA);
-		// Calculate contact point A's new angular velocity.
-		mat3MultMByVRow(&body1->inverseInertiaTensor, &angularDeltaA);
-		// Calculate contact point A's change in linear velocity due to its rotation.
-		vec3CrossR(&angularDeltaA, &localContactPointA, &angularDeltaLinear);
-
-		// Calculate contact point B's new torque.
-		vec3CrossR(&localContactPointB, &cd->normal, &angularDeltaB);
-		// Calculate contact point B's new angular velocity.
-		mat3MultMByVRow(&body2->inverseInertiaTensor, &angularDeltaB);
-		// Calculate contact point B's change in linear velocity due to its rotation.
-		vec3CrossR(&angularDeltaB, &localContactPointB, &angularDeltaLinearB);
-		vec3AddVToV(&angularDeltaLinear, &angularDeltaLinearB);
-
-		// Calculate the impulse magnitude.
-		impulseMagnitude = (-1.f - body1->local->coefficientOfRestitution * body2->local->coefficientOfRestitution) *
-		                   normalVelocity /
-		                   (body1->local->inverseMass + body2->local->inverseMass +
-		                   vec3Dot(&angularDeltaLinear, &cd->normal));
-
-		// Calculate body 1's new linear velocity.
-		impulseMagnitudeOverMass = impulseMagnitude * body1->local->inverseMass;
-		body1->linearVelocity.x += cd->normal.x * impulseMagnitudeOverMass;
-		body1->linearVelocity.y += cd->normal.y * impulseMagnitudeOverMass;
-		body1->linearVelocity.z += cd->normal.z * impulseMagnitudeOverMass;
-		// Calculate body 1's new angular velocity.
-		body1->angularVelocity.x += angularDeltaA.x * impulseMagnitude;
-		body1->angularVelocity.y += angularDeltaA.y * impulseMagnitude;
-		body1->angularVelocity.z += angularDeltaA.z * impulseMagnitude;
-
-		// Calculate body 2's new linear velocity.
-		impulseMagnitudeOverMass = impulseMagnitude * body2->local->inverseMass;
-		body2->linearVelocity.x -= cd->normal.x * impulseMagnitudeOverMass;
-		body2->linearVelocity.y -= cd->normal.y * impulseMagnitudeOverMass;
-		body2->linearVelocity.z -= cd->normal.z * impulseMagnitudeOverMass;
-		// Calculate body 2's new angular velocity.
-		body2->angularVelocity.x -= angularDeltaB.x * impulseMagnitude;
-		body2->angularVelocity.y -= angularDeltaB.y * impulseMagnitude;
-		body2->angularVelocity.z -= angularDeltaB.z * impulseMagnitude;
-
-	}**/
-
-}
-
-void physRigidBodyResolveCollisionGS(physRigidBody *const restrict body1, physRigidBody *const restrict body2, const cContact *const restrict cm){
-
-	/*
-	** Uses the Gauss-Seidel method to solve the
-	** impulse magnitude equation as a system of
-	** linear equations with multiple points of
-	** contact.
-	*/
-
-	//
-
-}
-
-void physRigidBodyUpdate(physRigidBody *const restrict body, const float dt){
-
-	//
+	///
 
 }
 
 void physRigidBodyDelete(physRigidBody *const restrict body){
-	physColliderDelete(&body->hull);
-	if(body->constraints != NULL){
-		modulePhysicsConstraintFreeArray(&body->constraints);
-	}
-	if(body->cache != NULL){
-		modulePhysicsSeparationFreeArray(&body->cache);
-	}
+	modulePhysicsColliderFreeArray(&body->hull);
 }

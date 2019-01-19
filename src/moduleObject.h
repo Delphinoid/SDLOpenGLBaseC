@@ -11,10 +11,11 @@
 #define RESOURCE_DEFAULT_OBJECT_NUM 4096
 
 // Forward declarations for inlining.
-extern memoryPool __ObjectBaseResourceArray;      // Contains objectBases.
-extern memoryPool __ObjectInstanceResourceArray;  // Contains objects.
+extern memoryPool __ObjectBaseResourceArray;  // Contains objectBases.
+extern memoryPool __ObjectResourceArray;      // Contains objects.
 
 /** Support locals? Merge all module containers? **/
+/** Use compiler constants for loop offsets?     **/
 
 /** Should scenes just be used for object instances? **/
 

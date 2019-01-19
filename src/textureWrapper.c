@@ -931,7 +931,7 @@ return_t twDefault(textureWrapper *const restrict tw){
 void twDelete(textureWrapper *const restrict tw){
 	if(tw->frames != NULL){
 		twFrame *f = tw->frames;
-		twFrame *const fLast = &f[tw->frameNum];
+		const twFrame *const fLast = &f[tw->frameNum];
 		for(; f < fLast; ++f){
 			twfDelete(f);
 		}
@@ -939,7 +939,7 @@ void twDelete(textureWrapper *const restrict tw){
 	}
 	if(tw->animations != NULL){
 		twAnim *a = tw->animations;
-		twAnim *const aLast = &a[tw->animationNum];
+		const twAnim *const aLast = &a[tw->animationNum];
 		for(; a < aLast; ++a){
 			twaDelete(a);
 		}

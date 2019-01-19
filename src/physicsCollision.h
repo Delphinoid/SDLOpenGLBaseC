@@ -1,41 +1,160 @@
 #ifndef PHYSICSCOLLISION_H
 #define PHYSICSCOLLISION_H
 
-#include "physicsBodyShared.h"
+#include "physicsShared.h"
 #include "collision.h"
 
-// Contact constraints are separated from other constraints
-// solely because of their size. The size of contact manifolds
-// significantly exceeds the size of all other types of
-// constraints, which would lead to an unacceptable amount of
-// internal fragmentation.
-// This, however, has an additional bonus of allowing contacts
-// to be more conveniently solved separately to constraints.
-// This means we can solve them after solving all regular joints,
-// giving them "priority".
+#ifndef PHYSICS_CONTACT_PAIR_MAX_INACTIVE_STEPS
+	#define PHYSICS_CONTACT_PAIR_MAX_INACTIVE_STEPS 0
+#endif
+
+#ifndef PHYSICS_SEPARATION_PAIR_MAX_INACTIVE_STEPS
+	#define PHYSICS_SEPARATION_PAIR_MAX_INACTIVE_STEPS 0
+#endif
+
+#ifndef PHYSICS_BAUMGARTE_TERM
+	#define PHYSICS_BAUMGARTE_TERM 0.2f
+#endif
+
+#ifndef PHYSICS_PENETRATION_SLOP
+	#define PHYSICS_PENETRATION_SLOP 0.05f
+#endif
+
+/*
+** Contact constraints are separated from other constraints
+** solely because of their size. The size of contact manifold
+** significantly exceeds the size of all other types of
+** constraints, which would lead to an unacceptable amount of
+** internal fragmentation.
+**
+** This, however, has an additional bonus of allowing contacts
+** to be more conveniently solved separately to constraints.
+** This means we can solve them after solving all regular joints,
+** giving them "priority".
+*/
+
+typedef struct aabbNode aabbNode;
 typedef struct physRigidBody physRigidBody;
-typedef struct {
-	physRigidBody *bodyA;  // Pointer to the reference body.
-	physRigidBody *bodyB;  // Pointer to the incident body.
-	cContact manifold;
+typedef struct physCollider physCollider;
+
+typedef uint_least8_t physPairTimestamp_t;
+
+typedef struct physContactPoint {
+
+	// Contact points in both colliders' local spaces.
+	vec3 pointA;
+	vec3 pointB;
+
+	// Contact normal.
+	vec3 normal;
+
+	// Contact tangents for simulating friction.
+	vec3 tangentA;
+	vec3 tangentB;
+
+	// Penetration depth.
+	float penetrationDepth;
+
+	// Impulse magnitude denominators.
+	float normalImpulse;
+	float tangentImpulseA;
+	float tangentImpulseB;
+
+	// Persistent impulse magnitude accumulator.
+	float normalImpulseAccumulator;
+
+	// Bias term for warm starting.
+	float bias;
+
+	// Key for temporal coherence.
+	cContactKey key;
+
+} physContactPoint;
+
+typedef struct physContact {
+
+	// Contact array.
+	physContactPoint contacts[COLLISION_MANIFOLD_MAX_CONTACT_POINTS];
+
+	// Persistent impulse magnitude accumulators for friction.
+	float tangentImpulseAccumulatorA;
+	float tangentImpulseAccumulatorB;
+
+	// Number of contacts.
+	cContactPointIndex_t contactNum;
+
 } physContact;
 
-typedef struct {
-	physicsBodyIndex_t id;  // An identifier for the other body involved in the collision.
-	cSeparation separation;
-} physSeparation;
+typedef struct physContactPair physContactPair;
+typedef struct physContactPair {
 
-typedef struct {
-	int temp;
-	///physCollider *incident;
-	///physSeparation *separations;
-} physCollisionCache;
+	// Cached pair data.
+	physContact data;
 
-void physContactSolve(physContact *contact);
+	// How many steps have passed since the pair was updated.
+	physPairTimestamp_t inactive;
 
-return_t physCheckCollision(physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB,
-                            physSeparation *const restrict sc, physContact *const restrict cm);
-return_t physCheckSeparation(physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB,
-                             physSeparation *const restrict sc);
+	// Pointers to the reference and incident colliders.
+	physCollider *colliderA;
+	physCollider *colliderB;
+
+	// The previous and next contact pairs in collider A's array.
+	physContactPair *prevA;
+	physContactPair *nextA;
+
+	// The previous and next contact pairs in collider B's array.
+	physContactPair *prevB;
+	physContactPair *nextB;
+
+} physContactPair;
+
+typedef struct cSeparation physSeparation;
+
+typedef struct physSeparationPair physSeparationPair;
+typedef struct physSeparationPair {
+
+	// Cached pair data.
+	physSeparation data;
+
+	// How many steps have passed since the pair was updated.
+	physPairTimestamp_t inactive;
+
+	// Pointers to the reference and incident colliders.
+	physCollider *colliderA;
+	physCollider *colliderB;
+
+	// The previous and next separation pairs in collider A's array.
+	physSeparationPair *prevA;
+	physSeparationPair *nextA;
+
+	// The previous and next separation pairs in collider B's array.
+	physSeparationPair *prevB;
+	physSeparationPair *nextB;
+
+} physSeparationPair;
+
+void physContactPairDeactivate(void *const restrict pair);
+void physSeparationPairDeactivate(void *const restrict pair);
+void physContactPairInvalidate(void *const restrict pair);
+void physSeparationPairInvalidate(void *const restrict pair);
+
+return_t physContactPairIsActive(physContactPair *const restrict pair);
+return_t physSeparationPairIsActive(physSeparationPair *const restrict pair);
+return_t physContactPairIsInactive(physContactPair *const restrict pair);
+return_t physSeparationPairIsInactive(physSeparationPair *const restrict pair);
+return_t physContactPairIsInvalid(physContactPair *const restrict pair);
+return_t physSeparationPairIsInvalid(physSeparationPair *const restrict pair);
+
+void physContactPairRefresh(physContactPair *const restrict pair);
+void physSeparationPairRefresh(physSeparationPair *const restrict pair);
+
+void physContactPairInit(physContactPair *const pair, physCollider *const c1, physCollider *const c2, physContactPair *previous, physContactPair *next);
+void physSeparationPairInit(physSeparationPair *const pair, physCollider *const c1, physCollider *const c2, physSeparationPair *previous, physSeparationPair *next);
+void physContactPairDelete(physContactPair *const pair);
+void physSeparationPairDelete(physSeparationPair *const pair);
+
+return_t physCollisionQuery(aabbNode *const restrict n1, aabbNode *const restrict n2, const float dt);
+
+void physContactSolve(physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB);
 
 #endif

@@ -11,6 +11,7 @@
 extern memoryPool __CameraResourceArray;  // Contains cameras.
 
 /** Support locals? Merge all module containers? **/
+/** Use compiler constants for loop offsets?     **/
 
 return_t moduleCameraResourcesInit();
 void moduleCameraResourcesReset();

@@ -134,12 +134,12 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 					loadPath[pathLength] = '\0';
 
 					if(base->skeletonBodies == NULL){
-						modulePhysicsRigidBodyLocalFreeArray(&base->skeletonBodies);
+						modulePhysicsRigidBodyBaseFreeArray(&base->skeletonBodies);
 						base->skeletonBodies = NULL;
 					}
 
 					// Load the rigid body from a file.
-					r = physRigidBodyLocalLoad(&base->skeletonBodies, base->skl, prgPath, loadPath);
+					r = physRigidBodyBaseLoad(&base->skeletonBodies, base->skl, prgPath, loadPath);
 
 					if(r < 0){
 						/** Memory allocation failure. **/
@@ -147,7 +147,7 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 						fclose(objInfo);
 						return -1;
 					}else if(r == 0){
-						modulePhysicsRigidBodyLocalFreeArray(&base->skeletonBodies);
+						modulePhysicsRigidBodyBaseFreeArray(&base->skeletonBodies);
 						base->skeletonBodies = NULL;
 					}
 
@@ -438,7 +438,7 @@ void objBaseDelete(objectBase *const restrict base){
 	}
 	if(base->skl != NULL){
 		if(base->skeletonBodies != NULL){
-			modulePhysicsRigidBodyLocalFreeArray(&base->skeletonBodies);
+			modulePhysicsRigidBodyBaseFreeArray(&base->skeletonBodies);
 		}
 		if(base->skeletonColliders != NULL){
 			collider *c = base->skeletonColliders;
@@ -520,7 +520,7 @@ return_t objInstantiate(object *const restrict obj, const objectBase *const rest
 
 			collider *cLocal = base->skeletonColliders;
 			collider *c = obj->skeletonColliders;
-			collider *const cLast = &c[base->skl->boneNum];
+			const collider *const cLast = &c[base->skl->boneNum];
 
 			obj->skeletonColliders = malloc(base->skl->boneNum * sizeof(collider));
 			if(obj->skeletonColliders == NULL){
@@ -560,7 +560,7 @@ return_t objInstantiate(object *const restrict obj, const objectBase *const rest
 		// Allocate memory for and initialize the rigid bodies if necessary.
 		if(base->skeletonBodies != NULL){
 
-			physRigidBodyLocal *bodyBase = base->skeletonBodies;
+			physRigidBodyBase *bodyBase = base->skeletonBodies;
 			physRigidBody *bodyInstance;
 
 			do {
@@ -582,7 +582,7 @@ return_t objInstantiate(object *const restrict obj, const objectBase *const rest
 				///bodyInstance->constraintNum = base->skeletonConstraintNum[i];
 				///bodyInstance->constraints = base->skeletonConstraints[i];
 
-				bodyBase = modulePhysicsRigidBodyLocalNext(bodyBase);
+				bodyBase = modulePhysicsRigidBodyBaseNext(bodyBase);
 
 			} while(bodyBase != NULL);
 
@@ -812,7 +812,7 @@ void objAddAngularVelocity(object *obj, const size_t boneID, const float angle, 
 	physRigidBodyAddAngularVelocity(&obj->skeletonBodies[boneID], angle, x, y, z);
 }**/
 
-return_t objUpdate(object *const restrict obj, physicsSolver *const restrict solver, const float elapsedTime, const float dt){
+return_t objUpdate(object *const restrict obj, physIsland *const restrict island, const float elapsedTime, const float dt){
 
 	boneIndex_t i;
 	rndrInstance *j;
@@ -823,9 +823,9 @@ return_t objUpdate(object *const restrict obj, physicsSolver *const restrict sol
 
 	// If we can create a new previous state, do so.
 	if(obj->stateNum < obj->stateMax){
-		if(objStateAllocate(obj) < 0){
-			return -1;
-		}
+		//if(objStateAllocate(obj) < 0){
+			//return -1;
+		//}
 	}
 
 	// Update each skeletal animation.
@@ -834,12 +834,12 @@ return_t objUpdate(object *const restrict obj, physicsSolver *const restrict sol
 	// Update the object's skeleton.
 	for(i = 0; i < obj->skeletonData.skl->boneNum; ++i, ++sklBone, ++sklState, ++configuration){
 
-		const return_t isRoot = (i == sklBone->parent) || (sklBone->parent >= obj->skeletonData.skl->boneNum);
+		const unsigned int isRoot = (i == sklBone->parent) || (sklBone->parent >= obj->skeletonData.skl->boneNum);
 
 		// Update the previous states.
 		objStateCopyBone(obj, i);
 
-		if(body != NULL && body->local->id == i && flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE)){
+		if(body != NULL && body->base->id == i && physRigidBodyIsSimulated(body)){
 
 			/*
 			** Simulate the body attached to the bone.
@@ -849,7 +849,7 @@ return_t objUpdate(object *const restrict obj, physicsSolver *const restrict sol
 			const vec3 gravity = {.x = 0.f, .y = -98.0665f, .z = 0.f};
 			physRigidBodyApplyLinearForce(body, &gravity);
 
-			if(flagsAreSet(body->flags, PHYSICS_BODY_INITIALIZE)){
+			if(physRigidBodyIsUninitialized(body)){
 
 				// Generate a new animated bone state.
 				*sklState = *configuration;
@@ -859,30 +859,32 @@ return_t objUpdate(object *const restrict obj, physicsSolver *const restrict sol
 				// for the leapfrog integration scheme.
 				physRigidBodyIntegrateVelocity(body, dt*0.5f);
 
-				// The body has been initialized.
-				flagsUnset(body->flags, PHYSICS_BODY_INITIALIZE);
+				// Add the body to the physics island
+				// and update all of its colliders.
+				if(physRigidBodyUpdateColliders(body, island) < 0){
+					/** Memory allocation failure. **/
+					return -1;
+				}
+
+				// Remove the body's "uninitialized" flag.
+				physRigidBodySetInitialized(body);
 
 			}else{
+
+				// Integrate the body's configuration.
+				// Done here for the sake of any child bones.
+				physRigidBodyIntegrateConfiguration(body, dt);
 
 				// Integrate the body's velocities.
 				physRigidBodyIntegrateVelocity(body, dt);
 
-			}
-
-			if(flagsAreSet(body->flags, PHYSICS_BODY_COLLIDE)){
-				// Only update the body's collision mesh
-				// and add it to the solver if it is set
-				// to interact with other bodies.
-				/** Only update AABB? **/
-				if(physSolverAllocate(solver, body) < 0){
+				// Update the body's colliders.
+				if(physRigidBodyUpdateColliders(body, island) < 0){
 					/** Memory allocation failure. **/
 					return -1;
 				}
-				physRigidBodyUpdateCollisionMesh(body);
-			}
 
-			/** TEMPORARILY SET THE BONE STATE. **/
-			//obj->skeletonState[0][i] = body->configuration[0];
+			}
 
 			body = modulePhysicsRigidBodyNext(body);
 
@@ -908,17 +910,11 @@ return_t objUpdate(object *const restrict obj, physicsSolver *const restrict sol
 				boneTransformAppend2(&obj->state.skeleton[sklBone->parent], sklState);
 			}
 
-			if(body != NULL && body->local->id == i){
-				if(flagsAreSet(body->flags, PHYSICS_BODY_COLLIDE)){
-					// Only update the body's collision mesh
-					// and add it to the solver if it is set
-					// to interact with other bodies.
-					/** Only update AABB? **/
-					if(physSolverAllocate(solver, body) < 0){
-						/** Memory allocation failure. **/
-						return -1;
-					}
-					physRigidBodyUpdateCollisionMesh(body);
+			if(body != NULL && body->base->id == i){
+				// Update the body's colliders.
+				if(physRigidBodyUpdateColliders(body, island) < 0){
+					/** Memory allocation failure. **/
+					return -1;
 				}
 				body = modulePhysicsRigidBodyNext(body);
 			}

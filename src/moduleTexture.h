@@ -14,6 +14,7 @@
 extern memoryPool __TextureResourceArray;  // Contains textures.
 
 /** Support locals? Merge all module containers? **/
+/** Use compiler constants for loop offsets?     **/
 
 return_t moduleTextureResourcesInit();
 return_t moduleTextureResourcesInitConstants();

@@ -14,6 +14,7 @@
 extern memoryPool __TextureWrapperResourceArray;  // Contains textureWrappers.
 
 /** Support locals? Merge all module containers? **/
+/** Use compiler constants for loop offsets?     **/
 
 return_t moduleTextureWrapperResourcesInit();
 return_t moduleTextureWrapperResourcesInitConstants();

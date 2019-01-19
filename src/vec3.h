@@ -54,6 +54,12 @@ void vec3DivVByS(vec3 *const restrict v, const float s);
 void vec3DivNByV(const float x, const float y, const float z, vec3 *const restrict v);
 void vec3DivSByV(const float s, vec3 *const restrict v);
 
+void vec3Min(const vec3 *const restrict v1, const vec3 *const restrict v2, vec3 *const restrict r);
+void vec3Max(const vec3 *const restrict v1, const vec3 *const restrict v2, vec3 *const restrict r);
+
+void vec3Negate(vec3 *const restrict v);
+void vec3NegateR(const vec3 *const restrict v, vec3 *const restrict r);
+
 float vec3Magnitude(const vec3 *const restrict v);
 float vec3MagnitudeSquared(const vec3 *const restrict v);
 float vec3InverseMagnitude(const vec3 *const restrict v);

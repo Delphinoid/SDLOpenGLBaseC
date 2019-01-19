@@ -1,12 +1,38 @@
-#include "physicsCollider.h"
+#include "modulePhysics.h"
 #include "memoryManager.h"
-#include "colliderMesh.h"
 #include "mat3.h"
 #include "inline.h"
 
 #define PHYSICS_COLLIDER_DEFAULT_VERTEX_MASS 1
 
-void physColliderGenerateMassMesh(void *const local, float *const restrict mass, float *const restrict inverseMass, vec3 *const restrict centroid, const float **const vertexMassArray){
+void physColliderInit(physCollider *const restrict c, const colliderType_t type, void *const restrict body){
+	cInit(&c->c, type);
+	c->density = 0.f;
+	c->friction = 0.f;
+	c->restitution = 1.f;
+	c->layers = ~((physCollisionMask_t)0);
+	c->node = NULL;
+	c->contactCache = NULL;
+	c->separationCache = NULL;
+	c->body = body;
+	c->base = NULL;
+}
+
+void physColliderInstantiate(physCollider *const restrict instance, physCollider *const restrict local, void *const restrict body){
+	cInstantiate(&instance->c, &local->c);
+	instance->density = local->density;
+	instance->friction = local->friction;
+	instance->restitution = local->restitution;
+	instance->layers = local->layers;
+	instance->node = NULL;
+	instance->contactCache = NULL;
+	instance->separationCache = NULL;
+	instance->body = body;
+	instance->base = &local->c;
+}
+
+
+void physColliderGenerateMassMesh(void *const restrict local, float *const restrict mass, float *const restrict inverseMass, vec3 *const restrict centroid, const float **const vertexMassArray){
 
 	cMesh *const cLocal = local;
 
@@ -55,7 +81,7 @@ void physColliderGenerateMassMesh(void *const local, float *const restrict mass,
 
 }
 
-void physColliderGenerateMassComposite(void *const local, float *const restrict mass, float *const restrict inverseMass, vec3 *const restrict centroid, const float **const vertexMassArray){
+void physColliderGenerateMassComposite(void *const restrict local, float *const restrict mass, float *const restrict inverseMass, vec3 *const restrict centroid, const float **const vertexMassArray){
 
 	cComposite *const cLocal = local;
 
@@ -98,13 +124,13 @@ void physColliderGenerateMassComposite(void *const local, float *const restrict 
 }
 
 /** The lines below should eventually be removed. **/
-#define physColliderGenerateMassCapsule   NULL
-#define physColliderGenerateMassSphere    NULL
-#define physColliderGenerateMassAABB      NULL
-#define physColliderGenerateMassPoint     NULL
+#define physColliderGenerateMassCapsule NULL
+#define physColliderGenerateMassSphere  NULL
+#define physColliderGenerateMassAABB    NULL
+#define physColliderGenerateMassPoint   NULL
 
 void (* const physColliderGenerateMassJumpTable[COLLIDER_TYPE_NUM])(
-	void *const local,
+	void *const restrict local,
 	float *const restrict mass,
 	float *const restrict inverseMass,
 	vec3 *const restrict centroid,
@@ -117,7 +143,7 @@ void (* const physColliderGenerateMassJumpTable[COLLIDER_TYPE_NUM])(
 	physColliderGenerateMassPoint,
 	physColliderGenerateMassComposite
 };
-__FORCE_INLINE__ void physColliderGenerateMass(collider *const local, float *const restrict mass, float *const restrict inverseMass, vec3 *const restrict centroid, const float **const vertexMassArray){
+__FORCE_INLINE__ void physColliderGenerateMass(collider *const restrict local, float *const restrict mass, float *const restrict inverseMass, vec3 *const restrict centroid, const float **const vertexMassArray){
 
 	/*
 	** Calculates the collider's center of mass
@@ -129,7 +155,7 @@ __FORCE_INLINE__ void physColliderGenerateMass(collider *const local, float *con
 }
 
 
-void physColliderGenerateMomentMesh(void *const local, mat3 *const restrict inertiaTensor, vec3 *const restrict centroid, const float **const vertexMassArray){
+void physColliderGenerateMomentMesh(void *const restrict local, mat3 *const restrict inertiaTensor, vec3 *const restrict centroid, const float **const vertexMassArray){
 
 	cMesh *const cLocal = local;
 
@@ -174,7 +200,7 @@ void physColliderGenerateMomentMesh(void *const local, mat3 *const restrict iner
 
 }
 
-void physColliderGenerateMomentComposite(void *const local, mat3 *const restrict inertiaTensor, vec3 *const restrict centroid, const float **const vertexMassArray){
+void physColliderGenerateMomentComposite(void *const restrict local, mat3 *const restrict inertiaTensor, vec3 *const restrict centroid, const float **const vertexMassArray){
 
 	cComposite *const cLocal = local;
 
@@ -214,13 +240,13 @@ void physColliderGenerateMomentComposite(void *const local, mat3 *const restrict
 }
 
 /** The lines below should eventually be removed. **/
-#define physColliderGenerateMomentCapsule   NULL
-#define physColliderGenerateMomentSphere    NULL
-#define physColliderGenerateMomentAABB      NULL
-#define physColliderGenerateMomentPoint     NULL
+#define physColliderGenerateMomentCapsule NULL
+#define physColliderGenerateMomentSphere  NULL
+#define physColliderGenerateMomentAABB    NULL
+#define physColliderGenerateMomentPoint   NULL
 
 void (* const physColliderGenerateMomentJumpTable[COLLIDER_TYPE_NUM])(
-	void *const local,
+	void *const restrict local,
 	mat3 *const restrict inertiaTensor,
 	vec3 *const restrict centroid,
 	const float **const vertexMassArray
@@ -232,7 +258,7 @@ void (* const physColliderGenerateMomentJumpTable[COLLIDER_TYPE_NUM])(
 	physColliderGenerateMomentPoint,
 	physColliderGenerateMomentComposite
 };
-__FORCE_INLINE__ void physColliderGenerateMoment(collider *const local, mat3 *const restrict inertiaTensor, vec3 *const restrict centroid, const float **const vertexMassArray){
+__FORCE_INLINE__ void physColliderGenerateMoment(collider *const restrict local, mat3 *const restrict inertiaTensor, vec3 *const restrict centroid, const float **const vertexMassArray){
 
 	/*
 	** Calculates the collider's moment of inertia tensor.
@@ -242,13 +268,163 @@ __FORCE_INLINE__ void physColliderGenerateMoment(collider *const local, mat3 *co
 
 }
 
-void physColliderDelete(collider *const restrict hull){
-	if(hull->type == COLLIDER_TYPE_MESH){
-		// Meshes reuse the local collider's
-		// arrays, except for vertices and
-		// normals which need to be modified.
-		cMesh *const cHull = (cMesh *)&hull->data;
-		memFree(cHull->vertices);
-		memFree(cHull->normals);
+
+void cTransformMesh(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const bone *const configuration, cAABB *const restrict aabb);
+void cTransformCapsule(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const bone *const configuration, cAABB *const restrict aabb);
+void cTransformSphere(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const bone *const configuration, cAABB *const restrict aabb);
+void cTransformAABB(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const bone *const configuration, cAABB *const restrict aabb);
+void cTransformPoint(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const bone *const configuration, cAABB *const restrict aabb);
+
+return_t physColliderTransformMesh(physCollider *const restrict c, physIsland *const restrict island){
+	const physRigidBody *const body = c->body;
+	if(flagsAreSet(body->flags, PHYSICS_BODY_TRANSFORMED | PHYSICS_BODY_COLLISION_MODIFIED)){
+		cTransformMesh(&c->c.data, &body->centroidGlobal, &c->base->data, &body->centroidLocal, body->configuration, &c->aabb);
+		return physIslandUpdateCollider(island, c);
+	}
+	return 1;
+}
+
+/** The lines below should eventually be removed. **/
+#define physColliderTransformCapsule   NULL
+#define physColliderTransformSphere    NULL
+#define physColliderTransformAABB      NULL
+#define physColliderTransformPoint     NULL
+#define physColliderTransformComposite NULL
+
+return_t (* const physColliderTransformJumpTable[COLLIDER_TYPE_NUM])(
+	physCollider *const restrict c,
+	physIsland *const restrict island
+) = {
+	physColliderTransformMesh,
+	physColliderTransformCapsule,
+	physColliderTransformSphere,
+	physColliderTransformAABB,
+	physColliderTransformPoint,
+	physColliderTransformComposite
+};
+__FORCE_INLINE__ return_t physColliderTransform(physCollider *const restrict c, physIsland *const restrict island){
+
+	/*
+	** Transforms a physics collider, updating its AABB in the AABB tree.
+	*/
+
+	return physColliderTransformJumpTable[c->c.type](c, island);
+
+}
+
+
+physContactPair *physColliderFindContact(const physCollider *const restrict c1, const physCollider *const restrict c2, physContactPair **const restrict previous, physContactPair **const restrict next){
+
+	/*
+	** Find a pair from a previous successful narrowphase collision check.
+	**
+	** Pairs are cached in increasing order of colliderB address, so once we find
+	** an address greater than the supplied address we can perform an early exit.
+	**
+	** We also need to return the pair directly before it in the SLink
+	** so we can perform an insertion or removal later on if we need to.
+	*/
+
+	physContactPair *p = NULL;
+	physContactPair *i = c1->contactCache;
+
+	while(i != NULL && c2 <= i->colliderB){
+		// Check if the incident collider is the same.
+		if(c2 == i->colliderB){
+			*previous = p;
+			*next = i;
+			return i;
+		}
+		p = i;
+		i = (physContactPair *)memSLinkNext(i);
+	}
+
+	*previous = p;
+	*next = i;
+	return NULL;
+
+}
+physSeparationPair *physColliderFindSeparation(const physCollider *const restrict c1, const physCollider *const restrict c2, physSeparationPair **const restrict previous, physSeparationPair **const restrict next){
+
+	/*
+	** Find a pair from a previous failed narrowphase collision check.
+	**
+	** Pairs are cached in increasing order of colliderB address, so once we find
+	** an address greater than the supplied address we can perform an early exit.
+	**
+	** We also need to return the pair directly before it in the SLink
+	** so we can perform an insertion or removal later on if we need to.
+	*/
+
+	physSeparationPair *p = NULL;
+	physSeparationPair *i = c1->separationCache;
+
+	while(i != NULL && c2 <= i->colliderB){
+		// Check if the incident collider is the same.
+		if(c2 == i->colliderB){
+			*previous = p;
+			*next = i;
+			return i;
+		}
+		p = i;
+		i = (physSeparationPair *)memSLinkNext(i);
+	}
+
+	*previous = p;
+	*next = i;
+	return NULL;
+
+}
+
+void physColliderRemoveContacts(physCollider *const c){
+
+	/*
+	** Removes any contact that has been inactive for too long.
+	*/
+
+	physContactPair *i = c->contactCache;
+
+	while(i != NULL && i->colliderA == c){
+		if(i->inactive > PHYSICS_CONTACT_PAIR_MAX_INACTIVE_STEPS){
+			// Remove the contact.
+			modulePhysicsContactPairFree(i);
+		}
+		++i->inactive;
+		i = i->nextA;
+	}
+
+}
+
+void physColliderRemoveSeparations(physCollider *const c){
+
+	/*
+	** Removes any separation that has been inactive for too long.
+	*/
+
+	physSeparationPair *i = c->separationCache;
+
+	while(i != NULL && i->colliderA == c){
+		if(i->inactive > PHYSICS_SEPARATION_PAIR_MAX_INACTIVE_STEPS){
+			// Remove the separation.
+			modulePhysicsSeparationPairFree(i);
+		}
+		++i->inactive;
+		i = i->nextA;
+	}
+
+}
+
+void physColliderDelete(physCollider *const restrict c){
+	if(c->base != NULL && flagsAreUnset(c->c.flags, COLLIDER_INSTANCE)){
+		// If the collider is not part of physRigidBodyBase, free its local collider.
+		cDelete(c->base);
+		flagsSet(c->c.flags, COLLIDER_INSTANCE);
+	}
+	cDelete(&c->c);
+	while(c->contactCache != NULL){
+		modulePhysicsContactPairFree(c->contactCache);
+	}
+	while(c->separationCache != NULL){
+		modulePhysicsSeparationPairFree(c->separationCache);
 	}
 }

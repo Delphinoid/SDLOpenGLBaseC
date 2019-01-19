@@ -1,5 +1,5 @@
-#ifndef PHYSICSBODYSHARED_H
-#define PHYSICSBODYSHARED_H
+#ifndef PHYSICSSHARED_H
+#define PHYSICSSHARED_H
 
 #include <stdint.h>
 

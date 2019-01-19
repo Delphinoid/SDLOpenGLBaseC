@@ -45,7 +45,7 @@ __HINT_INLINE__ scene *moduleSceneAllocateStatic(){
 	return memPoolAllocate(&__SceneResourceArray);
 }
 __HINT_INLINE__ scene *moduleSceneAllocate(){
-	scene *r = memPoolAllocate(&__SceneResourceArray);
+	scene *r = moduleSceneAllocateStatic();
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -56,7 +56,7 @@ __HINT_INLINE__ scene *moduleSceneAllocate(){
 			)
 		);
 		if(memPoolExtend(&__SceneResourceArray, memory, RESOURCE_DEFAULT_SCENE_SIZE, RESOURCE_DEFAULT_SCENE_NUM)){
-			r = memPoolAllocate(&__SceneResourceArray);
+			r = moduleSceneAllocateStatic();
 		}
 	}
 	return r;

@@ -27,6 +27,7 @@ extern memorySLink __SkeletonAnimationFragmentResourceArray;  // Contains sklAni
 extern memorySLink __SkeletonAnimationInstanceResourceArray;  // Contains sklAnimInstances.
 
 /** Support locals? Merge all module containers? **/
+/** Use compiler constants for loop offsets?     **/
 
 return_t moduleSkeletonResourcesInit();
 return_t moduleSkeletonResourcesInitConstants();

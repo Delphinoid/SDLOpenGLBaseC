@@ -83,13 +83,17 @@ typedef struct {
 
 void memPoolInit(memoryPool *const restrict pool);
 void *memPoolCreate(memoryPool *const restrict pool, void *start, const size_t bytes, const size_t length);
+void *memPoolCreateInit(memoryPool *const restrict pool, void *start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
 void *memPoolAllocate(memoryPool *const restrict pool);
 void memPoolFree(memoryPool *const restrict pool, void *const block);
 void *memPoolSetupMemory(void *start, const size_t bytes, const size_t length);
+void *memPoolSetupMemoryInit(void *start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
 void *memPoolIndex(memoryPool *const restrict pool, const size_t i);
 void *memPoolIndexRegion(memoryPool *const restrict pool, const size_t i, memoryRegion **const container);
 void memPoolClear(memoryPool *const restrict pool);
+void memPoolClearInit(memoryPool *const restrict pool, void (*func)(void *const restrict block));
 void *memPoolExtend(memoryPool *const restrict pool, void *const start, const size_t bytes, const size_t length);
+void *memPoolExtendInit(memoryPool *const restrict pool, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
 void memPoolDelete(memoryPool *const restrict pool);
 
 #define MEMORY_POOL_LOOP_BEGIN(allocator, n, type)                 \

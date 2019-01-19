@@ -1,5 +1,6 @@
 #include "collision.h"
 #include "inline.h"
+#include <math.h>
 
 return_t cCollisionMesh(const void *const restrict c1h, const void *const restrict c2h, void *const restrict sc, cContact *const restrict cm){
 	return cMeshCollisionSAT((const cMesh *const restrict)c1h, (const cMesh *const restrict)c2h, (cMeshSeparation *const restrict)sc, cm);

@@ -12,6 +12,7 @@
 
 /** Add physics island arrays to scenes.           **/
 /** Links both ways for object removal / deletion. **/
+/** Scene / zone update rate? **/
 
 //typedef uint_least32_t objectIndex_t;
 
@@ -56,7 +57,9 @@ typedef struct {
 
 	/**
 	*** Eventually, the object pool should
-	*** replace __ObjectInstanceResourceArray.
+	*** replace __ObjectResourceArray.
+	*** Or just use an SLink, depending on
+	*** performance.
 	**/
 
 	// Objects in the zone.
@@ -64,8 +67,8 @@ typedef struct {
 	size_t objectNum;    // The number of objects in each region.
 	                     // Allows preallocations when rendering.
 
-	// Solver for physically simulated objects.
-	physicsSolver solver;
+	// The scene's physics island.
+	physIsland island;
 
 } scene;
 
@@ -74,7 +77,7 @@ return_t scnInit(scene *scn, size_t objectNum, size_t bodyNum);
 object **scnAllocate(scene *scn);
 void scnFree(scene *scn, object **obj);
 
-void scnUpdate(scene *scn, const float elapsedTime, const float dt);
+return_t scnUpdate(scene *scn, const float elapsedTime, const float dt);
 
 void scnReset(scene *scn);
 void scnDelete(scene *scn);

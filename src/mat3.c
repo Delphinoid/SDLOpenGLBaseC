@@ -3,9 +3,9 @@
 #include <string.h>
 
 __HINT_INLINE__ mat3 mat3GetIdentity(){
-	mat3 r = {.m = {{1.f, 0.f, 0.f},
-	                {0.f, 1.f, 0.f},
-	                {0.f, 0.f, 1.f}}};
+	const mat3 r = {.m = {{1.f, 0.f, 0.f},
+	                      {0.f, 1.f, 0.f},
+	                      {0.f, 0.f, 1.f}}};
 	return r;
 }
 __HINT_INLINE__ void mat3Identity(mat3 *const restrict m){
@@ -19,58 +19,43 @@ __HINT_INLINE__ void mat3Zero(mat3 *const restrict m){
 
 __HINT_INLINE__ mat3 mat3MMultM(const mat3 *const restrict m1, const mat3 *const restrict m2){
 
-	mat3 r;
-
-	r.m[0][0] = m1->m[0][0]*m2->m[0][0] + m1->m[0][1]*m2->m[1][0] + m1->m[0][2]*m2->m[2][0];
-	r.m[0][1] = m1->m[0][0]*m2->m[0][1] + m1->m[0][1]*m2->m[1][1] + m1->m[0][2]*m2->m[2][1];
-	r.m[0][2] = m1->m[0][0]*m2->m[0][2] + m1->m[0][1]*m2->m[1][2] + m1->m[0][2]*m2->m[2][2];
-
-	r.m[1][0] = m1->m[1][0]*m2->m[0][0] + m1->m[1][1]*m2->m[1][0] + m1->m[1][2]*m2->m[2][0];
-	r.m[1][1] = m1->m[1][0]*m2->m[0][1] + m1->m[1][1]*m2->m[1][1] + m1->m[1][2]*m2->m[2][1];
-	r.m[1][2] = m1->m[1][0]*m2->m[0][2] + m1->m[1][1]*m2->m[1][2] + m1->m[1][2]*m2->m[2][2];
-
-	r.m[2][0] = m1->m[2][0]*m2->m[0][0] + m1->m[2][1]*m2->m[1][0] + m1->m[2][2]*m2->m[2][0];
-	r.m[2][1] = m1->m[2][0]*m2->m[0][1] + m1->m[2][1]*m2->m[1][1] + m1->m[2][2]*m2->m[2][1];
-	r.m[2][2] = m1->m[2][0]*m2->m[0][2] + m1->m[2][1]*m2->m[1][2] + m1->m[2][2]*m2->m[2][2];
-
+	const mat3 r = {.m = {{m1->m[0][0]*m2->m[0][0] + m1->m[0][1]*m2->m[1][0] + m1->m[0][2]*m2->m[2][0],
+	                       m1->m[0][0]*m2->m[0][1] + m1->m[0][1]*m2->m[1][1] + m1->m[0][2]*m2->m[2][1],
+	                       m1->m[0][0]*m2->m[0][2] + m1->m[0][1]*m2->m[1][2] + m1->m[0][2]*m2->m[2][2]},
+	                      {m1->m[1][0]*m2->m[0][0] + m1->m[1][1]*m2->m[1][0] + m1->m[1][2]*m2->m[2][0],
+	                       m1->m[1][0]*m2->m[0][1] + m1->m[1][1]*m2->m[1][1] + m1->m[1][2]*m2->m[2][1],
+	                       m1->m[1][0]*m2->m[0][2] + m1->m[1][1]*m2->m[1][2] + m1->m[1][2]*m2->m[2][2]},
+	                      {m1->m[2][0]*m2->m[0][0] + m1->m[2][1]*m2->m[1][0] + m1->m[2][2]*m2->m[2][0],
+	                       m1->m[2][0]*m2->m[0][1] + m1->m[2][1]*m2->m[1][1] + m1->m[2][2]*m2->m[2][1],
+	                       m1->m[2][0]*m2->m[0][2] + m1->m[2][1]*m2->m[1][2] + m1->m[2][2]*m2->m[2][2]}}};
 	return r;
 
 }
 __HINT_INLINE__ void mat3MultMByM1(mat3 *const restrict m1, const mat3 *const restrict m2){
 
-	mat3 r;
-
-	r.m[0][0] = m1->m[0][0]*m2->m[0][0] + m1->m[0][1]*m2->m[1][0] + m1->m[0][2]*m2->m[2][0];
-	r.m[0][1] = m1->m[0][0]*m2->m[0][1] + m1->m[0][1]*m2->m[1][1] + m1->m[0][2]*m2->m[2][1];
-	r.m[0][2] = m1->m[0][0]*m2->m[0][2] + m1->m[0][1]*m2->m[1][2] + m1->m[0][2]*m2->m[2][2];
-
-	r.m[1][0] = m1->m[1][0]*m2->m[0][0] + m1->m[1][1]*m2->m[1][0] + m1->m[1][2]*m2->m[2][0];
-	r.m[1][1] = m1->m[1][0]*m2->m[0][1] + m1->m[1][1]*m2->m[1][1] + m1->m[1][2]*m2->m[2][1];
-	r.m[1][2] = m1->m[1][0]*m2->m[0][2] + m1->m[1][1]*m2->m[1][2] + m1->m[1][2]*m2->m[2][2];
-
-	r.m[2][0] = m1->m[2][0]*m2->m[0][0] + m1->m[2][1]*m2->m[1][0] + m1->m[2][2]*m2->m[2][0];
-	r.m[2][1] = m1->m[2][0]*m2->m[0][1] + m1->m[2][1]*m2->m[1][1] + m1->m[2][2]*m2->m[2][1];
-	r.m[2][2] = m1->m[2][0]*m2->m[0][2] + m1->m[2][1]*m2->m[1][2] + m1->m[2][2]*m2->m[2][2];
-
+	const mat3 r = {.m = {{m1->m[0][0]*m2->m[0][0] + m1->m[0][1]*m2->m[1][0] + m1->m[0][2]*m2->m[2][0],
+	                       m1->m[0][0]*m2->m[0][1] + m1->m[0][1]*m2->m[1][1] + m1->m[0][2]*m2->m[2][1],
+	                       m1->m[0][0]*m2->m[0][2] + m1->m[0][1]*m2->m[1][2] + m1->m[0][2]*m2->m[2][2]},
+	                      {m1->m[1][0]*m2->m[0][0] + m1->m[1][1]*m2->m[1][0] + m1->m[1][2]*m2->m[2][0],
+	                       m1->m[1][0]*m2->m[0][1] + m1->m[1][1]*m2->m[1][1] + m1->m[1][2]*m2->m[2][1],
+	                       m1->m[1][0]*m2->m[0][2] + m1->m[1][1]*m2->m[1][2] + m1->m[1][2]*m2->m[2][2]},
+	                      {m1->m[2][0]*m2->m[0][0] + m1->m[2][1]*m2->m[1][0] + m1->m[2][2]*m2->m[2][0],
+	                       m1->m[2][0]*m2->m[0][1] + m1->m[2][1]*m2->m[1][1] + m1->m[2][2]*m2->m[2][1],
+	                       m1->m[2][0]*m2->m[0][2] + m1->m[2][1]*m2->m[1][2] + m1->m[2][2]*m2->m[2][2]}}};
 	*m1 = r;
 
 }
 __HINT_INLINE__ void mat3MultMByM2(const mat3 *const restrict m1, mat3 *const restrict m2){
 
-	mat3 r;
-
-	r.m[0][0] = m1->m[0][0]*m2->m[0][0] + m1->m[0][1]*m2->m[1][0] + m1->m[0][2]*m2->m[2][0];
-	r.m[0][1] = m1->m[0][0]*m2->m[0][1] + m1->m[0][1]*m2->m[1][1] + m1->m[0][2]*m2->m[2][1];
-	r.m[0][2] = m1->m[0][0]*m2->m[0][2] + m1->m[0][1]*m2->m[1][2] + m1->m[0][2]*m2->m[2][2];
-
-	r.m[1][0] = m1->m[1][0]*m2->m[0][0] + m1->m[1][1]*m2->m[1][0] + m1->m[1][2]*m2->m[2][0];
-	r.m[1][1] = m1->m[1][0]*m2->m[0][1] + m1->m[1][1]*m2->m[1][1] + m1->m[1][2]*m2->m[2][1];
-	r.m[1][2] = m1->m[1][0]*m2->m[0][2] + m1->m[1][1]*m2->m[1][2] + m1->m[1][2]*m2->m[2][2];
-
-	r.m[2][0] = m1->m[2][0]*m2->m[0][0] + m1->m[2][1]*m2->m[1][0] + m1->m[2][2]*m2->m[2][0];
-	r.m[2][1] = m1->m[2][0]*m2->m[0][1] + m1->m[2][1]*m2->m[1][1] + m1->m[2][2]*m2->m[2][1];
-	r.m[2][2] = m1->m[2][0]*m2->m[0][2] + m1->m[2][1]*m2->m[1][2] + m1->m[2][2]*m2->m[2][2];
-
+	const mat3 r = {.m = {{m1->m[0][0]*m2->m[0][0] + m1->m[0][1]*m2->m[1][0] + m1->m[0][2]*m2->m[2][0],
+	                       m1->m[0][0]*m2->m[0][1] + m1->m[0][1]*m2->m[1][1] + m1->m[0][2]*m2->m[2][1],
+	                       m1->m[0][0]*m2->m[0][2] + m1->m[0][1]*m2->m[1][2] + m1->m[0][2]*m2->m[2][2]},
+	                      {m1->m[1][0]*m2->m[0][0] + m1->m[1][1]*m2->m[1][0] + m1->m[1][2]*m2->m[2][0],
+	                       m1->m[1][0]*m2->m[0][1] + m1->m[1][1]*m2->m[1][1] + m1->m[1][2]*m2->m[2][1],
+	                       m1->m[1][0]*m2->m[0][2] + m1->m[1][1]*m2->m[1][2] + m1->m[1][2]*m2->m[2][2]},
+	                      {m1->m[2][0]*m2->m[0][0] + m1->m[2][1]*m2->m[1][0] + m1->m[2][2]*m2->m[2][0],
+	                       m1->m[2][0]*m2->m[0][1] + m1->m[2][1]*m2->m[1][1] + m1->m[2][2]*m2->m[2][1],
+	                       m1->m[2][0]*m2->m[0][2] + m1->m[2][1]*m2->m[1][2] + m1->m[2][2]*m2->m[2][2]}}};
 	*m2 = r;
 
 }
@@ -89,40 +74,36 @@ __HINT_INLINE__ void mat3MultMByMR(const mat3 *const restrict m1, const mat3 *co
 	r->m[2][2] = m1->m[2][0]*m2->m[0][2] + m1->m[2][1]*m2->m[1][2] + m1->m[2][2]*m2->m[2][2];
 
 }
-__HINT_INLINE__ vec3 mat3VMultMColumn(vec3 v, const mat3 *const restrict m){
-	vec3 r;
-	r.x = v.x * m->m[0][0] + v.y * m->m[1][0] + v.z * m->m[2][0];
-	r.y = v.x * m->m[0][1] + v.y * m->m[1][1] + v.z * m->m[2][1];
-	r.z = v.x * m->m[0][2] + v.y * m->m[1][2] + v.z * m->m[2][2];
+__HINT_INLINE__ vec3 mat3VMultMKet(const vec3 *const restrict v, const mat3 *const restrict m){
+	const vec3 r = {.x = v->x * m->m[0][0] + v->y * m->m[1][0] + v->z * m->m[2][0],
+	                .y = v->x * m->m[0][1] + v->y * m->m[1][1] + v->z * m->m[2][1],
+	                .z = v->x * m->m[0][2] + v->y * m->m[1][2] + v->z * m->m[2][2]};
 	return r;
 }
-__HINT_INLINE__ void mat3MultVByMColumn(vec3 *const restrict v, const mat3 *const restrict m){
-	vec3 r;
-	r.x = v->x * m->m[0][0] + v->y * m->m[1][0] + v->z * m->m[2][0];
-	r.y = v->x * m->m[0][1] + v->y * m->m[1][1] + v->z * m->m[2][1];
-	r.z = v->x * m->m[0][2] + v->y * m->m[1][2] + v->z * m->m[2][2];
-	v->x = r.x; v->y = r.y; v->z = r.z;
+__HINT_INLINE__ void mat3MultVByMKet(vec3 *const restrict v, const mat3 *const restrict m){
+	const vec3 r = {.x = v->x * m->m[0][0] + v->y * m->m[1][0] + v->z * m->m[2][0],
+	                .y = v->x * m->m[0][1] + v->y * m->m[1][1] + v->z * m->m[2][1],
+	                .z = v->x * m->m[0][2] + v->y * m->m[1][2] + v->z * m->m[2][2]};
+	*v = r;
 }
-__HINT_INLINE__ void mat3MultVByMColumnR(const vec3 *const restrict v, const mat3 *const restrict m, vec3 *const restrict r){
+__HINT_INLINE__ void mat3MultVByMKetR(const vec3 *const restrict v, const mat3 *const restrict m, vec3 *const restrict r){
 	r->x = v->x * m->m[0][0] + v->y * m->m[1][0] + v->z * m->m[2][0];
 	r->y = v->x * m->m[0][1] + v->y * m->m[1][1] + v->z * m->m[2][1];
 	r->z = v->x * m->m[0][2] + v->y * m->m[1][2] + v->z * m->m[2][2];
 }
-__HINT_INLINE__ vec3 mat3MMultVRow(const mat3 *const restrict m, vec3 v){
-	vec3 r;
-	r.x = v.x * m->m[0][0] + v.y * m->m[0][1] + v.z * m->m[0][2];
-	r.y = v.x * m->m[1][0] + v.y * m->m[1][1] + v.z * m->m[1][2];
-	r.z = v.x * m->m[2][0] + v.y * m->m[2][1] + v.z * m->m[2][2];
+__HINT_INLINE__ vec3 mat3MMultVBra(const mat3 *const restrict m, const vec3 *const restrict v){
+	const vec3 r = {.x = v->x * m->m[0][0] + v->y * m->m[0][1] + v->z * m->m[0][2],
+	                .y = v->x * m->m[1][0] + v->y * m->m[1][1] + v->z * m->m[1][2],
+	                .z = v->x * m->m[2][0] + v->y * m->m[2][1] + v->z * m->m[2][2]};
 	return r;
 }
-__HINT_INLINE__ void mat3MultMByVRow(const mat3 *const restrict m, vec3 *const restrict v){
-	vec3 r;
-	r.x = v->x * m->m[0][0] + v->y * m->m[0][1] + v->z * m->m[0][2];
-	r.y = v->x * m->m[1][0] + v->y * m->m[1][1] + v->z * m->m[1][2];
-	r.z = v->x * m->m[2][0] + v->y * m->m[2][1] + v->z * m->m[2][2];
-	v->x = r.x; v->y = r.y; v->z = r.z;
+__HINT_INLINE__ void mat3MultMByVBra(const mat3 *const restrict m, vec3 *const restrict v){
+	const vec3 r = {.x = v->x * m->m[0][0] + v->y * m->m[0][1] + v->z * m->m[0][2],
+	                .y = v->x * m->m[1][0] + v->y * m->m[1][1] + v->z * m->m[1][2],
+	                .z = v->x * m->m[2][0] + v->y * m->m[2][1] + v->z * m->m[2][2]};
+	*v = r;
 }
-__HINT_INLINE__ void mat3MultMByVRowR(const mat3 *const restrict m, const vec3 *const restrict v, vec3 *const restrict r){
+__HINT_INLINE__ void mat3MultMByVBraR(const mat3 *const restrict m, const vec3 *const restrict v, vec3 *const restrict r){
 	r->x = v->x * m->m[0][0] + v->y * m->m[0][1] + v->z * m->m[0][2];
 	r->y = v->x * m->m[1][0] + v->y * m->m[1][1] + v->z * m->m[1][2];
 	r->z = v->x * m->m[2][0] + v->y * m->m[2][1] + v->z * m->m[2][2];
@@ -135,9 +116,9 @@ __HINT_INLINE__ float mat3Determinant(const mat3 *const restrict m){
 }
 
 __HINT_INLINE__ mat3 mat3GetTranspose(const mat3 *const restrict m){
-	mat3 r = {.m = {{m->m[0][0], m->m[1][0], m->m[2][0]},
-	                {m->m[0][1], m->m[1][1], m->m[2][1]},
-	                {m->m[0][2], m->m[1][2], m->m[2][2]}}};
+	const mat3 r = {.m = {{m->m[0][0], m->m[1][0], m->m[2][0]},
+	                      {m->m[0][1], m->m[1][1], m->m[2][1]},
+	                      {m->m[0][2], m->m[1][2], m->m[2][2]}}};
 	return r;
 }
 __HINT_INLINE__ void mat3Transpose(mat3 *const restrict m){

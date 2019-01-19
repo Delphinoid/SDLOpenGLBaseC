@@ -1,7 +1,7 @@
 #ifndef PHYSICSCONSTRAINT_H
 #define PHYSICSCONSTRAINT_H
 
-#include "physicsBodyShared.h"
+#include "physicsShared.h"
 #include "memoryShared.h"
 #include "vec3.h"
 #include "flags.h"
@@ -22,14 +22,12 @@ typedef int_least8_t physConstraintType_t;
 // Forward declaration of physRigidBody.
 //typedef struct physRigidBody physRigidBody;
 
-typedef union {
-	int temp;
-} physConstraintData;
-
-typedef struct {
+typedef struct physConstraint {
 	//physRigidBody *bodyA;
 	//physRigidBody *bodyB;
-	physConstraintData data;
+	union {
+		int temp;
+	} data;
 	flags_t flags;
 } physConstraint;
 

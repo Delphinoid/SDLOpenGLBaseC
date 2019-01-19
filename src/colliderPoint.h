@@ -1,7 +1,7 @@
 #ifndef COLLIDERPOINT_H
 #define COLLIDERPOINT_H
 
-#include "manifold.h"
+#include "vec3.h"
 #include "return.h"
 
 typedef vec3 cPoint;

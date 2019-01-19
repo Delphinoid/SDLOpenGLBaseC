@@ -30,6 +30,30 @@ void *memListCreate(memoryList *const restrict list, void *const start, const si
 
 }
 
+void *memListCreateInit(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
+
+	/*
+	** Initialize a memory list with "length"-many
+	** elements of "bytes" size.
+	*/
+
+	if(start){
+
+		// Clamp the block size upwards to
+		// match the minimum block size.
+		list->block = memListBlockSize(bytes);
+		list->region = (memoryRegion *)((byte_t *)start + memListAllocationSize(start, bytes, length) - sizeof(memoryRegion));
+		list->region->start = start;
+		list->region->next = NULL;
+
+		memListClearInit(list, func);
+
+	}
+
+	return start;
+
+}
+
 void *memListAllocate(memoryList *const restrict list){
 
 	/*
@@ -78,6 +102,35 @@ void *memListSetupMemory(void *start, const size_t bytes, const size_t length){
 	}
 
 	// Final block contains a null pointer.
+	memListDataGetNextFree(block) = NULL;
+
+	return start;
+
+}
+
+void *memListSetupMemoryInit(void *start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
+
+	const size_t blockSize = memListBlockSize(bytes);
+	byte_t *block;
+	byte_t *next;
+	const byte_t *const end = (byte_t *)start + memListAllocationSize(start, bytes, length) - sizeof(memoryRegion);
+
+	start = memListAlignStartData(start);
+
+	block = start;
+	next = block + blockSize;
+
+	// Loop through every block, making it
+	// point to the next free block.
+	while(next < end){
+		(*func)(block);
+		memListDataGetNextFree(block) = next;
+		block = next;
+		next += blockSize;
+	}
+
+	// Final block contains a null pointer.
+	(*func)(block);
 	memListDataGetNextFree(block) = NULL;
 
 	return start;
@@ -161,6 +214,28 @@ void memListClear(memoryList *const restrict list){
 
 }
 
+void memListClearInit(memoryList *const restrict list, void (*func)(void *const restrict block)){
+
+	byte_t *block = memListAlignStartData(list->region->start);
+	byte_t *next = block + list->block;
+
+	list->free = block;
+
+	// Loop through every block, making it
+	// point to the next free block.
+	while(next < (byte_t *)list->region){
+		(*func)(block);
+		memListDataGetNextFree(block) = next;
+		block = next;
+		next += list->block;
+	}
+
+	// Final block contains a null pointer.
+	(*func)(block);
+	memListDataGetNextFree(block) = NULL;
+
+}
+
 void *memListExtend(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length){
 
 	/*
@@ -176,6 +251,29 @@ void *memListExtend(memoryList *const restrict list, void *const start, const si
 		memRegionExtend(&list->region, newRegion, start);
 
 		memListSetupMemory(start, bytes, length);
+		list->free = memListAlignStartData(start);
+
+	}
+
+	return start;
+
+}
+
+void *memListExtendInit(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
+
+	/*
+	** Extends the memory allocator.
+	** Its logical function is similar to a
+	** realloc, but it creates a new chunk
+	** and links it.
+	*/
+
+	if(start){
+
+		memoryRegion *const newRegion = (memoryRegion *)((byte_t *)start + memListAllocationSize(start, bytes, length) - sizeof(memoryRegion));
+		memRegionExtend(&list->region, newRegion, start);
+
+		memListSetupMemoryInit(start, bytes, length, func);
 		list->free = memListAlignStartData(start);
 
 	}

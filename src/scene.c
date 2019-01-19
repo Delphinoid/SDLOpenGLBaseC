@@ -21,7 +21,8 @@ return_t scnInit(scene *const restrict scn, size_t objectNum, size_t bodyNum){
 	}
 
 	scn->objectNum = objectNum;
-	return physSolverInit(&scn->solver, 0);
+	physIslandInit(&scn->island);
+	return 1;
 
 }
 
@@ -47,23 +48,26 @@ __FORCE_INLINE__ void scnFree(scene *const restrict scn, object **const restrict
 	memPoolFree(&scn->objects, (void *)obj);
 }
 #include "moduleObject.h"
-void scnUpdate(scene *const restrict scn, const float elapsedTime, const float dt){
+return_t scnUpdate(scene *const restrict scn, const float elapsedTime, const float dt){
 
 	/*
 	** Update each object in the scene.
 	*/
 
-	physSolverReset(&scn->solver);
-
 	MEMORY_POOL_LOOP_BEGIN(scn->objects, i, object **);
 
 		// Update each object in the scene.
-		objUpdate(*i, &scn->solver, elapsedTime, dt);
+		objUpdate(*i, &scn->island, elapsedTime, dt);
 
-	MEMORY_POOL_LOOP_END(scn->objects, i, goto UPDATE_PHYSICS_SOLVER;);
+	MEMORY_POOL_LOOP_END(scn->objects, i, goto UPDATE_PHYSICS_ISLAND;);
 
-	UPDATE_PHYSICS_SOLVER:
-	physSolverUpdate(&scn->solver);
+	UPDATE_PHYSICS_ISLAND:
+	if(physIslandQuery(&scn->island, dt) < 0){
+		/** Memory allocation failure. **/
+		return -1;
+	}
+
+	return 1;
 
 }
 
@@ -80,8 +84,7 @@ void scnReset(scene *const restrict scn){
 		region = next;
 	}
 	scn->objects.region->next = NULL;
-
-	physSolverDelete(&scn->solver);
+	physIslandDelete(&scn->island);
 
 }
 
@@ -97,6 +100,6 @@ void scnDelete(scene *const restrict scn){
 		memFree(region->start);
 		region = next;
 	}
-	physSolverDelete(&scn->solver);
+	physIslandDelete(&scn->island);
 
 }

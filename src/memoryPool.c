@@ -30,6 +30,30 @@ void *memPoolCreate(memoryPool *const restrict pool, void *start, const size_t b
 
 }
 
+void *memPoolCreateInit(memoryPool *const restrict pool, void *start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
+
+	/*
+	** Initialize a memory pool with "length"-many
+	** elements of "bytes" size.
+	*/
+
+	if(start){
+
+		// Clamp the block size upwards to
+		// match the minimum block size.
+		pool->block = memPoolBlockSize(bytes);
+		pool->region = (memoryRegion *)((byte_t *)start + memPoolAllocationSize(start, bytes, length) - sizeof(memoryRegion));
+		pool->region->start = start;
+		pool->region->next = NULL;
+
+		memPoolClearInit(pool, func);
+
+	}
+
+	return start;
+
+}
+
 void *memPoolAllocate(memoryPool *const restrict pool){
 
 	/*
@@ -80,6 +104,37 @@ void *memPoolSetupMemory(void *start, const size_t bytes, const size_t length){
 	}
 
 	// Final block contains a null pointer.
+	memPoolDataGetFlags(block) = MEMORY_POOL_BLOCK_INVALID;
+	memPoolDataGetNextFree(block) = NULL;
+
+	return start;
+
+}
+
+void *memPoolSetupMemoryInit(void *start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
+
+	const size_t blockSize = memPoolBlockSize(bytes);
+	byte_t *block;
+	byte_t *next;
+	const byte_t *const end = (byte_t *)start + memPoolAllocationSize(start, bytes, length) - sizeof(memoryRegion);
+
+	start = memPoolAlignStartData(start);
+
+	block = start;
+	next = block + blockSize;
+
+	// Loop through every block, making it
+	// point to the next free block.
+	while(next < end){
+		(*func)(block);
+		memPoolDataGetFlags(block) = MEMORY_POOL_BLOCK_INVALID;
+		memPoolDataGetNextFree(block) = next;
+		block = next;
+		next += blockSize;
+	}
+
+	// Final block contains a null pointer.
+	(*func)(block);
 	memPoolDataGetFlags(block) = MEMORY_POOL_BLOCK_INVALID;
 	memPoolDataGetNextFree(block) = NULL;
 
@@ -166,6 +221,30 @@ void memPoolClear(memoryPool *const restrict pool){
 
 }
 
+void memPoolClearInit(memoryPool *const restrict pool, void (*func)(void *const restrict block)){
+
+	byte_t *block = memPoolAlignStartData(pool->region->start);
+	byte_t *next = block + pool->block;
+
+	pool->free = block;
+
+	// Loop through every block, making it
+	// point to the next free block.
+	while(next < (byte_t *)pool->region){
+		(*func)(block);
+		memPoolDataGetFlags(block) = MEMORY_POOL_BLOCK_INVALID;
+		memPoolDataGetNextFree(block) = next;
+		block = next;
+		next += pool->block;
+	}
+
+	// Final block contains a null pointer.
+	(*func)(block);
+	memPoolDataGetFlags(block) = MEMORY_POOL_BLOCK_INVALID;
+	memPoolDataGetNextFree(block) = NULL;
+
+}
+
 void *memPoolExtend(memoryPool *const restrict pool, void *const start, const size_t bytes, const size_t length){
 
 	/*
@@ -181,6 +260,29 @@ void *memPoolExtend(memoryPool *const restrict pool, void *const start, const si
 		memRegionExtend(&pool->region, newRegion, start);
 
 		memPoolSetupMemory(start, bytes, length);
+		pool->free = memPoolAlignStartData(start);
+
+	}
+
+	return start;
+
+}
+
+void *memPoolExtendInit(memoryPool *const restrict pool, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
+
+	/*
+	** Extends the memory allocator.
+	** Its logical function is similar to a
+	** realloc, but it creates a new chunk
+	** and links it.
+	*/
+
+	if(start){
+
+		memoryRegion *const newRegion = (memoryRegion *)((byte_t *)start + memPoolAllocationSize(start, bytes, length) - sizeof(memoryRegion));
+		memRegionExtend(&pool->region, newRegion, start);
+
+		memPoolSetupMemoryInit(start, bytes, length, func);
 		pool->free = memPoolAlignStartData(start);
 
 	}

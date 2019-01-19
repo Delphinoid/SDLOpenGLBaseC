@@ -66,7 +66,7 @@ __HINT_INLINE__ model *moduleModelAllocateStatic(){
 	return memPoolAllocate(&__ModelResourceArray);
 }
 __HINT_INLINE__ model *moduleModelAllocate(){
-	model *r = memPoolAllocate(&__ModelResourceArray);
+	model *r = moduleModelAllocateStatic();
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -77,7 +77,7 @@ __HINT_INLINE__ model *moduleModelAllocate(){
 			)
 		);
 		if(memPoolExtend(&__ModelResourceArray, memory, RESOURCE_DEFAULT_MODEL_SIZE, RESOURCE_DEFAULT_MODEL_NUM)){
-			r = memPoolAllocate(&__ModelResourceArray);
+			r = moduleModelAllocateStatic();
 		}
 	}
 	return r;

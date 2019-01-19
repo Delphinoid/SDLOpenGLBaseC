@@ -71,7 +71,7 @@ __HINT_INLINE__ objectBase *moduleObjectBaseAllocateStatic(){
 	return memPoolAllocate(&__ObjectBaseResourceArray);
 }
 __HINT_INLINE__ objectBase *moduleObjectBaseAllocate(){
-	objectBase *r = memPoolAllocate(&__ObjectBaseResourceArray);
+	objectBase *r = moduleObjectBaseAllocateStatic();
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -82,7 +82,7 @@ __HINT_INLINE__ objectBase *moduleObjectBaseAllocate(){
 			)
 		);
 		if(memPoolExtend(&__ObjectBaseResourceArray, memory, RESOURCE_DEFAULT_OBJECT_LOCAL_SIZE, RESOURCE_DEFAULT_OBJECT_LOCAL_NUM)){
-			r = memPoolAllocate(&__ObjectBaseResourceArray);
+			r = moduleObjectBaseAllocateStatic();
 		}
 	}
 	return r;
@@ -119,7 +119,7 @@ __HINT_INLINE__ object *moduleObjectAllocateStatic(){
 	return memPoolAllocate(&__ObjectResourceArray);
 }
 __HINT_INLINE__ object *moduleObjectAllocate(){
-	object *r = memPoolAllocate(&__ObjectResourceArray);
+	object *r = moduleObjectAllocateStatic();
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -130,7 +130,7 @@ __HINT_INLINE__ object *moduleObjectAllocate(){
 			)
 		);
 		if(memPoolExtend(&__ObjectResourceArray, memory, RESOURCE_DEFAULT_OBJECT_SIZE, RESOURCE_DEFAULT_OBJECT_NUM)){
-			r = memPoolAllocate(&__ObjectResourceArray);
+			r = moduleObjectAllocateStatic();
 		}
 	}
 	return r;

@@ -30,6 +30,30 @@ void *memDLinkCreate(memoryDLink *const restrict array, void *const start, const
 
 }
 
+void *memDLinkCreateInit(memoryDLink *const restrict array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
+
+	/*
+	** Initialize an array allocator with "length"-many
+	** elements of "bytes" size.
+	*/
+
+	if(start){
+
+		// Clamp the block size upwards to
+		// match the minimum block size.
+		array->block = memDLinkBlockSize(bytes);
+		array->region = (memoryRegion *)((byte_t *)start + memDLinkAllocationSize(start, bytes, length) - sizeof(memoryRegion));
+		array->region->start = start;
+		array->region->next = NULL;
+
+		memDLinkClearInit(array, func);
+
+	}
+
+	return start;
+
+}
+
 void *memDLinkAllocate(memoryDLink *const restrict array){
 
 	/*
@@ -203,6 +227,37 @@ void *memDLinkSetupMemory(void *start, const size_t bytes, const size_t length){
 
 }
 
+void *memDLinkSetupMemoryInit(void *start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
+
+	const size_t blockSize = memDLinkBlockSize(bytes);
+	byte_t *block;
+	byte_t *next;
+	const byte_t *const end = (const byte_t *)start + memDLinkAllocationSize(start, bytes, length) - sizeof(memoryRegion);
+
+	start = memDLinkAlignStartData(start);
+
+	block = start;
+	next = block + blockSize;
+
+	// Loop through every block, making it
+	// point to the next free block.
+	while(next < end){
+		(*func)(block);
+		memDLinkDataGetPrev(block) = NULL;
+		memDLinkDataGetFlags(block) = (uintptr_t)next | MEMORY_DLINK_BLOCK_INACTIVE;
+		block = next;
+		next += blockSize;
+	}
+
+	// Final block contains a null pointer.
+	(*func)(block);
+	memDLinkDataGetPrev(block) = NULL;
+	memDLinkDataGetFlags(block) = MEMORY_DLINK_BLOCK_INVALID;
+
+	return start;
+
+}
+
 void memDLinkClear(memoryDLink *const restrict array){
 
 	byte_t *block = memDLinkAlignStartData(array->region->start);
@@ -225,6 +280,30 @@ void memDLinkClear(memoryDLink *const restrict array){
 
 }
 
+void memDLinkClearInit(memoryDLink *const restrict array, void (*func)(void *const restrict block)){
+
+	byte_t *block = memDLinkAlignStartData(array->region->start);
+	byte_t *next = block + array->block;
+
+	array->free = block;
+
+	// Loop through every block, making it
+	// point to the next free block.
+	while(next < (const byte_t *)array->region){
+		(*func)(block);
+		memDLinkDataGetPrev(block) = NULL;
+		memDLinkDataGetFlags(block) = (uintptr_t)next | MEMORY_DLINK_BLOCK_INACTIVE;
+		block = next;
+		next += array->block;
+	}
+
+	// Final block contains a null pointer.
+	(*func)(block);
+	memDLinkDataGetPrev(block) = NULL;
+	memDLinkDataGetFlags(block) = MEMORY_DLINK_BLOCK_INVALID;
+
+}
+
 void *memDLinkExtend(memoryDLink *const restrict array, void *const start, const size_t bytes, const size_t length){
 
 	/*
@@ -240,6 +319,29 @@ void *memDLinkExtend(memoryDLink *const restrict array, void *const start, const
 		memRegionPrepend(&array->region, newRegion, start);
 
 		memDLinkSetupMemory(start, bytes, length);
+		array->free = memDLinkAlignStartData(start);
+
+	}
+
+	return start;
+
+}
+
+void *memDLinkExtendInit(memoryDLink *const restrict array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
+
+	/*
+	** Extends the memory allocator.
+	** Its logical function is similar to a
+	** realloc, but it creates a new chunk
+	** and links it.
+	*/
+
+	if(start){
+
+		memoryRegion *const newRegion = (memoryRegion *)((byte_t *)start + memDLinkAllocationSize(start, bytes, length) - sizeof(memoryRegion));
+		memRegionPrepend(&array->region, newRegion, start);
+
+		memDLinkSetupMemoryInit(start, bytes, length, func);
 		array->free = memDLinkAlignStartData(start);
 
 	}

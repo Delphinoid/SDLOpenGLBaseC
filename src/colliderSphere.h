@@ -1,7 +1,6 @@
 #ifndef COLLIDERSPHERE_H
 #define COLLIDERSPHERE_H
 
-#include "manifold.h"
 #include "return.h"
 
 typedef struct {

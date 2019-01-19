@@ -16,7 +16,7 @@
 ** The texture struct should be 23 bytes (minus padding).
 ** This, plus the extra byte overhead for the active flag
 ** in memory pools, makes the final block divisible by
-** 8 bytes, reducing waste.
+** 8 bytes, reducing waste on 32-bit platforms.
 */
 typedef struct {
 

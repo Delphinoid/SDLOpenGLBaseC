@@ -7,7 +7,7 @@
 #include "colliderSphere.h"
 #include "colliderAABB.h"
 #include "colliderPoint.h"
-#include "bone.h"
+#include "flags.h"
 
 #define COLLIDER_TYPE_UNKNOWN  -1
 #define COLLIDER_TYPE_MESH      0
@@ -18,22 +18,23 @@
 #define COLLIDER_TYPE_COMPOSITE 5
 #define COLLIDER_TYPE_NUM       6
 
+#define COLLIDER_INSTANCE 0x01
+
 typedef int_least8_t  colliderType_t;
 typedef uint_least8_t colliderIndex_t;
 
-// Calculate the size of the largest collider type.
-typedef union {
-	cMesh mesh;
-	cCapsule capsule;
-	cSphere sphere;
-	cAABB aabb;
-	cPoint point;
-	cComposite composite;
-} colliderData;
-
 typedef struct collider {
-	colliderData data;
+	// Calculate the size of the largest collider type.
+	union {
+		cMesh mesh;
+		cCapsule capsule;
+		cSphere sphere;
+		cAABB aabb;
+		cPoint point;
+		cComposite composite;
+	} data;
 	colliderType_t type;
+	flags_t flags;  // Fits in for free next to colliderType_t.
 } collider;
 
 // Forward declarations for inlining.
@@ -43,16 +44,16 @@ extern return_t (* const cInstantiateJumpTable[COLLIDER_TYPE_NUM])(
 );
 extern void (* const cTransformJumpTable[COLLIDER_TYPE_NUM])(
 	void *const instance,
-	const vec3 *const restrict instanceCentroid,
+	const vec3 *const instanceCentroid,
 	const void *const local,
-	const vec3 *const restrict localCentroid,
-	cAABB *const restrict aabb,
-	const bone *const restrict configuration
+	const vec3 *const localCentroid,
+	const bone *const configuration,
+	cAABB *const restrict aabb
 );
 
 void cInit(collider *const restrict c, const colliderType_t type);
 return_t cInstantiate(collider *const instance, const collider *const local);
-void cTransform(collider *const instance, const vec3 *const instanceCentroid, const collider *const local, const vec3 *const localCentroid, cAABB *const restrict aabb, const bone *const configuration);
+void cTransform(collider *const instance, const vec3 *const instanceCentroid, const collider *const local, const vec3 *const localCentroid, const bone *const configuration, cAABB *const restrict aabb);
 void cDelete(collider *const restrict c);
 
 #endif

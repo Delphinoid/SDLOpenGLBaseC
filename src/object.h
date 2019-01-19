@@ -2,10 +2,10 @@
 #define OBJECT_H
 
 #include "graphicsRenderGroup.h"
+#include "physicsRigidBody.h"
+#include "physicsIsland.h"
 #include "renderable.h"
 #include "skeleton.h"
-#include "physicsRigidBody.h"
-#include "physicsSolver.h"
 #include "collider.h"
 #include "state.h"
 
@@ -19,6 +19,7 @@
 
 typedef uint_least8_t renderableIndex_t;
 
+/** TODO: Make the instance in all base / instance pairs less reliant on the base if possible. **/
 typedef struct {
 
 	/** Include previous state num. **/
@@ -30,8 +31,8 @@ typedef struct {
 	animIndex_t animationNum;  // Number of animations.
 	sklAnim **animations;      // Array of pointers to animations associated with the object.
 
-	physRigidBodyLocal *skeletonBodies;  // Rigid bodies for each bone.
-	collider *skeletonColliders;         // Collider arrays for each bone.
+	physRigidBodyBase *skeletonBodies;  // Rigid bodies for each bone.
+	collider *skeletonColliders;        // Collider arrays for each bone.
 
 	renderable *renderables;  // Default renderable array.
 
@@ -41,6 +42,7 @@ typedef struct {
 
 } objectBase;
 
+/** This should have its own allocator. **/
 typedef struct objState objState;
 typedef struct objState {
 
@@ -109,7 +111,7 @@ void objAddLinearVelocity(object *obj, const size_t boneID, const float x, const
 void objApplyLinearImpulse(object *obj, const size_t boneID, const float x, const float y, const float z);
 void objAddAngularVelocity(object *obj, const size_t boneID, const float angle, const float x, const float y, const float z);**/
 
-return_t objUpdate(object *const restrict obj, physicsSolver *const restrict solver, const float elapsedTime, const float dt);
+return_t objUpdate(object *const restrict obj, physIsland *const restrict island, const float elapsedTime, const float dt);
 
 gfxRenderGroup_t objRenderGroup(const object *const restrict obj, const float interpT);
 void objGenerateSprite(const object *const restrict obj, const rndrInstance *const restrict rndr, const float interpT, const float *const restrict texFrag, vertex *const restrict vertices);

@@ -133,7 +133,7 @@ __HINT_INLINE__ skeleton *moduleSkeletonAllocateStatic(){
 	return memPoolAllocate(&__SkeletonResourceArray);
 }
 __HINT_INLINE__ skeleton *moduleSkeletonAllocate(){
-	skeleton *r = memPoolAllocate(&__SkeletonResourceArray);
+	skeleton *r = moduleSkeletonAllocateStatic();
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -144,7 +144,7 @@ __HINT_INLINE__ skeleton *moduleSkeletonAllocate(){
 			)
 		);
 		if(memPoolExtend(&__SkeletonResourceArray, memory, RESOURCE_DEFAULT_SKELETON_SIZE, RESOURCE_DEFAULT_SKELETON_NUM)){
-			r = memPoolAllocate(&__SkeletonResourceArray);
+			r = moduleSkeletonAllocateStatic();
 		}
 	}
 	return r;
@@ -185,7 +185,7 @@ __HINT_INLINE__ sklAnim *moduleSkeletonAnimationAllocateStatic(){
 	return memPoolAllocate(&__SkeletonAnimationResourceArray);
 }
 __HINT_INLINE__ sklAnim *moduleSkeletonAnimationAllocate(){
-	sklAnim *r = memPoolAllocate(&__SkeletonAnimationResourceArray);
+	sklAnim *r = moduleSkeletonAnimationAllocateStatic();
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -196,7 +196,7 @@ __HINT_INLINE__ sklAnim *moduleSkeletonAnimationAllocate(){
 			)
 		);
 		if(memPoolExtend(&__SkeletonAnimationResourceArray, memory, RESOURCE_DEFAULT_SKELETAL_ANIMATION_SIZE, RESOURCE_DEFAULT_SKELETAL_ANIMATION_NUM)){
-			r = memPoolAllocate(&__SkeletonAnimationResourceArray);
+			r = moduleSkeletonAnimationAllocateStatic();
 		}
 	}
 	return r;
@@ -233,7 +233,7 @@ __HINT_INLINE__ sklAnimInstance *moduleSkeletonAnimationInstanceAppendStatic(skl
 	return memSLinkAppend(&__SkeletonAnimationInstanceResourceArray, (void **)array);
 }
 __HINT_INLINE__ sklAnimInstance *moduleSkeletonAnimationInstanceAppend(sklAnimInstance **const restrict array){
-	sklAnimInstance *r = memSLinkAppend(&__SkeletonAnimationInstanceResourceArray, (void **)array);
+	sklAnimInstance *r = moduleSkeletonAnimationInstanceAppendStatic(array);
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -244,7 +244,7 @@ __HINT_INLINE__ sklAnimInstance *moduleSkeletonAnimationInstanceAppend(sklAnimIn
 			)
 		);
 		if(memSLinkExtend(&__SkeletonAnimationInstanceResourceArray, memory, RESOURCE_DEFAULT_SKELETAL_ANIMATION_INSTANCE_SIZE, RESOURCE_DEFAULT_SKELETAL_ANIMATION_INSTANCE_NUM)){
-			r = memSLinkAppend(&__SkeletonAnimationInstanceResourceArray, (void **)array);
+			r = moduleSkeletonAnimationInstanceAppendStatic(array);
 		}
 	}
 	return r;
@@ -253,7 +253,7 @@ __HINT_INLINE__ sklAnimInstance *moduleSkeletonAnimationInstanceInsertAfterStati
 	return memSLinkInsertAfter(&__SkeletonAnimationInstanceResourceArray, (void **)array, (void *)resource);
 }
 __HINT_INLINE__ sklAnimInstance *moduleSkeletonAnimationInstanceInsertAfter(sklAnimInstance **const restrict array, sklAnimInstance *const restrict resource){
-	sklAnimInstance *r = memSLinkInsertAfter(&__SkeletonAnimationInstanceResourceArray, (void **)array, (void *)resource);
+	sklAnimInstance *r = moduleSkeletonAnimationInstanceInsertAfterStatic(array, resource);
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -264,7 +264,7 @@ __HINT_INLINE__ sklAnimInstance *moduleSkeletonAnimationInstanceInsertAfter(sklA
 			)
 		);
 		if(memSLinkExtend(&__SkeletonAnimationInstanceResourceArray, memory, RESOURCE_DEFAULT_SKELETAL_ANIMATION_INSTANCE_SIZE, RESOURCE_DEFAULT_SKELETAL_ANIMATION_INSTANCE_NUM)){
-			r = memSLinkInsertAfter(&__SkeletonAnimationInstanceResourceArray, (void **)array, (void *)resource);
+			r = moduleSkeletonAnimationInstanceInsertAfterStatic(array, resource);
 		}
 	}
 	return r;
@@ -279,8 +279,7 @@ __HINT_INLINE__ void moduleSkeletonAnimationInstanceFree(sklAnimInstance **const
 void moduleSkeletonAnimationInstanceFreeArray(sklAnimInstance **const restrict array){
 	sklAnimInstance *resource = *array;
 	while(resource != NULL){
-		sklaiDelete(resource);
-		memSLinkFree(&__SkeletonAnimationInstanceResourceArray, (void **)array, (void *)resource, NULL);
+		moduleSkeletonAnimationInstanceFree(array, resource, NULL);
 		resource = *array;
 	}
 }
@@ -298,7 +297,7 @@ __HINT_INLINE__ sklAnimFragment *moduleSkeletonAnimationFragmentAppendStatic(skl
 	return memSLinkAppend(&__SkeletonAnimationFragmentResourceArray, (void **)array);
 }
 __HINT_INLINE__ sklAnimFragment *moduleSkeletonAnimationFragmentAppend(sklAnimFragment **const restrict array){
-	sklAnimFragment *r = memSLinkAppend(&__SkeletonAnimationFragmentResourceArray, (void **)array);
+	sklAnimFragment *r = moduleSkeletonAnimationFragmentAppendStatic(array);
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -309,7 +308,7 @@ __HINT_INLINE__ sklAnimFragment *moduleSkeletonAnimationFragmentAppend(sklAnimFr
 			)
 		);
 		if(memSLinkExtend(&__SkeletonAnimationFragmentResourceArray, memory, RESOURCE_DEFAULT_SKELETAL_ANIMATION_FRAGMENT_SIZE, RESOURCE_DEFAULT_SKELETAL_ANIMATION_FRAGMENT_NUM)){
-			r = memSLinkAppend(&__SkeletonAnimationFragmentResourceArray, (void **)array);
+			r = moduleSkeletonAnimationFragmentAppendStatic(array);
 		}
 	}
 	return r;
@@ -318,7 +317,7 @@ __HINT_INLINE__ sklAnimFragment *moduleSkeletonAnimationFragmentInsertAfterStati
 	return memSLinkInsertAfter(&__SkeletonAnimationFragmentResourceArray, (void **)array, (void *)resource);
 }
 __HINT_INLINE__ sklAnimFragment *moduleSkeletonAnimationFragmentInsertAfter(sklAnimFragment **const restrict array, sklAnimFragment *const restrict resource){
-	sklAnimFragment *r = memSLinkInsertAfter(&__SkeletonAnimationFragmentResourceArray, (void **)array, (void *)resource);
+	sklAnimFragment *r = moduleSkeletonAnimationFragmentInsertAfterStatic(array, resource);
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -329,7 +328,7 @@ __HINT_INLINE__ sklAnimFragment *moduleSkeletonAnimationFragmentInsertAfter(sklA
 			)
 		);
 		if(memSLinkExtend(&__SkeletonAnimationFragmentResourceArray, memory, RESOURCE_DEFAULT_SKELETAL_ANIMATION_FRAGMENT_SIZE, RESOURCE_DEFAULT_SKELETAL_ANIMATION_FRAGMENT_NUM)){
-			r = memSLinkInsertAfter(&__SkeletonAnimationFragmentResourceArray, (void **)array, (void *)resource);
+			r = moduleSkeletonAnimationFragmentInsertAfterStatic(array, resource);
 		}
 	}
 	return r;
@@ -343,7 +342,7 @@ __HINT_INLINE__ void moduleSkeletonAnimationFragmentFree(sklAnimFragment **const
 void moduleSkeletonAnimationFragmentFreeArray(sklAnimFragment **const restrict array){
 	sklAnimFragment *resource = *array;
 	while(resource != NULL){
-		memSLinkFree(&__SkeletonAnimationFragmentResourceArray, (void **)array, (void *)resource, NULL);
+		moduleSkeletonAnimationFragmentFree(array, resource, NULL);
 		resource = *array;
 	}
 }

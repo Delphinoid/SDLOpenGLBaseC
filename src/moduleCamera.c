@@ -45,7 +45,7 @@ __HINT_INLINE__ camera *moduleCameraAllocateStatic(){
 	return memPoolAllocate(&__CameraResourceArray);
 }
 __HINT_INLINE__ camera *moduleCameraAllocate(){
-	camera *r = memPoolAllocate(&__CameraResourceArray);
+	camera *r = moduleCameraAllocateStatic();
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -56,7 +56,7 @@ __HINT_INLINE__ camera *moduleCameraAllocate(){
 			)
 		);
 		if(memPoolExtend(&__CameraResourceArray, memory, RESOURCE_DEFAULT_CAMERA_SIZE, RESOURCE_DEFAULT_CAMERA_NUM)){
-			r = memPoolAllocate(&__CameraResourceArray);
+			r = moduleCameraAllocateStatic();
 		}
 	}
 	return r;

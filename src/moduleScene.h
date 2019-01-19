@@ -13,6 +13,7 @@ extern memoryPool  __SceneResourceArray;      // Contains scenes.
 extern memorySLink __SceneZoneResourceArray;  // Contains zones.
 
 /** Support locals? Merge all module containers? **/
+/** Use compiler constants for loop offsets?     **/
 
 return_t moduleSceneResourcesInit();
 void moduleSceneResourcesReset();
