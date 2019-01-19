@@ -16,8 +16,15 @@ typedef uint_least8_t cSeparationFeature_t;
 // in clipping a particular contact point.
 // Allows for the identification of persistent contact points.
 typedef struct {
+	#ifdef COLLISION_MANIFOLD_SIMPLE_CONTACT_KEYS
 	cEdgeIndex_t edgeA;
 	cEdgeIndex_t edgeB;
+	#else
+	cEdgeIndex_t inEdgeR;
+	cEdgeIndex_t outEdgeR;
+	cEdgeIndex_t inEdgeI;
+	cEdgeIndex_t outEdgeI;
+	#endif
 } cContactKey;
 
 typedef struct cContactPoint {
