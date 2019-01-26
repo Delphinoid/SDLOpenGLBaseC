@@ -572,8 +572,7 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const restrict bodies, const 
 							end = strtoul(token, NULL, 0)-1;
 
 							// Look for a twin edge. If it is found,
-							// the current edge will be stored directly
-							// after it.
+							// we don't have to store the new edge.
 							while(i < oldNum){
 								// Check if the current edge is the next edge or a twin.
 								if(start == cHull->edges[i].end && end == cHull->edges[i].start){
@@ -1129,9 +1128,8 @@ void physRigidBodyIntegrateVelocity(physRigidBody *const restrict body, const fl
 
 		// Integrate linear velocity.
 		if(flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR)){
-			body->linearVelocity.x += body->netForce.x * modifier;
-			body->linearVelocity.y += body->netForce.y * modifier;
-			body->linearVelocity.z += body->netForce.z * modifier;
+			vec3MultVByS(&body->netForce, modifier);
+			vec3AddVToV(&body->linearVelocity, &body->netForce);
 			// Apply damping.
 			vec3MultVByS(&body->linearVelocity,  1.f / (1.f + dt * body->linearDamping));
 		}else{
@@ -1142,9 +1140,8 @@ void physRigidBodyIntegrateVelocity(physRigidBody *const restrict body, const fl
 		if(flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR)){
 			vec3 momentum;
 			mat3MultMByVBraR(&body->inverseInertiaTensorGlobal, &body->netTorque, &momentum);
-			body->angularVelocity.x += momentum.x * dt;
-			body->angularVelocity.y += momentum.y * dt;
-			body->angularVelocity.z += momentum.z * dt;
+			vec3MultVByS(&momentum, dt);
+			vec3AddVToV(&body->angularVelocity, &momentum);
 			// Apply damping.
 			vec3MultVByS(&body->angularVelocity, 1.f / (1.f + dt * body->angularDamping));
 		}else{
@@ -1185,6 +1182,7 @@ void physRigidBodyIntegrateConfiguration(physRigidBody *const restrict body, con
 		(body->angularVelocity.y != 0.f || body->angularVelocity.z != 0.f || body->angularVelocity.x != 0.f)
 	){
 		quatIntegrate(&body->configuration->orientation, &body->angularVelocity, dt);
+		quatNormalizeFast(&body->configuration->orientation);
 		flagsSet(body->flags, PHYSICS_BODY_ROTATED);
 	}else{
 		flagsUnset(body->flags, PHYSICS_BODY_ROTATED);

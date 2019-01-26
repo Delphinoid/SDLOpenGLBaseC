@@ -4,6 +4,10 @@
 #include "physicsShared.h"
 #include "collision.h"
 
+#ifndef PHYSICS_CONTACT_SOLVER_ITERATIONS
+	#define PHYSICS_CONTACT_SOLVER_ITERATIONS 5
+#endif
+
 #ifndef PHYSICS_CONTACT_PAIR_MAX_INACTIVE_STEPS
 	#define PHYSICS_CONTACT_PAIR_MAX_INACTIVE_STEPS 0
 #endif
@@ -45,23 +49,20 @@ typedef struct physContactPoint {
 	vec3 pointA;
 	vec3 pointB;
 
-	// Contact normal.
-	vec3 normal;
-
-	// Contact tangents for simulating friction.
-	vec3 tangentA;
-	vec3 tangentB;
-
 	// Penetration depth.
 	float penetrationDepth;
 
 	// Impulse magnitude denominators.
-	float normalImpulse;
-	float tangentImpulseA;
-	float tangentImpulseB;
+	float normalImpulseDenominator;
+	float tangentImpulseDenominatorA;
+	float tangentImpulseDenominatorB;
 
 	// Persistent impulse magnitude accumulator.
 	float normalImpulseAccumulator;
+
+	// Persistent impulse magnitude accumulators for friction.
+	float tangentImpulseAccumulatorA;
+	float tangentImpulseAccumulatorB;
 
 	// Bias term for warm starting.
 	float bias;
@@ -76,9 +77,15 @@ typedef struct physContact {
 	// Contact array.
 	physContactPoint contacts[COLLISION_MANIFOLD_MAX_CONTACT_POINTS];
 
-	// Persistent impulse magnitude accumulators for friction.
-	float tangentImpulseAccumulatorA;
-	float tangentImpulseAccumulatorB;
+	// Contact normal.
+	vec3 normal;
+
+	// Contact tangents for simulating friction.
+	vec3 tangentA;
+	vec3 tangentB;
+
+	float friction;
+	float restitution;
 
 	// Number of contacts.
 	cContactPointIndex_t contactNum;

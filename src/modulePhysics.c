@@ -564,24 +564,31 @@ void modulePhysicsAABBNodeClear(){
 
 }
 
-void modulePhysicsSolve(const float dt){
+void modulePhysicsSolve(){
 
 	/*
 	** Solves the constraints, followed by the contacts,
 	** for all systems being simulated.
 	*/
 
-	// Solve constraints.
+	size_t i;
+
+	// Iteratively solve constraints.
 	///
 
-	// Solve contacts.
-	PHYSICS_SOLVE_CONTACTS:
-	MEMORY_LIST_LOOP_BEGIN(__PhysicsContactPairResourceArray, i, physContactPair *);
-		if(physContactPairIsActive(i)){
-			physContactSolve(&i->data, i->colliderA->body, i->colliderB->body);
-		}else if(physContactPairIsInvalid(i)){
-			return;
-		}
-	MEMORY_LIST_LOOP_END(__PhysicsContactPairResourceArray, i);
+	// Iteratively solve contacts.
+	i = PHYSICS_CONTACT_SOLVER_ITERATIONS;
+	PHYSICS_CONTACT_SOLVER_NEXT_ITERATION:
+	while(i > 0){
+		MEMORY_LIST_LOOP_BEGIN(__PhysicsContactPairResourceArray, contact, physContactPair *);
+			if(physContactPairIsActive(contact)){
+				physContactSolve(&contact->data, contact->colliderA->body, contact->colliderB->body);
+			}else if(physContactPairIsInvalid(contact)){
+				--i;
+				goto PHYSICS_CONTACT_SOLVER_NEXT_ITERATION;
+			}
+		MEMORY_LIST_LOOP_END(__PhysicsContactPairResourceArray, contact);
+		--i;
+	}
 
 }

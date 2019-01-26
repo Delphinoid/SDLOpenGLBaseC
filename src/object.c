@@ -823,9 +823,9 @@ return_t objUpdate(object *const restrict obj, physIsland *const restrict island
 
 	// If we can create a new previous state, do so.
 	if(obj->stateNum < obj->stateMax){
-		//if(objStateAllocate(obj) < 0){
-			//return -1;
-		//}
+		if(objStateAllocate(obj) < 0){
+			return -1;
+		}
 	}
 
 	// Update each skeletal animation.

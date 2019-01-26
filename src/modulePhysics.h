@@ -97,6 +97,6 @@ aabbNode *modulePhysicsAABBNodeAllocate();
 void modulePhysicsAABBNodeFree(aabbNode *const restrict resource);
 void modulePhysicsAABBNodeClear();
 
-void modulePhysicsSolve(const float dt);
+void modulePhysicsSolve();
 
 #endif

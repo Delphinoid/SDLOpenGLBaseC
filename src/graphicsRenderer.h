@@ -11,8 +11,8 @@
 typedef struct {
 
 	const void *structure;
-	uint_least8_t type;
 	float distance;
+	uint_least8_t type;
 
 } gfxRenderElement;
 

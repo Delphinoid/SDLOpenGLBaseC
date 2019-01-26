@@ -14,34 +14,6 @@ static __FORCE_INLINE__ float physContactCalculateFriction(const float f1, const
 	return sqrtf(f1 * f2);
 }
 
-static __FORCE_INLINE__ void physContactInit(physContact *const restrict contact){
-
-	/*
-	** Set the incident and reference bodies
-	** and reset the impulse accumulators.
-	*/
-
-	physContactPoint *pPoint = &contact->contacts[0];
-	const physContactPoint *const pPointLast = &pPoint[COLLISION_MANIFOLD_MAX_CONTACT_POINTS];
-
-	// Initialize the tangent accumulators.
-	contact->tangentImpulseAccumulatorA = 0.f;
-	contact->tangentImpulseAccumulatorB = 0.f;
-
-	// Initialize the normal accumulators for each contact point.
-	for(; pPoint < pPointLast; ++pPoint){
-		pPoint->normalImpulseAccumulator = 0.f;
-	}
-
-	// Doing a memset appears to be faster than
-	// looping through the manifold and reseting
-	// only the impulse accumulators. However,
-	// it does not scale as well with the various
-	// optimization levels.
-	// memset(&contact->contacts[0], 0, sizeof(physContactPoint)*COLLISION_MANIFOLD_MAX_CONTACT_POINTS);
-
-}
-
 static __FORCE_INLINE__ void physContactGenerateTangents(const vec3 *const restrict normal, vec3 *const restrict tangentA, vec3 *const restrict tangentB){
 	// Generate the contact tangents, perpendicular to each other and the contact normal.
 	// Used for frictional calculations.
@@ -54,7 +26,160 @@ static __FORCE_INLINE__ void physContactGenerateTangents(const vec3 *const restr
 	vec3CrossR(normal, tangentA, tangentB);
 }
 
-static __FORCE_INLINE__ void physContactPointGenerateImpulses(physContactPoint *const restrict point, const physRigidBody *const restrict bodyA, const physRigidBody *const restrict bodyB){
+static __FORCE_INLINE__ void physContactInit(physContact *const restrict contact, const cContact *const restrict manifold, const physRigidBody *const restrict bodyA, const physRigidBody *const restrict bodyB, const physCollider *const restrict colliderA, const physCollider *const restrict colliderB){
+
+	/*
+	** Sets the incident and reference bodies
+	** and reset the impulse accumulators.
+	**
+	** Also generates a global normal and tangents.
+	*/
+
+	physContactPoint *pPoint = &contact->contacts[0];
+	const cContactPoint *cPoint = &manifold->contacts[0];
+	const cContactPoint *const cPointLast = &cPoint[manifold->contactNum];
+
+	// Combined contact normal.
+	vec3 normal;
+	vec3Zero(&normal);
+
+	// Initialize each contact.
+	for(; cPoint < cPointLast; ++cPoint, ++pPoint){
+
+		// Add up the combined contact normal.
+		vec3AddVToV(&normal, &cPoint->normal);
+
+		// Get the relative contact points.
+		vec3SubVFromVR(&cPoint->pointA, &bodyA->centroidGlobal, &pPoint->pointA);
+		vec3SubVFromVR(&cPoint->pointB, &bodyB->centroidGlobal, &pPoint->pointB);
+		pPoint->penetrationDepth = cPoint->penetrationDepth;
+		pPoint->key = cPoint->key;
+
+		// Initialize the accumulators.
+		pPoint->normalImpulseAccumulator = 0.f;
+		pPoint->tangentImpulseAccumulatorA = 0.f;
+		pPoint->tangentImpulseAccumulatorB = 0.f;
+
+	}
+
+
+	// Normalize the new total normal and generate tangents.
+	vec3NormalizeFastAccurate(&normal);
+	physContactGenerateTangents(&normal, &contact->tangentA, &contact->tangentB);
+	contact->normal = normal;
+
+	// Calculate the combined friction and restitution scalars.
+	contact->friction    = physContactCalculateFriction   (colliderA->friction,    colliderB->friction);
+	contact->restitution = physContactCalculateRestitution(colliderA->restitution, colliderB->restitution);
+
+	contact->contactNum = manifold->contactNum;
+
+}
+
+static __FORCE_INLINE__ void physContactPersist(physContact *const restrict contact, const cContact *const restrict manifold, const physRigidBody *const restrict bodyA, const physRigidBody *const restrict bodyB, const physCollider *const restrict colliderA, const physCollider *const restrict colliderB){
+
+	/*
+	** Copies the accumulators for persisting contacts
+	** and resets non-persisting accumulators.
+	**
+	** Also generates a global normal and tangents.
+	*/
+
+	const cContactPoint *cPoint = &manifold->contacts[0];
+	physContactPoint *pcPoint = &contact->contacts[0];
+	const cContactPoint *const cPointLast = &cPoint[manifold->contactNum];
+	const physContactPoint *const pPointLast = &pcPoint[contact->contactNum];
+
+	// Keep track of the contacts we're updating.
+	unsigned int persistent[COLLISION_MANIFOLD_MAX_CONTACT_POINTS];
+	unsigned int *flag = &persistent[0];
+
+	// Combined contact normal.
+	vec3 normal;
+
+	vec3Zero(&normal);
+	memset(persistent, 0, sizeof(unsigned int)*COLLISION_MANIFOLD_MAX_CONTACT_POINTS);
+
+	// Manage persistent contacts.
+	for(; cPoint < cPointLast; ++cPoint, ++pcPoint, ++flag){
+
+		physContactPoint *pPoint = &contact->contacts[0];
+		for(; pPoint < pPointLast; ++pPoint){
+
+			// We've found a contact in the old manifold with a
+			// matching key. Swap the impulse accumulators and
+			// keys so that the ones we're replacing aren't lost.
+			if(memcmp(&pPoint->key, &cPoint->key, sizeof(cContactKey)) == 0){
+
+				if(pPoint != pcPoint){
+
+					const cContactKey tempKey = pcPoint->key;
+					float tempAccumulator;
+
+					pcPoint->key = pPoint->key;
+					pPoint->key = tempKey;
+
+					tempAccumulator = pcPoint->normalImpulseAccumulator;
+					pcPoint->normalImpulseAccumulator = pPoint->normalImpulseAccumulator;
+					pPoint->normalImpulseAccumulator = tempAccumulator;
+
+					tempAccumulator = pcPoint->tangentImpulseAccumulatorA;
+					pcPoint->tangentImpulseAccumulatorA = pPoint->tangentImpulseAccumulatorA;
+					pPoint->tangentImpulseAccumulatorA = tempAccumulator;
+
+					tempAccumulator = pcPoint->tangentImpulseAccumulatorB;
+					pcPoint->tangentImpulseAccumulatorB = pPoint->tangentImpulseAccumulatorB;
+					pPoint->tangentImpulseAccumulatorB = tempAccumulator;
+
+				}
+
+				*flag = 1;
+				break;
+
+			}
+
+		}
+
+		// Add up the combined contact normal.
+		vec3AddVToV(&normal, &cPoint->normal);
+
+	}
+
+	// Initialize the accumulators for non-persisting contacts.
+	cPoint = &manifold->contacts[0];
+	pcPoint = &contact->contacts[0];
+	flag = &persistent[0];
+	for(; cPoint < cPointLast; ++cPoint, ++pcPoint, ++flag){
+
+		// Get the relative contact points.
+		vec3SubVFromVR(&cPoint->pointA, &bodyA->centroidGlobal, &pcPoint->pointA);
+		vec3SubVFromVR(&cPoint->pointB, &bodyB->centroidGlobal, &pcPoint->pointB);
+		pcPoint->penetrationDepth = cPoint->penetrationDepth;
+
+		// Initialize the accumulators for non-persistent contacts.
+		if(*flag == 0){
+			pcPoint->key = cPoint->key;
+			pcPoint->normalImpulseAccumulator = 0.f;
+			pcPoint->tangentImpulseAccumulatorA = 0.f;
+			pcPoint->tangentImpulseAccumulatorB = 0.f;
+		}
+
+	}
+
+	// Normalize the new total normal and generate tangents.
+	vec3NormalizeFastAccurate(&normal);
+	physContactGenerateTangents(&normal, &contact->tangentA, &contact->tangentB);
+	contact->normal = normal;
+
+	// Calculate the combined friction and restitution scalars.
+	contact->friction    = physContactCalculateFriction   (colliderA->friction,    colliderB->friction);
+	contact->restitution = physContactCalculateRestitution(colliderA->restitution, colliderB->restitution);
+
+	contact->contactNum = manifold->contactNum;
+
+}
+
+static __FORCE_INLINE__ void physContactPointGenerateImpulses(physContactPoint *const restrict point, const physContact *const restrict contact, const physRigidBody *const restrict bodyA, const physRigidBody *const restrict bodyB){
 
 	/*
 	** Calculates the impulse magnitude denominators for
@@ -68,33 +193,33 @@ static __FORCE_INLINE__ void physContactPointGenerateImpulses(physContactPoint *
 	vec3 angularDeltaLinearA, angularDeltaLinearB;
 
 	// Calculate the normal impulse magnitude denominator.
-	vec3CrossR(&point->pointA, &point->normal, &angularDeltaA);
+	vec3CrossR(&point->pointA, &contact->normal, &angularDeltaA);
 	mat3MultMByVBraR(&bodyA->inverseInertiaTensorGlobal, &angularDeltaA, &angularDeltaLinearA);
-	vec3CrossR(&point->pointB, &point->normal, &angularDeltaB);
+	vec3CrossR(&point->pointB, &contact->normal, &angularDeltaB);
 	mat3MultMByVBraR(&bodyB->inverseInertiaTensorGlobal, &angularDeltaB, &angularDeltaLinearB);
-	point->normalImpulse = 1.f / (
+	point->normalImpulseDenominator = 1.f / (
 		inverseMassTotal +
 		vec3Dot(&angularDeltaA, &angularDeltaLinearA) +
 		vec3Dot(&angularDeltaB, &angularDeltaLinearB)
 	);
 
 	// Calculate tangent A's impulse magnitude denominator.
-	vec3CrossR(&point->pointA, &point->tangentA, &angularDeltaA);
+	vec3CrossR(&contact->tangentA, &point->pointA, &angularDeltaA);
 	mat3MultMByVBraR(&bodyA->inverseInertiaTensorGlobal, &angularDeltaA, &angularDeltaLinearA);
-	vec3CrossR(&point->pointB, &point->tangentA, &angularDeltaB);
+	vec3CrossR(&contact->tangentA, &point->pointB, &angularDeltaB);
 	mat3MultMByVBraR(&bodyB->inverseInertiaTensorGlobal, &angularDeltaB, &angularDeltaLinearB);
-	point->tangentImpulseA = 1.f / (
+	point->tangentImpulseDenominatorA = 1.f / (
 		inverseMassTotal +
 		vec3Dot(&angularDeltaA, &angularDeltaLinearA) +
 		vec3Dot(&angularDeltaB, &angularDeltaLinearB)
 	);
 
 	// Calculate tangent B's impulse magnitude denominator.
-	vec3CrossR(&point->pointA, &point->tangentB, &angularDeltaA);
+	vec3CrossR(&contact->tangentB, &point->pointA, &angularDeltaA);
 	mat3MultMByVBraR(&bodyA->inverseInertiaTensorGlobal, &angularDeltaA, &angularDeltaLinearA);
-	vec3CrossR(&point->pointB, &point->tangentB, &angularDeltaB);
+	vec3CrossR(&contact->tangentB, &point->pointB, &angularDeltaB);
 	mat3MultMByVBraR(&bodyB->inverseInertiaTensorGlobal, &angularDeltaB, &angularDeltaLinearB);
-	point->tangentImpulseB = 1.f / (
+	point->tangentImpulseDenominatorB = 1.f / (
 		inverseMassTotal +
 		vec3Dot(&angularDeltaA, &angularDeltaLinearA) +
 		vec3Dot(&angularDeltaB, &angularDeltaLinearB)
@@ -111,10 +236,10 @@ static __FORCE_INLINE__ void physContactPointWarmStart(physContactPoint *const r
 	vec3 impulse;
 	vec3 accumulator;
 
-	vec3MultVBySR(&point->normal, point->normalImpulseAccumulator, &impulse);
-	vec3MultVBySR(&point->tangentA, contact->tangentImpulseAccumulatorA, &accumulator);
+	vec3MultVBySR(&contact->normal, point->normalImpulseAccumulator, &impulse);
+	vec3MultVBySR(&contact->tangentA, point->tangentImpulseAccumulatorA, &accumulator);
 	vec3AddVToV(&impulse, &accumulator);
-	vec3MultVBySR(&point->tangentB, contact->tangentImpulseAccumulatorB, &accumulator);
+	vec3MultVBySR(&contact->tangentB, point->tangentImpulseAccumulatorB, &accumulator);
 	vec3AddVToV(&impulse, &accumulator);
 
 	// Update body A's linear velocity.
@@ -135,7 +260,7 @@ static __FORCE_INLINE__ void physContactPointWarmStart(physContactPoint *const r
 
 }
 
-static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *const restrict point, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float dt){
+static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *const restrict point, const physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float dt){
 
 	float temp;
 	vec3 v1, v2;
@@ -149,85 +274,42 @@ static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *cons
 	// Apply restitution bias.
 	vec3CrossR(&bodyB->angularVelocity, &point->pointB, &v1);
 	vec3AddVToV(&v1, &bodyB->linearVelocity);
-	vec3CrossR(&bodyA->angularVelocity, &point->pointB, &v2);
-	vec3SubVFromV2(&bodyA->linearVelocity, &v2);
+	vec3CrossR(&bodyA->angularVelocity, &point->pointA, &v2);
+	vec3SubVFromV1(&v1, &bodyA->linearVelocity);
 	vec3SubVFromV1(&v1, &v2);
-	temp = vec3Dot(&v1, &point->normal);
-
+	temp = vec3Dot(&v1, &contact->normal);
 	if(temp < -1.f){
-		point->bias += -physContactCalculateRestitution(colliderA->restitution, colliderB->restitution) * temp;
+		point->bias += -contact->restitution * temp;
 	}
 
 }
 
-static __FORCE_INLINE__ void physContactPointGenerate(physContactPoint *const restrict point, const cContactPoint *const restrict base, const physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float dt){
-
-	// Get the relative contact points.
-	vec3SubVFromVR(&base->pointA, &bodyA->centroidGlobal, &point->pointA);
-	vec3SubVFromVR(&base->pointB, &bodyB->centroidGlobal, &point->pointB);
-	point->normal = base->normal;
-	point->penetrationDepth = base->penetrationDepth;
-
-	// Calculate the contact tangents.
-	physContactGenerateTangents(&point->normal, &point->tangentA, &point->tangentB);
+static __FORCE_INLINE__ void physContactPointGenerate(physContactPoint *const restrict point, const physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float dt){
 
 	// Generate impulses, including the two
 	// tangent impulses for friction simulation.
-	physContactPointGenerateImpulses(point, bodyA, bodyB);
+	physContactPointGenerateImpulses(point, contact, bodyA, bodyB);
 
-	// Warm-start the contact.
+	// Attempt to warm-start the contact.
 	physContactPointWarmStart(point, contact, bodyA, bodyB);
 
 	// Generate bias term.
-	physContactPointGenerateBias(point, bodyA, bodyB, colliderA, colliderB, dt);
+	physContactPointGenerateBias(point, contact, bodyA, bodyB, colliderA, colliderB, dt);
 
 }
 
-static __FORCE_INLINE__ void physContactUpdate(physContact *const restrict contact, const cContact *const restrict manifold, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float dt){
+static __FORCE_INLINE__ void physContactUpdate(physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float dt){
 
 	/*
 	** Builds a physContact from a cContact.
 	*/
 
-	const cContactPoint *cPoint = &manifold->contacts[0];
 	physContactPoint *pPoint = &contact->contacts[0];
-	const physContactPoint *const pPointLast = &pPoint[manifold->contactNum];
-
-	contact->contactNum = manifold->contactNum;
+	const physContactPoint *const pPointLast = &pPoint[contact->contactNum];
 
 	// Calculate extra data for each contact point.
-	for(; pPoint < pPointLast; ++pPoint, ++cPoint){
-		physContactPointGenerate(pPoint, cPoint, contact, bodyA, bodyB, colliderA, colliderB, dt);
-	}
-
-}
-
-static __FORCE_INLINE__ void physContactPersist(physContact *const restrict contact, const cContact *const restrict manifold){
-
-	const cContactPoint *cPoint = &manifold->contacts[0];
-	physContactPoint *pcPoint = &contact->contacts[0];
-	const cContactPoint *const cPointLast = &cPoint[manifold->contactNum];
-	const physContactPoint *const pPointLast = &pcPoint[contact->contactNum];
-
-	// Manage persistent contacts.
-	for(; cPoint < cPointLast; ++cPoint, ++pcPoint){
-		physContactPoint *pPoint = &contact->contacts[0];
-		for(; pPoint < pPointLast; ++pPoint){
-			// We've found a contact in the old manifold with a
-			// matching key. Swap the impulse accumulators and
-			// keys so that the ones we're replacing aren't lost.
-			if(memcmp(&pPoint->key, &cPoint->key, sizeof(cContactKey)) == 0){
-				if(pPoint != pcPoint){
-					const float tempAccumulator = pcPoint->normalImpulseAccumulator;
-					const cContactKey tempKey = pcPoint->key;
-					pcPoint->normalImpulseAccumulator = pPoint->normalImpulseAccumulator;
-					pPoint->normalImpulseAccumulator = tempAccumulator;
-					pcPoint->key = pPoint->key;
-					pPoint->key = tempKey;
-				}
-				break;
-			}
-		}
+	for(; pPoint < pPointLast; ++pPoint){
+		physContactPointGenerate(pPoint, contact, bodyA, bodyB, colliderA, colliderB, dt);
 	}
 
 }
@@ -535,7 +617,7 @@ return_t physCollisionQuery(aabbNode *const restrict n1, aabbNode *const restric
 				if(pair != NULL){
 					// The contact already exists, refresh it.
 					physContactPairRefresh((physContactPair *)pair);
-					physContactPersist(&((physContactPair *)pair)->data, &manifold);
+					physContactPersist(&((physContactPair *)pair)->data, &manifold, c1->body, c2->body, c1, c2);
 				}else{
 					// Allocate a new contact.
 					pair = modulePhysicsContactPairAllocate();
@@ -545,10 +627,10 @@ return_t physCollisionQuery(aabbNode *const restrict n1, aabbNode *const restric
 					}
 					// Initialize the pair and its contact.
 					physContactPairInit(pair, c1, c2, previous, next);
-					physContactInit(&((physContactPair *)pair)->data);
+					physContactInit(&((physContactPair *)pair)->data, &manifold, c1->body, c2->body, c1, c2);
 				}
 				// Update the contact.
-				physContactUpdate(&((physContactPair *)pair)->data, &manifold, c1->body, c2->body, c1, c2, dt);
+				physContactUpdate(&((physContactPair *)pair)->data, c1->body, c2->body, c1, c2, dt);
 
 			}else{
 
@@ -580,12 +662,167 @@ return_t physCollisionQuery(aabbNode *const restrict n1, aabbNode *const restric
 
 }
 
+static __FORCE_INLINE__ void physContactPointSolveTangents(physContactPoint *const restrict point, physContact *const restrict contact, physRigidBody *const bodyA, physRigidBody *const bodyB){
+
+	/*
+	** Solves the friction impulses.
+	*/
+
+	float lambda, lambdaClamp;
+	float temp1, temp2;
+	vec3 v1, v2;
+	vec3 impulse;
+
+	// Calculate the contact velocity.
+	vec3CrossR(&bodyB->angularVelocity, &point->pointB, &v1);
+	vec3AddVToV(&v1, &bodyB->linearVelocity);
+	vec3CrossR(&bodyA->angularVelocity, &point->pointA, &v2);
+	vec3SubVFromV1(&v1, &bodyA->linearVelocity);
+	vec3SubVFromV1(&v1, &v2);
+
+
+	/*
+	** Tangent A.
+	*/
+
+	// Calculate the frictional impulse.
+	lambda = -vec3Dot(&v1, &contact->tangentA) * point->tangentImpulseDenominatorA;
+	lambdaClamp = contact->friction * point->tangentImpulseAccumulatorA;
+
+	// Clamp the frictional impulse.
+	temp1 = point->tangentImpulseAccumulatorA;
+	temp2 = temp1 + lambda;
+	if(temp2 < -lambdaClamp){
+		point->tangentImpulseAccumulatorA = -lambdaClamp;
+	}else if(temp2 > lambdaClamp){
+		point->tangentImpulseAccumulatorA = lambdaClamp;
+	}else{
+		point->tangentImpulseAccumulatorA = temp2;
+	}
+	lambda = point->tangentImpulseAccumulatorA - temp1;
+
+	// Apply the frictional impulse.
+	vec3MultVBySR(&contact->tangentA, lambda, &impulse);
+
+	// Body A's linear velocity.
+	vec3MultVBySR(&impulse, bodyA->inverseMass, &v2);
+	vec3SubVFromV1(&bodyA->linearVelocity, &v2);
+	// Body A's angular velocity.
+	vec3CrossR(&point->pointA, &impulse, &v2);
+	mat3MultMByVBra(&bodyA->inverseInertiaTensorGlobal, &v2);
+	vec3SubVFromV1(&bodyA->angularVelocity, &v2);
+
+	// Body B's linear velocity.
+	vec3MultVBySR(&impulse, bodyB->inverseMass, &v2);
+	vec3AddVToV(&bodyB->linearVelocity, &v2);
+	// Body B's angular velocity.
+	vec3CrossR(&point->pointB, &impulse, &v2);
+	mat3MultMByVBra(&bodyB->inverseInertiaTensorGlobal, &v2);
+	vec3AddVToV(&bodyB->angularVelocity, &v2);
+
+
+	/*
+	** Tangent B.
+	*/
+
+	// Calculate the frictional impulse.
+	lambda = -vec3Dot(&v1, &contact->tangentB) * point->tangentImpulseDenominatorB;
+	lambdaClamp = contact->friction * point->tangentImpulseAccumulatorB;
+
+	// Clamp the frictional impulse.
+	temp1 = point->tangentImpulseAccumulatorB;
+	temp2 = temp1 + lambda;
+	if(temp2 < -lambdaClamp){
+		point->tangentImpulseAccumulatorB = -lambdaClamp;
+	}else if(temp2 > lambdaClamp){
+		point->tangentImpulseAccumulatorB = lambdaClamp;
+	}else{
+		point->tangentImpulseAccumulatorB = temp2;
+	}
+	lambda = point->tangentImpulseAccumulatorB - temp1;
+
+	// Apply the frictional impulse.
+	vec3MultVBySR(&contact->tangentB, lambda, &impulse);
+
+	// Body A's linear velocity.
+	vec3MultVBySR(&impulse, bodyA->inverseMass, &v2);
+	vec3SubVFromV1(&bodyA->linearVelocity, &v2);
+	// Body A's angular velocity.
+	vec3CrossR(&point->pointA, &impulse, &v2);
+	mat3MultMByVBra(&bodyA->inverseInertiaTensorGlobal, &v2);
+	vec3SubVFromV1(&bodyA->angularVelocity, &v2);
+
+	// Body B's linear velocity.
+	vec3MultVBySR(&impulse, bodyB->inverseMass, &v2);
+	vec3AddVToV(&bodyB->linearVelocity, &v2);
+	// Body B's angular velocity.
+	vec3CrossR(&point->pointB, &impulse, &v2);
+	mat3MultMByVBra(&bodyB->inverseInertiaTensorGlobal, &v2);
+	vec3AddVToV(&bodyB->angularVelocity, &v2);
+
+}
+
+static __FORCE_INLINE__ void physContactPointSolveNormal(physContactPoint *const restrict point, physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB){
+
+	/*
+	** Solves the normal impulse.
+	*/
+
+	float lambda;
+	float temp1, temp2;
+	vec3 impulse, v2;
+
+	// Calculate the contact velocity.
+	vec3CrossR(&bodyB->angularVelocity, &point->pointB, &impulse);
+	vec3AddVToV(&impulse, &bodyB->linearVelocity);
+	vec3CrossR(&bodyA->angularVelocity, &point->pointA, &v2);
+	vec3SubVFromV1(&impulse, &bodyA->linearVelocity);
+	vec3SubVFromV1(&impulse, &v2);
+	temp1 = vec3Dot(&impulse, &contact->normal);
+
+	// Calculate the impulse magnitude.
+	lambda = point->normalImpulseDenominator * (-temp1 + point->bias);
+
+	// Clamp the normal impulse.
+	temp1 = point->normalImpulseAccumulator;
+	temp2 = temp1 + lambda;
+	point->normalImpulseAccumulator = temp2 > 0.f ? temp2 : 0.f;
+	lambda = point->normalImpulseAccumulator - temp1;
+
+	// Apply the normal impulse.
+	vec3MultVBySR(&contact->normal, lambda, &impulse);
+
+	// Body A's linear velocity.
+	vec3MultVBySR(&impulse, bodyA->inverseMass, &v2);
+	vec3SubVFromV1(&bodyA->linearVelocity, &v2);
+	// Body A's angular velocity.
+	vec3CrossR(&point->pointA, &impulse, &v2);
+	mat3MultMByVBra(&bodyA->inverseInertiaTensorGlobal, &v2);
+	vec3SubVFromV1(&bodyA->angularVelocity, &v2);
+
+	// Body B's linear velocity.
+	vec3MultVBySR(&impulse, bodyB->inverseMass, &v2);
+	vec3AddVToV(&bodyB->linearVelocity, &v2);
+	// Body B's angular velocity.
+	vec3CrossR(&point->pointB, &impulse, &v2);
+	mat3MultMByVBra(&bodyB->inverseInertiaTensorGlobal, &v2);
+	vec3AddVToV(&bodyB->angularVelocity, &v2);
+
+}
+
 void physContactSolve(physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB){
 
 	/*
 	** Solves a contact.
 	*/
 
+	physContactPoint *point = &contact->contacts[0];
+	const physContactPoint *const pLast = &point[contact->contactNum];
 
+	// Solve each contact point.
+	for(; point < pLast; ++point){
+		physContactPointSolveTangents(point, contact, bodyA, bodyB);
+		physContactPointSolveNormal(point, contact, bodyA, bodyB);
+	}
 
 }
