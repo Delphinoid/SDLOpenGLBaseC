@@ -773,8 +773,8 @@ void physContactSolve(physContact *const restrict contact, physRigidBody *const 
 
 	// Solve each contact point.
 	for(; point < pLast; ++point){
-		physContactPointSolveNormal(point, contact, bodyA, bodyB);
 		physContactPointSolveTangents(point, contact, bodyA, bodyB);
+		physContactPointSolveNormal(point, contact, bodyA, bodyB);
 	}
 
 }
