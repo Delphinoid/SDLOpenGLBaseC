@@ -31,6 +31,7 @@ typedef struct {
 	physCollider *hull;  // The body's convex collider SLink.
 
 	// Physical mass properties.
+	float mass;                 // The body's mass.
 	float inverseMass;          // The reciprocal of the body's mass.
 	float linearDamping;        // The body's linear damping ratio.
 	float angularDamping;       // The body's angular damping ratio.
@@ -53,6 +54,7 @@ typedef struct physRigidBody {
 	physCollider *hull;  // The body's convex collider SLink.
 
 	// Physical properties.
+	float mass;                       // The body's mass.
 	float inverseMass;                // The reciprocal of the body's mass.
 	float linearDamping;              // The body's linear damping ratio.
 	float angularDamping;             // The body's angular damping ratio.
@@ -112,6 +114,8 @@ return_t physRigidBodyUpdateColliders(physRigidBody *const restrict body, physIs
 void physRigidBodyApplyLinearForce(physRigidBody *const restrict body, const vec3 *const restrict F);
 void physRigidBodyApplyAngularForceGlobal(physRigidBody *const restrict body, const vec3 *const restrict F, const vec3 *const restrict r);
 void physRigidBodyApplyForceGlobal(physRigidBody *const restrict body, const vec3 *const restrict F, const vec3 *const restrict r);
+void physRigidBodyApplyImpulse(physRigidBody *const restrict body, const vec3 *const restrict x, const vec3 *const restrict J);
+void physRigidBodyApplyImpulseInverse(physRigidBody *const restrict body, const vec3 *const restrict x, const vec3 *const restrict J);
 
 void physRigidBodyIntegrateVelocity(physRigidBody *const restrict body, const float dt);
 void physRigidBodyIntegrateConfiguration(physRigidBody *const restrict body, const float dt);

@@ -109,6 +109,24 @@ __HINT_INLINE__ void mat3MultMByVBraR(const mat3 *const restrict m, const vec3 *
 	r->z = v->x * m->m[2][0] + v->y * m->m[2][1] + v->z * m->m[2][2];
 }
 
+__HINT_INLINE__ mat3 mat3MAddM(const mat3 *const restrict m1, const mat3 *const restrict m2){
+	mat3 r;
+	r.m[0][0] = m1->m[0][0] + m2->m[0][0]; r.m[0][1] = m1->m[0][1] + m2->m[0][1]; r.m[0][2] = m1->m[0][2] + m2->m[0][2];
+	r.m[1][0] = m1->m[1][0] + m2->m[1][0]; r.m[1][1] = m1->m[1][1] + m2->m[1][1]; r.m[1][2] = m1->m[1][2] + m2->m[1][2];
+	r.m[2][0] = m1->m[2][0] + m2->m[2][0]; r.m[2][1] = m1->m[2][1] + m2->m[2][1]; r.m[2][2] = m1->m[2][2] + m2->m[2][2];
+	return r;
+}
+__HINT_INLINE__ void mat3AddMToM(mat3 *const restrict m1, const mat3 *const restrict m2){
+	m1->m[0][0] += m2->m[0][0]; m1->m[0][1] += m2->m[0][1]; m1->m[0][2] += m2->m[0][2];
+	m1->m[1][0] += m2->m[1][0]; m1->m[1][1] += m2->m[1][1]; m1->m[1][2] += m2->m[1][2];
+	m1->m[2][0] += m2->m[2][0]; m1->m[2][1] += m2->m[2][1]; m1->m[2][2] += m2->m[2][2];
+}
+__HINT_INLINE__ void mat3AddMToMR(const mat3 *const restrict m1, const mat3 *const restrict m2, mat3 *const restrict r){
+	r->m[0][0] = m1->m[0][0] + m2->m[0][0]; r->m[0][1] = m1->m[0][1] + m2->m[0][1]; r->m[0][2] = m1->m[0][2] + m2->m[0][2];
+	r->m[1][0] = m1->m[1][0] + m2->m[1][0]; r->m[1][1] = m1->m[1][1] + m2->m[1][1]; r->m[1][2] = m1->m[1][2] + m2->m[1][2];
+	r->m[2][0] = m1->m[2][0] + m2->m[2][0]; r->m[2][1] = m1->m[2][1] + m2->m[2][1]; r->m[2][2] = m1->m[2][2] + m2->m[2][2];
+}
+
 __HINT_INLINE__ float mat3Determinant(const mat3 *const restrict m){
 	return m->m[0][0] * (m->m[1][1]*m->m[2][2] - m->m[2][1]*m->m[1][2]) -
 	       m->m[1][0] * (m->m[0][1]*m->m[2][2] - m->m[2][1]*m->m[0][2]) +

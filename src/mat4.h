@@ -20,6 +20,19 @@ void mat4MultMByM2(const mat4 *const restrict m1, mat4 *const restrict m2);
 void mat4MultMByMR(const mat4 *const restrict m1, const mat4 *const restrict m2, mat4 *const restrict r);
 void mat4TransformV(const mat4 *const restrict m, vec3 *const restrict v);
 
+vec4 mat4VMultMKet(const vec4 *const restrict v, const mat4 *const restrict m);
+void mat4MultVByMKet(vec4 *const restrict v, const mat4 *const restrict m);
+void mat4MultVByMKetR(const vec4 *const restrict v, const mat4 *const restrict m, vec4 *const restrict r);
+void mat4MultNByM(const float x, const float y, const float z, const float w, const mat4 *const restrict m, vec4 *const restrict r);
+vec4 mat4MMultVBra(const mat4 *const restrict m, const vec4 *const restrict v);
+void mat4MultMByVBra(const mat4 *const restrict m, vec4 *const restrict v);
+void mat4MultMByVBraR(const mat4 *const restrict m, const vec4 *const restrict v, vec4 *const restrict r);
+void mat4MultMByN(const mat4 *const restrict m, const float x, const float y, const float z, const float w, vec4 *const restrict r);
+
+mat4 mat4MAddM(const mat4 *const restrict m1, const mat4 *const restrict m2);
+void mat4AddMToM(mat4 *const restrict m1, const mat4 *const restrict m2);
+void mat4AddMToMR(const mat4 *const restrict m1, const mat4 *const restrict m2, mat4 *const restrict r);
+
 float mat4Determinant(const mat4 *const restrict m);
 
 mat4 mat4GetTranspose(const mat4 *const restrict m);
@@ -44,23 +57,10 @@ void mat4ScaleR(const mat4 *const restrict m, const float x, const float y, cons
 void mat4SetScaleMatrix(mat4 *const restrict m, const float x, const float y, const float z);
 mat4 mat4ScaleMatrix(const float x, const float y, const float z);
 
-#ifdef VEC4_H
-vec4 mat4VMultMKet(const vec4 *const restrict v, const mat4 *const restrict m);
-void mat4MultVByMKet(vec4 *const restrict v, const mat4 *const restrict m);
-void mat4MultVByMKetR(const vec4 *const restrict v, const mat4 *const restrict m, vec4 *const restrict r);
-void mat4MultNByM(const float x, const float y, const float z, const float w, const mat4 *const restrict m, vec4 *const restrict r);
-vec4 mat4MMultVBra(const mat4 *const restrict m, const vec4 *const restrict v);
-void mat4MultMByVBra(const mat4 *const restrict m, vec4 *const restrict v);
-void mat4MultMByVBraR(const mat4 *const restrict m, const vec4 *const restrict v, vec4 *const restrict r);
-void mat4MultMByN(const mat4 *const restrict m, const float x, const float y, const float z, const float w, vec4 *const restrict r);
-#endif
-
-#ifdef QUAT_H
 void mat4Rotate(mat4 *const restrict m, const quat *const restrict q);
 void mat4RotateR(const mat4 *const restrict m, const quat *const restrict q, mat4 *const restrict r);
 void mat4SetRotationMatrix(mat4 *const restrict m, const quat *const restrict q);
 mat4 mat4RotationMatrix(const quat *const restrict q);
 void mat4Quat(mat4 *const restrict m, const quat *const restrict q);
-#endif
 
 #endif

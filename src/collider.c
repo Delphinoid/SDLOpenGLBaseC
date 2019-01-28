@@ -47,7 +47,7 @@ __FORCE_INLINE__ return_t cInstantiate(collider *const instance, const collider 
 }
 
 
-void cTransformMesh(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const bone *const configuration, cAABB *const restrict aabb){
+void cTransformMesh(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const vec3 *const position, const quat *const orientation, const vec3 *const scale, cAABB *const restrict aabb){
 
 	cMesh *const cInstance = instance;
 	const cMesh *const cLocal = local;
@@ -62,7 +62,7 @@ void cTransformMesh(void *const instance, const vec3 *const instanceCentroid, co
 	if(vGlobal < vLast){
 
 		// Extrapolate the collider's centroid from its position.
-		cMeshCentroidFromPosition(cInstance, cLocal, configuration);
+		cMeshCentroidFromPosition(cInstance, cLocal, position, orientation, scale);
 
 		/*
 		** First iteration.
@@ -71,9 +71,9 @@ void cTransformMesh(void *const instance, const vec3 *const instanceCentroid, co
 		// Subtract the local centroid from the vertex.
 		vec3SubVFromVR(vLocal, localCentroid, vGlobal);
 		// Rotate the new vertex around (0, 0, 0).
-		quatRotateVec3Fast(&configuration->orientation, vGlobal);
+		quatRotateVec3Fast(orientation, vGlobal);
 		// Scale the vertex.
-		vec3MultVByV(vGlobal, &configuration->scale);
+		vec3MultVByV(vGlobal, scale);
 		// Translate it by the global centroid.
 		vec3AddVToV(vGlobal, instanceCentroid);
 
@@ -91,9 +91,9 @@ void cTransformMesh(void *const instance, const vec3 *const instanceCentroid, co
 			// Subtract the local centroid from the vertex.
 			vec3SubVFromVR(vLocal, localCentroid, vGlobal);
 			// Rotate the new vertex around (0, 0, 0).
-			quatRotateVec3Fast(&configuration->orientation, vGlobal);
+			quatRotateVec3Fast(orientation, vGlobal);
 			// Scale the vertex.
-			vec3MultVByV(vGlobal, &configuration->scale);
+			vec3MultVByV(vGlobal, scale);
 			// Translate it by the global centroid.
 			vec3AddVToV(vGlobal, instanceCentroid);
 
@@ -127,7 +127,7 @@ void cTransformMesh(void *const instance, const vec3 *const instanceCentroid, co
 
 	// Update each normal.
 	for(; vGlobal < vLast; ++vLocal, ++vGlobal){
-		quatRotateVec3FastR(&configuration->orientation, vLocal, vGlobal);
+		quatRotateVec3FastR(orientation, vLocal, vGlobal);
 	}
 
 	if(aabb != NULL){
@@ -136,7 +136,7 @@ void cTransformMesh(void *const instance, const vec3 *const instanceCentroid, co
 
 }
 
-void cTransformComposite(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const bone *const configuration, cAABB *const restrict aabb){
+void cTransformComposite(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const vec3 *const position, const quat *const orientation, const vec3 *const scale, cAABB *const restrict aabb){
 
 	cComposite *const cInstance = instance;
 	const cComposite *const cLocal = local;
@@ -164,7 +164,7 @@ void cTransformComposite(void *const instance, const vec3 *const instanceCentroi
 		/*
 		** First iteration.
 		*/
-		cTransform(c1, instanceCentroid, c2, localCentroid, configuration, &tempAABB);
+		cTransform(c1, instanceCentroid, c2, localCentroid, position, orientation, scale, &tempAABB);
 
 		/*
 		** Remaining iterations.
@@ -172,7 +172,7 @@ void cTransformComposite(void *const instance, const vec3 *const instanceCentroi
 		for(++c1, ++c2; c1 < cLast; ++c1, ++c2){
 
 			cAABB colliderAABB;
-			cTransform(c1, instanceCentroid, c2, localCentroid, configuration, &colliderAABB);
+			cTransform(c1, instanceCentroid, c2, localCentroid, position, orientation, scale, &colliderAABB);
 
 			// Update collider minima and maxima.
 			// Update aabb.left and aabb.right.
@@ -215,7 +215,9 @@ void (* const cTransformJumpTable[COLLIDER_TYPE_NUM])(
 	const vec3 *const instanceCentroid,
 	const void *const local,
 	const vec3 *const localCentroid,
-	const bone *const configuration,
+	const vec3 *const position,
+	const quat *const orientation,
+	const vec3 *const scale,
 	cAABB *const restrict aabb
 ) = {
 	cTransformMesh,
@@ -225,13 +227,13 @@ void (* const cTransformJumpTable[COLLIDER_TYPE_NUM])(
 	cTransformPoint,
 	cTransformComposite
 };
-__FORCE_INLINE__ void cTransform(collider *const instance, const vec3 *const instanceCentroid, const collider *const local, const vec3 *const localCentroid, const bone *const configuration, cAABB *const restrict aabb){
+__FORCE_INLINE__ void cTransform(collider *const instance, const vec3 *const instanceCentroid, const collider *const local, const vec3 *const localCentroid, const vec3 *const position, const quat *const orientation, const vec3 *const scale, cAABB *const restrict aabb){
 
 	/*
 	** Updates the collider by transforming it.
 	*/
 
-	cTransformJumpTable[instance->type](&instance->data, instanceCentroid, &local->data, localCentroid, configuration, aabb);
+	cTransformJumpTable[instance->type](&instance->data, instanceCentroid, &local->data, localCentroid, position, orientation, scale, aabb);
 
 }
 

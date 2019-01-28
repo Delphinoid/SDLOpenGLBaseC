@@ -578,16 +578,15 @@ void modulePhysicsSolve(){
 
 	// Iteratively solve contacts.
 	i = PHYSICS_CONTACT_SOLVER_ITERATIONS;
-	PHYSICS_CONTACT_SOLVER_NEXT_ITERATION:
 	while(i > 0){
 		MEMORY_LIST_LOOP_BEGIN(__PhysicsContactPairResourceArray, contact, physContactPair *);
 			if(physContactPairIsActive(contact)){
 				physContactSolve(&contact->data, contact->colliderA->body, contact->colliderB->body);
 			}else if(physContactPairIsInvalid(contact)){
-				--i;
 				goto PHYSICS_CONTACT_SOLVER_NEXT_ITERATION;
 			}
 		MEMORY_LIST_LOOP_END(__PhysicsContactPairResourceArray, contact);
+		PHYSICS_CONTACT_SOLVER_NEXT_ITERATION:
 		--i;
 	}
 

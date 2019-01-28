@@ -14,6 +14,7 @@ void physRigidBodyBaseInit(physRigidBodyBase *const restrict local){
 	local->id = (physicsBodyIndex_t)-1;
 	local->flags = PHYSICS_BODY_ASLEEP;
 	local->hull = NULL;
+	local->mass = 0.f;
 	local->inverseMass = 0.f;
 	local->linearDamping = 0.f;
 	local->angularDamping = 0.f;
@@ -35,7 +36,6 @@ __FORCE_INLINE__ void physRigidBodyBaseGenerateProperties(physRigidBodyBase *con
 	float tempMass = 0.f;
 	vec3 tempCentroid = {.x = 0.f, .y = 0.f, .z = 0.f};
 	float tempInertiaTensor[6] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f};
-
 
 	// Generate the mass properites of each collider, as
 	// well as the total, weighted centroid of the body.
@@ -62,52 +62,56 @@ __FORCE_INLINE__ void physRigidBodyBaseGenerateProperties(physRigidBodyBase *con
 	}
 
 	if(tempMass != 0.f){
+
 		const float tempInverseMass = 1.f / tempMass;
 		tempCentroid.x *= tempInverseMass;
 		tempCentroid.y *= tempInverseMass;
 		tempCentroid.z *= tempInverseMass;
 		local->inverseMass = tempInverseMass;
-	}else{
-		local->inverseMass = 0.f;
-	}
-	local->centroid = tempCentroid;
 
+		// Calculate the combined moment of inertia for the
+		// collider as the sum of its collider's moments.
+		c = local->hull;
+		m = vertexMassArray;
+		while(c != NULL){
 
-	// Calculate the combined moment of inertia for the
-	// collider as the sum of its collider's moments.
-	c = local->hull;
-	m = vertexMassArray;
-	while(c != NULL){
+			mat3 colliderInertiaTensor;
+			physColliderGenerateMoment(&c->c, &colliderInertiaTensor, &tempCentroid, m);
 
-		mat3 colliderInertiaTensor;
-		physColliderGenerateMoment(&c->c, &colliderInertiaTensor, &tempCentroid, m);
+			tempInertiaTensor[0] += colliderInertiaTensor.m[0][0];
+			tempInertiaTensor[1] += colliderInertiaTensor.m[1][1];
+			tempInertiaTensor[2] += colliderInertiaTensor.m[2][2];
+			tempInertiaTensor[3] += colliderInertiaTensor.m[0][1];
+			tempInertiaTensor[4] += colliderInertiaTensor.m[0][2];
+			tempInertiaTensor[5] += colliderInertiaTensor.m[1][2];
 
-		tempInertiaTensor[0] += colliderInertiaTensor.m[0][0];
-		tempInertiaTensor[1] += colliderInertiaTensor.m[1][1];
-		tempInertiaTensor[2] += colliderInertiaTensor.m[2][2];
-		tempInertiaTensor[3] += colliderInertiaTensor.m[0][1];
-		tempInertiaTensor[4] += colliderInertiaTensor.m[0][2];
-		tempInertiaTensor[5] += colliderInertiaTensor.m[1][2];
+			c = (physCollider *)memSLinkNext(c);
+			if(m != NULL){
+				++m;
+			}
 
-		c = (physCollider *)memSLinkNext(c);
-		if(m != NULL){
-			++m;
 		}
 
+		local->inverseInertiaTensor.m[0][0] = tempInertiaTensor[0];
+		local->inverseInertiaTensor.m[1][1] = tempInertiaTensor[1];
+		local->inverseInertiaTensor.m[2][2] = tempInertiaTensor[2];
+		local->inverseInertiaTensor.m[0][1] = tempInertiaTensor[3];
+		local->inverseInertiaTensor.m[0][2] = tempInertiaTensor[4];
+		local->inverseInertiaTensor.m[1][2] = tempInertiaTensor[5];
+		// No point calculating the same numbers twice.
+		local->inverseInertiaTensor.m[1][0] = tempInertiaTensor[3];
+		local->inverseInertiaTensor.m[2][0] = tempInertiaTensor[4];
+		local->inverseInertiaTensor.m[2][1] = tempInertiaTensor[5];
+
+		mat3Invert(&local->inverseInertiaTensor);
+
+	}else{
+		local->inverseMass = 0.f;
+		mat3Zero(&local->inverseInertiaTensor);
 	}
 
-	local->inverseInertiaTensor.m[0][0] = tempInertiaTensor[0];
-	local->inverseInertiaTensor.m[1][1] = tempInertiaTensor[1];
-	local->inverseInertiaTensor.m[2][2] = tempInertiaTensor[2];
-	local->inverseInertiaTensor.m[0][1] = tempInertiaTensor[3];
-	local->inverseInertiaTensor.m[0][2] = tempInertiaTensor[4];
-	local->inverseInertiaTensor.m[1][2] = tempInertiaTensor[5];
-	// No point calculating the same numbers twice.
-	local->inverseInertiaTensor.m[1][0] = tempInertiaTensor[3];
-	local->inverseInertiaTensor.m[2][0] = tempInertiaTensor[4];
-	local->inverseInertiaTensor.m[2][1] = tempInertiaTensor[5];
-
-	mat3Invert(&local->inverseInertiaTensor);
+	local->mass = tempMass;
+	local->centroid = tempCentroid;
 
 }
 
@@ -956,6 +960,7 @@ return_t physRigidBodyInstantiate(physRigidBody *const restrict body, physRigidB
 	}
 
 	// Copy physical properties.
+	body->mass = local->mass;
 	body->inverseMass = local->inverseMass;
 	body->linearDamping = local->linearDamping;
 	body->angularDamping = local->angularDamping;
@@ -1055,7 +1060,7 @@ __FORCE_INLINE__ return_t physRigidBodyUpdateColliders(physRigidBody *const rest
 
 }
 
-void physRigidBodyApplyLinearForce(physRigidBody *const restrict body, const vec3 *const restrict F){
+__HINT_INLINE__ void physRigidBodyApplyLinearForce(physRigidBody *const restrict body, const vec3 *const restrict F){
 	/*
 	** Apply a linear force.
 	*/
@@ -1064,9 +1069,9 @@ void physRigidBodyApplyLinearForce(physRigidBody *const restrict body, const vec
 	body->netForce.z += F->z;
 }
 
-void physRigidBodyApplyAngularForceGlobal(physRigidBody *const restrict body, const vec3 *const restrict F, const vec3 *const restrict r){
+__HINT_INLINE__ void physRigidBodyApplyAngularForce(physRigidBody *const restrict body, const vec3 *const restrict F, const vec3 *const restrict r){
 	/*
-	** Apply an angular force.
+	** Apply an angular force in global space.
 	*/
 	// T = r x F
 	vec3 rsR, rxF;
@@ -1075,31 +1080,67 @@ void physRigidBodyApplyAngularForceGlobal(physRigidBody *const restrict body, co
 	vec3AddVToV(&body->netTorque, &rxF);
 }
 
-void physRigidBodyApplyForceGlobal(physRigidBody *const restrict body, const vec3 *const restrict F, const vec3 *const restrict r){
+__HINT_INLINE__ void physRigidBodyApplyForce(physRigidBody *const restrict body, const vec3 *const restrict F, const vec3 *const restrict r){
 
 	/*
 	** Accumulate the net force and torque.
-	** r is where the force F is applied, in world space.
+	** r is where the force F is applied, in global space.
 	*/
 
 	// Accumulate torque.
-	physRigidBodyApplyAngularForceGlobal(body, F, r);
+	physRigidBodyApplyAngularForce(body, F, r);
 
 	// Accumulate force.
 	physRigidBodyApplyLinearForce(body, F);
 
 }
 
+__HINT_INLINE__ void physRigidBodyApplyImpulse(physRigidBody *const restrict body, const vec3 *const restrict x, const vec3 *const restrict J){
+
+	/*
+	** Applies an impulse J at point x in global space.
+	*/
+
+	vec3 impulse;
+
+	// Linear impulse.
+	vec3MultVBySR(J, body->inverseMass, &impulse);
+	vec3AddVToV(&body->linearVelocity, &impulse);
+	// Angular impulse.
+	vec3CrossR(x, J, &impulse);
+	mat3MultMByVBra(&body->inverseInertiaTensorGlobal, &impulse);
+	vec3AddVToV(&body->angularVelocity, &impulse);
+
+}
+
+__HINT_INLINE__ void physRigidBodyApplyImpulseInverse(physRigidBody *const restrict body, const vec3 *const restrict x, const vec3 *const restrict J){
+
+	/*
+	** Applies an impulse -J at point x in global space.
+	*/
+
+	vec3 impulse;
+
+	// Linear impulse.
+	vec3MultVBySR(J, body->inverseMass, &impulse);
+	vec3SubVFromV1(&body->linearVelocity, &impulse);
+	// Angular impulse.
+	vec3CrossR(x, J, &impulse);
+	mat3MultMByVBra(&body->inverseInertiaTensorGlobal, &impulse);
+	vec3SubVFromV1(&body->angularVelocity, &impulse);
+
+}
+
 static __FORCE_INLINE__ void physRigidBodyCentroidFromPosition(physRigidBody *const restrict body){
 	quatRotateVec3FastR(&body->configuration->orientation, &body->centroidLocal, &body->centroidGlobal);
+	vec3MultVByV(&body->centroidGlobal, &body->configuration->scale);
 	vec3AddVToV(&body->centroidGlobal, &body->configuration->position);
 }
 
 static __FORCE_INLINE__ void physRigidBodyPositionFromCentroid(physRigidBody *const restrict body){
-	body->configuration->position.x = -body->centroidLocal.x;
-	body->configuration->position.y = -body->centroidLocal.y;
-	body->configuration->position.z = -body->centroidLocal.z;
+	vec3NegateR(&body->centroidLocal, &body->configuration->position);
 	quatRotateVec3Fast(&body->configuration->orientation, &body->configuration->position);
+	vec3MultVByV(&body->configuration->position, &body->configuration->scale);
 	vec3AddVToV(&body->configuration->position, &body->centroidGlobal);
 }
 

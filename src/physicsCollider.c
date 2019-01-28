@@ -8,7 +8,7 @@
 void physColliderInit(physCollider *const restrict c, const colliderType_t type, void *const restrict body){
 	cInit(&c->c, type);
 	c->density = 0.f;
-	c->friction = 0.f;
+	c->friction = 1.f;
 	c->restitution = 1.f;
 	c->layers = ~((physCollisionMask_t)0);
 	c->node = NULL;
@@ -269,16 +269,16 @@ __FORCE_INLINE__ void physColliderGenerateMoment(collider *const restrict local,
 }
 
 
-void cTransformMesh(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const bone *const configuration, cAABB *const restrict aabb);
-void cTransformCapsule(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const bone *const configuration, cAABB *const restrict aabb);
-void cTransformSphere(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const bone *const configuration, cAABB *const restrict aabb);
-void cTransformAABB(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const bone *const configuration, cAABB *const restrict aabb);
-void cTransformPoint(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const bone *const configuration, cAABB *const restrict aabb);
+void cTransformMesh(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const vec3 *const position, const quat *const orientation, const vec3 *const scale, cAABB *const restrict aabb);
+void cTransformCapsule(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const vec3 *const position, const quat *const orientation, const vec3 *const scale, cAABB *const restrict aabb);
+void cTransformSphere(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const vec3 *const position, const quat *const orientation, const vec3 *const scale, cAABB *const restrict aabb);
+void cTransformAABB(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const vec3 *const position, const quat *const orientation, const vec3 *const scale, cAABB *const restrict aabb);
+void cTransformPoint(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const vec3 *const position, const quat *const orientation, const vec3 *const scale, cAABB *const restrict aabb);
 
 return_t physColliderTransformMesh(physCollider *const restrict c, physIsland *const restrict island){
 	const physRigidBody *const body = c->body;
 	if(flagsAreSet(body->flags, PHYSICS_BODY_TRANSFORMED | PHYSICS_BODY_COLLISION_MODIFIED)){
-		cTransformMesh(&c->c.data, &body->centroidGlobal, &c->base->data, &body->centroidLocal, body->configuration, &c->aabb);
+		cTransformMesh(&c->c.data, &body->centroidGlobal, &c->base->data, &body->centroidLocal, &body->configuration->position, &body->configuration->orientation, &body->configuration->scale, &c->aabb);
 		return physIslandUpdateCollider(island, c);
 	}
 	return 1;
@@ -336,7 +336,7 @@ physContactPair *physColliderFindContact(const physCollider *const restrict c1, 
 			return i;
 		}
 		p = i;
-		i = (physContactPair *)memSLinkNext(i);
+		i = i->nextA;
 	}
 
 	*previous = p;
@@ -367,7 +367,7 @@ physSeparationPair *physColliderFindSeparation(const physCollider *const restric
 			return i;
 		}
 		p = i;
-		i = (physSeparationPair *)memSLinkNext(i);
+		i = i->nextA;
 	}
 
 	*previous = p;
@@ -376,7 +376,7 @@ physSeparationPair *physColliderFindSeparation(const physCollider *const restric
 
 }
 
-void physColliderRemoveContacts(physCollider *const c){
+void physColliderUpdateContacts(physCollider *const c, const float dt){
 
 	/*
 	** Removes any contact that has been inactive for too long.
@@ -385,17 +385,21 @@ void physColliderRemoveContacts(physCollider *const c){
 	physContactPair *i = c->contactCache;
 
 	while(i != NULL && i->colliderA == c){
+		physContactPair *const next = i->nextA;
 		if(i->inactive > PHYSICS_CONTACT_PAIR_MAX_INACTIVE_STEPS){
 			// Remove the contact.
 			modulePhysicsContactPairFree(i);
+		}else{
+			// Update the contact.
+			physContactUpdate(&i->data, i->colliderA, i->colliderB, dt);
+			++i->inactive;
 		}
-		++i->inactive;
-		i = i->nextA;
+		i = next;
 	}
 
 }
 
-void physColliderRemoveSeparations(physCollider *const c){
+void physColliderUpdateSeparations(physCollider *const c){
 
 	/*
 	** Removes any separation that has been inactive for too long.
@@ -404,12 +408,14 @@ void physColliderRemoveSeparations(physCollider *const c){
 	physSeparationPair *i = c->separationCache;
 
 	while(i != NULL && i->colliderA == c){
+		physSeparationPair *const next = i->nextA;
 		if(i->inactive > PHYSICS_SEPARATION_PAIR_MAX_INACTIVE_STEPS){
 			// Remove the separation.
 			modulePhysicsSeparationPairFree(i);
+		}else{
+			++i->inactive;
 		}
-		++i->inactive;
-		i = i->nextA;
+		i = next;
 	}
 
 }

@@ -273,6 +273,67 @@ __HINT_INLINE__ void segmentClosestPoints(const vec3 *const restrict s1, const v
 	p2->z = s2->z + m2 * (e2->z - s2->z);
 }
 
+__HINT_INLINE__ void segmentClosestPointReference(const vec3 *const restrict s1, const vec3 *const restrict e1, const vec3 *const restrict s2, const vec3 *const restrict e2, vec3 *const restrict p1){
+	/*
+	** Finds the closest point that
+	** lies on the two line segments.
+	*/
+	const vec3 v1 = {.x = s1->x - s2->x,
+	                 .y = s1->y - s2->y,
+	                 .z = s1->z - s2->z};
+	const vec3 v2 = {.x = e1->x - s1->x,
+	                 .y = e1->y - s1->y,
+	                 .z = e1->z - s1->z};
+	const vec3 v3 = {.x = e2->x - s2->x,
+	                 .y = e2->y - s2->y,
+	                 .z = e2->z - s2->z};
+	const float d12 = vec3Dot(&v1, &v2);
+	const float d13 = vec3Dot(&v1, &v3);
+	const float d22 = vec3Dot(&v2, &v2);
+	const float d32 = vec3Dot(&v3, &v2);
+	const float d33 = vec3Dot(&v3, &v3);
+	const float denom = d22 * d33 - d32 * d32;
+	// If the denominator is 0, use 0.5 as the position
+	// along the first line segment. This puts the closest
+	// point in the very center.
+	const float m1 = denom == 0.f ? 0.5f : (d13 * d32 - d12 * d33) / denom;
+	// Calculate the point on the first line segment.
+	p1->x = s1->x + m1 * (e1->x - s1->x);
+	p1->y = s1->y + m1 * (e1->y - s1->y);
+	p1->z = s1->z + m1 * (e1->z - s1->z);
+}
+
+__HINT_INLINE__ void segmentClosestPointIncident(const vec3 *const restrict s1, const vec3 *const restrict e1, const vec3 *const restrict s2, const vec3 *const restrict e2, vec3 *const restrict p2){
+	/*
+	** Finds the closest point that
+	** lies on the two line segments.
+	*/
+	const vec3 v1 = {.x = s1->x - s2->x,
+	                 .y = s1->y - s2->y,
+	                 .z = s1->z - s2->z};
+	const vec3 v2 = {.x = e1->x - s1->x,
+	                 .y = e1->y - s1->y,
+	                 .z = e1->z - s1->z};
+	const vec3 v3 = {.x = e2->x - s2->x,
+	                 .y = e2->y - s2->y,
+	                 .z = e2->z - s2->z};
+	const float d12 = vec3Dot(&v1, &v2);
+	const float d13 = vec3Dot(&v1, &v3);
+	const float d22 = vec3Dot(&v2, &v2);
+	const float d32 = vec3Dot(&v3, &v2);
+	const float d33 = vec3Dot(&v3, &v3);
+	const float denom = d22 * d33 - d32 * d32;
+	// If the denominator is 0, use 0.5 as the position
+	// along the first line segment. This puts the closest
+	// point in the very center.
+	const float m1 = denom == 0.f ? 0.5f : (d13 * d32 - d12 * d33) / denom;
+	const float m2 = (d13 + m1 * d32) / d33;
+	// Calculate the point on the second line segment.
+	p2->x = s2->x + m2 * (e2->x - s2->x);
+	p2->y = s2->y + m2 * (e2->y - s2->y);
+	p2->z = s2->z + m2 * (e2->z - s2->z);
+}
+
 __HINT_INLINE__ float floatLerp(const float f1, const float f2, const float t){
 	if(t == 0.f){
 		return f1;

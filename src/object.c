@@ -846,7 +846,7 @@ return_t objUpdate(object *const restrict obj, physIsland *const restrict island
 			*/
 
 			/** TEMPORARILY ADD GRAVITY. **/
-			const vec3 gravity = {.x = 0.f, .y = -98.0665f, .z = 0.f};
+			const vec3 gravity = {.x = 0.f, .y = -9.80665f * body->mass, .z = 0.f};
 			physRigidBodyApplyLinearForce(body, &gravity);
 
 			if(physRigidBodyIsUninitialized(body)){

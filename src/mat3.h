@@ -24,6 +24,10 @@ vec3 mat3MMultVBra(const mat3 *const restrict m, const vec3 *const restrict v);
 void mat3MultMByVBra(const mat3 *const restrict m, vec3 *const restrict v);
 void mat3MultMByVBraR(const mat3 *const restrict m, const vec3 *const restrict v, vec3 *const restrict r);
 
+mat3 mat3MAddM(const mat3 *const restrict m1, const mat3 *const restrict m2);
+void mat3AddMToM(mat3 *const restrict m1, const mat3 *const restrict m2);
+void mat3AddMToMR(const mat3 *const restrict m1, const mat3 *const restrict m2, mat3 *const restrict r);
+
 float mat3Determinant(const mat3 *const restrict m);
 
 mat3 mat3GetTranspose(const mat3 *const restrict m);
@@ -33,8 +37,6 @@ void mat3TransposeR(const mat3 *const restrict m, mat3 *const restrict r);
 return_t mat3Invert(mat3 *const restrict m);
 return_t mat3InvertR(const mat3 *const restrict m, mat3 *const restrict r);
 
-#ifdef QUAT_H
 void mat3Quat(mat3 *const restrict m, const quat *const restrict q);
-#endif
 
 #endif

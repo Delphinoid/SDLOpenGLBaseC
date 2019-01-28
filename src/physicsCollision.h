@@ -5,7 +5,7 @@
 #include "collision.h"
 
 #ifndef PHYSICS_CONTACT_SOLVER_ITERATIONS
-	#define PHYSICS_CONTACT_SOLVER_ITERATIONS 5
+	#define PHYSICS_CONTACT_SOLVER_ITERATIONS 4
 #endif
 
 #ifndef PHYSICS_CONTACT_PAIR_MAX_INACTIVE_STEPS
@@ -14,6 +14,10 @@
 
 #ifndef PHYSICS_SEPARATION_PAIR_MAX_INACTIVE_STEPS
 	#define PHYSICS_SEPARATION_PAIR_MAX_INACTIVE_STEPS 0
+#endif
+
+#ifndef PHYSICS_RESTITUTION_THRESHOLD
+	#define PHYSICS_RESTITUTION_THRESHOLD 1.f
 #endif
 
 #ifndef PHYSICS_BAUMGARTE_TERM
@@ -140,6 +144,8 @@ typedef struct physSeparationPair {
 
 } physSeparationPair;
 
+void physContactUpdate(physContact *const restrict contact, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float dt);
+
 void physContactPairDeactivate(void *const restrict pair);
 void physSeparationPairDeactivate(void *const restrict pair);
 void physContactPairInvalidate(void *const restrict pair);
@@ -160,7 +166,7 @@ void physSeparationPairInit(physSeparationPair *const pair, physCollider *const 
 void physContactPairDelete(physContactPair *const pair);
 void physSeparationPairDelete(physSeparationPair *const pair);
 
-return_t physCollisionQuery(aabbNode *const restrict n1, aabbNode *const restrict n2, const float dt);
+return_t physCollisionQuery(aabbNode *const restrict n1, aabbNode *const restrict n2);
 
 void physContactSolve(physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB);
 

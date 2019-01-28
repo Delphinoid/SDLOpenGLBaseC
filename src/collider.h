@@ -47,13 +47,15 @@ extern void (* const cTransformJumpTable[COLLIDER_TYPE_NUM])(
 	const vec3 *const instanceCentroid,
 	const void *const local,
 	const vec3 *const localCentroid,
-	const bone *const configuration,
+	const vec3 *const position,
+	const quat *const orientation,
+	const vec3 *const scale,
 	cAABB *const restrict aabb
 );
 
 void cInit(collider *const restrict c, const colliderType_t type);
 return_t cInstantiate(collider *const instance, const collider *const local);
-void cTransform(collider *const instance, const vec3 *const instanceCentroid, const collider *const local, const vec3 *const localCentroid, const bone *const configuration, cAABB *const restrict aabb);
+void cTransform(collider *const instance, const vec3 *const instanceCentroid, const collider *const local, const vec3 *const localCentroid, const vec3 *const position, const quat *const orientation, const vec3 *const scale, cAABB *const restrict aabb);
 void cDelete(collider *const restrict c);
 
 #endif

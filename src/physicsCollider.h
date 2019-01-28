@@ -79,8 +79,8 @@ return_t physColliderTransform(physCollider *const restrict c, physIsland *const
 physContactPair *physColliderFindContact(const physCollider *const restrict c1, const physCollider *const restrict c2, physContactPair **const restrict previous, physContactPair **const restrict next);
 physSeparationPair *physColliderFindSeparation(const physCollider *const restrict c1, const physCollider *const restrict c2, physSeparationPair **const restrict previous, physSeparationPair **const restrict next);
 
-void physColliderRemoveContacts(physCollider *const c);
-void physColliderRemoveSeparations(physCollider *const c);
+void physColliderUpdateContacts(physCollider *const c, const float dt);
+void physColliderUpdateSeparations(physCollider *const c);
 
 void physColliderDelete(physCollider *const restrict c);
 

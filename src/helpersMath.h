@@ -25,6 +25,8 @@ void linePlaneIntersection(const vec3 *const restrict normal, const vec3 *const 
 return_t segmentPlaneIntersection(const vec3 *const restrict normal, const vec3 *const restrict vertex, const vec3 *const restrict start, const vec3 *const restrict end, vec3 *const restrict point);
 
 void segmentClosestPoints(const vec3 *const restrict s1, const vec3 *const restrict e1, const vec3 *const restrict s2, const vec3 *const restrict e2, vec3 *const restrict p1, vec3 *const restrict p2);
+void segmentClosestPointReference(const vec3 *const restrict s1, const vec3 *const restrict e1, const vec3 *const restrict s2, const vec3 *const restrict e2, vec3 *const restrict p1);
+void segmentClosestPointIncident(const vec3 *const restrict s1, const vec3 *const restrict e1, const vec3 *const restrict s2, const vec3 *const restrict e2, vec3 *const restrict p2);
 
 float floatLerp(const float f1, const float f2, const float t);
 

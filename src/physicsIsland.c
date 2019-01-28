@@ -43,34 +43,12 @@ __FORCE_INLINE__ return_t physIslandQuery(const physIsland *const restrict islan
 
 	while(node != NULL){
 
-		// Manage any overlaps with this node.
-		aabbNode *stack[PHYSICS_ISLAND_QUERY_STACK_SIZE];
-		size_t i = 1;
+		// Check for potential collisions with the current node.
+		aabbTreeQueryNodeStack(&island->tree, node, &physCollisionQuery);
 
-		stack[0] = island->tree.root;
-
-		do {
-
-			aabbNode *test = stack[--i];
-
-			if(AABB_TREE_NODE_IS_LEAF(test)){
-				const return_t r = physCollisionQuery(node, test, frequency);
-				if(r < 0){
-					/** Memory allocation failure. **/
-					return r;
-				}
-			}else if(cAABBCollision(&node->aabb, &test->aabb)){
-				stack[i] = test->data.children.left;
-				++i;
-				stack[i] = test->data.children.right;
-				++i;
-			}
-
-		} while(i);
-
-		// Remove any outdated contacts and separations.
-		physColliderRemoveContacts(node->data.leaf.value);
-		physColliderRemoveSeparations(node->data.leaf.value);
+		// Remove any outdated contacts and separations and update what's left.
+		physColliderUpdateContacts(node->data.leaf.value, frequency);
+		physColliderUpdateSeparations(node->data.leaf.value);
 
 		node = node->data.leaf.next;
 

@@ -1,7 +1,7 @@
 #ifndef COLLIDERMESH_H
 #define COLLIDERMESH_H
 
-#include "bone.h"
+#include "quat.h"
 #include "return.h"
 #include <stddef.h>
 
@@ -75,7 +75,7 @@ typedef struct cSeparation   cMeshSeparation;
 
 void cMeshInit(cMesh *const restrict c);
 return_t cMeshInstantiate(cMesh *const restrict instance, const cMesh *const restrict local);
-void cMeshCentroidFromPosition(cMesh *const restrict c, const cMesh *const restrict l, const bone *const restrict configuration);
+void cMeshCentroidFromPosition(cMesh *const restrict c, const cMesh *const restrict l, const vec3 *const position, const quat *const orientation, const vec3 *const scale);
 return_t cMeshCollisionSAT(const cMesh *const restrict c1, const cMesh *const restrict c2, cMeshSeparation *const restrict sc, cMeshContact *const restrict cm);
 return_t cMeshSeparationSAT(const cMesh *const restrict c1, const cMesh *const restrict c2, const cMeshSeparation *const restrict sc);
 return_t cMeshCollisionGJK(const cMesh *const restrict c1, const cMesh *const restrict c2, cMeshContact *const restrict cm);

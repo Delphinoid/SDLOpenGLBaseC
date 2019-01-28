@@ -523,23 +523,21 @@ void aabbTreeTraverse(aabbTree *const restrict tree, void (*const func)(aabbNode
 
 	if(node != NULL){
 
-		aabbNode *nodeLeft;
-		aabbNode *nodeRight;
 		aabbNode *nodeParent;
 
 		// Start on the left-most node.
-		while(!AABB_TREE_NODE_IS_LEAF(node) && (nodeLeft = node->data.children.left) != NULL){
-			node = nodeLeft;
+		while(!AABB_TREE_NODE_IS_LEAF(node)){
+			node = node->data.children.left;
 		}
 
 		do {
 
-			if(!AABB_TREE_NODE_IS_LEAF(node) && (nodeRight = node->data.children.right)){
+			if(!AABB_TREE_NODE_IS_LEAF(node)){
 				// If we can go right, go right and
 				// then try to go left again.
-				node = nodeRight;
-				while(!AABB_TREE_NODE_IS_LEAF(node) && (nodeLeft = node->data.children.left) != NULL){
-					node = nodeLeft;
+				node = node->data.children.right;
+				while(!AABB_TREE_NODE_IS_LEAF(node)){
+					node = node->data.children.left;
 				}
 			}else{
 				// A leaf node was reached.
