@@ -145,6 +145,7 @@ typedef struct physSeparationPair {
 } physSeparationPair;
 
 void physContactUpdate(physContact *const restrict contact, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float dt);
+void physContactReset(physContact *const restrict contact);
 
 void physContactPairDeactivate(void *const restrict pair);
 void physSeparationPairDeactivate(void *const restrict pair);

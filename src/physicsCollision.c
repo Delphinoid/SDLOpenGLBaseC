@@ -304,6 +304,24 @@ __FORCE_INLINE__ void physContactUpdate(physContact *const restrict contact, phy
 
 }
 
+__FORCE_INLINE__ void physContactReset(physContact *const restrict contact){
+
+	physContactPoint *pPoint = &contact->contacts[0];
+	const physContactPoint *const pPointLast = &pPoint[contact->contactNum];
+
+	// Clear accumulators and keys.
+	for(; pPoint < pPointLast; ++pPoint){
+		pPoint->normalImpulseAccumulator = 0.f;
+		pPoint->tangentImpulseAccumulatorA = 0.f;
+		pPoint->tangentImpulseAccumulatorB = 0.f;
+		pPoint->key.inEdgeR  = (cEdgeIndex_t)-1;
+		pPoint->key.outEdgeR = (cEdgeIndex_t)-1;
+		pPoint->key.inEdgeI  = (cEdgeIndex_t)-1;
+		pPoint->key.outEdgeI = (cEdgeIndex_t)-1;
+	}
+
+}
+
 
 __FORCE_INLINE__ void physContactPairDeactivate(void *const restrict pair){
 	((physContactPair *)pair)->colliderA = PHYSICS_PAIR_INACTIVE;
@@ -463,20 +481,16 @@ void physContactPairDelete(physContactPair *const pair){
 	// Remove references from the previous pairs.
 	temp = pair->prevA;
 	if(temp != NULL){
-		if(temp->colliderA == pair->colliderA){
-			temp->nextA = pair->nextA;
-		}else{
-			temp->nextB = pair->nextA;
-		}
+		temp->nextA = pair->nextA;
 	}else{
 		pair->colliderA->contactCache = pair->nextA;
 	}
 	temp = pair->prevB;
 	if(temp != NULL){
-		if(temp->colliderB == pair->colliderB){
-			temp->nextB = pair->nextB;
-		}else{
+		if(temp->colliderA == pair->colliderB){
 			temp->nextA = pair->nextB;
+		}else{
+			temp->nextB = pair->nextB;
 		}
 	}else{
 		pair->colliderB->contactCache = pair->nextB;
@@ -493,11 +507,7 @@ void physContactPairDelete(physContactPair *const pair){
 	}
 	temp = pair->nextB;
 	if(temp != NULL){
-		if(temp->colliderB == pair->colliderB){
-			temp->prevB = pair->prevB;
-		}else{
-			temp->prevA = pair->prevB;
-		}
+		temp->prevB = pair->prevB;
 	}
 
 	physContactPairDeactivate(pair);
@@ -514,20 +524,16 @@ void physSeparationPairDelete(physSeparationPair *const pair){
 	// Remove references from the previous pairs.
 	temp = pair->prevA;
 	if(temp != NULL){
-		if(temp->colliderA == pair->colliderA){
-			temp->nextA = pair->nextA;
-		}else{
-			temp->nextB = pair->nextA;
-		}
+		temp->nextA = pair->nextA;
 	}else{
 		pair->colliderA->separationCache = pair->nextA;
 	}
 	temp = pair->prevB;
 	if(temp != NULL){
-		if(temp->colliderB == pair->colliderB){
-			temp->nextB = pair->nextB;
-		}else{
+		if(temp->colliderA == pair->colliderB){
 			temp->nextA = pair->nextB;
+		}else{
+			temp->nextB = pair->nextB;
 		}
 	}else{
 		pair->colliderB->separationCache = pair->nextB;
@@ -544,11 +550,7 @@ void physSeparationPairDelete(physSeparationPair *const pair){
 	}
 	temp = pair->nextB;
 	if(temp != NULL){
-		if(temp->colliderB == pair->colliderB){
-			temp->prevB = pair->prevB;
-		}else{
-			temp->prevA = pair->prevB;
-		}
+		temp->prevB = pair->prevB;
 	}
 
 	physSeparationPairDeactivate(pair);

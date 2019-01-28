@@ -328,7 +328,7 @@ physContactPair *physColliderFindContact(const physCollider *const restrict c1, 
 	physContactPair *p = NULL;
 	physContactPair *i = c1->contactCache;
 
-	while(i != NULL && c2 <= i->colliderB){
+	while(i != NULL && c2 >= i->colliderB){
 		// Check if the incident collider is the same.
 		if(c2 == i->colliderB){
 			*previous = p;
@@ -359,7 +359,7 @@ physSeparationPair *physColliderFindSeparation(const physCollider *const restric
 	physSeparationPair *p = NULL;
 	physSeparationPair *i = c1->separationCache;
 
-	while(i != NULL && c2 <= i->colliderB){
+	while(i != NULL && c2 >= i->colliderB){
 		// Check if the incident collider is the same.
 		if(c2 == i->colliderB){
 			*previous = p;
@@ -386,9 +386,13 @@ void physColliderUpdateContacts(physCollider *const c, const float dt){
 
 	while(i != NULL && i->colliderA == c){
 		physContactPair *const next = i->nextA;
-		if(i->inactive > PHYSICS_CONTACT_PAIR_MAX_INACTIVE_STEPS){
-			// Remove the contact.
-			modulePhysicsContactPairFree(i);
+		if(i->inactive > 0){
+			if(i->inactive > PHYSICS_CONTACT_PAIR_MAX_INACTIVE_STEPS){
+				// Remove the contact.
+				modulePhysicsContactPairFree(i);
+			}else{
+				physContactReset(&i->data);
+			}
 		}else{
 			// Update the contact.
 			physContactUpdate(&i->data, i->colliderA, i->colliderB, dt);
