@@ -401,11 +401,7 @@ void physContactPairInit(physContactPair *const pair, physCollider *const c1, ph
 		c2->contactCache = pair;
 	}
 	if(next != NULL){
-		if(next->colliderA == c2){
-			next->prevA = pair;
-		}else{
-			next->prevB = pair;
-		}
+		next->prevB = pair;
 	}
 	pair->prevB = previous;
 	pair->nextB = next;
@@ -455,11 +451,7 @@ void physSeparationPairInit(physSeparationPair *const pair, physCollider *const 
 		c2->separationCache = pair;
 	}
 	if(next != NULL){
-		if(next->colliderA == c2){
-			next->prevA = pair;
-		}else{
-			next->prevB = pair;
-		}
+		next->prevB = pair;
 	}
 	pair->prevB = previous;
 	pair->nextB = next;
