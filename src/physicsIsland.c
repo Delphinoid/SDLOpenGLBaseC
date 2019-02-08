@@ -53,7 +53,6 @@ __FORCE_INLINE__ return_t physIslandQuery(const physIsland *const restrict islan
 		node = node->data.leaf.next;
 
 	}
-
 	return 1;
 
 }

@@ -838,11 +838,10 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATFaceQuery(const cMesh *const r
 		// collider in the opposite direction that the
 		// face is pointing.
 		// After this, find the distance between them.
-		cVertexIndex_t c2VertexIndex;
 		const vec3 invNormal = {.x = -n->x,
 		                        .y = -n->y,
 		                        .z = -n->z};
-		const float distance = pointPlaneDistance(n, &c1->vertices[c1->edges[f->edge].start], cMeshCollisionSupportIndex(c2, &invNormal, &c2VertexIndex));
+		const float distance = pointPlaneDistance(n, &c1->vertices[c1->edges[f->edge].start], cMeshCollisionSupport(c2, &invNormal));
 
 		if(distance > 0.f){
 			// Early exit, a separating axis has been found.
@@ -850,7 +849,6 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATFaceQuery(const cMesh *const r
 			if(sc != NULL){
 				sc->type = type;
 				sc->featureA = i;
-				sc->featureB = c2VertexIndex;
 			}
 			return 0;
 		}else if(distance > r->penetrationDepth){
@@ -1065,7 +1063,9 @@ return_t cMeshCollisionSAT(const cMesh *const restrict c1, const cMesh *const re
 }
 
 static __FORCE_INLINE__ return_t cMeshSeparationSATFaceQuery(const cMesh *const restrict c1, const cMesh *const restrict c2, const cMeshSeparation *const restrict sc){
-	return pointPlaneDistance(&c1->normals[sc->featureA], &c1->vertices[c1->edges[c1->faces[sc->featureA].edge].start], &c2->vertices[sc->featureB]) > 0.f;
+	vec3 invNormal;
+	vec3NegateR(&c1->normals[sc->featureA], &invNormal);
+	return pointPlaneDistance(&c1->normals[sc->featureA], &c1->vertices[c1->edges[c1->faces[sc->featureA].edge].start], cMeshCollisionSupport(c2, &invNormal)/*&c2->vertices[sc->featureB]*/) > 0.f;
 }
 
 static __FORCE_INLINE__ return_t cMeshSeparationSATEdgeQuery(const cMesh *const restrict c1, const cMesh *const restrict c2, const cMeshSeparation *const restrict sc){
@@ -1078,7 +1078,7 @@ static __FORCE_INLINE__ return_t cMeshSeparationSATEdgeQuery(const cMesh *const 
 	vec3SubVFromVR(s2, &c2->vertices[e2->end], &e2InvDir);
 	return cMeshCollisionSATMinkowskiFace(&c1->normals[e1->face], &c1->normals[e1->twinFace], &e1InvDir,
 	                                      &c2->normals[e2->face], &c2->normals[e2->twinFace], &e2InvDir) &&
-	       cMeshCollisionSATEdgeSeparation(s1, s2, &c1->centroid, &e1InvDir, &e2InvDir) > 0.f;
+	       cMeshCollisionSATEdgeSeparation(s1, &e1InvDir, s2, &e2InvDir, &c1->centroid) > 0.f;
 }
 
 return_t cMeshSeparationSAT(const cMesh *const restrict c1, const cMesh *const restrict c2, const cMeshSeparation *const restrict sc){

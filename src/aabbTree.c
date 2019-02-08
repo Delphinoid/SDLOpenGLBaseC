@@ -13,8 +13,8 @@ static __FORCE_INLINE__ aabbNode *aabbTreeBalanceNode(aabbTree *const restrict t
 	** restore balance to the specified node.
 	*/
 
-	//We only need to perform a rotation of this node
-	//is not a leaf and it does not parent any leaves.
+	// We only need to perform a rotation of this node
+	// is not a leaf and it does not parent any leaves.
 	if(node->height > 1){
 
 		aabbNode *const parent = node->parent;
@@ -141,7 +141,7 @@ static __FORCE_INLINE__ void aabbTreeBalanceHierarchy(aabbTree *const restrict t
 	** specified node and all of its ancestors.
 	*/
 
-	do {
+	/*do {
 
 		aabbNode *left;
 		aabbNode *right;
@@ -149,6 +149,20 @@ static __FORCE_INLINE__ void aabbTreeBalanceHierarchy(aabbTree *const restrict t
 		node  = aabbTreeBalanceNode(tree, node);
 		left  = node->data.children.left;
 		right = node->data.children.right;
+
+		// Repair the node's properties to represent its new children.
+		cAABBCombine(&left->aabb, &right->aabb, &node->aabb);
+		node->height = (left->height >= right->height ? left->height : right->height) + 1;
+
+		// Continue with the node's parent.
+		node = node->parent;
+
+	} while(node != NULL);*/
+
+	do {
+
+		aabbNode *const left  = node->data.children.left;
+		aabbNode *const right = node->data.children.right;
 
 		// Repair the node's properties to represent its new children.
 		cAABBCombine(&left->aabb, &right->aabb, &node->aabb);
@@ -383,9 +397,9 @@ __HINT_INLINE__ return_t aabbTreeQueryNodeStack(const aabbTree *const restrict t
 				return r;
 			}
 		}else if(cAABBCollision(&node->aabb, &test->aabb)){
-			stack[i] = test->data.children.left;
-			++i;
 			stack[i] = test->data.children.right;
+			++i;
+			stack[i] = test->data.children.left;
 			++i;
 		}
 
@@ -401,7 +415,6 @@ __HINT_INLINE__ return_t aabbTreeQueryNode(const aabbTree *const restrict tree, 
 	** Runs "func()" on each potential leaf that could collide with node.
 	*/
 
-	aabbNode *parent;
 	aabbNode *test = tree->root;
 
 	if(test != NULL){
@@ -411,19 +424,15 @@ __HINT_INLINE__ return_t aabbTreeQueryNode(const aabbTree *const restrict tree, 
 
 			for(;;){
 
+				aabbNode *parent;
+
 				while(cAABBCollision(&node->aabb, &test->aabb)){
 
 					// A node with two leaves has been found.
 					// Run the callback function on both children.
-					if(AABB_TREE_NODE_IS_FINAL_BRANCH(test)){
+					if(AABB_TREE_NODE_IS_LEAF(test)){
 
-						return_t r = (*func)(node, test->data.children.left);
-						if(r < 0){
-							/** Memory allocation failure. **/
-							return r;
-						}
-
-						r = (*func)(node, test->data.children.right);
+						const return_t r = (*func)(node, test);
 						if(r < 0){
 							/** Memory allocation failure. **/
 							return r;

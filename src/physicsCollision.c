@@ -165,6 +165,15 @@ static __FORCE_INLINE__ void physContactPersist(physContact *const restrict cont
 
 	}
 
+	// Normalize the new total normal and generate tangents.
+	vec3NormalizeFastAccurate(&normal);
+	physContactGenerateTangents(&normal, &contact->tangentA, &contact->tangentB);
+	contact->normal = normal;
+
+	// Calculate the combined friction and restitution scalars.
+	contact->friction    = physContactCalculateFriction   (colliderA->friction,    colliderB->friction);
+	contact->restitution = physContactCalculateRestitution(colliderA->restitution, colliderB->restitution);
+
 	// Initialize the accumulators for non-persisting contacts.
 	cPoint = &manifold->contacts[0];
 	pcPoint = &contact->contacts[0];
@@ -188,15 +197,6 @@ static __FORCE_INLINE__ void physContactPersist(physContact *const restrict cont
 		}
 
 	}
-
-	// Normalize the new total normal and generate tangents.
-	vec3NormalizeFastAccurate(&normal);
-	physContactGenerateTangents(&normal, &contact->tangentA, &contact->tangentB);
-	contact->normal = normal;
-
-	// Calculate the combined friction and restitution scalars.
-	contact->friction    = physContactCalculateFriction   (colliderA->friction,    colliderB->friction);
-	contact->restitution = physContactCalculateRestitution(colliderA->restitution, colliderB->restitution);
 
 	contact->contactNum = manifold->contactNum;
 
@@ -584,7 +584,7 @@ return_t physCollisionQuery(aabbNode *const restrict n1, aabbNode *const restric
 				if(cCheckSeparation(&c1->c, &c2->c, separationPointer)){
 					// The separation still exists, refresh it and exit.
 					physSeparationPairRefresh((physSeparationPair *)pair);
-					//return 1;
+					return 1;
 				}
 			}else{
 				// Create a new separation.
