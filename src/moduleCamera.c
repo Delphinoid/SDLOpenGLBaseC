@@ -79,6 +79,11 @@ void moduleCameraClear(){
 	MEMORY_POOL_LOOP_BEGIN(__CameraResourceArray, i, camera *);
 
 		moduleCameraFree(i);
+		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
+
+	MEMORY_POOL_LOOP_INACTIVE_CASE(i);
+
+		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
 
 	MEMORY_POOL_LOOP_END(__CameraResourceArray, i, return;);
 

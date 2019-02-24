@@ -208,7 +208,7 @@ void memPoolClear(memoryPool *const restrict pool){
 
 	// Loop through every block, making it
 	// point to the next free block.
-	while(next < (byte_t *)pool->region){
+	while(next < (byte_t *)pool->region && memPoolDataGetFlags(block) != MEMORY_POOL_BLOCK_INVALID){
 		memPoolDataGetFlags(block) = MEMORY_POOL_BLOCK_INVALID;
 		memPoolDataGetNextFree(block) = next;
 		block = next;
@@ -230,7 +230,7 @@ void memPoolClearInit(memoryPool *const restrict pool, void (*func)(void *const 
 
 	// Loop through every block, making it
 	// point to the next free block.
-	while(next < (byte_t *)pool->region){
+	while(next < (byte_t *)pool->region && memPoolDataGetFlags(block) != MEMORY_POOL_BLOCK_INVALID){
 		(*func)(block);
 		memPoolDataGetFlags(block) = MEMORY_POOL_BLOCK_INVALID;
 		memPoolDataGetNextFree(block) = next;

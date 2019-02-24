@@ -385,9 +385,9 @@ __HINT_INLINE__ float quatDot(const quat *const restrict q1, const quat *const r
 	       q1->v.z * q2->v.z;
 }
 
-__HINT_INLINE__ vec3 quatGetRotatedVec3(const quat *const restrict q, const vec3 *v){
+__HINT_INLINE__ vec3 quatGetRotatedVec3(const quat *const restrict q, const vec3 *const restrict v){
 
-	vec3 r;
+	vec3 r, temp;
 
 	const float dotQV = vec3Dot(&q->v, v);
 	const float dotQQ = vec3Dot(&q->v, &q->v);
@@ -395,27 +395,24 @@ __HINT_INLINE__ vec3 quatGetRotatedVec3(const quat *const restrict q, const vec3
 	vec3 crossQV;
 	vec3CrossR(&q->v, v, &crossQV);
 
-	r.x *= m;
-	r.y *= m;
-	r.z *= m;
+	vec3MultVBySR(v, m, &r);
 
 	m = 2.f * dotQV;
-	r.x += m * q->v.x;
-	r.y += m * q->v.y;
-	r.z += m * q->v.z;
+	vec3MultVBySR(&q->v, m, &temp);
+	vec3AddVToV(&r, &temp);
 
 	m = 2.f * q->w;
-	r.x += m * crossQV.x;
-	r.y += m * crossQV.y;
-	r.z += m * crossQV.z;
+	vec3MultVBySR(&crossQV, m, &temp);
+	vec3AddVToV(&r, &temp);
 
 	return r;
 
 }
-__HINT_INLINE__ vec3 quatGetRotatedVec3Fast(const quat *const restrict q, const vec3 *v){
+__HINT_INLINE__ vec3 quatGetRotatedVec3Fast(const quat *const restrict q, const vec3 *const restrict v){
 
 	vec3 r;
 	vec3 crossQV, crossQQV;
+
 	vec3CrossR(&q->v, v, &crossQV);
 	crossQV.x += q->w * v->x;
 	crossQV.y += q->w * v->y;
@@ -425,10 +422,13 @@ __HINT_INLINE__ vec3 quatGetRotatedVec3Fast(const quat *const restrict q, const 
 	r.x = crossQQV.x + crossQQV.x + v->x;
 	r.y = crossQQV.y + crossQQV.y + v->y;
 	r.z = crossQQV.z + crossQQV.z + v->z;
+
 	return r;
 
 }
-__HINT_INLINE__ void quatRotateVec3(const quat *const restrict q, vec3 *v){
+__HINT_INLINE__ void quatRotateVec3(const quat *const restrict q, vec3 *const restrict v){
+
+	vec3 temp;
 
 	const float dotQV = vec3Dot(&q->v, v);
 	const float dotQQ = vec3Dot(&q->v, &q->v);
@@ -436,22 +436,20 @@ __HINT_INLINE__ void quatRotateVec3(const quat *const restrict q, vec3 *v){
 	vec3 crossQV;
 	vec3CrossR(&q->v, v, &crossQV);
 
-	v->x *= m;
-	v->y *= m;
-	v->z *= m;
+	vec3MultVByS(v, m);
 
 	m = 2.f * dotQV;
-	v->x += m * q->v.x;
-	v->y += m * q->v.y;
-	v->z += m * q->v.z;
+	vec3MultVBySR(&q->v, m, &temp);
+	vec3AddVToV(v, &temp);
 
 	m = 2.f * q->w;
-	v->x += m * crossQV.x;
-	v->y += m * crossQV.y;
-	v->z += m * crossQV.z;
+	vec3MultVBySR(&crossQV, m, &temp);
+	vec3AddVToV(v, &temp);
 
 }
-__HINT_INLINE__ void quatRotateVec3R(const quat *const restrict q, const vec3 *v, vec3 *r){
+__HINT_INLINE__ void quatRotateVec3R(const quat *const restrict q, const vec3 *const restrict v, vec3 *const restrict r){
+
+	vec3 temp;
 
 	const float dotQV = vec3Dot(&q->v, v);
 	const float dotQQ = vec3Dot(&q->v, &q->v);
@@ -459,25 +457,22 @@ __HINT_INLINE__ void quatRotateVec3R(const quat *const restrict q, const vec3 *v
 	vec3 crossQV;
 	vec3CrossR(&q->v, v, &crossQV);
 
-	r->x = v->x * m;
-	r->y = v->y * m;
-	r->z = v->z * m;
+	vec3MultVBySR(v, m, r);
 
 	m = 2.f * dotQV;
-	r->x += m * q->v.x;
-	r->y += m * q->v.y;
-	r->z += m * q->v.z;
+	vec3MultVBySR(&q->v, m, &temp);
+	vec3AddVToV(r, &temp);
 
 	m = 2.f * q->w;
-	r->x += m * crossQV.x;
-	r->y += m * crossQV.y;
-	r->z += m * crossQV.z;
+	vec3MultVBySR(&crossQV, m, &temp);
+	vec3AddVToV(r, &temp);
 
 }
-__HINT_INLINE__ void quatRotateVec3Fast(const quat *const restrict q, vec3 *v){
+__HINT_INLINE__ void quatRotateVec3Fast(const quat *const restrict q, vec3 *const restrict v){
 
 	vec3 crossQV, crossQQV;
 	vec3CrossR(&q->v, v, &crossQV);
+
 	crossQV.x += q->w * v->x;
 	crossQV.y += q->w * v->y;
 	crossQV.z += q->w * v->z;
@@ -488,10 +483,11 @@ __HINT_INLINE__ void quatRotateVec3Fast(const quat *const restrict q, vec3 *v){
 	v->z = crossQQV.z + crossQQV.z + v->z;
 
 }
-__HINT_INLINE__ void quatRotateVec3FastR(const quat *const restrict q, const vec3 *v, vec3 *r){
+__HINT_INLINE__ void quatRotateVec3FastR(const quat *const restrict q, const vec3 *const restrict v, vec3 *const restrict r){
 
 	vec3 crossQV, crossQQV;
 	vec3CrossR(&q->v, v, &crossQV);
+
 	crossQV.x += q->w * v->x;
 	crossQV.y += q->w * v->y;
 	crossQV.z += q->w * v->z;
@@ -503,7 +499,7 @@ __HINT_INLINE__ void quatRotateVec3FastR(const quat *const restrict q, const vec
 
 }
 
-__HINT_INLINE__ quat quatLookingAt(const vec3 *eye, const vec3 *target, const vec3 *up){
+__HINT_INLINE__ quat quatLookingAt(const vec3 *const restrict eye, const vec3 *const restrict target, const vec3 *const restrict up){
 
 	quat r;
 
@@ -533,7 +529,7 @@ __HINT_INLINE__ quat quatLookingAt(const vec3 *eye, const vec3 *target, const ve
 
 }
 
-__HINT_INLINE__ void quatLookAt(quat *const restrict q, const vec3 *eye, const vec3 *target, const vec3 *up){
+__HINT_INLINE__ void quatLookAt(quat *const restrict q, const vec3 *const restrict eye, const vec3 *const restrict target, const vec3 *const restrict up){
 
 	const float dot = vec3Dot(eye, target);
 

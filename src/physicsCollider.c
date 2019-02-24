@@ -31,6 +31,13 @@ void physColliderInstantiate(physCollider *const restrict instance, physCollider
 	instance->base = &local->c;
 }
 
+return_t physColliderPermitCollision(const physCollider *const c1, const physCollider *const c2){
+	// Prioritize contacts where the first
+	// collider has the larger address and
+	// make sure the collision masks overlap.
+	return c1 > c2 && (c1->layers & c2->layers) > 0;
+}
+
 
 void physColliderGenerateMassMesh(void *const restrict local, float *const restrict mass, float *const restrict inverseMass, vec3 *const restrict centroid, const float **const vertexMassArray){
 
@@ -313,7 +320,7 @@ __FORCE_INLINE__ return_t physColliderTransform(physCollider *const restrict c, 
 }
 
 
-physContactPair *physColliderFindContact(const physCollider *const restrict c1, const physCollider *const restrict c2, physContactPair **const restrict previous, physContactPair **const restrict next){
+physContactPair *physColliderFindContact(const physCollider *const c1, const physCollider *const c2, physContactPair **const previous, physContactPair **const next){
 
 	/*
 	** Find a pair from a previous successful narrowphase collision check.
@@ -336,7 +343,7 @@ physContactPair *physColliderFindContact(const physCollider *const restrict c1, 
 			return i;
 		}
 		p = i;
-		i = i->nextA;
+		i = (physContactPair *)memQLinkNextA(i);
 	}
 
 	*previous = p;
@@ -344,7 +351,7 @@ physContactPair *physColliderFindContact(const physCollider *const restrict c1, 
 	return NULL;
 
 }
-physSeparationPair *physColliderFindSeparation(const physCollider *const restrict c1, const physCollider *const restrict c2, physSeparationPair **const restrict previous, physSeparationPair **const restrict next){
+physSeparationPair *physColliderFindSeparation(const physCollider *const c1, const physCollider *const c2, physSeparationPair **const previous, physSeparationPair **const next){
 
 	/*
 	** Find a pair from a previous failed narrowphase collision check.
@@ -367,7 +374,7 @@ physSeparationPair *physColliderFindSeparation(const physCollider *const restric
 			return i;
 		}
 		p = i;
-		i = i->nextA;
+		i = (physSeparationPair *)memQLinkNextA(i);
 	}
 
 	*previous = p;
@@ -385,7 +392,7 @@ void physColliderUpdateContacts(physCollider *const c, const float dt){
 	physContactPair *i = c->contactCache;
 
 	while(i != NULL && i->colliderA == c){
-		physContactPair *const next = i->nextA;
+		physContactPair *const next = (physContactPair *)memQLinkNextA(i);
 		if(i->inactive > 0){
 			if(i->inactive > PHYSICS_CONTACT_PAIR_MAX_INACTIVE_STEPS){
 				// Remove the contact.
@@ -412,7 +419,7 @@ void physColliderUpdateSeparations(physCollider *const c){
 	physSeparationPair *i = c->separationCache;
 
 	while(i != NULL && i->colliderA == c){
-		physSeparationPair *const next = i->nextA;
+		physSeparationPair *const next = (physSeparationPair *)memQLinkNextA(i);
 		if(i->inactive > PHYSICS_SEPARATION_PAIR_MAX_INACTIVE_STEPS){
 			// Remove the separation.
 			modulePhysicsSeparationPairFree(i);

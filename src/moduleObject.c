@@ -110,6 +110,11 @@ void moduleObjectBaseClear(){
 	MEMORY_POOL_LOOP_BEGIN(__ObjectBaseResourceArray, i, objectBase *);
 
 		moduleObjectBaseFree(i);
+		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
+
+	MEMORY_POOL_LOOP_INACTIVE_CASE(i);
+
+		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
 
 	MEMORY_POOL_LOOP_END(__ObjectBaseResourceArray, i, return;);
 
@@ -147,6 +152,11 @@ void moduleObjectClear(){
 	MEMORY_POOL_LOOP_BEGIN(__ObjectResourceArray, i, object *);
 
 		moduleObjectFree(i);
+		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
+
+	MEMORY_POOL_LOOP_INACTIVE_CASE(i);
+
+		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
 
 	MEMORY_POOL_LOOP_END(__ObjectResourceArray, i, return;);
 

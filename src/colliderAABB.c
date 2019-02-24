@@ -68,21 +68,21 @@ __HINT_INLINE__ float cAABBVolumeCombined(const cAABB *const restrict c1, const 
 	vec3 v1, v2;
 	vec3Min(&c1->min, &c2->min, &v1);
 	vec3Max(&c1->max, &c2->max, &v2);
-	vec3SubVFromVR(&v1, &v2, &v1);
+	vec3SubVFromV1(&v1, &v2);
 	return v1.x * v1.y * v1.z;
 }
 __HINT_INLINE__ float cAABBSurfaceAreaCombined(const cAABB *const restrict c1, const cAABB *const restrict c2){
 	vec3 v1, v2;
 	vec3Min(&c1->min, &c2->min, &v1);
 	vec3Max(&c1->max, &c2->max, &v2);
-	vec3SubVFromVR(&v1, &v2, &v1);
+	vec3SubVFromV1(&v1, &v2);
 	return 2.f * (v1.x * (v1.y + v1.z) + v1.y * v1.z);
 }
 __HINT_INLINE__ float cAABBSurfaceAreaHalfCombined(const cAABB *const restrict c1, const cAABB *const restrict c2){
 	vec3 v1, v2;
 	vec3Min(&c1->min, &c2->min, &v1);
 	vec3Max(&c1->max, &c2->max, &v2);
-	vec3SubVFromVR(&v1, &v2, &v1);
+	vec3SubVFromV1(&v1, &v2);
 	return v1.x * (v1.y + v1.z) + v1.y * v1.z;
 }
 

@@ -10,10 +10,10 @@
 #include <string.h>
 #include <stdio.h>
 
-#define SKELETON_RESOURCE_DIRECTORY_STRING "Resources\\Skeletons\\"
+#define SKELETON_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Skeletons"FILE_PATH_DELIMITER_STRING
 #define SKELETON_RESOURCE_DIRECTORY_LENGTH 20
 
-#define SKELETON_ANIMATION_RESOURCE_DIRECTORY_STRING "Resources\\Skeletons\\Animations\\"
+#define SKELETON_ANIMATION_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Skeletons"FILE_PATH_DELIMITER_STRING"Animations"FILE_PATH_DELIMITER_STRING
 #define SKELETON_ANIMATION_RESOURCE_DIRECTORY_LENGTH 31
 
 #define SKELETON_ANIM_BONE_START_CAPACITY 1
@@ -679,8 +679,8 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, co
 							printf("Error loading skeletal animtion!\n"
 							       "Path: %s\n"
 							       "Line: %s\n"
-							       "Error: Found node %u when expecting node %u!\n",
-							       fullPath, line, boneID, tempBonesSize);
+							       "Error: Found node %lu when expecting node %lu!\n",
+							       fullPath, line, (unsigned long)boneID, (unsigned long)tempBonesSize);
 							sklaDelete(skla);
 							memFree(tempBones);
 							memFree(fullPath);
@@ -768,8 +768,8 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, co
 								printf("Error loading skeletal animtion!\n"
 									   "Path: %s\n"
 									   "Line: %s\n"
-									   "Error: Found skeletal data for bone %u, which doesn't exist!\n",
-									   fullPath, line, boneID);
+									   "Error: Found skeletal data for bone %lu, which doesn't exist!\n",
+									   fullPath, line, (unsigned long)boneID);
 								sklaDelete(skla);
 								memFree(tempBones);
 								memFree(fullPath);
@@ -1229,7 +1229,7 @@ return_t skliLoad(sklInstance *const restrict skli, const char *const restrict p
 	skla->animData.frameDelays[0] = 1000.f;
 
 	skla->frames[1] = memAllocate(skla->boneNum*sizeof(bone));
-	tempBoneRoot.orientation = quatNewEuler(-90.f*RADIAN_RATIO, 0.f, 0.f);
+	//tempBoneRoot.orientation = quatNewEuler(-90.f*RADIAN_RATIO, 0.f, 0.f);
 	skla->frames[1][0] = tempBoneRoot;
 	tempBoneTop.position.y += 0.5f;
 	skla->frames[1][1] = tempBoneTop;

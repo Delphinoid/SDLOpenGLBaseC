@@ -983,14 +983,14 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATEdgeQuery(const cMesh *c1, con
 		cEdgeIndex_t j;
 		const cMeshEdge *e2;
 
-		const vec3 const *s1 = &c1->vertices[e1->start];
+		const vec3 *const s1 = &c1->vertices[e1->start];
 
 		vec3 e1InvDir;
 		vec3SubVFromVR(s1, &c1->vertices[e1->end], &e1InvDir);
 
 		for(j = 0, e2 = c2->edges; j < c2->edgeNum; ++j, ++e2){
 
-			const vec3 const *s2 = &c2->vertices[e2->start];
+			const vec3 *const s2 = &c2->vertices[e2->start];
 
 			vec3 e2InvDir;
 			vec3SubVFromVR(s2, &c2->vertices[e2->end], &e2InvDir);
@@ -1139,9 +1139,7 @@ static __FORCE_INLINE__ void cMeshCollisionMinkowskiSupport(const cMesh *const r
 	// give us the two closest vertices along a given
 	// axis.
 	vec3 axisNegative;
-	axisNegative.x = -axis->x;
-	axisNegative.y = -axis->y;
-	axisNegative.z = -axis->z;
+	vec3NegateR(axis, &axisNegative);
 	r->s1 = cMeshCollisionSupport(c1, axis);
 	r->s2 = cMeshCollisionSupport(c2, &axisNegative);
 	// Get the "Minkowski Difference" of the two support points.
@@ -1306,9 +1304,7 @@ static __FORCE_INLINE__ void cMeshCollisionEPA(const cMesh *const restrict c1, c
 				faceLast->vertex[0] = faceLast->vertex[1];
 				faceLast->vertex[1] = swap;
 				// Invert the face's normal as well.
-				faceLast->normal.x = -faceLast->normal.x;
-				faceLast->normal.y = -faceLast->normal.y;
-				faceLast->normal.z = -faceLast->normal.z;
+				vec3Negate(&faceLast->normal);
 			}
 
 			++faceLast;

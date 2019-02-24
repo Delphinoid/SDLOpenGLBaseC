@@ -109,14 +109,6 @@ typedef struct physContactPair {
 	physCollider *colliderA;
 	physCollider *colliderB;
 
-	// The previous and next contact pairs in collider A's array.
-	physContactPair *prevA;
-	physContactPair *nextA;
-
-	// The previous and next contact pairs in collider B's array.
-	physContactPair *prevB;
-	physContactPair *nextB;
-
 } physContactPair;
 
 typedef struct cSeparation physSeparation;
@@ -134,30 +126,10 @@ typedef struct physSeparationPair {
 	physCollider *colliderA;
 	physCollider *colliderB;
 
-	// The previous and next separation pairs in collider A's array.
-	physSeparationPair *prevA;
-	physSeparationPair *nextA;
-
-	// The previous and next separation pairs in collider B's array.
-	physSeparationPair *prevB;
-	physSeparationPair *nextB;
-
 } physSeparationPair;
 
 void physContactUpdate(physContact *const restrict contact, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float dt);
 void physContactReset(physContact *const restrict contact);
-
-void physContactPairDeactivate(void *const restrict pair);
-void physSeparationPairDeactivate(void *const restrict pair);
-void physContactPairInvalidate(void *const restrict pair);
-void physSeparationPairInvalidate(void *const restrict pair);
-
-return_t physContactPairIsActive(physContactPair *const restrict pair);
-return_t physSeparationPairIsActive(physSeparationPair *const restrict pair);
-return_t physContactPairIsInactive(physContactPair *const restrict pair);
-return_t physSeparationPairIsInactive(physSeparationPair *const restrict pair);
-return_t physContactPairIsInvalid(physContactPair *const restrict pair);
-return_t physSeparationPairIsInvalid(physSeparationPair *const restrict pair);
 
 void physContactPairRefresh(physContactPair *const restrict pair);
 void physSeparationPairRefresh(physSeparationPair *const restrict pair);
@@ -167,7 +139,7 @@ void physSeparationPairInit(physSeparationPair *const pair, physCollider *const 
 void physContactPairDelete(physContactPair *const pair);
 void physSeparationPairDelete(physSeparationPair *const pair);
 
-return_t physCollisionQuery(aabbNode *const restrict n1, aabbNode *const restrict n2);
+return_t physCollisionQuery(aabbNode *const n1, aabbNode *const n2);
 
 void physContactSolve(physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB);
 

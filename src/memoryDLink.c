@@ -192,7 +192,6 @@ void memDLinkFree(memoryDLink *const restrict array, void **const start, void *c
 		*start = memDLinkDataGetNext(element);
 	}
 
-	memDLinkDataGetPrev(element) = NULL;
 	memDLinkDataGetFlags(element) = (uintptr_t)array->free | MEMORY_DLINK_BLOCK_INACTIVE;
 	array->free = element;
 
@@ -213,14 +212,12 @@ void *memDLinkSetupMemory(void *start, const size_t bytes, const size_t length){
 	// Loop through every block, making it
 	// point to the next free block.
 	while(next < end){
-		memDLinkDataGetPrev(block) = NULL;
-		memDLinkDataGetFlags(block) = (uintptr_t)next | MEMORY_DLINK_BLOCK_INACTIVE;
+		memDLinkDataGetFlags(block) = (uintptr_t)next | MEMORY_DLINK_BLOCK_INVALID;
 		block = next;
 		next += blockSize;
 	}
 
 	// Final block contains a null pointer.
-	memDLinkDataGetPrev(block) = NULL;
 	memDLinkDataGetFlags(block) = MEMORY_DLINK_BLOCK_INVALID;
 
 	return start;
@@ -243,15 +240,13 @@ void *memDLinkSetupMemoryInit(void *start, const size_t bytes, const size_t leng
 	// point to the next free block.
 	while(next < end){
 		(*func)(block);
-		memDLinkDataGetPrev(block) = NULL;
-		memDLinkDataGetFlags(block) = (uintptr_t)next | MEMORY_DLINK_BLOCK_INACTIVE;
+		memDLinkDataGetFlags(block) = (uintptr_t)next | MEMORY_DLINK_BLOCK_INVALID;
 		block = next;
 		next += blockSize;
 	}
 
 	// Final block contains a null pointer.
 	(*func)(block);
-	memDLinkDataGetPrev(block) = NULL;
 	memDLinkDataGetFlags(block) = MEMORY_DLINK_BLOCK_INVALID;
 
 	return start;
@@ -267,15 +262,13 @@ void memDLinkClear(memoryDLink *const restrict array){
 
 	// Loop through every block, making it
 	// point to the next free block.
-	while(next < (const byte_t *)array->region){
-		memDLinkDataGetPrev(block) = NULL;
-		memDLinkDataGetFlags(block) = (uintptr_t)next | MEMORY_DLINK_BLOCK_INACTIVE;
+	while(next < (const byte_t *)array->region && memDLinkBlockStatus(block) != MEMORY_DLINK_BLOCK_INVALID){
+		memDLinkDataGetFlags(block) = (uintptr_t)next | MEMORY_DLINK_BLOCK_INVALID;
 		block = next;
 		next += array->block;
 	}
 
 	// Final block contains a null pointer.
-	memDLinkDataGetPrev(block) = NULL;
 	memDLinkDataGetFlags(block) = MEMORY_DLINK_BLOCK_INVALID;
 
 }
@@ -289,17 +282,15 @@ void memDLinkClearInit(memoryDLink *const restrict array, void (*func)(void *con
 
 	// Loop through every block, making it
 	// point to the next free block.
-	while(next < (const byte_t *)array->region){
+	while(next < (const byte_t *)array->region && memDLinkBlockStatus(block) != MEMORY_DLINK_BLOCK_INVALID){
 		(*func)(block);
-		memDLinkDataGetPrev(block) = NULL;
-		memDLinkDataGetFlags(block) = (uintptr_t)next | MEMORY_DLINK_BLOCK_INACTIVE;
+		memDLinkDataGetFlags(block) = (uintptr_t)next | MEMORY_DLINK_BLOCK_INVALID;
 		block = next;
 		next += array->block;
 	}
 
 	// Final block contains a null pointer.
 	(*func)(block);
-	memDLinkDataGetPrev(block) = NULL;
 	memDLinkDataGetFlags(block) = MEMORY_DLINK_BLOCK_INVALID;
 
 }

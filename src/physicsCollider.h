@@ -71,13 +71,14 @@ extern return_t (* const physColliderTransformJumpTable[COLLIDER_TYPE_NUM])(
 
 void physColliderInit(physCollider *const restrict c, const colliderType_t type, void *const restrict body);
 void physColliderInstantiate(physCollider *const restrict instance, physCollider *const restrict local, void *const restrict body);
+return_t physColliderPermitCollision(const physCollider *const restrict c1, const physCollider *const restrict c2);
 
 void physColliderGenerateMass(collider *const restrict local, float *const restrict mass, float *const restrict inverseMass, vec3 *const restrict centroid, const float **const vertexMassArray);
 void physColliderGenerateMoment(collider *const restrict local, mat3 *const restrict inertiaTensor, vec3 *const restrict centroid, const float **const vertexMassArray);
 return_t physColliderTransform(physCollider *const restrict c, physIsland *const restrict island);
 
-physContactPair *physColliderFindContact(const physCollider *const restrict c1, const physCollider *const restrict c2, physContactPair **const restrict previous, physContactPair **const restrict next);
-physSeparationPair *physColliderFindSeparation(const physCollider *const restrict c1, const physCollider *const restrict c2, physSeparationPair **const restrict previous, physSeparationPair **const restrict next);
+physContactPair *physColliderFindContact(const physCollider *const c1, const physCollider *const c2, physContactPair **const previous, physContactPair **const next);
+physSeparationPair *physColliderFindSeparation(const physCollider *const c1, const physCollider *const c2, physSeparationPair **const previous, physSeparationPair **const next);
 
 void physColliderUpdateContacts(physCollider *const c, const float dt);
 void physColliderUpdateSeparations(physCollider *const c);

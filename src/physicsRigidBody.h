@@ -2,7 +2,6 @@
 #define PHYSICSRIGIDBODY_H
 
 #include "physicsShared.h"
-#include "collider.h"
 #include "skeleton.h"
 #include "mat3.h"
 
@@ -22,7 +21,7 @@
 #endif
 
 typedef struct physCollider physCollider;
-typedef struct physConstraint physConstraint;
+typedef struct physJoint physJoint;
 typedef struct physIsland physIsland;
 
 typedef struct {
@@ -71,8 +70,8 @@ typedef struct physRigidBody {
 	vec3 netTorque;        // Torque accumulator.
 
 	// Physical constraints.
-	physConstraint *constraints;  // An SLink of constraints for the kinematics chain.
-	                              // Ordered by smallest bodyB address to largest.
+	physJoint *joints;  // A QLink of joints that the body owns.
+	                    // Ordered by smallest child address to largest.
 
 	// The rigid body this instance is derived from, in local space.
 	const physRigidBodyBase *base;
@@ -120,7 +119,9 @@ void physRigidBodyApplyImpulseInverse(physRigidBody *const restrict body, const 
 void physRigidBodyIntegrateVelocity(physRigidBody *const restrict body, const float dt);
 void physRigidBodyIntegrateConfiguration(physRigidBody *const restrict body, const float dt);
 
-return_t physRigidBodyAddConstraint(physRigidBody *const restrict body, physConstraint *const c);
+return_t physRigidBodyPermitCollision(const physRigidBody *const restrict body1, const physRigidBody *const restrict body2);
+
+return_t physRigidBodyAddJoint(physRigidBody *const restrict body, physJoint *const c);
 
 void physRigidBodyDelete(physRigidBody *const restrict body);
 

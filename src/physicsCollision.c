@@ -3,9 +3,6 @@
 #include <string.h>
 #include <math.h>
 
-#define PHYSICS_PAIR_INACTIVE (physCollider *)0x00
-#define PHYSICS_PAIR_INVALID  (physCollider *)0x01
-
 static __FORCE_INLINE__ float physContactCalculateRestitution(const float r1, const float r2){
 	return r1 >= r2 ? r1 : r2;
 }
@@ -323,38 +320,6 @@ __FORCE_INLINE__ void physContactReset(physContact *const restrict contact){
 }
 
 
-__FORCE_INLINE__ void physContactPairDeactivate(void *const restrict pair){
-	((physContactPair *)pair)->colliderA = PHYSICS_PAIR_INACTIVE;
-}
-__FORCE_INLINE__ void physSeparationPairDeactivate(void *const restrict pair){
-	((physSeparationPair *)pair)->colliderA = PHYSICS_PAIR_INACTIVE;
-}
-__FORCE_INLINE__ void physContactPairInvalidate(void *const restrict pair){
-	((physContactPair *)pair)->colliderA = PHYSICS_PAIR_INVALID;
-}
-__FORCE_INLINE__ void physSeparationPairInvalidate(void *const restrict pair){
-	((physSeparationPair *)pair)->colliderA = PHYSICS_PAIR_INVALID;
-}
-
-__FORCE_INLINE__ return_t physContactPairIsActive(physContactPair *const restrict pair){
-	return pair->colliderA > PHYSICS_PAIR_INVALID;
-}
-__FORCE_INLINE__ return_t physSeparationPairIsActive(physSeparationPair *const restrict pair){
-	return pair->colliderA > PHYSICS_PAIR_INVALID;
-}
-__FORCE_INLINE__ return_t physContactPairIsInactive(physContactPair *const restrict pair){
-	return pair->colliderA <= PHYSICS_PAIR_INVALID;
-}
-__FORCE_INLINE__ return_t physSeparationPairIsInactive(physSeparationPair *const restrict pair){
-	return pair->colliderA <= PHYSICS_PAIR_INVALID;
-}
-__FORCE_INLINE__ return_t physContactPairIsInvalid(physContactPair *const restrict pair){
-	return pair->colliderA == PHYSICS_PAIR_INVALID;
-}
-__FORCE_INLINE__ return_t physSeparationPairIsInvalid(physSeparationPair *const restrict pair){
-	return pair->colliderA == PHYSICS_PAIR_INVALID;
-}
-
 __FORCE_INLINE__ void physContactPairRefresh(physContactPair *const restrict pair){
 	pair->inactive = 0;
 }
@@ -370,41 +335,41 @@ void physContactPairInit(physContactPair *const pair, physCollider *const c1, ph
 
 	if(previous != NULL){
 		// Insert between the previous pair and its next pair.
-		previous->nextA = pair;
+		memQLinkNextA(previous) = (byte_t *)pair;
 	}else{
 		// Insert directly before the first pair.
 		c1->contactCache = pair;
 	}
 	if(next != NULL){
 		if(next->colliderA == c1){
-			next->prevA = pair;
+			memQLinkPrevA(next) = (byte_t *)pair;
 		}else{
-			next->prevB = pair;
+			memQLinkPrevB(next) = (byte_t *)pair;
 		}
 	}
-	pair->prevA = previous;
-	pair->nextA = next;
+	memQLinkPrevA(pair) = (byte_t *)previous;
+	memQLinkNextA(pair) = (byte_t *)next;
 
 	// Find the previous and next nodes for the second collider.
 	previous = NULL;
 	next = c2->contactCache;
 	while(next != NULL && next->colliderA == c2){
 		previous = next;
-		next = next->nextA;
+		next = (physContactPair *)memQLinkNextA(next);
 	}
 
 	if(previous != NULL){
 		// Insert between the previous pair and its next pair.
-		previous->nextA = pair;
+		memQLinkNextA(previous) = (byte_t *)pair;
 	}else{
 		// Insert directly before the first pair.
 		c2->contactCache = pair;
 	}
 	if(next != NULL){
-		next->prevB = pair;
+		memQLinkPrevB(next) = (byte_t *)pair;
 	}
-	pair->prevB = previous;
-	pair->nextB = next;
+	memQLinkPrevB(pair) = (byte_t *)previous;
+	memQLinkNextB(pair) = (byte_t *)next;
 
 	// Set the pair's miscellaneous variables.
 	pair->colliderA = c1;
@@ -420,41 +385,41 @@ void physSeparationPairInit(physSeparationPair *const pair, physCollider *const 
 
 	if(previous != NULL){
 		// Insert between the previous pair and its next pair.
-		previous->nextA = pair;
+		memQLinkNextA(previous) = (byte_t *)pair;
 	}else{
 		// Insert directly before the first pair.
 		c1->separationCache = pair;
 	}
 	if(next != NULL){
 		if(next->colliderA == c1){
-			next->prevA = pair;
+			memQLinkPrevA(next) = (byte_t *)pair;
 		}else{
-			next->prevB = pair;
+			memQLinkPrevB(next) = (byte_t *)pair;
 		}
 	}
-	pair->prevA = previous;
-	pair->nextA = next;
+	memQLinkPrevA(pair) = (byte_t *)previous;
+	memQLinkNextA(pair) = (byte_t *)next;
 
 	// Find the previous and next nodes for the second collider.
 	previous = NULL;
 	next = c2->separationCache;
 	while(next != NULL && next->colliderA == c2){
 		previous = next;
-		next = next->nextA;
+		next = (physSeparationPair *)memQLinkNextA(next);
 	}
 
 	if(previous != NULL){
 		// Insert between the previous pair and its next pair.
-		previous->nextA = pair;
+		memQLinkNextA(previous) = (byte_t *)pair;
 	}else{
 		// Insert directly before the first pair.
 		c2->separationCache = pair;
 	}
 	if(next != NULL){
-		next->prevB = pair;
+		memQLinkPrevB(next) = (byte_t *)pair;
 	}
-	pair->prevB = previous;
-	pair->nextB = next;
+	memQLinkPrevB(pair) = (byte_t *)previous;
+	memQLinkNextB(pair) = (byte_t *)next;
 
 	// Set the pair's miscellaneous variables.
 	pair->colliderA = c1;
@@ -471,38 +436,36 @@ void physContactPairDelete(physContactPair *const pair){
 	physContactPair *temp;
 
 	// Remove references from the previous pairs.
-	temp = pair->prevA;
+	temp = (physContactPair *)memQLinkPrevA(pair);
 	if(temp != NULL){
-		temp->nextA = pair->nextA;
+		memQLinkNextA(temp) = memQLinkNextA(pair);
 	}else{
-		pair->colliderA->contactCache = pair->nextA;
+		pair->colliderA->contactCache = (physContactPair *)memQLinkNextA(pair);
 	}
-	temp = pair->prevB;
+	temp = (physContactPair *)memQLinkPrevB(pair);
 	if(temp != NULL){
 		if(temp->colliderA == pair->colliderB){
-			temp->nextA = pair->nextB;
+			memQLinkNextA(temp) = memQLinkNextB(pair);
 		}else{
-			temp->nextB = pair->nextB;
+			memQLinkNextB(temp) = memQLinkNextB(pair);
 		}
 	}else{
-		pair->colliderB->contactCache = pair->nextB;
+		pair->colliderB->contactCache = (physContactPair *)memQLinkNextB(pair);
 	}
 
 	// Remove references from the next pairs.
-	temp = pair->nextA;
+	temp = (physContactPair *)memQLinkNextA(pair);
 	if(temp != NULL){
 		if(temp->colliderA == pair->colliderA){
-			temp->prevA = pair->prevA;
+			memQLinkPrevA(temp) = memQLinkPrevA(pair);
 		}else{
-			temp->prevB = pair->prevA;
+			memQLinkPrevB(temp) = memQLinkPrevA(pair);
 		}
 	}
-	temp = pair->nextB;
+	temp = (physContactPair *)memQLinkNextB(pair);
 	if(temp != NULL){
-		temp->prevB = pair->prevB;
+		memQLinkPrevB(temp) = memQLinkPrevB(pair);
 	}
-
-	physContactPairDeactivate(pair);
 
 }
 void physSeparationPairDelete(physSeparationPair *const pair){
@@ -514,42 +477,40 @@ void physSeparationPairDelete(physSeparationPair *const pair){
 	physSeparationPair *temp;
 
 	// Remove references from the previous pairs.
-	temp = pair->prevA;
+	temp = (physSeparationPair *)memQLinkPrevA(pair);
 	if(temp != NULL){
-		temp->nextA = pair->nextA;
+		memQLinkNextA(temp) = memQLinkNextA(pair);
 	}else{
-		pair->colliderA->separationCache = pair->nextA;
+		pair->colliderA->separationCache = (physSeparationPair *)memQLinkNextA(pair);
 	}
-	temp = pair->prevB;
+	temp = (physSeparationPair *)memQLinkPrevB(pair);
 	if(temp != NULL){
 		if(temp->colliderA == pair->colliderB){
-			temp->nextA = pair->nextB;
+			memQLinkNextA(temp) = memQLinkNextB(pair);
 		}else{
-			temp->nextB = pair->nextB;
+			memQLinkNextB(temp) = memQLinkNextB(pair);
 		}
 	}else{
-		pair->colliderB->separationCache = pair->nextB;
+		pair->colliderB->separationCache = (physSeparationPair *)memQLinkNextB(pair);
 	}
 
 	// Remove references from the next pairs.
-	temp = pair->nextA;
+	temp = (physSeparationPair *)memQLinkNextA(pair);
 	if(temp != NULL){
 		if(temp->colliderA == pair->colliderA){
-			temp->prevA = pair->prevA;
+			memQLinkPrevA(temp) = memQLinkPrevA(pair);
 		}else{
-			temp->prevB = pair->prevA;
+			memQLinkPrevB(temp) = memQLinkPrevA(pair);
 		}
 	}
-	temp = pair->nextB;
+	temp = (physSeparationPair *)memQLinkNextB(pair);
 	if(temp != NULL){
-		temp->prevB = pair->prevB;
+		memQLinkPrevB(temp) = memQLinkPrevB(pair);
 	}
-
-	physSeparationPairDeactivate(pair);
 
 }
 
-return_t physCollisionQuery(aabbNode *const restrict n1, aabbNode *const restrict n2){
+return_t physCollisionQuery(aabbNode *const n1, aabbNode *const n2){
 
 	/*
 	** Manages the broadphase and narrowphase
@@ -559,23 +520,18 @@ return_t physCollisionQuery(aabbNode *const restrict n1, aabbNode *const restric
 	physCollider *const c1 = (physCollider *)n1->data.leaf.value;
 	physCollider *const c2 = (physCollider *)n2->data.leaf.value;
 
-	// Prioritize contacts where the first
-	// collider has the larger address.
-	// Also make sure that they don't share
-	// the same owner.
-	if(c1 > c2 && c1->body != c2->body){
+	// Make sure the colliders and their owning bodies permit collisions.
+	if(physColliderPermitCollision(c1, c2) && physRigidBodyPermitCollision((physRigidBody *)c1->body, (physRigidBody *)c2->body)){
 
 		// Broadphase collision check.
-		// Checks the colliders' collision masks and their tightly-fitting AABBs.
-		if((c1->layers & c2->layers) > 0 && cAABBCollision(&c1->aabb, &c2->aabb)){
+		if(cAABBCollision(&c1->aabb, &c2->aabb)){
 
 			cContact manifold;
 			physSeparation separation;
 			physSeparation *separationPointer;
 
 			// Find a previous separation for the pair, if one exists.
-			void *previous;
-			void *next;
+			void *previous, *next;
 			void *pair = physColliderFindSeparation(c1, c2, (physSeparationPair **)&previous, (physSeparationPair **)&next);
 
 			// If a separation does exist, check it.

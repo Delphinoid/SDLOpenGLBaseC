@@ -3,11 +3,12 @@
 
 #include "physicsRigidBody.h"
 #include "physicsCollider.h"
-#include "physicsConstraint.h"
+#include "physicsJoint.h"
 #include "physicsCollision.h"
 #include "physicsIsland.h"
 #include "memoryList.h"
 #include "memorySLink.h"
+#include "memoryQLink.h"
 
 #define RESOURCE_DEFAULT_RIGID_BODY_LOCAL_SIZE sizeof(physRigidBodyBase)
 #define RESOURCE_DEFAULT_RIGID_BODY_LOCAL_NUM 1024*SKELETON_MAX_BONE_NUM
@@ -18,8 +19,8 @@
 #define RESOURCE_DEFAULT_COLLIDER_SIZE sizeof(physCollider)
 #define RESOURCE_DEFAULT_COLLIDER_NUM RESOURCE_DEFAULT_RIGID_BODY_NUM
 
-#define RESOURCE_DEFAULT_CONSTRAINT_SIZE sizeof(physConstraint)
-#define RESOURCE_DEFAULT_CONSTRAINT_NUM RESOURCE_DEFAULT_RIGID_BODY_NUM
+#define RESOURCE_DEFAULT_JOINT_SIZE sizeof(physJoint)
+#define RESOURCE_DEFAULT_JOINT_NUM RESOURCE_DEFAULT_RIGID_BODY_NUM
 
 #define RESOURCE_DEFAULT_CONTACT_PAIR_SIZE sizeof(physContactPair)
 #define RESOURCE_DEFAULT_CONTACT_PAIR_NUM RESOURCE_DEFAULT_RIGID_BODY_NUM
@@ -31,12 +32,12 @@
 #define RESOURCE_DEFAULT_AABB_NODE_NUM RESOURCE_DEFAULT_RIGID_BODY_NUM
 
 // Forward declarations for inlining.
-extern memorySLink __PhysicsRigidBodyLocalResourceArray;  // Contains physRigidBodyBases.
+extern memorySLink __PhysicsRigidBodyBaseResourceArray;   // Contains physRigidBodyBases.
 extern memorySLink __PhysicsRigidBodyResourceArray;       // Contains physRigidBodies.
 extern memorySLink __PhysicsColliderResourceArray;        // Contains physColliders.
-extern memorySLink __PhysicsConstraintResourceArray;      // Contains physConstraints.
-extern memoryList  __PhysicsContactPairResourceArray;     // Contains physContactPairs.
-extern memoryList  __PhysicsSeparationPairResourceArray;  // Contains physSeparationPairs.
+extern memoryQLink __PhysicsJointResourceArray;           // Contains physJoints.
+extern memoryQLink __PhysicsContactPairResourceArray;     // Contains physContactPairs.
+extern memoryQLink __PhysicsSeparationPairResourceArray;  // Contains physSeparationPairs.
 extern memoryList  __PhysicsAABBNodeResourceArray;        // Contains aabbNodes.
 
 /** Support locals? Merge all module containers? **/
@@ -73,14 +74,10 @@ void modulePhysicsColliderFree(physCollider **const restrict array, physCollider
 void modulePhysicsColliderFreeArray(physCollider **const restrict array);
 void modulePhysicsColliderClear();
 
-physConstraint *modulePhysicsConstraintAppendStatic(physConstraint **const restrict array);
-physConstraint *modulePhysicsConstraintAppend(physConstraint **const restrict array);
-physConstraint *modulePhysicsConstraintInsertAfterStatic(physConstraint **const restrict array, physConstraint *const restrict resource);
-physConstraint *modulePhysicsConstraintInsertAfter(physConstraint **const restrict array, physConstraint *const restrict resource);
-physConstraint *modulePhysicsConstraintNext(const physConstraint *const restrict i);
-void modulePhysicsConstraintFree(physConstraint **const restrict array, physConstraint *const restrict resource, const physConstraint *const restrict previous);
-void modulePhysicsConstraintFreeArray(physConstraint **const restrict array);
-void modulePhysicsConstraintClear();
+physJoint *modulePhysicsJointAllocateStatic();
+physJoint *modulePhysicsJointAllocate();
+void modulePhysicsJointFree(physJoint *const restrict resource);
+void modulePhysicsJointClear();
 
 physContactPair *modulePhysicsContactPairAllocateStatic();
 physContactPair *modulePhysicsContactPairAllocate();

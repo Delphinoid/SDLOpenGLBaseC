@@ -241,7 +241,7 @@ void memSLinkClear(memorySLink *const restrict array){
 
 	// Loop through every block, making it
 	// point to the next free block.
-	while(next < (byte_t *)array->region){
+	while(next < (byte_t *)array->region && memSLinkBlockStatus(block) != MEMORY_SLINK_BLOCK_INVALID){
 		memSLinkDataGetFlags(block) = (uintptr_t)next | MEMORY_SLINK_BLOCK_INVALID;
 		block = next;
 		next += array->block;
@@ -261,7 +261,7 @@ void memSLinkClearInit(memorySLink *const restrict array, void (*func)(void *con
 
 	// Loop through every block, making it
 	// point to the next free block.
-	while(next < (byte_t *)array->region){
+	while(next < (byte_t *)array->region && memSLinkBlockStatus(block) != MEMORY_SLINK_BLOCK_INVALID){
 		(*func)(block);
 		memSLinkDataGetFlags(block) = (uintptr_t)next | MEMORY_SLINK_BLOCK_INVALID;
 		block = next;

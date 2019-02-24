@@ -6,7 +6,7 @@
 
 #define LTOSTR_MAX_LENGTH 20  // Max number length for ltostr (including minus sign and null terminator). 64-bit just in case.
 
-return_t pushDynamicArray(void **const restrict vector, const void *const restrict element, const size_t bytes, size_t *const restrict size, size_t *const restrict capacity);
+return_t pushDynamicArray(void **vector, const void *const restrict element, const size_t bytes, size_t *const restrict size, size_t *const restrict capacity);
 size_t ltostr(long n, char *s);
 
 /** TEMPORARY **/

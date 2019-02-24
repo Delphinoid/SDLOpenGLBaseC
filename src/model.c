@@ -6,11 +6,12 @@
 #include "helpersFileIO.h"
 #include "inline.h"
 #include <float.h>
+#include <string.h>
 
-#define MODEL_RESOURCE_DIRECTORY_STRING "Resources\\Models\\"
+#define MODEL_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Models"FILE_PATH_DELIMITER_STRING
 #define MODEL_RESOURCE_DIRECTORY_LENGTH 17
 
-return_t mdlWavefrontObjLoad(const char *const restrict filePath, size_t *const vertexNum, vertex **const vertices, size_t *const restrict indexNum, vertexIndex_t **const indices, size_t *const restrict lodNum, mdlLOD **const lods, char *const restrict sklPath);
+return_t mdlWavefrontObjLoad(const char *const restrict filePath, vertexIndex_t *const vertexNum, vertex **const vertices, vertexIndexNum_t *const restrict indexNum, vertexIndex_t **const indices, size_t *const restrict lodNum, mdlLOD **const lods, char *const restrict sklPath);
 ///return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, size_t *indexNum, vertexIndex_t **indices);
 
 void mdlInit(model *const restrict mdl){
@@ -43,7 +44,7 @@ static void mdlVertexAttributes(){
 	glEnableVertexAttribArray(4);
 }
 
-static return_t mdlGenBufferObjects(model *const restrict mdl, const char *const restrict filePath, const size_t vertexNum, const vertex *const restrict vertices, const size_t indexNum, const vertexIndex_t *const restrict indices){
+static return_t mdlGenBufferObjects(model *const restrict mdl, const char *const restrict filePath, const vertexIndex_t vertexNum, const vertex *const restrict vertices, const vertexIndexNum_t indexNum, const vertexIndex_t *const restrict indices){
 
 	if(vertexNum > 0){
 		if(indexNum > 0){
@@ -127,9 +128,9 @@ return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, 
 	/** Create a proper model file that loads a specified mesh, a name and a skeleton. **/
 	return_t r;
 
-	size_t vertexNum;
+	vertexIndex_t vertexNum;
 	vertex *vertices;
-	size_t indexNum;
+	vertexIndexNum_t indexNum;
 	vertexIndex_t *indices;
 	size_t lodNum;
 	mdlLOD *lods;

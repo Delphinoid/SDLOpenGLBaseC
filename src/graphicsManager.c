@@ -1,5 +1,6 @@
 #include "graphicsManager.h"
 #include "memoryManager.h"
+#include "helpersFileIO.h"
 #include "helpersMisc.h"
 #include "inline.h"
 #include <SDL2/SDL_image.h>
@@ -7,41 +8,7 @@
 #include <string.h>
 #include <stdio.h>
 
-static return_t gfxMngrInitSDL(graphicsManager *const restrict gfxMngr);
-static return_t gfxMngrInitOGL(graphicsManager *const restrict gfxMngr);
-static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, const char *const restrict prgPath);
-static return_t gfxMngrCreateBuffers(graphicsManager *const restrict gfxMngr);
-
-return_t gfxMngrInit(graphicsManager *const restrict gfxMngr, const char *const restrict prgPath){
-
-	return_t r;
-
-	mat4Identity(&gfxMngr->identityMatrix);
-	gfxMngr->windowAspectRatioX = GFX_DEFAULT_WINDOW_ASPECT_RATIO_X;
-	gfxMngr->windowAspectRatioY = GFX_DEFAULT_WINDOW_ASPECT_RATIO_Y;
-	gfxMngr->windowWidth = GFX_DEFAULT_WINDOW_WIDTH;
-	gfxMngr->windowHeight = GFX_DEFAULT_WINDOW_HEIGHT;
-	gfxMngr->windowStretchToFit = 0;
-	gfxMngr->windowModified = 1;
-	gfxMngr->biasMIP = GFX_DEFAULT_BIAS_MIP;
-	gfxMngr->biasLOD = GFX_DEFAULT_BIAS_LOD;
-
-	r = gfxMngrInitSDL(gfxMngr);
-	if(r <= 0){
-		return r;
-	}
-	r = gfxMngrInitOGL(gfxMngr);
-	if(r <= 0){
-		return r;
-	}
-	r = gfxMngrLoadShaders(gfxMngr, prgPath);
-	if(r <= 0){
-		return r;
-	}
-	glUniform1f(gfxMngr->mipID, GFX_DEFAULT_BIAS_MIP);
-	return gfxMngrCreateBuffers(gfxMngr);
-
-}
+/** Tidy loading code, put variable declarations in blocks. **/
 
 static return_t gfxMngrInitSDL(graphicsManager *const restrict gfxMngr){
 
@@ -126,7 +93,7 @@ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, cons
 	/*
 	** Vertex shader.
 	*/
-	const char *const restrict vertexShaderExtra = "Resources\\Shaders\\s_vertex.gls";
+	const char *const restrict vertexShaderExtra = "Resources"FILE_PATH_DELIMITER_STRING"Shaders"FILE_PATH_DELIMITER_STRING"s_vertex.gls";
 	const size_t pathLen = strlen(prgPath);
 	const size_t vsExtraLen = strlen(vertexShaderExtra);
 	char *const restrict vertexShaderPath = memAllocate((pathLen+vsExtraLen+1)*sizeof(char));
@@ -147,9 +114,14 @@ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, cons
 	if(vertexShaderCode == NULL){
 		/** Memory allocation failure. **/
 		memFree(vertexShaderPath);
+		fclose(vertexShaderFile);
 		return -1;
 	}
-	fread(vertexShaderCode, sizeof(char), size, vertexShaderFile);
+	if(fread(vertexShaderCode, sizeof(char), size, vertexShaderFile) != size){
+		memFree(vertexShaderPath);
+		fclose(vertexShaderFile);
+		return -1;
+	}
 	vertexShaderCode[size] = '\0';
 	fclose(vertexShaderFile);
 
@@ -182,7 +154,7 @@ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, cons
 	/*
 	** Fragment shader.
 	*/
-	const char *const restrict fragmentShaderExtra = "Resources\\Shaders\\s_fragment.gls";
+	const char *const restrict fragmentShaderExtra = "Resources"FILE_PATH_DELIMITER_STRING"Shaders"FILE_PATH_DELIMITER_STRING"s_fragment.gls";
 	const size_t fsExtraLen = strlen(fragmentShaderExtra);
 	char *const restrict fragmentShaderPath = memAllocate((pathLen+fsExtraLen+1)*sizeof(char));
 	if(fragmentShaderPath == NULL){
@@ -202,9 +174,14 @@ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, cons
 	if(fragmentShaderCode == NULL){
 		/** Memory allocation failure. **/
 		memFree(fragmentShaderPath);
+		fclose(fragmentShaderFile);
 		return -1;
 	}
-	fread(fragmentShaderCode, sizeof(char), size, fragmentShaderFile);
+	if(fread(fragmentShaderCode, sizeof(char), size, fragmentShaderFile) != size){
+		memFree(fragmentShaderPath);
+		fclose(fragmentShaderFile);
+		return -1;
+	}
 	fragmentShaderCode[size] = '\0';
 	fclose(fragmentShaderFile);
 
@@ -340,6 +317,37 @@ static return_t gfxMngrCreateBuffers(graphicsManager *const restrict gfxMngr){
 		return 0;
 	}
 	return 1;
+
+}
+
+return_t gfxMngrInit(graphicsManager *const restrict gfxMngr, const char *const restrict prgPath){
+
+	return_t r;
+
+	mat4Identity(&gfxMngr->identityMatrix);
+	gfxMngr->windowAspectRatioX = GFX_DEFAULT_WINDOW_ASPECT_RATIO_X;
+	gfxMngr->windowAspectRatioY = GFX_DEFAULT_WINDOW_ASPECT_RATIO_Y;
+	gfxMngr->windowWidth = GFX_DEFAULT_WINDOW_WIDTH;
+	gfxMngr->windowHeight = GFX_DEFAULT_WINDOW_HEIGHT;
+	gfxMngr->windowStretchToFit = 0;
+	gfxMngr->windowModified = 1;
+	gfxMngr->biasMIP = GFX_DEFAULT_BIAS_MIP;
+	gfxMngr->biasLOD = GFX_DEFAULT_BIAS_LOD;
+
+	r = gfxMngrInitSDL(gfxMngr);
+	if(r <= 0){
+		return r;
+	}
+	r = gfxMngrInitOGL(gfxMngr);
+	if(r <= 0){
+		return r;
+	}
+	r = gfxMngrLoadShaders(gfxMngr, prgPath);
+	if(r <= 0){
+		return r;
+	}
+	glUniform1f(gfxMngr->mipID, GFX_DEFAULT_BIAS_MIP);
+	return gfxMngrCreateBuffers(gfxMngr);
 
 }
 

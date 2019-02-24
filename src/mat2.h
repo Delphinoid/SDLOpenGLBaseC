@@ -13,10 +13,10 @@ mat2 mat2GetIdentity();
 void mat2Identity(mat2 *const restrict m);
 void mat2Zero(mat2 *const restrict m);
 
-mat2 mat2MMultM(const mat2 *const restrict m1, const mat2 *const restrict m2);
-void mat2MultMByM1(mat2 *const restrict m1, const mat2 *const restrict m2);
-void mat2MultMByM2(const mat2 *const restrict m1, mat2 *const restrict m2);
-void mat2MultMByMR(const mat2 *const restrict m1, const mat2 *const restrict m2, mat2 *const restrict r);
+mat2 mat2MMultM(const mat2 m1, const mat2 m2);
+void mat2MultMByM1(mat2 *const restrict m1, const mat2 m2);
+void mat2MultMByM2(const mat2 m1, mat2 *const restrict m2);
+void mat2MultMByMR(const mat2 m1, const mat2 m2, mat2 *const restrict r);
 vec2 mat2VMultMKet(const vec2 *const restrict v, const mat2 *const restrict m);
 void mat2MultVByMKet(vec2 *const restrict v, const mat2 *const restrict m);
 void mat2MultVByMKetR(const vec2 *const restrict v, const mat2 *const restrict m, vec2 *const restrict r);

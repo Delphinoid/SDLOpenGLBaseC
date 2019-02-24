@@ -5,6 +5,7 @@
 #include "inline.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 /****/
 #include "moduleTextureWrapper.h"
@@ -13,7 +14,7 @@
 #include "moduleRenderable.h"
 #include "modulePhysics.h"
 
-#define OBJECT_RESOURCE_DIRECTORY_STRING "Resources\\Objects\\"
+#define OBJECT_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Objects"FILE_PATH_DELIMITER_STRING
 #define OBJECT_RESOURCE_DIRECTORY_LENGTH 18
 
 void objBaseInit(objectBase *const restrict base){
@@ -58,23 +59,7 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 			if(lineLength >= 10 && strncmp(line, "skeleton ", 9) == 0){
 
 				skeleton *tempSkl;
-				size_t pathBegin;
-				size_t pathLength;
-				const char *firstQuote = strchr(line+9, '"');
-				const char *secondQuote = NULL;
-				if(firstQuote != NULL){
-					++firstQuote;
-					pathBegin = firstQuote-line;
-					secondQuote = strrchr(firstQuote, '"');
-				}
-				if(secondQuote > firstQuote){
-					pathLength = secondQuote-firstQuote;
-				}else{
-					pathBegin = 9;
-					pathLength = lineLength-pathBegin;
-				}
-				strncpy(&loadPath[0], line+pathBegin, pathLength);
-				loadPath[pathLength] = '\0';
+				fileParseResourcePath(&loadPath[0], NULL, line, lineLength, 9);
 
 				// Check if the skeleton has already been loaded.
 				tempSkl = moduleSkeletonFind(&loadPath[0]);
@@ -114,29 +99,7 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 				if(base->skl != NULL){
 
 					return_t r;
-
-					size_t pathBegin;
-					size_t pathLength;
-					const char *firstQuote = strchr(line+9, '"');
-					const char *secondQuote = NULL;
-					if(firstQuote != NULL){
-						++firstQuote;
-						pathBegin = firstQuote-line;
-						secondQuote = strrchr(firstQuote, '"');
-					}
-					if(secondQuote > firstQuote){
-						pathLength = secondQuote-firstQuote;
-					}else{
-						pathBegin = 9;
-						pathLength = lineLength-pathBegin;
-					}
-					strncpy(&loadPath[0], line+pathBegin, pathLength);
-					loadPath[pathLength] = '\0';
-
-					if(base->skeletonBodies == NULL){
-						modulePhysicsRigidBodyBaseFreeArray(&base->skeletonBodies);
-						base->skeletonBodies = NULL;
-					}
+					fileParseResourcePath(&loadPath[0], NULL, line, lineLength, 16);
 
 					// Load the rigid body from a file.
 					r = physRigidBodyBaseLoad(&base->skeletonBodies, base->skl, prgPath, loadPath);
@@ -170,23 +133,7 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 			}else if(lineLength >= 11 && strncmp(line, "animation ", 10) == 0){
 
 				sklAnim *tempSkla;
-				size_t pathBegin;
-				size_t pathLength;
-				const char *firstQuote = strchr(line+9, '"');
-				const char *secondQuote = NULL;
-				if(firstQuote != NULL){
-					++firstQuote;
-					pathBegin = firstQuote-line;
-					secondQuote = strrchr(firstQuote, '"');
-				}
-				if(secondQuote > firstQuote){
-					pathLength = secondQuote-firstQuote;
-				}else{
-					pathBegin = 9;
-					pathLength = lineLength-pathBegin;
-				}
-				strncpy(&loadPath[0], line+pathBegin, pathLength);
-				loadPath[pathLength] = '\0';
+				fileParseResourcePath(&loadPath[0], NULL, line, lineLength, 10);
 
 				// Check if the animation has already been loaded.
 				tempSkla = moduleSkeletonAnimationFind(&loadPath[0]);
@@ -272,6 +219,7 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 					size_t texPathBegin = mdlPathBegin+mdlPathLength+1;
 					size_t texPathLength = 0;
 					const char *texSecondQuote = NULL;
+					char *delimiter;
 
 					// Get the texture wrapper path.
 					if(line[texPathBegin] == ' '){
@@ -293,6 +241,14 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 					// Load the model.
 					strncpy(&loadPath[0], line+mdlPathBegin, mdlPathLength);
 					loadPath[mdlPathLength] = '\0';
+
+					delimiter = loadPath;
+					while(*delimiter != '\0'){
+						if(*delimiter == FILE_PATH_DELIMITER_CHAR_UNUSED){
+							*delimiter = FILE_PATH_DELIMITER_CHAR;
+						}
+						++delimiter;
+					}
 
 					// Check if the model has already been loaded.
 					tempMdl = moduleModelFind(&loadPath[0]);
@@ -333,6 +289,14 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 						// Load the texture wrapper.
 						strncpy(&loadPath[0], line+texPathBegin, texPathLength);
 						loadPath[texPathLength] = '\0';
+
+						delimiter = loadPath;
+						while(*delimiter != '\0'){
+							if(*delimiter == FILE_PATH_DELIMITER_CHAR_UNUSED){
+								*delimiter = FILE_PATH_DELIMITER_CHAR;
+							}
+							++delimiter;
+						}
 
 						// Check if the texture wrapper has already been loaded.
 						tempTw = moduleTextureWrapperFind(&loadPath[0]);
@@ -579,8 +543,8 @@ return_t objInstantiate(object *const restrict obj, const objectBase *const rest
 
 				/** Figure out constraint loading. **/
 				///bodyInstance->flags = PHYSICS_BODY_INACTIVE;
-				///bodyInstance->constraintNum = base->skeletonConstraintNum[i];
-				///bodyInstance->constraints = base->skeletonConstraints[i];
+				///bodyInstance->constraintNum = base->skeletonJointNum[i];
+				///bodyInstance->constraints = base->skeletonJoints[i];
 
 				bodyBase = modulePhysicsRigidBodyBaseNext(bodyBase);
 

@@ -893,10 +893,10 @@ void memTreePrintFreeBlocks(memoryTree *const restrict tree, const unsigned int 
 			++i;
 
 			printf(
-				   "Address:%u Size:%u Previous:%u First:%u Last:%u State:Inactive\n",
-				   (uintptr_t)node,
-				   memTreeNodeGetCurrent(node),
-				   memTreeNodeGetPreviousFlagless(node),
+				   "Address:%lu Size:%lu Previous:%lu First:%u Last:%u State:Inactive\n",
+				   (unsigned long)node,
+				   (unsigned long)memTreeNodeGetCurrent(node),
+				   (unsigned long)memTreeNodeGetPreviousFlagless(node),
 			       memTreeBlockIsFirst(memTreeNodeGetFlags(node)) > 0,
 			       memTreeBlockIsLast(memTreeNodeGetFlags(node)) > 0
 			);
@@ -945,29 +945,29 @@ void memTreePrintAllBlocks(memoryTree *const restrict tree){
 
 		const byte_t *block = memTreeAlignStartBlock(region->start);
 
-		printf("\nRegion #%u:\n", regionNum);
+		printf("\nRegion #%lu:\n", (unsigned long)regionNum);
 		while(block < (byte_t *)region){
 
 			const size_t size =  memTreeBlockGetCurrent(block);
 			if(memTreeBlockGetActiveMasked(block) == MEMORY_TREE_BLOCK_INACTIVE){
 				printf(
-				       "Address:%u Size:%u Previous:%u First:%u Last:%u State:Inactive\nParent:%u Left:%u Right:%u Colour:%s\n",
-				       (uintptr_t)memTreeBlockGetNode(block),
-				       size,
-				       memTreeBlockGetPreviousFlagless(block),
+				       "Address:%lu Size:%lu Previous:%lu First:%u Last:%u State:Inactive\nParent:%lu Left:%lu Right:%lu Colour:%s\n",
+				       (unsigned long)memTreeBlockGetNode(block),
+				       (unsigned long)size,
+				       (unsigned long)memTreeBlockGetPreviousFlagless(block),
 				       memTreeBlockIsFirst(memTreeBlockGetFlags(block)) > 0,
 				       memTreeBlockIsLast(memTreeBlockGetFlags(block)) > 0,
-				       (uintptr_t)memTreeBlockGetParentColourless(block),
-				       (uintptr_t)memTreeBlockGetLeft(block),
-				       (uintptr_t)memTreeBlockGetRight(block),
+				       (unsigned long)memTreeBlockGetParentColourless(block),
+				       (unsigned long)memTreeBlockGetLeft(block),
+				       (unsigned long)memTreeBlockGetRight(block),
 				       memTreeBlockGetColourMasked(block) == 0 ? "Black" : "Red"
 				);
 			}else{
 				printf(
-				       "Address:%u Size:%u Previous:%u First:%u Last:%u State:Active\n",
-				       (uintptr_t)memTreeBlockGetNode(block),
-				       size,
-				       memTreeBlockGetPreviousFlagless(block),
+				       "Address:%lu Size:%lu Previous:%lu First:%u Last:%u State:Active\n",
+				       (unsigned long)memTreeBlockGetNode(block),
+				       (unsigned long)size,
+				       (unsigned long)memTreeBlockGetPreviousFlagless(block),
 				       memTreeBlockIsFirst(memTreeBlockGetFlags(block)) > 0,
 				       memTreeBlockIsLast(memTreeBlockGetFlags(block)) > 0
 				);

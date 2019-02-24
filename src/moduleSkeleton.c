@@ -176,6 +176,11 @@ void moduleSkeletonClear(){
 	);
 
 		moduleSkeletonFree(i);
+		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
+
+	MEMORY_POOL_LOOP_INACTIVE_CASE(i);
+
+		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
 
 	MEMORY_POOL_OFFSET_LOOP_END(__SkeletonResourceArray, i, return;);
 
@@ -224,6 +229,11 @@ void moduleSkeletonAnimationClear(){
 	MEMORY_POOL_LOOP_BEGIN(__SkeletonAnimationResourceArray, i, sklAnim *);
 
 		moduleSkeletonAnimationFree(i);
+		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
+
+	MEMORY_POOL_LOOP_INACTIVE_CASE(i);
+
+		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
 
 	MEMORY_POOL_LOOP_END(__SkeletonAnimationResourceArray, i, return;);
 
@@ -288,6 +298,11 @@ void moduleSkeletonAnimationInstanceClear(){
 	MEMORY_SLINK_LOOP_BEGIN(__SkeletonAnimationInstanceResourceArray, i, sklAnimInstance *);
 
 		moduleSkeletonAnimationInstanceFree(NULL, i, NULL);
+		memSLinkDataSetFlags(i, MEMORY_SLINK_BLOCK_INVALID);
+
+	MEMORY_SLINK_LOOP_INACTIVE_CASE(i);
+
+		memSLinkDataSetFlags(i, MEMORY_SLINK_BLOCK_INVALID);
 
 	MEMORY_SLINK_LOOP_END(__SkeletonAnimationInstanceResourceArray, i, return;);
 
@@ -351,6 +366,11 @@ void moduleSkeletonAnimationFragmentClear(){
 	MEMORY_SLINK_LOOP_BEGIN(__SkeletonAnimationFragmentResourceArray, i, sklAnimFragment *);
 
 		moduleSkeletonAnimationFragmentFree(NULL, i, NULL);
+		memSLinkDataSetFlags(i, MEMORY_SLINK_BLOCK_INVALID);
+
+	MEMORY_SLINK_LOOP_INACTIVE_CASE(i);
+
+		memSLinkDataSetFlags(i, MEMORY_SLINK_BLOCK_INVALID);
 
 	MEMORY_SLINK_LOOP_END(__SkeletonAnimationFragmentResourceArray, i, return;);
 

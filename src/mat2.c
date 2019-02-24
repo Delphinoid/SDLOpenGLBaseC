@@ -15,40 +15,42 @@ __HINT_INLINE__ void mat2Zero(mat2 *const restrict m){
 	memset(m->m, 0, sizeof(mat2));
 }
 
-__HINT_INLINE__ mat2 mat2MMultM(const mat2 *const restrict m1, const mat2 *const restrict m2){
+__HINT_INLINE__ mat2 mat2MMultM(const mat2 m1, const mat2 m2){
 
-	const mat2 r = {.m = {{m1->m[0][0]*m2->m[0][0] + m1->m[0][1]*m2->m[1][0],
-	                       m1->m[0][0]*m2->m[0][1] + m1->m[0][1]*m2->m[1][1]},
-	                      {m1->m[1][0]*m2->m[0][0] + m1->m[1][1]*m2->m[1][0],
-	                       m1->m[1][0]*m2->m[0][1] + m1->m[1][1]*m2->m[1][1]}}};
+	const mat2 r = {.m = {{m1.m[0][0]*m2.m[0][0] + m1.m[0][1]*m2.m[1][0],
+	                       m1.m[0][0]*m2.m[0][1] + m1.m[0][1]*m2.m[1][1]},
+	                      {m1.m[1][0]*m2.m[0][0] + m1.m[1][1]*m2.m[1][0],
+	                       m1.m[1][0]*m2.m[0][1] + m1.m[1][1]*m2.m[1][1]}}};
 	return r;
 
 }
-__HINT_INLINE__ void mat2MultMByM1(mat2 *const restrict m1, const mat2 *const restrict m2){
+__HINT_INLINE__ void mat2MultMByM1(mat2 *const restrict m1, const mat2 m2){
 
-	const mat2 r = {.m = {{m1->m[0][0]*m2->m[0][0] + m1->m[0][1]*m2->m[1][0],
-	                       m1->m[0][0]*m2->m[0][1] + m1->m[0][1]*m2->m[1][1]},
-	                      {m1->m[1][0]*m2->m[0][0] + m1->m[1][1]*m2->m[1][0],
-	                       m1->m[1][0]*m2->m[0][1] + m1->m[1][1]*m2->m[1][1]}}};
+	const mat2 m1_c = *m1;
+	const mat2 r = {.m = {{m1_c.m[0][0]*m2.m[0][0] + m1_c.m[0][1]*m2.m[1][0],
+	                       m1_c.m[0][0]*m2.m[0][1] + m1_c.m[0][1]*m2.m[1][1]},
+	                      {m1_c.m[1][0]*m2.m[0][0] + m1_c.m[1][1]*m2.m[1][0],
+	                       m1_c.m[1][0]*m2.m[0][1] + m1_c.m[1][1]*m2.m[1][1]}}};
 	*m1 = r;
 
 }
-__HINT_INLINE__ void mat2MultMByM2(const mat2 *const restrict m1, mat2 *const restrict m2){
+__HINT_INLINE__ void mat2MultMByM2(const mat2 m1, mat2 *const restrict m2){
 
-	const mat2 r = {.m = {{m1->m[0][0]*m2->m[0][0] + m1->m[0][1]*m2->m[1][0],
-	                       m1->m[0][0]*m2->m[0][1] + m1->m[0][1]*m2->m[1][1]},
-	                      {m1->m[1][0]*m2->m[0][0] + m1->m[1][1]*m2->m[1][0],
-	                       m1->m[1][0]*m2->m[0][1] + m1->m[1][1]*m2->m[1][1]}}};
+	const mat2 m2_c = *m2;
+	const mat2 r = {.m = {{m1.m[0][0]*m2_c.m[0][0] + m1.m[0][1]*m2_c.m[1][0],
+	                       m1.m[0][0]*m2_c.m[0][1] + m1.m[0][1]*m2_c.m[1][1]},
+	                      {m1.m[1][0]*m2_c.m[0][0] + m1.m[1][1]*m2_c.m[1][0],
+	                       m1.m[1][0]*m2_c.m[0][1] + m1.m[1][1]*m2_c.m[1][1]}}};
 	*m2 = r;
 
 }
-__HINT_INLINE__ void mat2MultMByMR(const mat2 *const restrict m1, const mat2 *const restrict m2, mat2 *const restrict r){
+__HINT_INLINE__ void mat2MultMByMR(const mat2 m1, const mat2 m2, mat2 *const restrict r){
 
-	r->m[0][0] = m1->m[0][0]*m2->m[0][0] + m1->m[0][1]*m2->m[1][0];
-	r->m[0][1] = m1->m[0][0]*m2->m[0][1] + m1->m[0][1]*m2->m[1][1];
-
-	r->m[1][0] = m1->m[1][0]*m2->m[0][0] + m1->m[1][1]*m2->m[1][0];
-	r->m[1][1] = m1->m[1][0]*m2->m[0][1] + m1->m[1][1]*m2->m[1][1];
+	const mat2 r_c = {.m = {{m1.m[0][0]*m2.m[0][0] + m1.m[0][1]*m2.m[1][0],
+	                         m1.m[0][0]*m2.m[0][1] + m1.m[0][1]*m2.m[1][1]},
+	                        {m1.m[1][0]*m2.m[0][0] + m1.m[1][1]*m2.m[1][0],
+	                         m1.m[1][0]*m2.m[0][1] + m1.m[1][1]*m2.m[1][1]}}};
+	*r = r_c;
 
 }
 __HINT_INLINE__ vec2 mat2VMultMKet(const vec2 *const restrict v, const mat2 *const restrict m){

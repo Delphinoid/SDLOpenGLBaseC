@@ -3,12 +3,12 @@
 #include "memoryManager.h"
 #include "inline.h"
 
-memorySLink __PhysicsRigidBodyLocalResourceArray;  // Contains physRigidBodyBases.
+memorySLink __PhysicsRigidBodyBaseResourceArray;   // Contains physRigidBodyBases.
 memorySLink __PhysicsRigidBodyResourceArray;       // Contains physRigidBodies.
 memorySLink __PhysicsColliderResourceArray;        // Contains physColliders.
-memorySLink __PhysicsConstraintResourceArray;      // Contains physConstraints.
-memoryList  __PhysicsContactPairResourceArray;     // Contains physContactPairs.
-memoryList  __PhysicsSeparationPairResourceArray;  // Contains physSeparationPairs.
+memoryQLink __PhysicsJointResourceArray;           // Contains physJoints.
+memoryQLink __PhysicsContactPairResourceArray;     // Contains physContactPairs.
+memoryQLink __PhysicsSeparationPairResourceArray;  // Contains physSeparationPairs.
 memoryList  __PhysicsAABBNodeResourceArray;        // Contains aabbNodes.
 
 return_t modulePhysicsResourcesInit(){
@@ -19,7 +19,7 @@ return_t modulePhysicsResourcesInit(){
 			RESOURCE_DEFAULT_RIGID_BODY_LOCAL_NUM
 		)
 	);
-	if(memSLinkCreate(&__PhysicsRigidBodyLocalResourceArray, memory, RESOURCE_DEFAULT_RIGID_BODY_LOCAL_SIZE, RESOURCE_DEFAULT_RIGID_BODY_LOCAL_NUM) == NULL){
+	if(memSLinkCreate(&__PhysicsRigidBodyBaseResourceArray, memory, RESOURCE_DEFAULT_RIGID_BODY_LOCAL_SIZE, RESOURCE_DEFAULT_RIGID_BODY_LOCAL_NUM) == NULL){
 		return -1;
 	}
 	memory = memAllocate(
@@ -43,33 +43,33 @@ return_t modulePhysicsResourcesInit(){
 		return -1;
 	}
 	memory = memAllocate(
-		memSLinkAllocationSize(
+		memQLinkAllocationSize(
 			NULL,
-			RESOURCE_DEFAULT_CONSTRAINT_SIZE,
-			RESOURCE_DEFAULT_CONSTRAINT_NUM
+			RESOURCE_DEFAULT_JOINT_SIZE,
+			RESOURCE_DEFAULT_JOINT_NUM
 		)
 	);
-	if(memSLinkCreate(&__PhysicsConstraintResourceArray, memory, RESOURCE_DEFAULT_CONSTRAINT_SIZE, RESOURCE_DEFAULT_CONSTRAINT_NUM) == NULL){
+	if(memQLinkCreate(&__PhysicsJointResourceArray, memory, RESOURCE_DEFAULT_JOINT_SIZE, RESOURCE_DEFAULT_JOINT_NUM) == NULL){
 		return -1;
 	}
 	memory = memAllocate(
-		memListAllocationSize(
+		memQLinkAllocationSize(
 			NULL,
 			RESOURCE_DEFAULT_CONTACT_PAIR_SIZE,
 			RESOURCE_DEFAULT_CONTACT_PAIR_NUM
 		)
 	);
-	if(memListCreateInit(&__PhysicsContactPairResourceArray, memory, RESOURCE_DEFAULT_CONTACT_PAIR_SIZE, RESOURCE_DEFAULT_CONTACT_PAIR_NUM, physContactPairInvalidate) == NULL){
+	if(memQLinkCreate(&__PhysicsContactPairResourceArray, memory, RESOURCE_DEFAULT_CONTACT_PAIR_SIZE, RESOURCE_DEFAULT_CONTACT_PAIR_NUM) == NULL){
 		return -1;
 	}
 	memory = memAllocate(
-		memListAllocationSize(
+		memQLinkAllocationSize(
 			NULL,
 			RESOURCE_DEFAULT_SEPARATION_PAIR_SIZE,
 			RESOURCE_DEFAULT_SEPARATION_PAIR_NUM
 		)
 	);
-	if(memListCreateInit(&__PhysicsSeparationPairResourceArray, memory, RESOURCE_DEFAULT_SEPARATION_PAIR_SIZE, RESOURCE_DEFAULT_SEPARATION_PAIR_NUM, physSeparationPairInvalidate) == NULL){
+	if(memQLinkCreate(&__PhysicsSeparationPairResourceArray, memory, RESOURCE_DEFAULT_SEPARATION_PAIR_SIZE, RESOURCE_DEFAULT_SEPARATION_PAIR_NUM) == NULL){
 		return -1;
 	}
 	memory = memAllocate(
@@ -87,13 +87,13 @@ return_t modulePhysicsResourcesInit(){
 void modulePhysicsResourcesReset(){
 	memoryRegion *region;
 	modulePhysicsRigidBodyBaseClear();
-	region = __PhysicsRigidBodyLocalResourceArray.region->next;
+	region = __PhysicsRigidBodyBaseResourceArray.region->next;
 	while(region != NULL){
 		memoryRegion *next = (memoryRegion *)region->next;
 		memFree(region->start);
 		region = next;
 	}
-	__PhysicsRigidBodyLocalResourceArray.region->next = NULL;
+	__PhysicsRigidBodyBaseResourceArray.region->next = NULL;
 	modulePhysicsRigidBodyClear();
 	region = __PhysicsRigidBodyResourceArray.region->next;
 	while(region != NULL){
@@ -110,14 +110,14 @@ void modulePhysicsResourcesReset(){
 		region = next;
 	}
 	__PhysicsColliderResourceArray.region->next = NULL;
-	modulePhysicsConstraintClear();
-	region = __PhysicsConstraintResourceArray.region->next;
+	modulePhysicsJointClear();
+	region = __PhysicsJointResourceArray.region->next;
 	while(region != NULL){
 		memoryRegion *next = (memoryRegion *)region->next;
 		memFree(region->start);
 		region = next;
 	}
-	__PhysicsConstraintResourceArray.region->next = NULL;
+	__PhysicsJointResourceArray.region->next = NULL;
 	modulePhysicsContactPairClear();
 	region = __PhysicsContactPairResourceArray.region->next;
 	while(region != NULL){
@@ -146,7 +146,7 @@ void modulePhysicsResourcesReset(){
 void modulePhysicsResourcesDelete(){
 	memoryRegion *region;
 	modulePhysicsRigidBodyBaseClear();
-	region = __PhysicsRigidBodyLocalResourceArray.region;
+	region = __PhysicsRigidBodyBaseResourceArray.region;
 	while(region != NULL){
 		memoryRegion *next = (memoryRegion *)region->next;
 		memFree(region->start);
@@ -166,8 +166,8 @@ void modulePhysicsResourcesDelete(){
 		memFree(region->start);
 		region = next;
 	}
-	modulePhysicsConstraintClear();
-	region = __PhysicsConstraintResourceArray.region;
+	modulePhysicsJointClear();
+	region = __PhysicsJointResourceArray.region;
 	while(region != NULL){
 		memoryRegion *next = (memoryRegion *)region->next;
 		memFree(region->start);
@@ -197,7 +197,7 @@ void modulePhysicsResourcesDelete(){
 }
 
 __HINT_INLINE__ physRigidBodyBase *modulePhysicsRigidBodyBaseAppendStatic(physRigidBodyBase **const restrict array){
-	return memSLinkAppend(&__PhysicsRigidBodyLocalResourceArray, (void **)array);
+	return memSLinkAppend(&__PhysicsRigidBodyBaseResourceArray, (void **)array);
 }
 __HINT_INLINE__ physRigidBodyBase *modulePhysicsRigidBodyBaseAppend(physRigidBodyBase **const restrict array){
 	physRigidBodyBase *r = modulePhysicsRigidBodyBaseAppendStatic(array);
@@ -210,14 +210,14 @@ __HINT_INLINE__ physRigidBodyBase *modulePhysicsRigidBodyBaseAppend(physRigidBod
 				RESOURCE_DEFAULT_RIGID_BODY_LOCAL_NUM
 			)
 		);
-		if(memSLinkExtend(&__PhysicsRigidBodyLocalResourceArray, memory, RESOURCE_DEFAULT_RIGID_BODY_LOCAL_SIZE, RESOURCE_DEFAULT_RIGID_BODY_LOCAL_NUM)){
+		if(memSLinkExtend(&__PhysicsRigidBodyBaseResourceArray, memory, RESOURCE_DEFAULT_RIGID_BODY_LOCAL_SIZE, RESOURCE_DEFAULT_RIGID_BODY_LOCAL_NUM)){
 			r = modulePhysicsRigidBodyBaseAppendStatic(array);
 		}
 	}
 	return r;
 }
 __HINT_INLINE__ physRigidBodyBase *modulePhysicsRigidBodyBaseInsertAfterStatic(physRigidBodyBase **const restrict array, physRigidBodyBase *const restrict resource){
-	return memSLinkInsertAfter(&__PhysicsRigidBodyLocalResourceArray, (void **)array, (void *)resource);
+	return memSLinkInsertAfter(&__PhysicsRigidBodyBaseResourceArray, (void **)array, (void *)resource);
 }
 __HINT_INLINE__ physRigidBodyBase *modulePhysicsRigidBodyBaseInsertAfter(physRigidBodyBase **const restrict array, physRigidBodyBase *const restrict resource){
 	physRigidBodyBase *r = modulePhysicsRigidBodyBaseInsertAfterStatic(array, resource);
@@ -230,7 +230,7 @@ __HINT_INLINE__ physRigidBodyBase *modulePhysicsRigidBodyBaseInsertAfter(physRig
 				RESOURCE_DEFAULT_RIGID_BODY_LOCAL_NUM
 			)
 		);
-		if(memSLinkExtend(&__PhysicsRigidBodyLocalResourceArray, memory, RESOURCE_DEFAULT_RIGID_BODY_LOCAL_SIZE, RESOURCE_DEFAULT_RIGID_BODY_LOCAL_NUM)){
+		if(memSLinkExtend(&__PhysicsRigidBodyBaseResourceArray, memory, RESOURCE_DEFAULT_RIGID_BODY_LOCAL_SIZE, RESOURCE_DEFAULT_RIGID_BODY_LOCAL_NUM)){
 			r = modulePhysicsRigidBodyBaseInsertAfterStatic(array, resource);
 		}
 	}
@@ -241,7 +241,7 @@ __HINT_INLINE__ physRigidBodyBase *modulePhysicsRigidBodyBaseNext(const physRigi
 }
 __HINT_INLINE__ void modulePhysicsRigidBodyBaseFree(physRigidBodyBase **const restrict array, physRigidBodyBase *const restrict resource, const physRigidBodyBase *const restrict previous){
 	physRigidBodyBaseDelete(resource);
-	memSLinkFree(&__PhysicsRigidBodyLocalResourceArray, (void **)array, (void *)resource, (const void *)previous);
+	memSLinkFree(&__PhysicsRigidBodyBaseResourceArray, (void **)array, (void *)resource, (const void *)previous);
 }
 void modulePhysicsRigidBodyBaseFreeArray(physRigidBodyBase **const restrict array){
 	physRigidBodyBase *resource = *array;
@@ -252,11 +252,16 @@ void modulePhysicsRigidBodyBaseFreeArray(physRigidBodyBase **const restrict arra
 }
 void modulePhysicsRigidBodyBaseClear(){
 
-	MEMORY_SLINK_LOOP_BEGIN(__PhysicsRigidBodyLocalResourceArray, i, physRigidBodyBase *);
+	MEMORY_SLINK_LOOP_BEGIN(__PhysicsRigidBodyBaseResourceArray, i, physRigidBodyBase *);
 
 		modulePhysicsRigidBodyBaseFree(NULL, i, NULL);
+		memSLinkDataSetFlags(i, MEMORY_SLINK_BLOCK_INVALID);
 
-	MEMORY_SLINK_LOOP_END(__PhysicsRigidBodyLocalResourceArray, i, return;);
+	MEMORY_SLINK_LOOP_INACTIVE_CASE(i);
+
+		memSLinkDataSetFlags(i, MEMORY_SLINK_BLOCK_INVALID);
+
+	MEMORY_SLINK_LOOP_END(__PhysicsRigidBodyBaseResourceArray, i, return;);
 
 }
 
@@ -319,6 +324,11 @@ void modulePhysicsRigidBodyClear(){
 	MEMORY_SLINK_LOOP_BEGIN(__PhysicsRigidBodyResourceArray, i, physRigidBody *);
 
 		modulePhysicsRigidBodyFree(NULL, i, NULL);
+		memSLinkDataSetFlags(i, MEMORY_SLINK_BLOCK_INVALID);
+
+	MEMORY_SLINK_LOOP_INACTIVE_CASE(i);
+
+		memSLinkDataSetFlags(i, MEMORY_SLINK_BLOCK_INVALID);
 
 	MEMORY_SLINK_LOOP_END(__PhysicsRigidBodyResourceArray, i, return;);
 
@@ -383,150 +393,130 @@ void modulePhysicsColliderClear(){
 	MEMORY_SLINK_LOOP_BEGIN(__PhysicsColliderResourceArray, i, physCollider *);
 
 		modulePhysicsColliderFree(NULL, i, NULL);
+		memSLinkDataSetFlags(i, MEMORY_SLINK_BLOCK_INVALID);
+
+	MEMORY_SLINK_LOOP_INACTIVE_CASE(i);
+
+		memSLinkDataSetFlags(i, MEMORY_SLINK_BLOCK_INVALID);
 
 	MEMORY_SLINK_LOOP_END(__PhysicsColliderResourceArray, i, return;);
 
 }
 
-__HINT_INLINE__ physConstraint *modulePhysicsConstraintAppendStatic(physConstraint **const restrict array){
-	return memSLinkAppend(&__PhysicsConstraintResourceArray, (void **)array);
+__HINT_INLINE__ physJoint *modulePhysicsJointAllocateStatic(){
+	return memQLinkAllocate(&__PhysicsJointResourceArray);
 }
-__HINT_INLINE__ physConstraint *modulePhysicsConstraintAppend(physConstraint **const restrict array){
-	physConstraint *r = modulePhysicsConstraintAppendStatic(array);
+__HINT_INLINE__ physJoint *modulePhysicsJointAllocate(){
+	physJoint *r = modulePhysicsJointAllocateStatic();
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
-			memSLinkAllocationSize(
+			memQLinkAllocationSize(
 				NULL,
-				RESOURCE_DEFAULT_CONSTRAINT_SIZE,
-				RESOURCE_DEFAULT_CONSTRAINT_NUM
+				RESOURCE_DEFAULT_CONTACT_PAIR_SIZE,
+				RESOURCE_DEFAULT_CONTACT_PAIR_NUM
 			)
 		);
-		if(memSLinkExtend(&__PhysicsConstraintResourceArray, memory, RESOURCE_DEFAULT_CONSTRAINT_SIZE, RESOURCE_DEFAULT_CONSTRAINT_NUM)){
-			r = modulePhysicsConstraintAppendStatic(array);
+		if(memQLinkExtend(&__PhysicsJointResourceArray, memory, RESOURCE_DEFAULT_CONTACT_PAIR_SIZE, RESOURCE_DEFAULT_CONTACT_PAIR_NUM)){
+			r = modulePhysicsJointAllocateStatic();
 		}
 	}
 	return r;
 }
-__HINT_INLINE__ physConstraint *modulePhysicsConstraintInsertAfterStatic(physConstraint **const restrict array, physConstraint *const restrict resource){
-	return memSLinkInsertAfter(&__PhysicsConstraintResourceArray, (void **)array, (void *)resource);
+__HINT_INLINE__ void modulePhysicsJointFree(physJoint *const restrict resource){
+	physJointDelete(resource);
+	memQLinkFree(&__PhysicsJointResourceArray, (void *)resource);
 }
-__HINT_INLINE__ physConstraint *modulePhysicsConstraintInsertAfter(physConstraint **const restrict array, physConstraint *const restrict resource){
-	physConstraint *r = modulePhysicsConstraintInsertAfterStatic(array, resource);
-	if(r == NULL){
-		// Attempt to extend the allocator.
-		void *const memory = memAllocate(
-			memSLinkAllocationSize(
-				NULL,
-				RESOURCE_DEFAULT_CONSTRAINT_SIZE,
-				RESOURCE_DEFAULT_CONSTRAINT_NUM
-			)
-		);
-		if(memSLinkExtend(&__PhysicsConstraintResourceArray, memory, RESOURCE_DEFAULT_CONSTRAINT_SIZE, RESOURCE_DEFAULT_CONSTRAINT_NUM)){
-			r = modulePhysicsConstraintInsertAfterStatic(array, resource);
-		}
-	}
-	return r;
-}
-__HINT_INLINE__ physConstraint *modulePhysicsConstraintNext(const physConstraint *const restrict i){
-	return (physConstraint *)memSLinkDataGetNext(i);
-}
-__HINT_INLINE__ void modulePhysicsConstraintFree(physConstraint **const restrict array, physConstraint *const restrict resource, const physConstraint *const restrict previous){
-	/// FREE CONSTRAINT
-	memSLinkFree(&__PhysicsConstraintResourceArray, (void **)array, (void *)resource, (const void *)previous);
-}
-void modulePhysicsConstraintFreeArray(physConstraint **const restrict array){
-	physConstraint *resource = *array;
-	while(resource != NULL){
-		modulePhysicsConstraintFree(array, resource, NULL);
-		resource = *array;
-	}
-}
-void modulePhysicsConstraintClear(){
+void modulePhysicsJointClear(){
 
-	MEMORY_SLINK_LOOP_BEGIN(__PhysicsConstraintResourceArray, i, physConstraint *);
+	MEMORY_QLINK_LOOP_BEGIN(__PhysicsJointResourceArray, i, physJoint *);
 
-		modulePhysicsConstraintFree(NULL, i, NULL);
+		modulePhysicsJointFree(i);
+		memQLinkDataSetFlags(i, MEMORY_QLINK_BLOCK_INVALID);
 
-	MEMORY_SLINK_LOOP_END(__PhysicsConstraintResourceArray, i, return;);
+	MEMORY_QLINK_LOOP_INACTIVE_CASE(i);
+
+		memQLinkDataSetFlags(i, MEMORY_QLINK_BLOCK_INVALID);
+
+	MEMORY_QLINK_LOOP_END(__PhysicsJointResourceArray, i, return;);
 
 }
 
 __HINT_INLINE__ physContactPair *modulePhysicsContactPairAllocateStatic(){
-	return memListAllocate(&__PhysicsContactPairResourceArray);
+	return memQLinkAllocate(&__PhysicsContactPairResourceArray);
 }
 __HINT_INLINE__ physContactPair *modulePhysicsContactPairAllocate(){
 	physContactPair *r = modulePhysicsContactPairAllocateStatic();
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
-			memListAllocationSize(
+			memQLinkAllocationSize(
 				NULL,
 				RESOURCE_DEFAULT_CONTACT_PAIR_SIZE,
 				RESOURCE_DEFAULT_CONTACT_PAIR_NUM
 			)
 		);
-		if(memListExtendInit(&__PhysicsContactPairResourceArray, memory, RESOURCE_DEFAULT_CONTACT_PAIR_SIZE, RESOURCE_DEFAULT_CONTACT_PAIR_NUM, physContactPairInvalidate)){
+		if(memQLinkExtend(&__PhysicsContactPairResourceArray, memory, RESOURCE_DEFAULT_CONTACT_PAIR_SIZE, RESOURCE_DEFAULT_CONTACT_PAIR_NUM)){
 			r = modulePhysicsContactPairAllocateStatic();
 		}
 	}
 	return r;
 }
-__HINT_INLINE__ void modulePhysicsContactPairFree(physContactPair *const resource){
+__HINT_INLINE__ void modulePhysicsContactPairFree(physContactPair *const restrict resource){
 	physContactPairDelete(resource);
-	memListFree(&__PhysicsContactPairResourceArray, (void *)resource);
+	memQLinkFree(&__PhysicsContactPairResourceArray, (void *)resource);
 }
 void modulePhysicsContactPairClear(){
 
-	MEMORY_LIST_LOOP_BEGIN(__PhysicsContactPairResourceArray, i, physContactPair *);
+	MEMORY_QLINK_LOOP_BEGIN(__PhysicsContactPairResourceArray, i, physContactPair *);
 
-		if(physContactPairIsActive(i)){
-			modulePhysicsContactPairFree(i);
-			physContactPairInvalidate(i);
-		}else if(physContactPairIsInvalid(i)){
-			return;
-		}
+		modulePhysicsContactPairFree(i);
+		memQLinkDataSetFlags(i, MEMORY_QLINK_BLOCK_INVALID);
 
-	MEMORY_LIST_LOOP_END(__PhysicsContactPairResourceArray, i);
+	MEMORY_QLINK_LOOP_INACTIVE_CASE(i);
+
+		memQLinkDataSetFlags(i, MEMORY_QLINK_BLOCK_INVALID);
+
+	MEMORY_QLINK_LOOP_END(__PhysicsContactPairResourceArray, i, return;);
 
 }
 
 __HINT_INLINE__ physSeparationPair *modulePhysicsSeparationPairAllocateStatic(){
-	return memListAllocate(&__PhysicsSeparationPairResourceArray);
+	return memQLinkAllocate(&__PhysicsSeparationPairResourceArray);
 }
 __HINT_INLINE__ physSeparationPair *modulePhysicsSeparationPairAllocate(){
 	physSeparationPair *r = modulePhysicsSeparationPairAllocateStatic();
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
-			memListAllocationSize(
+			memQLinkAllocationSize(
 				NULL,
 				RESOURCE_DEFAULT_SEPARATION_PAIR_SIZE,
 				RESOURCE_DEFAULT_SEPARATION_PAIR_NUM
 			)
 		);
-		if(memListExtendInit(&__PhysicsSeparationPairResourceArray, memory, RESOURCE_DEFAULT_SEPARATION_PAIR_SIZE, RESOURCE_DEFAULT_SEPARATION_PAIR_NUM, physSeparationPairInvalidate)){
+		if(memQLinkExtend(&__PhysicsSeparationPairResourceArray, memory, RESOURCE_DEFAULT_SEPARATION_PAIR_SIZE, RESOURCE_DEFAULT_SEPARATION_PAIR_NUM)){
 			r = modulePhysicsSeparationPairAllocateStatic();
 		}
 	}
 	return r;
 }
-__HINT_INLINE__ void modulePhysicsSeparationPairFree(physSeparationPair *const resource){
+__HINT_INLINE__ void modulePhysicsSeparationPairFree(physSeparationPair *const restrict resource){
 	physSeparationPairDelete(resource);
-	memListFree(&__PhysicsSeparationPairResourceArray, (void *)resource);
+	memQLinkFree(&__PhysicsSeparationPairResourceArray, (void *)resource);
 }
 void modulePhysicsSeparationPairClear(){
 
-	MEMORY_LIST_LOOP_BEGIN(__PhysicsSeparationPairResourceArray, i, physSeparationPair *);
+	MEMORY_QLINK_LOOP_BEGIN(__PhysicsSeparationPairResourceArray, i, physSeparationPair *);
 
-		if(physSeparationPairIsActive(i)){
-			modulePhysicsSeparationPairFree(i);
-			physSeparationPairInvalidate(i);
-		}else if(physSeparationPairIsInvalid(i)){
-			return;
-		}
+		modulePhysicsSeparationPairFree(i);
+		memQLinkDataSetFlags(i, MEMORY_QLINK_BLOCK_INVALID);
 
-	MEMORY_LIST_LOOP_END(__PhysicsSeparationPairResourceArray, i);
+	MEMORY_QLINK_LOOP_INACTIVE_CASE(i);
+
+		memQLinkDataSetFlags(i, MEMORY_QLINK_BLOCK_INVALID);
+
+	MEMORY_QLINK_LOOP_END(__PhysicsSeparationPairResourceArray, i, return;);
 
 }
 
@@ -579,15 +569,16 @@ void modulePhysicsSolve(){
 	// Iteratively solve contacts.
 	i = PHYSICS_CONTACT_SOLVER_ITERATIONS;
 	while(i > 0){
-		MEMORY_LIST_LOOP_BEGIN(__PhysicsContactPairResourceArray, contact, physContactPair *);
-			if(physContactPairIsActive(contact)){
-				physContactSolve(&contact->data, contact->colliderA->body, contact->colliderB->body);
-			}else if(physContactPairIsInvalid(contact)){
-				goto PHYSICS_CONTACT_SOLVER_NEXT_ITERATION;
-			}
-		MEMORY_LIST_LOOP_END(__PhysicsContactPairResourceArray, contact);
+
+		MEMORY_QLINK_LOOP_BEGIN(__PhysicsContactPairResourceArray, contact, physContactPair *);
+
+			physContactSolve(&contact->data, contact->colliderA->body, contact->colliderB->body);
+
+		MEMORY_QLINK_LOOP_END(__PhysicsContactPairResourceArray, contact, goto PHYSICS_CONTACT_SOLVER_NEXT_ITERATION;);
+
 		PHYSICS_CONTACT_SOLVER_NEXT_ITERATION:
 		--i;
+
 	}
 
 }

@@ -9,10 +9,10 @@
 #include <stdio.h>
 #include <math.h>
 
-#define IMAGE_RESOURCE_DIRECTORY_STRING "Resources\\Images\\"
+#define IMAGE_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Images"FILE_PATH_DELIMITER_STRING
 #define IMAGE_RESOURCE_DIRECTORY_LENGTH 17
 
-#define TEXTURE_RESOURCE_DIRECTORY_STRING "Resources\\Textures\\"
+#define TEXTURE_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Textures"FILE_PATH_DELIMITER_STRING
 #define TEXTURE_RESOURCE_DIRECTORY_LENGTH 19
 
 /** Maybe remove printf()s? **/
@@ -123,13 +123,11 @@ return_t tLoad(texture *const restrict tex, const char *const restrict prgPath, 
 			if(lineLength >= 7 && strncmp(line, "image ", 6) == 0){
 				if(image == NULL){
 					char imgPath[FILE_MAX_PATH_LENGTH];
-					if(line[6] == '"' && line[lineLength-1] == '"'){
-						line[lineLength-1] = '\0';
-						++line;
-						lineLength -= 2;
-					}
-					fileGenerateFullPath(imgPath, prgPath, strlen(prgPath), IMAGE_RESOURCE_DIRECTORY_STRING, IMAGE_RESOURCE_DIRECTORY_LENGTH, &line[6], lineLength-6);
-					image = tLoadImage(imgPath);
+					char resPath[FILE_MAX_PATH_LENGTH];
+					size_t resLength;
+					fileParseResourcePath(&resPath[0], &resLength, line, lineLength, 6);
+					fileGenerateFullPath(&imgPath[0], prgPath, strlen(prgPath), IMAGE_RESOURCE_DIRECTORY_STRING, IMAGE_RESOURCE_DIRECTORY_LENGTH, &resPath[0], resLength);
+					image = tLoadImage(&imgPath[0]);
 					if(image == NULL){
 						printf("Error generating SDL_Surface for texture \"%s\": %s\n", imgPath, SDL_GetError());
 					}

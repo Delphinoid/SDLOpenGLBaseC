@@ -124,6 +124,11 @@ void moduleRenderableClear(){
 	MEMORY_SLINK_LOOP_BEGIN(__RenderableResourceArray, i, renderable *);
 
 		moduleRenderableFree(NULL, i, NULL);
+		memSLinkDataSetFlags(i, MEMORY_SLINK_BLOCK_INVALID);
+
+	MEMORY_SLINK_LOOP_INACTIVE_CASE(i);
+
+		memSLinkDataSetFlags(i, MEMORY_SLINK_BLOCK_INVALID);
 
 	MEMORY_SLINK_LOOP_END(__RenderableResourceArray, i, return;);
 
@@ -187,6 +192,11 @@ void moduleRenderableInstanceClear(){
 	MEMORY_SLINK_LOOP_BEGIN(__RenderableInstanceResourceArray, i, rndrInstance *);
 
 		moduleRenderableInstanceFree(NULL, i, NULL);
+		memSLinkDataSetFlags(i, MEMORY_SLINK_BLOCK_INVALID);
+
+	MEMORY_SLINK_LOOP_INACTIVE_CASE(i);
+
+		memSLinkDataSetFlags(i, MEMORY_SLINK_BLOCK_INVALID);
 
 	MEMORY_SLINK_LOOP_END(__RenderableInstanceResourceArray, i, return;);
 

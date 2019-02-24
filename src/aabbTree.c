@@ -375,7 +375,7 @@ void aabbTreeUpdate(aabbTree *const restrict tree, aabbNode *const node){
 
 }
 
-__HINT_INLINE__ return_t aabbTreeQueryNodeStack(const aabbTree *const restrict tree, aabbNode *const restrict node, return_t (*const func)(aabbNode *const restrict, aabbNode *const restrict)){
+__HINT_INLINE__ return_t aabbTreeQueryNodeStack(const aabbTree *const restrict tree, aabbNode *const node, return_t (*const func)(aabbNode *const, aabbNode *const)){
 
 	/*
 	** Runs "func()" on each potential leaf that could collide with node.
@@ -409,7 +409,7 @@ __HINT_INLINE__ return_t aabbTreeQueryNodeStack(const aabbTree *const restrict t
 
 }
 
-__HINT_INLINE__ return_t aabbTreeQueryNode(const aabbTree *const restrict tree, aabbNode *const restrict node, return_t (*const func)(aabbNode *const restrict, aabbNode *const restrict)){
+__HINT_INLINE__ return_t aabbTreeQueryNode(const aabbTree *const restrict tree, aabbNode *const node, return_t (*const func)(aabbNode *const, aabbNode *const)){
 
 	/*
 	** Runs "func()" on each potential leaf that could collide with node.
@@ -482,7 +482,7 @@ __HINT_INLINE__ return_t aabbTreeQueryNode(const aabbTree *const restrict tree, 
 
 }
 
-return_t aabbTreeQueryStack(const aabbTree *const restrict tree, return_t (*const func)(aabbNode *const restrict, aabbNode *const restrict)){
+return_t aabbTreeQueryStack(const aabbTree *const restrict tree, return_t (*const func)(aabbNode *const, aabbNode *const)){
 
 	/*
 	** Queries every leaf node in the tree.
@@ -501,7 +501,7 @@ return_t aabbTreeQueryStack(const aabbTree *const restrict tree, return_t (*cons
 
 }
 
-return_t aabbTreeQuery(const aabbTree *const restrict tree, return_t (*const func)(aabbNode *const restrict, aabbNode *const restrict)){
+return_t aabbTreeQuery(const aabbTree *const restrict tree, return_t (*const func)(aabbNode *const, aabbNode *const)){
 
 	/*
 	** Queries every leaf node in the tree.

@@ -30,7 +30,7 @@
 	return 0;
 }*/
 
-return_t pushDynamicArray(void **const restrict vector, const void *const restrict element, const size_t bytes, size_t *const restrict size, size_t *const restrict capacity){
+return_t pushDynamicArray(void **vector, const void *const restrict element, const size_t bytes, size_t *const restrict size, size_t *const restrict capacity){
 	/*
 	** Push an element into a dynamic array.
 	*/

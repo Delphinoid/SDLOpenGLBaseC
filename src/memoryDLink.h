@@ -32,11 +32,11 @@
 #define MEMORY_DLINK_BLOCK_HEADER_SIZE  (MEMORY_DLINK_BLOCK_NEXT_SIZE + MEMORY_DLINK_BLOCK_PREV_SIZE)
 
 #define MEMORY_DLINK_NEXT_OFFSET_FROM_BLOCK  0
-#define MEMORY_DLINK_PREV_OFFSET_FROM_BLOCK  MEMORY_DLINK_BLOCK_PREV_SIZE
+#define MEMORY_DLINK_PREV_OFFSET_FROM_BLOCK  (MEMORY_DLINK_NEXT_OFFSET_FROM_BLOCK + MEMORY_DLINK_BLOCK_NEXT_SIZE)
 #define MEMORY_DLINK_FLAGS_OFFSET_FROM_BLOCK MEMORY_DLINK_NEXT_OFFSET_FROM_BLOCK
 #define MEMORY_DLINK_DATA_OFFSET_FROM_BLOCK  MEMORY_DLINK_BLOCK_HEADER_SIZE
-#define MEMORY_DLINK_NEXT_OFFSET_FROM_DATA   (-MEMORY_DLINK_BLOCK_NEXT_SIZE - MEMORY_DLINK_BLOCK_PREV_SIZE)
-#define MEMORY_DLINK_PREV_OFFSET_FROM_DATA   -MEMORY_DLINK_BLOCK_NEXT_SIZE
+#define MEMORY_DLINK_NEXT_OFFSET_FROM_DATA   -MEMORY_DLINK_BLOCK_HEADER_SIZE
+#define MEMORY_DLINK_PREV_OFFSET_FROM_DATA   (MEMORY_DLINK_NEXT_OFFSET_FROM_DATA + MEMORY_DLINK_BLOCK_NEXT_SIZE)
 #define MEMORY_DLINK_FLAGS_OFFSET_FROM_DATA  MEMORY_DLINK_NEXT_OFFSET_FROM_DATA
 #define MEMORY_DLINK_BLOCK_OFFSET_FROM_DATA  -MEMORY_DLINK_BLOCK_HEADER_SIZE
 
@@ -67,8 +67,9 @@
 #define memDLinkDataGetActive(data)        *((uintptr_t *)((byte_t *)data + MEMORY_DLINK_FLAGS_OFFSET_FROM_DATA))
 #define memDLinkDataGetActiveMasked(data) (*((uintptr_t *)((byte_t *)data + MEMORY_DLINK_FLAGS_OFFSET_FROM_DATA)) & MEMORY_DLINK_BLOCK_INACTIVE_MASK)
 #define memDLinkDataGetActivePointer(data)  ((uintptr_t *)((byte_t *)data + MEMORY_DLINK_FLAGS_OFFSET_FROM_DATA))
-#define memDLinkDataSetActive(data)        *((uintptr_t *)((byte_t *)data + MEMORY_DLINK_FLAGS_OFFSET_FROM_DATA)) &= MEMORY_DLINK_BLOCK_ACTIVE_MASK
-#define memDLinkDataSetInactive(data)      *((uintptr_t *)((byte_t *)data + MEMORY_DLINK_FLAGS_OFFSET_FROM_DATA)) |= MEMORY_DLINK_BLOCK_INACTIVE_MASK
+
+#define memDLinkDataSetFlags(data, flag) *((uintptr_t *)((byte_t *)data + MEMORY_DLINK_FLAGS_OFFSET_FROM_DATA)) &= MEMORY_DLINK_BLOCK_ACTIVE_MASK; \
+                                         *((uintptr_t *)((byte_t *)data + MEMORY_DLINK_FLAGS_OFFSET_FROM_DATA)) |= flag;
 
 #ifdef MEMORY_DLINK_LEAN
 	#define MEMORY_DLINK_ALIGN(x) x
@@ -120,23 +121,26 @@ void *memDLinkExtend(memoryDLink *const restrict array, void *const start, const
 void *memDLinkExtendInit(memoryDLink *const restrict array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
 void memDLinkDelete(memoryDLink *const restrict array);
 
-#define MEMORY_DLINK_LOOP_BEGIN(allocator, n, type)                 \
-	{                                                               \
-		const memoryRegion *__region_##n = allocator.region;        \
-		do {                                                        \
-			type n = memDLinkFirst(__region_##n);                   \
-			while(n < (type)memAllocatorEnd(__region_##n)){         \
-				const byte_t __flag_##n = memDLinkBlockStatus(n);   \
-				if(__flag_##n == MEMORY_DLINK_BLOCK_ACTIVE){
+#define MEMORY_DLINK_LOOP_BEGIN(allocator, n, type)                      \
+	{                                                                    \
+		const memoryRegion *__region_##n = allocator.region;             \
+		do {                                                             \
+			type n = memDLinkFirst(__region_##n);                        \
+			while(n < (type)memAllocatorEnd(__region_##n)){              \
+				const byte_t __flag_##n = memDLinkDataGetActive(n);      \
+				if((__flag_##n & MEMORY_DLINK_BLOCK_INACTIVE_MASK) == 0){
 
-#define MEMORY_DLINK_LOOP_END(allocator, n, earlyexit)              \
-				}else if(__flag_##n == MEMORY_DLINK_BLOCK_INVALID){ \
-					earlyexit                                       \
-				}                                                   \
-				n = memDLinkBlockNext(allocator, n);                \
-			}                                                       \
-			__region_##n = memAllocatorNext(__region_##n);          \
-		} while(__region_##n != NULL);                              \
+#define MEMORY_DLINK_LOOP_INACTIVE_CASE(n)                               \
+				}else if((__flag_##n & MEMORY_DLINK_BLOCK_INACTIVE) > 0){
+
+#define MEMORY_DLINK_LOOP_END(allocator, n, earlyexit)                   \
+				}else if((__flag_##n & MEMORY_DLINK_BLOCK_INVALID) > 0){ \
+					earlyexit                                            \
+				}                                                        \
+				n = memDLinkBlockNext(allocator, n);                     \
+			}                                                            \
+			__region_##n = memAllocatorNext(__region_##n);               \
+		} while(__region_##n != NULL);                                   \
 	}
 
 #endif

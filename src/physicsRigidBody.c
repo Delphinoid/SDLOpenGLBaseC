@@ -7,8 +7,10 @@
 #include <stdio.h>
 #include <math.h>
 
-#define PHYSICS_RESOURCE_DIRECTORY_STRING "Resources\\Skeletons\\Physics\\"
+#define PHYSICS_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Skeletons"FILE_PATH_DELIMITER_STRING"Physics"FILE_PATH_DELIMITER_STRING
 #define PHYSICS_RESOURCE_DIRECTORY_LENGTH 28
+
+/** Use Parallel Axis Theorem for loading colliders. **/
 
 void physRigidBodyBaseInit(physRigidBodyBase *const restrict local){
 	local->id = (physicsBodyIndex_t)-1;
@@ -49,9 +51,8 @@ __FORCE_INLINE__ void physRigidBodyBaseGenerateProperties(physRigidBodyBase *con
 
 		physColliderGenerateMass(&c->c, &colliderMass, &colliderInverseMass, &colliderCentroid, m);
 
-		tempCentroid.x += colliderCentroid.x * colliderMass;
-		tempCentroid.y += colliderCentroid.y * colliderMass;
-		tempCentroid.z += colliderCentroid.z * colliderMass;
+		vec3MultVByS(&colliderCentroid, colliderMass);
+		vec3AddVToV(&tempCentroid, &colliderCentroid);
 		tempMass += colliderMass;
 
 		c = (physCollider *)memSLinkNext(c);
@@ -64,9 +65,7 @@ __FORCE_INLINE__ void physRigidBodyBaseGenerateProperties(physRigidBodyBase *con
 	if(tempMass != 0.f){
 
 		const float tempInverseMass = 1.f / tempMass;
-		tempCentroid.x *= tempInverseMass;
-		tempCentroid.y *= tempInverseMass;
-		tempCentroid.z *= tempInverseMass;
+		vec3MultVByS(&tempCentroid, tempInverseMass);
 		local->inverseMass = tempInverseMass;
 
 		// Calculate the combined moment of inertia for the
@@ -1153,8 +1152,8 @@ static __FORCE_INLINE__ void physRigidBodyGenerateGlobalInertia(physRigidBody *c
 	mat3TransposeR(&orientationMatrix, &inverseOrientationMatrix);
 
 	// Multiply them against the local inertia tensor to get the global inverse moment of inertia.
-	mat3MultMByMR(&orientationMatrix, &body->inverseInertiaTensorLocal, &body->inverseInertiaTensorGlobal);
-	mat3MultMByM1(&body->inverseInertiaTensorGlobal, &inverseOrientationMatrix);
+	mat3MultMByMR(orientationMatrix, body->inverseInertiaTensorLocal, &body->inverseInertiaTensorGlobal);
+	mat3MultMByM1(&body->inverseInertiaTensorGlobal, inverseOrientationMatrix);
 
 }
 
@@ -1236,10 +1235,53 @@ void physRigidBodyIntegrateConfiguration(physRigidBody *const restrict body, con
 
 }
 
-return_t physRigidBodyAddConstraint(physRigidBody *const restrict body, physConstraint *const c){
+return_t physRigidBodyPermitCollision(const physRigidBody *const body1, const physRigidBody *const body2){
 
 	/*
-	** Sort a new constraint into the body.
+	** Check if two rigid bodies may collide.
+	*/
+
+	// Make sure the bodies are not the same.
+	if(body1 != body2){
+
+		// Check if they share any joints that forbid collision.
+
+		// Body 1's joints.
+		physJoint *i = body1->joints;
+		while(i != NULL && body2 >= (physRigidBody *)i->child){
+			// Check if the child body is the same.
+			if(body2 == (physRigidBody *)i->child){
+				if(flagsAreUnset(i->flags, PHYSICS_JOINT_COLLIDE)){
+					return 0;
+				}
+			}
+			i = (physJoint *)memQLinkNextA(i);
+		}
+
+		// Body 2's joints.
+		i = body2->joints;
+		while(i != NULL && body1 >= (physRigidBody *)i->child){
+			// Check if the child body is the same.
+			if(body1 == (physRigidBody *)i->child){
+				if(flagsAreUnset(i->flags, PHYSICS_JOINT_COLLIDE)){
+					return 0;
+				}
+			}
+			i = (physJoint *)memQLinkNextA(i);
+		}
+
+		return 1;
+
+	}
+
+	return 0;
+
+}
+
+return_t physRigidBodyAddJoint(physRigidBody *const restrict body, physJoint *const c){
+
+	/*
+	** Sort a new joint into the body.
 	*/
 
 	///

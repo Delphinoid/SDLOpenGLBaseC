@@ -27,9 +27,11 @@
 *** active member?
 **/
 
-#define MEMORY_POOL_BLOCK_ACTIVE   (byte_t)0x00
-#define MEMORY_POOL_BLOCK_INACTIVE (byte_t)0x01
-#define MEMORY_POOL_BLOCK_INVALID  (byte_t)0x02
+#define MEMORY_POOL_BLOCK_ACTIVE        (byte_t)0x00
+#define MEMORY_POOL_BLOCK_INACTIVE      (byte_t)0x01
+#define MEMORY_POOL_BLOCK_INVALID       (byte_t)0x02
+#define MEMORY_POOL_BLOCK_INACTIVE_MASK (byte_t)0x03
+#define MEMORY_POOL_BLOCK_ACTIVE_MASK   (byte_t)~MEMORY_POOL_BLOCK_INACTIVE_MASK
 
 #define MEMORY_POOL_BLOCK_POINTER_SIZE sizeof(byte_t *)
 #define MEMORY_POOL_BLOCK_FLAGS_SIZE   sizeof(byte_t)
@@ -50,6 +52,8 @@
 #define memPoolDataGetNextFree(data) *((byte_t **)data)
 #define memPoolDataGetBlock(data)     ((byte_t *)data + MEMORY_POOL_BLOCK_OFFSET_FROM_DATA)
 
+#define memPoolDataSetFlags(data, flag) *((byte_t *)data + MEMORY_POOL_FLAGS_OFFSET_FROM_DATA) &= MEMORY_POOL_BLOCK_ACTIVE_MASK; \
+                                        *((byte_t *)data + MEMORY_POOL_FLAGS_OFFSET_FROM_DATA) |= flag;
 #ifdef MEMORY_POOL_LEAN
 	#define MEMORY_POOL_ALIGN(x) x
 #else
@@ -104,6 +108,9 @@ void memPoolDelete(memoryPool *const restrict pool);
 			while(n < (type)memAllocatorEnd(__region_##n)){        \
 				const byte_t __flag_##n = memPoolBlockStatus(n);   \
 				if(__flag_##n == MEMORY_POOL_BLOCK_ACTIVE){
+
+#define MEMORY_POOL_LOOP_INACTIVE_CASE(n)                          \
+				}else if(__flag_##n == MEMORY_POOL_BLOCK_INACTIVE){
 
 #define MEMORY_POOL_LOOP_END(allocator, n, earlyexit)              \
 				}else if(__flag_##n == MEMORY_POOL_BLOCK_INVALID){ \

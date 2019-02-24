@@ -100,6 +100,11 @@ void moduleTextureClear(){
 	);
 
 		moduleTextureFree(i);
+		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
+
+	MEMORY_POOL_LOOP_INACTIVE_CASE(i);
+
+		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
 
 	MEMORY_POOL_OFFSET_LOOP_END(__TextureResourceArray, i, return;);
 

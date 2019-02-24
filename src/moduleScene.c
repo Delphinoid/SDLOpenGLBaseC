@@ -70,6 +70,11 @@ void moduleSceneClear(){
 	MEMORY_POOL_LOOP_BEGIN(__SceneResourceArray, i, scene *);
 
 		moduleSceneFree(i);
+		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
+
+	MEMORY_POOL_LOOP_INACTIVE_CASE(i);
+
+		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
 
 	MEMORY_POOL_LOOP_END(__SceneResourceArray, i, return;);
 

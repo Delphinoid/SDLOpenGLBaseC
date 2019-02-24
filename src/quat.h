@@ -82,15 +82,15 @@ void quatAxisAngleFast(const quat *const restrict q, float *angle, float *axisX,
 
 float quatDot(const quat *const restrict q1, const quat *const restrict q2);
 
-vec3 quatGetRotatedVec3(const quat *const restrict q, const vec3 *v);
-vec3 quatGetRotatedVec3Fast(const quat *const restrict q, const vec3 *v);
-void quatRotateVec3(const quat *const restrict q, vec3 *v);
-void quatRotateVec3R(const quat *const restrict q, const vec3 *v, vec3 *r);
-void quatRotateVec3Fast(const quat *const restrict q, vec3 *v);
-void quatRotateVec3FastR(const quat *const restrict q, const vec3 *v, vec3 *r);
+vec3 quatGetRotatedVec3(const quat *const restrict q, const vec3 *const restrict v);
+vec3 quatGetRotatedVec3Fast(const quat *const restrict q, const vec3 *const restrict v);
+void quatRotateVec3(const quat *const restrict q, vec3 *const restrict v);
+void quatRotateVec3R(const quat *const restrict q, const vec3 *const restrict v, vec3 *const restrict r);
+void quatRotateVec3Fast(const quat *const restrict q, vec3 *const restrict v);
+void quatRotateVec3FastR(const quat *const restrict q, const vec3 *const restrict v, vec3 *const restrict r);
 
-quat quatLookingAt(const vec3 *eye, const vec3 *target, const vec3 *up);
-void quatLookAt(quat *const restrict q, const vec3 *eye, const vec3 *target, const vec3 *up);
+quat quatLookingAt(const vec3 *const restrict eye, const vec3 *const restrict target, const vec3 *const restrict up);
+void quatLookAt(quat *const restrict q, const vec3 *const restrict eye, const vec3 *const restrict target, const vec3 *const restrict up);
 
 quat quatGetLerp(const quat *const restrict q1, const quat *const restrict q2, const float t);
 void quatLerp1(quat *const restrict q1, const quat *const restrict q2, const float t);

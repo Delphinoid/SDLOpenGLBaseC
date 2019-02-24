@@ -14,10 +14,10 @@ mat4 mat4GetIdentity();
 void mat4Identity(mat4 *const restrict m);
 void mat4Zero(mat4 *const restrict m);
 
-mat4 mat4MMultM(const mat4 *const restrict m1, const mat4 *const restrict m2);
-void mat4MultMByM1(mat4 *const restrict m1, const mat4 *const restrict m2);
-void mat4MultMByM2(const mat4 *const restrict m1, mat4 *const restrict m2);
-void mat4MultMByMR(const mat4 *const restrict m1, const mat4 *const restrict m2, mat4 *const restrict r);
+mat4 mat4MMultM(const mat4 m1, const mat4 m2);
+void mat4MultMByM1(mat4 *const restrict m1, const mat4 m2);
+void mat4MultMByM2(const mat4 m1, mat4 *const restrict m2);
+void mat4MultMByMR(const mat4 m1, const mat4 m2, mat4 *const restrict r);
 void mat4TransformV(const mat4 *const restrict m, vec3 *const restrict v);
 
 vec4 mat4VMultMKet(const vec4 *const restrict v, const mat4 *const restrict m);

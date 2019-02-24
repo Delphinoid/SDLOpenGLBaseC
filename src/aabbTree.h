@@ -40,10 +40,10 @@ void aabbTreeInit(aabbTree *const restrict tree);
 return_t aabbTreeInsert(aabbTree *const restrict tree, aabbNode **node, void *const restrict value, const cAABB *const restrict aabb, aabbNode *(*const allocator)());
 void aabbTreeRemove(aabbTree *const restrict tree, aabbNode *const node, void (*deallocator)(aabbNode *const restrict));
 void aabbTreeUpdate(aabbTree *const restrict tree, aabbNode *const node);
-return_t aabbTreeQueryNodeStack(const aabbTree *const restrict tree, aabbNode *const restrict node, return_t (*const func)(aabbNode *const restrict, aabbNode *const restrict));
-return_t aabbTreeQueryNode(const aabbTree *const restrict tree, aabbNode *const restrict node, return_t (*const func)(aabbNode *const restrict, aabbNode *const restrict));
-return_t aabbTreeQueryStack(const aabbTree *const restrict tree, return_t (*const func)(aabbNode *const restrict, aabbNode *const restrict));
-return_t aabbTreeQuery(const aabbTree *const restrict tree, return_t (*const func)(aabbNode *const restrict, aabbNode *const restrict));
+return_t aabbTreeQueryNodeStack(const aabbTree *const restrict tree, aabbNode *const node, return_t (*const func)(aabbNode *const, aabbNode *const));
+return_t aabbTreeQueryNode(const aabbTree *const restrict tree, aabbNode *const node, return_t (*const func)(aabbNode *const, aabbNode *const));
+return_t aabbTreeQueryStack(const aabbTree *const restrict tree, return_t (*const func)(aabbNode *const, aabbNode *const));
+return_t aabbTreeQuery(const aabbTree *const restrict tree, return_t (*const func)(aabbNode *const, aabbNode *const));
 void aabbTreeTraverse(aabbTree *const restrict tree, void (*const func)(aabbNode *const restrict));
 
 #endif

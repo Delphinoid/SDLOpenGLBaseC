@@ -72,7 +72,7 @@ byte_t *memMngrAllocateVirtualHeap(const size_t bytes){
 		#endif
 
 			// Initialize the general purpose allocator.
-			memCreate(data, bytes, MEMORY_TREE_UNSPECIFIED_LENGTH);
+			memCreate(data, bytes - sizeof(memoryRegion), MEMORY_TREE_UNSPECIFIED_LENGTH);
 
 		}else{
 
@@ -82,7 +82,7 @@ byte_t *memMngrAllocateVirtualHeap(const size_t bytes){
 			#endif
 
 			// Extend the virtual heap.
-			memExtend(data, bytes, MEMORY_TREE_UNSPECIFIED_LENGTH);
+			memExtend(data, bytes - sizeof(memoryRegion), MEMORY_TREE_UNSPECIFIED_LENGTH);
 
 		}
 
@@ -154,7 +154,7 @@ __FORCE_INLINE__ void *memAllocate(const size_t bytes){
 	#endif
 }
 
-__FORCE_INLINE__ void *memReallocate(void *const restrict data, const const size_t bytes){
+__FORCE_INLINE__ void *memReallocate(void *const restrict data, const size_t bytes){
 	#ifdef MEMORY_MANAGER_ENFORCE_STATIC_VIRTUAL_HEAP
 	return memTreeReallocate(&__memmngr.allocator, bytes);
 	#else

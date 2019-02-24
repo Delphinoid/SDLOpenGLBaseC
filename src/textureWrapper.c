@@ -8,7 +8,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#define TEXTURE_WRAPPER_RESOURCE_DIRECTORY_STRING "Resources\\Wrappers\\"
+#define TEXTURE_WRAPPER_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Wrappers"FILE_PATH_DELIMITER_STRING
 #define TEXTURE_WRAPPER_RESOURCE_DIRECTORY_LENGTH 19
 
 #define FRAME_START_CAPACITY     1  // 128
@@ -335,11 +335,8 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 			if(lineLength >= 9 && strncmp(line, "texture ", 8) == 0){
 
 				texture *tempTex;
-				size_t pathBegin;
-				size_t pathLength;
-				const char *firstQuote = strchr(line+8, '"');
-				const char *secondQuote = NULL;
 				char texPath[1024];
+				size_t pathLength;
 
 				// A multiline command is already in progress; try to close it and continue.
 				if(currentCommand != -1){
@@ -395,19 +392,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 				twFrame tempFrame;
 				twfInit(&tempFrame);
 
-				if(firstQuote != NULL){
-					++firstQuote;
-					pathBegin = firstQuote-line;
-					secondQuote = strrchr(firstQuote, '"');
-				}
-				if(secondQuote > firstQuote){
-					pathLength = secondQuote-firstQuote;
-				}else{
-					pathBegin = 8;
-					pathLength = lineLength-pathBegin;
-				}
-				strncpy(&texPath[0], line+pathBegin, pathLength);
-				texPath[pathLength] = '\0';
+				fileParseResourcePath(&texPath[0], &pathLength, line, lineLength, 8);
 
 				// Check if the texture has already been loaded.
 				tempTex = moduleTextureFind(&texPath[0]);
@@ -442,7 +427,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 				}
 
 				// Check if the command spans multiple lines (it contains an opening brace at the end).
-				if(strrchr(line, '{') > line+pathBegin+1+pathLength){
+				if(strrchr(line, '{') > line+1+pathLength){
 					subframeCapacity = SUBFRAME_START_CAPACITY;
 					twfNew(&tempFrame, subframeCapacity);
 					currentCommand = 0;

@@ -74,6 +74,44 @@ __HINT_INLINE__ void fileGenerateFullPath(char *const restrict fullPath,
 
 }
 
+__HINT_INLINE__ void fileParseResourcePath(char *const restrict resPath, size_t *const restrict resLength, const char *const restrict line, const size_t length, const size_t offset){
+
+	size_t pathBegin;
+	size_t pathLength;
+	const char *firstQuote = strchr(line+offset, '"');
+	const char *secondQuote = NULL;
+	char *delimiter;
+
+	if(firstQuote != NULL){
+		++firstQuote;
+		pathBegin = firstQuote-line;
+		secondQuote = strrchr(firstQuote, '"');
+	}
+	if(secondQuote > firstQuote){
+		pathLength = secondQuote-firstQuote;
+	}else{
+		pathBegin = offset;
+		pathLength = length-pathBegin;
+	}
+
+	strncpy(resPath, line+pathBegin, pathLength);
+	resPath[pathLength] = '\0';
+
+	// Replace Windows delimiters with Linux delimiters or vice versa.
+	delimiter = resPath;
+	while(*delimiter != '\0'){
+		if(*delimiter == FILE_PATH_DELIMITER_CHAR_UNUSED){
+			*delimiter = FILE_PATH_DELIMITER_CHAR;
+		}
+		++delimiter;
+	}
+
+	if(resLength != NULL){
+		*resLength = pathLength;
+	}
+
+}
+
 __HINT_INLINE__ char *fileGenerateResourceName(const char *const restrict resource, const size_t length){
 
 	char *name;
@@ -86,7 +124,7 @@ __HINT_INLINE__ char *fileGenerateResourceName(const char *const restrict resour
 		if(*c == '.'){
 			extension = resource[length-1] - c;
 			break;
-		}else if(*c == '\\'){
+		}else if(*c == FILE_PATH_DELIMITER_CHAR){
 			break;
 		}
 		--c;
