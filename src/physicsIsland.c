@@ -18,7 +18,7 @@ __FORCE_INLINE__ return_t physIslandUpdateCollider(physIsland *const restrict is
 	}else if(!cAABBEncapsulates(&c->node->aabb, &c->aabb)){
 		// Update the collider.
 		c->node->aabb = c->aabb;
-		cAABBExpandVelocity(&c->node->aabb, &((physRigidBody *)c->body)->linearVelocity, PHYSICS_ISLAND_COLLIDER_AABB_VELOCITY_FACTOR);
+		cAABBExpandVelocity(&c->node->aabb, ((physRigidBody *)c->body)->linearVelocity, PHYSICS_ISLAND_COLLIDER_AABB_VELOCITY_FACTOR);
 		cAABBExpand(&c->node->aabb, PHYSICS_ISLAND_COLLIDER_AABB_ADDEND);
 		aabbTreeUpdate(&island->tree, c->node);
 	}

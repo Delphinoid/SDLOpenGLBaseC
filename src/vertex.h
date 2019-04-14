@@ -16,6 +16,6 @@ typedef struct {
 } vertex;
 
 void vertInit(vertex *const restrict v);
-void vertTransform(vertex *const restrict v, const vec3 *const restrict position, const quat *const restrict orientation, const vec3 *const restrict scale);
+void vertTransform(vertex *const restrict v, const vec3 position, const quat orientation, const vec3 scale);
 
 #endif

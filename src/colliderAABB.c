@@ -5,15 +5,14 @@ __HINT_INLINE__ void cAABBExpand(cAABB *const restrict c, const float addend){
 	/*
 	** Expand the AABB by a specified amount.
 	*/
-	vec3SubSFromV(&c->min, addend);
-	vec3AddSToV(&c->max, addend);
+	c->min = vec3VSubS(c->min, addend);
+	c->max = vec3VAddS(c->max, addend);
 }
-__HINT_INLINE__ void cAABBExpandVelocity(cAABB *const restrict c, const vec3 *const restrict velocity, const float factor){
+__HINT_INLINE__ void cAABBExpandVelocity(cAABB *const restrict c, const vec3 velocity, const float factor){
 	/*
 	** Expand the AABB using a linear velocity.
 	*/
-	vec3 product;
-	vec3MultVBySR(velocity, factor, &product);
+	const vec3 product = vec3VMultS(velocity, factor);
 	if(product.x >= 0.f){
 		c->max.x += product.x;
 	}else{
@@ -35,55 +34,43 @@ __HINT_INLINE__ void cAABBCombine(cAABB *const restrict c1, cAABB *const restric
 	/*
 	** Merge the two AABBs to create one that can contain them both.
 	*/
-	vec3Min(&c1->min, &c2->min, &r->min);
-	vec3Max(&c1->max, &c2->max, &r->max);
+	r->min = vec3Min(c1->min, c2->min);
+	r->max = vec3Max(c1->max, c2->max);
 }
 
 __HINT_INLINE__ float cAABBVolume(const cAABB *const restrict c){
-	vec3 v;
 	// Because the bounding box is axis-aligned,
 	// a simple subtraction will calculate the
 	// length of its sides.
-	vec3SubVFromVR(&c->min, &c->max, &v);
+	const vec3 v = vec3VSubV(c->min, c->max);
 	return v.x * v.y * v.z;
 }
 __HINT_INLINE__ float cAABBSurfaceArea(const cAABB *const restrict c){
-	vec3 v;
 	// Because the bounding box is axis-aligned,
 	// a simple subtraction will calculate the
 	// length of its sides.
-	vec3SubVFromVR(&c->min, &c->max, &v);
+	const vec3 v = vec3VSubV(c->min, c->max);
 	return 2.f * (v.x * (v.y + v.z) + v.y * v.z);
 }
 __HINT_INLINE__ float cAABBSurfaceAreaHalf(const cAABB *const restrict c){
-	vec3 v;
 	// Because the bounding box is axis-aligned,
 	// a simple subtraction will calculate the
 	// length of its sides.
-	vec3SubVFromVR(&c->min, &c->max, &v);
+	const vec3 v = vec3VSubV(c->min, c->max);
 	return v.x * (v.y + v.z) + v.y * v.z;
 }
 
 __HINT_INLINE__ float cAABBVolumeCombined(const cAABB *const restrict c1, const cAABB *const restrict c2){
-	vec3 v1, v2;
-	vec3Min(&c1->min, &c2->min, &v1);
-	vec3Max(&c1->max, &c2->max, &v2);
-	vec3SubVFromV1(&v1, &v2);
-	return v1.x * v1.y * v1.z;
+	const vec3 v = vec3VSubV(vec3Min(c1->min, c2->min), vec3Max(c1->max, c2->max));
+	return v.x * v.y * v.z;
 }
 __HINT_INLINE__ float cAABBSurfaceAreaCombined(const cAABB *const restrict c1, const cAABB *const restrict c2){
-	vec3 v1, v2;
-	vec3Min(&c1->min, &c2->min, &v1);
-	vec3Max(&c1->max, &c2->max, &v2);
-	vec3SubVFromV1(&v1, &v2);
-	return 2.f * (v1.x * (v1.y + v1.z) + v1.y * v1.z);
+	const vec3 v = vec3VSubV(vec3Min(c1->min, c2->min), vec3Max(c1->max, c2->max));
+	return 2.f * (v.x * (v.y + v.z) + v.y * v.z);
 }
 __HINT_INLINE__ float cAABBSurfaceAreaHalfCombined(const cAABB *const restrict c1, const cAABB *const restrict c2){
-	vec3 v1, v2;
-	vec3Min(&c1->min, &c2->min, &v1);
-	vec3Max(&c1->max, &c2->max, &v2);
-	vec3SubVFromV1(&v1, &v2);
-	return v1.x * (v1.y + v1.z) + v1.y * v1.z;
+	const vec3 v = vec3VSubV(vec3Min(c1->min, c2->min), vec3Max(c1->max, c2->max));
+	return v.x * (v.y + v.z) + v.y * v.z;
 }
 
 __HINT_INLINE__ return_t cAABBEncapsulates(const cAABB *const restrict container, const cAABB *const restrict containee){

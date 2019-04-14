@@ -110,11 +110,11 @@ return_t physRigidBodyIsAsleep(physRigidBody *const restrict body);
 
 return_t physRigidBodyUpdateColliders(physRigidBody *const restrict body, physIsland *const restrict island);
 
-void physRigidBodyApplyLinearForce(physRigidBody *const restrict body, const vec3 *const restrict F);
-void physRigidBodyApplyAngularForceGlobal(physRigidBody *const restrict body, const vec3 *const restrict F, const vec3 *const restrict r);
-void physRigidBodyApplyForceGlobal(physRigidBody *const restrict body, const vec3 *const restrict F, const vec3 *const restrict r);
-void physRigidBodyApplyImpulse(physRigidBody *const restrict body, const vec3 *const restrict x, const vec3 *const restrict J);
-void physRigidBodyApplyImpulseInverse(physRigidBody *const restrict body, const vec3 *const restrict x, const vec3 *const restrict J);
+void physRigidBodyApplyLinearForce(physRigidBody *const restrict body, const vec3 F);
+void physRigidBodyApplyAngularForceGlobal(physRigidBody *const restrict body, const vec3 F, const vec3 r);
+void physRigidBodyApplyForceGlobal(physRigidBody *const restrict body, const vec3 F, const vec3 r);
+void physRigidBodyApplyImpulse(physRigidBody *const restrict body, const vec3 x, const vec3 J);
+void physRigidBodyApplyImpulseInverse(physRigidBody *const restrict body, const vec3 x, const vec3 J);
 
 void physRigidBodyIntegrateVelocity(physRigidBody *const restrict body, const float dt);
 void physRigidBodyIntegrateConfiguration(physRigidBody *const restrict body, const float dt);

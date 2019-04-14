@@ -8,8 +8,6 @@ void vertInit(vertex *const restrict v){
 	v->bWeights[0] = 1.f; v->bWeights[1] = 0.f; v->bWeights[2] = 0.f; v->bWeights[3] = 0.f;
 }
 
-void vertTransform(vertex *const restrict v, const vec3 *const restrict position, const quat *const restrict orientation, const vec3 *const restrict scale){
-	vec3MultVByV(&v->position, scale);
-	quatRotateVec3Fast(orientation, &v->position);
-	vec3AddVToV(&v->position, position);
+void vertTransform(vertex *const restrict v, const vec3 position, const quat orientation, const vec3 scale){
+	v->position = vec3VAddV(quatRotateVec3Fast(orientation, vec3VMultV(v->position, scale)), position);
 }

@@ -276,16 +276,16 @@ __FORCE_INLINE__ void physColliderGenerateMoment(collider *const restrict local,
 }
 
 
-void cTransformMesh(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const vec3 *const position, const quat *const orientation, const vec3 *const scale, cAABB *const restrict aabb);
-void cTransformCapsule(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const vec3 *const position, const quat *const orientation, const vec3 *const scale, cAABB *const restrict aabb);
-void cTransformSphere(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const vec3 *const position, const quat *const orientation, const vec3 *const scale, cAABB *const restrict aabb);
-void cTransformAABB(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const vec3 *const position, const quat *const orientation, const vec3 *const scale, cAABB *const restrict aabb);
-void cTransformPoint(void *const instance, const vec3 *const instanceCentroid, const void *const local, const vec3 *const localCentroid, const vec3 *const position, const quat *const orientation, const vec3 *const scale, cAABB *const restrict aabb);
+cAABB cTransformMesh(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale);
+cAABB cTransformCapsule(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale);
+cAABB cTransformSphere(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale);
+cAABB cTransformAABB(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale);
+cAABB cTransformPoint(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale);
 
 return_t physColliderTransformMesh(physCollider *const restrict c, physIsland *const restrict island){
 	const physRigidBody *const body = c->body;
 	if(flagsAreSet(body->flags, PHYSICS_BODY_TRANSFORMED | PHYSICS_BODY_COLLISION_MODIFIED)){
-		cTransformMesh(&c->c.data, &body->centroidGlobal, &c->base->data, &body->centroidLocal, &body->configuration->position, &body->configuration->orientation, &body->configuration->scale, &c->aabb);
+		c->aabb = cTransformMesh(&c->c.data, body->centroidGlobal, &c->base->data, body->centroidLocal, body->configuration->position, body->configuration->orientation, body->configuration->scale);
 		return physIslandUpdateCollider(island, c);
 	}
 	return 1;

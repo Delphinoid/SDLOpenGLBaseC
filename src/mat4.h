@@ -10,57 +10,75 @@ typedef struct {
 	float m[4][4];
 } mat4;
 
-mat4 mat4GetIdentity();
-void mat4Identity(mat4 *const restrict m);
+mat4 mat4Identity();
+void mat4IdentityP(mat4 *const restrict m);
 void mat4Zero(mat4 *const restrict m);
 
 mat4 mat4MMultM(const mat4 m1, const mat4 m2);
-void mat4MultMByM1(mat4 *const restrict m1, const mat4 m2);
-void mat4MultMByM2(const mat4 m1, mat4 *const restrict m2);
-void mat4MultMByMR(const mat4 m1, const mat4 m2, mat4 *const restrict r);
-void mat4TransformV(const mat4 *const restrict m, vec3 *const restrict v);
+void mat4MMultMP1(mat4 *const restrict m1, const mat4 *const restrict m2);
+void mat4MMultMP2(const mat4 *const restrict m1, mat4 *const restrict m2);
+void mat4MMultMPR(const mat4 *const restrict m1, const mat4 *const restrict m2, mat4 *const restrict r);
 
-vec4 mat4VMultMKet(const vec4 *const restrict v, const mat4 *const restrict m);
-void mat4MultVByMKet(vec4 *const restrict v, const mat4 *const restrict m);
-void mat4MultVByMKetR(const vec4 *const restrict v, const mat4 *const restrict m, vec4 *const restrict r);
-void mat4MultNByM(const float x, const float y, const float z, const float w, const mat4 *const restrict m, vec4 *const restrict r);
-vec4 mat4MMultVBra(const mat4 *const restrict m, const vec4 *const restrict v);
-void mat4MultMByVBra(const mat4 *const restrict m, vec4 *const restrict v);
-void mat4MultMByVBraR(const mat4 *const restrict m, const vec4 *const restrict v, vec4 *const restrict r);
-void mat4MultMByN(const mat4 *const restrict m, const float x, const float y, const float z, const float w, vec4 *const restrict r);
+///void mat4TransformVP(const mat4 *const restrict m, vec3 *const restrict v);
 
-mat4 mat4MAddM(const mat4 *const restrict m1, const mat4 *const restrict m2);
-void mat4AddMToM(mat4 *const restrict m1, const mat4 *const restrict m2);
-void mat4AddMToMR(const mat4 *const restrict m1, const mat4 *const restrict m2, mat4 *const restrict r);
+vec4 mat4VMultMKet(const vec4 v, const mat4 m);
+void mat4VMultMKetP(vec4 *const restrict v, const mat4 *const restrict m);
+void mat4VMultMKetPR(const vec4 *const restrict v, const mat4 *const restrict m, vec4 *const restrict r);
+vec4 mat4MMultVBra(const mat4 m, const vec4 v);
+void mat4MMultVBraP(const mat4 *const restrict m, vec4 *const restrict v);
+void mat4MMultVBraPR(const mat4 *const restrict m, const vec4 *const restrict v, vec4 *const restrict r);
 
-float mat4Determinant(const mat4 *const restrict m);
+vec4 mat4NMultM(const float x, const float y, const float z, const float w, const mat4 m);
+void mat4NMultMP(const float x, const float y, const float z, const float w, const mat4 *const restrict m, vec4 *const restrict r);
+vec4 mat4MMultN(const mat4 m, const float x, const float y, const float z, const float w);
+void mat4MMultNP(const mat4 *const restrict m, const float x, const float y, const float z, const float w, vec4 *const restrict r);
 
-mat4 mat4GetTranspose(const mat4 *const restrict m);
-void mat4Transpose(mat4 *const restrict m);
-void mat4TransposeR(const mat4 *const restrict m, mat4 *const restrict r);
+mat4 mat4MAddM(const mat4 m1, const mat4 m2);
+void mat4MAddMP(mat4 *const restrict m1, const mat4 *const restrict m2);
+void mat4MAddMPR(const mat4 *const restrict m1, const mat4 *const restrict m2, mat4 *const restrict r);
 
-return_t mat4Invert(mat4 *const restrict m);
-return_t mat4InvertR(const mat4 *const restrict m, mat4 *const restrict r);
+float mat4Determinant(const mat4 m);
+float mat4DeterminantP(const mat4 *const restrict m);
 
-return_t mat4Frustum(mat4 *const restrict m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar);
-return_t mat4Ortho(mat4 *const restrict m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar);
-return_t mat4Perspective(mat4 *const restrict m, const float fovy, const float aspectRatio, const float zNear, const float zFar);
-void mat4RotateToFace(mat4 *const restrict m, const vec3 *const restrict eye, const vec3 *const restrict target, const vec3 *const restrict up);
-void mat4LookAt(mat4 *const restrict m, const vec3 *const restrict eye, const vec3 *const restrict target, const vec3 *const restrict up);
+mat4 mat4Transpose(const mat4 m);
+void mat4TransposeP(mat4 *const restrict m);
+void mat4TransposePR(const mat4 *const restrict m, mat4 *const restrict r);
 
-void mat4Translate(mat4 *const restrict m, const float x, const float y, const float z);
-void mat4TranslateR(const mat4 *const restrict m, const float x, const float y, const float z, mat4 *const restrict r);
-void mat4SetTranslationMatrix(mat4 *const restrict r, const float x, const float y, const float z);
+mat4 mat4Invert(const mat4 m);
+return_t mat4InvertR(const mat4 m, mat4 *const restrict r);
+return_t mat4InvertP(mat4 *const restrict m);
+return_t mat4InvertPR(const mat4 *const restrict m, mat4 *const restrict r);
+
+mat4 mat4Frustum(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar);
+return_t mat4FrustumP(mat4 *const restrict m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar);
+mat4 mat4Ortho(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar);
+return_t mat4OrthoP(mat4 *const restrict m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar);
+mat4 mat4Perspective(const float fovy, const float aspectRatio, const float zNear, const float zFar);
+return_t mat4PerspectiveP(mat4 *const restrict m, const float fovy, const float aspectRatio, const float zNear, const float zFar);
+mat4 mat4RotateToFace(const vec3 eye, const vec3 target, const vec3 up);
+void mat4RotateToFaceP(mat4 *const restrict m, const vec3 *const restrict eye, const vec3 *const restrict target, const vec3 *const restrict up);
+mat4 mat4LookAt(const vec3 eye, const vec3 target, const vec3 up);
+void mat4LookAtP(mat4 *const restrict m, const vec3 *const restrict eye, const vec3 *const restrict target, const vec3 *const restrict up);
+
 mat4 mat4TranslationMatrix(const float x, const float y, const float z);
-void mat4Scale(mat4 *const restrict m, const float x, const float y, const float z);
-void mat4ScaleR(const mat4 *const restrict m, const float x, const float y, const float z, mat4 *const restrict r);
-void mat4SetScaleMatrix(mat4 *const restrict m, const float x, const float y, const float z);
-mat4 mat4ScaleMatrix(const float x, const float y, const float z);
+void mat4TranslationMatrixP(mat4 *const restrict r, const float x, const float y, const float z);
+mat4 mat4Translate(const mat4 m, const float x, const float y, const float z);
+void mat4TranslateP(mat4 *const restrict m, const float x, const float y, const float z);
+void mat4TranslatePR(const mat4 *const restrict m, const float x, const float y, const float z, mat4 *const restrict r);
 
-void mat4Rotate(mat4 *const restrict m, const quat *const restrict q);
-void mat4RotateR(const mat4 *const restrict m, const quat *const restrict q, mat4 *const restrict r);
-void mat4SetRotationMatrix(mat4 *const restrict m, const quat *const restrict q);
-mat4 mat4RotationMatrix(const quat *const restrict q);
-void mat4Quat(mat4 *const restrict m, const quat *const restrict q);
+mat4 mat4RotationMatrix(const quat q);
+void mat4RotationMatrixP(mat4 *const restrict m, const quat *const restrict q);
+mat4 mat4Rotate(const mat4 m, const quat q);
+void mat4RotateP(mat4 *const restrict m, const quat *const restrict q);
+void mat4RotatePR(const mat4 *const restrict m, const quat *const restrict q, mat4 *const restrict r);
+
+mat4 mat4ScaleMatrix(const float x, const float y, const float z);
+void mat4ScaleMatrixP(mat4 *const restrict m, const float x, const float y, const float z);
+mat4 mat4Scale(const mat4 m, const float x, const float y, const float z);
+void mat4ScaleP(mat4 *const restrict m, const float x, const float y, const float z);
+void mat4ScalePR(const mat4 *const restrict m, const float x, const float y, const float z, mat4 *const restrict r);
+
+mat4 mat4Quaternion(const quat q);
+void mat4QuaternionP(mat4 *const restrict m, const quat *const restrict q);
 
 #endif

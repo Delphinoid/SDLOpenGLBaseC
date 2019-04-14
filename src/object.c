@@ -811,7 +811,7 @@ return_t objUpdate(object *const restrict obj, physIsland *const restrict island
 
 			/** TEMPORARILY ADD GRAVITY. **/
 			const vec3 gravity = {.x = 0.f, .y = -9.80665f * body->mass, .z = 0.f};
-			physRigidBodyApplyLinearForce(body, &gravity);
+			physRigidBodyApplyLinearForce(body, gravity);
 
 			if(physRigidBodyIsUninitialized(body)){
 
@@ -864,14 +864,16 @@ return_t objUpdate(object *const restrict obj, physIsland *const restrict island
 			skliGenerateBoneState(&obj->skeletonData, i, sklBone->name, sklState);
 
 			// Apply the object skeleton's bind offsets.
-			boneTransformAppendPositionVec(sklState,
-			                               sklBone->defaultState.position.x,
-			                               sklBone->defaultState.position.y,
-			                               sklBone->defaultState.position.z);
+			sklState->position = boneTransformAppendPositionVec(
+				*sklState,
+				sklBone->defaultState.position.x,
+				sklBone->defaultState.position.y,
+				sklBone->defaultState.position.z
+			);
 
 			// Apply the parent's transformations to each bone.
 			if(!isRoot){
-				boneTransformAppend2(&obj->state.skeleton[sklBone->parent], sklState);
+				*sklState = boneTransformAppend(obj->state.skeleton[sklBone->parent], *sklState);
 			}
 
 			if(body != NULL && body->base->id == i){
@@ -1081,13 +1083,13 @@ void objGenerateSprite(const object *const restrict obj, const rndrInstance *con
 	*/
 	/** Optimize? **/
 	//boneInterpolate(&obj->skeletonState[1][0], &obj->skeletonState[0][0], interpT, &transform);
-	boneInterpolateR(previous, current, interpT, &transform);
+	transform = boneInterpolate(*previous, *current, interpT);
 	transform.scale.x *= twiGetFrameWidth(&rndr->twi) * twiGetTexWidth(&rndr->twi);
 	transform.scale.y *= twiGetFrameHeight(&rndr->twi) * twiGetTexHeight(&rndr->twi);
-	vertTransform(&vertices[0], &transform.position, &transform.orientation, &transform.scale);
-	vertTransform(&vertices[1], &transform.position, &transform.orientation, &transform.scale);
-	vertTransform(&vertices[2], &transform.position, &transform.orientation, &transform.scale);
-	vertTransform(&vertices[3], &transform.position, &transform.orientation, &transform.scale);
+	vertTransform(&vertices[0], transform.position, transform.orientation, transform.scale);
+	vertTransform(&vertices[1], transform.position, transform.orientation, transform.scale);
+	vertTransform(&vertices[2], transform.position, transform.orientation, transform.scale);
+	vertTransform(&vertices[3], transform.position, transform.orientation, transform.scale);
 
 	// We can't pass unique textureFragment values for each individual sprite when batching. Therefore,
 	// we have to do the offset calculations for each vertex UV here instead of in the shader.

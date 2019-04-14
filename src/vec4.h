@@ -61,7 +61,7 @@ void vec4NegateR(const vec4 *const restrict v, vec4 *const restrict r);
 
 float vec4Magnitude(const vec4 *const restrict v);
 float vec4MagnitudeSquared(const vec4 *const restrict v);
-float vec4InverseMagnitude(const vec4 *const restrict v);
+float vec4MagnitudeInverse(const vec4 *const restrict v);
 
 vec4 vec4GetUnit(const vec4 *const restrict v);
 vec4 vec4GetUnitFast(const vec4 *const restrict v);

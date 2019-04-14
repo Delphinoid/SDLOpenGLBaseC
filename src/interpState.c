@@ -97,9 +97,9 @@ void iSizeTInterpolate(const interpSizeT *const restrict iSizeT, const float int
 ** INTERPOLATED 3D VECTOR FUNCTIONS
 */
 void iVec3Init(interpVec3 *const restrict iVec3, const float x, const float y, const float z){
-	vec3Set(&iVec3->previous, x, y, z);
-	vec3Set(&iVec3->value,    x, y, z);
-	vec3Set(&iVec3->render,   x, y, z);
+	iVec3->previous = vec3New(x, y, z);
+	iVec3->value    = vec3New(x, y, z);
+	iVec3->render   = vec3New(x, y, z);
 }
 void iVec3ResetInterp(interpVec3 *const restrict iVec3){
 	iVec3->previous = iVec3->value;
@@ -125,10 +125,10 @@ return_t iVec3Update(interpVec3 *const restrict iVec3, const float interpT){
 		}
 		iVec3->render = iVec3->value;
 	}else{
-		vec3LerpR(&iVec3->previous,
-		          &iVec3->value,
-		          interpT,
-		          &iVec3->render);
+		vec3LerpPR(&iVec3->previous,
+		           &iVec3->value,
+		           interpT,
+		           &iVec3->render);
 	}
 	return 1;
 }
@@ -154,9 +154,9 @@ void iVec3Interpolate(const interpVec3 *const restrict iVec3, const float interp
 ** INTERPOLATED QUATERNION FUNCTIONS
 */
 void iQuatInit(interpQuat *const restrict iQuat){
-	quatSetIdentity(&iQuat->previous);
-	quatSetIdentity(&iQuat->value);
-	quatSetIdentity(&iQuat->render);
+	iQuat->previous = quatIdentity();
+	iQuat->value = quatIdentity();
+	iQuat->render = quatIdentity();
 }
 void iQuatResetInterp(interpQuat *const restrict iQuat){
 	iQuat->previous = iQuat->value;
@@ -185,10 +185,10 @@ return_t iQuatUpdate(interpQuat *const restrict iQuat, const float interpT){
 		}
 		iQuat->render = iQuat->value;
 	}else{
-		quatSlerpR(&iQuat->previous,
-		           &iQuat->value,
-		           interpT,
-		           &iQuat->render);
+		quatSlerpPR(&iQuat->previous,
+		            &iQuat->value,
+		            interpT,
+		            &iQuat->render);
 	}
 	return 1;
 }

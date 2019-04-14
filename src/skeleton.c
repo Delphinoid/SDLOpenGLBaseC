@@ -126,9 +126,9 @@ return_t sklLoad(skeleton *const restrict skl, const char *const restrict prgPat
 						}
 					}
 
-					vec3Set(&skl->bones[skl->boneNum].defaultState.position, data[0][0], data[0][1], data[0][2]);
-					quatSetEuler(&skl->bones[skl->boneNum].defaultState.orientation, data[1][0]*RADIAN_RATIO, data[1][1]*RADIAN_RATIO, data[1][2]*RADIAN_RATIO);
-					vec3Set(&skl->bones[skl->boneNum].defaultState.scale, data[2][0], data[2][1], data[2][2]);
+					skl->bones[skl->boneNum].defaultState.position = vec3New(data[0][0], data[0][1], data[0][2]);
+					skl->bones[skl->boneNum].defaultState.orientation = quatNewEuler(data[1][0]*RADIAN_RATIO, data[1][1]*RADIAN_RATIO, data[1][2]*RADIAN_RATIO);
+					skl->bones[skl->boneNum].defaultState.scale = vec3New(data[2][0], data[2][1], data[2][2]);
 
 					skl->bones[skl->boneNum].parent = parent;
 
@@ -511,9 +511,9 @@ return_t sklaLoad(sklAnim *const restrict skla, const char *const restrict prgPa
 							}
 						}
 
-						vec3Set(&skla->frames[skla->animData.frameNum-1][boneID].position, data[0][0], data[0][1], data[0][2]);
-						quatSetEuler(&skla->frames[skla->animData.frameNum-1][boneID].orientation, data[1][0]*RADIAN_RATIO, data[1][1]*RADIAN_RATIO, data[1][2]*RADIAN_RATIO);
-						vec3Set(&skla->frames[skla->animData.frameNum-1][boneID].scale, data[2][0], data[2][1], data[2][2]);
+						skla->frames[skla->animData.frameNum-1][boneID].position = vec3New(data[0][0], data[0][1], data[0][2]);
+						skla->frames[skla->animData.frameNum-1][boneID].orientation = quatNewEuler(data[1][0]*RADIAN_RATIO, data[1][1]*RADIAN_RATIO, data[1][2]*RADIAN_RATIO);
+						skla->frames[skla->animData.frameNum-1][boneID].scale = vec3New(data[2][0], data[2][1], data[2][2]);
 
 					}else{
 						printf("Error loading skeletal animation \"%s\": Frame sub-command \"transform\" at line %u does not specify a bone ID.\n", fullPath, currentLine);
@@ -734,7 +734,7 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, co
 								if(boneID == 0){
 									vec3InitSet(&currentState->pos, x, z, y);
 								}else{*/
-									vec3Set(&currentState->position, x, y, z);
+									currentState->position = vec3New(x, y, z);
 								//}
 
 								//The Source Engine uses Z as its up axis, so we need to fix that with the root bone.
@@ -754,11 +754,11 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, co
 								if(boneID == 0){
 									quatInitEulerRad(&currentState->rot, x - 1.5707963267948966192313216916398f, -z, y);
 								}else{*/
-									quatSetEuler(&currentState->orientation, x, y, z);
+									currentState->orientation = quatNewEuler(x, y, z);
 								//}
 
 								//Set the bone's scale!
-								vec3Set(&currentState->scale, 1.f, 1.f, 1.f);
+								currentState->scale = vec3New(1.f, 1.f, 1.f);
 
 								//bone thing = skl->bones[boneID].defaultState;
 								//boneStateInvert(&thing, &thing);
@@ -1296,12 +1296,12 @@ void skliGenerateBoneState(const sklInstance *const restrict skli, const boneInd
 				if(animBoneID < frag->animation->boneNum){
 
 					// Interpolate between startFrame and endFrame, storing the result in fragmentState.
-					boneInterpolateR(&frag->animation->frames[frag->animStartFrame][animBoneID],
-					                 &frag->animation->frames[frag->animEndFrame][animBoneID],
-					                 frag->animInterpT, &fragmentState);
+					fragmentState = boneInterpolate(frag->animation->frames[frag->animStartFrame][animBoneID],
+					                                frag->animation->frames[frag->animEndFrame][animBoneID],
+					                                frag->animInterpT);
 
 					// Blend from the previous animation fragment. animInterpTBlend is always 1.f for the first animation fragment.
-					boneInterpolate1(&animationState, &fragmentState, animInterpTBlend);
+					animationState = boneInterpolate(animationState, fragmentState, animInterpTBlend);
 
 				}else{
 					boneInit(&fragmentState);
@@ -1323,10 +1323,10 @@ void skliGenerateBoneState(const sklInstance *const restrict skli, const boneInd
 		if(anim->flags == SKELETON_ANIM_INSTANCE_OVERWRITE){
 			// Set if the animation is not additive. Start from the
 			// base state so custom transformations aren't lost.
-			boneTransformCombineR(&baseState, &animationState, state);
+			*state = boneTransformCombine(baseState, animationState);
 		}else{
 			// Add the changes in lastState to skeletonState if the animation is additive.
-			boneTransformCombine1(state, &animationState);
+			*state = boneTransformCombine(*state, animationState);
 		}
 
 		anim = moduleSkeletonAnimationInstanceNext(anim);
@@ -1350,11 +1350,13 @@ void skliGenerateDefaultState(const skeleton *const restrict skl, mat4 *const re
 	}
 
 	// Apply default state transformations.
-	mat4Translate(&state[boneID], skl->bones[boneID].defaultState.position.x,
+	state[boneID] = mat4Translate(state[boneID],
+	                              skl->bones[boneID].defaultState.position.x,
 	                              skl->bones[boneID].defaultState.position.y,
 	                              skl->bones[boneID].defaultState.position.z);
-	mat4Rotate(&state[boneID], &skl->bones[boneID].defaultState.orientation);
-	mat4Scale(&state[boneID], skl->bones[boneID].defaultState.scale.x,
+	state[boneID] = mat4Rotate(state[boneID], skl->bones[boneID].defaultState.orientation);
+	state[boneID] = mat4Scale(state[boneID],
+	                          skl->bones[boneID].defaultState.scale.x,
 	                          skl->bones[boneID].defaultState.scale.y,
 	                          skl->bones[boneID].defaultState.scale.z);
 
@@ -1376,16 +1378,19 @@ void skliGenerateBoneStateFromLocal(const bone *const restrict skeletonState, co
 		//quat inverseOrientation;
 
 		// Apply animation transformations.
-		mat4Translate(&state[boneID], skeletonState[animBone].position.x,
+		state[boneID] = mat4Translate(state[boneID],
+		                              skeletonState[animBone].position.x,
 		                              skeletonState[animBone].position.y,
 		                              skeletonState[animBone].position.z);
-		mat4Rotate(&state[boneID], &skeletonState[animBone].orientation);
-		mat4Scale(&state[boneID], skeletonState[animBone].scale.x,
+		state[boneID] = mat4Rotate(state[boneID], skeletonState[animBone].orientation);
+		state[boneID] = mat4Scale(state[boneID],
+		                          skeletonState[animBone].scale.x,
 		                          skeletonState[animBone].scale.y,
 		                          skeletonState[animBone].scale.z);
 
 		// Apply model's negative default state transformations.
-		mat4Translate(&state[boneID], -mskl->bones[boneID].defaultState.position.x,
+		state[boneID] = mat4Translate(state[boneID],
+		                              -mskl->bones[boneID].defaultState.position.x,
 		                              -mskl->bones[boneID].defaultState.position.y,
 		                              -mskl->bones[boneID].defaultState.position.z);
 		/** Probably won't keep what's below. **/
@@ -1397,12 +1402,14 @@ void skliGenerateBoneStateFromLocal(const bone *const restrict skeletonState, co
 
 		// Apply object's default state transformations.
 		// This makes more sense when diagrammed.
-		mat4Translate(&state[boneID], oskl->bones[animBone].defaultState.position.x,
+		state[boneID] = mat4Translate(state[boneID],
+		                              oskl->bones[animBone].defaultState.position.x,
 		                              oskl->bones[animBone].defaultState.position.y,
 		                              oskl->bones[animBone].defaultState.position.z);
-		mat4Rotate(&state[boneID], &oskl->bones[animBone].defaultState.orientation);
+		state[boneID] = mat4Rotate(state[boneID], oskl->bones[animBone].defaultState.orientation);
 		/** Probably won't keep what's below. **/
-		mat4Scale(&state[boneID], oskl->bones[animBone].defaultState.scale.x,//*oskl->bones[animBone].defaultState.scale.x,
+		state[boneID] = mat4Scale(state[boneID],
+		                          oskl->bones[animBone].defaultState.scale.x,//*oskl->bones[animBone].defaultState.scale.x,
 		                          oskl->bones[animBone].defaultState.scale.y,//*oskl->bones[animBone].defaultState.scale.y,
 		                          oskl->bones[animBone].defaultState.scale.z);//*oskl->bones[animBone].defaultState.scale.z);
 
@@ -1415,11 +1422,12 @@ void skliGenerateBoneStateFromGlobal(const bone *const restrict skeletonState, c
 	if(animBone < oskl->boneNum){
 
 		// Apply animation transformations.
-		mat4SetTranslationMatrix(&state[boneID], skeletonState[animBone].position.x,
-		                                         skeletonState[animBone].position.y,
-		                                         skeletonState[animBone].position.z);
-		mat4Rotate(&state[boneID], &skeletonState[animBone].orientation);
-		mat4Scale(&state[boneID], skeletonState[animBone].scale.x,
+		state[boneID] = mat4TranslationMatrix(skeletonState[animBone].position.x,
+		                                      skeletonState[animBone].position.y,
+		                                      skeletonState[animBone].position.z);
+		state[boneID] = mat4Rotate(state[boneID], skeletonState[animBone].orientation);
+		state[boneID] = mat4Scale(state[boneID],
+		                          skeletonState[animBone].scale.x,
 		                          skeletonState[animBone].scale.y,
 		                          skeletonState[animBone].scale.z);
 

@@ -105,9 +105,8 @@ int main(int argc, char *argv[]){
 	tempObji->configuration[0].position.x = 0.5f;
 	tempObji->configuration[0].position.y = 0.5f;
 	vec3SetS(&tempObji->configuration[0].scale, 0.15f);
-	quat changeRotation;
-	quatSetEuler(&changeRotation, 45.f*RADIAN_RATIO, 45.f*RADIAN_RATIO, 0.f);
-	quatMultQByQ2(&changeRotation, &tempObji->configuration[0].orientation);
+	quat changeRotation = quatNewEuler(45.f*RADIAN_RATIO, 45.f*RADIAN_RATIO, 0.f);
+	tempObji->configuration[0].orientation = quatQMultQ(changeRotation, tempObji->configuration[0].orientation);
 	tempObji->renderables[0].alpha = 0.5f;
 
 	// Sprite Object Instances.
@@ -285,8 +284,8 @@ int main(int argc, char *argv[]){
 				tickrateTimeMod = tickrate*timeMod;
 				tickratioTimeMod = tickratio*timeMod;
 				/** changeRotation is created to initialize the second renderable. **/
-				quatSetEuler(&changeRotation, -90.f*RADIAN_RATIO, 0.f, 0.f);
-				quatRotateR(&moduleObjectIndex(0)->configuration[0].orientation, &changeRotation, tickratio, &moduleObjectIndex(0)->configuration[0].orientation);
+				changeRotation = quatNewEuler(-90.f*RADIAN_RATIO, 0.f, 0.f);
+				moduleObjectIndex(0)->configuration[0].orientation = quatRotate(moduleObjectIndex(0)->configuration[0].orientation, changeRotation, tickratio);
 				camMain->position.value.z += -5.f * tickratio;
 				//objGetState(&gameStateManager, 4, 0)->tempRndrConfig.targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
 			}
@@ -295,26 +294,26 @@ int main(int argc, char *argv[]){
 				tickrateTimeMod = tickrate*timeMod;
 				tickratioTimeMod = tickratio*timeMod;
 				/** changeRotation is created to initialize the second renderable. **/
-				quatSetEuler(&changeRotation, 90.f*RADIAN_RATIO, 0.f, 0.f);
-				quatRotateR(&moduleObjectIndex(0)->configuration[0].orientation, &changeRotation, tickratio, &moduleObjectIndex(0)->configuration[0].orientation);
+				changeRotation = quatNewEuler(90.f*RADIAN_RATIO, 0.f, 0.f);
+				moduleObjectIndex(0)->configuration[0].orientation = quatRotate(moduleObjectIndex(0)->configuration[0].orientation, changeRotation, tickratio);
 				camMain->position.value.z += 5.f * tickratio;
 				//objGetState(&gameStateManager, 4, 0)->tempRndrConfig.targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
 			}
 			if(LEFT){
 				/** changeRotation is created to initialize the second renderable. **/
-				quatSetEuler(&changeRotation, 0.f, -90.f*RADIAN_RATIO, 0.f);
-				quatRotateR(&moduleObjectIndex(0)->configuration[0].orientation, &changeRotation, tickratio, &moduleObjectIndex(0)->configuration[0].orientation);
-				quatSetEuler(&changeRotation, 0.f, 0.f, -90.f*RADIAN_RATIO);
-				quatRotateR(&moduleObjectIndex(3)->configuration[0].orientation, &changeRotation, tickratio, &moduleObjectIndex(3)->configuration[0].orientation);
+				changeRotation = quatNewEuler(0.f, -90.f*RADIAN_RATIO, 0.f);
+				moduleObjectIndex(0)->configuration[0].orientation = quatRotate(moduleObjectIndex(0)->configuration[0].orientation, changeRotation, tickratio);
+				changeRotation = quatNewEuler(0.f, 0.f, -90.f*RADIAN_RATIO);
+				moduleObjectIndex(3)->configuration[0].orientation = quatRotate(moduleObjectIndex(3)->configuration[0].orientation, changeRotation, tickratio);
 				camMain->position.value.x += -5.f * tickratio;
 				//objGetState(&gameStateManager, 4, 0)->tempRndrConfig.targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
 			}
 			if(RIGHT){
 				/** changeRotation is created to initialize the second renderable. **/
-				quatSetEuler(&changeRotation, 0.f, 90.f*RADIAN_RATIO, 0.f);
-				quatRotateR(&moduleObjectIndex(0)->configuration[0].orientation, &changeRotation, tickratio, &moduleObjectIndex(0)->configuration[0].orientation);
-				quatSetEuler(&changeRotation, 0.f, 0.f, 90.f*RADIAN_RATIO);
-				quatRotateR(&moduleObjectIndex(3)->configuration[0].orientation, &changeRotation, tickratio, &moduleObjectIndex(3)->configuration[0].orientation);
+				changeRotation = quatNewEuler(0.f, 90.f*RADIAN_RATIO, 0.f);
+				moduleObjectIndex(0)->configuration[0].orientation = quatRotate(moduleObjectIndex(0)->configuration[0].orientation, changeRotation, tickratio);
+				changeRotation = quatNewEuler(0.f, 0.f, 90.f*RADIAN_RATIO);
+				moduleObjectIndex(3)->configuration[0].orientation = quatRotate(moduleObjectIndex(3)->configuration[0].orientation, changeRotation, tickratio);
 				camMain->position.value.x += 5.f * tickratio;
 				//objGetState(&gameStateManager, 4, 0)->tempRndrConfig.targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
 			}

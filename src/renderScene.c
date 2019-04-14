@@ -34,15 +34,15 @@ void renderModel(const object *const restrict obj, const float distance, const c
 
 		// Interpolate between bone states.
 		//boneInterpolate(&obj->skeletonState[1][i], &obj->skeletonState[0][i], interpT, &interpBone);
-		boneInterpolateR(bPrevious, bCurrent, interpT, &interpBone);
+		interpBone = boneInterpolate(*bPrevious, *bCurrent, interpT);
 
 		// Convert the bone to a matrix.
 		//mat4SetScaleMatrix(&gfxMngr->sklTransformState[i], gfxMngr->sklAnimationState[i].scale.x, gfxMngr->sklAnimationState[i].scale.y, gfxMngr->sklAnimationState[i].scale.z);
 		//mat4SetTranslationMatrix(&gfxMngr->sklTransformState[i], gfxMngr->sklAnimationState[i].position.x, gfxMngr->sklAnimationState[i].position.y, gfxMngr->sklAnimationState[i].position.z);
-		mat4SetRotationMatrix(transform, &interpBone.orientation);
+		*transform = mat4RotationMatrix(interpBone.orientation);
 		//mat4Rotate(&gfxMngr->sklTransformState[i], &gfxMngr->sklAnimationState[i].orientation);
 		//mat4Translate(&gfxMngr->sklTransformState[i], gfxMngr->sklAnimationState[i].position.x, gfxMngr->sklAnimationState[i].position.y, gfxMngr->sklAnimationState[i].position.z);
-		mat4Scale(transform, interpBone.scale.x, interpBone.scale.y, interpBone.scale.z);
+		*transform = mat4Scale(*transform, interpBone.scale.x, interpBone.scale.y, interpBone.scale.z);
 		transform->m[3][0] = interpBone.position.x;
 		transform->m[3][1] = interpBone.position.y;
 		transform->m[3][2] = interpBone.position.z;
@@ -90,14 +90,9 @@ void renderModel(const object *const restrict obj, const float distance, const c
 					// Also make sure the bone's parent isn't itself (that is, make sure it has a parent).
 					if(nLayout->parent < boneNum && i != nLayout->parent){
 						// Apply the parent's bind offsets.
-						const vec3 *bParent = &gfxMngr->sklBindAccumulator[nLayout->parent];
-						bAccumulator->x = bParent->x;
-						bAccumulator->y = bParent->y;
-						bAccumulator->z = bParent->z;
+						*bAccumulator = gfxMngr->sklBindAccumulator[nLayout->parent];
 					}else{
-						bAccumulator->x = 0.f;
-						bAccumulator->y = 0.f;
-						bAccumulator->z = 0.f;
+						vec3Zero(bAccumulator);
 					}
 
 					// If the animated bone is in the model, pass in its animation transforms.
@@ -109,10 +104,10 @@ void renderModel(const object *const restrict obj, const float distance, const c
 
 						// Rotate the bind pose position by the current bone's orientation
 						// and add this offset to the bind pose accumulator.
-						mat4MultNByM(nLayout->defaultState.position.x,
-						             nLayout->defaultState.position.y,
-						             nLayout->defaultState.position.z,
-						             0.f, &transform, &translation);
+						translation = mat4NMultM(nLayout->defaultState.position.x,
+						                         nLayout->defaultState.position.y,
+						                         nLayout->defaultState.position.z,
+						                         0.f, transform);
 						bAccumulator->x += translation.x;
 						bAccumulator->y += translation.y;
 						bAccumulator->z += translation.z;

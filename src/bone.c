@@ -2,33 +2,75 @@
 
 void boneInit(bone *const restrict b){
 	vec3Zero(&b->position);
-	quatSetIdentity(&b->orientation);
-	vec3SetS(&b->scale, 1.f);
+	b->orientation = quatIdentity();
+	b->scale = vec3NewS(1.f);
 }
 
-void boneInvert(bone *const restrict b){
-    b->position.x = -b->position.x;
-    b->position.y = -b->position.y;
-    b->position.z = -b->position.z;
-    b->orientation.w = -b->orientation.w;
-    b->orientation.v = b->orientation.v;
-    b->scale.x = 1.f/b->scale.x;
-    b->scale.y = 1.f/b->scale.y;
-    b->scale.z = 1.f/b->scale.z;
+bone boneInvert(const bone b){
+	const bone r = {
+		.position = vec3Negate(b.position),
+		.orientation = quatNegate(b.orientation),
+		.scale = vec3SDivV(1.f, b.scale)
+	};
+	return r;
+}
+void boneInvertP(bone *const restrict b){
+	b->position.x = -b->position.x;
+	b->position.y = -b->position.y;
+	b->position.z = -b->position.z;
+	b->orientation.w = -b->orientation.w;
+	b->orientation.v = b->orientation.v;
+	b->scale.x = 1.f/b->scale.x;
+	b->scale.y = 1.f/b->scale.y;
+	b->scale.z = 1.f/b->scale.z;
+}
+void boneInvertPR(const bone *const restrict b, bone *const restrict r){
+	r->position.x = -b->position.x;
+	r->position.y = -b->position.y;
+	r->position.z = -b->position.z;
+	r->orientation.w = -b->orientation.w;
+	r->orientation.v = b->orientation.v;
+	r->scale.x = 1.f/b->scale.x;
+	r->scale.y = 1.f/b->scale.y;
+	r->scale.z = 1.f/b->scale.z;
 }
 
-void boneInvertR(const bone *const restrict b, bone *const restrict r){
-    r->position.x = -b->position.x;
-    r->position.y = -b->position.y;
-    r->position.z = -b->position.z;
-    r->orientation.w = -b->orientation.w;
-    r->orientation.v = b->orientation.v;
-    r->scale.x = 1.f/b->scale.x;
-    r->scale.y = 1.f/b->scale.y;
-    r->scale.z = 1.f/b->scale.z;
-}
+bone boneInterpolate(const bone b1, const bone b2, const float t){
 
-void boneInterpolate1(bone *const restrict b1, const bone *const restrict b2, const float t){
+	/*
+	** Calculate the interpolated delta transform for the bone.
+	*/
+	if(t <= 0.f){
+
+		// Only use the start frame if t exceeds the lower bounds.
+		return b1;
+
+	}else if(t >= 1.f){
+
+		// Only use the end frame if t exceeds the upper bounds.
+		return b2;
+
+	}else{
+
+		const bone r = {
+
+			// LERP between the start position and end position.
+			.position = vec3Lerp(b1.position, b2.position, t),
+
+			// SLERP between the start orientation and end orientation.
+			.orientation = quatSlerp(b1.orientation, b2.orientation, t),
+
+			// LERP once more for the scale.
+			.scale = vec3Lerp(b1.scale, b2.scale, t)
+
+		};
+
+		return r;
+
+	}
+
+}
+void boneInterpolateP1(bone *const restrict b1, const bone *const restrict b2, const float t){
 
 	/*
 	** Calculate the interpolated delta transform for the bone.
@@ -43,19 +85,18 @@ void boneInterpolate1(bone *const restrict b1, const bone *const restrict b2, co
 	}else if(t > 0.f){
 
 		// LERP between the start position and end position.
-		vec3Lerp1(&b1->position, &b2->position, t);
+		vec3LerpP1(&b1->position, &b2->position, t);
 
 		// SLERP between the start orientation and end orientation.
-		quatSlerp1(&b1->orientation, &b2->orientation, t);
+		quatSlerpP1(&b1->orientation, &b2->orientation, t);
 
 		// LERP once more for the scale.
-		vec3Lerp1(&b1->scale, &b2->scale, t);
+		vec3LerpP1(&b1->scale, &b2->scale, t);
 
 	}
 
 }
-
-void boneInterpolate2(const bone *const restrict b1, bone *const restrict b2, const float t){
+void boneInterpolateP2(const bone *const restrict b1, bone *const restrict b2, const float t){
 
 	/*
 	** Calculate the interpolated delta transform for the bone.
@@ -70,19 +111,18 @@ void boneInterpolate2(const bone *const restrict b1, bone *const restrict b2, co
 	}else if(t < 1.f){
 
 		// LERP between the start position and end position.
-		vec3Lerp2(&b1->position, &b2->position, t);
+		vec3LerpP2(&b1->position, &b2->position, t);
 
 		// SLERP between the start orientation and end orientation.
-		quatSlerp2(&b1->orientation, &b2->orientation, t);
+		quatSlerpP2(&b1->orientation, &b2->orientation, t);
 
 		// LERP once more for the scale.
-		vec3Lerp2(&b1->scale, &b2->scale, t);
+		vec3LerpP2(&b1->scale, &b2->scale, t);
 
 	}
 
 }
-
-void boneInterpolateR(const bone *const restrict b1, const bone *const restrict b2, const float t, bone *const restrict r){
+void boneInterpolatePR(const bone *const restrict b1, const bone *const restrict b2, const float t, bone *const restrict r){
 
 	/*
 	** Calculate the interpolated delta transform for the bone.
@@ -104,183 +144,212 @@ void boneInterpolateR(const bone *const restrict b1, const bone *const restrict 
 	}else{
 
 		// LERP between the start position and end position.
-		vec3LerpR(&b1->position, &b2->position, t, &r->position);
+		vec3LerpPR(&b1->position, &b2->position, t, &r->position);
 
 		// SLERP between the start orientation and end orientation.
-		quatSlerpR(&b1->orientation, &b2->orientation, t, &r->orientation);
+		quatSlerpPR(&b1->orientation, &b2->orientation, t, &r->orientation);
 
 		// LERP once more for the scale.
-		vec3LerpR(&b1->scale, &b2->scale, t, &r->scale);
+		vec3LerpPR(&b1->scale, &b2->scale, t, &r->scale);
 
 	}
 
 }
 
-void boneTransformAppendPosition1(bone *const restrict b1, const bone *const restrict b2){
+vec3 boneTransformAppendPosition1(const bone b1, const bone b2){
+	return vec3VAddV(b1.position, quatRotateVec3Fast(b1.orientation, vec3VMultV(b2.position, b1.scale)));
+}
+vec3 boneTransformAppendPosition2(const bone b1, const bone b2){
+	return vec3VAddV(b2.position, quatRotateVec3Fast(b1.orientation, vec3VMultV(b2.position, b1.scale)));
+}
+void boneTransformAppendPositionP1(bone *const restrict b1, const bone *const restrict b2){
 	// Calculate total translation.
 	vec3 tempVec3;
-	vec3MultVByVR(&b2->position, &b1->scale, &tempVec3);  // Scale
-	quatRotateVec3Fast(&b1->orientation, &tempVec3);      // Rotate
-	vec3AddVToV(&b1->position, &tempVec3);                // Translate
+	vec3VMultVPR(&b2->position, &b1->scale, &tempVec3);  // Scale
+	quatRotateVec3FastP(&b1->orientation, &tempVec3);    // Rotate
+	vec3VAddVP(&b1->position, &tempVec3);                // Translate
 }
-
-void boneTransformAppendPosition2(const bone *const restrict b1, bone *const restrict b2){
+void boneTransformAppendPositionP2(const bone *const restrict b1, bone *const restrict b2){
 	// Calculate total translation.
-	vec3MultVByV(&b2->position, &b1->scale);              // Scale
-	quatRotateVec3Fast(&b1->orientation, &b2->position);  // Rotate
-	vec3AddVToV(&b2->position, &b1->position);            // Translate
+	vec3VMultVP(&b2->position, &b1->scale);                // Scale
+	quatRotateVec3FastP(&b1->orientation, &b2->position);  // Rotate
+	vec3VAddVP(&b2->position, &b1->position);              // Translate
 }
-
-void boneTransformAppendPositionR(const bone *const restrict b1, const bone *const restrict b2, bone *const restrict r){
+void boneTransformAppendPositionPR(const bone *const restrict b1, const bone *const restrict b2, bone *const restrict r){
 	// Calculate total translation.
-	vec3MultVByVR(&b2->position, &b1->scale, &r->position);  // Scale
-	quatRotateVec3Fast(&b1->orientation, &r->position);      // Rotate
-	vec3AddVToV(&r->position, &b1->position);                // Translate
+	vec3VMultVPR(&b2->position, &b1->scale, &r->position);  // Scale
+	quatRotateVec3FastP(&b1->orientation, &r->position);    // Rotate
+	vec3VAddVP(&r->position, &b1->position);               // Translate
 }
 
-void boneTransformAppendPositionVec(bone *const restrict b, const float x, const float y, const float z){
+vec3 boneTransformAppendPositionVec(const bone b, const float x, const float y, const float z){
+	return vec3VAddV(b.position, quatRotateVec3Fast(b.orientation, vec3VMultN(b.scale, x, y, z)));
+}
+void boneTransformAppendPositionVecP(bone *const restrict b, const float x, const float y, const float z){
 	// Calculate total translation.
 	vec3 tempVec3;
-	tempVec3.x = x * b->scale.x;                     // Scale
+	tempVec3.x = x * b->scale.x;                      // Scale
 	tempVec3.y = y * b->scale.y;
 	tempVec3.z = z * b->scale.z;
-	quatRotateVec3Fast(&b->orientation, &tempVec3);  // Rotate
-	vec3AddVToV(&b->position, &tempVec3);            // Translate
+	quatRotateVec3FastP(&b->orientation, &tempVec3);  // Rotate
+	vec3VAddVP(&b->position, &tempVec3);              // Translate
 }
-
-void boneTransformAppendPositionVecR(const bone *const restrict b, const float x, const float y, const float z, vec3 *const restrict r){
+void boneTransformAppendPositionVecPR(const bone *const restrict b, const float x, const float y, const float z, vec3 *const restrict r){
 	// Calculate total translation.
-	r->x = x * b->scale.x;                   // Scale
+	r->x = x * b->scale.x;                    // Scale
 	r->y = y * b->scale.y;
 	r->z = z * b->scale.z;
-	quatRotateVec3Fast(&b->orientation, r);  // Rotate
-	vec3AddVToV(r, &b->position);            // Translate
+	quatRotateVec3FastP(&b->orientation, r);  // Rotate
+	vec3VAddVP(r, &b->position);              // Translate
 }
 
-void boneTransformAppendOrientation1(bone *const restrict b1, const bone *const restrict b2){
+quat boneTransformAppendOrientation(const bone b1, const bone b2){
+	return quatNormalizeFast(quatQMultQ(b1.orientation, b2.orientation));
+}
+void boneTransformAppendOrientationP1(bone *const restrict b1, const bone *const restrict b2){
 	// Calculate total orientation.
-	quatMultQByQ1(&b1->orientation, &b2->orientation);
+	quatQMultQP1(&b1->orientation, &b2->orientation);
 	// Normalize the new orientation to prevent error build-ups.
-	quatNormalizeFast(&b1->orientation);
+	quatNormalizeFastP(&b1->orientation);
 }
-
-void boneTransformAppendOrientation2(const bone *const restrict b1, bone *const restrict b2){
+void boneTransformAppendOrientationP2(const bone *const restrict b1, bone *const restrict b2){
 	// Calculate total orientation.
-	quatMultQByQ2(&b1->orientation, &b2->orientation);
+	quatQMultQP2(&b1->orientation, &b2->orientation);
 	// Normalize the new orientation to prevent error build-ups.
-	quatNormalizeFast(&b2->orientation);
+	quatNormalizeFastP(&b2->orientation);
 }
-
-void boneTransformAppendOrientationR(const bone *const restrict b1, const bone *const restrict b2, bone *const restrict r){
+void boneTransformAppendOrientationPR(const bone *const restrict b1, const bone *const restrict b2, bone *const restrict r){
 	// Calculate total orientation.
-	quatMultQByQR(&b1->orientation, &b2->orientation, &r->orientation);
+	quatQMultQPR(&b1->orientation, &b2->orientation, &r->orientation);
 	// Normalize the new orientation to prevent error build-ups.
-	quatNormalizeFast(&r->orientation);
+	quatNormalizeFastP(&r->orientation);
 }
 
-void boneTransformAppendScale(bone *const restrict b1, const bone *const restrict b2){
+vec3 boneTransformAppendScale(const bone b1, const bone b2){
+	return vec3VMultV(b1.scale, b2.scale);
+}
+void boneTransformAppendScaleP(bone *const restrict b1, const bone *const restrict b2){
 	// Calculate total scale.
-	vec3MultVByV(&b1->scale, &b2->scale);
+	vec3VMultVP(&b1->scale, &b2->scale);
 }
-
-void boneTransformAppendScaleR(const bone *const restrict b1, const bone *const restrict b2, bone *const restrict r){
+void boneTransformAppendScalePR(const bone *const restrict b1, const bone *const restrict b2, bone *const restrict r){
 	// Calculate total scale.
-	vec3MultVByVR(&b2->scale, &b1->scale, &r->scale);
+	vec3VMultVPR(&b2->scale, &b1->scale, &r->scale);
 }
 
-void boneTransformAppend1(bone *const restrict b1, const bone *const restrict b2){
+bone boneTransformAppend(const bone b1, const bone b2){
 	/*
 	** Adds the transformations for b2 to b1 and stores the result in r.
+	** Used for getting the total sum of all transformations of a bone.
+	*/
+	const bone r = {
+		.position = vec3VAddV(b1.position, quatRotateVec3Fast(b1.orientation, vec3VMultV(b2.position, b1.scale))),
+		.orientation = quatNormalizeFast(quatQMultQ(b1.orientation, b2.orientation)),
+		.scale = vec3VMultV(b1.scale, b2.scale)
+	};
+	return r;
+}
+void boneTransformAppendP1(bone *const restrict b1, const bone *const restrict b2){
+	/*
+	** Adds the transformations for b2 to b1 and stores the result in b1.
 	** Used for getting the total sum of all transformations of a bone.
 	*/
 	// Calculate total translation.
 	vec3 tempVec3;
-	vec3MultVByVR(&b2->position, &b1->scale, &tempVec3);  // Scale
-	quatRotateVec3Fast(&b1->orientation, &tempVec3);      // Rotate
-	vec3AddVToV(&b1->position, &tempVec3);                // Translate
+	vec3VMultVPR(&b2->position, &b1->scale, &tempVec3);  // Scale
+	quatRotateVec3FastP(&b1->orientation, &tempVec3);    // Rotate
+	vec3VAddVP(&b1->position, &tempVec3);                // Translate
 	// Calculate total orientation.
-	quatMultQByQ1(&b1->orientation, &b2->orientation);
+	quatQMultQP1(&b1->orientation, &b2->orientation);
 	// Normalize the new orientation to prevent error build-ups.
-	quatNormalizeFast(&b1->orientation);
+	quatNormalizeFastP(&b1->orientation);
 	// Calculate total scale.
-	vec3MultVByV(&b1->scale, &b2->scale);
+	vec3VMultVP(&b1->scale, &b2->scale);
 }
-
-void boneTransformAppend2(const bone *const restrict b1, bone *const restrict b2){
+void boneTransformAppendP2(const bone *const restrict b1, bone *const restrict b2){
+	/*
+	** Adds the transformations for b2 to b1 and stores the result in b2.
+	** Used for getting the total sum of all transformations of a bone.
+	*/
+	// Calculate total translation.
+	vec3VMultVP(&b2->position, &b1->scale);                // Scale
+	quatRotateVec3FastP(&b1->orientation, &b2->position);  // Rotate
+	vec3VAddVP(&b2->position, &b1->position);              // Translate
+	// Calculate total orientation.
+	quatQMultQP2(&b1->orientation, &b2->orientation);
+	// Normalize the new orientation to prevent error build-ups.
+	quatNormalizeFastP(&b2->orientation);
+	// Calculate total scale.
+	vec3VMultVP(&b2->scale, &b1->scale);
+}
+void boneTransformAppendPR(const bone *const restrict b1, const bone *const restrict b2, bone *const restrict r){
 	/*
 	** Adds the transformations for b2 to b1 and stores the result in r.
 	** Used for getting the total sum of all transformations of a bone.
 	*/
 	// Calculate total translation.
-	vec3MultVByV(&b2->position, &b1->scale);              // Scale
-	quatRotateVec3Fast(&b1->orientation, &b2->position);  // Rotate
-	vec3AddVToV(&b2->position, &b1->position);            // Translate
+	vec3VMultVPR(&b2->position, &b1->scale, &r->position);  // Scale
+	quatRotateVec3FastP(&b1->orientation, &r->position);    // Rotate
+	vec3VAddVP(&r->position, &b1->position);                // Translate
 	// Calculate total orientation.
-	quatMultQByQ2(&b1->orientation, &b2->orientation);
+	quatQMultQPR(&b1->orientation, &b2->orientation, &r->orientation);
 	// Normalize the new orientation to prevent error build-ups.
-	quatNormalizeFast(&b2->orientation);
+	quatNormalizeFastP(&r->orientation);
 	// Calculate total scale.
-	vec3MultVByV(&b2->scale, &b1->scale);
+	vec3VMultVPR(&b1->scale, &b2->scale, &r->scale);
 }
 
-void boneTransformAppendR(const bone *const restrict b1, const bone *const restrict b2, bone *const restrict r){
+bone boneTransformCombine(const bone b1, const bone b2){
 	/*
-	** Adds the transformations for b2 to b1 and stores the result in r.
+	** Combines the transformations for b2 with b1 and stores the result in r.
+	** Used for getting the total sum of all transformations of a bone.
+	*/
+	const bone r = {
+		.position = vec3VAddV(b1.position, b2.position),
+		.orientation = quatNormalizeFast(quatQMultQ(b1.orientation, b2.orientation)),
+		.scale = vec3VMultV(b1.scale, b2.scale)
+	};
+	return r;
+}
+void boneTransformCombineP1(bone *const restrict b1, const bone *const restrict b2){
+	/*
+	** Combines the transformations for b2 with b1 and stores the result in b1.
 	** Used for getting the total sum of all transformations of a bone.
 	*/
 	// Calculate total translation.
-	vec3MultVByVR(&b2->position, &b1->scale, &r->position);  // Scale
-	quatRotateVec3Fast(&b1->orientation, &r->position);      // Rotate
-	vec3AddVToV(&r->position, &b1->position);                // Translate
+	vec3VAddVP(&b1->position, &b2->position);
 	// Calculate total orientation.
-	quatMultQByQR(&b1->orientation, &b2->orientation, &r->orientation);
+	quatQMultQP1(&b1->orientation, &b2->orientation);
 	// Normalize the new orientation to prevent error build-ups.
-	quatNormalizeFast(&r->orientation);
+	quatNormalizeFastP(&b1->orientation);
 	// Calculate total scale.
-	vec3MultVByVR(&b1->scale, &b2->scale, &r->scale);
+	vec3VMultVP(&b1->scale, &b2->scale);
 }
-
-void boneTransformCombine1(bone *const restrict b1, const bone *const restrict b2){
+void boneTransformCombineP2(const bone *const restrict b1, bone *const restrict b2){
+	/*
+	** Combines the transformations for b2 with b1 and stores the result in b2.
+	** Used for getting the total sum of all transformations of a bone.
+	*/
+	// Calculate total translation.
+	vec3VAddVP(&b2->position, &b1->position);
+	// Calculate total orientation.
+	quatQMultQP2(&b1->orientation, &b2->orientation);
+	// Normalize the new orientation to prevent error build-ups.
+	quatNormalizeFastP(&b2->orientation);
+	// Calculate total scale.
+	vec3VMultVP(&b2->scale, &b1->scale);
+}
+void boneTransformCombinePR(const bone *const restrict b1, const bone *const restrict b2, bone *const restrict r){
 	/*
 	** Combines the transformations for b2 with b1 and stores the result in r.
 	** Used for getting the total sum of all transformations of a bone.
 	*/
 	// Calculate total translation.
-	vec3AddVToV(&b1->position, &b2->position);
+	vec3VAddVPR(&b1->position, &b2->position, &r->position);
 	// Calculate total orientation.
-	quatMultQByQ1(&b1->orientation, &b2->orientation);
+	quatQMultQPR(&b1->orientation, &b2->orientation, &r->orientation);
 	// Normalize the new orientation to prevent error build-ups.
-	quatNormalizeFast(&b1->orientation);
+	quatNormalizeFastP(&r->orientation);
 	// Calculate total scale.
-	vec3MultVByV(&b1->scale, &b2->scale);
-}
-
-void boneTransformCombine2(const bone *const restrict b1, bone *const restrict b2){
-	/*
-	** Combines the transformations for b2 with b1 and stores the result in r.
-	** Used for getting the total sum of all transformations of a bone.
-	*/
-	// Calculate total translation.
-	vec3AddVToV(&b2->position, &b1->position);
-	// Calculate total orientation.
-	quatMultQByQ2(&b1->orientation, &b2->orientation);
-	// Normalize the new orientation to prevent error build-ups.
-	quatNormalizeFast(&b2->orientation);
-	// Calculate total scale.
-	vec3MultVByV(&b2->scale, &b1->scale);
-}
-
-void boneTransformCombineR(const bone *const restrict b1, const bone *const restrict b2, bone *const restrict r){
-	/*
-	** Combines the transformations for b2 with b1 and stores the result in r.
-	** Used for getting the total sum of all transformations of a bone.
-	*/
-	// Calculate total translation.
-	vec3AddVToVR(&b1->position, &b2->position, &r->position);
-	// Calculate total orientation.
-	quatMultQByQR(&b1->orientation, &b2->orientation, &r->orientation);
-	// Normalize the new orientation to prevent error build-ups.
-	quatNormalizeFast(&r->orientation);
-	// Calculate total scale.
-	vec3MultVByVR(&b1->scale, &b2->scale, &r->scale);
+	vec3VMultVPR(&b1->scale, &b2->scale, &r->scale);
 }

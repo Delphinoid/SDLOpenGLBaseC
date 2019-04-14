@@ -5,15 +5,15 @@
 void camInit(camera *const restrict cam){
 	iVec3Init(&cam->position, 0.f, 0.f, 0.f);
 	iQuatInit(&cam->orientation);
-	vec3Set(&cam->rotation, 0.f, 0.f, 0.f);
+	cam->rotation = vec3NewS(0.f);
 	///vec3Set(cam->previousRotation, 0.f, 0.f, 0.f);
 	iVec3Init(&cam->targetPosition, 0.f, 0.f, -1.f);
 	iVec3Init(&cam->up, 0.f, 1.f, 0.f);
 	iFloatInit(&cam->fovy, 90.f);
 	gfxViewInit(&cam->view);
-	mat4Identity(&cam->viewMatrix);
-	mat4Identity(&cam->projectionMatrix);
-	mat4Identity(&cam->viewProjectionMatrix);
+	cam->viewMatrix = mat4Identity();
+	cam->projectionMatrix = mat4Identity();
+	cam->viewProjectionMatrix = mat4Identity();
 	cam->flags = CAM_UPDATE_VIEW | CAM_UPDATE_PROJECTION;
 }
 void camResetInterpolation(camera *const restrict cam){
@@ -80,7 +80,7 @@ void camUpdateViewMatrix(camera *const restrict cam, const float interpT){
 	   cam->rotation.y != cam->previousRotation.y ||
 	   cam->rotation.z != cam->previousRotation.z){**/
 		// Update orientation.
-		quatSetEuler(&cam->orientation.value, cam->rotation.x*RADIAN_RATIO,
+		cam->orientation.value = quatNewEuler(cam->rotation.x*RADIAN_RATIO,
 		                                      cam->rotation.y*RADIAN_RATIO,
 		                                      cam->rotation.z*RADIAN_RATIO);
 		/**cam->previousRotation = cam->rotation;
@@ -97,12 +97,10 @@ void camUpdateViewMatrix(camera *const restrict cam, const float interpT){
 		/**camCalculateUp(cam);**/
 
 		// Set the camera to look at something.
-		mat4LookAt(&cam->viewMatrix, &cam->position.render,
-		                             &cam->targetPosition.render,
-		                             &cam->up.render);
+		cam->viewMatrix = mat4LookAt(cam->position.render, cam->targetPosition.render, cam->up.render);
 
 		// Rotate the camera.
-		mat4Rotate(&cam->viewMatrix, &cam->orientation.render);
+		cam->viewMatrix = mat4Rotate(cam->viewMatrix, cam->orientation.render);
 
 		flagsUnset(cam->flags, CAM_UPDATE_VIEW);
 
@@ -116,15 +114,14 @@ void camUpdateProjectionMatrix(camera *const restrict cam, const float windowAsp
 		if(flagsAreUnset(cam->flags, CAM_PROJECTION_ORTHO)){
 
 			// CAM_PROJECTION_TYPE is not set, the camera is using a frustum projection matrix
-			mat4Perspective(&cam->projectionMatrix, cam->fovy.render*RADIAN_RATIO, windowAspectRatioX / windowAspectRatioY, 0.1f/cam->fovy.render, 1000.f);
+			cam->projectionMatrix = mat4Perspective(cam->fovy.render*RADIAN_RATIO, windowAspectRatioX / windowAspectRatioY, 0.1f/cam->fovy.render, 1000.f);
 
 		}else{
 
 			// CAM_PROJECTION_TYPE is set, the camera is using an orthographic projection matrix
-			mat4Ortho(&cam->projectionMatrix,
-			          0.f, windowAspectRatioX / (windowAspectRatioX < windowAspectRatioY ? windowAspectRatioX : windowAspectRatioY),
-			          0.f, windowAspectRatioY / (windowAspectRatioX < windowAspectRatioY ? windowAspectRatioX : windowAspectRatioY),
-			          -1000.f, 1000.f);
+			cam->projectionMatrix = mat4Ortho(0.f, windowAspectRatioX / (windowAspectRatioX < windowAspectRatioY ? windowAspectRatioX : windowAspectRatioY),
+			                                  0.f, windowAspectRatioY / (windowAspectRatioX < windowAspectRatioY ? windowAspectRatioX : windowAspectRatioY),
+			                                  -1000.f, 1000.f);
 
 		}
 
@@ -140,7 +137,7 @@ void camUpdateViewProjectionMatrix(camera *const restrict cam, const unsigned in
 		flagsSet(cam->flags, CAM_UPDATE_PROJECTION);
 	}
 	camUpdateProjectionMatrix(cam, windowAspectRatioX, windowAspectRatioY, interpT);
-	mat4MultMByMR(cam->viewMatrix, cam->projectionMatrix, &cam->viewProjectionMatrix);
+	cam->viewProjectionMatrix = mat4MMultM(cam->viewMatrix, cam->projectionMatrix);
 }
 
 float camDistance(const camera *const restrict cam, const vec3 *const restrict target){

@@ -10,7 +10,7 @@ typedef struct {
 } cAABB;
 
 void cAABBExpand(cAABB *const restrict c, const float addend);
-void cAABBExpandVelocity(cAABB *const restrict c, const vec3 *const restrict velocity, const float factor);
+void cAABBExpandVelocity(cAABB *const restrict c, const vec3 velocity, const float factor);
 
 void cAABBCombine(cAABB *const restrict c1, cAABB *const restrict c2, cAABB *const restrict r);
 
