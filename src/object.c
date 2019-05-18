@@ -834,9 +834,9 @@ return_t objUpdate(object *const restrict obj, physIsland *const restrict island
 				// Remove the body's "uninitialized" flag.
 				physRigidBodySetInitialized(body);
 
-				#if !defined PHYSICS_MODULARIZE_SOLVER && !defined PHYSICS_GAUSS_SEIDEL_SOLVER
-
 			}else{
+
+				#if !defined PHYSICS_MODULARIZE_SOLVER && !defined PHYSICS_GAUSS_SEIDEL_SOLVER
 
 				// Integrate the body's configuration.
 				// Done here for the sake of any child bones.
@@ -845,10 +845,10 @@ return_t objUpdate(object *const restrict obj, physIsland *const restrict island
 				// Integrate the body's velocities.
 				physRigidBodyIntegrateVelocity(body, dt);
 
+				#endif
+
 				// Update the position from the centroid.
 				physRigidBodyUpdateConfiguration(body);
-
-				#endif
 
 			}
 

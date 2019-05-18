@@ -653,20 +653,12 @@ void modulePhysicsSolveConstraints(const float dt){
 		PHYSICS_CONTACT_CONFIGURATION_SOLVER_NEXT_ITERATION:
 		// Exit if the error is small.
 		if(error >= PHYSICS_ERROR_THRESHOLD){
-			goto PHYSICS_UPDATE_POSITIONS;
+			return;
 		}else{
 			--i;
 		}
 
 	}
-
-	// Update the body's positions from their centroids.
-	PHYSICS_UPDATE_POSITIONS:
-	MEMORY_SLINK_LOOP_BEGIN(__PhysicsRigidBodyResourceArray, body, physRigidBody *);
-
-		physRigidBodyUpdateConfiguration(body);
-
-	MEMORY_SLINK_LOOP_END(__PhysicsRigidBodyResourceArray, body, return;);
 
 	#endif
 	#endif
