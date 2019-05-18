@@ -17,6 +17,9 @@
 **
 ** It can also be treated as an object
 ** pool if necessary.
+**
+** Block format:
+** [ Next block pointer + active flag ][ Previous block pointer ][ Data (or free-list pointer) ]
 */
 
 #define MEMORY_DLINK_BLOCK_ACTIVE        (uintptr_t)0x00

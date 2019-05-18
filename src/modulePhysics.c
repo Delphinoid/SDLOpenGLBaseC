@@ -554,31 +554,121 @@ void modulePhysicsAABBNodeClear(){
 
 }
 
-void modulePhysicsSolve(){
+#if !defined PHYSICS_MODULARIZE_SOLVER && !defined PHYSICS_GAUSS_SEIDEL_SOLVER
+void modulePhysicsSolveConstraints(){
+#else
+void modulePhysicsSolveConstraints(const float dt){
+#endif
+
 
 	/*
-	** Solves the constraints, followed by the contacts,
+	** Solves all active constraints
 	** for all systems being simulated.
 	*/
 
 	size_t i;
 
-	// Iteratively solve constraints.
-	///
+	// Iteratively solve joint velocity constraints.
+	i = PHYSICS_JOINT_VELOCITY_SOLVER_ITERATIONS;
+	while(i > 0){
 
-	// Iteratively solve contacts.
-	i = PHYSICS_CONTACT_SOLVER_ITERATIONS;
+		MEMORY_QLINK_LOOP_BEGIN(__PhysicsJointResourceArray, joint, physJoint *);
+
+			physJointSolveVelocityConstraints(joint);
+
+		MEMORY_QLINK_LOOP_END(__PhysicsJointResourceArray, joint, goto PHYSICS_JOINT_VELOCITY_SOLVER_NEXT_ITERATION;);
+
+		PHYSICS_JOINT_VELOCITY_SOLVER_NEXT_ITERATION:
+		--i;
+
+	}
+
+	// Iteratively solve contact velocity constraints.
+	i = PHYSICS_CONTACT_VELOCITY_SOLVER_ITERATIONS;
 	while(i > 0){
 
 		MEMORY_QLINK_LOOP_BEGIN(__PhysicsContactPairResourceArray, contact, physContactPair *);
 
-			physContactSolve(&contact->data, contact->colliderA->body, contact->colliderB->body);
+			physContactSolveVelocityConstraints(&contact->data, contact->colliderA->body, contact->colliderB->body);
 
-		MEMORY_QLINK_LOOP_END(__PhysicsContactPairResourceArray, contact, goto PHYSICS_CONTACT_SOLVER_NEXT_ITERATION;);
+		MEMORY_QLINK_LOOP_END(__PhysicsContactPairResourceArray, contact, goto PHYSICS_CONTACT_VELOCITY_SOLVER_NEXT_ITERATION;);
 
-		PHYSICS_CONTACT_SOLVER_NEXT_ITERATION:
+		PHYSICS_CONTACT_VELOCITY_SOLVER_NEXT_ITERATION:
 		--i;
 
 	}
+
+	#if defined PHYSICS_MODULARIZE_SOLVER || defined PHYSICS_GAUSS_SEIDEL_SOLVER
+
+	// Integrate velocities and configurations.
+	MEMORY_SLINK_LOOP_BEGIN(__PhysicsRigidBodyResourceArray, body, physRigidBody *);
+
+		physRigidBodyIntegrate(body, dt);
+
+	#ifndef PHYSICS_GAUSS_SEIDEL_SOLVER
+		if(flagsAreSet(body->flags, PHYSICS_BODY_TRANSFORMED)){
+			physRigidBodyPositionFromCentroid(body);
+		}
+
+	MEMORY_SLINK_LOOP_END(__PhysicsRigidBodyResourceArray, body, return;);
+	#else
+	MEMORY_SLINK_LOOP_END(__PhysicsRigidBodyResourceArray, body, goto PHYSICS_JOINT_CONFIGURATION_SOLVER;);
+
+	// Iteratively solve joint configuration constraints.
+	PHYSICS_JOINT_CONFIGURATION_SOLVER:
+	i = PHYSICS_JOINT_CONFIGURATION_SOLVER_ITERATIONS;
+	/*while(i > 0){
+
+		float error = 0.f;
+
+		MEMORY_QLINK_LOOP_BEGIN(__PhysicsJointResourceArray, joint, physJoint *);
+
+			error = physJointSolveConfigurationConstraints(joint);
+
+		MEMORY_QLINK_LOOP_END(__PhysicsJointResourceArray, joint, goto PHYSICS_JOINT_CONFIGURATION_SOLVER_NEXT_ITERATION;);
+
+		PHYSICS_JOINT_CONFIGURATION_SOLVER_NEXT_ITERATION:
+		// Exit if the error is small.
+		if(error >= PHYSICS_ERROR_THRESHOLD){
+			goto PHYSICS_CONTACT_CONFIGURATION_SOLVER;
+		}else{
+			--i;
+		}
+
+	}*/
+
+	// Iteratively solve contact configuration constraints.
+	PHYSICS_CONTACT_CONFIGURATION_SOLVER:
+	i = PHYSICS_CONTACT_CONFIGURATION_SOLVER_ITERATIONS;
+	while(i > 0){
+
+		float error = 0.f;
+
+		MEMORY_QLINK_LOOP_BEGIN(__PhysicsContactPairResourceArray, contact, physContactPair *);
+
+			error = physContactSolveConfigurationConstraints(&contact->data, contact->colliderA->body, contact->colliderB->body, error);
+
+		MEMORY_QLINK_LOOP_END(__PhysicsContactPairResourceArray, contact, goto PHYSICS_CONTACT_CONFIGURATION_SOLVER_NEXT_ITERATION;);
+
+		PHYSICS_CONTACT_CONFIGURATION_SOLVER_NEXT_ITERATION:
+		// Exit if the error is small.
+		if(error >= PHYSICS_ERROR_THRESHOLD){
+			goto PHYSICS_UPDATE_POSITIONS;
+		}else{
+			--i;
+		}
+
+	}
+
+	// Update the body's positions from their centroids.
+	PHYSICS_UPDATE_POSITIONS:
+	MEMORY_SLINK_LOOP_BEGIN(__PhysicsRigidBodyResourceArray, body, physRigidBody *);
+
+		physRigidBodyUpdateConfiguration(body);
+
+	MEMORY_SLINK_LOOP_END(__PhysicsRigidBodyResourceArray, body, return;);
+
+	#endif
+	#endif
 
 }

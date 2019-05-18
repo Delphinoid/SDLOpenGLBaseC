@@ -33,6 +33,9 @@
 ** MEMORY_TREE_FORCE_MOVE_ON_REALLOC
 ** may be specified to force best
 ** fits on reallocations.
+**
+** Block format:
+** [ Current block size ][Previous block size + active flag ][ Data (or [ Left child pointer ][ Right child pointer ][ Parent pointer + colour flag ]) ]
 */
 
 #define MEMORY_TREE_UNSPECIFIED_LENGTH MEMORY_UNSPECIFIED_LENGTH

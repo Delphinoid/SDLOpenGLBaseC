@@ -13,6 +13,7 @@
 /** Add physics island arrays to scenes.           **/
 /** Links both ways for object removal / deletion. **/
 /** Scene / zone update rate? **/
+/** Scene transformation (translation, scale, rotation for updating)? **/
 
 //typedef uint_least32_t objectIndex_t;
 

@@ -24,6 +24,11 @@ scene *moduleSceneAllocate();
 void moduleSceneFree(scene *const restrict resource);
 void moduleSceneClear();
 
+#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
+void moduleSceneQueryIslands(const float dt);
+#else
+void moduleSceneQueryIslands();
+#endif
 void moduleSceneUpdate(const float elapsedTime, const float dt);
 
 #endif

@@ -1,0 +1,31 @@
+#ifndef PHYSICSCONSTRAINT_H
+#define PHYSICSCONSTRAINT_H
+
+#ifndef PHYSICS_LINEAR_SLOP
+	#define PHYSICS_LINEAR_SLOP 0.05f
+#endif
+
+#ifndef PHYSICS_BAUMGARTE_TERM
+	#define PHYSICS_BAUMGARTE_TERM 0.2f
+#endif
+
+#ifndef PHYSICS_RESTITUTION_THRESHOLD
+	#define PHYSICS_RESTITUTION_THRESHOLD 1.f
+#endif
+
+#ifndef PHYSICS_SEPARATION_BIAS
+	#define PHYSICS_SEPARATION_BIAS 0.f
+#endif
+#define PHYSICS_SEPARATION_BIAS_TOTAL (2.f * PHYSICS_SEPARATION_BIAS)
+
+// Maximum linear correction for NGS position solving.
+#ifndef PHYSICS_LINEAR_CORRECTION
+	#define PHYSICS_LINEAR_CORRECTION 0.2f
+#endif
+
+// Error threshold for NGS position solving.
+#ifndef PHYSICS_ERROR_THRESHOLD
+	#define PHYSICS_ERROR_THRESHOLD (-3.f * PHYSICS_LINEAR_SLOP)
+#endif
+
+#endif

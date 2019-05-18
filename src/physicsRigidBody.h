@@ -15,6 +15,7 @@
 #define PHYSICS_BODY_TRANSLATED         0x20  // The body was translated this frame.
 #define PHYSICS_BODY_ROTATED            0x40  // The body was rotated this frame.
 #define PHYSICS_BODY_TRANSFORMED        0x60  // The body was transformed this frame.
+#define PHYSICS_BODY_INITIALIZED        0x80  // The body was initialized on this frame.
 
 #ifndef PHYSICS_BODY_DEFAULT_STATE
 	#define PHYSICS_BODY_DEFAULT_STATE PHYSICS_BODY_UNINITIALIZED | PHYSICS_BODY_SIMULATE | PHYSICS_BODY_COLLIDE | PHYSICS_BODY_COLLISION_MODIFIED
@@ -63,15 +64,19 @@ typedef struct physRigidBody {
 	mat3 inverseInertiaTensorGlobal;  // The inverse of the body's global inertia tensor.
 
 	// Space properties.
-	bone *configuration;   // Pointer to the current configuration of the body.
+	bone configuration;   // Pointer to the current configuration of the body.
 	vec3 linearVelocity;   // Current linear velocity.
 	vec3 angularVelocity;  // Current angular velocity.
 	vec3 netForce;         // Force accumulator.
 	vec3 netTorque;        // Torque accumulator.
 
 	// Physical constraints.
-	physJoint *joints;  // A QLink of joints that the body owns.
-	                    // Ordered by smallest child address to largest.
+	// joints is a QLink of all joints that the body is a part of,
+	// ordered from smallest partner address to largest.
+	// At the beginning of the QLink is all of the joints where this
+	// body is the one with the larger address, similar to collider
+	// contacts and separations.
+	physJoint *joints;
 
 	// The rigid body this instance is derived from, in local space.
 	const physRigidBodyBase *base;
@@ -89,7 +94,7 @@ void physRigidBodyBaseDelete(physRigidBodyBase *const restrict local);
 
 // Physics rigid body instance functions.
 void physRigidBodyInit(physRigidBody *const restrict body);
-return_t physRigidBodyInstantiate(physRigidBody *const restrict body, physRigidBodyBase *const restrict local, bone *const restrict configuration);
+return_t physRigidBodyInstantiate(physRigidBody *const restrict body, physRigidBodyBase *const restrict local);
 
 void physRigidBodySetInitialized(physRigidBody *const restrict body);
 void physRigidBodySetAsleep(physRigidBody *const restrict body);
@@ -107,6 +112,7 @@ return_t physRigidBodyIsUninitialized(const physRigidBody *const restrict body);
 return_t physRigidBodyIsSimulated(const physRigidBody *const restrict body);
 return_t physRigidBodyIsCollidable(const physRigidBody *const restrict body);
 return_t physRigidBodyIsAsleep(physRigidBody *const restrict body);
+return_t physRigidBodyWasInitialized(const physRigidBody *const restrict body);
 
 return_t physRigidBodyUpdateColliders(physRigidBody *const restrict body, physIsland *const restrict island);
 
@@ -116,12 +122,21 @@ void physRigidBodyApplyForceGlobal(physRigidBody *const restrict body, const vec
 void physRigidBodyApplyImpulse(physRigidBody *const restrict body, const vec3 x, const vec3 J);
 void physRigidBodyApplyImpulseInverse(physRigidBody *const restrict body, const vec3 x, const vec3 J);
 
+void physRigidBodyCentroidFromPosition(physRigidBody *const restrict body);
+void physRigidBodyPositionFromCentroid(physRigidBody *const restrict body);
+void physRigidBodyGenerateGlobalInertia(physRigidBody *const restrict body);
+
+void physRigidBodyPrepare(physRigidBody *const restrict body);
+void physRigidBodyUpdateConfiguration(physRigidBody *const restrict body);
+
 void physRigidBodyIntegrateVelocity(physRigidBody *const restrict body, const float dt);
 void physRigidBodyIntegrateConfiguration(physRigidBody *const restrict body, const float dt);
+void physRigidBodyIntegrate(physRigidBody *const restrict body, const float dt);
 
 return_t physRigidBodyPermitCollision(const physRigidBody *const restrict body1, const physRigidBody *const restrict body2);
 
-return_t physRigidBodyAddJoint(physRigidBody *const restrict body, physJoint *const c);
+void physRigidBodyAddCollider(physRigidBody *const restrict body, physCollider *const c, const float **const vertexMassArray);
+return_t physRigidBodyAddJoint(physRigidBody *const restrict body, physJoint *const joint);
 
 void physRigidBodyDelete(physRigidBody *const restrict body);
 

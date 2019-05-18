@@ -62,10 +62,10 @@ return_t scnUpdate(scene *const restrict scn, const float elapsedTime, const flo
 	MEMORY_POOL_LOOP_END(scn->objects, i, goto UPDATE_PHYSICS_ISLAND;);
 
 	UPDATE_PHYSICS_ISLAND:
-	if(physIslandQuery(&scn->island, dt) < 0){
+	//if(physIslandQuery(&scn->island, dt) < 0){
 		/** Memory allocation failure. **/
-		return -1;
-	}
+		//return -1;
+	//}
 
 	return 1;
 

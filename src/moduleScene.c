@@ -80,6 +80,24 @@ void moduleSceneClear(){
 
 }
 
+#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
+void moduleSceneQueryIslands(const float dt){
+#else
+void moduleSceneQueryIslands(){
+#endif
+
+	MEMORY_POOL_LOOP_BEGIN(__SceneResourceArray, i, scene *);
+
+		#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
+		physIslandQuery(&i->island, dt);
+		#else
+		physIslandQuery(&i->island);
+		#endif
+
+	MEMORY_POOL_LOOP_END(__SceneResourceArray, i, return;);
+
+}
+
 void moduleSceneUpdate(const float elapsedTime, const float dt){
 
 	MEMORY_POOL_LOOP_BEGIN(__SceneResourceArray, i, scene *);

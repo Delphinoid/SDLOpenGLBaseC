@@ -8,6 +8,9 @@
 **
 ** Implements a doubly-linked list that
 ** may have two distinct, separate owners.
+**
+** Block format:
+** [ Next block pointer A + active flag ][ Previous block pointer A ][ Next block pointer B ][ Previous block pointer B ][ Data (or free-list pointer) ]
 */
 
 #define MEMORY_QLINK_BLOCK_ACTIVE        (uintptr_t)0x00

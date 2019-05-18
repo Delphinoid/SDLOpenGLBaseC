@@ -31,13 +31,19 @@ __FORCE_INLINE__ void physIslandRemoveCollider(physIsland *const restrict island
 	}
 }
 
+#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
 __FORCE_INLINE__ return_t physIslandQuery(const physIsland *const restrict island, const float dt){
+#else
+__FORCE_INLINE__ return_t physIslandQuery(const physIsland *const restrict island){
+#endif
 
 	/*
 	** Maintain contact and separation pairs for each collider.
 	*/
 
+	#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
 	const float frequency = 1.f/dt;
+	#endif
 
 	aabbNode *node = island->tree.leaves;
 
@@ -47,12 +53,17 @@ __FORCE_INLINE__ return_t physIslandQuery(const physIsland *const restrict islan
 		aabbTreeQueryNodeStack(&island->tree, node, &physCollisionQuery);
 
 		// Remove any outdated contacts and separations and update what's left.
+		#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
 		physColliderUpdateContacts(node->data.leaf.value, frequency);
+		#else
+		physColliderUpdateContacts(node->data.leaf.value);
+		#endif
 		physColliderUpdateSeparations(node->data.leaf.value);
 
 		node = node->data.leaf.next;
 
 	}
+
 	return 1;
 
 }

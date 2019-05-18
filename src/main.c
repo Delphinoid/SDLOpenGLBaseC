@@ -318,11 +318,22 @@ int main(int argc, char *argv[]){
 				//objGetState(&gameStateManager, 4, 0)->tempRndrConfig.targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
 			}
 
-			// Update.
-			moduleSceneUpdate(tickrateTimeMod, tickratioTimeMod);
+			// Query physics islands.
+			#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
+			moduleSceneQueryIslands(tickratioTimeMod);
+			#else
+			moduleSceneQueryIslands();
+			#endif
 
-			// Solve constraints.
-			modulePhysicsSolve(tickratioTimeMod);
+			// Solve physics constraints.
+			#if !defined PHYSICS_MODULARIZE_SOLVER && !defined PHYSICS_GAUSS_SEIDEL_SOLVER
+			modulePhysicsSolveConstraints();
+			#else
+			modulePhysicsSolveConstraints(tickratioTimeMod);
+			#endif
+
+			// Update scenes.
+			moduleSceneUpdate(tickrateTimeMod, tickratioTimeMod);
 
 			// Next frame.
 			nextUpdate += tickrateUpdateMod;

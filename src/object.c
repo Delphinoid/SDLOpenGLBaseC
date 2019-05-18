@@ -532,7 +532,7 @@ return_t objInstantiate(object *const restrict obj, const objectBase *const rest
 				bodyInstance = modulePhysicsRigidBodyAppend(&obj->skeletonBodies);
 				if(
 					bodyInstance == NULL ||
-					physRigidBodyInstantiate(bodyInstance, bodyBase, &obj->state.skeleton[bodyBase->id]) < 0
+					physRigidBodyInstantiate(bodyInstance, bodyBase/*, &obj->state.skeleton[bodyBase->id]*/) < 0
 				){
 					/** Memory allocation failure. **/
 					memFree(obj->configuration);
@@ -816,22 +816,25 @@ return_t objUpdate(object *const restrict obj, physIsland *const restrict island
 			if(physRigidBodyIsUninitialized(body)){
 
 				// Generate a new animated bone state.
-				*sklState = *configuration;
-				skliGenerateBoneState(&obj->skeletonData, i, sklBone->name, sklState);
+				// This will later be copied into sklState.
+				body->configuration = *configuration;
+				skliGenerateBoneState(&obj->skeletonData, i, sklBone->name, &body->configuration);
+
+				// Initialize the body's moment of inertia and centroid.
+				physRigidBodyPrepare(body);
+
+				#if !defined PHYSICS_MODULARIZE_SOLVER && !defined PHYSICS_GAUSS_SEIDEL_SOLVER
 
 				// Only integrate half of the first step
 				// for the leapfrog integration scheme.
 				physRigidBodyIntegrateVelocity(body, dt*0.5f);
 
-				// Add the body to the physics island
-				// and update all of its colliders.
-				if(physRigidBodyUpdateColliders(body, island) < 0){
-					/** Memory allocation failure. **/
-					return -1;
-				}
+				#endif
 
 				// Remove the body's "uninitialized" flag.
 				physRigidBodySetInitialized(body);
+
+				#if !defined PHYSICS_MODULARIZE_SOLVER && !defined PHYSICS_GAUSS_SEIDEL_SOLVER
 
 			}else{
 
@@ -842,12 +845,22 @@ return_t objUpdate(object *const restrict obj, physIsland *const restrict island
 				// Integrate the body's velocities.
 				physRigidBodyIntegrateVelocity(body, dt);
 
-				// Update the body's colliders.
-				if(physRigidBodyUpdateColliders(body, island) < 0){
-					/** Memory allocation failure. **/
-					return -1;
-				}
+				// Update the position from the centroid.
+				physRigidBodyUpdateConfiguration(body);
 
+				#endif
+
+			}
+
+			// Copy the new bone state, as modified
+			// by the body, into the object.
+			*sklState = body->configuration;
+
+			// Add the body to the physics island
+			// and update all of its colliders.
+			if(physRigidBodyUpdateColliders(body, island) < 0){
+				/** Memory allocation failure. **/
+				return -1;
 			}
 
 			body = modulePhysicsRigidBodyNext(body);
@@ -877,12 +890,17 @@ return_t objUpdate(object *const restrict obj, physIsland *const restrict island
 			}
 
 			if(body != NULL && body->base->id == i){
+
+				// Copy the bone state over to the body.
+				body->configuration = *sklState;
+
 				// Update the body's colliders.
 				if(physRigidBodyUpdateColliders(body, island) < 0){
 					/** Memory allocation failure. **/
 					return -1;
 				}
 				body = modulePhysicsRigidBodyNext(body);
+
 			}
 
 		}

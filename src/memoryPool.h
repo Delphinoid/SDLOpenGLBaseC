@@ -19,6 +19,9 @@
 **
 ** Free-list pointers point to the
 ** data, not the beginning of the block.
+**
+** Block format:
+** [ Active flag ][ Data (or free-list pointer) ]
 */
 
 /**

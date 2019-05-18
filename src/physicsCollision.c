@@ -37,8 +37,8 @@ static __FORCE_INLINE__ void physContactPointWarmStart(physContactPoint *const r
 		vec3VMultS(contact->tangentB, point->tangentImpulseAccumulatorB)
 	);
 
-	physRigidBodyApplyImpulseInverse(bodyA, point->pointA, impulse);
-	physRigidBodyApplyImpulse(bodyB, point->pointB, impulse);
+	physRigidBodyApplyImpulseInverse(bodyA, point->halfwayA, impulse);
+	physRigidBodyApplyImpulse(bodyB, point->halfwayB, impulse);
 
 }
 
@@ -62,12 +62,19 @@ static __FORCE_INLINE__ void physContactInit(physContact *const restrict contact
 	// Initialize each contact.
 	for(; cPoint < cPointLast; ++cPoint, ++pPoint){
 
-		// Add up the combined contact normal.
-		normal = vec3VAddV(normal, cPoint->normal);
+		// Get the halfway points.
+		const vec3 halfway = vec3VMultS(vec3VAddV(cPoint->pointA, cPoint->pointB), 0.5f);
+		pPoint->halfwayA = vec3VSubV(halfway, bodyA->centroidGlobal);
+		pPoint->halfwayB = vec3VSubV(halfway, bodyB->centroidGlobal);
 
 		// Get the relative contact points.
-		pPoint->pointA = vec3VSubV(cPoint->point, bodyA->centroidGlobal);
-		pPoint->pointB = vec3VSubV(cPoint->point, bodyB->centroidGlobal);
+		#ifdef PHYSICS_GAUSS_SEIDEL_SOLVER
+		pPoint->pointA = quatRotateVec3Fast(quatConjugateFast(bodyA->configuration.orientation), vec3VSubV(cPoint->pointA, bodyA->centroidGlobal));
+		pPoint->pointB = quatRotateVec3Fast(quatConjugateFast(bodyB->configuration.orientation), vec3VSubV(cPoint->pointB, bodyB->centroidGlobal));
+		pPoint->normalA = quatRotateVec3Fast(quatConjugateFast(bodyA->configuration.orientation), cPoint->normal);
+		#endif
+
+		// Get the penetration depth and key.
 		pPoint->penetrationDepth = cPoint->penetrationDepth;
 		pPoint->key = cPoint->key;
 
@@ -75,6 +82,9 @@ static __FORCE_INLINE__ void physContactInit(physContact *const restrict contact
 		pPoint->normalImpulseAccumulator = 0.f;
 		pPoint->tangentImpulseAccumulatorA = 0.f;
 		pPoint->tangentImpulseAccumulatorB = 0.f;
+
+		// Add up the combined contact normal.
+		normal = vec3VAddV(normal, cPoint->normal);
 
 	}
 
@@ -176,9 +186,19 @@ static __FORCE_INLINE__ void physContactPersist(physContact *const restrict cont
 	flag = &persistent[0];
 	for(; cPoint < cPointLast; ++cPoint, ++pcPoint, ++flag){
 
+		// Get the halfway points.
+		const vec3 halfway = vec3VMultS(vec3VAddV(cPoint->pointA, cPoint->pointB), 0.5f);
+		pcPoint->halfwayA = vec3VSubV(halfway, bodyA->centroidGlobal);
+		pcPoint->halfwayB = vec3VSubV(halfway, bodyB->centroidGlobal);
+
 		// Get the relative contact points.
-		pcPoint->pointA = vec3VSubV(cPoint->point, bodyA->centroidGlobal);
-		pcPoint->pointB = vec3VSubV(cPoint->point, bodyB->centroidGlobal);
+		#ifdef PHYSICS_GAUSS_SEIDEL_SOLVER
+		pcPoint->pointA = quatRotateVec3Fast(quatConjugateFast(bodyA->configuration.orientation), vec3VSubV(cPoint->pointA, bodyA->centroidGlobal));
+		pcPoint->pointB = quatRotateVec3Fast(quatConjugateFast(bodyB->configuration.orientation), vec3VSubV(cPoint->pointB, bodyB->centroidGlobal));
+		pcPoint->normalA = quatRotateVec3Fast(quatConjugateFast(bodyA->configuration.orientation), cPoint->normal);
+		#endif
+
+		// Get the penetration depth.
 		pcPoint->penetrationDepth = cPoint->penetrationDepth;
 
 		if(*flag == 0){
@@ -198,47 +218,48 @@ static __FORCE_INLINE__ void physContactPersist(physContact *const restrict cont
 
 }
 
-static __FORCE_INLINE__ void physContactPointGenerateImpulses(physContactPoint *const restrict point, const physContact *const restrict contact, const physRigidBody *const restrict bodyA, const physRigidBody *const restrict bodyB){
+static __FORCE_INLINE__ float physContactEffectiveMass(const vec3 normalA, const vec3 pointA, const mat3 inverseInertiaTensorA, const vec3 normalB, const vec3 pointB, const mat3 inverseInertiaTensorB, const float inverseMassTotal){
 
 	/*
-	** Calculates the impulse magnitude denominators for
-	** the contact normal and both contact tangents.
+	** Calculates the impulse magnitude denominators (effective mass)
+	** for the contact normal and both contact tangents. This is the
+	** denominator of the constraint's Lagrange multiplier:
+	**
+	** 1 / ((JM^-1)(J^T))
+	**
+	** Where M^-1 is the inverse mass matrix:
+	**  _                    _
+	** | mA^-1  0    0    0   |
+	** |   0  IA^-1  0    0   |
+	** |   0    0  mB^-1  0   |
+	** |_  0    0    0  IB^-1_|
+	**
+	** And J is the Jacobian row vector (with J^T as its transpose):
+	**
+	** [-n, -(rA x n), n, (rA x n)]
+	**
+	** Which is derived from JV = C', where C is the contact constraint equation:
+	**
+	** C = (pB - pA) . n >= 0
+	** C' = dC/dt = ((vB + wB x rB) - (vA + wA x rA)) . n >= 0
+	**
+	** And V is the velocity column vector:
+	**      _  _
+	**     | vA |
+	**     | wA |
+	** V = | vB |
+	**     |_wB_|
+	**
+	** Thus, our initial expression above expands to the following:
 	**
 	** 1 / (mA + mB + ((rA X n) . (IA(rA x n))) + ((rB x n) . (IB(rB x n))))
 	*/
 
-	const float inverseMassTotal = bodyA->inverseMass + bodyB->inverseMass;
-	vec3 angularDeltaA, angularDeltaB;
-	vec3 angularDeltaLinearA, angularDeltaLinearB;
-
-	// Calculate the normal impulse magnitude denominator.
-	angularDeltaA = vec3Cross(point->pointA, contact->normal);
-	angularDeltaLinearA = mat3MMultVBra(bodyA->inverseInertiaTensorGlobal, angularDeltaA);
-	angularDeltaB = vec3Cross(point->pointB, contact->normal);
-	angularDeltaLinearB = mat3MMultVBra(bodyB->inverseInertiaTensorGlobal, angularDeltaB);
-	point->normalImpulseDenominator = 1.f / (
-		inverseMassTotal +
-		vec3Dot(angularDeltaA, angularDeltaLinearA) +
-		vec3Dot(angularDeltaB, angularDeltaLinearB)
-	);
-
-	// Calculate tangent A's impulse magnitude denominator.
-	angularDeltaA = vec3Cross(contact->tangentA, point->pointA);
-	angularDeltaLinearA = mat3MMultVBra(bodyA->inverseInertiaTensorGlobal, angularDeltaA);
-	angularDeltaB = vec3Cross(contact->tangentA, point->pointB);
-	angularDeltaLinearB = mat3MMultVBra(bodyB->inverseInertiaTensorGlobal, angularDeltaB);
-	point->tangentImpulseDenominatorA = 1.f / (
-		inverseMassTotal +
-		vec3Dot(angularDeltaA, angularDeltaLinearA) +
-		vec3Dot(angularDeltaB, angularDeltaLinearB)
-	);
-
-	// Calculate tangent B's impulse magnitude denominator.
-	angularDeltaA = vec3Cross(contact->tangentB, point->pointA);
-	angularDeltaLinearA = mat3MMultVBra(bodyA->inverseInertiaTensorGlobal, angularDeltaA);
-	angularDeltaB = vec3Cross(contact->tangentB, point->pointB);
-	angularDeltaLinearB = mat3MMultVBra(bodyB->inverseInertiaTensorGlobal, angularDeltaB);
-	point->tangentImpulseDenominatorB = 1.f / (
+	const vec3 angularDeltaA = vec3Cross(pointA, normalA);
+	const vec3 angularDeltaLinearA = mat3MMultVBra(inverseInertiaTensorA, angularDeltaA);
+	const vec3 angularDeltaB = vec3Cross(pointB, normalB);
+	const vec3 angularDeltaLinearB = mat3MMultVBra(inverseInertiaTensorB, angularDeltaB);
+	return 1.f / (
 		inverseMassTotal +
 		vec3Dot(angularDeltaA, angularDeltaLinearA) +
 		vec3Dot(angularDeltaB, angularDeltaLinearB)
@@ -246,48 +267,100 @@ static __FORCE_INLINE__ void physContactPointGenerateImpulses(physContactPoint *
 
 }
 
+static __FORCE_INLINE__ void physContactPointGenerateImpulses(physContactPoint *const restrict point, const physContact *const restrict contact, const physRigidBody *const restrict bodyA, const physRigidBody *const restrict bodyB){
+
+	const float inverseMassTotal = bodyA->inverseMass + bodyB->inverseMass;
+
+	point->normalEffectiveMass = physContactEffectiveMass(
+		contact->normal, point->halfwayA, bodyA->inverseInertiaTensorGlobal,
+		contact->normal, point->halfwayB, bodyB->inverseInertiaTensorGlobal,
+		inverseMassTotal
+	);
+	point->tangentEffectiveMassA = physContactEffectiveMass(
+		point->halfwayA, contact->tangentA, bodyA->inverseInertiaTensorGlobal,
+		point->halfwayB, contact->tangentA, bodyB->inverseInertiaTensorGlobal,
+		inverseMassTotal
+	);
+	point->tangentEffectiveMassB = physContactEffectiveMass(
+		point->halfwayA, contact->tangentB, bodyA->inverseInertiaTensorGlobal,
+		point->halfwayB, contact->tangentB, bodyB->inverseInertiaTensorGlobal,
+		inverseMassTotal
+	);
+
+}
+
+#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
 static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *const restrict point, const physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float dt){
+#else
+static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *const restrict point, const physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, physCollider *const restrict colliderA, physCollider *const restrict colliderB){
+#endif
+
+	/*
+	** Generate the constraint bias. Used in the
+	** constraint's Lagrange multiplier, i.e.:
+	**
+	** -(JV + b)/((JM^-1)(J^T))
+	*/
 
 	float temp;
 
+	#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
+
 	// Calculate potential slop.
-	temp = point->penetrationDepth + PHYSICS_PENETRATION_SLOP;
+	temp = point->penetrationDepth + PHYSICS_LINEAR_SLOP;
 
 	// Calculate the bias term.
-	point->bias = -PHYSICS_BAUMGARTE_TERM * dt * (temp < 0.f ? temp : 0.f);
+	point->bias = PHYSICS_BAUMGARTE_TERM * dt * (temp < 0.f ? temp : 0.f);
 
-	// Apply restitution bias.
+	#else
+	point->bias = 0.f;
+	#endif
+
+	// Apply restitution bias if JV is within a particular threshold.
+	// JV = (((wB x rB) + vB) - ((wA x rA) + vA)) . n
 	temp = vec3Dot(
 		vec3VSubV(
 			vec3VSubV(
 				vec3VAddV(
-					vec3Cross(bodyB->angularVelocity, point->pointB),
+					vec3Cross(bodyB->angularVelocity, point->halfwayB),
 					bodyB->linearVelocity
 				),
 				bodyA->linearVelocity
 			),
-			vec3Cross(bodyA->angularVelocity, point->pointA)
+			vec3Cross(bodyA->angularVelocity, point->halfwayA)
 		),
 		contact->normal
 	);
 	if(temp < -PHYSICS_RESTITUTION_THRESHOLD){
-		point->bias += -contact->restitution * temp;
+		point->bias += contact->restitution * temp;
 	}
 
 }
 
+#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
 static __FORCE_INLINE__ void physContactPointGenerate(physContactPoint *const restrict point, const physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float dt){
+#else
+static __FORCE_INLINE__ void physContactPointGenerate(physContactPoint *const restrict point, const physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, physCollider *const restrict colliderA, physCollider *const restrict colliderB){
+#endif
 
 	// Generate impulses, including the two
 	// tangent impulses for friction simulation.
 	physContactPointGenerateImpulses(point, contact, bodyA, bodyB);
 
 	// Generate bias term.
+	#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
 	physContactPointGenerateBias(point, contact, bodyA, bodyB, colliderA, colliderB, dt);
+	#else
+	physContactPointGenerateBias(point, contact, bodyA, bodyB, colliderA, colliderB);
+	#endif
 
 }
 
+#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
 __FORCE_INLINE__ void physContactUpdate(physContact *const restrict contact, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float dt){
+#else
+__FORCE_INLINE__ void physContactUpdate(physContact *const restrict contact, physCollider *const restrict colliderA, physCollider *const restrict colliderB){
+#endif
 
 	/*
 	** Builds a physContact from a cContact.
@@ -301,7 +374,11 @@ __FORCE_INLINE__ void physContactUpdate(physContact *const restrict contact, phy
 
 	// Calculate extra data for each contact point.
 	for(; pPoint < pPointLast; ++pPoint){
+		#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
 		physContactPointGenerate(pPoint, contact, bodyA, bodyB, colliderA, colliderB, dt);
+		#else
+		physContactPointGenerate(pPoint, contact, bodyA, bodyB, colliderA, colliderB);
+		#endif
 	}
 
 }
@@ -608,38 +685,38 @@ return_t physCollisionQuery(aabbNode *const n1, aabbNode *const n2){
 
 }
 
-static __FORCE_INLINE__ void physContactPointSolveTangents(physContactPoint *const restrict point, physContact *const restrict contact, physRigidBody *const bodyA, physRigidBody *const bodyB){
+static __FORCE_INLINE__ void physContactPointSolveVelocityTangents(physContactPoint *const restrict point, physContact *const restrict contact, physRigidBody *const bodyA, physRigidBody *const bodyB){
 
 	/*
 	** Solves the friction impulses.
 	*/
 
-	float lambda, lambdaClamp;
 	float temp1, temp2;
+	float lambda, lambdaClamp;
 	vec3 v, impulse;
 
 	// Calculate the contact velocity.
+	// ((wB x rB) + vB) - ((wA x rA) + vA)
 	v = vec3VSubV(
 		vec3VSubV(
 			vec3VAddV(
-				vec3Cross(bodyB->angularVelocity, point->pointB),
+				vec3Cross(bodyB->angularVelocity, point->halfwayB),
 				bodyB->linearVelocity
 			),
 			bodyA->linearVelocity
 		),
-		vec3Cross(bodyA->angularVelocity, point->pointA)
+		vec3Cross(bodyA->angularVelocity, point->halfwayA)
 	);
-
 
 	/*
 	** Tangent A.
 	*/
 
-	// Calculate the frictional impulse.
-	lambda = -vec3Dot(v, contact->tangentA) * point->tangentImpulseDenominatorA;
-	lambdaClamp = contact->friction * point->tangentImpulseDenominatorA;
+	// Calculate the frictional impulse magnitude.
+	lambda = -vec3Dot(v, contact->tangentA) * point->tangentEffectiveMassA;
+	lambdaClamp = contact->friction * point->tangentEffectiveMassA;
 
-	// Clamp the frictional impulse.
+	// Clamp the frictional impulse magnitude.
 	temp1 = point->tangentImpulseAccumulatorA;
 	temp2 = temp1 + lambda;
 	if(temp2 < -lambdaClamp){
@@ -651,22 +728,18 @@ static __FORCE_INLINE__ void physContactPointSolveTangents(physContactPoint *con
 	}
 	lambda = point->tangentImpulseAccumulatorA - temp1;
 
-	// Apply the frictional impulse.
+	// Calculate the frictional impulse.
 	impulse = vec3VMultS(contact->tangentA, lambda);
-
-	physRigidBodyApplyImpulseInverse(bodyA, point->pointA, impulse);
-	physRigidBodyApplyImpulse(bodyB, point->pointB, impulse);
-
 
 	/*
 	** Tangent B.
 	*/
 
-	// Calculate the frictional impulse.
-	lambda = -vec3Dot(v, contact->tangentB) * point->tangentImpulseDenominatorB;
-	lambdaClamp = contact->friction * point->tangentImpulseDenominatorB;
+	// Calculate the frictional impulse magnitude.
+	lambda = -vec3Dot(v, contact->tangentB) * point->tangentEffectiveMassB;
+	lambdaClamp = contact->friction * point->tangentEffectiveMassB;
 
-	// Clamp the frictional impulse.
+	// Clamp the frictional impulse magnitude.
 	temp1 = point->tangentImpulseAccumulatorB;
 	temp2 = temp1 + lambda;
 	if(temp2 < -lambdaClamp){
@@ -678,60 +751,70 @@ static __FORCE_INLINE__ void physContactPointSolveTangents(physContactPoint *con
 	}
 	lambda = point->tangentImpulseAccumulatorB - temp1;
 
-	// Apply the frictional impulse.
-	impulse = vec3VMultS(contact->tangentB, lambda);
+	// Calculate the frictional impulse.
+	impulse = vec3VAddV(impulse, vec3VMultS(contact->tangentB, lambda));
 
-	physRigidBodyApplyImpulseInverse(bodyA, point->pointA, impulse);
-	physRigidBodyApplyImpulse(bodyB, point->pointB, impulse);
+	/*
+	** Apply both of the frictional impulses.
+	*/
+	physRigidBodyApplyImpulseInverse(bodyA, point->halfwayA, impulse);
+	physRigidBodyApplyImpulse(bodyB, point->halfwayB, impulse);
 
 }
 
-static __FORCE_INLINE__ void physContactPointSolveNormal(physContactPoint *const restrict point, physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB){
+static __FORCE_INLINE__ void physContactPointSolveVelocityNormal(physContactPoint *const restrict point, physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB){
 
 	/*
 	** Solves the normal impulse.
 	*/
 
-	float lambda;
 	float temp1, temp2;
+	float lambda;
 	vec3 impulse;
 
-	// Calculate the contact velocity.
+	// Calculate the contact velocity, JV.
+	// C = (pB - pA) . n
+	// C' = dC/dt = (((wB x rB) + vB) - ((wA x rA) + vA)) . n
+	// JV = C'
 	temp1 = vec3Dot(
 		vec3VSubV(
 			vec3VSubV(
 				vec3VAddV(
-					vec3Cross(bodyB->angularVelocity, point->pointB),
+					vec3Cross(bodyB->angularVelocity, point->halfwayB),
 					bodyB->linearVelocity
 				),
 				bodyA->linearVelocity
 			),
-			vec3Cross(bodyA->angularVelocity, point->pointA)
+			vec3Cross(bodyA->angularVelocity, point->halfwayA)
 		),
 		contact->normal
 	);
 
-	// Calculate the impulse magnitude.
-	lambda = point->normalImpulseDenominator * (-temp1 + point->bias);
+	// Calculate the normal impulse magnitude, i.e.
+	// the constraint's Lagrange multiplier.
+	// -(JV + b)/((JM^-1)(J^T))
+	lambda = -(temp1 + point->bias) * point->normalEffectiveMass;
 
-	// Clamp the normal impulse.
+	// Clamp the normal impulse magnitude.
+	// The constraint equation states that impulse magnitude >= 0.
 	temp1 = point->normalImpulseAccumulator;
 	temp2 = temp1 + lambda;
 	point->normalImpulseAccumulator = temp2 > 0.f ? temp2 : 0.f;
 	lambda = point->normalImpulseAccumulator - temp1;
 
-	// Apply the normal impulse.
+	// Calculate the normal impulse.
 	impulse = vec3VMultS(contact->normal, lambda);
 
-	physRigidBodyApplyImpulseInverse(bodyA, point->pointA, impulse);
-	physRigidBodyApplyImpulse(bodyB, point->pointB, impulse);
+	// Apply the normal impulse.
+	physRigidBodyApplyImpulseInverse(bodyA, point->halfwayA, impulse);
+	physRigidBodyApplyImpulse(bodyB, point->halfwayB, impulse);
 
 }
 
-void physContactSolve(physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB){
+void physContactSolveVelocityConstraints(physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB){
 
 	/*
-	** Solves a contact.
+	** Solves a contact's velocity constraints.
 	*/
 
 	physContactPoint *point = &contact->contacts[0];
@@ -739,8 +822,125 @@ void physContactSolve(physContact *const restrict contact, physRigidBody *const 
 
 	// Solve each contact point.
 	for(; point < pLast; ++point){
-		physContactPointSolveTangents(point, contact, bodyA, bodyB);
-		physContactPointSolveNormal(point, contact, bodyA, bodyB);
+		physContactPointSolveVelocityTangents(point, contact, bodyA, bodyB);
+		physContactPointSolveVelocityNormal(point, contact, bodyA, bodyB);
 	}
 
 }
+
+#ifdef PHYSICS_GAUSS_SEIDEL_SOLVER
+static __FORCE_INLINE__ float physContactPointSolveConfigurationNormal(physContactPoint *const restrict point, physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB){
+
+	/*
+	** Solves the normal constraint.
+	*/
+
+	float constraint, effectiveMass;
+	float lambda;
+	vec3 impulse;
+
+	// Transform the contact points into global space.
+	const vec3 pointGlobalA = vec3VAddV(quatRotateVec3Fast(bodyA->configuration.orientation, point->pointA), bodyA->centroidGlobal);
+	const vec3 pointGlobalB = vec3VAddV(quatRotateVec3Fast(bodyB->configuration.orientation, point->pointB), bodyB->centroidGlobal);
+
+	// Calculate the transformed normal and a point
+	// halfway between both transformed contact points.
+	const vec3 normal = quatRotateVec3Fast(bodyA->configuration.orientation, point->normalA);
+	const vec3 halfway = pointGlobalB;//vec3VMultS(vec3VAddV(pointGlobalA, pointGlobalB), 0.5f);
+
+	// Calculate the separation.
+	const float separation = vec3Dot(vec3VSubV(pointGlobalB, pointGlobalA), normal) - PHYSICS_SEPARATION_BIAS_TOTAL;
+
+	// Calculate the new, transformed contact point offsets.
+	const vec3 pointLocalA = vec3VSubV(halfway, bodyA->centroidGlobal);
+	const vec3 pointLocalB = vec3VSubV(halfway, bodyB->centroidGlobal);
+
+	// Apply a slop and clamp to the configuration constraint.
+	constraint = PHYSICS_BAUMGARTE_TERM * (separation + PHYSICS_LINEAR_SLOP);
+	if(constraint < -PHYSICS_LINEAR_CORRECTION){
+		constraint = -PHYSICS_LINEAR_CORRECTION;
+	}else if(constraint > 0.f){
+		constraint = 0.f;
+	}
+
+	// Calculate the new effective mass.
+	effectiveMass = physContactEffectiveMass(
+		normal, pointLocalA, bodyA->inverseInertiaTensorGlobal,
+		normal, pointLocalB, bodyB->inverseInertiaTensorGlobal,
+		bodyA->inverseMass + bodyB->inverseMass
+	);
+
+	// Calculate the normal impulse magnitude, i.e.
+	// the constraint's Lagrange multiplier.
+	lambda = -constraint * effectiveMass;
+
+	// Calculate the normal impulse.
+	impulse = vec3VMultS(normal, lambda);
+
+	// Apply the normal impulse to body A.
+	if(flagsAreSet(bodyA->flags, PHYSICS_BODY_SIMULATE_LINEAR)){
+		bodyA->centroidGlobal = vec3VSubV(bodyA->centroidGlobal, vec3VMultS(impulse, bodyA->inverseMass));
+		flagsSet(bodyA->flags, PHYSICS_BODY_TRANSLATED);
+	}
+	if(flagsAreSet(bodyA->flags, PHYSICS_BODY_SIMULATE_ANGULAR)){
+		bodyA->configuration.orientation = quatNormalizeFastAccurate(
+			quatQSubQ(
+				bodyA->configuration.orientation,
+				quatDifferentiate(
+					bodyA->configuration.orientation,
+					mat3MMultVBra(
+						bodyA->inverseInertiaTensorGlobal,
+						vec3Cross(pointLocalA, impulse)
+					)
+				)
+			)
+		);
+		physRigidBodyGenerateGlobalInertia(bodyA);
+		flagsSet(bodyA->flags, PHYSICS_BODY_ROTATED);
+	}
+
+	// Apply the normal impulse to body B.
+	if(flagsAreSet(bodyB->flags, PHYSICS_BODY_SIMULATE_LINEAR)){
+		bodyB->centroidGlobal = vec3VAddV(bodyB->centroidGlobal, vec3VMultS(impulse, bodyB->inverseMass));
+		flagsSet(bodyB->flags, PHYSICS_BODY_TRANSLATED);
+	}
+	if(flagsAreSet(bodyB->flags, PHYSICS_BODY_SIMULATE_ANGULAR)){
+		bodyB->configuration.orientation = quatNormalizeFastAccurate(
+			quatQAddQ(
+				bodyB->configuration.orientation,
+				quatDifferentiate(
+					bodyB->configuration.orientation,
+					mat3MMultVBra(
+						bodyB->inverseInertiaTensorGlobal,
+						vec3Cross(pointLocalA, impulse)
+					)
+				)
+			)
+		);
+		physRigidBodyGenerateGlobalInertia(bodyB);
+		flagsSet(bodyB->flags, PHYSICS_BODY_ROTATED);
+	}
+
+	return separation;
+
+}
+
+float physContactSolveConfigurationConstraints(physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, float error){
+
+	/*
+	** Solves a contact's position and orientation constraints.
+	*/
+
+	physContactPoint *point = &contact->contacts[0];
+	const physContactPoint *const pLast = &point[contact->contactNum];
+
+	// Solve each contact point.
+	for(; point < pLast; ++point){
+		const float separation = physContactPointSolveConfigurationNormal(point, contact, bodyA, bodyB);
+		error = (error > separation ? separation : error);
+	}
+
+	return error;
+
+}
+#endif

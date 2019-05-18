@@ -39,8 +39,8 @@ typedef struct physCollider {
 
 	// Broadphase data.
 	aabbNode *node;  // Pointer to the collider's node in the AABB tree.
-	physContactPair    *contactCache;     // An SLink of contact pairs.
-	physSeparationPair *separationCache;  // An SLink of separation pairs.
+	physContactPair    *contactCache;     // A QLink of contact pairs.
+	physSeparationPair *separationCache;  // A QLink of separation pairs.
 
 	void *body;      // Owner rigid body or rigid body base.
 	collider *base;  // Convex collider in local space.
@@ -80,7 +80,11 @@ return_t physColliderTransform(physCollider *const restrict c, physIsland *const
 physContactPair *physColliderFindContact(const physCollider *const c1, const physCollider *const c2, physContactPair **const previous, physContactPair **const next);
 physSeparationPair *physColliderFindSeparation(const physCollider *const c1, const physCollider *const c2, physSeparationPair **const previous, physSeparationPair **const next);
 
+#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
 void physColliderUpdateContacts(physCollider *const c, const float dt);
+#else
+void physColliderUpdateContacts(physCollider *const c);
+#endif
 void physColliderUpdateSeparations(physCollider *const c);
 
 void physColliderDelete(physCollider *const restrict c);

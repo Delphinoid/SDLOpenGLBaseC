@@ -24,7 +24,61 @@ void physRigidBodyBaseInit(physRigidBodyBase *const restrict local){
 	mat3Identity(&local->inverseInertiaTensor);
 }
 
-__FORCE_INLINE__ void physRigidBodyBaseGenerateProperties(physRigidBodyBase *const restrict local, const float **const vertexMassArray){
+__FORCE_INLINE__ static void physRigidBodyBaseAddCollider(physRigidBodyBase *const restrict local, physCollider *const c, const float **const vertexMassArray){
+
+	/*
+	** Adds a single collider to the body.
+	*/
+
+	float mass;
+	float inverseMass;
+	vec3 centroid;
+
+	// Generate the new collider's mass properties.
+	physColliderGenerateMass(&c->c, &mass, &inverseMass, &centroid, vertexMassArray);
+
+	if(mass != 0.f){
+
+		mat3 inverseInertiaTensor;
+
+		const vec3 difference = vec3VSubV(local->centroid, centroid);
+		const vec3 differenceWeighted = vec3VMultS(difference, mass);
+		const vec3 differenceWeightedSquared = vec3VMultV(difference, differenceWeighted);
+
+		// Generate and add the new collider's inverse moment
+		// of inertia using the Parallel Axis Theorem.
+		physColliderGenerateMoment(&c->c, &inverseInertiaTensor, &centroid, vertexMassArray);
+		inverseInertiaTensor = mat3Invert(inverseInertiaTensor);
+
+		// Translate the inertia tensor using the rigid body's centroid.
+		inverseInertiaTensor.m[0][0] += differenceWeightedSquared.y + differenceWeightedSquared.z;
+		inverseInertiaTensor.m[0][1] -= differenceWeighted.x * difference.y;
+		inverseInertiaTensor.m[0][2] -= differenceWeighted.x * difference.z;
+		inverseInertiaTensor.m[1][1] += differenceWeightedSquared.x + differenceWeightedSquared.z;
+		inverseInertiaTensor.m[1][2] -= differenceWeighted.y * difference.z;
+		inverseInertiaTensor.m[2][2] += differenceWeightedSquared.x + differenceWeightedSquared.y;
+
+		// Add the collider's contribution to the body's inertia tensor.
+		local->inverseInertiaTensor.m[0][0] += inverseInertiaTensor.m[0][0];
+		local->inverseInertiaTensor.m[0][1] += inverseInertiaTensor.m[0][1];
+		local->inverseInertiaTensor.m[1][0] += inverseInertiaTensor.m[0][1];
+		local->inverseInertiaTensor.m[0][2] += inverseInertiaTensor.m[0][2];
+		local->inverseInertiaTensor.m[2][0] += inverseInertiaTensor.m[0][2];
+		local->inverseInertiaTensor.m[1][1] += inverseInertiaTensor.m[1][1];
+		local->inverseInertiaTensor.m[1][2] += inverseInertiaTensor.m[1][2];
+		local->inverseInertiaTensor.m[2][1] += inverseInertiaTensor.m[1][2];
+		local->inverseInertiaTensor.m[2][2] += inverseInertiaTensor.m[2][2];
+
+		// Calculate the new, weighted centroid.
+		local->inverseMass = 1.f / (local->mass + mass);
+		local->centroid = vec3VMultS(vec3VAddV(vec3VMultS(local->centroid, local->mass), vec3VMultS(centroid, mass)), local->inverseMass);
+		local->mass += mass;
+
+	}
+
+}
+
+__FORCE_INLINE__ static void physRigidBodyBaseGenerateProperties(physRigidBodyBase *const restrict local, const float **const vertexMassArray){
 
 	/*
 	** Calculates the rigid body's total mass, inverse mass,
@@ -64,12 +118,11 @@ __FORCE_INLINE__ void physRigidBodyBaseGenerateProperties(physRigidBodyBase *con
 
 	if(tempMass != 0.f){
 
-		const float tempInverseMass = 1.f / tempMass;
-		tempCentroid = vec3VMultS(tempCentroid, tempInverseMass);
-		local->inverseMass = tempInverseMass;
+		local->inverseMass = 1.f / tempMass;
+		tempCentroid = vec3VMultS(tempCentroid, local->inverseMass);
 
-		// Calculate the combined moment of inertia for the
-		// collider as the sum of its collider's moments.
+		// Calculate the combined inverse moment of inertia for
+		// the collider as the sum of its collider's moments.
 		c = local->hull;
 		m = vertexMassArray;
 		while(c != NULL){
@@ -936,14 +989,14 @@ void physRigidBodyInit(physRigidBody *const restrict body){
 	body->flags = PHYSICS_BODY_ASLEEP;
 	body->base = NULL;
 	body->hull = NULL;
-	body->configuration = NULL;
+	boneInit(&body->configuration);
 	vec3Zero(&body->linearVelocity);
 	vec3Zero(&body->angularVelocity);
 	vec3Zero(&body->netForce);
 	vec3Zero(&body->netTorque);
 }
 
-return_t physRigidBodyInstantiate(physRigidBody *const restrict body, physRigidBodyBase *const restrict local, bone *const restrict configuration){
+return_t physRigidBodyInstantiate(physRigidBody *const restrict body, physRigidBodyBase *const restrict local){
 
 	physCollider *cBody = NULL;
 	physCollider *cLocal = local->hull;
@@ -966,7 +1019,6 @@ return_t physRigidBodyInstantiate(physRigidBody *const restrict body, physRigidB
 	body->inverseInertiaTensorLocal = local->inverseInertiaTensor;
 
 	body->base = local;
-	body->configuration = configuration;
 	body->flags = local->flags;
 
 	return 1;
@@ -975,6 +1027,7 @@ return_t physRigidBodyInstantiate(physRigidBody *const restrict body, physRigidB
 
 __FORCE_INLINE__ void physRigidBodySetInitialized(physRigidBody *const restrict body){
 	flagsUnset(body->flags, PHYSICS_BODY_UNINITIALIZED);
+	flagsSet(body->flags, PHYSICS_BODY_INITIALIZED);
 }
 __FORCE_INLINE__ void physRigidBodySetAsleep(physRigidBody *const restrict body){
 	body->flags = 0;
@@ -1017,6 +1070,10 @@ __FORCE_INLINE__ return_t physRigidBodyIsCollidable(const physRigidBody *const r
 }
 __FORCE_INLINE__ return_t physRigidBodyIsAsleep(physRigidBody *const restrict body){
 	return body->flags;
+}
+
+__FORCE_INLINE__ return_t physRigidBodyWasInitialized(const physRigidBody *const restrict body){
+	return flagsAreSet(body->flags, PHYSICS_BODY_INITIALIZED);
 }
 
 __FORCE_INLINE__ return_t physRigidBodyUpdateColliders(physRigidBody *const restrict body, physIsland *const restrict island){
@@ -1114,41 +1171,52 @@ __HINT_INLINE__ void physRigidBodyApplyImpulseInverse(physRigidBody *const restr
 
 }
 
-static __FORCE_INLINE__ void physRigidBodyCentroidFromPosition(physRigidBody *const restrict body){
+__FORCE_INLINE__ void physRigidBodyCentroidFromPosition(physRigidBody *const restrict body){
 	body->centroidGlobal = vec3VAddV(
 		vec3VMultV(
 			quatRotateVec3Fast(
-				body->configuration->orientation,
+				body->configuration.orientation,
 				body->centroidLocal
 			),
-			body->configuration->scale
+			body->configuration.scale
 		),
-		body->configuration->position
+		body->configuration.position
 	);
 }
 
-static __FORCE_INLINE__ void physRigidBodyPositionFromCentroid(physRigidBody *const restrict body){
-	body->configuration->position = vec3VAddV(
+__FORCE_INLINE__ void physRigidBodyPositionFromCentroid(physRigidBody *const restrict body){
+	body->configuration.position = vec3VAddV(
 		vec3VMultV(
 			quatRotateVec3Fast(
-				body->configuration->orientation,
+				body->configuration.orientation,
 				vec3Negate(body->centroidLocal)
 			),
-			body->configuration->scale
+			body->configuration.scale
 		),
 		body->centroidGlobal
 	);
 }
 
-static __FORCE_INLINE__ void physRigidBodyGenerateGlobalInertia(physRigidBody *const restrict body){
+__FORCE_INLINE__ void physRigidBodyGenerateGlobalInertia(physRigidBody *const restrict body){
 
 	// Generate 3x3 matrices for the orientation and the inverse orientation.
-	const mat3 orientationMatrix = mat3Quaternion(body->configuration->orientation);
+	const mat3 orientationMatrix = mat3Quaternion(body->configuration.orientation);
 	const mat3 inverseOrientationMatrix = mat3Transpose(orientationMatrix);
 
 	// Multiply them against the local inertia tensor to get the global inverse moment of inertia.
 	body->inverseInertiaTensorGlobal = mat3MMultM(mat3MMultM(orientationMatrix, body->inverseInertiaTensorLocal), inverseOrientationMatrix);
 
+}
+
+__FORCE_INLINE__ void physRigidBodyPrepare(physRigidBody *const restrict body){
+	physRigidBodyGenerateGlobalInertia(body);
+	physRigidBodyCentroidFromPosition(body);
+}
+
+__FORCE_INLINE__ void physRigidBodyUpdateConfiguration(physRigidBody *const restrict body){
+	if(flagsAreSet(body->flags, PHYSICS_BODY_TRANSFORMED)){
+		physRigidBodyPositionFromCentroid(body);
+	}
 }
 
 void physRigidBodyIntegrateVelocity(physRigidBody *const restrict body, const float dt){
@@ -1194,11 +1262,6 @@ void physRigidBodyIntegrateVelocity(physRigidBody *const restrict body, const fl
 	vec3Zero(&body->netForce);
 	vec3Zero(&body->netTorque);
 
-	// Update the centroid from the position.
-	if(flagsAreSet(body->flags, PHYSICS_BODY_UNINITIALIZED | PHYSICS_BODY_TRANSFORMED)){
-		physRigidBodyCentroidFromPosition(body);
-	}
-
 }
 
 void physRigidBodyIntegrateConfiguration(physRigidBody *const restrict body, const float dt){
@@ -1219,15 +1282,34 @@ void physRigidBodyIntegrateConfiguration(physRigidBody *const restrict body, con
 		flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR) &&
 		(body->angularVelocity.y != 0.f || body->angularVelocity.z != 0.f || body->angularVelocity.x != 0.f)
 	){
-		body->configuration->orientation = quatNormalizeFast(quatIntegrate(body->configuration->orientation, body->angularVelocity, dt));
+		body->configuration.orientation = quatNormalizeFast(quatIntegrate(body->configuration.orientation, body->angularVelocity, dt));
 		flagsSet(body->flags, PHYSICS_BODY_ROTATED);
 	}else{
 		flagsUnset(body->flags, PHYSICS_BODY_ROTATED);
 	}
 
-	// Update the position from the centroid.
-	if(flagsAreSet(body->flags, PHYSICS_BODY_TRANSFORMED)){
-		physRigidBodyPositionFromCentroid(body);
+}
+
+__FORCE_INLINE__ void physRigidBodyIntegrate(physRigidBody *const restrict body, const float dt){
+
+	if(physRigidBodyWasInitialized(body)){
+
+		// Only integrate half of the first step
+		// for the leapfrog integration scheme.
+		physRigidBodyIntegrateVelocity(body, dt*0.5f);
+
+		// Remove the body's "just initialized" flag.
+		flagsUnset(body->flags, PHYSICS_BODY_INITIALIZED);
+
+	}else if(!physRigidBodyIsUninitialized(body)){
+
+		// Integrate the body's configuration.
+		// Done here for the sake of any child bones.
+		physRigidBodyIntegrateConfiguration(body, dt);
+
+		// Integrate the body's velocities.
+		physRigidBodyIntegrateVelocity(body, dt);
+
 	}
 
 }
@@ -1238,16 +1320,19 @@ return_t physRigidBodyPermitCollision(const physRigidBody *const body1, const ph
 	** Check if two rigid bodies may collide.
 	*/
 
-	// Make sure the bodies are not the same.
-	if(body1 != body2){
+	// Check if they share any joints that forbid collision.
+	// "Ownership" of the joint is delegated to the body with
+	// the greater address; while the joint will appear in
+	// both arrays, it will be closer to the front in the
+	// owner's array.
 
-		// Check if they share any joints that forbid collision.
+	if(body1 > body2){
 
 		// Body 1's joints.
-		physJoint *i = body1->joints;
-		while(i != NULL && body2 >= (physRigidBody *)i->child){
+		const physJoint *i = body1->joints;
+		while(i != NULL && body2 >= (physRigidBody *)i->bodyB){
 			// Check if the child body is the same.
-			if(body2 == (physRigidBody *)i->child){
+			if(body2 == (physRigidBody *)i->bodyB){
 				if(flagsAreUnset(i->flags, PHYSICS_JOINT_COLLIDE)){
 					return 0;
 				}
@@ -1255,11 +1340,15 @@ return_t physRigidBodyPermitCollision(const physRigidBody *const body1, const ph
 			i = (physJoint *)memQLinkNextA(i);
 		}
 
+		return 1;
+
+	}else if(body2 > body1){
+
 		// Body 2's joints.
-		i = body2->joints;
-		while(i != NULL && body1 >= (physRigidBody *)i->child){
+		const physJoint *i = body2->joints;
+		while(i != NULL && body1 >= (physRigidBody *)i->bodyB){
 			// Check if the child body is the same.
-			if(body1 == (physRigidBody *)i->child){
+			if(body1 == (physRigidBody *)i->bodyB){
 				if(flagsAreUnset(i->flags, PHYSICS_JOINT_COLLIDE)){
 					return 0;
 				}
@@ -1275,7 +1364,61 @@ return_t physRigidBodyPermitCollision(const physRigidBody *const body1, const ph
 
 }
 
-return_t physRigidBodyAddJoint(physRigidBody *const restrict body, physJoint *const c){
+void physRigidBodyAddCollider(physRigidBody *const restrict body, physCollider *const c, const float **const vertexMassArray){
+
+	/*
+	** Adds a single collider to the body.
+	*/
+
+	float mass;
+	float inverseMass;
+	vec3 centroid;
+
+	// Generate the new collider's mass properties.
+	physColliderGenerateMass(&c->c, &mass, &inverseMass, &centroid, vertexMassArray);
+
+	if(mass != 0.f){
+
+		mat3 inverseInertiaTensor;
+
+		const vec3 difference = vec3VSubV(body->centroidLocal, centroid);
+		const vec3 differenceWeighted = vec3VMultS(difference, mass);
+		const vec3 differenceWeightedSquared = vec3VMultV(difference, differenceWeighted);
+
+		// Generate and add the new collider's inverse moment
+		// of inertia using the Parallel Axis Theorem.
+		physColliderGenerateMoment(&c->c, &inverseInertiaTensor, &centroid, vertexMassArray);
+		inverseInertiaTensor = mat3Invert(inverseInertiaTensor);
+
+		// Translate the inertia tensor using the rigid body's centroid.
+		inverseInertiaTensor.m[0][0] += differenceWeightedSquared.y + differenceWeightedSquared.z;
+		inverseInertiaTensor.m[0][1] -= differenceWeighted.x * difference.y;
+		inverseInertiaTensor.m[0][2] -= differenceWeighted.x * difference.z;
+		inverseInertiaTensor.m[1][1] += differenceWeightedSquared.x + differenceWeightedSquared.z;
+		inverseInertiaTensor.m[1][2] -= differenceWeighted.y * difference.z;
+		inverseInertiaTensor.m[2][2] += differenceWeightedSquared.x + differenceWeightedSquared.y;
+
+		// Add the collider's contribution to the body's inertia tensor.
+		body->inverseInertiaTensorLocal.m[0][0] += inverseInertiaTensor.m[0][0];
+		body->inverseInertiaTensorLocal.m[0][1] += inverseInertiaTensor.m[0][1];
+		body->inverseInertiaTensorLocal.m[1][0] += inverseInertiaTensor.m[0][1];
+		body->inverseInertiaTensorLocal.m[0][2] += inverseInertiaTensor.m[0][2];
+		body->inverseInertiaTensorLocal.m[2][0] += inverseInertiaTensor.m[0][2];
+		body->inverseInertiaTensorLocal.m[1][1] += inverseInertiaTensor.m[1][1];
+		body->inverseInertiaTensorLocal.m[1][2] += inverseInertiaTensor.m[1][2];
+		body->inverseInertiaTensorLocal.m[2][1] += inverseInertiaTensor.m[1][2];
+		body->inverseInertiaTensorLocal.m[2][2] += inverseInertiaTensor.m[2][2];
+
+		// Calculate the new, weighted centroid.
+		body->inverseMass = 1.f / (body->mass + mass);
+		body->centroidLocal = vec3VMultS(vec3VAddV(vec3VMultS(body->centroidLocal, body->mass), vec3VMultS(centroid, mass)), body->inverseMass);
+		body->mass += mass;
+
+	}
+
+}
+
+return_t physRigidBodyAddJoint(physRigidBody *const restrict body, physJoint *const joint){
 
 	/*
 	** Sort a new joint into the body.

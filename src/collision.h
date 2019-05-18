@@ -29,8 +29,9 @@ typedef struct {
 
 typedef struct cContactPoint {
 
-	// Contact point on the reference collider, in global space.
-	vec3 point;
+	// Global contact points on the reference and incident colliders.
+	vec3 pointA;
+	vec3 pointB;
 
 	// Contact normal.
 	vec3 normal;

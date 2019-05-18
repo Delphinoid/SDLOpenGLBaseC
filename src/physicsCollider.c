@@ -285,7 +285,7 @@ cAABB cTransformPoint(void *const instance, const vec3 instanceCentroid, const v
 return_t physColliderTransformMesh(physCollider *const restrict c, physIsland *const restrict island){
 	const physRigidBody *const body = c->body;
 	if(flagsAreSet(body->flags, PHYSICS_BODY_TRANSFORMED | PHYSICS_BODY_COLLISION_MODIFIED)){
-		c->aabb = cTransformMesh(&c->c.data, body->centroidGlobal, &c->base->data, body->centroidLocal, body->configuration->position, body->configuration->orientation, body->configuration->scale);
+		c->aabb = cTransformMesh(&c->c.data, body->centroidGlobal, &c->base->data, body->centroidLocal, body->configuration.position, body->configuration.orientation, body->configuration.scale);
 		return physIslandUpdateCollider(island, c);
 	}
 	return 1;
@@ -383,7 +383,11 @@ physSeparationPair *physColliderFindSeparation(const physCollider *const c1, con
 
 }
 
+#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
 void physColliderUpdateContacts(physCollider *const c, const float dt){
+#else
+void physColliderUpdateContacts(physCollider *const c){
+#endif
 
 	/*
 	** Removes any contact that has been inactive for too long.
@@ -402,7 +406,11 @@ void physColliderUpdateContacts(physCollider *const c, const float dt){
 			}
 		}else{
 			// Update the contact.
+			#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
 			physContactUpdate(&i->data, i->colliderA, i->colliderB, dt);
+			#else
+			physContactUpdate(&i->data, i->colliderA, i->colliderB);
+			#endif
 			++i->inactive;
 		}
 		i = next;
