@@ -260,12 +260,14 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 						tempMdl = moduleModelAllocate();
 						if(tempMdl != NULL){
 							const return_t r = mdlLoad(tempMdl, prgPath, &loadPath[0]);
-							if(r < 0){
-								/** Memory allocation failure. **/
+							if(r <= 0){
 								moduleModelFree(tempMdl);
-								objBaseDelete(base);
-								fclose(objInfo);
-								return -1;
+								if(r < 0){
+									/** Memory allocation failure. **/
+									objBaseDelete(base);
+									fclose(objInfo);
+									return -1;
+								}
 							}else if(r > 0){
 								rndr.mdl = tempMdl;
 							}
@@ -308,12 +310,14 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 							tempTw = moduleTextureWrapperAllocate();
 							if(tempTw != NULL){
 								const return_t r = twLoad(tempTw, prgPath, &loadPath[0]);
-								if(r < 0){
-									/** Memory allocation failure. **/
+								if(r <= 0){
 									moduleTextureWrapperFree(tempTw);
-									objBaseDelete(base);
-									fclose(objInfo);
-									return -1;
+									if(r < 0){
+										/** Memory allocation failure. **/
+										objBaseDelete(base);
+										fclose(objInfo);
+										return -1;
+									}
 								}else if(r > 0){
 									rndr.tw = tempTw;
 								}
@@ -1050,7 +1054,7 @@ void objGenerateSprite(const object *const restrict obj, const rndrInstance *con
 	vertices[0].position.z = z;
 	vertices[0].u = 0.f;
 	vertices[0].v = 0.f;
-	vec3Zero(&vertices[0].normal);
+	vec3ZeroP(&vertices[0].normal);
 	vertices[0].bIDs[0] = -1;
 	vertices[0].bIDs[1] = -1;
 	vertices[0].bIDs[2] = -1;
@@ -1063,7 +1067,7 @@ void objGenerateSprite(const object *const restrict obj, const rndrInstance *con
 	vertices[1].position.z = z;
 	vertices[1].u = 1.f;
 	vertices[1].v = 0.f;
-	vec3Zero(&vertices[0].normal);
+	vec3ZeroP(&vertices[0].normal);
 	vertices[1].bIDs[0] = -1;
 	vertices[1].bIDs[1] = -1;
 	vertices[1].bIDs[2] = -1;
@@ -1076,7 +1080,7 @@ void objGenerateSprite(const object *const restrict obj, const rndrInstance *con
 	vertices[2].position.z = z;
 	vertices[2].u = 0.f;
 	vertices[2].v = -1.f;  // Flip the y dimension so the image isn't upside down.
-	vec3Zero(&vertices[0].normal);
+	vec3ZeroP(&vertices[0].normal);
 	vertices[2].bIDs[0] = -1;
 	vertices[2].bIDs[1] = -1;
 	vertices[2].bIDs[2] = -1;
@@ -1089,7 +1093,7 @@ void objGenerateSprite(const object *const restrict obj, const rndrInstance *con
 	vertices[3].position.z = z;
 	vertices[3].u = 1.f;
 	vertices[3].v = -1.f;  // Flip the y dimension so the image isn't upside down.
-	vec3Zero(&vertices[0].normal);
+	vec3ZeroP(&vertices[0].normal);
 	vertices[3].bIDs[0] = -1;
 	vertices[3].bIDs[1] = -1;
 	vertices[3].bIDs[2] = -1;

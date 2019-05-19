@@ -11,8 +11,9 @@ typedef struct {
 } mat4;
 
 mat4 mat4Identity();
+mat4 mat4Zero();
 void mat4IdentityP(mat4 *const restrict m);
-void mat4Zero(mat4 *const restrict m);
+void mat4ZeroP(mat4 *const restrict m);
 
 mat4 mat4MMultM(const mat4 m1, const mat4 m2);
 void mat4MMultMP1(mat4 *const restrict m1, const mat4 *const restrict m2);

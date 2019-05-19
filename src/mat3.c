@@ -13,7 +13,13 @@ __HINT_INLINE__ void mat3IdentityP(mat3 *const restrict m){
 	m->m[1][0] = 0.f; m->m[1][1] = 1.f; m->m[1][2] = 0.f;
 	m->m[2][0] = 0.f; m->m[2][1] = 0.f; m->m[2][2] = 1.f;
 }
-__HINT_INLINE__ void mat3Zero(mat3 *const restrict m){
+__HINT_INLINE__ mat3 mat3Zero(){
+	const mat3 r = {.m = {{0.f, 0.f, 0.f},
+	                      {0.f, 0.f, 0.f},
+	                      {0.f, 0.f, 0.f}}};
+	return r;
+}
+__HINT_INLINE__ void mat3ZeroP(mat3 *const restrict m){
 	memset(m->m, 0, sizeof(mat3));
 }
 

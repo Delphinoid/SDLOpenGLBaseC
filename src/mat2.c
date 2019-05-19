@@ -11,7 +11,12 @@ __HINT_INLINE__ void mat2IdentityP(mat2 *const restrict m){
 	m->m[0][0] = 1.f; m->m[0][1] = 0.f;
 	m->m[1][0] = 0.f; m->m[1][1] = 1.f;
 }
-__HINT_INLINE__ void mat2Zero(mat2 *const restrict m){
+__HINT_INLINE__ mat2 mat2Zero(){
+	const mat2 r = {.m = {{0.f, 0.f},
+	                      {0.f, 0.f}}};
+	return r;
+}
+__HINT_INLINE__ void mat2ZeroP(mat2 *const restrict m){
 	memset(m->m, 0, sizeof(mat2));
 }
 

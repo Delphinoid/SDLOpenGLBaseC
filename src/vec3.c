@@ -11,6 +11,12 @@ __HINT_INLINE__ vec3 vec3NewS(const float s){
 	const vec3 r = {.x = s, .y = s, .z = s};
 	return r;
 }
+__HINT_INLINE__ vec3 vec3Zero(){
+	const vec3 r = {.x = 0.f,
+	                .y = 0.f,
+	                .z = 0.f};
+	return r;
+}
 __HINT_INLINE__ void vec3Set(vec3 *const restrict v, const float x, const float y, const float z){
 	v->x = x;
 	v->y = y;
@@ -21,7 +27,7 @@ __HINT_INLINE__ void vec3SetS(vec3 *const restrict v, const float s){
 	v->y = s;
 	v->z = s;
 }
-__HINT_INLINE__ void vec3Zero(vec3 *const restrict v){
+__HINT_INLINE__ void vec3ZeroP(vec3 *const restrict v){
 	memset(v, 0, sizeof(vec3));
 }
 

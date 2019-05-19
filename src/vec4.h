@@ -7,9 +7,10 @@ typedef struct {
 
 vec4 vec4New(const float x, const float y, const float z, const float w);
 vec4 vec4NewS(const float s);
+vec4 vec4Zero();
 void vec4Set(vec4 *const restrict v, const float x, const float y, const float z, const float w);
 void vec4SetS(vec4 *const restrict v, const float s);
-void vec4Zero(vec4 *const restrict v);
+void vec4ZeroP(vec4 *const restrict v);
 
 vec4 vec4VAddV(const vec4 *const restrict v1, const vec4 *const restrict v2);
 vec4 vec4VAddN(const vec4 *const restrict v, const float x, const float y, const float z, const float w);

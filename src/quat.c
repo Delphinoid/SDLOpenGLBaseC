@@ -9,20 +9,21 @@
 #define QUAT_LERP_ANGLE cos(RADIAN_RATIO)
 
 __HINT_INLINE__ quat quatNew(const float w, const float x, const float y, const float z){
-	quat r = {.w = w, .v.x = x, .v.y = y, .v.z = z};
+	const quat r = {.w = w, .v.x = x, .v.y = y, .v.z = z};
 	return r;
 }
 __HINT_INLINE__ quat quatNewS(const float s){
-	quat r = {.w = s, .v.x = s, .v.y = s, .v.z = s};
+	const quat r = {.w = s, .v.x = s, .v.y = s, .v.z = s};
 	return r;
 }
 __HINT_INLINE__ quat quatNewAxisAngle(const float angle, const float axisX, const float axisY, const float axisZ){
-	float t = sinf(angle/2.f);
-	quat r;
-	r.w   = cosf(angle/2.f);
-	r.v.x = axisX * t;
-	r.v.y = axisY * t;
-	r.v.z = axisZ * t;
+	const float t = sinf(angle/2.f);
+	const quat r = {
+		.w   = cosf(angle/2.f),
+		.v.x = axisX * t,
+		.v.y = axisY * t,
+		.v.z = axisZ * t
+	};
 	return r;
 }
 __HINT_INLINE__ quat quatNewEuler(const float x, const float y, const float z){
@@ -35,11 +36,16 @@ __HINT_INLINE__ quat quatNewEuler(const float x, const float y, const float z){
 	const float sx = sinf(hx);
 	const float sy = sinf(hy);
 	const float sz = sinf(hz);
-	quat r;
-	r.w   = cx*cy*cz+sx*sy*sz;
-	r.v.x = sx*cy*cz-cx*sy*sz;
-	r.v.y = cx*sy*cz+sx*cy*sz;
-	r.v.z = cx*cy*sz-sx*sy*cz;
+	const quat r = {
+		.w   = cx*cy*cz+sx*sy*sz,
+		.v.x = sx*cy*cz-cx*sy*sz,
+		.v.y = cx*sy*cz+sx*cy*sz,
+		.v.z = cx*cy*sz-sx*sy*cz
+	};
+	return r;
+}
+quat quatZero(){
+	const quat r = {.w = 0.f, .v.x = 0.f, .v.y = 0.f, .v.z = 0.f};
 	return r;
 }
 __HINT_INLINE__ void quatSet(quat *const restrict q, const float w, const float x, const float y, const float z){
@@ -70,7 +76,7 @@ __HINT_INLINE__ void quatSetEuler(quat *const restrict q, const float x, const f
 	q->v.y = cx*sy*cz+sx*cy*sz;
 	q->v.z = cx*cy*sz-sx*sy*cz;
 }
-void quatZero(quat *const restrict q){
+void quatZeroP(quat *const restrict q){
 	memset(q, 0, sizeof(quat));
 }
 
@@ -229,7 +235,7 @@ __HINT_INLINE__ void quatQDivQP1(quat *const restrict q1, const quat *const rest
 		q1->v.y /= q2->v.y;
 		q1->v.z /= q2->v.z;
 	}else{
-		quatZero(q1);
+		quatZeroP(q1);
 	}
 }
 __HINT_INLINE__ void quatQDivQP2(const quat *const restrict q1, quat *const restrict q2){
@@ -239,7 +245,7 @@ __HINT_INLINE__ void quatQDivQP2(const quat *const restrict q1, quat *const rest
 		q2->v.y = q1->v.y / q2->v.y;
 		q2->v.z = q1->v.z / q2->v.z;
 	}else{
-		quatZero(q2);
+		quatZeroP(q2);
 	}
 }
 __HINT_INLINE__ void quatQDivQPR(const quat *const restrict q1, const quat *const restrict q2, quat *const restrict r){
@@ -249,7 +255,7 @@ __HINT_INLINE__ void quatQDivQPR(const quat *const restrict q1, const quat *cons
 		r->v.y = q1->v.y / q2->v.y;
 		r->v.z = q1->v.z / q2->v.z;
 	}else{
-		quatZero(r);
+		quatZeroP(r);
 	}
 }
 __HINT_INLINE__ void quatQDivSP(quat *const restrict q, const float s){
@@ -260,7 +266,7 @@ __HINT_INLINE__ void quatQDivSP(quat *const restrict q, const float s){
 		q->v.y *= invS;
 		q->v.z *= invS;
 	}else{
-		quatZero(q);
+		quatZeroP(q);
 	}
 }
 

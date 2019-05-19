@@ -10,8 +10,9 @@ typedef struct {
 } mat3;
 
 mat3 mat3Identity();
+mat3 mat3Zero();
 void mat3IdentityP(mat3 *const restrict m);
-void mat3Zero(mat3 *const restrict m);
+void mat3ZeroP(mat3 *const restrict m);
 
 mat3 mat3MMultM(const mat3 m1, const mat3 m2);
 void mat3MMultMP1(mat3 *const restrict m1, const mat3 *const restrict m2);

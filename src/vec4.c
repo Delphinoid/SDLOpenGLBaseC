@@ -18,6 +18,13 @@ __HINT_INLINE__ vec4 vec4NewS(const float s){
 	                .w = s};
 	return r;
 }
+__HINT_INLINE__ vec4 vec4Zero(){
+	const vec4 r = {.x = 0.f,
+	                .y = 0.f,
+	                .z = 0.f,
+	                .w = 0.f};
+	return r;
+}
 __HINT_INLINE__ void vec4Set(vec4 *const restrict v, const float x, const float y, const float z, const float w){
 	v->x = x;
 	v->y = y;
@@ -30,7 +37,7 @@ __HINT_INLINE__ void vec4SetS(vec4 *const restrict v, const float s){
 	v->z = s;
 	v->w = s;
 }
-__HINT_INLINE__ void vec4Zero(vec4 *const restrict v){
+__HINT_INLINE__ void vec4ZeroP(vec4 *const restrict v){
 	memset(v, 0, sizeof(vec4));
 }
 

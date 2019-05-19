@@ -57,7 +57,7 @@ static __FORCE_INLINE__ void physContactInit(physContact *const restrict contact
 
 	// Combined contact normal.
 	vec3 normal;
-	vec3Zero(&normal);
+	vec3ZeroP(&normal);
 
 	// Initialize each contact.
 	for(; cPoint < cPointLast; ++cPoint, ++pPoint){
@@ -123,7 +123,7 @@ static __FORCE_INLINE__ void physContactPersist(physContact *const restrict cont
 	// Combined contact normal.
 	vec3 normal;
 
-	vec3Zero(&normal);
+	vec3ZeroP(&normal);
 	memset(persistent, 0, sizeof(unsigned int)*COLLISION_MANIFOLD_MAX_CONTACT_POINTS);
 
 	// Manage persistent contacts.
@@ -259,11 +259,11 @@ static __FORCE_INLINE__ float physContactEffectiveMass(const vec3 normalA, const
 	const vec3 angularDeltaLinearA = mat3MMultVBra(inverseInertiaTensorA, angularDeltaA);
 	const vec3 angularDeltaB = vec3Cross(pointB, normalB);
 	const vec3 angularDeltaLinearB = mat3MMultVBra(inverseInertiaTensorB, angularDeltaB);
-	return 1.f / (
+	const float effectiveMass =
 		inverseMassTotal +
 		vec3Dot(angularDeltaA, angularDeltaLinearA) +
-		vec3Dot(angularDeltaB, angularDeltaLinearB)
-	);
+		vec3Dot(angularDeltaB, angularDeltaLinearB);
+	return (effectiveMass > 0.f ? 1.f/effectiveMass : 0.f);
 
 }
 
@@ -851,15 +851,15 @@ static __FORCE_INLINE__ float physContactPointSolveConfigurationNormal(physConta
 	// Calculate the separation.
 	const float separation = vec3Dot(vec3VSubV(pointGlobalB, pointGlobalA), normal) - PHYSICS_SEPARATION_BIAS_TOTAL;
 
-	// Calculate the new, transformed contact point offsets.
-	const vec3 pointLocalA = vec3VSubV(halfway, bodyA->centroidGlobal);
-	const vec3 pointLocalB = vec3VSubV(halfway, bodyB->centroidGlobal);
-
-	// Apply a slop to the configuration constraint and clamp it.
+	// Apply a slop to the configuration constraint.
 	constraint = PHYSICS_BAUMGARTE_TERM * (separation + PHYSICS_LINEAR_SLOP);
-	if(constraint < -PHYSICS_LINEAR_CORRECTION){
 
-		constraint = -PHYSICS_LINEAR_CORRECTION;
+	// Make sure the magnitude is less than 0.
+	if(constraint < 0.f){
+
+		// Calculate the new, transformed contact point offsets.
+		const vec3 pointLocalA = vec3VSubV(halfway, bodyA->centroidGlobal);
+		const vec3 pointLocalB = vec3VSubV(halfway, bodyB->centroidGlobal);
 
 		// Calculate the new effective mass.
 		effectiveMass = physContactEffectiveMass(
@@ -868,55 +868,65 @@ static __FORCE_INLINE__ float physContactPointSolveConfigurationNormal(physConta
 			bodyA->inverseMass + bodyB->inverseMass
 		);
 
-		// Calculate the normal impulse magnitude, i.e.
-		// the constraint's Lagrange multiplier.
-		lambda = -constraint * effectiveMass;
+		// Make sure the effective mass is greater than 0.
+		if(effectiveMass > 0.f){
 
-		// Calculate the normal impulse.
-		impulse = vec3VMultS(normal, lambda);
+			// Clamp the constraint to prevent large corrections.
+			if(constraint < -PHYSICS_LINEAR_CORRECTION){
+				constraint = -PHYSICS_LINEAR_CORRECTION;
+			}
 
-		// Apply the normal impulse to body A.
-		if(flagsAreSet(bodyA->flags, PHYSICS_BODY_SIMULATE_LINEAR)){
-			bodyA->centroidGlobal = vec3VSubV(bodyA->centroidGlobal, vec3VMultS(impulse, bodyA->inverseMass));
-			flagsSet(bodyA->flags, PHYSICS_BODY_TRANSLATED);
-		}
-		if(flagsAreSet(bodyA->flags, PHYSICS_BODY_SIMULATE_ANGULAR)){
-			bodyA->configuration.orientation = quatNormalizeFastAccurate(
-				quatQSubQ(
-					bodyA->configuration.orientation,
-					quatDifferentiate(
+			// Calculate the normal impulse magnitude, i.e.
+			// the constraint's Lagrange multiplier.
+			lambda = -constraint * effectiveMass;
+
+			// Calculate the normal impulse.
+			impulse = vec3VMultS(normal, lambda);
+
+			// Apply the normal impulse to body A.
+			if(flagsAreSet(bodyA->flags, PHYSICS_BODY_SIMULATE_LINEAR)){
+				bodyA->centroidGlobal = vec3VSubV(bodyA->centroidGlobal, vec3VMultS(impulse, bodyA->inverseMass));
+				flagsSet(bodyA->flags, PHYSICS_BODY_TRANSLATED);
+			}
+			if(flagsAreSet(bodyA->flags, PHYSICS_BODY_SIMULATE_ANGULAR)){
+				bodyA->configuration.orientation = quatNormalizeFastAccurate(
+					quatQSubQ(
 						bodyA->configuration.orientation,
-						mat3MMultVBra(
-							bodyA->inverseInertiaTensorGlobal,
-							vec3Cross(pointLocalA, impulse)
+						quatDifferentiate(
+							bodyA->configuration.orientation,
+							mat3MMultVBra(
+								bodyA->inverseInertiaTensorGlobal,
+								vec3Cross(pointLocalA, impulse)
+							)
 						)
 					)
-				)
-			);
-			physRigidBodyGenerateGlobalInertia(bodyA);
-			flagsSet(bodyA->flags, PHYSICS_BODY_ROTATED);
-		}
+				);
+				physRigidBodyGenerateGlobalInertia(bodyA);
+				flagsSet(bodyA->flags, PHYSICS_BODY_ROTATED);
+			}
 
-		// Apply the normal impulse to body B.
-		if(flagsAreSet(bodyB->flags, PHYSICS_BODY_SIMULATE_LINEAR)){
-			bodyB->centroidGlobal = vec3VAddV(bodyB->centroidGlobal, vec3VMultS(impulse, bodyB->inverseMass));
-			flagsSet(bodyB->flags, PHYSICS_BODY_TRANSLATED);
-		}
-		if(flagsAreSet(bodyB->flags, PHYSICS_BODY_SIMULATE_ANGULAR)){
-			bodyB->configuration.orientation = quatNormalizeFastAccurate(
-				quatQAddQ(
-					bodyB->configuration.orientation,
-					quatDifferentiate(
+			// Apply the normal impulse to body B.
+			if(flagsAreSet(bodyB->flags, PHYSICS_BODY_SIMULATE_LINEAR)){
+				bodyB->centroidGlobal = vec3VAddV(bodyB->centroidGlobal, vec3VMultS(impulse, bodyB->inverseMass));
+				flagsSet(bodyB->flags, PHYSICS_BODY_TRANSLATED);
+			}
+			if(flagsAreSet(bodyB->flags, PHYSICS_BODY_SIMULATE_ANGULAR)){
+				bodyB->configuration.orientation = quatNormalizeFastAccurate(
+					quatQAddQ(
 						bodyB->configuration.orientation,
-						mat3MMultVBra(
-							bodyB->inverseInertiaTensorGlobal,
-							vec3Cross(pointLocalA, impulse)
+						quatDifferentiate(
+							bodyB->configuration.orientation,
+							mat3MMultVBra(
+								bodyB->inverseInertiaTensorGlobal,
+								vec3Cross(pointLocalA, impulse)
+							)
 						)
 					)
-				)
-			);
-			physRigidBodyGenerateGlobalInertia(bodyB);
-			flagsSet(bodyB->flags, PHYSICS_BODY_ROTATED);
+				);
+				physRigidBodyGenerateGlobalInertia(bodyB);
+				flagsSet(bodyB->flags, PHYSICS_BODY_ROTATED);
+			}
+
 		}
 
 	}

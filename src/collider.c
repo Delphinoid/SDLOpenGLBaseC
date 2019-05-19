@@ -68,15 +68,7 @@ cAABB cTransformMesh(void *const instance, const vec3 instanceCentroid, const vo
 		** First iteration.
 		*/
 		// Transform the vertex.
-		// Subtract the local centroid from the vertex.
-		//vec3SubVFromVR(vLocal, localCentroid, vGlobal);
-		// Rotate the new vertex around (0, 0, 0).
-		//quatRotateVec3Fast(orientation, vGlobal);
-		// Scale the vertex.
-		//vec3MultVByV(vGlobal, scale);
-		// Translate it by the global centroid.
-		//vec3AddVToV(vGlobal, instanceCentroid);
-		*vGlobal = vec3VAddV(vec3VMultV(quatRotateVec3Fast(orientation, vec3VSubV(*vLocal, localCentroid)), scale), instanceCentroid);
+		*vGlobal = vec3VAddV(quatRotateVec3Fast(orientation, vec3VMultV(vec3VSubV(*vLocal, localCentroid), scale)), instanceCentroid);
 
 		// Initialize the AABB to the first vertex.
 		tempAABB.min = *vGlobal;
@@ -89,15 +81,7 @@ cAABB cTransformMesh(void *const instance, const vec3 instanceCentroid, const vo
 		for(++vLocal, ++vGlobal; vGlobal < vLast; ++vLocal, ++vGlobal){
 
 			// Transform the vertex.
-			// Subtract the local centroid from the vertex.
-			//vec3SubVFromVR(vLocal, localCentroid, vGlobal);
-			// Rotate the new vertex around (0, 0, 0).
-			//quatRotateVec3Fast(orientation, vGlobal);
-			// Scale the vertex.
-			//vec3MultVByV(vGlobal, scale);
-			// Translate it by the global centroid.
-			//vec3AddVToV(vGlobal, instanceCentroid);
-			*vGlobal = vec3VAddV(vec3VMultV(quatRotateVec3Fast(orientation, vec3VSubV(*vLocal, localCentroid)), scale), instanceCentroid);
+			*vGlobal = vec3VAddV(quatRotateVec3Fast(orientation, vec3VMultV(vec3VSubV(*vLocal, localCentroid), scale)), instanceCentroid);
 
 			// Update collider minima and maxima.
 			// Update aabb.left and aabb.right.
@@ -144,17 +128,6 @@ cAABB cTransformComposite(void *const instance, const vec3 instanceCentroid, con
 	collider *c1 = cInstance->colliders;
 	collider *c2 = cLocal->colliders;
 	const collider *const cLast = &c1[cInstance->colliderNum];
-
-	/*if(aabb == NULL){
-		for(; c1 < cLast; ++c1, ++c2){
-			cTransform(c1, instanceCentroid, c2, localCentroid, NULL, configuration);
-		}
-	}else{
-		cAABB *bounds = aabb;
-		for(; c1 < cLast; ++c1, ++c2, ++bounds){
-			cTransform(c1, instanceCentroid, c2, localCentroid, bounds, configuration);
-		}
-	}*/
 
 	cAABB tempAABB = {.min.x = 0.f, .min.y = 0.f, .min.z = 0.f, .max.x = 0.f, .max.y = 0.f, .max.z = 0.f};
 

@@ -12,6 +12,11 @@ __HINT_INLINE__ vec2 vec2NewS(const float s){
 	const vec2 r = {.x = s, .y = s};
 	return r;
 }
+__HINT_INLINE__ vec2 vec2Zero(){
+	const vec2 r = {.x = 0.f,
+	                .y = 0.f};
+	return r;
+}
 __HINT_INLINE__ void vec2Set(vec2 *const restrict v, const float x, const float y){
 	v->x = x;
 	v->y = y;
@@ -20,7 +25,7 @@ __HINT_INLINE__ void vec2SetS(vec2 *const restrict v, const float s){
 	v->x = s;
 	v->y = s;
 }
-__HINT_INLINE__ void vec2Zero(vec2 *const restrict v){
+__HINT_INLINE__ void vec2ZeroP(vec2 *const restrict v){
 	memset(v, 0, sizeof(vec2));
 }
 

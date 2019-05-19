@@ -20,7 +20,7 @@ void physRigidBodyBaseInit(physRigidBodyBase *const restrict local){
 	local->inverseMass = 0.f;
 	local->linearDamping = 0.f;
 	local->angularDamping = 0.f;
-	vec3Zero(&local->centroid);
+	vec3ZeroP(&local->centroid);
 	mat3Identity(&local->inverseInertiaTensor);
 }
 
@@ -159,7 +159,7 @@ __FORCE_INLINE__ static void physRigidBodyBaseGenerateProperties(physRigidBodyBa
 
 	}else{
 		local->inverseMass = 0.f;
-		mat3Zero(&local->inverseInertiaTensor);
+		mat3ZeroP(&local->inverseInertiaTensor);
 	}
 
 	local->mass = tempMass;
@@ -990,10 +990,10 @@ void physRigidBodyInit(physRigidBody *const restrict body){
 	body->base = NULL;
 	body->hull = NULL;
 	boneInit(&body->configuration);
-	vec3Zero(&body->linearVelocity);
-	vec3Zero(&body->angularVelocity);
-	vec3Zero(&body->netForce);
-	vec3Zero(&body->netTorque);
+	vec3ZeroP(&body->linearVelocity);
+	vec3ZeroP(&body->angularVelocity);
+	vec3ZeroP(&body->netForce);
+	vec3ZeroP(&body->netTorque);
 }
 
 return_t physRigidBodyInstantiate(physRigidBody *const restrict body, physRigidBodyBase *const restrict local){
@@ -1221,9 +1221,6 @@ __FORCE_INLINE__ void physRigidBodyUpdateConfiguration(physRigidBody *const rest
 
 void physRigidBodyIntegrateVelocity(physRigidBody *const restrict body, const float dt){
 
-	// Update moment of inertia.
-	physRigidBodyGenerateGlobalInertia(body);
-
 	if(body->inverseMass > 0.f){
 
 		const float modifier = body->inverseMass * dt;
@@ -1233,11 +1230,15 @@ void physRigidBodyIntegrateVelocity(physRigidBody *const restrict body, const fl
 			// Apply damping.
 			body->linearVelocity = vec3VMultS(vec3VAddV(body->linearVelocity, vec3VMultS(body->netForce, modifier)),  1.f / (1.f + dt * body->linearDamping));
 		}else{
-			vec3Zero(&body->linearVelocity);
+			vec3ZeroP(&body->linearVelocity);
 		}
 
 		// Integrate angular velocity.
 		if(flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR)){
+
+			// Update moment of inertia.
+			physRigidBodyGenerateGlobalInertia(body);
+
 			// Apply damping.
 			body->angularVelocity = vec3VMultS(
 				vec3VAddV(
@@ -1252,15 +1253,17 @@ void physRigidBodyIntegrateVelocity(physRigidBody *const restrict body, const fl
 				),
 				1.f / (1.f + dt * body->angularDamping)
 			);
+
 		}else{
-			vec3Zero(&body->angularVelocity);
+			mat3ZeroP(&body->inverseInertiaTensorGlobal);
+			vec3ZeroP(&body->angularVelocity);
 		}
 
 	}
 
 	// Reset force and torque accumulators.
-	vec3Zero(&body->netForce);
-	vec3Zero(&body->netTorque);
+	vec3ZeroP(&body->netForce);
+	vec3ZeroP(&body->netTorque);
 
 }
 

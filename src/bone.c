@@ -1,7 +1,7 @@
 #include "bone.h"
 
 void boneInit(bone *const restrict b){
-	vec3Zero(&b->position);
+	vec3ZeroP(&b->position);
 	b->orientation = quatIdentity();
 	b->scale = vec3NewS(1.f);
 }

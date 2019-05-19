@@ -398,7 +398,7 @@ return_t mdlWavefrontObjLoad(const char *const restrict filePath, vertexIndex_t 
 						tempVert.position.y = tempPositions[pos+1];
 						tempVert.position.z = tempPositions[pos+2];
 					}else{
-						vec3Zero(&tempVert.position);
+						vec3ZeroP(&tempVert.position);
 					}
 					// Vertex UV data
 					pos = uvIndex[i]<<1;
@@ -416,7 +416,7 @@ return_t mdlWavefrontObjLoad(const char *const restrict filePath, vertexIndex_t 
 						tempVert.normal.y = tempNormals[pos+1];
 						tempVert.normal.z = tempNormals[pos+2];
 					}else{
-						vec3Zero(&tempVert.normal);
+						vec3ZeroP(&tempVert.normal);
 					}
 					/****/
 					pos = positionIndex[i]*4;

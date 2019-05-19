@@ -92,7 +92,7 @@ void renderModel(const object *const restrict obj, const float distance, const c
 						// Apply the parent's bind offsets.
 						*bAccumulator = gfxMngr->sklBindAccumulator[nLayout->parent];
 					}else{
-						vec3Zero(bAccumulator);
+						vec3ZeroP(bAccumulator);
 					}
 
 					// If the animated bone is in the model, pass in its animation transforms.
