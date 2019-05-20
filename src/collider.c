@@ -68,7 +68,7 @@ cAABB cTransformMesh(void *const instance, const vec3 instanceCentroid, const vo
 		** First iteration.
 		*/
 		// Transform the vertex.
-		*vGlobal = vec3VAddV(quatRotateVec3Fast(orientation, vec3VMultV(vec3VSubV(*vLocal, localCentroid), scale)), instanceCentroid);
+		*vGlobal = vec3VAddV(quatRotateVec3(orientation, vec3VMultV(vec3VSubV(*vLocal, localCentroid), scale)), instanceCentroid);
 
 		// Initialize the AABB to the first vertex.
 		tempAABB.min = *vGlobal;
@@ -81,7 +81,7 @@ cAABB cTransformMesh(void *const instance, const vec3 instanceCentroid, const vo
 		for(++vLocal, ++vGlobal; vGlobal < vLast; ++vLocal, ++vGlobal){
 
 			// Transform the vertex.
-			*vGlobal = vec3VAddV(quatRotateVec3Fast(orientation, vec3VMultV(vec3VSubV(*vLocal, localCentroid), scale)), instanceCentroid);
+			*vGlobal = vec3VAddV(quatRotateVec3(orientation, vec3VMultV(vec3VSubV(*vLocal, localCentroid), scale)), instanceCentroid);
 
 			// Update collider minima and maxima.
 			// Update aabb.left and aabb.right.
@@ -113,7 +113,7 @@ cAABB cTransformMesh(void *const instance, const vec3 instanceCentroid, const vo
 
 	// Update each normal.
 	for(; vGlobal < vLast; ++vLocal, ++vGlobal){
-		*vGlobal = quatRotateVec3Fast(orientation, *vLocal);
+		*vGlobal = quatRotateVec3(orientation, *vLocal);
 	}
 
 	return tempAABB;

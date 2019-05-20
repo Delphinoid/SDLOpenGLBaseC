@@ -5,12 +5,13 @@
 #include "skeleton.h"
 #include "mat3.h"
 
-#define PHYSICS_BODY_ASLEEP             0x00
 #define PHYSICS_BODY_UNINITIALIZED      0x01  // Whether or not the simulation has just begun on this frame.
 #define PHYSICS_BODY_SIMULATE_LINEAR    0x02  // Simulate linear velocity.
 #define PHYSICS_BODY_SIMULATE_ANGULAR   0x04  // Simulate angular velocity. Disabling this is useful for certain entities, such as players.
 #define PHYSICS_BODY_SIMULATE           0x06  // Simulate both linear and angular velocity.
 #define PHYSICS_BODY_COLLIDE            0x08  // Permit collisions.
+#define PHYSICS_BODY_AWAKE              0x0E  // Whether or not the body is asleep.
+#define PHYSICS_BODY_ASLEEP             0xF1  // Whether or not the body is asleep.
 #define PHYSICS_BODY_COLLISION_MODIFIED 0x10  // The collision flag was modified.
 #define PHYSICS_BODY_TRANSLATED         0x20  // The body was translated this frame.
 #define PHYSICS_BODY_ROTATED            0x40  // The body was rotated this frame.

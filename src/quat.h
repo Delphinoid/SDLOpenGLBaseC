@@ -94,11 +94,11 @@ float quatDot(const quat q1, const quat q2);
 float quatDotP(const quat *const restrict q1, const quat *const restrict q2);
 
 vec3 quatRotateVec3(const quat q, const vec3 v);
-vec3 quatRotateVec3Fast(const quat q, const vec3 v);
+vec3 quatRotateVec3FastApproximate(const quat q, const vec3 v);
 void quatRotateVec3P(const quat *const restrict q, vec3 *const restrict v);
 void quatRotateVec3PR(const quat *const restrict q, const vec3 *const restrict v, vec3 *const restrict r);
-void quatRotateVec3FastP(const quat *const restrict q, vec3 *const restrict v);
-void quatRotateVec3FastPR(const quat *const restrict q, const vec3 *const restrict v, vec3 *const restrict r);
+void quatRotateVec3FastApproximateP(const quat *const restrict q, vec3 *const restrict v);
+void quatRotateVec3FastApproximatePR(const quat *const restrict q, const vec3 *const restrict v, vec3 *const restrict r);
 
 quat quatLookAt(const vec3 eye, const vec3 target, const vec3 up);
 void quatLookAtP(quat *const restrict q, const vec3 *const restrict eye, const vec3 *const restrict target, const vec3 *const restrict up);

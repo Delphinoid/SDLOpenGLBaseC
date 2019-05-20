@@ -70,7 +70,7 @@ void camCalculateUp(camera *const restrict cam){  /** Probably not entirely nece
 	                           cam->rotation.y*RADIAN_RATIO,
 	                           cam->rotation.z*RADIAN_RATIO);
 	vec3Set(&cam->up, 0.f, 1.f, 0.f);
-	quatRotateVec3Fast(&camRotation, &cam->up);*/
+	quatRotateVec3(&camRotation, &cam->up);*/
 
 }
 void camUpdateViewMatrix(camera *const restrict cam, const float interpT){

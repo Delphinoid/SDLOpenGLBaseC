@@ -1030,7 +1030,7 @@ __FORCE_INLINE__ void physRigidBodySetInitialized(physRigidBody *const restrict 
 	flagsSet(body->flags, PHYSICS_BODY_INITIALIZED);
 }
 __FORCE_INLINE__ void physRigidBodySetAsleep(physRigidBody *const restrict body){
-	body->flags = 0;
+	body->flags &= PHYSICS_BODY_ASLEEP;
 }
 __FORCE_INLINE__ void physRigidBodySetAwake(physRigidBody *const restrict body, const flags_t flags){
 	body->flags = flags;
@@ -1174,7 +1174,7 @@ __HINT_INLINE__ void physRigidBodyApplyImpulseInverse(physRigidBody *const restr
 __FORCE_INLINE__ void physRigidBodyCentroidFromPosition(physRigidBody *const restrict body){
 	body->centroidGlobal = vec3VAddV(
 		vec3VMultV(
-			quatRotateVec3Fast(
+			quatRotateVec3(
 				body->configuration.orientation,
 				body->centroidLocal
 			),
@@ -1187,7 +1187,7 @@ __FORCE_INLINE__ void physRigidBodyCentroidFromPosition(physRigidBody *const res
 __FORCE_INLINE__ void physRigidBodyPositionFromCentroid(physRigidBody *const restrict body){
 	body->configuration.position = vec3VAddV(
 		vec3VMultV(
-			quatRotateVec3Fast(
+			quatRotateVec3(
 				body->configuration.orientation,
 				vec3Negate(body->centroidLocal)
 			),

@@ -422,28 +422,16 @@ __HINT_INLINE__ float quatDotP(const quat *const restrict q1, const quat *const 
 }
 
 __HINT_INLINE__ vec3 quatRotateVec3(const quat q, const vec3 v){
-
-	vec3 r, temp;
-
 	const float dotQV = vec3Dot(q.v, v);
-	const float dotQQ = vec3Dot(q.v, q.v);
-	float m = q.w*q.w - dotQQ;
-	const vec3 crossQV = vec3Cross(q.v, v);
-
-	r = vec3VMultS(v, m);
-
-	m = 2.f * dotQV;
-	temp = vec3VMultS(q.v, m);
-	r = vec3VAddV(r, temp);
-
-	m = 2.f * q.w;
-	temp = vec3VMultS(crossQV, m);
-	r = vec3VAddV(r, temp);
-
-	return r;
-
+	return vec3VAddV(
+		vec3VMultS(v, q.w*q.w - vec3Dot(q.v, q.v)),
+		vec3VAddV(
+			vec3VMultS(q.v, dotQV + dotQV),
+			vec3VMultS(vec3Cross(q.v, v), q.w + q.w)
+		)
+	);
 }
-__HINT_INLINE__ vec3 quatRotateVec3Fast(const quat q, const vec3 v){
+__HINT_INLINE__ vec3 quatRotateVec3FastApproximate(const quat q, const vec3 v){
 	const vec3 crossQQV = vec3Cross(q.v, vec3VAddV(vec3Cross(q.v, v), vec3VMultS(v, q.w)));
 	return vec3VAddV(crossQQV, vec3VAddV(crossQQV, v));
 }
@@ -459,11 +447,11 @@ __HINT_INLINE__ void quatRotateVec3P(const quat *const restrict q, vec3 *const r
 
 	vec3VMultSP(v, m);
 
-	m = 2.f * dotQV;
+	m = dotQV + dotQV;
 	vec3VMultSPR(&q->v, m, &temp);
 	vec3VAddVP(v, &temp);
 
-	m = 2.f * q->w;
+	m = q->w + q->w;
 	vec3VMultSPR(&crossQV, m, &temp);
 	vec3VAddVP(v, &temp);
 
@@ -480,16 +468,16 @@ __HINT_INLINE__ void quatRotateVec3PR(const quat *const restrict q, const vec3 *
 
 	vec3VMultSPR(v, m, r);
 
-	m = 2.f * dotQV;
+	m = dotQV + dotQV;
 	vec3VMultSPR(&q->v, m, &temp);
 	vec3VAddVP(r, &temp);
 
-	m = 2.f * q->w;
+	m = q->w + q->w;
 	vec3VMultSPR(&crossQV, m, &temp);
 	vec3VAddVP(r, &temp);
 
 }
-__HINT_INLINE__ void quatRotateVec3FastP(const quat *const restrict q, vec3 *const restrict v){
+__HINT_INLINE__ void quatRotateVec3FastApproximateP(const quat *const restrict q, vec3 *const restrict v){
 
 	vec3 crossQV, crossQQV;
 	vec3CrossPR(&q->v, v, &crossQV);
@@ -504,7 +492,7 @@ __HINT_INLINE__ void quatRotateVec3FastP(const quat *const restrict q, vec3 *con
 	v->z = crossQQV.z + crossQQV.z + v->z;
 
 }
-__HINT_INLINE__ void quatRotateVec3FastPR(const quat *const restrict q, const vec3 *const restrict v, vec3 *const restrict r){
+__HINT_INLINE__ void quatRotateVec3FastApproximatePR(const quat *const restrict q, const vec3 *const restrict v, vec3 *const restrict r){
 
 	vec3 crossQV, crossQQV;
 	vec3CrossPR(&q->v, v, &crossQV);

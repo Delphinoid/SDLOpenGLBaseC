@@ -75,7 +75,7 @@ __FORCE_INLINE__ void cMeshCentroidFromPosition(cMesh *const restrict c, const c
 	/*
 	** Extrapolate the mesh's centroid from a configuration.
 	*/
-	c->centroid = vec3VAddV(vec3VMultV(quatRotateVec3Fast(orientation, l->centroid), scale), position);
+	c->centroid = vec3VAddV(vec3VMultV(quatRotateVec3(orientation, l->centroid), scale), position);
 }
 
 static __FORCE_INLINE__ const vec3 *cMeshCollisionSupport(const cMesh *const restrict c, const vec3 axis){
@@ -881,10 +881,6 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATMinkowskiFace(const vec3 A, co
 	// the arcs. Instead of crossing the two
 	// adjacent face normals, we can just
 	// subtract one edge vertex from the other.
-	//
-	// D x C
-	//vec3SubVFromVR(&c2->vertices[e2->start], &c2->vertices[e2->end], &normal);
-
 	const float BDC = vec3Dot(B, DxC);
 
 	// Check if the arcs are overlapping by testing
@@ -896,10 +892,6 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATMinkowskiFace(const vec3 A, co
 
 		// Normals of the other plane intersecting
 		// the arcs.
-		//
-		// B x A
-		//vec3SubVFromVR(&c1->vertices[e1->start], &c1->vertices[e1->end], &normal);
-
 		const float CBA = vec3Dot(C, BxA);
 
 		// Make sure both arcs are on the same
@@ -921,6 +913,7 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATMinkowskiFace(const vec3 A, co
 			// they will cancel each other out.
 			//
 			// CBA * DBA
+
 			return CBA * vec3Dot(D, BxA) < 0.f;
 
 		}
@@ -942,24 +935,20 @@ static __FORCE_INLINE__ float cMeshCollisionSATEdgeSeparation(const vec3 pointA,
 	/** Should perform calculations in the second collider's local space? **/
 	/** Might not be worth it, as our physics colliders are very simple.  **/
 
-	vec3 normal, offset;
-	float magnitudeSquared;
-
-	normal = vec3Cross(e1InvDir, e2InvDir);
-	magnitudeSquared = vec3MagnitudeSquared(normal);
+	vec3 normal = vec3Cross(e1InvDir, e2InvDir);
+	const float normalMagnitudeSquared = vec3MagnitudeSquared(normal);
 
 	// Check if the edges are parallel enough to not be
 	// considered a new face on the Minkowski difference.
-	if(magnitudeSquared < vec3MagnitudeSquared(e1InvDir) * vec3MagnitudeSquared(e2InvDir) * COLLISION_PARALLEL_THRESHOLD_SQUARED){
+	if(normalMagnitudeSquared < vec3MagnitudeSquared(e1InvDir) * vec3MagnitudeSquared(e2InvDir) * COLLISION_PARALLEL_THRESHOLD_SQUARED){
 		return -INFINITY;
 	}
 
 	// Normalize.
-	normal = vec3VMultS(normal, fastInvSqrt(magnitudeSquared));
-	offset = vec3VSubV(pointA, centroid);
+	normal = vec3VMultS(normal, fastInvSqrt(normalMagnitudeSquared));
 
 	// Ensure the normal points from A to B.
-	if(vec3Dot(normal, offset) < 0.f){
+	if(vec3Dot(normal, vec3VSubV(pointA, centroid)) < 0.f){
 		normal = vec3Negate(normal);
 	}
 
