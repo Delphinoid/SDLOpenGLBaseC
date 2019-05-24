@@ -90,6 +90,10 @@ void vec3CrossP1(vec3 *const restrict v1, const vec3 *const restrict v2);
 void vec3CrossP2(const vec3 *const restrict v1, vec3 *const restrict v2);
 void vec3CrossPR(const vec3 *const restrict v1, const vec3 *const restrict v2, vec3 *const restrict r);
 
+vec3 vec3Perpendicular(const vec3 v);
+void vec3PerpendicularP(vec3 *const restrict v);
+void vec3PerpendicularPR(const vec3 *const restrict v, vec3 *const restrict r);
+
 vec3 vec3Lerp(const vec3 v1, const vec3 v2, const float t);
 void vec3LerpP1(vec3 *const restrict v1, const vec3 *const restrict v2, const float t);
 void vec3LerpP2(const vec3 *const restrict v1, vec3 *const restrict v2, const float t);

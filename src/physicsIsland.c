@@ -31,7 +31,7 @@ __FORCE_INLINE__ void physIslandRemoveCollider(physIsland *const restrict island
 	}
 }
 
-#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
+#ifndef PHYSICS_GAUSS_SEIDEL_SOLVER
 __FORCE_INLINE__ return_t physIslandQuery(const physIsland *const restrict island, const float dt){
 #else
 __FORCE_INLINE__ return_t physIslandQuery(const physIsland *const restrict island){
@@ -41,7 +41,7 @@ __FORCE_INLINE__ return_t physIslandQuery(const physIsland *const restrict islan
 	** Maintain contact and separation pairs for each collider.
 	*/
 
-	#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
+	#ifndef PHYSICS_GAUSS_SEIDEL_SOLVER
 	const float frequency = 1.f/dt;
 	#endif
 
@@ -53,7 +53,7 @@ __FORCE_INLINE__ return_t physIslandQuery(const physIsland *const restrict islan
 		aabbTreeQueryNodeStack(&island->tree, node, &physCollisionQuery);
 
 		// Remove any outdated contacts and separations and update what's left.
-		#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
+		#ifndef PHYSICS_GAUSS_SEIDEL_SOLVER
 		physColliderUpdateContacts(node->data.leaf.value, frequency);
 		#else
 		physColliderUpdateContacts(node->data.leaf.value);

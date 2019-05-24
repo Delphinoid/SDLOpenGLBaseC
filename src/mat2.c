@@ -124,17 +124,13 @@ __HINT_INLINE__ void mat2TransposePR(const mat2 *const restrict m, mat2 *const r
 }
 
 __HINT_INLINE__ mat2 mat2Invert(const mat2 m){
-	float invDet = mat2Determinant(m);
-	if(invDet != 0.f){
-		mat2 r;
-		invDet = 1.f / invDet;
-		r.m[0][0] = m.m[1][1] * invDet;
-		r.m[0][1] = m.m[0][1] * -invDet;
-		r.m[1][0] = m.m[1][0] * -invDet;
-		r.m[1][1] = m.m[0][0] * invDet;
-		return r;
-	}
-	return m;
+	mat2 r;
+	const float invDet = 1.f / mat2Determinant(m);
+	r.m[0][0] = m.m[1][1] * invDet;
+	r.m[0][1] = m.m[0][1] * -invDet;
+	r.m[1][0] = m.m[1][0] * -invDet;
+	r.m[1][1] = m.m[0][0] * invDet;
+	return r;
 }
 __HINT_INLINE__ return_t mat2InvertR(const mat2 m, mat2 *const restrict r){
 	float invDet = mat2Determinant(m);

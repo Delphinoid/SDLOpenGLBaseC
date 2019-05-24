@@ -319,18 +319,14 @@ int main(int argc, char *argv[]){
 			}
 
 			// Query physics islands.
-			#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
+			#ifndef PHYSICS_GAUSS_SEIDEL_SOLVER
 			moduleSceneQueryIslands(tickratioTimeMod);
 			#else
 			moduleSceneQueryIslands();
 			#endif
 
 			// Solve physics constraints.
-			#if !defined PHYSICS_MODULARIZE_SOLVER && !defined PHYSICS_GAUSS_SEIDEL_SOLVER
-			modulePhysicsSolveConstraints();
-			#else
 			modulePhysicsSolveConstraints(tickratioTimeMod);
-			#endif
 
 			// Update scenes.
 			moduleSceneUpdate(tickrateTimeMod, tickratioTimeMod);

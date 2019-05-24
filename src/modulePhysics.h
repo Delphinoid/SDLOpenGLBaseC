@@ -94,10 +94,6 @@ aabbNode *modulePhysicsAABBNodeAllocate();
 void modulePhysicsAABBNodeFree(aabbNode *const restrict resource);
 void modulePhysicsAABBNodeClear();
 
-#if !defined PHYSICS_MODULARIZE_SOLVER && !defined PHYSICS_GAUSS_SEIDEL_SOLVER
-void modulePhysicsSolveConstraints();
-#else
 void modulePhysicsSolveConstraints(const float dt);
-#endif
 
 #endif

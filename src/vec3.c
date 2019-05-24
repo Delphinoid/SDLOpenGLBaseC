@@ -374,6 +374,34 @@ __HINT_INLINE__ void vec3CrossPR(const vec3 *const restrict v1, const vec3 *cons
 	r->z = v1->x * v2->y - v1->y * v2->x;
 }
 
+__HINT_INLINE__ vec3 vec3Perpendicular(const vec3 v){
+	if(fabsf(v.x) >= 0.5773502691896257){  // sqrtf(1.f / 3.f), 0x3F13CD3A
+		return vec3New(v.y, -v.x, 0.f);
+	}
+	return vec3New(0.f, v.z, -v.y);
+}
+__HINT_INLINE__ void vec3PerpendicularP(vec3 *const restrict v){
+	const float y = v->y;
+	if(fabsf(v->x) >= 0.5773502691896257){  // sqrtf(1.f / 3.f), 0x3F13CD3A
+		v->y = -v->x;
+		v->x = y;
+		v->z = 0.f;
+	}
+	v->y = v->z;
+	v->x = 0.f;
+	v->z = -y;
+}
+__HINT_INLINE__ void vec3PerpendicularPR(const vec3 *const restrict v, vec3 *const restrict r){
+	if(fabsf(v->x) >= 0.5773502691896257){  // sqrtf(1.f / 3.f), 0x3F13CD3A
+		r->x = v->y;
+		r->y = -v->x;
+		r->z = 0.f;
+	}
+	r->x = 0.f;
+	r->y = v->z;
+	r->z = -v->y;
+}
+
 __HINT_INLINE__ vec3 vec3Lerp(const vec3 v1, const vec3 v2, const float t){
 	/*
 	** r = v1 + (v2 - v1) * t

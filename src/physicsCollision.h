@@ -4,6 +4,7 @@
 #include "physicsShared.h"
 #include "physicsConstraint.h"
 #include "collision.h"
+#include "mat2.h"
 
 #ifndef PHYSICS_CONTACT_VELOCITY_SOLVER_ITERATIONS
 	#define PHYSICS_CONTACT_VELOCITY_SOLVER_ITERATIONS 4
@@ -55,27 +56,33 @@ typedef struct physContactPoint {
 	vec3 pointA;
 	vec3 pointB;
 
-	// The "untransformed" normal relative to pointA.
-	vec3 normalA;
+	#else
+
+	// Penetration depth. Always negative.
+	/** Rename to separation, as it's a negative quantity. **/
+	float penetrationDepth;
 
 	#endif
 
-	// Penetration depth.
-	float penetrationDepth;
-
-	// Impulse magnitude denominators.
+	// Normal impulse magnitude denominator.
 	float normalEffectiveMass;
-	float tangentEffectiveMassA;
-	float tangentEffectiveMassB;
 
 	// Persistent impulse magnitude accumulator.
 	float normalImpulseAccumulator;
 
-	// Persistent impulse magnitude accumulators for friction.
+	#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
+
+	// Friction inverse effective mass.
+	float tangentEffectiveMassA;
+	float tangentEffectiveMassB;
+
+	// Impulse magnitude accumulators for friction.
 	float tangentImpulseAccumulatorA;
 	float tangentImpulseAccumulatorB;
 
-	// Bias term for warm starting.
+	#endif
+
+	// Bias term for velocity warm starting.
 	float bias;
 
 	// Key for temporal coherence.
@@ -88,13 +95,37 @@ typedef struct physContact {
 	// Contact array.
 	physContactPoint contacts[COLLISION_MANIFOLD_MAX_CONTACT_POINTS];
 
-	// Contact normal.
+	// Average halfway points.
+	vec3 halfwayA;
+	vec3 halfwayB;
+
+	// Average contact normal.
 	vec3 normal;
+
+	#if defined PHYSICS_GAUSS_SEIDEL_SOLVER
+
+	// The "untransformed" average normal relative to the average pointA.
+	vec3 normalA;
+
+	#endif
 
 	// Contact tangents for simulating friction.
 	vec3 tangentA;
 	vec3 tangentB;
 
+	#ifdef PHYSICS_CONTACT_FRICTION_CONSTRAINT
+
+	// Friction inverse effective mass.
+	mat2 tangentEffectiveMass;
+	float angularEffectiveMass;
+
+	// Impulse magnitude accumulators for friction.
+	vec2 tangentImpulseAccumulator;
+	float angularImpulseAccumulator;
+
+	#endif
+
+	// Coefficients of friction and restitution.
 	float friction;
 	float restitution;
 
@@ -139,7 +170,7 @@ typedef struct physSeparationPair {
 
 } physSeparationPair;
 
-#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
+#ifndef PHYSICS_GAUSS_SEIDEL_SOLVER
 void physContactUpdate(physContact *const restrict contact, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float dt);
 #else
 void physContactUpdate(physContact *const restrict contact, physCollider *const restrict colliderA, physCollider *const restrict colliderB);

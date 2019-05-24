@@ -80,7 +80,7 @@ return_t physColliderTransform(physCollider *const restrict c, physIsland *const
 physContactPair *physColliderFindContact(const physCollider *const c1, const physCollider *const c2, physContactPair **const previous, physContactPair **const next);
 physSeparationPair *physColliderFindSeparation(const physCollider *const c1, const physCollider *const c2, physSeparationPair **const previous, physSeparationPair **const next);
 
-#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
+#ifndef PHYSICS_GAUSS_SEIDEL_SOLVER
 void physColliderUpdateContacts(physCollider *const c, const float dt);
 #else
 void physColliderUpdateContacts(physCollider *const c);

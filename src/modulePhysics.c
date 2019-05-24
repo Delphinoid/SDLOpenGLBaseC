@@ -554,11 +554,7 @@ void modulePhysicsAABBNodeClear(){
 
 }
 
-#if !defined PHYSICS_MODULARIZE_SOLVER && !defined PHYSICS_GAUSS_SEIDEL_SOLVER
-void modulePhysicsSolveConstraints(){
-#else
 void modulePhysicsSolveConstraints(const float dt){
-#endif
 
 
 	/*
@@ -568,7 +564,19 @@ void modulePhysicsSolveConstraints(const float dt){
 
 	size_t i;
 
+
+	// Integrate velocities.
+	MEMORY_SLINK_LOOP_BEGIN(__PhysicsRigidBodyResourceArray, body, physRigidBody *);
+
+		// Integrate the body's velocities.
+		physRigidBodyIntegrateVelocity(body, dt);
+		physRigidBodyResetAccumulators(body);
+
+	MEMORY_SLINK_LOOP_END(__PhysicsRigidBodyResourceArray, body, goto PHYSICS_JOINT_VELOCITY_SOLVER;);
+
+
 	// Iteratively solve joint velocity constraints.
+	PHYSICS_JOINT_VELOCITY_SOLVER:
 	i = PHYSICS_JOINT_VELOCITY_SOLVER_ITERATIONS;
 	while(i > 0){
 
@@ -598,21 +606,18 @@ void modulePhysicsSolveConstraints(const float dt){
 
 	}
 
-	#if defined PHYSICS_MODULARIZE_SOLVER || defined PHYSICS_GAUSS_SEIDEL_SOLVER
 
-	// Integrate velocities and configurations.
+	// Integrate configurations.
 	MEMORY_SLINK_LOOP_BEGIN(__PhysicsRigidBodyResourceArray, body, physRigidBody *);
 
-		physRigidBodyIntegrate(body, dt);
+		// Integrate the body's configuration.
+		physRigidBodyIntegrateConfiguration(body, dt);
 
 	#ifndef PHYSICS_GAUSS_SEIDEL_SOLVER
-		if(flagsAreSet(body->flags, PHYSICS_BODY_TRANSFORMED)){
-			physRigidBodyPositionFromCentroid(body);
-		}
-
 	MEMORY_SLINK_LOOP_END(__PhysicsRigidBodyResourceArray, body, return;);
 	#else
 	MEMORY_SLINK_LOOP_END(__PhysicsRigidBodyResourceArray, body, goto PHYSICS_JOINT_CONFIGURATION_SOLVER;);
+
 
 	// Iteratively solve joint configuration constraints.
 	PHYSICS_JOINT_CONFIGURATION_SOLVER:
@@ -660,7 +665,6 @@ void modulePhysicsSolveConstraints(const float dt){
 
 	}
 
-	#endif
 	#endif
 
 }

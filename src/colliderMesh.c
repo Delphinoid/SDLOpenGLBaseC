@@ -780,7 +780,7 @@ static __HINT_INLINE__ void cMeshClipFaceContact(const cMesh *const reference, c
 
 }
 
-static __FORCE_INLINE__ void cMeshCollisionSHClipping(const cMesh *const restrict c1, const cMesh *const restrict c2, const cMeshPenetrationPlanes *const restrict planes, cMeshContact *const restrict cm){
+static __FORCE_INLINE__ return_t cMeshCollisionSHClipping(const cMesh *const restrict c1, const cMesh *const restrict c2, const cMeshPenetrationPlanes *const restrict planes, cMeshContact *const restrict cm){
 
 	/*
 	** Implementation of the Sutherland-Hodgman clipping
@@ -816,6 +816,9 @@ static __FORCE_INLINE__ void cMeshCollisionSHClipping(const cMesh *const restric
 		}
 
 	}
+
+	/** Make contactNum > 0! **/
+	return cm->contactNum > 0;
 
 }
 
@@ -1035,7 +1038,7 @@ return_t cMeshCollisionSAT(const cMesh *const restrict c1, const cMesh *const re
 		if(cMeshCollisionSATFaceQuery(c2, c1, &planes.face2, sc, COLLIDER_MESH_SEPARATION_FEATURE_FACE_2)){
 			if(cMeshCollisionSATEdgeQuery(c1, c2, &planes.edge, sc)){
 				if(cm != NULL){
-					cMeshCollisionSHClipping(c1, c2, &planes, cm);
+					return cMeshCollisionSHClipping(c1, c2, &planes, cm);
 				}
 				return 1;
 			}

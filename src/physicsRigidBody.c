@@ -1025,9 +1025,15 @@ return_t physRigidBodyInstantiate(physRigidBody *const restrict body, physRigidB
 
 }
 
+__FORCE_INLINE__ void physRigidBodySetUninitialized(physRigidBody *const restrict body){
+	flagsSet(body->flags, PHYSICS_BODY_UNINITIALIZED);
+}
 __FORCE_INLINE__ void physRigidBodySetInitialized(physRigidBody *const restrict body){
 	flagsUnset(body->flags, PHYSICS_BODY_UNINITIALIZED);
 	flagsSet(body->flags, PHYSICS_BODY_INITIALIZED);
+}
+__FORCE_INLINE__ void physRigidBodySetInitializedFull(physRigidBody *const restrict body){
+	flagsUnset(body->flags, PHYSICS_BODY_UNINITIALIZED);
 }
 __FORCE_INLINE__ void physRigidBodySetAsleep(physRigidBody *const restrict body){
 	body->flags &= PHYSICS_BODY_ASLEEP;
@@ -1145,29 +1151,150 @@ __HINT_INLINE__ void physRigidBodyApplyForce(physRigidBody *const restrict body,
 
 }
 
-__HINT_INLINE__ void physRigidBodyApplyImpulse(physRigidBody *const restrict body, const vec3 x, const vec3 J){
+__HINT_INLINE__ void physRigidBodyApplyVelocityImpulse(physRigidBody *const restrict body, const vec3 x, const vec3 J){
 
 	/*
 	** Applies an impulse J at point x in global space.
 	*/
 
-	// Linear impulse.
-	body->linearVelocity = vec3VAddV(body->linearVelocity, vec3VMultS(J, body->inverseMass));
-	// Angular impulse.
-	body->angularVelocity = vec3VAddV(body->angularVelocity, mat3MMultVBra(body->inverseInertiaTensorGlobal, vec3Cross(x, J)));
+	//if(body->inverseMass > 0.f){
+
+		// Linear impulse.
+		body->linearVelocity = vec3VAddV(body->linearVelocity, vec3VMultS(J, body->inverseMass));
+		// Angular impulse.
+		body->angularVelocity = vec3VAddV(body->angularVelocity, mat3MMultVBra(body->inverseInertiaTensorGlobal, vec3Cross(x, J)));
+
+	//}
 
 }
-
-__HINT_INLINE__ void physRigidBodyApplyImpulseInverse(physRigidBody *const restrict body, const vec3 x, const vec3 J){
+__HINT_INLINE__ void physRigidBodyApplyVelocityImpulseInverse(physRigidBody *const restrict body, const vec3 x, const vec3 J){
 
 	/*
 	** Applies an impulse -J at point x in global space.
 	*/
 
-	// Linear impulse.
-	body->linearVelocity = vec3VSubV(body->linearVelocity, vec3VMultS(J, body->inverseMass));
-	// Angular impulse.
-	body->angularVelocity = vec3VSubV(body->angularVelocity, mat3MMultVBra(body->inverseInertiaTensorGlobal, vec3Cross(x, J)));
+	//if(body->inverseMass > 0.f){
+
+		// Linear impulse.
+		body->linearVelocity = vec3VSubV(body->linearVelocity, vec3VMultS(J, body->inverseMass));
+		// Angular impulse.
+		body->angularVelocity = vec3VSubV(body->angularVelocity, mat3MMultVBra(body->inverseInertiaTensorGlobal, vec3Cross(x, J)));
+
+	//}
+
+}
+
+__HINT_INLINE__ void physRigidBodyApplyVelocityImpulseAngular(physRigidBody *const restrict body, const vec3 x, const vec3 J, const vec3 a){
+
+	/*
+	** Applies an impulse J at point x in global space.
+	*/
+
+	//if(body->inverseMass > 0.f){
+
+		// Linear impulse.
+		body->linearVelocity = vec3VAddV(body->linearVelocity, vec3VMultS(J, body->inverseMass));
+		// Angular impulse.
+		body->angularVelocity = vec3VAddV(body->angularVelocity, mat3MMultVBra(body->inverseInertiaTensorGlobal, vec3VAddV(vec3Cross(x, J), a)));
+
+	//}
+
+}
+__HINT_INLINE__ void physRigidBodyApplyVelocityImpulseAngularInverse(physRigidBody *const restrict body, const vec3 x, const vec3 J, const vec3 a){
+
+	/*
+	** Applies an impulse -J at point x in global space.
+	*/
+
+	//if(body->inverseMass > 0.f){
+
+		// Linear impulse.
+		body->linearVelocity = vec3VSubV(body->linearVelocity, vec3VMultS(J, body->inverseMass));
+		// Angular impulse.
+		body->angularVelocity = vec3VSubV(body->angularVelocity, mat3MMultVBra(body->inverseInertiaTensorGlobal, vec3VAddV(vec3Cross(x, J), a)));
+
+	//}
+
+}
+
+__HINT_INLINE__ void physRigidBodyApplyConfigurationImpulse(physRigidBody *const restrict body, const vec3 x, const vec3 J){
+
+	/*
+	** Applies an impulse J at point x in global space.
+	*/
+
+	//if(body->inverseMass > 0.f){
+
+		// Linear impulse.
+		if(
+			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR)/* &&
+			(body->linearVelocity.y != 0.f || body->linearVelocity.x != 0.f || body->linearVelocity.z != 0.f)*/
+		){
+			body->centroidGlobal = vec3VAddV(body->centroidGlobal, vec3VMultS(J, body->inverseMass));
+			flagsSet(body->flags, PHYSICS_BODY_TRANSLATED);
+		}
+		// Angular impulse.
+		if(
+			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR)/* &&
+			(body->angularVelocity.y != 0.f || body->angularVelocity.z != 0.f || body->angularVelocity.x != 0.f)*/
+		){
+			body->configuration.orientation = quatNormalizeFastAccurate(
+				quatQAddQ(
+					body->configuration.orientation,
+					quatDifferentiate(
+						body->configuration.orientation,
+						mat3MMultVBra(
+							body->inverseInertiaTensorGlobal,
+							vec3Cross(x, J)
+						)
+					)
+				)
+			);
+			physRigidBodyGenerateGlobalInertia(body);
+			flagsSet(body->flags, PHYSICS_BODY_ROTATED);
+		}
+
+	//}
+
+}
+__HINT_INLINE__ void physRigidBodyApplyConfigurationImpulseInverse(physRigidBody *const restrict body, const vec3 x, const vec3 J){
+
+	/*
+	** Applies an impulse -J at point x in global space.
+	*/
+
+	//if(body->inverseMass > 0.f){
+
+		// Linear impulse.
+		if(
+			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR)/* &&
+			(body->linearVelocity.y != 0.f || body->linearVelocity.x != 0.f || body->linearVelocity.z != 0.f)*/
+		){
+			body->centroidGlobal = vec3VSubV(body->centroidGlobal, vec3VMultS(J, body->inverseMass));
+			flagsSet(body->flags, PHYSICS_BODY_TRANSLATED);
+		}
+		// Angular impulse.
+		if(
+			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR)/* &&
+			(body->angularVelocity.y != 0.f || body->angularVelocity.z != 0.f || body->angularVelocity.x != 0.f)*/
+		){
+			body->configuration.orientation = quatNormalizeFastAccurate(
+				quatQSubQ(
+					body->configuration.orientation,
+					quatDifferentiate(
+						body->configuration.orientation,
+						mat3MMultVBra(
+							body->inverseInertiaTensorGlobal,
+							vec3Cross(x, J)
+						)
+					)
+				)
+			);
+			physRigidBodyGenerateGlobalInertia(body);
+			flagsSet(body->flags, PHYSICS_BODY_ROTATED);
+		}
+
+	//}
 
 }
 
@@ -1197,6 +1324,64 @@ __FORCE_INLINE__ void physRigidBodyPositionFromCentroid(physRigidBody *const res
 	);
 }
 
+#ifdef PHYSICS_SCALE_INERTIA_TENSORS
+__FORCE_INLINE__ static mat3 physRigidBodyScaleInertia(mat3 I, const vec3 scale){
+
+	if(scale.x != 1.f || scale.y != 1.f || scale.z != 1.f){
+
+		if(mat3InvertR(I, &I)){
+
+			const float xy = scale.x * scale.y;
+			const float xz = scale.x * scale.z;
+			const float yz = scale.y * scale.z;
+
+			float sqrZ = (I.m[0][0] + I.m[1][1] - I.m[2][2]) * 0.5f;
+			const float sqrY = (I.m[0][0] - sqrZ) * scale.y * scale.y;
+			const float sqrX = (I.m[1][1] - sqrZ) * scale.x * scale.x;
+			sqrZ *= scale.z * scale.z;
+
+			/*
+			** I[0][0] = J[0] = y^2 + z^2
+			** I[1][1] = J[1] = x^2 + z^2
+			** I[2][2] = J[2] = x^2 + y^2
+			**
+			** Therefore:
+			** x^2 = (J[1] - J[0] + J[2])/2
+			** y^2 = (J[0] - J[1] + J[2])/2
+			** z^2 = (J[0] - J[2] + J[1])/2
+			**
+			** To scale, multiply by the scale coefficient squared.
+			*/
+			I.m[0][0] = sqrY + sqrZ;
+			I.m[1][1] = sqrX + sqrZ;
+			I.m[2][2] = sqrX + sqrY;
+
+			/*
+			** I[0][1] = I[1][0] = J[3] -= x * y;
+			** I[0][2] = I[2][0] = J[4] -= x * z;
+			** I[1][2] = I[2][1] = J[5] -= y * z;
+			**
+			** To scale, just multiply each element by the
+			** product of the two scale coefficients.
+			*/
+			I.m[0][1] *= xy;
+			I.m[0][2] *= xz;
+			I.m[1][2] *= yz;
+			I.m[1][0] *= xy;
+			I.m[2][0] *= xz;
+			I.m[2][1] *= yz;
+
+			I = mat3Invert(I);
+
+		}
+
+	}
+
+	return I;
+
+}
+#endif
+
 __FORCE_INLINE__ void physRigidBodyGenerateGlobalInertia(physRigidBody *const restrict body){
 
 	// Generate 3x3 matrices for the orientation and the inverse orientation.
@@ -1204,13 +1389,18 @@ __FORCE_INLINE__ void physRigidBodyGenerateGlobalInertia(physRigidBody *const re
 	const mat3 inverseOrientationMatrix = mat3Transpose(orientationMatrix);
 
 	// Multiply them against the local inertia tensor to get the global inverse moment of inertia.
-	body->inverseInertiaTensorGlobal = mat3MMultM(mat3MMultM(orientationMatrix, body->inverseInertiaTensorLocal), inverseOrientationMatrix);
+	body->inverseInertiaTensorGlobal = mat3MMultM(
+		mat3MMultM(
+			orientationMatrix,
+			#ifdef PHYSICS_SCALE_INERTIA_TENSORS
+			physRigidBodyScaleInertia(body->inverseInertiaTensorLocal, body->configuration.scale)
+			#else
+			body->inverseInertiaTensorLocal
+			#endif
+		),
+		inverseOrientationMatrix
+	);
 
-}
-
-__FORCE_INLINE__ void physRigidBodyPrepare(physRigidBody *const restrict body){
-	physRigidBodyGenerateGlobalInertia(body);
-	physRigidBodyCentroidFromPosition(body);
 }
 
 __FORCE_INLINE__ void physRigidBodyUpdateConfiguration(physRigidBody *const restrict body){
@@ -1219,9 +1409,15 @@ __FORCE_INLINE__ void physRigidBodyUpdateConfiguration(physRigidBody *const rest
 	}
 }
 
+__FORCE_INLINE__ void physRigidBodyResetAccumulators(physRigidBody *const restrict body){
+	// Reset force and torque accumulators.
+	vec3ZeroP(&body->netForce);
+	vec3ZeroP(&body->netTorque);
+}
+
 void physRigidBodyIntegrateVelocity(physRigidBody *const restrict body, const float dt){
 
-	if(body->inverseMass > 0.f){
+	//if(body->inverseMass > 0.f){
 
 		const float modifier = body->inverseMass * dt;
 
@@ -1259,46 +1455,74 @@ void physRigidBodyIntegrateVelocity(physRigidBody *const restrict body, const fl
 			vec3ZeroP(&body->angularVelocity);
 		}
 
-	}
+	/*}else{
 
-	// Reset force and torque accumulators.
-	vec3ZeroP(&body->netForce);
-	vec3ZeroP(&body->netTorque);
+		mat3ZeroP(&body->inverseInertiaTensorGlobal);
+
+	}*/
 
 }
 
 void physRigidBodyIntegrateConfiguration(physRigidBody *const restrict body, const float dt){
 
-	// Integrate position.
-	if(
-		flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR) &&
-		(body->linearVelocity.y != 0.f || body->linearVelocity.x != 0.f || body->linearVelocity.z != 0.f)
-	){
-		body->centroidGlobal = vec3VAddV(body->centroidGlobal, vec3VMultS(body->linearVelocity, dt));
-		flagsSet(body->flags, PHYSICS_BODY_TRANSLATED);
-	}else{
-		flagsUnset(body->flags, PHYSICS_BODY_TRANSLATED);
-	}
+	//if(body->inverseMass > 0.f){
 
-	// Integrate orientation.
-	if(
-		flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR) &&
-		(body->angularVelocity.y != 0.f || body->angularVelocity.z != 0.f || body->angularVelocity.x != 0.f)
-	){
-		body->configuration.orientation = quatNormalizeFast(quatIntegrate(body->configuration.orientation, body->angularVelocity, dt));
-		flagsSet(body->flags, PHYSICS_BODY_ROTATED);
-	}else{
-		flagsUnset(body->flags, PHYSICS_BODY_ROTATED);
-	}
+		// Integrate position.
+		if(
+			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR)/* &&
+			(body->linearVelocity.y != 0.f || body->linearVelocity.x != 0.f || body->linearVelocity.z != 0.f)*/
+		){
+			body->centroidGlobal = vec3VAddV(body->centroidGlobal, vec3VMultS(body->linearVelocity, dt));
+			flagsSet(body->flags, PHYSICS_BODY_TRANSLATED);
+		}else{
+			flagsUnset(body->flags, PHYSICS_BODY_TRANSLATED);
+		}
+
+		// Integrate orientation.
+		if(
+			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR)/* &&
+			(body->angularVelocity.y != 0.f || body->angularVelocity.z != 0.f || body->angularVelocity.x != 0.f)*/
+		){
+			body->configuration.orientation = quatNormalizeFastAccurate(quatIntegrate(body->configuration.orientation, body->angularVelocity, dt));
+			flagsSet(body->flags, PHYSICS_BODY_ROTATED);
+		}else{
+			flagsUnset(body->flags, PHYSICS_BODY_ROTATED);
+		}
+
+	//}
 
 }
 
-__FORCE_INLINE__ void physRigidBodyIntegrate(physRigidBody *const restrict body, const float dt){
+__FORCE_INLINE__ void physRigidBodyIntegrateSymplecticEuler(physRigidBody *const restrict body, const float dt){
+
+	// Integrate the body's velocities.
+	physRigidBodyIntegrateVelocity(body, dt);
+	physRigidBodyResetAccumulators(body);
+
+	// Integrate the body's configuration.
+	physRigidBodyIntegrateConfiguration(body, dt);
+
+}
+
+__FORCE_INLINE__ void physRigidBodyIntegrateLeapfrog(physRigidBody *const restrict body, const float dt){
+
+	// "Kick".
+	physRigidBodyIntegrateVelocity(body, dt*0.5f);
+
+	// "Drift".
+	physRigidBodyIntegrateConfiguration(body, dt);
+
+	// "Kick".
+	physRigidBodyIntegrateVelocity(body, dt*0.5f);
+	physRigidBodyResetAccumulators(body);
+
+}
+
+__FORCE_INLINE__ void physRigidBodyIntegrateLeapfrogTest(physRigidBody *const restrict body, const float dt){
 
 	if(physRigidBodyWasInitialized(body)){
 
-		// Only integrate half of the first step
-		// for the leapfrog integration scheme.
+		// "Kick".
 		physRigidBodyIntegrateVelocity(body, dt*0.5f);
 
 		// Remove the body's "just initialized" flag.
@@ -1306,14 +1530,15 @@ __FORCE_INLINE__ void physRigidBodyIntegrate(physRigidBody *const restrict body,
 
 	}else if(!physRigidBodyIsUninitialized(body)){
 
-		// Integrate the body's configuration.
-		// Done here for the sake of any child bones.
+		// "Drift".
 		physRigidBodyIntegrateConfiguration(body, dt);
 
-		// Integrate the body's velocities.
+		// "Kick-kick."
 		physRigidBodyIntegrateVelocity(body, dt);
 
 	}
+
+	physRigidBodyResetAccumulators(body);
 
 }
 

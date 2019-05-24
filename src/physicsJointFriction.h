@@ -1,0 +1,6 @@
+#ifndef PHYSICSJOINTFRICTION_H
+#define PHYSICSJOINTFRICTION_H
+
+
+
+#endif

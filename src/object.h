@@ -94,6 +94,7 @@ return_t objNewRenderableFromInstance(object *const restrict obj, const rndrInst
 return_t objInitSkeleton(object *const restrict obj, const skeleton *const skl);
 ///return_t objInitPhysics(object *obj);
 
+physRigidBody *objBoneGetPhysicsBody(const object *const restrict obj, const boneIndex_t boneID);
 ///void objBoneSetPhysicsFlags(object *obj, const boneIndex_t boneID, const flags_t flags);
 
 sklAnim *objGetAnimation(const object *const restrict obj, const animIndex_t id);

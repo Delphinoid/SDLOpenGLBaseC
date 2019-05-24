@@ -536,7 +536,7 @@ return_t objInstantiate(object *const restrict obj, const objectBase *const rest
 				bodyInstance = modulePhysicsRigidBodyAppend(&obj->skeletonBodies);
 				if(
 					bodyInstance == NULL ||
-					physRigidBodyInstantiate(bodyInstance, bodyBase/*, &obj->state.skeleton[bodyBase->id]*/) < 0
+					physRigidBodyInstantiate(bodyInstance, bodyBase) < 0
 				){
 					/** Memory allocation failure. **/
 					memFree(obj->configuration);
@@ -701,9 +701,47 @@ return_t objInitSkeleton(object *const restrict obj, const skeleton *const restr
 		}
 	}
 	return 1;
+}**/
+
+physRigidBody *objBoneGetPhysicsBody(const object *const restrict obj, const boneIndex_t boneID){
+
+	/*
+	** Finds the body attached to the
+	** specified bone, if one exists.
+	*/
+
+	boneIndex_t i;
+	physRigidBody *body = obj->skeletonBodies;
+
+	for(i = 0; i < boneID; ++i){
+		if(body != NULL){
+			if(body->base->id == i){
+				++body;
+			}
+		}else{
+			return NULL;
+		}
+	}
+
+	if(body != NULL && body->base->id == boneID){
+		return body;
+	}
+
+	return NULL;
+
 }
 
-void objBoneSetPhysicsFlags(object *obj, const boneIndex_t boneID, const flags_t flags){
+/**void objBoneScale(const object *const restrict obj, const boneIndex_t boneID, const vec3 scale){
+
+	physRigidBody *const body = objBoneGetPhysicsBody(obj, boneID);
+	if(body != NULL){
+		body->configuration.scale = scale;
+	}
+	obj->configuration[boneID].scale = scale;
+
+}**/
+
+/**void objBoneSetPhysicsFlags(object *obj, const boneIndex_t boneID, const flags_t flags){
 
 	if(obj->skeletonBodies != NULL){
 
@@ -825,40 +863,20 @@ return_t objUpdate(object *const restrict obj, physIsland *const restrict island
 				skliGenerateBoneState(&obj->skeletonData, i, sklBone->name, &body->configuration);
 
 				// Initialize the body's moment of inertia and centroid.
-				physRigidBodyPrepare(body);
-
-				#if !defined PHYSICS_MODULARIZE_SOLVER && !defined PHYSICS_GAUSS_SEIDEL_SOLVER
-
-				// Only integrate half of the first step
-				// for the leapfrog integration scheme.
-				physRigidBodyIntegrateVelocity(body, dt*0.5f);
-
-				#endif
+				physRigidBodyCentroidFromPosition(body);
 
 				// Remove the body's "uninitialized" flag.
-				physRigidBodySetInitialized(body);
-
-			}else{
-
-				#if !defined PHYSICS_MODULARIZE_SOLVER && !defined PHYSICS_GAUSS_SEIDEL_SOLVER
-
-				// Integrate the body's configuration.
-				// Done here for the sake of any child bones.
-				physRigidBodyIntegrateConfiguration(body, dt);
-
-				// Integrate the body's velocities.
-				physRigidBodyIntegrateVelocity(body, dt);
-
-				#endif
-
-				// Update the position from the centroid.
-				physRigidBodyUpdateConfiguration(body);
+				physRigidBodySetInitializedFull(body);
 
 			}
 
+			// Update the position from the centroid.
+			physRigidBodyUpdateConfiguration(body);
+
 			// Copy the new bone state, as modified
 			// by the body, into the object.
-			*sklState = body->configuration;
+			*configuration = body->configuration;
+			*sklState = *configuration;
 
 			// Add the body to the physics island
 			// and update all of its colliders.
@@ -897,6 +915,12 @@ return_t objUpdate(object *const restrict obj, physIsland *const restrict island
 
 				// Copy the bone state over to the body.
 				body->configuration = *sklState;
+
+				// Initialize the body's moment of inertia and centroid.
+				physRigidBodyCentroidFromPosition(body);
+
+				// Set the body's "uninitialized" flag.
+				physRigidBodySetUninitialized(body);
 
 				// Update the body's colliders.
 				if(physRigidBodyUpdateColliders(body, island) < 0){

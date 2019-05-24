@@ -383,7 +383,7 @@ physSeparationPair *physColliderFindSeparation(const physCollider *const c1, con
 
 }
 
-#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
+#ifndef PHYSICS_GAUSS_SEIDEL_SOLVER
 void physColliderUpdateContacts(physCollider *const c, const float dt){
 #else
 void physColliderUpdateContacts(physCollider *const c){
@@ -406,7 +406,7 @@ void physColliderUpdateContacts(physCollider *const c){
 			}
 		}else{
 			// Update the contact.
-			#if !defined PHYSICS_GAUSS_SEIDEL_SOLVER || defined PHYSICS_FORCE_VELOCITY_BAUMGARTE
+			#ifndef PHYSICS_GAUSS_SEIDEL_SOLVER
 			physContactUpdate(&i->data, i->colliderA, i->colliderB, dt);
 			#else
 			physContactUpdate(&i->data, i->colliderA, i->colliderB);

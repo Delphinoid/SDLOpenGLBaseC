@@ -97,7 +97,9 @@ void physRigidBodyBaseDelete(physRigidBodyBase *const restrict local);
 void physRigidBodyInit(physRigidBody *const restrict body);
 return_t physRigidBodyInstantiate(physRigidBody *const restrict body, physRigidBodyBase *const restrict local);
 
+void physRigidBodySetUninitialized(physRigidBody *const restrict body);
 void physRigidBodySetInitialized(physRigidBody *const restrict body);
+void physRigidBodySetInitializedFull(physRigidBody *const restrict body);
 void physRigidBodySetAsleep(physRigidBody *const restrict body);
 void physRigidBodySetAwake(physRigidBody *const restrict body, const flags_t flags);
 
@@ -120,19 +122,29 @@ return_t physRigidBodyUpdateColliders(physRigidBody *const restrict body, physIs
 void physRigidBodyApplyLinearForce(physRigidBody *const restrict body, const vec3 F);
 void physRigidBodyApplyAngularForceGlobal(physRigidBody *const restrict body, const vec3 F, const vec3 r);
 void physRigidBodyApplyForceGlobal(physRigidBody *const restrict body, const vec3 F, const vec3 r);
-void physRigidBodyApplyImpulse(physRigidBody *const restrict body, const vec3 x, const vec3 J);
-void physRigidBodyApplyImpulseInverse(physRigidBody *const restrict body, const vec3 x, const vec3 J);
+
+void physRigidBodyApplyVelocityImpulse(physRigidBody *const restrict body, const vec3 x, const vec3 J);
+void physRigidBodyApplyVelocityImpulseInverse(physRigidBody *const restrict body, const vec3 x, const vec3 J);
+
+void physRigidBodyApplyVelocityImpulseAngular(physRigidBody *const restrict body, const vec3 x, const vec3 J, const vec3 a);
+void physRigidBodyApplyVelocityImpulseAngularInverse(physRigidBody *const restrict body, const vec3 x, const vec3 J, const vec3 a);
+
+void physRigidBodyApplyConfigurationImpulse(physRigidBody *const restrict body, const vec3 x, const vec3 J);
+void physRigidBodyApplyConfigurationImpulseInverse(physRigidBody *const restrict body, const vec3 x, const vec3 J);
 
 void physRigidBodyCentroidFromPosition(physRigidBody *const restrict body);
 void physRigidBodyPositionFromCentroid(physRigidBody *const restrict body);
 void physRigidBodyGenerateGlobalInertia(physRigidBody *const restrict body);
 
-void physRigidBodyPrepare(physRigidBody *const restrict body);
 void physRigidBodyUpdateConfiguration(physRigidBody *const restrict body);
 
+void physRigidBodyResetAccumulators(physRigidBody *const restrict body);
 void physRigidBodyIntegrateVelocity(physRigidBody *const restrict body, const float dt);
 void physRigidBodyIntegrateConfiguration(physRigidBody *const restrict body, const float dt);
-void physRigidBodyIntegrate(physRigidBody *const restrict body, const float dt);
+
+void physRigidBodyIntegrateSymplecticEuler(physRigidBody *const restrict body, const float dt);
+void physRigidBodyIntegrateLeapfrog(physRigidBody *const restrict body, const float dt);
+void physRigidBodyIntegrateLeapfrogTest(physRigidBody *const restrict body, const float dt);
 
 return_t physRigidBodyPermitCollision(const physRigidBody *const restrict body1, const physRigidBody *const restrict body2);
 
