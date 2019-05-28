@@ -1301,7 +1301,7 @@ __HINT_INLINE__ void physRigidBodyApplyConfigurationImpulseInverse(physRigidBody
 __FORCE_INLINE__ void physRigidBodyCentroidFromPosition(physRigidBody *const restrict body){
 	body->centroidGlobal = vec3VAddV(
 		vec3VMultV(
-			quatRotateVec3(
+			quatRotateVec3FastApproximate(
 				body->configuration.orientation,
 				body->centroidLocal
 			),
@@ -1314,7 +1314,7 @@ __FORCE_INLINE__ void physRigidBodyCentroidFromPosition(physRigidBody *const res
 __FORCE_INLINE__ void physRigidBodyPositionFromCentroid(physRigidBody *const restrict body){
 	body->configuration.position = vec3VAddV(
 		vec3VMultV(
-			quatRotateVec3(
+			quatRotateVec3FastApproximate(
 				body->configuration.orientation,
 				vec3Negate(body->centroidLocal)
 			),

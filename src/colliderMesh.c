@@ -75,7 +75,7 @@ __FORCE_INLINE__ void cMeshCentroidFromPosition(cMesh *const restrict c, const c
 	/*
 	** Extrapolate the mesh's centroid from a configuration.
 	*/
-	c->centroid = vec3VAddV(vec3VMultV(quatRotateVec3(orientation, l->centroid), scale), position);
+	c->centroid = vec3VAddV(vec3VMultV(quatRotateVec3FastApproximate(orientation, l->centroid), scale), position);
 }
 
 static __FORCE_INLINE__ const vec3 *cMeshCollisionSupport(const cMesh *const restrict c, const vec3 axis){

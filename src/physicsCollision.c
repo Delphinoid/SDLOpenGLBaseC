@@ -64,8 +64,8 @@ static __FORCE_INLINE__ void physContactInit(physContact *const restrict contact
 
 		// Get the relative contact points.
 		#ifdef PHYSICS_GAUSS_SEIDEL_SOLVER
-		pPoint->pointA = quatRotateVec3(quatConjugateFast(bodyA->configuration.orientation), vec3VSubV(cPoint->pointA, bodyA->centroidGlobal));
-		pPoint->pointB = quatRotateVec3(quatConjugateFast(bodyB->configuration.orientation), vec3VSubV(cPoint->pointB, bodyB->centroidGlobal));
+		pPoint->pointA = quatRotateVec3FastApproximate(quatConjugateFast(bodyA->configuration.orientation), vec3VSubV(cPoint->pointA, bodyA->centroidGlobal));
+		pPoint->pointB = quatRotateVec3FastApproximate(quatConjugateFast(bodyB->configuration.orientation), vec3VSubV(cPoint->pointB, bodyB->centroidGlobal));
 		#else
 		// Get the penetration depth.
 		pPoint->separation = cPoint->separation;
@@ -103,7 +103,7 @@ static __FORCE_INLINE__ void physContactInit(physContact *const restrict contact
 	physContactTangent1(contact) = vec3Perpendicular(normal);
 	physContactTangent2(contact) = vec3Cross(normal, physContactTangent1(contact));
 	#ifdef PHYSICS_GAUSS_SEIDEL_SOLVER
-	contact->normalA = quatRotateVec3(quatConjugateFast(bodyA->configuration.orientation), normal);
+	contact->normalA = quatRotateVec3FastApproximate(quatConjugateFast(bodyA->configuration.orientation), normal);
 	#endif
 
 	// Calculate the combined friction and restitution scalars.
@@ -217,7 +217,7 @@ static __FORCE_INLINE__ void physContactPersist(physContact *const restrict cont
 	physContactTangent1(contact) = vec3Perpendicular(normal);
 	physContactTangent2(contact) = vec3Cross(normal, physContactTangent1(contact));
 	#ifdef PHYSICS_GAUSS_SEIDEL_SOLVER
-	contact->normalA = quatRotateVec3(quatConjugateFast(bodyA->configuration.orientation), normal);
+	contact->normalA = quatRotateVec3FastApproximate(quatConjugateFast(bodyA->configuration.orientation), normal);
 	#endif
 
 	// Calculate the combined friction and restitution scalars.
@@ -238,8 +238,8 @@ static __FORCE_INLINE__ void physContactPersist(physContact *const restrict cont
 
 		// Get the relative contact points.
 		#ifdef PHYSICS_GAUSS_SEIDEL_SOLVER
-		pcPoint->pointA = quatRotateVec3(quatConjugateFast(bodyA->configuration.orientation), vec3VSubV(cPoint->pointA, bodyA->centroidGlobal));
-		pcPoint->pointB = quatRotateVec3(quatConjugateFast(bodyB->configuration.orientation), vec3VSubV(cPoint->pointB, bodyB->centroidGlobal));
+		pcPoint->pointA = quatRotateVec3FastApproximate(quatConjugateFast(bodyA->configuration.orientation), vec3VSubV(cPoint->pointA, bodyA->centroidGlobal));
+		pcPoint->pointB = quatRotateVec3FastApproximate(quatConjugateFast(bodyB->configuration.orientation), vec3VSubV(cPoint->pointB, bodyB->centroidGlobal));
 		#else
 		// Get the penetration depth.
 		pcPoint->separation = cPoint->separation;
@@ -909,12 +909,12 @@ static __FORCE_INLINE__ float physContactPointSolveConfigurationNormal(physConta
 	vec3 impulse;
 
 	// Transform the contact points into global space.
-	const vec3 pointGlobalA = vec3VAddV(quatRotateVec3(bodyA->configuration.orientation, point->pointA), bodyA->centroidGlobal);
-	const vec3 pointGlobalB = vec3VAddV(quatRotateVec3(bodyB->configuration.orientation, point->pointB), bodyB->centroidGlobal);
+	const vec3 pointGlobalA = vec3VAddV(quatRotateVec3FastApproximate(bodyA->configuration.orientation, point->pointA), bodyA->centroidGlobal);
+	const vec3 pointGlobalB = vec3VAddV(quatRotateVec3FastApproximate(bodyB->configuration.orientation, point->pointB), bodyB->centroidGlobal);
 
 	// Calculate the transformed normal and a point
 	// halfway between both transformed contact points.
-	const vec3 normal = quatRotateVec3(bodyA->configuration.orientation, contact->normalA);
+	const vec3 normal = quatRotateVec3FastApproximate(bodyA->configuration.orientation, contact->normalA);
 	const vec3 halfway = pointGlobalB;//vec3VMultS(vec3VAddV(pointGlobalA, pointGlobalB), 0.5f);
 
 	// Calculate the separation.
