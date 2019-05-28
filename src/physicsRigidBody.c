@@ -1329,6 +1329,7 @@ __FORCE_INLINE__ static mat3 physRigidBodyScaleInertia(mat3 I, const vec3 scale)
 
 	if(scale.x != 1.f || scale.y != 1.f || scale.z != 1.f){
 
+		/** Try and remove the need for two inversions. **/
 		if(mat3InvertR(I, &I)){
 
 			const float xy = scale.x * scale.y;

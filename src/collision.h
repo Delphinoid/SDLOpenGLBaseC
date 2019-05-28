@@ -37,7 +37,7 @@ typedef struct cContactPoint {
 	vec3 normal;
 
 	// Penetration depth.
-	float penetrationDepth;
+	float separation;
 
 	#ifdef COLLISION_ENABLE_CONTACT_PHYSICS
 

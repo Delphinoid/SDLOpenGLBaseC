@@ -845,11 +845,12 @@ void *memTreeExtend(memoryTree *const restrict tree, void *const start, const si
 
 		const size_t totalBytes = memTreeAllocationSize(start, bytes, length) - sizeof(memoryRegion);
 
+		// Place the memory region at the end of the chunk.
 		memoryRegion *const newRegion = (memoryRegion *)((byte_t *)start + totalBytes);
 		memRegionPrepend(&tree->region, newRegion, start);
 
 		memTreeSetupMemory(start, bytes, length);
-		memTreeInsert(tree, memTreeAlignStartData(start), totalBytes);
+		memTreeInsert(tree, memTreeAlignStartBlock(start), totalBytes);
 
 	}
 

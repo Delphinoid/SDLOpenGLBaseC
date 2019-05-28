@@ -60,7 +60,7 @@ typedef struct physContactPoint {
 
 	// Penetration depth. Always negative.
 	/** Rename to separation, as it's a negative quantity. **/
-	float penetrationDepth;
+	float separation;
 
 	#endif
 

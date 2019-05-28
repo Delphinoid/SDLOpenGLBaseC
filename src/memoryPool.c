@@ -256,6 +256,7 @@ void *memPoolExtend(memoryPool *const restrict pool, void *const start, const si
 
 	if(start){
 
+		// Place the memory region at the end of the chunk.
 		memoryRegion *const newRegion = (memoryRegion *)((byte_t *)start + memPoolAllocationSize(start, bytes, length) - sizeof(memoryRegion));
 		memRegionExtend(&pool->region, newRegion, start);
 
@@ -279,6 +280,7 @@ void *memPoolExtendInit(memoryPool *const restrict pool, void *const start, cons
 
 	if(start){
 
+		// Place the memory region at the end of the chunk.
 		memoryRegion *const newRegion = (memoryRegion *)((byte_t *)start + memPoolAllocationSize(start, bytes, length) - sizeof(memoryRegion));
 		memRegionExtend(&pool->region, newRegion, start);
 

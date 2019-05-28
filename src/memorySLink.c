@@ -285,6 +285,7 @@ void *memSLinkExtend(memorySLink *const restrict array, void *const start, const
 
 	if(start){
 
+		// Place the memory region at the end of the chunk.
 		memoryRegion *const newRegion = (memoryRegion *)((byte_t *)start + memSLinkAllocationSize(start, bytes, length) - sizeof(memoryRegion));
 		memRegionPrepend(&array->region, newRegion, start);
 
@@ -308,6 +309,7 @@ void *memSLinkExtendInit(memorySLink *const restrict array, void *const start, c
 
 	if(start){
 
+		// Place the memory region at the end of the chunk.
 		memoryRegion *const newRegion = (memoryRegion *)((byte_t *)start + memSLinkAllocationSize(start, bytes, length) - sizeof(memoryRegion));
 		memRegionPrepend(&array->region, newRegion, start);
 

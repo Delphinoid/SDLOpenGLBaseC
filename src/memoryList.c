@@ -247,6 +247,7 @@ void *memListExtend(memoryList *const restrict list, void *const start, const si
 
 	if(start){
 
+		// Place the memory region at the end of the chunk.
 		memoryRegion *const newRegion = (memoryRegion *)((byte_t *)start + memListAllocationSize(start, bytes, length) - sizeof(memoryRegion));
 		memRegionExtend(&list->region, newRegion, start);
 
@@ -270,6 +271,7 @@ void *memListExtendInit(memoryList *const restrict list, void *const start, cons
 
 	if(start){
 
+		// Place the memory region at the end of the chunk.
 		memoryRegion *const newRegion = (memoryRegion *)((byte_t *)start + memListAllocationSize(start, bytes, length) - sizeof(memoryRegion));
 		memRegionExtend(&list->region, newRegion, start);
 

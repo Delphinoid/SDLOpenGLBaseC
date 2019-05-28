@@ -130,6 +130,7 @@ void *memArrayExtend(memoryArray *const restrict array, void *const start, const
 
 	if(start){
 
+		// Place the memory region at the end of the chunk.
 		memoryRegion *const newRegion = (memoryRegion *)((byte_t *)start + memArrayAllocationSize(start, bytes, length) - sizeof(memoryRegion));
 		memRegionExtend(&array->region, newRegion, start);
 

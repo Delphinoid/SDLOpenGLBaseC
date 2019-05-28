@@ -48,6 +48,7 @@ void *memStackExtend(memoryStack *const restrict stack, void *const start, const
 
 	if(start){
 
+		// Place the memory region at the end of the chunk.
 		memoryRegion *const newRegion = (memoryRegion *)((byte_t *)start + memStackAllocationSize(start, bytes, length) - sizeof(memoryRegion));
 		memRegionExtend(&stack->region, newRegion, start);
 

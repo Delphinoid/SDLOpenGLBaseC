@@ -52,7 +52,7 @@ static __FORCE_INLINE__ void physContactInit(physContact *const restrict contact
 		pPoint->pointB = quatRotateVec3(quatConjugateFast(bodyB->configuration.orientation), vec3VSubV(cPoint->pointB, bodyB->centroidGlobal));
 		#else
 		// Get the penetration depth.
-		pPoint->penetrationDepth = cPoint->penetrationDepth;
+		pPoint->separation = cPoint->separation;
 		#endif
 
 		// Get the contact key.
@@ -245,8 +245,11 @@ static __FORCE_INLINE__ void physContactPersist(physContact *const restrict cont
 		pcPoint->pointB = quatRotateVec3(quatConjugateFast(bodyB->configuration.orientation), vec3VSubV(cPoint->pointB, bodyB->centroidGlobal));
 		#else
 		// Get the penetration depth.
-		pcPoint->penetrationDepth = cPoint->penetrationDepth;
+		pcPoint->separation = cPoint->separation;
 		#endif
+		//if(cPoint->separation < 0.3f){
+
+		//}
 
 		if(*flag == 0){
 			// Initialize the accumulator for non-persistent contacts.
@@ -406,7 +409,7 @@ static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *cons
 	#ifndef PHYSICS_GAUSS_SEIDEL_SOLVER
 
 	// Calculate potential slop.
-	temp = point->penetrationDepth + PHYSICS_LINEAR_SLOP;
+	temp = point->separation + PHYSICS_LINEAR_SLOP;
 
 	// Calculate the bias term.
 	point->bias = -PHYSICS_BAUMGARTE_TERM * dt * (temp < 0.f ? temp : 0.f);
