@@ -39,25 +39,6 @@ typedef struct cContactPoint {
 	// Penetration depth.
 	float separation;
 
-	#ifdef COLLISION_ENABLE_CONTACT_PHYSICS
-
-	// Contact tangents for simulating friction.
-	vec3 tangentA;
-	vec3 tangentB;
-
-	// Impulse magnitude denominators.
-	float normalImpulse;
-	float tangentImpulseA;
-	float tangentImpulseB;
-
-	// Impulse magnitude accumulator.
-	float normalImpulseAccumulator;
-
-	// Bias for warm starting.
-	float bias;
-
-	#endif
-
 	// Key for temporal coherence.
 	cContactKey key;
 
@@ -67,14 +48,6 @@ typedef struct cContact {
 
 	// Contact array.
 	cContactPoint contacts[COLLISION_MANIFOLD_MAX_CONTACT_POINTS];
-
-	#ifdef COLLISION_ENABLE_CONTACT_PHYSICS
-
-	// Impulse magnitude accumulators for friction.
-	float tangentImpulseAccumulatorA;
-	float tangentImpulseAccumulatorB;
-
-	#endif
 
 	// Number of contacts.
 	cContactPointIndex_t contactNum;
@@ -106,8 +79,6 @@ extern return_t (* const cSeparationJumpTable[COLLIDER_TYPE_NUM][COLLIDER_TYPE_N
 	const void *const restrict,
 	const void *const restrict
 );
-
-void cContactGenerateTangents(const vec3 *const restrict normal, vec3 *const restrict tangentA, vec3 *const restrict tangentB);
 
 return_t cCheckCollision(const collider *const restrict c1, const collider *const restrict c2, cSeparation *const restrict sc, cContact *const restrict cm);
 return_t cCheckSeparation(const collider *const restrict c1, const collider *const restrict c2, const cSeparation *const restrict sc);

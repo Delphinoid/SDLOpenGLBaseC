@@ -2,6 +2,9 @@
 #define PHYSICSCOLLISION_H
 
 #include "physicsShared.h"
+#ifdef PHYSICS_CONTACT_FRICTION_CONSTRAINT
+#include "physicsJointFriction.h"
+#endif
 #include "physicsConstraint.h"
 #include "collision.h"
 #include "mat2.h"
@@ -44,8 +47,8 @@ typedef uint_least8_t physPairTimestamp_t;
 typedef struct physContactPoint {
 
 	// Point halfway between both contact points in both colliders' local spaces.
-	vec3 halfwayA;
-	vec3 halfwayB;
+	vec3 rA;
+	vec3 rB;
 
 	#ifdef PHYSICS_GAUSS_SEIDEL_SOLVER
 
@@ -65,7 +68,7 @@ typedef struct physContactPoint {
 	#endif
 
 	// Normal impulse magnitude denominator.
-	float normalEffectiveMass;
+	float normalInverseEffectiveMass;
 
 	// Persistent impulse magnitude accumulator.
 	float normalImpulseAccumulator;
@@ -73,12 +76,12 @@ typedef struct physContactPoint {
 	#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
 
 	// Friction inverse effective mass.
-	float tangentEffectiveMassA;
-	float tangentEffectiveMassB;
+	float tangentInverseEffectiveMass1;
+	float tangentInverseEffectiveMass2;
 
 	// Impulse magnitude accumulators for friction.
-	float tangentImpulseAccumulatorA;
-	float tangentImpulseAccumulatorB;
+	float tangentImpulseAccumulator1;
+	float tangentImpulseAccumulator2;
 
 	#endif
 
@@ -95,12 +98,17 @@ typedef struct physContact {
 	// Contact array.
 	physContactPoint contacts[COLLISION_MANIFOLD_MAX_CONTACT_POINTS];
 
-	// Average halfway points.
-	vec3 halfwayA;
-	vec3 halfwayB;
+	#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
+
+	// Halfway points transformed by the
+	// bodies' global configurations.
+	vec3 rA;
+	vec3 rB;
 
 	// Average contact normal.
 	vec3 normal;
+
+	#endif
 
 	#if defined PHYSICS_GAUSS_SEIDEL_SOLVER
 
@@ -109,24 +117,23 @@ typedef struct physContact {
 
 	#endif
 
-	// Contact tangents for simulating friction.
-	vec3 tangentA;
-	vec3 tangentB;
-
 	#ifdef PHYSICS_CONTACT_FRICTION_CONSTRAINT
 
-	// Friction inverse effective mass.
-	mat2 tangentEffectiveMass;
-	float angularEffectiveMass;
+	// The friction constraint, if we're simulating friction using motors.
+	physJointFriction frictionConstraint;
 
-	// Impulse magnitude accumulators for friction.
-	vec2 tangentImpulseAccumulator;
-	float angularImpulseAccumulator;
+	#else
+
+	// Contact tangents for simulating friction.
+	vec3 tangent1;
+	vec3 tangent2;
+
+	// Coefficient of friction.
+	float friction;
 
 	#endif
 
-	// Coefficients of friction and restitution.
-	float friction;
+	// Coefficient of restitution.
 	float restitution;
 
 	// Number of contacts.
