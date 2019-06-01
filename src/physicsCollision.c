@@ -24,7 +24,7 @@ static __FORCE_INLINE__ float physContactCalculateRestitution(const float r1, co
 }
 
 static __FORCE_INLINE__ float physContactCalculateFriction(const float f1, const float f2){
-	#ifdef PHYSICS_FRICTION_GEOMETRIC_AVERAGE
+	#ifdef PHYSICS_CONTACT_FRICTION_GEOMETRIC_AVERAGE
 	return sqrtf(f1 * f2);
 	#else
 	const float w1 = 1.414213562373095f * (1.f - f1) + 1.f;
@@ -63,7 +63,7 @@ static __FORCE_INLINE__ void physContactInit(physContact *const restrict contact
 		halfway = vec3VAddV(halfway, pHalfway);
 
 		// Get the relative contact points.
-		#ifdef PHYSICS_GAUSS_SEIDEL_SOLVER
+		#ifdef PHYSICS_SOLVER_GAUSS_SEIDEL
 		pPoint->pointA = quatRotateVec3FastApproximate(quatConjugateFast(bodyA->configuration.orientation), vec3VSubV(cPoint->pointA, bodyA->centroidGlobal));
 		pPoint->pointB = quatRotateVec3FastApproximate(quatConjugateFast(bodyB->configuration.orientation), vec3VSubV(cPoint->pointB, bodyB->centroidGlobal));
 		#else
@@ -102,7 +102,7 @@ static __FORCE_INLINE__ void physContactInit(physContact *const restrict contact
 	physContactNormal(contact) = normal;
 	physContactTangent1(contact) = vec3Perpendicular(normal);
 	physContactTangent2(contact) = vec3Cross(normal, physContactTangent1(contact));
-	#ifdef PHYSICS_GAUSS_SEIDEL_SOLVER
+	#ifdef PHYSICS_SOLVER_GAUSS_SEIDEL
 	contact->normalA = quatRotateVec3FastApproximate(quatConjugateFast(bodyA->configuration.orientation), normal);
 	#endif
 
@@ -216,7 +216,7 @@ static __FORCE_INLINE__ void physContactPersist(physContact *const restrict cont
 	physContactNormal(contact) = normal;
 	physContactTangent1(contact) = vec3Perpendicular(normal);
 	physContactTangent2(contact) = vec3Cross(normal, physContactTangent1(contact));
-	#ifdef PHYSICS_GAUSS_SEIDEL_SOLVER
+	#ifdef PHYSICS_SOLVER_GAUSS_SEIDEL
 	contact->normalA = quatRotateVec3FastApproximate(quatConjugateFast(bodyA->configuration.orientation), normal);
 	#endif
 
@@ -237,7 +237,7 @@ static __FORCE_INLINE__ void physContactPersist(physContact *const restrict cont
 		halfway = vec3VAddV(halfway, pHalfway);
 
 		// Get the relative contact points.
-		#ifdef PHYSICS_GAUSS_SEIDEL_SOLVER
+		#ifdef PHYSICS_SOLVER_GAUSS_SEIDEL
 		pcPoint->pointA = quatRotateVec3FastApproximate(quatConjugateFast(bodyA->configuration.orientation), vec3VSubV(cPoint->pointA, bodyA->centroidGlobal));
 		pcPoint->pointB = quatRotateVec3FastApproximate(quatConjugateFast(bodyB->configuration.orientation), vec3VSubV(cPoint->pointB, bodyB->centroidGlobal));
 		#else
@@ -350,7 +350,7 @@ static __FORCE_INLINE__ void physContactPointGenerateInverseEffectiveMass(physCo
 
 }
 
-#ifndef PHYSICS_GAUSS_SEIDEL_SOLVER
+#ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
 static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *const restrict point, const physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float dt){
 #else
 static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *const restrict point, const physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, physCollider *const restrict colliderA, physCollider *const restrict colliderB){
@@ -365,13 +365,13 @@ static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *cons
 
 	float temp;
 
-	#ifndef PHYSICS_GAUSS_SEIDEL_SOLVER
+	#ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
 
 	// Calculate potential slop.
 	temp = point->separation + PHYSICS_LINEAR_SLOP;
 
 	// Calculate the bias term.
-	point->bias = -PHYSICS_BAUMGARTE_TERM * dt * (temp < 0.f ? temp : 0.f);
+	point->bias = PHYSICS_BAUMGARTE_TERM * dt * (temp < 0.f ? temp : 0.f);
 
 	#else
 	point->bias = 0.f;
@@ -398,7 +398,7 @@ static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *cons
 
 }
 
-#ifndef PHYSICS_GAUSS_SEIDEL_SOLVER
+#ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
 __FORCE_INLINE__ void physContactUpdate(physContact *const restrict contact, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float dt){
 #else
 __FORCE_INLINE__ void physContactUpdate(physContact *const restrict contact, physCollider *const restrict colliderA, physCollider *const restrict colliderB){
@@ -424,7 +424,7 @@ __FORCE_INLINE__ void physContactUpdate(physContact *const restrict contact, phy
 		physContactPointGenerateInverseEffectiveMass(pPoint, contact, bodyA, bodyB, inverseMassTotal);
 
 		// Generate bias term.
-		#ifndef PHYSICS_GAUSS_SEIDEL_SOLVER
+		#ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
 		physContactPointGenerateBias(pPoint, contact, bodyA, bodyB, colliderA, colliderB, dt);
 		#else
 		physContactPointGenerateBias(pPoint, contact, bodyA, bodyB, colliderA, colliderB);
@@ -846,7 +846,7 @@ static __FORCE_INLINE__ void physContactPointSolveVelocity(physContactPoint *con
 	// Calculate the normal impulse magnitude,
 	// i.e. the constraint's Lagrange multiplier.
 	// -(JV + b)/((JM^-1)J^T)
-	lambda = -point->normalInverseEffectiveMass * (lambda - point->bias);
+	lambda = -point->normalInverseEffectiveMass * (lambda + point->bias);
 
 	// Clamp the normal impulse magnitude.
 	// The constraint equation states that impulse magnitude >= 0.
@@ -897,7 +897,7 @@ void physContactSolveVelocityConstraints(physContact *const restrict contact, ph
 
 }
 
-#ifdef PHYSICS_GAUSS_SEIDEL_SOLVER
+#ifdef PHYSICS_SOLVER_GAUSS_SEIDEL
 static __FORCE_INLINE__ float physContactPointSolveConfigurationNormal(physContactPoint *const restrict point, physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB){
 
 	/*

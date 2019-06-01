@@ -21,7 +21,11 @@ void physRigidBodyBaseInit(physRigidBodyBase *const restrict local){
 	local->linearDamping = 0.f;
 	local->angularDamping = 0.f;
 	vec3ZeroP(&local->centroid);
+	#ifdef PHYSICS_BODY_SCALE_INERTIA_TENSORS
+	mat3Identity(&local->inertiaTensor);
+	#else
 	mat3Identity(&local->inverseInertiaTensor);
+	#endif
 }
 
 __FORCE_INLINE__ static void physRigidBodyBaseAddCollider(physRigidBodyBase *const restrict local, physCollider *const c, const float **const vertexMassArray){
@@ -39,7 +43,7 @@ __FORCE_INLINE__ static void physRigidBodyBaseAddCollider(physRigidBodyBase *con
 
 	if(mass != 0.f){
 
-		mat3 inverseInertiaTensor;
+		mat3 inertiaTensor;
 
 		const vec3 difference = vec3VSubV(local->centroid, centroid);
 		const vec3 differenceWeighted = vec3VMultS(difference, mass);
@@ -47,27 +51,40 @@ __FORCE_INLINE__ static void physRigidBodyBaseAddCollider(physRigidBodyBase *con
 
 		// Generate and add the new collider's inverse moment
 		// of inertia using the Parallel Axis Theorem.
-		physColliderGenerateMoment(&c->c, &inverseInertiaTensor, &centroid, vertexMassArray);
-		inverseInertiaTensor = mat3Invert(inverseInertiaTensor);
+		physColliderGenerateMoment(&c->c, &inertiaTensor, &centroid, vertexMassArray);
 
 		// Translate the inertia tensor using the rigid body's centroid.
-		inverseInertiaTensor.m[0][0] += differenceWeightedSquared.y + differenceWeightedSquared.z;
-		inverseInertiaTensor.m[0][1] -= differenceWeighted.x * difference.y;
-		inverseInertiaTensor.m[0][2] -= differenceWeighted.x * difference.z;
-		inverseInertiaTensor.m[1][1] += differenceWeightedSquared.x + differenceWeightedSquared.z;
-		inverseInertiaTensor.m[1][2] -= differenceWeighted.y * difference.z;
-		inverseInertiaTensor.m[2][2] += differenceWeightedSquared.x + differenceWeightedSquared.y;
+		inertiaTensor.m[0][0] += differenceWeightedSquared.y + differenceWeightedSquared.z;
+		inertiaTensor.m[0][1] -= differenceWeighted.x * difference.y;
+		inertiaTensor.m[0][2] -= differenceWeighted.x * difference.z;
+		inertiaTensor.m[1][1] += differenceWeightedSquared.x + differenceWeightedSquared.z;
+		inertiaTensor.m[1][2] -= differenceWeighted.y * difference.z;
+		inertiaTensor.m[2][2] += differenceWeightedSquared.x + differenceWeightedSquared.y;
 
 		// Add the collider's contribution to the body's inertia tensor.
-		local->inverseInertiaTensor.m[0][0] += inverseInertiaTensor.m[0][0];
-		local->inverseInertiaTensor.m[0][1] += inverseInertiaTensor.m[0][1];
-		local->inverseInertiaTensor.m[1][0] += inverseInertiaTensor.m[0][1];
-		local->inverseInertiaTensor.m[0][2] += inverseInertiaTensor.m[0][2];
-		local->inverseInertiaTensor.m[2][0] += inverseInertiaTensor.m[0][2];
-		local->inverseInertiaTensor.m[1][1] += inverseInertiaTensor.m[1][1];
-		local->inverseInertiaTensor.m[1][2] += inverseInertiaTensor.m[1][2];
-		local->inverseInertiaTensor.m[2][1] += inverseInertiaTensor.m[1][2];
-		local->inverseInertiaTensor.m[2][2] += inverseInertiaTensor.m[2][2];
+		#ifdef PHYSICS_BODY_SCALE_INERTIA_TENSORS
+		local->inertiaTensor.m[0][0] += inertiaTensor.m[0][0];
+		local->inertiaTensor.m[0][1] += inertiaTensor.m[0][1];
+		local->inertiaTensor.m[1][0] += inertiaTensor.m[0][1];
+		local->inertiaTensor.m[0][2] += inertiaTensor.m[0][2];
+		local->inertiaTensor.m[2][0] += inertiaTensor.m[0][2];
+		local->inertiaTensor.m[1][1] += inertiaTensor.m[1][1];
+		local->inertiaTensor.m[1][2] += inertiaTensor.m[1][2];
+		local->inertiaTensor.m[2][1] += inertiaTensor.m[1][2];
+		local->inertiaTensor.m[2][2] += inertiaTensor.m[2][2];
+		#else
+		local->inverseInertiaTensor = mat3Invert(local->inverseInertiaTensor);
+		local->inverseInertiaTensor.m[0][0] += inertiaTensor.m[0][0];
+		local->inverseInertiaTensor.m[0][1] += inertiaTensor.m[0][1];
+		local->inverseInertiaTensor.m[1][0] += inertiaTensor.m[0][1];
+		local->inverseInertiaTensor.m[0][2] += inertiaTensor.m[0][2];
+		local->inverseInertiaTensor.m[2][0] += inertiaTensor.m[0][2];
+		local->inverseInertiaTensor.m[1][1] += inertiaTensor.m[1][1];
+		local->inverseInertiaTensor.m[1][2] += inertiaTensor.m[1][2];
+		local->inverseInertiaTensor.m[2][1] += inertiaTensor.m[1][2];
+		local->inverseInertiaTensor.m[2][2] += inertiaTensor.m[2][2];
+		local->inverseInertiaTensor = mat3Invert(local->inverseInertiaTensor);
+		#endif
 
 		// Calculate the new, weighted centroid.
 		local->inverseMass = 1.f / (local->mass + mass);
@@ -91,7 +108,7 @@ __FORCE_INLINE__ static void physRigidBodyBaseGenerateProperties(physRigidBodyBa
 
 	float tempMass = 0.f;
 	vec3 tempCentroid = {.x = 0.f, .y = 0.f, .z = 0.f};
-	float tempInertiaTensor[6] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f};
+	float inertiaTensor[6] = {0.f, 0.f, 0.f, 0.f, 0.f, 0.f};
 
 	// Generate the mass properites of each collider, as
 	// well as the total, weighted centroid of the body.
@@ -130,12 +147,12 @@ __FORCE_INLINE__ static void physRigidBodyBaseGenerateProperties(physRigidBodyBa
 			mat3 colliderInertiaTensor;
 			physColliderGenerateMoment(&c->c, &colliderInertiaTensor, &tempCentroid, m);
 
-			tempInertiaTensor[0] += colliderInertiaTensor.m[0][0];
-			tempInertiaTensor[1] += colliderInertiaTensor.m[1][1];
-			tempInertiaTensor[2] += colliderInertiaTensor.m[2][2];
-			tempInertiaTensor[3] += colliderInertiaTensor.m[0][1];
-			tempInertiaTensor[4] += colliderInertiaTensor.m[0][2];
-			tempInertiaTensor[5] += colliderInertiaTensor.m[1][2];
+			inertiaTensor[0] += colliderInertiaTensor.m[0][0];
+			inertiaTensor[1] += colliderInertiaTensor.m[1][1];
+			inertiaTensor[2] += colliderInertiaTensor.m[2][2];
+			inertiaTensor[3] += colliderInertiaTensor.m[0][1];
+			inertiaTensor[4] += colliderInertiaTensor.m[0][2];
+			inertiaTensor[5] += colliderInertiaTensor.m[1][2];
 
 			c = (physCollider *)memSLinkNext(c);
 			if(m != NULL){
@@ -144,22 +161,38 @@ __FORCE_INLINE__ static void physRigidBodyBaseGenerateProperties(physRigidBodyBa
 
 		}
 
-		local->inverseInertiaTensor.m[0][0] = tempInertiaTensor[0];
-		local->inverseInertiaTensor.m[1][1] = tempInertiaTensor[1];
-		local->inverseInertiaTensor.m[2][2] = tempInertiaTensor[2];
-		local->inverseInertiaTensor.m[0][1] = tempInertiaTensor[3];
-		local->inverseInertiaTensor.m[0][2] = tempInertiaTensor[4];
-		local->inverseInertiaTensor.m[1][2] = tempInertiaTensor[5];
+		#ifdef PHYSICS_BODY_SCALE_INERTIA_TENSORS
+		local->inertiaTensor.m[0][0] = inertiaTensor[0];
+		local->inertiaTensor.m[1][1] = inertiaTensor[1];
+		local->inertiaTensor.m[2][2] = inertiaTensor[2];
+		local->inertiaTensor.m[0][1] = inertiaTensor[3];
+		local->inertiaTensor.m[0][2] = inertiaTensor[4];
+		local->inertiaTensor.m[1][2] = inertiaTensor[5];
 		// No point calculating the same numbers twice.
-		local->inverseInertiaTensor.m[1][0] = tempInertiaTensor[3];
-		local->inverseInertiaTensor.m[2][0] = tempInertiaTensor[4];
-		local->inverseInertiaTensor.m[2][1] = tempInertiaTensor[5];
-
+		local->inertiaTensor.m[1][0] = inertiaTensor[3];
+		local->inertiaTensor.m[2][0] = inertiaTensor[4];
+		local->inertiaTensor.m[2][1] = inertiaTensor[5];
+		#else
+		local->inverseInertiaTensor.m[0][0] = inertiaTensor[0];
+		local->inverseInertiaTensor.m[1][1] = inertiaTensor[1];
+		local->inverseInertiaTensor.m[2][2] = inertiaTensor[2];
+		local->inverseInertiaTensor.m[0][1] = inertiaTensor[3];
+		local->inverseInertiaTensor.m[0][2] = inertiaTensor[4];
+		local->inverseInertiaTensor.m[1][2] = inertiaTensor[5];
+		// No point calculating the same numbers twice.
+		local->inverseInertiaTensor.m[1][0] = inertiaTensor[3];
+		local->inverseInertiaTensor.m[2][0] = inertiaTensor[4];
+		local->inverseInertiaTensor.m[2][1] = inertiaTensor[5];
 		local->inverseInertiaTensor = mat3Invert(local->inverseInertiaTensor);
+		#endif
 
 	}else{
 		local->inverseMass = 0.f;
+		#ifdef PHYSICS_BODY_SCALE_INERTIA_TENSORS
+		mat3ZeroP(&local->inertiaTensor);
+		#else
 		mat3ZeroP(&local->inverseInertiaTensor);
+		#endif
 	}
 
 	local->mass = tempMass;
@@ -1016,7 +1049,11 @@ return_t physRigidBodyInstantiate(physRigidBody *const restrict body, physRigidB
 	body->linearDamping = local->linearDamping;
 	body->angularDamping = local->angularDamping;
 	body->centroidLocal = local->centroid;
+	#ifdef PHYSICS_BODY_SCALE_INERTIA_TENSORS
+	body->inertiaTensorLocal = local->inertiaTensor;
+	#else
 	body->inverseInertiaTensorLocal = local->inverseInertiaTensor;
+	#endif
 
 	body->base = local;
 	body->flags = local->flags;
@@ -1324,61 +1361,157 @@ __FORCE_INLINE__ void physRigidBodyPositionFromCentroid(physRigidBody *const res
 	);
 }
 
-#ifdef PHYSICS_SCALE_INERTIA_TENSORS
+#ifdef PHYSICS_BODY_SCALE_INERTIA_TENSORS
 __FORCE_INLINE__ static mat3 physRigidBodyScaleInertia(mat3 I, const vec3 scale){
 
-	if(scale.x != 1.f || scale.y != 1.f || scale.z != 1.f){
+	const float xy = scale.x * scale.y;
+	const float xz = scale.x * scale.z;
+	const float yz = scale.y * scale.z;
 
-		/** Try and remove the need for two inversions. **/
-		if(mat3InvertR(I, &I)){
+	float sqrZ = (I.m[0][0] + I.m[1][1] - I.m[2][2]) * 0.5f;
+	const float sqrY = (I.m[0][0] - sqrZ) * scale.y * scale.y;
+	const float sqrX = (I.m[1][1] - sqrZ) * scale.x * scale.x;
+	sqrZ *= scale.z * scale.z;
 
-			const float xy = scale.x * scale.y;
-			const float xz = scale.x * scale.z;
-			const float yz = scale.y * scale.z;
+	/*
+	** I[0][0] = J[0] = y^2 + z^2
+	** I[1][1] = J[1] = x^2 + z^2
+	** I[2][2] = J[2] = x^2 + y^2
+	**
+	** Therefore:
+	** x^2 = (J[1] - J[0] + J[2])/2
+	** y^2 = (J[0] - J[1] + J[2])/2
+	** z^2 = (J[0] - J[2] + J[1])/2
+	**
+	** To scale, multiply by the scale coefficient squared.
+	*/
+	I.m[0][0] = sqrY + sqrZ;
+	I.m[1][1] = sqrX + sqrZ;
+	I.m[2][2] = sqrX + sqrY;
 
-			float sqrZ = (I.m[0][0] + I.m[1][1] - I.m[2][2]) * 0.5f;
-			const float sqrY = (I.m[0][0] - sqrZ) * scale.y * scale.y;
-			const float sqrX = (I.m[1][1] - sqrZ) * scale.x * scale.x;
-			sqrZ *= scale.z * scale.z;
+	/*
+	** I[0][1] = I[1][0] = J[3] -= x * y;
+	** I[0][2] = I[2][0] = J[4] -= x * z;
+	** I[1][2] = I[2][1] = J[5] -= y * z;
+	**
+	** To scale, just multiply each element by the
+	** product of the two scale coefficients.
+	*/
+	I.m[0][1] *= xy;
+	I.m[0][2] *= xz;
+	I.m[1][2] *= yz;
+	I.m[1][0] *= xy;
+	I.m[2][0] *= xz;
+	I.m[2][1] *= yz;
 
-			/*
-			** I[0][0] = J[0] = y^2 + z^2
-			** I[1][1] = J[1] = x^2 + z^2
-			** I[2][2] = J[2] = x^2 + y^2
-			**
-			** Therefore:
-			** x^2 = (J[1] - J[0] + J[2])/2
-			** y^2 = (J[0] - J[1] + J[2])/2
-			** z^2 = (J[0] - J[2] + J[1])/2
-			**
-			** To scale, multiply by the scale coefficient squared.
-			*/
-			I.m[0][0] = sqrY + sqrZ;
-			I.m[1][1] = sqrX + sqrZ;
-			I.m[2][2] = sqrX + sqrY;
+	return mat3Invert(I);
 
-			/*
-			** I[0][1] = I[1][0] = J[3] -= x * y;
-			** I[0][2] = I[2][0] = J[4] -= x * z;
-			** I[1][2] = I[2][1] = J[5] -= y * z;
-			**
-			** To scale, just multiply each element by the
-			** product of the two scale coefficients.
-			*/
-			I.m[0][1] *= xy;
-			I.m[0][2] *= xz;
-			I.m[1][2] *= yz;
-			I.m[1][0] *= xy;
-			I.m[2][0] *= xz;
-			I.m[2][1] *= yz;
+}
+#else
+void physRigidBodyScale(physRigidBody *const restrict body, const vec3 scale){
 
-			I = mat3Invert(I);
+	mat3 I = body->inverseInertiaTensorLocal;
 
-		}
+	if(mat3InvertR(I, &I)){
+
+		const float xy = scale.x * scale.y;
+		const float xz = scale.x * scale.z;
+		const float yz = scale.y * scale.z;
+
+		float sqrZ = (I.m[0][0] + I.m[1][1] - I.m[2][2]) * 0.5f;
+		const float sqrY = (I.m[0][0] - sqrZ) * scale.y * scale.y;
+		const float sqrX = (I.m[1][1] - sqrZ) * scale.x * scale.x;
+		sqrZ *= scale.z * scale.z;
+
+		/*
+		** I[0][0] = J[0] = y^2 + z^2
+		** I[1][1] = J[1] = x^2 + z^2
+		** I[2][2] = J[2] = x^2 + y^2
+		**
+		** Therefore:
+		** x^2 = (J[1] - J[0] + J[2])/2
+		** y^2 = (J[0] - J[1] + J[2])/2
+		** z^2 = (J[0] - J[2] + J[1])/2
+		**
+		** To scale, multiply by the scale coefficient squared.
+		*/
+		I.m[0][0] = sqrY + sqrZ;
+		I.m[1][1] = sqrX + sqrZ;
+		I.m[2][2] = sqrX + sqrY;
+
+		/*
+		** I[0][1] = I[1][0] = J[3] -= x * y;
+		** I[0][2] = I[2][0] = J[4] -= x * z;
+		** I[1][2] = I[2][1] = J[5] -= y * z;
+		**
+		** To scale, just multiply each element by the
+		** product of the two scale coefficients.
+		*/
+		I.m[0][1] *= xy;
+		I.m[0][2] *= xz;
+		I.m[1][2] *= yz;
+		I.m[1][0] *= xy;
+		I.m[2][0] *= xz;
+		I.m[2][1] *= yz;
+
+		body->inverseInertiaTensorLocal = mat3Invert(I);
+		body->configuration.scale = vec3VMultV(body->configuration.scale, scale);
 
 	}
 
-	return I;
+}
+void physRigidBodySetScale(physRigidBody *const restrict body, const vec3 scale){
+
+	mat3 I = body->inverseInertiaTensorLocal;
+
+	if(mat3InvertR(I, &I)){
+
+		const vec3 scaleRelative = vec3VDivV(scale, body->configuration.scale);
+
+		const float xy = scaleRelative.x * scaleRelative.y;
+		const float xz = scaleRelative.x * scaleRelative.z;
+		const float yz = scaleRelative.y * scaleRelative.z;
+
+		float sqrZ = (I.m[0][0] + I.m[1][1] - I.m[2][2]) * 0.5f;
+		const float sqrY = (I.m[0][0] - sqrZ) * scaleRelative.y * scaleRelative.y;
+		const float sqrX = (I.m[1][1] - sqrZ) * scaleRelative.x * scaleRelative.x;
+		sqrZ *= scaleRelative.z * scaleRelative.z;
+
+		/*
+		** I[0][0] = J[0] = y^2 + z^2
+		** I[1][1] = J[1] = x^2 + z^2
+		** I[2][2] = J[2] = x^2 + y^2
+		**
+		** Therefore:
+		** x^2 = (J[1] - J[0] + J[2])/2
+		** y^2 = (J[0] - J[1] + J[2])/2
+		** z^2 = (J[0] - J[2] + J[1])/2
+		**
+		** To scale, multiply by the scale coefficient squared.
+		*/
+		I.m[0][0] = sqrY + sqrZ;
+		I.m[1][1] = sqrX + sqrZ;
+		I.m[2][2] = sqrX + sqrY;
+
+		/*
+		** I[0][1] = I[1][0] = J[3] -= x * y;
+		** I[0][2] = I[2][0] = J[4] -= x * z;
+		** I[1][2] = I[2][1] = J[5] -= y * z;
+		**
+		** To scale, just multiply each element by the
+		** product of the two scale coefficients.
+		*/
+		I.m[0][1] *= xy;
+		I.m[0][2] *= xz;
+		I.m[1][2] *= yz;
+		I.m[1][0] *= xy;
+		I.m[2][0] *= xz;
+		I.m[2][1] *= yz;
+
+		body->inverseInertiaTensorLocal = mat3Invert(I);
+		body->configuration.scale = scale;
+
+	}
 
 }
 #endif
@@ -1393,8 +1526,8 @@ __FORCE_INLINE__ void physRigidBodyGenerateGlobalInertia(physRigidBody *const re
 	body->inverseInertiaTensorGlobal = mat3MMultM(
 		mat3MMultM(
 			orientationMatrix,
-			#ifdef PHYSICS_SCALE_INERTIA_TENSORS
-			physRigidBodyScaleInertia(body->inverseInertiaTensorLocal, body->configuration.scale)
+			#ifdef PHYSICS_BODY_SCALE_INERTIA_TENSORS
+			physRigidBodyScaleInertia(body->inertiaTensorLocal, body->configuration.scale)
 			#else
 			body->inverseInertiaTensorLocal
 			#endif
@@ -1608,7 +1741,7 @@ void physRigidBodyAddCollider(physRigidBody *const restrict body, physCollider *
 
 	if(mass != 0.f){
 
-		mat3 inverseInertiaTensor;
+		mat3 inertiaTensor;
 
 		const vec3 difference = vec3VSubV(body->centroidLocal, centroid);
 		const vec3 differenceWeighted = vec3VMultS(difference, mass);
@@ -1616,27 +1749,39 @@ void physRigidBodyAddCollider(physRigidBody *const restrict body, physCollider *
 
 		// Generate and add the new collider's inverse moment
 		// of inertia using the Parallel Axis Theorem.
-		physColliderGenerateMoment(&c->c, &inverseInertiaTensor, &centroid, vertexMassArray);
-		inverseInertiaTensor = mat3Invert(inverseInertiaTensor);
+		physColliderGenerateMoment(&c->c, &inertiaTensor, &centroid, vertexMassArray);
 
 		// Translate the inertia tensor using the rigid body's centroid.
-		inverseInertiaTensor.m[0][0] += differenceWeightedSquared.y + differenceWeightedSquared.z;
-		inverseInertiaTensor.m[0][1] -= differenceWeighted.x * difference.y;
-		inverseInertiaTensor.m[0][2] -= differenceWeighted.x * difference.z;
-		inverseInertiaTensor.m[1][1] += differenceWeightedSquared.x + differenceWeightedSquared.z;
-		inverseInertiaTensor.m[1][2] -= differenceWeighted.y * difference.z;
-		inverseInertiaTensor.m[2][2] += differenceWeightedSquared.x + differenceWeightedSquared.y;
+		inertiaTensor.m[0][0] += differenceWeightedSquared.y + differenceWeightedSquared.z;
+		inertiaTensor.m[0][1] -= differenceWeighted.x * difference.y;
+		inertiaTensor.m[0][2] -= differenceWeighted.x * difference.z;
+		inertiaTensor.m[1][1] += differenceWeightedSquared.x + differenceWeightedSquared.z;
+		inertiaTensor.m[1][2] -= differenceWeighted.y * difference.z;
+		inertiaTensor.m[2][2] += differenceWeightedSquared.x + differenceWeightedSquared.y;
 
-		// Add the collider's contribution to the body's inertia tensor.
-		body->inverseInertiaTensorLocal.m[0][0] += inverseInertiaTensor.m[0][0];
-		body->inverseInertiaTensorLocal.m[0][1] += inverseInertiaTensor.m[0][1];
-		body->inverseInertiaTensorLocal.m[1][0] += inverseInertiaTensor.m[0][1];
-		body->inverseInertiaTensorLocal.m[0][2] += inverseInertiaTensor.m[0][2];
-		body->inverseInertiaTensorLocal.m[2][0] += inverseInertiaTensor.m[0][2];
-		body->inverseInertiaTensorLocal.m[1][1] += inverseInertiaTensor.m[1][1];
-		body->inverseInertiaTensorLocal.m[1][2] += inverseInertiaTensor.m[1][2];
-		body->inverseInertiaTensorLocal.m[2][1] += inverseInertiaTensor.m[1][2];
-		body->inverseInertiaTensorLocal.m[2][2] += inverseInertiaTensor.m[2][2];
+		#ifdef PHYSICS_BODY_SCALE_INERTIA_TENSORS
+		body->inertiaTensorLocal.m[0][0] += inertiaTensor.m[0][0];
+		body->inertiaTensorLocal.m[0][1] += inertiaTensor.m[0][1];
+		body->inertiaTensorLocal.m[1][0] += inertiaTensor.m[0][1];
+		body->inertiaTensorLocal.m[0][2] += inertiaTensor.m[0][2];
+		body->inertiaTensorLocal.m[2][0] += inertiaTensor.m[0][2];
+		body->inertiaTensorLocal.m[1][1] += inertiaTensor.m[1][1];
+		body->inertiaTensorLocal.m[1][2] += inertiaTensor.m[1][2];
+		body->inertiaTensorLocal.m[2][1] += inertiaTensor.m[1][2];
+		body->inertiaTensorLocal.m[2][2] += inertiaTensor.m[2][2];
+		#else
+		body->inverseInertiaTensorLocal = mat3Invert(body->inverseInertiaTensorLocal);
+		body->inverseInertiaTensorLocal.m[0][0] += inertiaTensor.m[0][0];
+		body->inverseInertiaTensorLocal.m[0][1] += inertiaTensor.m[0][1];
+		body->inverseInertiaTensorLocal.m[1][0] += inertiaTensor.m[0][1];
+		body->inverseInertiaTensorLocal.m[0][2] += inertiaTensor.m[0][2];
+		body->inverseInertiaTensorLocal.m[2][0] += inertiaTensor.m[0][2];
+		body->inverseInertiaTensorLocal.m[1][1] += inertiaTensor.m[1][1];
+		body->inverseInertiaTensorLocal.m[1][2] += inertiaTensor.m[1][2];
+		body->inverseInertiaTensorLocal.m[2][1] += inertiaTensor.m[1][2];
+		body->inverseInertiaTensorLocal.m[2][2] += inertiaTensor.m[2][2];
+		body->inverseInertiaTensorLocal = mat3Invert(body->inverseInertiaTensorLocal);
+		#endif
 
 		// Calculate the new, weighted centroid.
 		body->inverseMass = 1.f / (body->mass + mass);

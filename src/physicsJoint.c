@@ -34,7 +34,7 @@ __FORCE_INLINE__ void physJointSolveVelocityConstraints(const physJoint *const r
 
 }
 
-#ifdef PHYSICS_GAUSS_SEIDEL_SOLVER
+#ifdef PHYSICS_SOLVER_GAUSS_SEIDEL
 
 /** The lines below should eventually be removed. **/
 #define physJointSolveConfigurationConstraintsFixed     NULL

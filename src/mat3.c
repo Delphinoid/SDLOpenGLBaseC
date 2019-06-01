@@ -170,23 +170,31 @@ __HINT_INLINE__ void mat3TransposePR(const mat3 *const restrict m, mat3 *const r
 
 mat3 mat3Invert(const mat3 m){
 
-	mat3 r;
 	const float f0 = m.m[1][1] * m.m[2][2] - m.m[1][2] * m.m[2][1];
 	const float f1 = m.m[2][1] * m.m[0][2] - m.m[0][1] * m.m[2][2];
 	const float f2 = m.m[0][1] * m.m[1][2] - m.m[1][1] * m.m[0][2];
-	const float invDet = 1.f / (m.m[0][0] * f0 + m.m[1][0] * f1 + m.m[2][0] * f2);
+	float invDet = m.m[0][0] * f0 + m.m[1][0] * f1 + m.m[2][0] * f2;
 
-	r.m[0][0] = f0 * invDet;
-	r.m[1][0] = (m.m[2][0] * m.m[1][2] - m.m[1][0] * m.m[1][1]) * invDet;
-	r.m[2][0] = (m.m[1][0] * m.m[2][1] - m.m[2][0] * m.m[2][2]) * invDet;
-	r.m[0][1] = f1 * invDet;
-	r.m[1][1] = (m.m[0][0] * m.m[2][2] - m.m[2][0] * m.m[0][2]) * invDet;
-	r.m[2][1] = (m.m[0][1] * m.m[2][0] - m.m[0][0] * m.m[2][1]) * invDet;
-	r.m[0][2] = f2 * invDet;
-	r.m[1][2] = (m.m[0][2] * m.m[1][0] - m.m[0][0] * m.m[1][2]) * invDet;
-	r.m[2][2] = (m.m[0][0] * m.m[1][1] - m.m[0][1] * m.m[1][0]) * invDet;
+	if(invDet != 0.f){
 
-	return r;
+		mat3 r;
+		invDet = 1.f / invDet;
+
+		r.m[0][0] = f0 * invDet;
+		r.m[1][0] = (m.m[2][0] * m.m[1][2] - m.m[1][0] * m.m[1][1]) * invDet;
+		r.m[2][0] = (m.m[1][0] * m.m[2][1] - m.m[2][0] * m.m[2][2]) * invDet;
+		r.m[0][1] = f1 * invDet;
+		r.m[1][1] = (m.m[0][0] * m.m[2][2] - m.m[2][0] * m.m[0][2]) * invDet;
+		r.m[2][1] = (m.m[0][1] * m.m[2][0] - m.m[0][0] * m.m[2][1]) * invDet;
+		r.m[0][2] = f2 * invDet;
+		r.m[1][2] = (m.m[0][2] * m.m[1][0] - m.m[0][0] * m.m[1][2]) * invDet;
+		r.m[2][2] = (m.m[0][0] * m.m[1][1] - m.m[0][1] * m.m[1][0]) * invDet;
+
+		return r;
+
+	}
+
+	return mat3Zero();
 
 }
 return_t mat3InvertR(const mat3 m, mat3 *const restrict r){

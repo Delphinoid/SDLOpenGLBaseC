@@ -24,7 +24,7 @@ typedef struct physIsland {
 void physIslandInit(physIsland *const restrict island);
 return_t physIslandUpdateCollider(physIsland *const restrict island, physCollider *const restrict c);
 void physIslandRemoveCollider(physIsland *const restrict island, physCollider *const restrict c);
-#ifndef PHYSICS_GAUSS_SEIDEL_SOLVER
+#ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
 return_t physIslandQuery(const physIsland *const restrict island, const float dt);
 #else
 return_t physIslandQuery(const physIsland *const restrict island);

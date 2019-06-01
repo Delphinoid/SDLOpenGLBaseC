@@ -613,7 +613,7 @@ void modulePhysicsSolveConstraints(const float dt){
 		// Integrate the body's configuration.
 		physRigidBodyIntegrateConfiguration(body, dt);
 
-	#ifndef PHYSICS_GAUSS_SEIDEL_SOLVER
+	#ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
 	MEMORY_SLINK_LOOP_END(__PhysicsRigidBodyResourceArray, body, return;);
 	#else
 	MEMORY_SLINK_LOOP_END(__PhysicsRigidBodyResourceArray, body, goto PHYSICS_JOINT_CONFIGURATION_SOLVER;);

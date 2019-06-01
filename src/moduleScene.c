@@ -80,7 +80,7 @@ void moduleSceneClear(){
 
 }
 
-#ifndef PHYSICS_GAUSS_SEIDEL_SOLVER
+#ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
 void moduleSceneQueryIslands(const float dt){
 #else
 void moduleSceneQueryIslands(){
@@ -88,7 +88,7 @@ void moduleSceneQueryIslands(){
 
 	MEMORY_POOL_LOOP_BEGIN(__SceneResourceArray, i, scene *);
 
-		#ifndef PHYSICS_GAUSS_SEIDEL_SOLVER
+		#ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
 		physIslandQuery(&i->island, dt);
 		#else
 		physIslandQuery(&i->island);

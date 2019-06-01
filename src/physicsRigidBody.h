@@ -5,6 +5,22 @@
 #include "skeleton.h"
 #include "mat3.h"
 
+/*
+** physRigidBody defines a physical rigid body.
+**
+** Note: the definition of the rigid body may change
+** depending on the preprocessor directives.
+**
+** If PHYSICS_BODY_SCALE_INERTIA_TENSORS is defined, rigid
+** bodies and rigid body bases will store regular inertia
+** tensors rather than inverses to make scaling more
+** efficient. If your application will not be making much
+** use of scaling or the effects of scaling on the
+** simulation are negligible, please consider undefining
+** this and manually invoking the physRigidBodyScale()
+** function instead.
+*/
+
 #define PHYSICS_BODY_UNINITIALIZED      0x01  // Whether or not the simulation has just begun on this frame.
 #define PHYSICS_BODY_SIMULATE_LINEAR    0x02  // Simulate linear velocity.
 #define PHYSICS_BODY_SIMULATE_ANGULAR   0x04  // Simulate angular velocity. Disabling this is useful for certain entities, such as players.
@@ -37,7 +53,11 @@ typedef struct {
 	float linearDamping;        // The body's linear damping ratio.
 	float angularDamping;       // The body's angular damping ratio.
 	vec3 centroid;              // The body's center of mass.
+	#ifdef PHYSICS_BODY_SCALE_INERTIA_TENSORS
+	mat3 inertiaTensor;         // The body's local inertia tensor.
+	#else
 	mat3 inverseInertiaTensor;  // The inverse of the body's local inertia tensor.
+	#endif
 
 	// The bone the body is associated with.
 	physicsBodyIndex_t id;
@@ -61,7 +81,11 @@ typedef struct physRigidBody {
 	float angularDamping;             // The body's angular damping ratio.
 	vec3 centroidLocal;               // The body's local center of mass.
 	vec3 centroidGlobal;              // The body's global center of mass.
+	#ifdef PHYSICS_BODY_SCALE_INERTIA_TENSORS
+	mat3 inertiaTensorLocal;          // The body's local inertia tensor.
+	#else
 	mat3 inverseInertiaTensorLocal;   // The inverse of the body's local inertia tensor.
+	#endif
 	mat3 inverseInertiaTensorGlobal;  // The inverse of the body's global inertia tensor.
 
 	// Space properties.
@@ -131,6 +155,11 @@ void physRigidBodyApplyVelocityImpulseAngularInverse(physRigidBody *const restri
 
 void physRigidBodyApplyConfigurationImpulse(physRigidBody *const restrict body, const vec3 x, const vec3 J);
 void physRigidBodyApplyConfigurationImpulseInverse(physRigidBody *const restrict body, const vec3 x, const vec3 J);
+
+#ifndef PHYSICS_BODY_SCALE_INERTIA_TENSORS
+void physRigidBodyScale(physRigidBody *const restrict body, const vec3 scale);
+void physRigidBodySetScale(physRigidBody *const restrict body, const vec3 scale);
+#endif
 
 void physRigidBodyCentroidFromPosition(physRigidBody *const restrict body);
 void physRigidBodyPositionFromCentroid(physRigidBody *const restrict body);
