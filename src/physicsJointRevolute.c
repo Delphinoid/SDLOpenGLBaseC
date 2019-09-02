@@ -1,6 +1,6 @@
 #include "physicsJoint.h"
 
-void physJointSolveVelocityConstraintsRevolute(const physJoint *const restrict joint){
+void physJointRevoluteSolveVelocityConstraints(const physJoint *const restrict joint){
 
 	//
 

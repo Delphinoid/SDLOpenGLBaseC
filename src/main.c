@@ -190,6 +190,7 @@ int main(int argc, char *argv[]){
 
 	float tickrateTimeMod = tickrate * timeMod;
 	float tickratioTimeMod = tickratio * timeMod;
+	float tickratioTimeModFrequency = 1.f / tickratioTimeMod;
 	float tickrateUpdateMod = tickrate / updateMod;
 
 	float startUpdate;
@@ -318,18 +319,18 @@ int main(int argc, char *argv[]){
 				//objGetState(&gameStateManager, 4, 0)->tempRndrConfig.targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
 			}
 
+			// Update scenes.
+			moduleSceneUpdate(tickrateTimeMod);
+
 			// Query physics islands.
-			#ifndef PHYSICS_GAUSS_SEIDEL_SOLVER
-			moduleSceneQueryIslands(tickratioTimeMod);
+			#ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
+			moduleSceneQueryIslands(tickratioTimeModFrequency);
 			#else
 			moduleSceneQueryIslands();
 			#endif
 
 			// Solve physics constraints.
 			modulePhysicsSolveConstraints(tickratioTimeMod);
-
-			// Update scenes.
-			moduleSceneUpdate(tickrateTimeMod, tickratioTimeMod);
 
 			// Next frame.
 			nextUpdate += tickrateUpdateMod;

@@ -13,48 +13,74 @@ void physJointCreate(physJoint *const restrict joint, physRigidBody *const restr
 }
 
 /** The lines below should eventually be removed. **/
-#define physJointSolveVelocityConstraintsFixed     NULL
-#define physJointSolveVelocityConstraintsDistance  NULL
-#define physJointSolveVelocityConstraintsPrismatic NULL
-#define physJointSolveVelocityConstraintsRevolute  NULL
-#define physJointSolveVelocityConstraintsSphere    NULL
+#define physJointFixedPresolveConstraints     NULL
+#define physJointPrismaticPresolveConstraints NULL
+#define physJointRevolutePresolveConstraints  NULL
+#define physJointSpherePresolveConstraints    NULL
+
+void (* const physJointPresolveConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM])(
+	physJoint *const restrict joint,
+	physRigidBody *const restrict bodyA,
+	physRigidBody *const restrict bodyB,
+	const float dt
+) = {
+	physJointFixedPresolveConstraints,
+	physJointDistancePresolveConstraints,
+	physJointPrismaticPresolveConstraints,
+	physJointRevolutePresolveConstraints,
+	physJointSpherePresolveConstraints
+};
+__FORCE_INLINE__ void physJointPresolveConstraints(physJoint *const restrict joint, const float dt){
+
+	physJointPresolveConstraintsJumpTable[joint->type](joint, joint->bodyA, joint->bodyB, dt);
+
+}
+
+/** The lines below should eventually be removed. **/
+#define physJointFixedSolveVelocityConstraints     NULL
+#define physJointPrismaticSolveVelocityConstraints NULL
+#define physJointRevoluteSolveVelocityConstraints  NULL
+#define physJointSphereSolveVelocityConstraints    NULL
 
 void (* const physJointSolveVelocityConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM])(
-	const void *const restrict joint
+	physJoint *const restrict joint,
+	physRigidBody *const restrict bodyA,
+	physRigidBody *const restrict bodyB
 ) = {
-	physJointSolveVelocityConstraintsFixed,
-	physJointSolveVelocityConstraintsDistance,
-	physJointSolveVelocityConstraintsPrismatic,
-	physJointSolveVelocityConstraintsRevolute,
-	physJointSolveVelocityConstraintsSphere
+	physJointFixedSolveVelocityConstraints,
+	physJointDistanceSolveVelocityConstraints,
+	physJointPrismaticSolveVelocityConstraints,
+	physJointRevoluteSolveVelocityConstraints,
+	physJointSphereSolveVelocityConstraints
 };
-__FORCE_INLINE__ void physJointSolveVelocityConstraints(const physJoint *const restrict joint){
+__FORCE_INLINE__ void physJointSolveVelocityConstraints(physJoint *const restrict joint){
 
-	physJointSolveVelocityConstraintsJumpTable[joint->type](joint);
+	physJointSolveVelocityConstraintsJumpTable[joint->type](joint, joint->bodyA, joint->bodyB);
 
 }
 
 #ifdef PHYSICS_SOLVER_GAUSS_SEIDEL
 
 /** The lines below should eventually be removed. **/
-#define physJointSolveConfigurationConstraintsFixed     NULL
-#define physJointSolveConfigurationConstraintsDistance  NULL
-#define physJointSolveConfigurationConstraintsPrismatic NULL
-#define physJointSolveConfigurationConstraintsRevolute  NULL
-#define physJointSolveConfigurationConstraintsSphere    NULL
+#define physJointFixedSolveConfigurationConstraints     NULL
+#define physJointPrismaticSolveConfigurationConstraints NULL
+#define physJointRevoluteSolveConfigurationConstraints  NULL
+#define physJointSphereSolveConfigurationConstraints    NULL
 
-void (* const physJointSolveConfigurationConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM])(
-	const void *const restrict joint
+return_t (* const physJointSolveConfigurationConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM])(
+	physJoint *const restrict joint,
+	physRigidBody *const restrict bodyA,
+	physRigidBody *const restrict bodyB
 ) = {
-	physJointSolveConfigurationConstraintsFixed,
-	physJointSolveConfigurationConstraintsDistance,
-	physJointSolveConfigurationConstraintsPrismatic,
-	physJointSolveConfigurationConstraintsRevolute,
-	physJointSolveConfigurationConstraintsSphere
+	physJointFixedSolveConfigurationConstraints,
+	physJointDistanceSolveConfigurationConstraints,
+	physJointPrismaticSolveConfigurationConstraints,
+	physJointRevoluteSolveConfigurationConstraints,
+	physJointSphereSolveConfigurationConstraints
 };
-__FORCE_INLINE__ void physJointSolveConfigurationConstraints(const physJoint *const restrict joint){
+__FORCE_INLINE__ return_t physJointSolveConfigurationConstraints(physJoint *const restrict joint){
 
-	physJointSolveVelocityConstraintsJumpTable[joint->type](joint);
+	return physJointSolveConfigurationConstraintsJumpTable[joint->type](joint, joint->bodyA, joint->bodyB);
 
 }
 

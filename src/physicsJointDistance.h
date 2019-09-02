@@ -9,24 +9,55 @@
 ** other. Can be rigid or spring-like.
 */
 
+typedef struct physRigidBody physRigidBody;
 typedef struct physJoint physJoint;
 typedef struct {
 
 	// Application points in both bodies' local spaces.
-	vec3 pointA;
-	vec3 pointB;
+	vec3 anchorA;
+	vec3 anchorB;
 
-	// Valid distance range.
-	float distanceMin;
-	float distanceMax;
-	float tolerance;
+	// The distance that the joint attempts to maintain.
+	float distance;
 
-	// Spring constants.
-	float stiffness;
+	// The natural (angular) frequency of the mass-spring-damper
+	// system in radians per second. A value of 0 disables
+	// spring softening.
+	//     omega = 2 * pi * f
+	// f = frequency
+	float angularFrequency;
+
+	// Spring damping coefficient.
+	//     d = 2 * omega * zeta
+	// omega = angular frequency, zeta = damping ratio.
 	float damping;
+
+	// "Magic" constants from Erin Catto's GDC 2011 presentation
+	// on soft constraints. The bias is simply a Baumgarte term
+	// with a special value for beta.
+	//     gamma = 1/(hk + c)
+	//     beta  = hk/(hk + c)
+	//     bias  = beta/h * C(p)
+	// h = time step, k = spring stiffness, c = damping coefficient.
+	float gamma;
+	float bias;
+
+	// Transformed anchor points in global space.
+	vec3 rA;
+	vec3 rB;
+
+	// Anchor separation (rB - rA).
+	vec3 rAB;
+
+	float inverseEffectiveMass;
+	float impulseAccumulator;
 
 } physJointDistance;
 
-void physJointSolveVelocityConstraintsDistance(const physJoint *const restrict joint);
+void physJointDistancePresolveConstraints(physJoint *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, const float dt);
+void physJointDistanceSolveVelocityConstraints(physJoint *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB);
+#ifdef PHYSICS_SOLVER_GAUSS_SEIDEL
+return_t physJointDistanceSolveConfigurationConstraints(physJoint *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB);
+#endif
 
 #endif

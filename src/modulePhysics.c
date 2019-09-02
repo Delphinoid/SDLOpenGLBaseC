@@ -565,21 +565,30 @@ void modulePhysicsSolveConstraints(const float dt){
 	size_t i;
 
 
+	// Presolve joints.
+	MEMORY_QLINK_LOOP_BEGIN(__PhysicsJointResourceArray, joint, physJoint *);
+
+		physJointPresolveConstraints(joint, dt);
+
+	MEMORY_QLINK_LOOP_END(__PhysicsJointResourceArray, joint, goto PHYSICS_VELOCITY_PRESOLVER;);
+
 	// Integrate velocities.
+	PHYSICS_VELOCITY_PRESOLVER:
 	MEMORY_SLINK_LOOP_BEGIN(__PhysicsRigidBodyResourceArray, body, physRigidBody *);
 
 		// Integrate the body's velocities.
 		physRigidBodyIntegrateVelocity(body, dt);
 		physRigidBodyResetAccumulators(body);
 
-	MEMORY_SLINK_LOOP_END(__PhysicsRigidBodyResourceArray, body, goto PHYSICS_JOINT_VELOCITY_SOLVER;);
+	MEMORY_SLINK_LOOP_END(__PhysicsRigidBodyResourceArray, body, goto PHYSICS_VELOCITY_SOLVER;);
 
 
-	// Iteratively solve joint velocity constraints.
-	PHYSICS_JOINT_VELOCITY_SOLVER:
-	i = PHYSICS_JOINT_VELOCITY_SOLVER_ITERATIONS;
+	// Iteratively solve joint and contact velocity constraints.
+	PHYSICS_VELOCITY_SOLVER:
+	i = PHYSICS_VELOCITY_SOLVER_ITERATIONS;
 	while(i > 0){
 
+		// Solve joint velocity constraints.
 		MEMORY_QLINK_LOOP_BEGIN(__PhysicsJointResourceArray, joint, physJoint *);
 
 			physJointSolveVelocityConstraints(joint);
@@ -587,14 +596,7 @@ void modulePhysicsSolveConstraints(const float dt){
 		MEMORY_QLINK_LOOP_END(__PhysicsJointResourceArray, joint, goto PHYSICS_JOINT_VELOCITY_SOLVER_NEXT_ITERATION;);
 
 		PHYSICS_JOINT_VELOCITY_SOLVER_NEXT_ITERATION:
-		--i;
-
-	}
-
-	// Iteratively solve contact velocity constraints.
-	i = PHYSICS_CONTACT_VELOCITY_SOLVER_ITERATIONS;
-	while(i > 0){
-
+		// Solve contact velocity constraints.
 		MEMORY_QLINK_LOOP_BEGIN(__PhysicsContactPairResourceArray, contact, physContactPair *);
 
 			physContactSolveVelocityConstraints(&contact->data, contact->colliderA->body, contact->colliderB->body);
@@ -616,39 +618,26 @@ void modulePhysicsSolveConstraints(const float dt){
 	#ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
 	MEMORY_SLINK_LOOP_END(__PhysicsRigidBodyResourceArray, body, return;);
 	#else
-	MEMORY_SLINK_LOOP_END(__PhysicsRigidBodyResourceArray, body, goto PHYSICS_JOINT_CONFIGURATION_SOLVER;);
+	MEMORY_SLINK_LOOP_END(__PhysicsRigidBodyResourceArray, body, goto PHYSICS_CONFIGURATION_SOLVER;);
 
 
-	// Iteratively solve joint configuration constraints.
-	PHYSICS_JOINT_CONFIGURATION_SOLVER:
-	i = PHYSICS_JOINT_CONFIGURATION_SOLVER_ITERATIONS;
-	/*while(i > 0){
+	// Iteratively solve joint and contact configuration constraints.
+	PHYSICS_CONFIGURATION_SOLVER:
+	i = PHYSICS_CONFIGURATION_SOLVER_ITERATIONS;
+	while(i > 0){
 
+		return_t solved = 1;
 		float error = 0.f;
 
+		// Solve joint configuration constraints.
 		MEMORY_QLINK_LOOP_BEGIN(__PhysicsJointResourceArray, joint, physJoint *);
 
-			error = physJointSolveConfigurationConstraints(joint);
+			solved &= physJointSolveConfigurationConstraints(joint);
 
 		MEMORY_QLINK_LOOP_END(__PhysicsJointResourceArray, joint, goto PHYSICS_JOINT_CONFIGURATION_SOLVER_NEXT_ITERATION;);
 
 		PHYSICS_JOINT_CONFIGURATION_SOLVER_NEXT_ITERATION:
-		// Exit if the error is small.
-		if(error >= PHYSICS_ERROR_THRESHOLD){
-			goto PHYSICS_CONTACT_CONFIGURATION_SOLVER;
-		}else{
-			--i;
-		}
-
-	}*/
-
-	// Iteratively solve contact configuration constraints.
-	PHYSICS_CONTACT_CONFIGURATION_SOLVER:
-	i = PHYSICS_CONTACT_CONFIGURATION_SOLVER_ITERATIONS;
-	while(i > 0){
-
-		float error = 0.f;
-
+		// Solve contact configuration constraints.
 		MEMORY_QLINK_LOOP_BEGIN(__PhysicsContactPairResourceArray, contact, physContactPair *);
 
 			error = physContactSolveConfigurationConstraints(&contact->data, contact->colliderA->body, contact->colliderB->body, error);
@@ -656,8 +645,8 @@ void modulePhysicsSolveConstraints(const float dt){
 		MEMORY_QLINK_LOOP_END(__PhysicsContactPairResourceArray, contact, goto PHYSICS_CONTACT_CONFIGURATION_SOLVER_NEXT_ITERATION;);
 
 		PHYSICS_CONTACT_CONFIGURATION_SOLVER_NEXT_ITERATION:
-		// Exit if the error is small.
-		if(error >= PHYSICS_ERROR_THRESHOLD){
+		// Exit if the errors are small.
+		if(solved && error >= PHYSICS_CONTACT_ERROR_THRESHOLD){
 			return;
 		}else{
 			--i;

@@ -9,20 +9,19 @@
 #include "collision.h"
 #include "mat2.h"
 
-#ifndef PHYSICS_CONTACT_VELOCITY_SOLVER_ITERATIONS
-	#define PHYSICS_CONTACT_VELOCITY_SOLVER_ITERATIONS 4
-#endif
-
-#ifndef PHYSICS_CONTACT_CONFIGURATION_SOLVER_ITERATIONS
-	#define PHYSICS_CONTACT_CONFIGURATION_SOLVER_ITERATIONS 4
-#endif
-
 #ifndef PHYSICS_CONTACT_PAIR_MAX_INACTIVE_STEPS
 	#define PHYSICS_CONTACT_PAIR_MAX_INACTIVE_STEPS 0
 #endif
 
 #ifndef PHYSICS_SEPARATION_PAIR_MAX_INACTIVE_STEPS
 	#define PHYSICS_SEPARATION_PAIR_MAX_INACTIVE_STEPS 0
+#endif
+
+#ifdef PHYSICS_SOLVER_GAUSS_SEIDEL
+	// Error threshold for NGS configuration solving.
+	#ifndef PHYSICS_CONTACT_ERROR_THRESHOLD
+		#define PHYSICS_CONTACT_ERROR_THRESHOLD (-3.f * PHYSICS_LINEAR_SLOP)
+	#endif
 #endif
 
 /*
@@ -178,9 +177,9 @@ typedef struct physSeparationPair {
 } physSeparationPair;
 
 #ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
-void physContactUpdate(physContact *const restrict contact, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float dt);
+void physContactPresolveConstraints(physContact *const restrict contact, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float frequency);
 #else
-void physContactUpdate(physContact *const restrict contact, physCollider *const restrict colliderA, physCollider *const restrict colliderB);
+void physContactPresolveConstraints(physContact *const restrict contact, physCollider *const restrict colliderA, physCollider *const restrict colliderB);
 #endif
 void physContactReset(physContact *const restrict contact);
 

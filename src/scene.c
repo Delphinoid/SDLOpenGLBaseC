@@ -48,7 +48,7 @@ __FORCE_INLINE__ void scnFree(scene *const restrict scn, object **const restrict
 	memPoolFree(&scn->objects, (void *)obj);
 }
 #include "moduleObject.h"
-return_t scnUpdate(scene *const restrict scn, const float elapsedTime, const float dt){
+return_t scnUpdate(scene *const restrict scn, const float elapsedTime/**, const float dt**/){
 
 	/*
 	** Update each object in the scene.
@@ -57,7 +57,7 @@ return_t scnUpdate(scene *const restrict scn, const float elapsedTime, const flo
 	MEMORY_POOL_LOOP_BEGIN(scn->objects, i, object **);
 
 		// Update each object in the scene.
-		objUpdate(*i, &scn->island, elapsedTime, dt);
+		objUpdate(*i, &scn->island, elapsedTime);
 
 	MEMORY_POOL_LOOP_END(scn->objects, i, return 1;);
 

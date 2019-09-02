@@ -32,7 +32,7 @@ __FORCE_INLINE__ void physIslandRemoveCollider(physIsland *const restrict island
 }
 
 #ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
-__FORCE_INLINE__ return_t physIslandQuery(const physIsland *const restrict island, const float dt){
+__FORCE_INLINE__ return_t physIslandQuery(const physIsland *const restrict island, const float frequency){
 #else
 __FORCE_INLINE__ return_t physIslandQuery(const physIsland *const restrict island){
 #endif
@@ -40,10 +40,6 @@ __FORCE_INLINE__ return_t physIslandQuery(const physIsland *const restrict islan
 	/*
 	** Maintain contact and separation pairs for each collider.
 	*/
-
-	#ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
-	const float frequency = 1.f/dt;
-	#endif
 
 	aabbNode *node = island->tree.leaves;
 

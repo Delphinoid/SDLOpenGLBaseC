@@ -81,7 +81,7 @@ physContactPair *physColliderFindContact(const physCollider *const c1, const phy
 physSeparationPair *physColliderFindSeparation(const physCollider *const c1, const physCollider *const c2, physSeparationPair **const previous, physSeparationPair **const next);
 
 #ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
-void physColliderUpdateContacts(physCollider *const c, const float dt);
+void physColliderUpdateContacts(physCollider *const c, const float frequency);
 #else
 void physColliderUpdateContacts(physCollider *const c);
 #endif

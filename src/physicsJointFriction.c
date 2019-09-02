@@ -112,7 +112,7 @@ __FORCE_INLINE__ void physJointFrictionGenerateInverseEffectiveMass(physJointFri
 
 }
 
-__FORCE_INLINE__ void physJointFrictionSolveVelocity(physJointFriction *const restrict joint, physRigidBody *const bodyA, physRigidBody *const bodyB, const float normalImpulseTotal){
+__FORCE_INLINE__ void physJointFrictionSolveVelocityConstraints(physJointFriction *const restrict joint, physRigidBody *const bodyA, physRigidBody *const bodyB, const float normalImpulseTotal){
 
 	/*
 	** Solves the friction constraint impulses.
@@ -167,7 +167,7 @@ __FORCE_INLINE__ void physJointFrictionSolveVelocity(physJointFriction *const re
 
 	// Clamp the angular friction impulse magnitude.
 	// C' <= mu * lambda_total
-	if(angularImpulseAccumulatorNew < -lambdaClamp){
+	if(angularImpulseAccumulatorNew <= -lambdaClamp){
 		angularImpulseAccumulatorNew = -lambdaClamp;
 	}else if(angularImpulseAccumulatorNew > lambdaClamp){
 		angularImpulseAccumulatorNew = lambdaClamp;

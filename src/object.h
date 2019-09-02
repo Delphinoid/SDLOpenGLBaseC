@@ -112,7 +112,7 @@ void objAddLinearVelocity(object *obj, const size_t boneID, const float x, const
 void objApplyLinearImpulse(object *obj, const size_t boneID, const float x, const float y, const float z);
 void objAddAngularVelocity(object *obj, const size_t boneID, const float angle, const float x, const float y, const float z);**/
 
-return_t objUpdate(object *const restrict obj, physIsland *const restrict island, const float elapsedTime, const float dt);
+return_t objUpdate(object *const restrict obj, physIsland *const restrict island, const float elapsedTime);
 
 gfxRenderGroup_t objRenderGroup(const object *const restrict obj, const float interpT);
 void objGenerateSprite(const object *const restrict obj, const rndrInstance *const restrict rndr, const float interpT, const float *const restrict texFrag, vertex *const restrict vertices);

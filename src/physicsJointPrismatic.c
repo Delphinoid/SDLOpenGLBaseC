@@ -1,6 +1,6 @@
 #include "physicsJoint.h"
 
-void physJointSolveVelocityConstraintsPrismatic(const physJoint *const restrict joint){
+void physJointPrismaticSolveVelocityConstraints(const physJoint *const restrict joint){
 
 	//
 

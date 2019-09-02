@@ -25,10 +25,10 @@ void moduleSceneFree(scene *const restrict resource);
 void moduleSceneClear();
 
 #ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
-void moduleSceneQueryIslands(const float dt);
+void moduleSceneQueryIslands(const float frequency);
 #else
 void moduleSceneQueryIslands();
 #endif
-void moduleSceneUpdate(const float elapsedTime, const float dt);
+void moduleSceneUpdate(const float elapsedTime/**, const float dt**/);
 
 #endif

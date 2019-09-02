@@ -25,7 +25,7 @@ void physIslandInit(physIsland *const restrict island);
 return_t physIslandUpdateCollider(physIsland *const restrict island, physCollider *const restrict c);
 void physIslandRemoveCollider(physIsland *const restrict island, physCollider *const restrict c);
 #ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
-return_t physIslandQuery(const physIsland *const restrict island, const float dt);
+return_t physIslandQuery(const physIsland *const restrict island, const float frequency);
 #else
 return_t physIslandQuery(const physIsland *const restrict island);
 #endif

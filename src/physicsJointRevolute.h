@@ -6,6 +6,6 @@ typedef struct {
 
 } physJointRevolute;
 
-void physJointSolveVelocityConstraintsRevolute(const physJoint *const restrict joint);
+void physJointRevoluteSolveVelocityConstraints(const physJoint *const restrict joint);
 
 #endif

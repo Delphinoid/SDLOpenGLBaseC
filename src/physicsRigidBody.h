@@ -89,7 +89,7 @@ typedef struct physRigidBody {
 	mat3 inverseInertiaTensorGlobal;  // The inverse of the body's global inertia tensor.
 
 	// Space properties.
-	bone configuration;   // Pointer to the current configuration of the body.
+	bone configuration;    // The current global configuration of the body.
 	vec3 linearVelocity;   // Current linear velocity.
 	vec3 angularVelocity;  // Current angular velocity.
 	vec3 netForce;         // Force accumulator.

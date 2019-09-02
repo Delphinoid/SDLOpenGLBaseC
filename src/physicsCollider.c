@@ -384,7 +384,7 @@ physSeparationPair *physColliderFindSeparation(const physCollider *const c1, con
 }
 
 #ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
-void physColliderUpdateContacts(physCollider *const c, const float dt){
+void physColliderUpdateContacts(physCollider *const c, const float frequency){
 #else
 void physColliderUpdateContacts(physCollider *const c){
 #endif
@@ -407,9 +407,9 @@ void physColliderUpdateContacts(physCollider *const c){
 		}else{
 			// Update the contact.
 			#ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
-			physContactUpdate(&i->data, i->colliderA, i->colliderB, dt);
+			physContactPresolveConstraints(&i->data, i->colliderA, i->colliderB, frequency);
 			#else
-			physContactUpdate(&i->data, i->colliderA, i->colliderB);
+			physContactPresolveConstraints(&i->data, i->colliderA, i->colliderB);
 			#endif
 			++i->inactive;
 		}

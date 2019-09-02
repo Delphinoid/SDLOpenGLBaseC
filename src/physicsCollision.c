@@ -274,32 +274,32 @@ static __FORCE_INLINE__ void physContactPersist(physContact *const restrict cont
 
 }
 
-static __FORCE_INLINE__ float physContactInverseEffectiveMass(const vec3 normalA, const vec3 pointA, const mat3 inverseInertiaTensorA, const vec3 normalB, const vec3 pointB, const mat3 inverseInertiaTensorB, const float inverseMassTotal){
+static __FORCE_INLINE__ float physContactEffectiveMass(const vec3 normalA, const vec3 pointA, const mat3 inverseInertiaTensorA, const vec3 normalB, const vec3 pointB, const mat3 inverseInertiaTensorB, const float inverseMassTotal){
 
 	/*
-	** Calculates the inverse effective mass for the contact.
-	** This is used as the denominator for the impulse magnitude
-	** (constraint Lagrange multiplier):
+	** Calculates the effective mass for the constraint.
+	** The inverse of this is used as the denominator for the
+	** impulse magnitude (constraint Lagrange multiplier):
 	**
 	** 1 / ((JM^-1)J^T)
 	**
 	** Where J is the Jacobian row vector, J^T is its transpose
 	** and M^-1 is the inverse mass matrix:
 	**
-	** J = [-n, -(rA x n), n, (rA x n)]
+	** J = [-n, -(rA x n), n, (rB x n)]
 	**
 	**       [    -n   ]
 	**       [-(rA x n)]
 	** J^T = [     n   ]
-	**       [ (rA x n)]
+	**       [ (rB x n)]
 	**
 	**        [mA^-1  0    0    0  ]
 	**        [  0  IA^-1  0    0  ]
 	** M^-1 = [  0    0  mB^-1  0  ]
 	**        [  0    0    0  IB^-1]
 	**
-	** J is derived from JV = C', where C is the contact
-	** constraint equation and V is the velocity column vector:
+	** J is derived from JV = C', where C is the constraint
+	** equation and V is the velocity column vector:
 	**
 	** C = (pB - pA) . n >= 0
 	** C' = dC/dt = ((vB + wB x rB) - (vA + wA x rA)) . n >= 0
@@ -316,11 +316,9 @@ static __FORCE_INLINE__ float physContactInverseEffectiveMass(const vec3 normalA
 
 	const vec3 angularDeltaA = vec3Cross(pointA, normalA);
 	const vec3 angularDeltaB = vec3Cross(pointB, normalB);
-	const float effectiveMass =
-		inverseMassTotal +
-		vec3Dot(angularDeltaA, mat3MMultVBra(inverseInertiaTensorA, angularDeltaA)) +
-		vec3Dot(angularDeltaB, mat3MMultVBra(inverseInertiaTensorB, angularDeltaB));
-	return (effectiveMass > 0.f ? 1.f/effectiveMass : 0.f);
+	return inverseMassTotal +
+	       vec3Dot(angularDeltaA, mat3MMultVBra(inverseInertiaTensorA, angularDeltaA)) +
+	       vec3Dot(angularDeltaB, mat3MMultVBra(inverseInertiaTensorB, angularDeltaB));
 
 }
 
@@ -330,28 +328,33 @@ static __FORCE_INLINE__ void physContactPointGenerateInverseEffectiveMass(physCo
 	** Calculate the inverse effective mass for the normal constraint.
 	*/
 
-	point->normalInverseEffectiveMass = physContactInverseEffectiveMass(
+	float effectiveMass = physContactEffectiveMass(
 		physContactNormal(contact), point->rA, bodyA->inverseInertiaTensorGlobal,
 		physContactNormal(contact), point->rB, bodyB->inverseInertiaTensorGlobal,
 		inverseMassTotal
 	);
+	point->normalInverseEffectiveMass = (effectiveMass > 0.f ? 1.f/effectiveMass : 0.f);
+
 	#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
-	point->tangentInverseEffectiveMass1 = physContactInverseEffectiveMass(
+	effectiveMass = physContactEffectiveMass(
 		point->rA, physContactTangent1(contact), bodyA->inverseInertiaTensorGlobal,
 		point->rB, physContactTangent1(contact), bodyB->inverseInertiaTensorGlobal,
 		inverseMassTotal
 	);
-	point->tangentInverseEffectiveMass2 = physContactInverseEffectiveMass(
+	point->tangentInverseEffectiveMass1 = (effectiveMass > 0.f ? 1.f/effectiveMass : 0.f);
+
+	effectiveMass = physContactEffectiveMass(
 		point->rA, physContactTangent2(contact), bodyA->inverseInertiaTensorGlobal,
 		point->rB, physContactTangent2(contact), bodyB->inverseInertiaTensorGlobal,
 		inverseMassTotal
 	);
+	point->tangentInverseEffectiveMass2 = (effectiveMass > 0.f ? 1.f/effectiveMass : 0.f);
 	#endif
 
 }
 
 #ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
-static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *const restrict point, const physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float dt){
+static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *const restrict point, const physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float frequency){
 #else
 static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *const restrict point, const physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, physCollider *const restrict colliderA, physCollider *const restrict colliderB){
 #endif
@@ -371,7 +374,7 @@ static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *cons
 	temp = point->separation + PHYSICS_LINEAR_SLOP;
 
 	// Calculate the bias term.
-	point->bias = PHYSICS_BAUMGARTE_TERM * dt * (temp < 0.f ? temp : 0.f);
+	point->bias = PHYSICS_BAUMGARTE_TERM * frequency * (temp < 0.f ? temp : 0.f);
 
 	#else
 	point->bias = 0.f;
@@ -399,9 +402,9 @@ static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *cons
 }
 
 #ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
-__FORCE_INLINE__ void physContactUpdate(physContact *const restrict contact, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float dt){
+__FORCE_INLINE__ void physContactPresolveConstraints(physContact *const restrict contact, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float frequency){
 #else
-__FORCE_INLINE__ void physContactUpdate(physContact *const restrict contact, physCollider *const restrict colliderA, physCollider *const restrict colliderB){
+__FORCE_INLINE__ void physContactPresolveConstraints(physContact *const restrict contact, physCollider *const restrict colliderA, physCollider *const restrict colliderB){
 #endif
 
 	/*
@@ -425,7 +428,7 @@ __FORCE_INLINE__ void physContactUpdate(physContact *const restrict contact, phy
 
 		// Generate bias term.
 		#ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
-		physContactPointGenerateBias(pPoint, contact, bodyA, bodyB, colliderA, colliderB, dt);
+		physContactPointGenerateBias(pPoint, contact, bodyA, bodyB, colliderA, colliderB, frequency);
 		#else
 		physContactPointGenerateBias(pPoint, contact, bodyA, bodyB, colliderA, colliderB);
 		#endif
@@ -710,7 +713,7 @@ return_t physCollisionQuery(aabbNode *const n1, aabbNode *const n2){
 				}
 				// Update the contact.
 				// Moved to physColliderUpdateContacts().
-				// physContactUpdate(&((physContactPair *)pair)->data, c1->body, c2->body, c1, c2, dt);
+				// physContactPresolveConstraints(&((physContactPair *)pair)->data, c1->body, c2->body, c1, c2, frequency);
 
 			}else{
 
@@ -776,7 +779,7 @@ static __FORCE_INLINE__ void physContactPointSolveVelocityTangents(physContactPo
 
 	// Clamp the frictional impulse magnitude.
 	tangentImpulseAccumulatorNew = point->tangentImpulseAccumulator1 + lambda;
-	if(tangentImpulseAccumulatorNew < -lambdaClamp){
+	if(tangentImpulseAccumulatorNew <= -lambdaClamp){
 		tangentImpulseAccumulatorNew = -lambdaClamp;
 	}else if(tangentImpulseAccumulatorNew > lambdaClamp){
 		tangentImpulseAccumulatorNew = lambdaClamp;
@@ -796,7 +799,7 @@ static __FORCE_INLINE__ void physContactPointSolveVelocityTangents(physContactPo
 
 	// Clamp the frictional impulse magnitude.
 	tangentImpulseAccumulatorNew = point->tangentImpulseAccumulator2 + lambda;
-	if(tangentImpulseAccumulatorNew < -lambdaClamp){
+	if(tangentImpulseAccumulatorNew <= -lambdaClamp){
 		tangentImpulseAccumulatorNew = -lambdaClamp;
 	}else if(tangentImpulseAccumulatorNew > lambdaClamp){
 		tangentImpulseAccumulatorNew = lambdaClamp;
@@ -892,7 +895,7 @@ void physContactSolveVelocityConstraints(physContact *const restrict contact, ph
 
 	// Solve friction constraint impulses.
 	#ifdef PHYSICS_CONTACT_FRICTION_CONSTRAINT
-	physJointFrictionSolveVelocity(&contact->frictionConstraint, bodyA, bodyB, normalImpulseTotal);
+	physJointFrictionSolveVelocityConstraints(&contact->frictionConstraint, bodyA, bodyB, normalImpulseTotal);
 	#endif
 
 }
@@ -904,24 +907,20 @@ static __FORCE_INLINE__ float physContactPointSolveConfigurationNormal(physConta
 	** Solves the normal constraint.
 	*/
 
-	float constraint, inverseEffectiveMass;
-	float lambda;
-	vec3 impulse;
-
 	// Transform the contact points into global space.
 	const vec3 pointGlobalA = vec3VAddV(quatRotateVec3FastApproximate(bodyA->configuration.orientation, point->pointA), bodyA->centroidGlobal);
 	const vec3 pointGlobalB = vec3VAddV(quatRotateVec3FastApproximate(bodyB->configuration.orientation, point->pointB), bodyB->centroidGlobal);
 
 	// Calculate the transformed normal and a point
 	// halfway between both transformed contact points.
-	const vec3 normal = quatRotateVec3FastApproximate(bodyA->configuration.orientation, contact->normalA);
+	vec3 normal = quatRotateVec3FastApproximate(bodyA->configuration.orientation, contact->normalA);
 	const vec3 halfway = pointGlobalB;//vec3VMultS(vec3VAddV(pointGlobalA, pointGlobalB), 0.5f);
 
 	// Calculate the separation.
 	const float separation = vec3Dot(vec3VSubV(pointGlobalB, pointGlobalA), normal) - PHYSICS_SEPARATION_BIAS_TOTAL;
 
 	// Apply a slop to the configuration constraint.
-	constraint = PHYSICS_BAUMGARTE_TERM * (separation + PHYSICS_LINEAR_SLOP);
+	float constraint = PHYSICS_BAUMGARTE_TERM * (separation + PHYSICS_LINEAR_SLOP);
 
 	// Make sure the magnitude is less than 0.
 	if(constraint < 0.f){
@@ -931,30 +930,26 @@ static __FORCE_INLINE__ float physContactPointSolveConfigurationNormal(physConta
 		const vec3 pointLocalB = vec3VSubV(halfway, bodyB->centroidGlobal);
 
 		// Calculate the new effective mass.
-		inverseEffectiveMass = physContactInverseEffectiveMass(
+		const float effectiveMass = physContactEffectiveMass(
 			normal, pointLocalA, bodyA->inverseInertiaTensorGlobal,
 			normal, pointLocalB, bodyB->inverseInertiaTensorGlobal,
 			bodyA->inverseMass + bodyB->inverseMass
 		);
 
 		// Make sure the effective mass is greater than 0.
-		if(inverseEffectiveMass > 0.f){
+		if(effectiveMass > 0.f){
 
 			// Clamp the constraint to prevent large corrections.
-			if(constraint < -PHYSICS_LINEAR_CORRECTION){
-				constraint = -PHYSICS_LINEAR_CORRECTION;
+			if(constraint < -PHYSICS_MAXIMUM_LINEAR_CORRECTION){
+				constraint = -PHYSICS_MAXIMUM_LINEAR_CORRECTION;
 			}
 
-			// Calculate the normal impulse magnitude,
-			// i.e. the constraint's Lagrange multiplier.
-			lambda = -constraint * inverseEffectiveMass;
-
 			// Calculate the normal impulse.
-			impulse = vec3VMultS(normal, lambda);
+			normal = vec3VMultS(normal, -constraint / effectiveMass);
 
 			// Apply the normal impulse.
-			physRigidBodyApplyConfigurationImpulseInverse(bodyA, pointLocalA, impulse);
-			physRigidBodyApplyConfigurationImpulse(bodyB, pointLocalB, impulse);
+			physRigidBodyApplyConfigurationImpulseInverse(bodyA, pointLocalA, normal);
+			physRigidBodyApplyConfigurationImpulse(bodyB, pointLocalB, normal);
 
 		}
 

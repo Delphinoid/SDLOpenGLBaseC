@@ -53,20 +53,31 @@ typedef struct physJoint {
 
 } physJoint;
 
+extern void (* const physJointPresolveConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM])(
+	physJoint *const restrict joint,
+	physRigidBody *const restrict bodyA,
+	physRigidBody *const restrict bodyB,
+	const float dt
+);
 extern void (* const physJointSolveVelocityConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM])(
-	const void *const restrict joint
+	physJoint *const restrict joint,
+	physRigidBody *const restrict bodyA,
+	physRigidBody *const restrict bodyB
 );
 #ifdef PHYSICS_SOLVER_GAUSS_SEIDEL
-extern void (* const physJointSolveConfigurationConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM])(
-	const void *const restrict joint
+extern return_t (* const physJointSolveConfigurationConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM])(
+	physJoint *const restrict joint,
+	physRigidBody *const restrict bodyA,
+	physRigidBody *const restrict bodyB
 );
 #endif
 
 void physJointInit(physJoint *const restrict joint, const physJointType_t type);
 void physJointCreate(physJoint *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, const physJointType_t type);
-void physJointSolveVelocityConstraints(const physJoint *const restrict joint);
+void physJointPresolveConstraints(physJoint *const restrict joint, const float dt);
+void physJointSolveVelocityConstraints(physJoint *const restrict joint);
 #ifdef PHYSICS_SOLVER_GAUSS_SEIDEL
-void physJointSolveConfigurationConstraints(const physJoint *const restrict joint);
+return_t physJointSolveConfigurationConstraints(physJoint *const restrict joint);
 #endif
 void physJointDelete(physJoint *const restrict joint);
 

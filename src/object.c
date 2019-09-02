@@ -818,7 +818,7 @@ void objAddAngularVelocity(object *obj, const size_t boneID, const float angle, 
 	physRigidBodyAddAngularVelocity(&obj->skeletonBodies[boneID], angle, x, y, z);
 }**/
 
-return_t objUpdate(object *const restrict obj, physIsland *const restrict island, const float elapsedTime, const float dt){
+return_t objUpdate(object *const restrict obj, physIsland *const restrict island, const float elapsedTime){
 
 	boneIndex_t i;
 	rndrInstance *j;
