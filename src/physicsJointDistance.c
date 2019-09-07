@@ -60,8 +60,8 @@ static __FORCE_INLINE__ float physJointDistanceEffectiveMass(const vec3 pointA, 
 	// We don't invert the effective mass here, as
 	// we may modify it in physJointGenerateBias().
 	return inverseMassTotal +
-	       vec3Dot(angularDeltaA, mat3MMultVBra(inverseInertiaTensorA, angularDeltaA)) +
-	       vec3Dot(angularDeltaB, mat3MMultVBra(inverseInertiaTensorB, angularDeltaB));
+	       vec3Dot(angularDeltaA, mat3MMultVKet(inverseInertiaTensorA, angularDeltaA)) +
+	       vec3Dot(angularDeltaB, mat3MMultVKet(inverseInertiaTensorB, angularDeltaB));
 
 }
 

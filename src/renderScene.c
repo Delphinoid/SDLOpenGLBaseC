@@ -18,10 +18,9 @@
 /** This should not be necessary! **/
 void renderModel(const object *const restrict obj, const float distance, const camera *const restrict cam, const float interpT, graphicsManager *const restrict gfxMngr){
 
-	bone interpBone;
 	const rndrInstance *currentRndr = obj->renderables;
 
-	mat4 *transform = gfxMngr->sklTransformState;
+	mat4 *transformCurrent = gfxMngr->sklTransformState;
 	const bone *bCurrent = obj->state.skeleton;
 	const bone *bPrevious = (obj->state.previous == NULL ? bCurrent : obj->state.previous->skeleton);
 	const bone *const bLast = &bCurrent[obj->skeletonData.skl->boneNum];
@@ -30,22 +29,14 @@ void renderModel(const object *const restrict obj, const float distance, const c
 	//rndrConfigRenderUpdate(&obj->tempRndrConfig, interpT);  /** Only line that requires non-const object. **/
 
 	// Interpolate between the previous and last skeleton states.
-	for(; bCurrent < bLast; ++bCurrent, ++bPrevious, ++transform){
+	for(; bCurrent < bLast; ++bCurrent, ++bPrevious, ++transformCurrent){
 
-		// Interpolate between bone states.
-		//boneInterpolate(&obj->skeletonState[1][i], &obj->skeletonState[0][i], interpT, &interpBone);
-		interpBone = boneInterpolate(*bPrevious, *bCurrent, interpT);
-
-		// Convert the bone to a matrix.
-		//mat4SetScaleMatrix(&gfxMngr->sklTransformState[i], gfxMngr->sklAnimationState[i].scale.x, gfxMngr->sklAnimationState[i].scale.y, gfxMngr->sklAnimationState[i].scale.z);
-		//mat4SetTranslationMatrix(&gfxMngr->sklTransformState[i], gfxMngr->sklAnimationState[i].position.x, gfxMngr->sklAnimationState[i].position.y, gfxMngr->sklAnimationState[i].position.z);
-		*transform = mat4RotationMatrix(interpBone.orientation);
-		//mat4Rotate(&gfxMngr->sklTransformState[i], &gfxMngr->sklAnimationState[i].orientation);
-		//mat4Translate(&gfxMngr->sklTransformState[i], gfxMngr->sklAnimationState[i].position.x, gfxMngr->sklAnimationState[i].position.y, gfxMngr->sklAnimationState[i].position.z);
-		*transform = mat4Scale(*transform, interpBone.scale.x, interpBone.scale.y, interpBone.scale.z);
-		transform->m[3][0] = interpBone.position.x;
-		transform->m[3][1] = interpBone.position.y;
-		transform->m[3][2] = interpBone.position.z;
+		// Interpolate between bone states and
+		// convert the interpolated bone to a
+		// matrix for the shader.
+		*transformCurrent = boneMatrix(
+			boneInterpolate(*bPrevious, *bCurrent, interpT)
+		);
 
 	}
 
@@ -72,12 +63,9 @@ void renderModel(const object *const restrict obj, const float distance, const c
 
 			if(alpha > 0.f){
 
-				boneIndex_t i;
-				boneIndex_t boneNum = currentRndr->mdl->skl->boneNum;
+				const boneIndex_t boneNum = currentRndr->mdl->skl->boneNum;
 
-				boneIndex_t rndrBone;
-				vec4 translation;
-				mat4 transform;
+				boneIndex_t i;
 
 				sklNode *nLayout = currentRndr->mdl->skl->bones;
 				GLuint *bArray = gfxMngr->boneArrayID;
@@ -85,6 +73,8 @@ void renderModel(const object *const restrict obj, const float distance, const c
 
 				// If there is a valid animated skeleton, apply animation transformations.
 				for(i = 0; i < boneNum; ++i, ++bAccumulator, ++bArray, ++nLayout){
+
+					const boneIndex_t rndrBone = sklFindBone(obj->skeletonData.skl, i, nLayout->name);
 
 					// Accumulate the bind positions. We need to use global bone offsets.
 					// Also make sure the bone's parent isn't itself (that is, make sure it has a parent).
@@ -97,17 +87,19 @@ void renderModel(const object *const restrict obj, const float distance, const c
 
 					// If the animated bone is in the model, pass in its animation transforms.
 					/** Use a lookup, same in object.c. **/
-					rndrBone = sklFindBone(obj->skeletonData.skl, i, nLayout->name);
 					if(rndrBone < obj->skeletonData.skl->boneNum){
 
-						transform = gfxMngr->sklTransformState[rndrBone];
+						mat4 transform = gfxMngr->sklTransformState[rndrBone];
 
 						// Rotate the bind pose position by the current bone's orientation
-						// and add this offset to the bind pose accumulator.
-						translation = mat4NMultM(nLayout->defaultState.position.x,
-						                         nLayout->defaultState.position.y,
-						                         nLayout->defaultState.position.z,
-						                         0.f, transform);
+						// and add this offset to the bind pose accumulator. Treats the
+						// vector as a bra vector so that column-major multiplication is
+						// invoked. OpenGL prefers column-major matrices.
+						const vec4 translation = mat4MMultNKet(transform,
+						                                       nLayout->defaultState.position.x,
+						                                       nLayout->defaultState.position.y,
+						                                       nLayout->defaultState.position.z,
+						                                       0.f);
 						bAccumulator->x += translation.x;
 						bAccumulator->y += translation.y;
 						bAccumulator->z += translation.z;

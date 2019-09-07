@@ -895,6 +895,7 @@ return_t objUpdate(object *const restrict obj, physIsland *const restrict island
 
 			// Generate a new animated bone state.
 			/** Should configurations be optional? **/
+
 			*sklState = *configuration;
 			skliGenerateBoneState(&obj->skeletonData, i, sklBone->name, sklState);
 

@@ -2,7 +2,6 @@
 #include "memoryManager.h"
 #include "moduleSkeleton.h"
 #include "constantsMath.h"
-#include "mat4.h"
 #include "inline.h"
 #include "helpersFileIO.h"
 #include "helpersMisc.h"
@@ -1246,6 +1245,8 @@ return_t skliLoad(sklInstance *const restrict skli, const char *const restrict p
 	sklai = skliAnimationNew(skli);
 	sklaiChange(sklai, skli->skl, skla, 0, 0.f);
 
+
+
 	return 1;
 
 }
@@ -1342,6 +1343,10 @@ void skliChangeSkeleton(sklInstance *const restrict skli, const skeleton *const 
 }
 void skliGenerateDefaultState(const skeleton *const restrict skl, mat4 *const restrict state, const boneIndex_t boneID){
 
+	// NOTE: The generated matrix will be in row-major
+	//       order, where as OpenGL accepts column-major
+	//       matrices by default.
+
 	// Apply parent transformations first if possible.
 	if(boneID != skl->bones[boneID].parent){
 		state[boneID] = state[skl->bones[boneID].parent];
@@ -1362,6 +1367,10 @@ void skliGenerateDefaultState(const skeleton *const restrict skl, mat4 *const re
 
 }
 void skliGenerateBoneStateFromLocal(const bone *const restrict skeletonState, const skeleton *const restrict oskl, const skeleton *const restrict mskl, mat4 *const restrict state, const boneIndex_t boneID){
+
+	// NOTE: The generated matrix will be in row-major
+	//       order, where as OpenGL accepts column-major
+	//       matrices by default.
 
 	const boneIndex_t animBone = sklFindBone(oskl, boneID, mskl->bones[boneID].name);
 
@@ -1417,6 +1426,10 @@ void skliGenerateBoneStateFromLocal(const bone *const restrict skeletonState, co
 
 }
 void skliGenerateBoneStateFromGlobal(const bone *const restrict skeletonState, const skeleton *const restrict oskl, const skeleton *const restrict mskl, mat4 *const restrict state, const boneIndex_t boneID){
+
+	// NOTE: The generated matrix will be in row-major
+	//       order, where as OpenGL accepts column-major
+	//       matrices by default.
 
 	const boneIndex_t animBone = sklFindBone(oskl, boneID, mskl->bones[boneID].name);
 	if(animBone < oskl->boneNum){

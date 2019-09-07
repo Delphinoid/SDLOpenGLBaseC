@@ -137,7 +137,8 @@ void camUpdateViewProjectionMatrix(camera *const restrict cam, const unsigned in
 		flagsSet(cam->flags, CAM_UPDATE_PROJECTION);
 	}
 	camUpdateProjectionMatrix(cam, windowAspectRatioX, windowAspectRatioY, interpT);
-	cam->viewProjectionMatrix = mat4MMultM(cam->viewMatrix, cam->projectionMatrix);
+	//cam->viewProjectionMatrix = mat4MMultM(cam->viewMatrix, cam->projectionMatrix);
+	cam->viewProjectionMatrix = mat4MMultM(cam->projectionMatrix, cam->viewMatrix);
 }
 
 float camDistance(const camera *const restrict cam, const vec3 *const restrict target){

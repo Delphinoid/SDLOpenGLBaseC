@@ -40,156 +40,156 @@ __HINT_INLINE__ mat4 mat4MMultM(const mat4 m1, const mat4 m2){
 		}
 	}*/
 
-	const mat4 r = {.m = {{m1.m[0][0]*m2.m[0][0] + m1.m[0][1]*m2.m[1][0] + m1.m[0][2]*m2.m[2][0] + m1.m[0][3]*m2.m[3][0],
-	                       m1.m[0][0]*m2.m[0][1] + m1.m[0][1]*m2.m[1][1] + m1.m[0][2]*m2.m[2][1] + m1.m[0][3]*m2.m[3][1],
-	                       m1.m[0][0]*m2.m[0][2] + m1.m[0][1]*m2.m[1][2] + m1.m[0][2]*m2.m[2][2] + m1.m[0][3]*m2.m[3][2],
-	                       m1.m[0][0]*m2.m[0][3] + m1.m[0][1]*m2.m[1][3] + m1.m[0][2]*m2.m[2][3] + m1.m[0][3]*m2.m[3][3]},
-	                      {m1.m[1][0]*m2.m[0][0] + m1.m[1][1]*m2.m[1][0] + m1.m[1][2]*m2.m[2][0] + m1.m[1][3]*m2.m[3][0],
-	                       m1.m[1][0]*m2.m[0][1] + m1.m[1][1]*m2.m[1][1] + m1.m[1][2]*m2.m[2][1] + m1.m[1][3]*m2.m[3][1],
-	                       m1.m[1][0]*m2.m[0][2] + m1.m[1][1]*m2.m[1][2] + m1.m[1][2]*m2.m[2][2] + m1.m[1][3]*m2.m[3][2],
-	                       m1.m[1][0]*m2.m[0][3] + m1.m[1][1]*m2.m[1][3] + m1.m[1][2]*m2.m[2][3] + m1.m[1][3]*m2.m[3][3]},
-	                      {m1.m[2][0]*m2.m[0][0] + m1.m[2][1]*m2.m[1][0] + m1.m[2][2]*m2.m[2][0] + m1.m[2][3]*m2.m[3][0],
-	                       m1.m[2][0]*m2.m[0][1] + m1.m[2][1]*m2.m[1][1] + m1.m[2][2]*m2.m[2][1] + m1.m[2][3]*m2.m[3][1],
-	                       m1.m[2][0]*m2.m[0][2] + m1.m[2][1]*m2.m[1][2] + m1.m[2][2]*m2.m[2][2] + m1.m[2][3]*m2.m[3][2],
-	                       m1.m[2][0]*m2.m[0][3] + m1.m[2][1]*m2.m[1][3] + m1.m[2][2]*m2.m[2][3] + m1.m[2][3]*m2.m[3][3]},
-	                      {m1.m[3][0]*m2.m[0][0] + m1.m[3][1]*m2.m[1][0] + m1.m[3][2]*m2.m[2][0] + m1.m[3][3]*m2.m[3][0],
-	                       m1.m[3][0]*m2.m[0][1] + m1.m[3][1]*m2.m[1][1] + m1.m[3][2]*m2.m[2][1] + m1.m[3][3]*m2.m[3][1],
-	                       m1.m[3][0]*m2.m[0][2] + m1.m[3][1]*m2.m[1][2] + m1.m[3][2]*m2.m[2][2] + m1.m[3][3]*m2.m[3][2],
-	                       m1.m[3][0]*m2.m[0][3] + m1.m[3][1]*m2.m[1][3] + m1.m[3][2]*m2.m[2][3] + m1.m[3][3]*m2.m[3][3]}}};
+	const mat4 r = {.m = {{m1.m[0][0]*m2.m[0][0] + m1.m[1][0]*m2.m[0][1] + m1.m[2][0]*m2.m[0][2] + m1.m[3][0]*m2.m[0][3],
+	                       m1.m[0][1]*m2.m[0][0] + m1.m[1][1]*m2.m[0][1] + m1.m[2][1]*m2.m[0][2] + m1.m[3][1]*m2.m[0][3],
+	                       m1.m[0][2]*m2.m[0][0] + m1.m[1][2]*m2.m[0][1] + m1.m[2][2]*m2.m[0][2] + m1.m[3][2]*m2.m[0][3],
+	                       m1.m[0][3]*m2.m[0][0] + m1.m[1][3]*m2.m[0][1] + m1.m[2][3]*m2.m[0][2] + m1.m[3][3]*m2.m[0][3]},
+	                      {m1.m[0][0]*m2.m[1][0] + m1.m[1][0]*m2.m[1][1] + m1.m[2][0]*m2.m[1][2] + m1.m[3][0]*m2.m[1][3],
+	                       m1.m[0][1]*m2.m[1][0] + m1.m[1][1]*m2.m[1][1] + m1.m[2][1]*m2.m[1][2] + m1.m[3][1]*m2.m[1][3],
+	                       m1.m[0][2]*m2.m[1][0] + m1.m[1][2]*m2.m[1][1] + m1.m[2][2]*m2.m[1][2] + m1.m[3][2]*m2.m[1][3],
+	                       m1.m[0][3]*m2.m[1][0] + m1.m[1][3]*m2.m[1][1] + m1.m[2][3]*m2.m[1][2] + m1.m[3][3]*m2.m[1][3]},
+	                      {m1.m[0][0]*m2.m[2][0] + m1.m[1][0]*m2.m[2][1] + m1.m[2][0]*m2.m[2][2] + m1.m[3][0]*m2.m[2][3],
+	                       m1.m[0][1]*m2.m[2][0] + m1.m[1][1]*m2.m[2][1] + m1.m[2][1]*m2.m[2][2] + m1.m[3][1]*m2.m[2][3],
+	                       m1.m[0][2]*m2.m[2][0] + m1.m[1][2]*m2.m[2][1] + m1.m[2][2]*m2.m[2][2] + m1.m[3][2]*m2.m[2][3],
+	                       m1.m[0][3]*m2.m[2][0] + m1.m[1][3]*m2.m[2][1] + m1.m[2][3]*m2.m[2][2] + m1.m[3][3]*m2.m[2][3]},
+	                      {m1.m[0][0]*m2.m[3][0] + m1.m[1][0]*m2.m[3][1] + m1.m[2][0]*m2.m[3][2] + m1.m[3][0]*m2.m[3][3],
+	                       m1.m[0][1]*m2.m[3][0] + m1.m[1][1]*m2.m[3][1] + m1.m[2][1]*m2.m[3][2] + m1.m[3][1]*m2.m[3][3],
+	                       m1.m[0][2]*m2.m[3][0] + m1.m[1][2]*m2.m[3][1] + m1.m[2][2]*m2.m[3][2] + m1.m[3][2]*m2.m[3][3],
+	                       m1.m[0][3]*m2.m[3][0] + m1.m[1][3]*m2.m[3][1] + m1.m[2][3]*m2.m[3][2] + m1.m[3][3]*m2.m[3][3]}}};
 	return r;
 
 }
 __HINT_INLINE__ void mat4MMultMP1(mat4 *const restrict m1, const mat4 *const restrict m2){
 
-	const mat4 r = {.m = {{m1->m[0][0]*m2->m[0][0] + m1->m[0][1]*m2->m[1][0] + m1->m[0][2]*m2->m[2][0] + m1->m[0][3]*m2->m[3][0],
-	                       m1->m[0][0]*m2->m[0][1] + m1->m[0][1]*m2->m[1][1] + m1->m[0][2]*m2->m[2][1] + m1->m[0][3]*m2->m[3][1],
-	                       m1->m[0][0]*m2->m[0][2] + m1->m[0][1]*m2->m[1][2] + m1->m[0][2]*m2->m[2][2] + m1->m[0][3]*m2->m[3][2],
-	                       m1->m[0][0]*m2->m[0][3] + m1->m[0][1]*m2->m[1][3] + m1->m[0][2]*m2->m[2][3] + m1->m[0][3]*m2->m[3][3]},
-	                      {m1->m[1][0]*m2->m[0][0] + m1->m[1][1]*m2->m[1][0] + m1->m[1][2]*m2->m[2][0] + m1->m[1][3]*m2->m[3][0],
-	                       m1->m[1][0]*m2->m[0][1] + m1->m[1][1]*m2->m[1][1] + m1->m[1][2]*m2->m[2][1] + m1->m[1][3]*m2->m[3][1],
-	                       m1->m[1][0]*m2->m[0][2] + m1->m[1][1]*m2->m[1][2] + m1->m[1][2]*m2->m[2][2] + m1->m[1][3]*m2->m[3][2],
-	                       m1->m[1][0]*m2->m[0][3] + m1->m[1][1]*m2->m[1][3] + m1->m[1][2]*m2->m[2][3] + m1->m[1][3]*m2->m[3][3]},
-	                      {m1->m[2][0]*m2->m[0][0] + m1->m[2][1]*m2->m[1][0] + m1->m[2][2]*m2->m[2][0] + m1->m[2][3]*m2->m[3][0],
-	                       m1->m[2][0]*m2->m[0][1] + m1->m[2][1]*m2->m[1][1] + m1->m[2][2]*m2->m[2][1] + m1->m[2][3]*m2->m[3][1],
-	                       m1->m[2][0]*m2->m[0][2] + m1->m[2][1]*m2->m[1][2] + m1->m[2][2]*m2->m[2][2] + m1->m[2][3]*m2->m[3][2],
-	                       m1->m[2][0]*m2->m[0][3] + m1->m[2][1]*m2->m[1][3] + m1->m[2][2]*m2->m[2][3] + m1->m[2][3]*m2->m[3][3]},
-	                      {m1->m[3][0]*m2->m[0][0] + m1->m[3][1]*m2->m[1][0] + m1->m[3][2]*m2->m[2][0] + m1->m[3][3]*m2->m[3][0],
-	                       m1->m[3][0]*m2->m[0][1] + m1->m[3][1]*m2->m[1][1] + m1->m[3][2]*m2->m[2][1] + m1->m[3][3]*m2->m[3][1],
-	                       m1->m[3][0]*m2->m[0][2] + m1->m[3][1]*m2->m[1][2] + m1->m[3][2]*m2->m[2][2] + m1->m[3][3]*m2->m[3][2],
-	                       m1->m[3][0]*m2->m[0][3] + m1->m[3][1]*m2->m[1][3] + m1->m[3][2]*m2->m[2][3] + m1->m[3][3]*m2->m[3][3]}}};
+	const mat4 r = {.m = {{m1->m[0][0]*m2->m[0][0] + m1->m[1][0]*m2->m[0][1] + m1->m[2][0]*m2->m[0][2] + m1->m[3][0]*m2->m[0][3],
+	                       m1->m[0][1]*m2->m[0][0] + m1->m[1][1]*m2->m[0][1] + m1->m[2][1]*m2->m[0][2] + m1->m[3][1]*m2->m[0][3],
+	                       m1->m[0][2]*m2->m[0][0] + m1->m[1][2]*m2->m[0][1] + m1->m[2][2]*m2->m[0][2] + m1->m[3][2]*m2->m[0][3],
+	                       m1->m[0][3]*m2->m[0][0] + m1->m[1][3]*m2->m[0][1] + m1->m[2][3]*m2->m[0][2] + m1->m[3][3]*m2->m[0][3]},
+	                      {m1->m[0][0]*m2->m[1][0] + m1->m[1][0]*m2->m[1][1] + m1->m[2][0]*m2->m[1][2] + m1->m[3][0]*m2->m[1][3],
+	                       m1->m[0][1]*m2->m[1][0] + m1->m[1][1]*m2->m[1][1] + m1->m[2][1]*m2->m[1][2] + m1->m[3][1]*m2->m[1][3],
+	                       m1->m[0][2]*m2->m[1][0] + m1->m[1][2]*m2->m[1][1] + m1->m[2][2]*m2->m[1][2] + m1->m[3][2]*m2->m[1][3],
+	                       m1->m[0][3]*m2->m[1][0] + m1->m[1][3]*m2->m[1][1] + m1->m[2][3]*m2->m[1][2] + m1->m[3][3]*m2->m[1][3]},
+	                      {m1->m[0][0]*m2->m[2][0] + m1->m[1][0]*m2->m[2][1] + m1->m[2][0]*m2->m[2][2] + m1->m[3][0]*m2->m[2][3],
+	                       m1->m[0][1]*m2->m[2][0] + m1->m[1][1]*m2->m[2][1] + m1->m[2][1]*m2->m[2][2] + m1->m[3][1]*m2->m[2][3],
+	                       m1->m[0][2]*m2->m[2][0] + m1->m[1][2]*m2->m[2][1] + m1->m[2][2]*m2->m[2][2] + m1->m[3][2]*m2->m[2][3],
+	                       m1->m[0][3]*m2->m[2][0] + m1->m[1][3]*m2->m[2][1] + m1->m[2][3]*m2->m[2][2] + m1->m[3][3]*m2->m[2][3]},
+	                      {m1->m[0][0]*m2->m[3][0] + m1->m[1][0]*m2->m[3][1] + m1->m[2][0]*m2->m[3][2] + m1->m[3][0]*m2->m[3][3],
+	                       m1->m[0][1]*m2->m[3][0] + m1->m[1][1]*m2->m[3][1] + m1->m[2][1]*m2->m[3][2] + m1->m[3][1]*m2->m[3][3],
+	                       m1->m[0][2]*m2->m[3][0] + m1->m[1][2]*m2->m[3][1] + m1->m[2][2]*m2->m[3][2] + m1->m[3][2]*m2->m[3][3],
+	                       m1->m[0][3]*m2->m[3][0] + m1->m[1][3]*m2->m[3][1] + m1->m[2][3]*m2->m[3][2] + m1->m[3][3]*m2->m[3][3]}}};
 	*m1 = r;
 
 }
 __HINT_INLINE__ void mat4MMultMP2(const mat4 *const restrict m1, mat4 *const restrict m2){
 
-	const mat4 r = {.m = {{m1->m[0][0]*m2->m[0][0] + m1->m[0][1]*m2->m[1][0] + m1->m[0][2]*m2->m[2][0] + m1->m[0][3]*m2->m[3][0],
-	                       m1->m[0][0]*m2->m[0][1] + m1->m[0][1]*m2->m[1][1] + m1->m[0][2]*m2->m[2][1] + m1->m[0][3]*m2->m[3][1],
-	                       m1->m[0][0]*m2->m[0][2] + m1->m[0][1]*m2->m[1][2] + m1->m[0][2]*m2->m[2][2] + m1->m[0][3]*m2->m[3][2],
-	                       m1->m[0][0]*m2->m[0][3] + m1->m[0][1]*m2->m[1][3] + m1->m[0][2]*m2->m[2][3] + m1->m[0][3]*m2->m[3][3]},
-	                      {m1->m[1][0]*m2->m[0][0] + m1->m[1][1]*m2->m[1][0] + m1->m[1][2]*m2->m[2][0] + m1->m[1][3]*m2->m[3][0],
-	                       m1->m[1][0]*m2->m[0][1] + m1->m[1][1]*m2->m[1][1] + m1->m[1][2]*m2->m[2][1] + m1->m[1][3]*m2->m[3][1],
-	                       m1->m[1][0]*m2->m[0][2] + m1->m[1][1]*m2->m[1][2] + m1->m[1][2]*m2->m[2][2] + m1->m[1][3]*m2->m[3][2],
-	                       m1->m[1][0]*m2->m[0][3] + m1->m[1][1]*m2->m[1][3] + m1->m[1][2]*m2->m[2][3] + m1->m[1][3]*m2->m[3][3]},
-	                      {m1->m[2][0]*m2->m[0][0] + m1->m[2][1]*m2->m[1][0] + m1->m[2][2]*m2->m[2][0] + m1->m[2][3]*m2->m[3][0],
-	                       m1->m[2][0]*m2->m[0][1] + m1->m[2][1]*m2->m[1][1] + m1->m[2][2]*m2->m[2][1] + m1->m[2][3]*m2->m[3][1],
-	                       m1->m[2][0]*m2->m[0][2] + m1->m[2][1]*m2->m[1][2] + m1->m[2][2]*m2->m[2][2] + m1->m[2][3]*m2->m[3][2],
-	                       m1->m[2][0]*m2->m[0][3] + m1->m[2][1]*m2->m[1][3] + m1->m[2][2]*m2->m[2][3] + m1->m[2][3]*m2->m[3][3]},
-	                      {m1->m[3][0]*m2->m[0][0] + m1->m[3][1]*m2->m[1][0] + m1->m[3][2]*m2->m[2][0] + m1->m[3][3]*m2->m[3][0],
-	                       m1->m[3][0]*m2->m[0][1] + m1->m[3][1]*m2->m[1][1] + m1->m[3][2]*m2->m[2][1] + m1->m[3][3]*m2->m[3][1],
-	                       m1->m[3][0]*m2->m[0][2] + m1->m[3][1]*m2->m[1][2] + m1->m[3][2]*m2->m[2][2] + m1->m[3][3]*m2->m[3][2],
-	                       m1->m[3][0]*m2->m[0][3] + m1->m[3][1]*m2->m[1][3] + m1->m[3][2]*m2->m[2][3] + m1->m[3][3]*m2->m[3][3]}}};
+	const mat4 r = {.m = {{m1->m[0][0]*m2->m[0][0] + m1->m[1][0]*m2->m[0][1] + m1->m[2][0]*m2->m[0][2] + m1->m[3][0]*m2->m[0][3],
+	                       m1->m[0][1]*m2->m[0][0] + m1->m[1][1]*m2->m[0][1] + m1->m[2][1]*m2->m[0][2] + m1->m[3][1]*m2->m[0][3],
+	                       m1->m[0][2]*m2->m[0][0] + m1->m[1][2]*m2->m[0][1] + m1->m[2][2]*m2->m[0][2] + m1->m[3][2]*m2->m[0][3],
+	                       m1->m[0][3]*m2->m[0][0] + m1->m[1][3]*m2->m[0][1] + m1->m[2][3]*m2->m[0][2] + m1->m[3][3]*m2->m[0][3]},
+	                      {m1->m[0][0]*m2->m[1][0] + m1->m[1][0]*m2->m[1][1] + m1->m[2][0]*m2->m[1][2] + m1->m[3][0]*m2->m[1][3],
+	                       m1->m[0][1]*m2->m[1][0] + m1->m[1][1]*m2->m[1][1] + m1->m[2][1]*m2->m[1][2] + m1->m[3][1]*m2->m[1][3],
+	                       m1->m[0][2]*m2->m[1][0] + m1->m[1][2]*m2->m[1][1] + m1->m[2][2]*m2->m[1][2] + m1->m[3][2]*m2->m[1][3],
+	                       m1->m[0][3]*m2->m[1][0] + m1->m[1][3]*m2->m[1][1] + m1->m[2][3]*m2->m[1][2] + m1->m[3][3]*m2->m[1][3]},
+	                      {m1->m[0][0]*m2->m[2][0] + m1->m[1][0]*m2->m[2][1] + m1->m[2][0]*m2->m[2][2] + m1->m[3][0]*m2->m[2][3],
+	                       m1->m[0][1]*m2->m[2][0] + m1->m[1][1]*m2->m[2][1] + m1->m[2][1]*m2->m[2][2] + m1->m[3][1]*m2->m[2][3],
+	                       m1->m[0][2]*m2->m[2][0] + m1->m[1][2]*m2->m[2][1] + m1->m[2][2]*m2->m[2][2] + m1->m[3][2]*m2->m[2][3],
+	                       m1->m[0][3]*m2->m[2][0] + m1->m[1][3]*m2->m[2][1] + m1->m[2][3]*m2->m[2][2] + m1->m[3][3]*m2->m[2][3]},
+	                      {m1->m[0][0]*m2->m[3][0] + m1->m[1][0]*m2->m[3][1] + m1->m[2][0]*m2->m[3][2] + m1->m[3][0]*m2->m[3][3],
+	                       m1->m[0][1]*m2->m[3][0] + m1->m[1][1]*m2->m[3][1] + m1->m[2][1]*m2->m[3][2] + m1->m[3][1]*m2->m[3][3],
+	                       m1->m[0][2]*m2->m[3][0] + m1->m[1][2]*m2->m[3][1] + m1->m[2][2]*m2->m[3][2] + m1->m[3][2]*m2->m[3][3],
+	                       m1->m[0][3]*m2->m[3][0] + m1->m[1][3]*m2->m[3][1] + m1->m[2][3]*m2->m[3][2] + m1->m[3][3]*m2->m[3][3]}}};
 	*m2 = r;
 
 }
 __HINT_INLINE__ void mat4MMultMPR(const mat4 *const restrict m1, const mat4 *const restrict m2, mat4 *const restrict r){
 
-	r->m[0][0] = m1->m[0][0]*m2->m[0][0] + m1->m[0][1]*m2->m[1][0] + m1->m[0][2]*m2->m[2][0] + m1->m[0][3]*m2->m[3][0];
-	r->m[0][1] = m1->m[0][0]*m2->m[0][1] + m1->m[0][1]*m2->m[1][1] + m1->m[0][2]*m2->m[2][1] + m1->m[0][3]*m2->m[3][1];
-	r->m[0][2] = m1->m[0][0]*m2->m[0][2] + m1->m[0][1]*m2->m[1][2] + m1->m[0][2]*m2->m[2][2] + m1->m[0][3]*m2->m[3][2];
-	r->m[0][3] = m1->m[0][0]*m2->m[0][3] + m1->m[0][1]*m2->m[1][3] + m1->m[0][2]*m2->m[2][3] + m1->m[0][3]*m2->m[3][3];
+	r->m[0][0] = m1->m[0][0]*m2->m[0][0] + m1->m[1][0]*m2->m[0][1] + m1->m[2][0]*m2->m[0][2] + m1->m[3][0]*m2->m[0][3];
+	r->m[0][1] = m1->m[0][1]*m2->m[0][0] + m1->m[1][1]*m2->m[0][1] + m1->m[2][1]*m2->m[0][2] + m1->m[3][1]*m2->m[0][3];
+	r->m[0][2] = m1->m[0][2]*m2->m[0][0] + m1->m[1][2]*m2->m[0][1] + m1->m[2][2]*m2->m[0][2] + m1->m[3][2]*m2->m[0][3];
+	r->m[0][3] = m1->m[0][3]*m2->m[0][0] + m1->m[1][3]*m2->m[0][1] + m1->m[2][3]*m2->m[0][2] + m1->m[3][3]*m2->m[0][3];
 
-	r->m[1][0] = m1->m[1][0]*m2->m[0][0] + m1->m[1][1]*m2->m[1][0] + m1->m[1][2]*m2->m[2][0] + m1->m[1][3]*m2->m[3][0];
-	r->m[1][1] = m1->m[1][0]*m2->m[0][1] + m1->m[1][1]*m2->m[1][1] + m1->m[1][2]*m2->m[2][1] + m1->m[1][3]*m2->m[3][1];
-	r->m[1][2] = m1->m[1][0]*m2->m[0][2] + m1->m[1][1]*m2->m[1][2] + m1->m[1][2]*m2->m[2][2] + m1->m[1][3]*m2->m[3][2];
-	r->m[1][3] = m1->m[1][0]*m2->m[0][3] + m1->m[1][1]*m2->m[1][3] + m1->m[1][2]*m2->m[2][3] + m1->m[1][3]*m2->m[3][3];
+	r->m[1][0] = m1->m[0][0]*m2->m[1][0] + m1->m[1][0]*m2->m[1][1] + m1->m[2][0]*m2->m[1][2] + m1->m[3][0]*m2->m[1][3];
+	r->m[1][1] = m1->m[0][1]*m2->m[1][0] + m1->m[1][1]*m2->m[1][1] + m1->m[2][1]*m2->m[1][2] + m1->m[3][1]*m2->m[1][3];
+	r->m[1][2] = m1->m[0][2]*m2->m[1][0] + m1->m[1][2]*m2->m[1][1] + m1->m[2][2]*m2->m[1][2] + m1->m[3][2]*m2->m[1][3];
+	r->m[1][3] = m1->m[0][3]*m2->m[1][0] + m1->m[1][3]*m2->m[1][1] + m1->m[2][3]*m2->m[1][2] + m1->m[3][3]*m2->m[1][3];
 
-	r->m[2][0] = m1->m[2][0]*m2->m[0][0] + m1->m[2][1]*m2->m[1][0] + m1->m[2][2]*m2->m[2][0] + m1->m[2][3]*m2->m[3][0];
-	r->m[2][1] = m1->m[2][0]*m2->m[0][1] + m1->m[2][1]*m2->m[1][1] + m1->m[2][2]*m2->m[2][1] + m1->m[2][3]*m2->m[3][1];
-	r->m[2][2] = m1->m[2][0]*m2->m[0][2] + m1->m[2][1]*m2->m[1][2] + m1->m[2][2]*m2->m[2][2] + m1->m[2][3]*m2->m[3][2];
-	r->m[2][3] = m1->m[2][0]*m2->m[0][3] + m1->m[2][1]*m2->m[1][3] + m1->m[2][2]*m2->m[2][3] + m1->m[2][3]*m2->m[3][3];
+	r->m[2][0] = m1->m[0][0]*m2->m[2][0] + m1->m[1][0]*m2->m[2][1] + m1->m[2][0]*m2->m[2][2] + m1->m[3][0]*m2->m[2][3];
+	r->m[2][1] = m1->m[0][1]*m2->m[2][0] + m1->m[1][1]*m2->m[2][1] + m1->m[2][1]*m2->m[2][2] + m1->m[3][1]*m2->m[2][3];
+	r->m[2][2] = m1->m[0][2]*m2->m[2][0] + m1->m[1][2]*m2->m[2][1] + m1->m[2][2]*m2->m[2][2] + m1->m[3][2]*m2->m[2][3];
+	r->m[2][3] = m1->m[0][3]*m2->m[2][0] + m1->m[1][3]*m2->m[2][1] + m1->m[2][3]*m2->m[2][2] + m1->m[3][3]*m2->m[2][3];
 
-	r->m[3][0] = m1->m[3][0]*m2->m[0][0] + m1->m[3][1]*m2->m[1][0] + m1->m[3][2]*m2->m[2][0] + m1->m[3][3]*m2->m[3][0];
-	r->m[3][1] = m1->m[3][0]*m2->m[0][1] + m1->m[3][1]*m2->m[1][1] + m1->m[3][2]*m2->m[2][1] + m1->m[3][3]*m2->m[3][1];
-	r->m[3][2] = m1->m[3][0]*m2->m[0][2] + m1->m[3][1]*m2->m[1][2] + m1->m[3][2]*m2->m[2][2] + m1->m[3][3]*m2->m[3][2];
-	r->m[3][3] = m1->m[3][0]*m2->m[0][3] + m1->m[3][1]*m2->m[1][3] + m1->m[3][2]*m2->m[2][3] + m1->m[3][3]*m2->m[3][3];
+	r->m[3][0] = m1->m[0][0]*m2->m[3][0] + m1->m[1][0]*m2->m[3][1] + m1->m[2][0]*m2->m[3][2] + m1->m[3][0]*m2->m[3][3];
+	r->m[3][1] = m1->m[0][1]*m2->m[3][0] + m1->m[1][1]*m2->m[3][1] + m1->m[2][1]*m2->m[3][2] + m1->m[3][1]*m2->m[3][3];
+	r->m[3][2] = m1->m[0][2]*m2->m[3][0] + m1->m[1][2]*m2->m[3][1] + m1->m[2][2]*m2->m[3][2] + m1->m[3][2]*m2->m[3][3];
+	r->m[3][3] = m1->m[0][3]*m2->m[3][0] + m1->m[1][3]*m2->m[3][1] + m1->m[2][3]*m2->m[3][2] + m1->m[3][3]*m2->m[3][3];
 
 }
-__HINT_INLINE__ vec4 mat4VMultMKet(const vec4 v, const mat4 m){
-	const vec4 r = {.x = v.x * m.m[0][0] + v.y * m.m[1][0] + v.z * m.m[2][0] + v.w * m.m[3][0],
-	                .y = v.x * m.m[0][1] + v.y * m.m[1][1] + v.z * m.m[2][1] + v.w * m.m[3][1],
-	                .z = v.x * m.m[0][2] + v.y * m.m[1][2] + v.z * m.m[2][2] + v.w * m.m[3][2],
-	                .w = v.x * m.m[0][3] + v.y * m.m[1][3] + v.z * m.m[2][3] + v.w * m.m[3][3]};
-	return r;
-}
-__HINT_INLINE__ void mat4VMultMKetP(vec4 *const restrict v, const mat4 *const restrict m){
-	const vec4 r = {.x = v->x * m->m[0][0] + v->y * m->m[1][0] + v->z * m->m[2][0] + v->w * m->m[3][0],
-	                .y = v->x * m->m[0][1] + v->y * m->m[1][1] + v->z * m->m[2][1] + v->w * m->m[3][1],
-	                .z = v->x * m->m[0][2] + v->y * m->m[1][2] + v->z * m->m[2][2] + v->w * m->m[3][2],
-	                .w = v->x * m->m[0][3] + v->y * m->m[1][3] + v->z * m->m[2][3] + v->w * m->m[3][3]};
-	*v = r;
-}
-__HINT_INLINE__ void mat4VMultMKetPR(const vec4 *const restrict v, const mat4 *const restrict m, vec4 *const restrict r){
-	r->x = v->x * m->m[0][0] + v->y * m->m[1][0] + v->z * m->m[2][0] + v->w * m->m[3][0];
-	r->y = v->x * m->m[0][1] + v->y * m->m[1][1] + v->z * m->m[2][1] + v->w * m->m[3][1];
-	r->z = v->x * m->m[0][2] + v->y * m->m[1][2] + v->z * m->m[2][2] + v->w * m->m[3][2];
-	r->w = v->x * m->m[0][3] + v->y * m->m[1][3] + v->z * m->m[2][3] + v->w * m->m[3][3];
-}
-__HINT_INLINE__ vec4 mat4MMultVBra(const mat4 m, const vec4 v){
+__HINT_INLINE__ vec4 mat4VMultMBra(const vec4 v, const mat4 m){
 	const vec4 r = {.x = v.x * m.m[0][0] + v.y * m.m[0][1] + v.z * m.m[0][2] + v.w * m.m[0][3],
 	                .y = v.x * m.m[1][0] + v.y * m.m[1][1] + v.z * m.m[1][2] + v.w * m.m[1][3],
 	                .z = v.x * m.m[2][0] + v.y * m.m[2][1] + v.z * m.m[2][2] + v.w * m.m[2][3],
 	                .w = v.x * m.m[3][0] + v.y * m.m[3][1] + v.z * m.m[3][2] + v.w * m.m[3][3]};
 	return r;
 }
-__HINT_INLINE__ void mat4MMultVBraP(const mat4 *const restrict m, vec4 *const restrict v){
+__HINT_INLINE__ void mat4VMultMBraP(vec4 *const restrict v, const mat4 *const restrict m){
 	const vec4 r = {.x = v->x * m->m[0][0] + v->y * m->m[0][1] + v->z * m->m[0][2] + v->w * m->m[0][3],
 	                .y = v->x * m->m[1][0] + v->y * m->m[1][1] + v->z * m->m[1][2] + v->w * m->m[1][3],
 	                .z = v->x * m->m[2][0] + v->y * m->m[2][1] + v->z * m->m[2][2] + v->w * m->m[2][3],
 	                .w = v->x * m->m[3][0] + v->y * m->m[3][1] + v->z * m->m[3][2] + v->w * m->m[3][3]};
 	*v = r;
 }
-__HINT_INLINE__ void mat4MMultVBraPR(const mat4 *const restrict m, const vec4 *const restrict v, vec4 *const restrict r){
+__HINT_INLINE__ void mat4VMultMBraPR(const vec4 *const restrict v, const mat4 *const restrict m, vec4 *const restrict r){
 	r->x = v->x * m->m[0][0] + v->y * m->m[0][1] + v->z * m->m[0][2] + v->w * m->m[0][3];
 	r->y = v->x * m->m[1][0] + v->y * m->m[1][1] + v->z * m->m[1][2] + v->w * m->m[1][3];
 	r->z = v->x * m->m[2][0] + v->y * m->m[2][1] + v->z * m->m[2][2] + v->w * m->m[2][3];
 	r->w = v->x * m->m[3][0] + v->y * m->m[3][1] + v->z * m->m[3][2] + v->w * m->m[3][3];
 }
-
-__HINT_INLINE__ vec4 mat4NMultM(const float x, const float y, const float z, const float w, const mat4 m){
-	const vec4 r = {.x = x * m.m[0][0] + y * m.m[1][0] + z * m.m[2][0] + w * m.m[3][0],
-	                .y = x * m.m[0][1] + y * m.m[1][1] + z * m.m[2][1] + w * m.m[3][1],
-	                .z = x * m.m[0][2] + y * m.m[1][2] + z * m.m[2][2] + w * m.m[3][2],
-	                .w = x * m.m[0][3] + y * m.m[1][3] + z * m.m[2][3] + w * m.m[3][3]};
+__HINT_INLINE__ vec4 mat4MMultVKet(const mat4 m, const vec4 v){
+	const vec4 r = {.x = v.x * m.m[0][0] + v.y * m.m[1][0] + v.z * m.m[2][0] + v.w * m.m[3][0],
+	                .y = v.x * m.m[0][1] + v.y * m.m[1][1] + v.z * m.m[2][1] + v.w * m.m[3][1],
+	                .z = v.x * m.m[0][2] + v.y * m.m[1][2] + v.z * m.m[2][2] + v.w * m.m[3][2],
+	                .w = v.x * m.m[0][3] + v.y * m.m[1][3] + v.z * m.m[2][3] + v.w * m.m[3][3]};
 	return r;
 }
-__HINT_INLINE__ void mat4NMultMP(const float x, const float y, const float z, const float w, const mat4 *const restrict m, vec4 *const restrict r){
-	r->x = x * m->m[0][0] + y * m->m[1][0] + z * m->m[2][0] + w * m->m[3][0];
-	r->y = x * m->m[0][1] + y * m->m[1][1] + z * m->m[2][1] + w * m->m[3][1];
-	r->z = x * m->m[0][2] + y * m->m[1][2] + z * m->m[2][2] + w * m->m[3][2];
-	r->w = x * m->m[0][3] + y * m->m[1][3] + z * m->m[2][3] + w * m->m[3][3];
+__HINT_INLINE__ void mat4MMultVKetP(const mat4 *const restrict m, vec4 *const restrict v){
+	const vec4 r = {.x = v->x * m->m[0][0] + v->y * m->m[1][0] + v->z * m->m[2][0] + v->w * m->m[3][0],
+	                .y = v->x * m->m[0][1] + v->y * m->m[1][1] + v->z * m->m[2][1] + v->w * m->m[3][1],
+	                .z = v->x * m->m[0][2] + v->y * m->m[1][2] + v->z * m->m[2][2] + v->w * m->m[3][2],
+	                .w = v->x * m->m[0][3] + v->y * m->m[1][3] + v->z * m->m[2][3] + v->w * m->m[3][3]};
+	*v = r;
 }
-__HINT_INLINE__ vec4 mat4MMultN(const mat4 m, const float x, const float y, const float z, const float w){
+__HINT_INLINE__ void mat4MMultVKetPR(const mat4 *const restrict m, const vec4 *const restrict v, vec4 *const restrict r){
+	r->x = v->x * m->m[0][0] + v->y * m->m[1][0] + v->z * m->m[2][0] + v->w * m->m[3][0];
+	r->y = v->x * m->m[0][1] + v->y * m->m[1][1] + v->z * m->m[2][1] + v->w * m->m[3][1];
+	r->z = v->x * m->m[0][2] + v->y * m->m[1][2] + v->z * m->m[2][2] + v->w * m->m[3][2];
+	r->w = v->x * m->m[0][3] + v->y * m->m[1][3] + v->z * m->m[2][3] + v->w * m->m[3][3];
+}
+
+__HINT_INLINE__ vec4 mat4NMultMBra(const float x, const float y, const float z, const float w, const mat4 m){
 	const vec4 r = {.x = x * m.m[0][0] + y * m.m[0][1] + z * m.m[0][2] + w * m.m[0][3],
 	                .y = x * m.m[1][0] + y * m.m[1][1] + z * m.m[1][2] + w * m.m[1][3],
 	                .z = x * m.m[2][0] + y * m.m[2][1] + z * m.m[2][2] + w * m.m[2][3],
 	                .w = x * m.m[3][0] + y * m.m[3][1] + z * m.m[3][2] + w * m.m[3][3]};
 	return r;
 }
-__HINT_INLINE__ void mat4MMultNP(const mat4 *const restrict m, const float x, const float y, const float z, const float w, vec4 *r){
+__HINT_INLINE__ void mat4NMultMBraPR(const float x, const float y, const float z, const float w, const mat4 *const restrict m, vec4 *const restrict r){
 	r->x = x * m->m[0][0] + y * m->m[0][1] + z * m->m[0][2] + w * m->m[0][3];
 	r->y = x * m->m[1][0] + y * m->m[1][1] + z * m->m[1][2] + w * m->m[1][3];
 	r->z = x * m->m[2][0] + y * m->m[2][1] + z * m->m[2][2] + w * m->m[2][3];
 	r->w = x * m->m[3][0] + y * m->m[3][1] + z * m->m[3][2] + w * m->m[3][3];
+}
+__HINT_INLINE__ vec4 mat4MMultNKet(const mat4 m, const float x, const float y, const float z, const float w){
+	const vec4 r = {.x = x * m.m[0][0] + y * m.m[1][0] + z * m.m[2][0] + w * m.m[3][0],
+	                .y = x * m.m[0][1] + y * m.m[1][1] + z * m.m[2][1] + w * m.m[3][1],
+	                .z = x * m.m[0][2] + y * m.m[1][2] + z * m.m[2][2] + w * m.m[3][2],
+	                .w = x * m.m[0][3] + y * m.m[1][3] + z * m.m[2][3] + w * m.m[3][3]};
+	return r;
+}
+__HINT_INLINE__ void mat4MMultNKetPR(const mat4 *const restrict m, const float x, const float y, const float z, const float w, vec4 *r){
+	r->x = x * m->m[0][0] + y * m->m[1][0] + z * m->m[2][0] + w * m->m[3][0];
+	r->y = x * m->m[0][1] + y * m->m[1][1] + z * m->m[2][1] + w * m->m[3][1];
+	r->z = x * m->m[0][2] + y * m->m[1][2] + z * m->m[2][2] + w * m->m[3][2];
+	r->w = x * m->m[0][3] + y * m->m[1][3] + z * m->m[2][3] + w * m->m[3][3];
 }
 
 /**__HINT_INLINE__ vec3 mat4GetTransformedV(const mat4 m, const vec3 v){
@@ -238,32 +238,32 @@ __HINT_INLINE__ void mat4MAddMPR(const mat4 *const restrict m1, const mat4 *cons
 }
 
 __HINT_INLINE__ float mat4Determinant(const mat4 m){
-	return m.m[0][0] * (m.m[1][1] * (m.m[2][2]*m.m[3][3] - m.m[3][3]*m.m[2][3]) -
-	                    m.m[2][1] * (m.m[1][2]*m.m[3][3] - m.m[3][3]*m.m[1][3]) +
-	                    m.m[3][1] * (m.m[1][2]*m.m[2][3] - m.m[2][3]*m.m[1][3])) -
-	       m.m[1][0] * (m.m[0][1] * (m.m[2][2]*m.m[3][3] - m.m[3][3]*m.m[2][3]) -
-	                    m.m[2][1] * (m.m[0][2]*m.m[3][3] - m.m[3][3]*m.m[0][3]) +
-	                    m.m[3][1] * (m.m[0][2]*m.m[2][3] - m.m[2][3]*m.m[0][3])) +
-	       m.m[2][0] * (m.m[0][1] * (m.m[1][2]*m.m[3][3] - m.m[3][3]*m.m[1][3]) -
-	                    m.m[1][1] * (m.m[0][2]*m.m[3][3] - m.m[3][3]*m.m[0][3]) +
-	                    m.m[3][1] * (m.m[0][2]*m.m[1][3] - m.m[1][3]*m.m[0][3])) -
-	       m.m[3][0] * (m.m[0][1] * (m.m[1][2]*m.m[2][3] - m.m[2][3]*m.m[1][3]) -
-	                    m.m[1][1] * (m.m[0][2]*m.m[2][3] - m.m[2][3]*m.m[0][3]) +
-	                    m.m[2][1] * (m.m[0][2]*m.m[1][3] - m.m[1][3]*m.m[0][3]));
+	return m.m[0][0] * (m.m[1][1] * (m.m[2][2]*m.m[3][3] - m.m[3][3]*m.m[3][2]) -
+	                    m.m[1][2] * (m.m[2][1]*m.m[3][3] - m.m[3][3]*m.m[3][1]) +
+	                    m.m[1][3] * (m.m[2][1]*m.m[3][2] - m.m[3][2]*m.m[3][1])) -
+	       m.m[0][1] * (m.m[1][0] * (m.m[2][2]*m.m[3][3] - m.m[3][3]*m.m[3][2]) -
+	                    m.m[1][2] * (m.m[2][0]*m.m[3][3] - m.m[3][3]*m.m[3][0]) +
+	                    m.m[1][3] * (m.m[2][0]*m.m[3][2] - m.m[3][2]*m.m[3][0])) +
+	       m.m[0][2] * (m.m[1][0] * (m.m[2][1]*m.m[3][3] - m.m[3][3]*m.m[3][1]) -
+	                    m.m[1][1] * (m.m[2][0]*m.m[3][3] - m.m[3][3]*m.m[3][0]) +
+	                    m.m[1][3] * (m.m[2][0]*m.m[3][1] - m.m[3][1]*m.m[3][0])) -
+	       m.m[0][3] * (m.m[1][0] * (m.m[2][1]*m.m[3][2] - m.m[3][2]*m.m[3][1]) -
+	                    m.m[1][1] * (m.m[2][0]*m.m[3][2] - m.m[3][2]*m.m[3][0]) +
+	                    m.m[1][2] * (m.m[2][0]*m.m[3][1] - m.m[3][1]*m.m[3][0]));
 }
 __HINT_INLINE__ float mat4DeterminantP(const mat4 *const restrict m){
-	return m->m[0][0] * (m->m[1][1] * (m->m[2][2]*m->m[3][3] - m->m[3][3]*m->m[2][3]) -
-	                     m->m[2][1] * (m->m[1][2]*m->m[3][3] - m->m[3][3]*m->m[1][3]) +
-	                     m->m[3][1] * (m->m[1][2]*m->m[2][3] - m->m[2][3]*m->m[1][3])) -
-	       m->m[1][0] * (m->m[0][1] * (m->m[2][2]*m->m[3][3] - m->m[3][3]*m->m[2][3]) -
-	                     m->m[2][1] * (m->m[0][2]*m->m[3][3] - m->m[3][3]*m->m[0][3]) +
-	                     m->m[3][1] * (m->m[0][2]*m->m[2][3] - m->m[2][3]*m->m[0][3])) +
-	       m->m[2][0] * (m->m[0][1] * (m->m[1][2]*m->m[3][3] - m->m[3][3]*m->m[1][3]) -
-	                     m->m[1][1] * (m->m[0][2]*m->m[3][3] - m->m[3][3]*m->m[0][3]) +
-	                     m->m[3][1] * (m->m[0][2]*m->m[1][3] - m->m[1][3]*m->m[0][3])) -
-	       m->m[3][0] * (m->m[0][1] * (m->m[1][2]*m->m[2][3] - m->m[2][3]*m->m[1][3]) -
-	                     m->m[1][1] * (m->m[0][2]*m->m[2][3] - m->m[2][3]*m->m[0][3]) +
-	                     m->m[2][1] * (m->m[0][2]*m->m[1][3] - m->m[1][3]*m->m[0][3]));
+	return m->m[0][0] * (m->m[1][1] * (m->m[2][2]*m->m[3][3] - m->m[3][3]*m->m[3][2]) -
+	                     m->m[1][2] * (m->m[2][1]*m->m[3][3] - m->m[3][3]*m->m[3][1]) +
+	                     m->m[1][3] * (m->m[2][1]*m->m[3][2] - m->m[3][2]*m->m[3][1])) -
+	       m->m[0][1] * (m->m[1][0] * (m->m[2][2]*m->m[3][3] - m->m[3][3]*m->m[3][2]) -
+	                     m->m[1][2] * (m->m[2][0]*m->m[3][3] - m->m[3][3]*m->m[3][0]) +
+	                     m->m[1][3] * (m->m[2][0]*m->m[3][2] - m->m[3][2]*m->m[3][0])) +
+	       m->m[0][2] * (m->m[1][0] * (m->m[2][1]*m->m[3][3] - m->m[3][3]*m->m[3][1]) -
+	                     m->m[1][1] * (m->m[2][0]*m->m[3][3] - m->m[3][3]*m->m[3][0]) +
+	                     m->m[1][3] * (m->m[2][0]*m->m[3][1] - m->m[3][1]*m->m[3][0])) -
+	       m->m[0][3] * (m->m[1][0] * (m->m[2][1]*m->m[3][2] - m->m[3][2]*m->m[3][1]) -
+	                     m->m[1][1] * (m->m[2][0]*m->m[3][2] - m->m[3][2]*m->m[3][0]) +
+	                     m->m[1][2] * (m->m[2][0]*m->m[3][1] - m->m[3][1]*m->m[3][0]));
 }
 
 __HINT_INLINE__ mat4 mat4Transpose(const mat4 m){
@@ -330,81 +330,70 @@ __HINT_INLINE__ return_t mat4InvertPR(const mat4 *const restrict m, mat4 *const 
 }
 
 __HINT_INLINE__ mat4 mat4Frustum(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar){
-	if(left != right && bottom != top && zNear != zFar){
-		const mat4 r = {.m = {{2.f*zNear/(right-left),    0.f,                       0.f,                          0.f},
-		                      {0.f,                       2.f*zNear/(top-bottom),    0.f,                          0.f},
-		                      {(right+left)/(right-left), (top+bottom)/(top-bottom), -(zFar+zNear)/(zFar-zNear),  -1.f},
-		                      {0.f,                       0.f,                       2.f*zFar*zNear/(zFar-zNear),  0.f}}};
-		return r;
-	}
-	return mat4Identity();
+	const mat4 r = {.m = {{(zNear+zNear)/(right-left), 0.f,                        0.f,                                0.f},
+	                      {0.f,                        (zNear+zNear)/(top-bottom), 0.f,                                0.f},
+	                      {(right+left)/(right-left),  (top+bottom)/(top-bottom),  -(zFar+zNear)/(zFar-zNear),         -1.f},
+	                      {0.f,                        0.f,                        -((zFar+zFar)*zNear)/(zFar-zNear),  0.f}}};
+	return r;
 }
-__HINT_INLINE__ return_t mat4FrustumP(mat4 *const restrict m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar){
-	if(left != right && bottom != top && zNear != zFar){
-		m->m[0][0] = 2.f*zNear/(right-left);    m->m[0][1] = 0.f;                       m->m[0][2] = 0.f;                         m->m[0][3] = 0.f;
-		m->m[1][0] = 0.f;                       m->m[1][1] = 2.f*zNear/(top-bottom);    m->m[1][2] = 0.f;                         m->m[1][3] = 0.f;
-		m->m[2][0] = (right+left)/(right-left); m->m[2][1] = (top+bottom)/(top-bottom); m->m[2][2] = -(zFar+zNear)/(zFar-zNear);  m->m[2][3] = -1.f;
-		m->m[3][0] = 0.f;                       m->m[3][1] = 0.f;                       m->m[3][2] = 2.f*zFar*zNear/(zFar-zNear); m->m[3][3] = 0.f;
-		return 1;
-	}
-	return 0;
+__HINT_INLINE__ void mat4FrustumP(mat4 *const restrict m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar){
+	const float invRightSubLeft = 1.f/(right-left);
+	const float invTopSubBottom = 1.f/(top-bottom);
+	const float invFarSubNear = 1.f/(zFar-zNear);
+	m->m[0][0] = (zNear+zNear)*invRightSubLeft; m->m[0][1] = 0.f;                           m->m[0][2] = 0.f;                              m->m[0][3] = 0.f;
+	m->m[1][0] = 0.f;                           m->m[1][1] = (zNear+zNear)*invTopSubBottom; m->m[1][2] = 0.f;                              m->m[1][3] = 0.f;
+	m->m[2][0] = (right+left)*invRightSubLeft;  m->m[2][1] = (top+bottom)*invTopSubBottom;  m->m[2][2] = -(zFar+zNear)*invFarSubNear;      m->m[2][3] = -1.f;
+	m->m[3][0] = 0.f;                           m->m[3][1] = 0.f;                           m->m[3][2] = -(zFar+zFar)*zNear*invFarSubNear; m->m[3][3] = 0.f;
 }
 __HINT_INLINE__ mat4 mat4Ortho(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar){
-	if(left != right && bottom != top && zNear != zFar){
-		const mat4 r = {.m = {{2.f/(right-left),             0.f,                          0.f,                          0.f},
-		                      {0.f,                          2.f/(top-bottom),             0.f,                          0.f},
-		                      {0.f,                          0.f,                          -2.f/(zFar-zNear),            0.f},
-		                      {-((right+left)/(right-left)), -((top+bottom)/(top-bottom)), -((zFar+zNear)/(zFar-zNear)), 1.f}}};
-		return r;
-	}
-	return mat4Identity();
+	const float invRightSubLeft = 1.f/(right-left);
+	const float invTopSubBottom = 1.f/(top-bottom);
+	const float invFarSubNear = 1.f/(zFar-zNear);
+	const mat4 r = {.m = {{2.f*invRightSubLeft,           0.f,                           0.f,                         0.f},
+	                      {0.f,                           2.f*invTopSubBottom,           0.f,                         0.f},
+	                      {0.f,                           0.f,                           -2.f*invFarSubNear,          0.f},
+	                      {-(right+left)*invRightSubLeft, -(top+bottom)*invTopSubBottom, -(zFar+zNear)*invFarSubNear, 1.f}}};
+	return r;
 }
-__HINT_INLINE__ return_t mat4OrthoP(mat4 *const restrict m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar){
-	if(left != right && bottom != top && zNear != zFar){
-		m->m[0][0] = 2.f/(right-left);             m->m[0][1] = 0.f;                          m->m[0][2] = 0.f;                          m->m[0][3] = 0.f;
-		m->m[1][0] = 0.f;                          m->m[1][1] = 2.f/(top-bottom);             m->m[1][2] = 0.f;                          m->m[1][3] = 0.f;
-		m->m[2][0] = 0.f;                          m->m[2][1] = 0.f;                          m->m[2][2] = -2.f/(zFar-zNear);            m->m[2][3] = 0.f;
-		m->m[3][0] = -((right+left)/(right-left)); m->m[3][1] = -((top+bottom)/(top-bottom)); m->m[3][2] = -((zFar+zNear)/(zFar-zNear)); m->m[3][3] = 1.f;
-		return 1;
-	}
-	return 0;
+__HINT_INLINE__ void mat4OrthoP(mat4 *const restrict m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar){
+	const float invRightSubLeft = 1.f/(right-left);
+	const float invTopSubBottom = 1.f/(top-bottom);
+	const float invFarSubNear = 1.f/(zFar-zNear);
+	m->m[0][0] = 2.f*invRightSubLeft;           m->m[0][1] = 0.f;                           m->m[0][2] = 0.f;                         m->m[0][3] = 0.f;
+	m->m[1][0] = 0.f;                           m->m[1][1] = 2.f*invTopSubBottom;           m->m[1][2] = 0.f;                         m->m[1][3] = 0.f;
+	m->m[2][0] = 0.f;                           m->m[2][1] = 0.f;                           m->m[2][2] = -2.f*invFarSubNear;          m->m[2][3] = 0.f;
+	m->m[3][0] = -(right+left)*invRightSubLeft; m->m[3][1] = -(top+bottom)*invTopSubBottom; m->m[3][2] = -(zFar+zNear)*invFarSubNear; m->m[3][3] = 1.f;
 }
 __HINT_INLINE__ mat4 mat4Perspective(const float fovy, const float aspectRatio, const float zNear, const float zFar){
-	if(fovy != 0.f && aspectRatio != 0.f && zNear != zFar){
-		const float scale = tanf(fovy * 0.5f);
-		// Currently right-handed for OpenGL. For left-handed, use the additive inverses of the values in the third column.
-		const mat4 r = {.m = {{1.f/(scale*aspectRatio), 0.f,       0.f,                          0.f},
-		                      {0.f,                     1.f/scale, 0.f,                          0.f},
-		                      {0.f,                     0.f,       -(zFar+zNear)/(zFar-zNear),   -1.f},
-		                      {0.f,                     0.f,       -2.f*zFar*zNear/(zFar-zNear), 0.f}}};
-		return r;
-	}
-	return mat4Identity();
+	const float invScale = 1.f/tanf(fovy * 0.5f);
+	const float invFarSubNear = 1.f/(zFar-zNear);
+	const mat4 r = {.m = {{invScale/aspectRatio, 0.f,       0.f,                              0.f},
+	                      {0.f,                  invScale,  0.f,                              0.f},
+	                      {0.f,                  0.f,       -(zFar+zNear)*invFarSubNear,      -1.f},
+	                      {0.f,                  0.f,       -(zFar+zFar)*zNear*invFarSubNear, 0.f}}};
+	return r;
 }
-__HINT_INLINE__ return_t mat4PerspectiveP(mat4 *const restrict m, const float fovy, const float aspectRatio, const float zNear, const float zFar){
-	if(fovy != 0.f && aspectRatio != 0.f && zNear != zFar){
-		const float scale = tanf(fovy * 0.5f);
-		// Currently right-handed for OpenGL. For left-handed, use the additive inverses of the values in the third column.
-		m->m[0][0] = 1.f/(scale*aspectRatio); m->m[0][1] = 0.f;       m->m[0][2] = 0.f;                          m->m[0][3] = 0.f;
-		m->m[1][0] = 0.f;                     m->m[1][1] = 1.f/scale; m->m[1][2] = 0.f;                          m->m[1][3] = 0.f;
-		m->m[2][0] = 0.f;                     m->m[2][1] = 0.f;       m->m[2][2] = -(zFar+zNear)/(zFar-zNear);   m->m[2][3] = -1.f;
-		m->m[3][0] = 0.f;                     m->m[3][1] = 0.f;       m->m[3][2] = -2.f*zFar*zNear/(zFar-zNear); m->m[3][3] = 0.f;
-		return 1;
-	}
-	return 0;
+__HINT_INLINE__ void mat4PerspectiveP(mat4 *const restrict m, const float fovy, const float aspectRatio, const float zNear, const float zFar){
+	const float invScale = 1.f/tanf(fovy * 0.5f);
+	const float invFarSubNear = 1.f/(zFar-zNear);
+	m->m[0][0] = invScale/aspectRatio; m->m[0][1] = 0.f;      m->m[0][2] = 0.f;                              m->m[0][3] = 0.f;
+	m->m[1][0] = 0.f;                  m->m[1][1] = invScale; m->m[1][2] = 0.f;                              m->m[1][3] = 0.f;
+	m->m[2][0] = 0.f;                  m->m[2][1] = 0.f;      m->m[2][2] = -(zFar+zNear)*invFarSubNear;      m->m[2][3] = -1.f;
+	m->m[3][0] = 0.f;                  m->m[3][1] = 0.f;      m->m[3][2] = -(zFar+zFar)*zNear*invFarSubNear; m->m[3][3] = 0.f;
 }
 __HINT_INLINE__ mat4 mat4RotateToFace(const vec3 eye, const vec3 target, const vec3 up){
+	/** CHECK MATRIX ORDER (ROW OR COLUMN MAJOR?) **/
 	const vec3 zAxis = vec3NormalizeFast(vec3VSubV(target, eye));
 	const vec3 xAxis = vec3NormalizeFast(vec3Cross(zAxis, up));
 	const vec3 yAxis = vec3NormalizeFast(vec3Cross(xAxis, zAxis));
-	// Currently right-handed for OpenGL. For left-handed, use the additive inverses of the values in the third row.
-	const mat4 r = {.m = {{xAxis.x,  xAxis.y,  xAxis.z,  0.f},
-	                      {yAxis.x,  yAxis.y,  yAxis.z,  0.f},
-	                      {-zAxis.x, -zAxis.y, -zAxis.z, 0.f},
-	                      {0.f,      0.f,      0.f,      1.f}}};
+	const mat4 r = {.m = {{xAxis.x, xAxis.y, xAxis.z, 0.f},
+	                      {yAxis.x, yAxis.y, yAxis.z, 0.f},
+	                      {zAxis.x, zAxis.y, zAxis.z, 0.f},
+	                      {0.f,      0.f,      0.f,   1.f}}};
 	return r;
 }
 __HINT_INLINE__ void mat4RotateToFaceP(mat4 *const restrict m, const vec3 *const restrict eye, const vec3 *const restrict target, const vec3 *const restrict up){
+	/** CHECK MATRIX ORDER (ROW OR COLUMN MAJOR?) **/
 	vec3 xAxis, yAxis, zAxis;
 	vec3VSubVPR(target, eye, &zAxis);
 	vec3NormalizeFastP(&zAxis);
@@ -412,36 +401,33 @@ __HINT_INLINE__ void mat4RotateToFaceP(mat4 *const restrict m, const vec3 *const
 	vec3NormalizeFastP(&xAxis);
 	vec3CrossPR(&xAxis, &zAxis, &yAxis);
 	vec3NormalizeFastP(&yAxis);
-	// Currently right-handed for OpenGL. For left-handed, use the additive inverses of the values in the third row.
-	m->m[0][0] =  xAxis.x; m->m[0][1] =  xAxis.y; m->m[0][2] =  xAxis.z; m->m[0][3] = 0.f;
-	m->m[1][0] =  yAxis.x; m->m[1][1] =  yAxis.y; m->m[1][2] =  yAxis.z; m->m[1][3] = 0.f;
-	m->m[2][0] = -zAxis.x; m->m[2][1] = -zAxis.y; m->m[2][2] = -zAxis.z; m->m[2][3] = 0.f;
-	m->m[3][0] = 0.f;      m->m[3][1] = 0.f;      m->m[3][2] = 0.f;      m->m[3][3] = 1.f;
+	m->m[0][0] = xAxis.x; m->m[0][1] = xAxis.y; m->m[0][2] = xAxis.z; m->m[0][3] = 0.f;
+	m->m[1][0] = yAxis.x; m->m[1][1] = yAxis.y; m->m[1][2] = yAxis.z; m->m[1][3] = 0.f;
+	m->m[2][0] = zAxis.x; m->m[2][1] = zAxis.y; m->m[2][2] = zAxis.z; m->m[2][3] = 0.f;
+	m->m[3][0] = 0.f;     m->m[3][1] = 0.f;     m->m[3][2] = 0.f;     m->m[3][3] = 1.f;
 }
 __HINT_INLINE__ mat4 mat4LookAt(const vec3 eye, const vec3 target, const vec3 up){
-	const vec3 zAxis = vec3NormalizeFast(vec3VSubV(target, eye));
-	const vec3 xAxis = vec3NormalizeFast(vec3Cross(zAxis, up));
-	const vec3 yAxis = vec3NormalizeFast(vec3Cross(xAxis, zAxis));
-	// Currently right-handed for OpenGL. For left-handed, use the additive inverses of the values in the third column.
-	const mat4 r = {.m = {{xAxis.x,              yAxis.x,              -zAxis.x,            0.f},
-	                      {xAxis.y,              yAxis.y,              -zAxis.y,            0.f},
-	                      {xAxis.z,              yAxis.z,              -zAxis.z,            0.f},
-	                      {-vec3Dot(xAxis, eye), -vec3Dot(yAxis, eye), vec3Dot(zAxis, eye), 1.f}}};
+	const vec3 zAxis = vec3NormalizeFast(vec3VSubV(eye, target));
+	const vec3 xAxis = vec3NormalizeFast(vec3Cross(up, zAxis));
+	const vec3 yAxis = vec3NormalizeFast(vec3Cross(zAxis, xAxis));
+	const mat4 r = {.m = {{xAxis.x,              yAxis.x,              zAxis.x,              0.f},
+	                      {xAxis.y,              yAxis.y,              zAxis.y,              0.f},
+	                      {xAxis.z,              yAxis.z,              zAxis.z,              0.f},
+	                      {-vec3Dot(xAxis, eye), -vec3Dot(yAxis, eye), -vec3Dot(zAxis, eye), 1.f}}};
 	return r;
 }
 __HINT_INLINE__ void mat4LookAtP(mat4 *const restrict m, const vec3 *const restrict eye, const vec3 *const restrict target, const vec3 *const restrict up){
 	vec3 xAxis, yAxis, zAxis;
-	vec3VSubVPR(target, eye, &zAxis);
+	vec3VSubVPR(eye, target, &zAxis);
 	vec3NormalizeFastP(&zAxis);
-	vec3CrossPR(&zAxis, up, &xAxis);
+	vec3CrossPR(up, &zAxis, &xAxis);
 	vec3NormalizeFastP(&xAxis);
-	vec3CrossPR(&xAxis, &zAxis, &yAxis);
+	vec3CrossPR(&zAxis, &xAxis, &yAxis);
 	vec3NormalizeFastP(&yAxis);
-	// Currently right-handed for OpenGL. For left-handed, use the additive inverses of the values in the third column.
-	m->m[0][0] = xAxis.x;                m->m[0][1] = yAxis.x;                m->m[0][2] = -zAxis.x;              m->m[0][3] = 0.f;
-	m->m[1][0] = xAxis.y;                m->m[1][1] = yAxis.y;                m->m[1][2] = -zAxis.y;              m->m[1][3] = 0.f;
-	m->m[2][0] = xAxis.z;                m->m[2][1] = yAxis.z;                m->m[2][2] = -zAxis.z;              m->m[2][3] = 0.f;
-	m->m[3][0] = -vec3DotP(&xAxis, eye); m->m[3][1] = -vec3DotP(&yAxis, eye); m->m[3][2] = vec3DotP(&zAxis, eye); m->m[3][3] = 1.f;
+	m->m[0][0] = xAxis.x;                m->m[0][1] = yAxis.x;                m->m[0][2] = zAxis.x;                m->m[0][3] = 0.f;
+	m->m[1][0] = xAxis.y;                m->m[1][1] = yAxis.y;                m->m[1][2] = zAxis.y;                m->m[1][3] = 0.f;
+	m->m[2][0] = xAxis.z;                m->m[2][1] = yAxis.z;                m->m[2][2] = zAxis.z;                m->m[2][3] = 0.f;
+	m->m[3][0] = -vec3DotP(&xAxis, eye); m->m[3][1] = -vec3DotP(&yAxis, eye); m->m[3][2] = -vec3DotP(&zAxis, eye); m->m[3][3] = 1.f;
 }
 
 __HINT_INLINE__ mat4 mat4TranslationMatrix(const float x, const float y, const float z){
@@ -490,16 +476,16 @@ __HINT_INLINE__ void mat4RotationMatrixP(mat4 *const restrict m, const quat *con
 	mat4QuaternionP(m, q);
 }
 __HINT_INLINE__ mat4 mat4Rotate(const mat4 m, const quat q){
-	return mat4MMultM(mat4Quaternion(q), m);
+	return mat4MMultM(m, mat4Quaternion(q));
 }
 __HINT_INLINE__ void mat4RotateP(mat4 *const restrict m, const quat *const restrict q){
 	mat4 r;
 	mat4QuaternionP(&r, q);
-	mat4MMultMP2(&r, m);
+	mat4MMultMP1(m, &r);
 }
 __HINT_INLINE__ void mat4RotatePR(const mat4 *const restrict m, const quat *const restrict q, mat4 *const restrict r){
 	mat4QuaternionP(r, q);
-	mat4MMultMP1(r, m);
+	mat4MMultMP2(m, r);
 }
 
 mat4 mat4ScaleMatrix(const float x, const float y, const float z){
@@ -534,33 +520,44 @@ __HINT_INLINE__ void mat4ScalePR(const mat4 *const restrict m, const float x, co
 }
 
 __HINT_INLINE__ mat4 mat4Quaternion(const quat q){
-	const float xx = q.v.x*q.v.x;
-	const float yy = q.v.y*q.v.y;
-	const float zz = q.v.z*q.v.z;
-	const float xy = q.v.x*q.v.y;
-	const float xz = q.v.x*q.v.z;
-	const float xw = q.v.x*q.w;
-	const float yz = q.v.y*q.v.z;
-	const float yw = q.v.y*q.w;
-	const float zw = q.v.z*q.w;
-	const mat4 r = {.m = {{1.f-2.f*(yy+zz), 2.f*(xy+zw),     2.f*(xz-yw),     0.f},
-	                      {2.f*(xy-zw),     1.f-2.f*(xx+zz), 2.f*(yz+xw),     0.f},
-	                      {2.f*(xz+yw),     2.f*(yz-xw),     1.f-2.f*(xx+yy), 0.f},
-	                      {0.f,             0.f,             0.f,             1.f}}};
+	const float x2 = q.v.x+q.v.x;
+	const float y2 = q.v.y+q.v.y;
+	const float z2 = q.v.z+q.v.z;
+	const float w2x = q.w*x2;
+	const float w2y = q.w*y2;
+	const float w2z = q.w*z2;
+	const float x2x = q.v.x*x2;
+	const float x2y = q.v.x*y2;
+	const float x2z = q.v.x*z2;
+	const float y2y = q.v.y*y2;
+	const float y2z = q.v.y*z2;
+	const float z2z = q.v.z*z2;
+	///if(isnan(yy)){exit(1);}
+	/**printf("%f %f %f %f\n", 1.f-y2y-z2z, x2y+w2z,     x2z-w2y,     0.f);
+	printf("%f %f %f %f\n", x2y-w2z,     1.f-x2x-z2z, y2z+w2x,     0.f);
+	printf("%f %f %f %f\n", x2z+w2y,     y2z-w2x,     1.f-x2x-y2y, 0.f);
+	printf("%f %f %f %f\n\n", 0.f,             0.f,             0.f,             1.f);**/
+	const mat4 r = {.m = {{1.f-y2y-z2z, x2y+w2z,     x2z-w2y,     0.f},
+	                      {x2y-w2z,     1.f-x2x-z2z, y2z+w2x,     0.f},
+	                      {x2z+w2y,     y2z-w2x,     1.f-x2x-y2y, 0.f},
+	                      {0.f,         0.f,         0.f,         1.f}}};
 	return r;
 }
 __HINT_INLINE__ void mat4QuaternionP(mat4 *const restrict m, const quat *const restrict q){
-	const float xx = q->v.x*q->v.x;
-	const float yy = q->v.y*q->v.y;
-	const float zz = q->v.z*q->v.z;
-	const float xy = q->v.x*q->v.y;
-	const float xz = q->v.x*q->v.z;
-	const float xw = q->v.x*q->w;
-	const float yz = q->v.y*q->v.z;
-	const float yw = q->v.y*q->w;
-	const float zw = q->v.z*q->w;
-	m->m[0][0] = 1.f-2.f*(yy+zz); m->m[0][1] = 2.f*(xy+zw);     m->m[0][2] = 2.f*(xz-yw);     m->m[0][3] = 0.f;
-	m->m[1][0] = 2.f*(xy-zw);     m->m[1][1] = 1.f-2.f*(xx+zz); m->m[1][2] = 2.f*(yz+xw);     m->m[1][3] = 0.f;
-	m->m[2][0] = 2.f*(xz+yw);     m->m[2][1] = 2.f*(yz-xw);     m->m[2][2] = 1.f-2.f*(xx+yy); m->m[2][3] = 0.f;
-	m->m[3][0] = 0.f;             m->m[3][1] = 0.f;             m->m[3][2] = 0.f;             m->m[3][3] = 1.f;
+	const float x2 = q->v.x+q->v.x;
+	const float y2 = q->v.y+q->v.y;
+	const float z2 = q->v.z+q->v.z;
+	const float w2x = q->w*x2;
+	const float w2y = q->w*y2;
+	const float w2z = q->w*z2;
+	const float x2x = q->v.x*x2;
+	const float x2y = q->v.x*y2;
+	const float x2z = q->v.x*z2;
+	const float y2y = q->v.y*y2;
+	const float y2z = q->v.y*z2;
+	const float z2z = q->v.z*z2;
+	m->m[0][0] = 1.f-y2y-z2z; m->m[0][1] = x2y+w2z;     m->m[0][2] = x2z-w2y;     m->m[0][3] = 0.f;
+	m->m[1][0] = x2y-w2z;     m->m[1][1] = 1.f-x2x-z2z; m->m[1][2] = y2z+w2x;     m->m[1][3] = 0.f;
+	m->m[2][0] = x2z+w2y;     m->m[2][1] = y2z-w2x;     m->m[2][2] = 1.f-x2x-y2y; m->m[2][3] = 0.f;
+	m->m[3][0] = 0.f;         m->m[3][1] = 0.f;         m->m[3][2] = 0.f;         m->m[3][3] = 1.f;
 }

@@ -317,8 +317,8 @@ static __FORCE_INLINE__ float physContactEffectiveMass(const vec3 normalA, const
 	const vec3 angularDeltaA = vec3Cross(pointA, normalA);
 	const vec3 angularDeltaB = vec3Cross(pointB, normalB);
 	return inverseMassTotal +
-	       vec3Dot(angularDeltaA, mat3MMultVBra(inverseInertiaTensorA, angularDeltaA)) +
-	       vec3Dot(angularDeltaB, mat3MMultVBra(inverseInertiaTensorB, angularDeltaB));
+	       vec3Dot(angularDeltaA, mat3MMultVKet(inverseInertiaTensorA, angularDeltaA)) +
+	       vec3Dot(angularDeltaB, mat3MMultVKet(inverseInertiaTensorB, angularDeltaB));
 
 }
 

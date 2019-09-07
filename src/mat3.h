@@ -5,6 +5,12 @@
 #include "return.h"
 
 /** Use an alias? **/
+// All matrices are stored in column-major
+// order, despite this being non-standard
+// mathematically and C preferring row-major.
+// This is both to keep it consistent with
+// OpenGL and to make accessing column
+// vectors faster.
 typedef struct {
 	float m[3][3];
 } mat3;
@@ -18,12 +24,12 @@ mat3 mat3MMultM(const mat3 m1, const mat3 m2);
 void mat3MMultMP1(mat3 *const restrict m1, const mat3 *const restrict m2);
 void mat3MMultMP2(const mat3 *const restrict m1, mat3 *const restrict m2);
 void mat3MMultMPR(const mat3 *const restrict m1, const mat3 *const restrict m2, mat3 *const restrict r);
-vec3 mat3VMultMKet(const vec3 v, const mat3 m);
-void mat3VMultMKetP(vec3 *const restrict v, const mat3 *const restrict m);
-void mat3VMultMKetPR(const vec3 *const restrict v, const mat3 *const restrict m, vec3 *const restrict r);
-vec3 mat3MMultVBra(const mat3 m, const vec3 v);
-void mat3MMultVBraP(const mat3 *const restrict m, vec3 *const restrict v);
-void mat3MMultVBraPR(const mat3 *const restrict m, const vec3 *const restrict v, vec3 *const restrict r);
+vec3 mat3VMultMBra(const vec3 v, const mat3 m);
+void mat3VMultMBraP(vec3 *const restrict v, const mat3 *const restrict m);
+void mat3VMultMBraPR(const vec3 *const restrict v, const mat3 *const restrict m, vec3 *const restrict r);
+vec3 mat3MMultVKet(const mat3 m, const vec3 v);
+void mat3MMultVKetP(const mat3 *const restrict m, vec3 *const restrict v);
+void mat3MMultVKetPR(const mat3 *const restrict m, const vec3 *const restrict v, vec3 *const restrict r);
 
 mat3 mat3MAddM(const mat3 m1, const mat3 m2);
 void mat3MAddMP(mat3 *const restrict m1, const mat3 *const restrict m2);

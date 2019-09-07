@@ -6,6 +6,12 @@
 #include "return.h"
 
 /** Use an alias? **/
+// All matrices are stored in column-major
+// order, despite this being non-standard
+// mathematically and C preferring row-major.
+// This is both to keep it consistent with
+// OpenGL and to make accessing column
+// vectors faster.
 typedef struct {
 	float m[4][4];
 } mat4;
@@ -22,17 +28,17 @@ void mat4MMultMPR(const mat4 *const restrict m1, const mat4 *const restrict m2, 
 
 ///void mat4TransformVP(const mat4 *const restrict m, vec3 *const restrict v);
 
-vec4 mat4VMultMKet(const vec4 v, const mat4 m);
-void mat4VMultMKetP(vec4 *const restrict v, const mat4 *const restrict m);
-void mat4VMultMKetPR(const vec4 *const restrict v, const mat4 *const restrict m, vec4 *const restrict r);
-vec4 mat4MMultVBra(const mat4 m, const vec4 v);
-void mat4MMultVBraP(const mat4 *const restrict m, vec4 *const restrict v);
-void mat4MMultVBraPR(const mat4 *const restrict m, const vec4 *const restrict v, vec4 *const restrict r);
+vec4 mat4VMultMBra(const vec4 v, const mat4 m);
+void mat4VMultMBraP(vec4 *const restrict v, const mat4 *const restrict m);
+void mat4VMultMBraPR(const vec4 *const restrict v, const mat4 *const restrict m, vec4 *const restrict r);
+vec4 mat4MMultVKet(const mat4 m, const vec4 v);
+void mat4MMultVKetP(const mat4 *const restrict m, vec4 *const restrict v);
+void mat4MMultVKetPR(const mat4 *const restrict m, const vec4 *const restrict v, vec4 *const restrict r);
 
-vec4 mat4NMultM(const float x, const float y, const float z, const float w, const mat4 m);
-void mat4NMultMP(const float x, const float y, const float z, const float w, const mat4 *const restrict m, vec4 *const restrict r);
-vec4 mat4MMultN(const mat4 m, const float x, const float y, const float z, const float w);
-void mat4MMultNP(const mat4 *const restrict m, const float x, const float y, const float z, const float w, vec4 *const restrict r);
+vec4 mat4NMultMBra(const float x, const float y, const float z, const float w, const mat4 m);
+void mat4NMultMBraPR(const float x, const float y, const float z, const float w, const mat4 *const restrict m, vec4 *const restrict r);
+vec4 mat4MMultNKet(const mat4 m, const float x, const float y, const float z, const float w);
+void mat4MMultNKetPR(const mat4 *const restrict m, const float x, const float y, const float z, const float w, vec4 *const restrict r);
 
 mat4 mat4MAddM(const mat4 m1, const mat4 m2);
 void mat4MAddMP(mat4 *const restrict m1, const mat4 *const restrict m2);
@@ -51,11 +57,11 @@ return_t mat4InvertP(mat4 *const restrict m);
 return_t mat4InvertPR(const mat4 *const restrict m, mat4 *const restrict r);
 
 mat4 mat4Frustum(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar);
-return_t mat4FrustumP(mat4 *const restrict m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar);
+void mat4FrustumP(mat4 *const restrict m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar);
 mat4 mat4Ortho(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar);
-return_t mat4OrthoP(mat4 *const restrict m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar);
+void mat4OrthoP(mat4 *const restrict m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar);
 mat4 mat4Perspective(const float fovy, const float aspectRatio, const float zNear, const float zFar);
-return_t mat4PerspectiveP(mat4 *const restrict m, const float fovy, const float aspectRatio, const float zNear, const float zFar);
+void mat4PerspectiveP(mat4 *const restrict m, const float fovy, const float aspectRatio, const float zNear, const float zFar);
 mat4 mat4RotateToFace(const vec3 eye, const vec3 target, const vec3 up);
 void mat4RotateToFaceP(mat4 *const restrict m, const vec3 *const restrict eye, const vec3 *const restrict target, const vec3 *const restrict up);
 mat4 mat4LookAt(const vec3 eye, const vec3 target, const vec3 up);

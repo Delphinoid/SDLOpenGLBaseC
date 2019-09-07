@@ -1,7 +1,7 @@
 #ifndef BONE_H
 #define BONE_H
 
-#include "quat.h"
+#include "mat4.h"
 
 // Skeleton bone data.
 typedef struct {
@@ -11,6 +11,7 @@ typedef struct {
 } bone;
 
 void boneInit(bone *const restrict b);
+mat4 boneMatrix(const bone b);
 
 bone boneInvert(const bone b);
 void boneInvertP(bone *const restrict b);

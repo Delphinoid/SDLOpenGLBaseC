@@ -6,6 +6,18 @@ void boneInit(bone *const restrict b){
 	b->scale = vec3NewS(1.f);
 }
 
+mat4 boneMatrix(const bone b){
+	// Don't ask.
+	mat4 transform = mat4Scale(
+		mat4RotationMatrix(b.orientation),
+		b.scale.x, b.scale.y, b.scale.z
+	);
+	transform.m[3][0] = b.position.x;
+	transform.m[3][1] = b.position.y;
+	transform.m[3][2] = b.position.z;
+	return transform;
+}
+
 bone boneInvert(const bone b){
 	const bone r = {
 		.position = vec3Negate(b.position),
