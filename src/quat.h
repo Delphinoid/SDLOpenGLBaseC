@@ -4,8 +4,8 @@
 #include "vec3.h"
 
 typedef struct {
-	float w;
 	vec3 v;
+	float w;
 } quat;
 
 quat quatNew(const float w, const float x, const float y, const float z);

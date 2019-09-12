@@ -2,6 +2,101 @@
 #include "physicsRigidBody.h"
 #include "inline.h"
 
+/*
+** ----------------------------------------------------------------------
+**
+** Friction joints are based on three velocity constraints. The
+** first two are the linear "point-to-point" constraints for
+** tangential friction, while the third is an angular constraint.
+**
+** The magnitude of these three constraint expressions must be
+** less than or equal to mu * lambda_total, where mu is the
+** coefficient of friction and lambda_total is the total accumulated
+** impulse magnitude over the length of the contact.
+**
+** This joint is generally only used if PHYSICS_CONTACT_FRICTION_CONSTRAINT
+** is defined.
+**
+** ----------------------------------------------------------------------
+**
+** Differentiated tangential friction constraint equations:
+**
+** C1' : ((vB + wB X rB) - (vA + wA X rA)) . t1,
+** C2' : ((vB + wB X rB) - (vA + wA X rA)) . t2,
+**
+** where t1, t2 are the contact tangents.
+**
+** Differentiated angular friction constraint equation:
+**
+** C3' : (wB - wA) . n,
+**
+** where n is the contact normal.
+**
+** ----------------------------------------------------------------------
+**
+** Given the velocity vector
+**
+**     [vA]
+**     [wA]
+** V = [vB]
+**     [wB]
+**
+** and the identity
+**
+**       [((vB + wB X rB) - (vA + wA X rA)) . t1]
+** JtV = [((vB + wB X rB) - (vA + wA X rA)) . t2],
+**
+** we can solve for the Jacobian Jt for the tangential constraint
+** equations:
+**
+**      [-t1, -(rA X t1), t1, (rB X t1)]
+** Jt = [-t2, -(rA X t2), t2, (rB X t2)].
+**
+** For the angular constraint equation, the Jacobian Ja is
+**
+** Ja = [0, -n, 0, n]
+**
+** ----------------------------------------------------------------------
+**
+** The effective mass for the tangential constraint is given by
+** the 2x2 matrix (JtM^-1)Jt^T, where M^-1 is the inverse mass
+** matrix and Jt^T is the transposed tangential Jacobian.
+**
+**        [mA^-1  0    0    0  ]
+**        [  0  IA^-1  0    0  ]
+** M^-1 = [  0    0  mB^-1  0  ]
+**        [  0    0    0  IB^-1],
+**
+**        [    -t1,       -t2    ]
+**        [-(rA X t1), -(rA X t2)]
+** Jt^T = [     t1,        t2    ]
+**        [ (rB X t1),  (rB X t2)].
+**
+** Expanding results in
+**
+**                [mA^-1 + mB^-1 + (IA^-1 * (rA X t1) . (rA X t1)) + (IB^-1 * (rB X t1) . (rB X t1)),                 (IA^-1 * (rA X t1) . (rA X t2)) + (IB^-1 * (rB X t1) . (rB X t2))]
+** (JtM^-1)Jt^T = [                (IA^-1 * (rA X t1) . (rA X t2)) + (IB^-1 * (rB X t1) . (rB X t2)), mA^-1 + mB^-1 + (IA^-1 * (rA X t2) . (rA X t2)) + (IB^-1 * (rB X t2) . (rB X t2))].
+**
+** The effective mass for the angular constraint is given by
+** the scalar (JaM^-1)Ja^T:
+**
+** (JaM^-1)Ja^T = (((IA^-1 * n) . n) + ((IB^-1 * n) . n)).
+**
+** ----------------------------------------------------------------------
+**
+** Semi-implicit Euler:
+**
+** V = v + M^-1 * P.
+**
+** Where P = lambda * J^T and lambda is the impulse magnitude
+** (constraint Lagrange multiplier). Solving for lambda:
+**
+** lambda = -(JV + b)/((JM^-1)J^T).
+**
+** ----------------------------------------------------------------------
+*/
+
+#ifdef PHYSICS_CONSTRAINT_WARM_START
 __FORCE_INLINE__ void physJointFrictionWarmStart(const physJointFriction *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB){
 
 	/*
@@ -18,76 +113,23 @@ __FORCE_INLINE__ void physJointFrictionWarmStart(const physJointFriction *const 
 	physRigidBodyApplyVelocityImpulseAngular(bodyB, joint->rB, impulseTangent, impulseAngular);
 
 }
+#endif
 
 __FORCE_INLINE__ void physJointFrictionGenerateInverseEffectiveMass(physJointFriction *const restrict joint, const physRigidBody *const restrict bodyA, const physRigidBody *const restrict bodyB, const float inverseMassTotal){
 
-	/*
-	** Friction joints are based on the following three velocity
-	** constraints. The first two are the linear constraints for
-	** tangential friction, while the third is an angular constraint.
-	**
-	** C1' : ((vB + wB X rB) - (vA + wA X rA)) . t1
-	** C2' : ((vB + wB X rB) - (vA + wA X rA)) . t2
-	** C3' : (wB - wA) . n
-	**
-	** The magnitude of these three constraint expressions must be
-	** less than or equal to mu * lambda_total, where mu is the
-	** coefficient of friction and lambda_total is the total accumulated
-	** impulse magnitude over the length of the contact.
-	**
-	** The first step is to derive the effective mass for the two
-	** linear constraints. Because we have two of them, the Jacobian
-	** will be a 2x4 matrix rather than the 1x4 matrix used in most
-	** other constraints.
-	**
-	**     [-t1, -(rA X t1), t1, (rB X t1)]
-	** J = [-t2, -(rA X t2), t2, (rB X t2)]
-	**
-	**       [    -t1,       -t2    ]
-	**       [-(rA X t1), -(rA X t2)]
-	** J^T = [     t1,        t2    ]
-	**       [ (rB X t1),  (rB X t2)]
-	**
-	**        [mA^-1  0    0    0  ]
-	**        [  0  IA^-1  0    0  ]
-	** M^-1 = [  0    0  mB^-1  0  ]
-	**        [  0    0    0  IB^-1]
-	**
-	** Using the Jacobian and the inverse mass matrix, we can calculate
-	** the 2x2 effective mass matrix, (JM^-1)J^T:
-	**
-	**         [mA^-1 * -t1, IA^-1 * -(rA X t1), mB^-1 * t1, IB^-1 * (rB X t1)]
-	** JM^-1 = [mA^-1 * -t2, IA^-1 * -(rA X t2), mB^-1 * t2, IB^-1 * (rB X t2)]
-	**
-	**              [mA^-1 + mB^-1 + (IA^-1 * (rA X t1) . (rA X t1)) + (IB^-1 * (rB X t1) . (rB X t1)),                 (IA^-1 * (rA X t1) . (rA X t2)) + (IB^-1 * (rB X t1) . (rB X t2))]
-	** (JM^-1)J^T = [                (IA^-1 * (rA X t1) . (rA X t2)) + (IB^-1 * (rB X t1) . (rB X t2)), mA^-1 + mB^-1 + (IA^-1 * (rA X t2) . (rA X t2)) + (IB^-1 * (rB X t2) . (rB X t2))]
-	**
-	** Unlike contact constraints, the JV term used in the tangential
-	** Lagrange multiplier is not a scalar either. Rather, it is the
-	** following 2x1 matrix:
-	**
-	**      [((vB + wB X rB) - (vA + wA X rA)) . t1]
-	** JV = [((vB + wB X rB) - (vA + wA X rA)) . t2]
-	**
-	** Multiplying the inverse effective mass matrix, ((JM^-1)J^T)^-1,
-	** by JV results in a 2x1 matrix, where each row represents the
-	** tangential Lagrange multiplier (impulse magnitude).
-	**
-	** The angular constraint uses the following Jacobian:
-	**
-	** J = [0, -n, 0, n]
-	**
-	** Which results in the following inverse effective mass scalar:
-	**
-	** 1/(JM^-1J^T) = 1/(((IA^-1 * n) . n) + ((IB^-1 * n) . n))
-	*/
+	// Tangential effective mass:
+	//                [mA^-1 + mB^-1 + (IA^-1 * (rA X t1) . (rA X t1)) + (IB^-1 * (rB X t1) . (rB X t1)),                 (IA^-1 * (rA X t1) . (rA X t2)) + (IB^-1 * (rB X t1) . (rB X t2))]
+	// (JtM^-1)Jt^T = [                (IA^-1 * (rA X t1) . (rA X t2)) + (IB^-1 * (rB X t1) . (rB X t2)), mA^-1 + mB^-1 + (IA^-1 * (rA X t2) . (rA X t2)) + (IB^-1 * (rB X t2) . (rB X t2))]
+
+	// Angular effective mass:
+	// (JM^-1)J^T = ((IA^-1 * n) . n) + ((IB^-1 * n) . n)
 
 	const float angularMass = vec3Dot(
-		joint->normal,
 		mat3MMultVKet(
 			mat3MAddM(bodyA->inverseInertiaTensorGlobal, bodyB->inverseInertiaTensorGlobal),
 			joint->normal
-		)
+		),
+		joint->normal
 	);
 
 	const vec3 tangent1 = joint->tangent1;

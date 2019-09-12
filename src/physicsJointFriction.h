@@ -1,6 +1,7 @@
 #ifndef PHYSICSJOINTFRICTION_H
 #define PHYSICSJOINTFRICTION_H
 
+#include "physicsSettings.h"
 #include "vec3.h"
 #include "mat2.h"
 
@@ -40,7 +41,9 @@ typedef struct {
 
 } physJointFriction;
 
+#ifdef PHYSICS_CONSTRAINT_WARM_START
 void physJointFrictionWarmStart(const physJointFriction *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB);
+#endif
 void physJointFrictionGenerateInverseEffectiveMass(physJointFriction *const restrict joint, const physRigidBody *const restrict bodyA, const physRigidBody *const restrict bodyB, const float inverseMassTotal);
 void physJointFrictionSolveVelocityConstraints(physJointFriction *const restrict joint, physRigidBody *const bodyA, physRigidBody *const bodyB, const float normalImpulseTotal);
 

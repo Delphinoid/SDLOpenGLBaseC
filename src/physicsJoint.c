@@ -1,15 +1,11 @@
 #include "modulePhysics.h"
 #include "inline.h"
 
-void physJointInit(physJoint *const restrict joint, const physJointType_t type){
+void physJointInit(physJoint *const restrict joint, const flags_t flags, const physJointType_t type){
 	joint->type = type;
-	joint->flags = 0;
-}
-
-void physJointCreate(physJoint *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, const physJointType_t type){
-
-    ///
-
+	joint->flags = flags;
+	joint->bodyA = NULL;
+	joint->bodyB = NULL;
 }
 
 /** The lines below should eventually be removed. **/
@@ -59,7 +55,7 @@ __FORCE_INLINE__ void physJointSolveVelocityConstraints(physJoint *const restric
 
 }
 
-#ifdef PHYSICS_SOLVER_GAUSS_SEIDEL
+#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 
 /** The lines below should eventually be removed. **/
 #define physJointFixedSolveConfigurationConstraints     NULL
@@ -85,6 +81,75 @@ __FORCE_INLINE__ return_t physJointSolveConfigurationConstraints(physJoint *cons
 }
 
 #endif
+
+void physJointAdd(physJoint *const joint, physRigidBody *bodyA, physRigidBody *bodyB){
+
+	/*
+	** Sort a new joint into its bodies.
+	*/
+
+	// Set the joint's miscellaneous variables.
+	// bodyA must be the body with the greater address.
+	if(bodyA < bodyB){
+		joint->bodyA = bodyB;
+		joint->bodyB = bodyA;
+		bodyA = bodyB;
+		bodyB = joint->bodyB;
+	}else{
+		joint->bodyA = bodyA;
+		joint->bodyB = bodyB;
+	}
+
+	// Find an insertion point for the joint in bodyA's joint array.
+	// Joints are sorted from smallest partner address to largest.
+	physJoint *previous = NULL;
+	physJoint *next = bodyA->joints;
+	while(next != NULL && bodyB > next->bodyB){
+		previous = next;
+		next = (physJoint *)memQLinkNextA(next);
+	}
+
+	if(previous != NULL){
+		// Insert between the previous joint and its next joint.
+		memQLinkNextA(previous) = (byte_t *)joint;
+	}else{
+		// Insert directly before the first joint.
+		bodyA->joints = joint;
+	}
+	if(next != NULL){
+		if(next->bodyA == bodyA){
+			memQLinkPrevA(next) = (byte_t *)joint;
+		}else{
+			memQLinkPrevB(next) = (byte_t *)joint;
+		}
+	}
+	memQLinkPrevA(joint) = (byte_t *)previous;
+	memQLinkNextA(joint) = (byte_t *)next;
+
+
+	// Find an insertion point for the joint in bodyB's joint array.
+	// Joints are sorted from smallest partner address to largest.
+	previous = NULL;
+	next = bodyB->joints;
+	while(next != NULL && next->bodyA == bodyB){
+		previous = next;
+		next = (physJoint *)memQLinkNextA(next);
+	}
+
+	if(previous != NULL){
+		// Insert between the previous joint and its next joint.
+		memQLinkNextA(previous) = (byte_t *)joint;
+	}else{
+		// Insert directly before the first joint.
+		bodyB->joints = joint;
+	}
+	if(next != NULL){
+		memQLinkPrevB(next) = (byte_t *)joint;
+	}
+	memQLinkPrevB(joint) = (byte_t *)previous;
+	memQLinkNextB(joint) = (byte_t *)next;
+
+}
 
 void physJointDelete(physJoint *const joint){
 

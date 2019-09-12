@@ -3,6 +3,85 @@
 #include <math.h>
 #include "inline.h"
 
+/*
+** ----------------------------------------------------------------------
+**
+** Distance constraint equation:
+**
+** C = ||pB - pA|| - L = 0.
+**
+** Differentiating so we can solve w.r.t. velocity:
+**
+** C' = dC/dt = (((wB X rB) + vB) - ((wA X rA) + vA)) . n = 0,
+**
+** where n = (pB - pA)/||pB - pA|| and the p terms are the
+** transformed anchor points in global space.
+**
+** ----------------------------------------------------------------------
+**
+** Given the velocity vector
+**
+**     [vA]
+**     [wA]
+** V = [vB]
+**     [wB]
+**
+** and the identity JV = C', we can solve for the Jacobian J:
+**
+** J = [-n, -(rA X n), n, (rB X n)].
+**
+** Finally, adding a potential bias term, we have
+**
+** C' = JV + b >= 0.
+**
+** ----------------------------------------------------------------------
+**
+** The effective mass for the constraint is given by (JM^-1)J^T,
+** where M^-1 is the inverse mass matrix and J^T is the transposed
+** Jacobian.
+**
+**        [mA^-1  0    0    0  ]
+**        [  0  IA^-1  0    0  ]
+** M^-1 = [  0    0  mB^-1  0  ]
+**        [  0    0    0  IB^-1],
+**
+**       [    -n   ]
+**       [-(rA X n)]
+** J^T = [     n   ]
+**       [ (rB X n)].
+**
+** Expanding results in
+**
+** (JM^-1)J^T = mA^-1 + mB^-1 + ((rA X n) . (IA^-1 * (rA X n))) + ((rB X n) . (IB^-1 * (rB X n))).
+**
+** ----------------------------------------------------------------------
+**
+** Semi-implicit Euler:
+**
+** V = v + M^-1 * P.
+**
+** Where P = lambda * J^T and lambda is the impulse magnitude
+** (constraint Lagrange multiplier). Solving for lambda:
+**
+** lambda = -(JV + b)/((JM^-1)J^T).
+**
+** ----------------------------------------------------------------------
+*/
+
+void physJointDistanceInit(physJointDistance *const restrict joint, const vec3 anchorA, const vec3 anchorB, const float distance, const float frequency, const float damping){
+	joint->distance = distance;
+	joint->angularFrequency = 2.f * M_PI * frequency;
+	joint->damping = 2.f * joint->angularFrequency * damping;
+	joint->gamma = 0.f;
+	joint->bias = 0.f;
+	vec3ZeroP(&joint->rA);
+	vec3ZeroP(&joint->rB);
+	vec3ZeroP(&joint->rAB);
+	joint->inverseEffectiveMass = 0.f;
+	joint->impulseAccumulator = 0.f;
+}
+
+#ifdef PHYSICS_CONSTRAINT_WARM_START
 static __FORCE_INLINE__ void physJointDistanceWarmStart(physJointDistance *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB){
 
 	const vec3 impulse = vec3VMultS(joint->rAB, joint->impulseAccumulator);
@@ -13,52 +92,14 @@ static __FORCE_INLINE__ void physJointDistanceWarmStart(physJointDistance *const
 	physRigidBodyApplyVelocityImpulse(bodyB, joint->rB, impulse);
 
 }
+#endif
 
 static __FORCE_INLINE__ float physJointDistanceEffectiveMass(const vec3 pointA, const mat3 inverseInertiaTensorA, const vec3 pointB, const mat3 inverseInertiaTensorB, const vec3 normal, const float inverseMassTotal){
 
-	/*
-	** Calculates the effective mass for the constraint.
-	** The inverse of this is used as the denominator for the
-	** impulse magnitude (constraint Lagrange multiplier):
-	**
-	** 1 / ((JM^-1)J^T)
-	**
-	** Where J is the Jacobian row vector, J^T is its transpose
-	** and M^-1 is the inverse mass matrix:
-	**
-	** J = [-p, -(rA X p), p, (rB X p)]
-	**
-	**       [    -p   ]
-	**       [-(rA x p)]
-	** J^T = [     p   ]
-	**       [ (rB x p)]
-	**
-	**        [mA^-1  0    0    0  ]
-	**        [  0  IA^-1  0    0  ]
-	** M^-1 = [  0    0  mB^-1  0  ]
-	**        [  0    0    0  IB^-1]
-	**
-	** Note that p = (pB - pA). J is derived from JV = C', where C is
-	** the constraint equation and V is the velocity column vector:
-	**
-	** C = (1/2)((pB - pA)^2 - L^2) = 0
-	** C' = dC/dt = ((vB + wB X rB) - (vA + wA X rA)) . (pB - pA) = 0
-	**
-	**     [vA]
-	**     [wA]
-	** V = [vB]
-	**     [wB]
-	**
-	** Thus, our initial expression above expands to the following:
-	**
-	** 1 / (mA + mB + ((rA X p) . (IA(rA x p))) + ((rB x p) . (IB(rB x p))))
-	*/
-
+	// Effective mass:
+	// (JM^-1)J^T = mA^-1 + mB^-1 + ((rA X n) . (IA^-1 * (rA X n))) + ((rB X n) . (IB^-1 * (rB X n)))
 	const vec3 angularDeltaA = vec3Cross(pointA, normal);
 	const vec3 angularDeltaB = vec3Cross(pointB, normal);
-
-	// We don't invert the effective mass here, as
-	// we may modify it in physJointGenerateBias().
 	return inverseMassTotal +
 	       vec3Dot(angularDeltaA, mat3MMultVKet(inverseInertiaTensorA, angularDeltaA)) +
 	       vec3Dot(angularDeltaB, mat3MMultVKet(inverseInertiaTensorB, angularDeltaB));
@@ -68,26 +109,33 @@ static __FORCE_INLINE__ float physJointDistanceEffectiveMass(const vec3 pointA, 
 static __FORCE_INLINE__ void physJointDistanceGenerateBias(physJointDistance *const restrict joint, const physRigidBody *const restrict bodyA, const physRigidBody *const restrict bodyB, const float dt){
 
 	// Only use soft constraints if the angular frequency is greater than 0.
-	if(joint->angularFrequency <= 0.f || joint->inverseEffectiveMass <= 0.f){
+	if(joint->angularFrequency <= 0.f){
 
 		joint->gamma = 0.f;
 		joint->bias = 0.f;
 
 	}else{
 
-		const float inverseEffectiveMass = 1.f / joint->inverseEffectiveMass;
+		// joint->inverseEffectiveMass is set to the
+		// effective mass in physJointDistancePersist().
+		const float inverseEffectiveMass = (joint->inverseEffectiveMass > 0.f ? 1.f/joint->inverseEffectiveMass : 0.f);
 		// k = m_effective * omega^2
 		const float stiffness = inverseEffectiveMass * joint->angularFrequency * joint->angularFrequency;
 
 		// c = m_effective * d
-		// gamma = 1/(hk + c)
-		joint->gamma = 1.f / (dt * (dt * stiffness + inverseEffectiveMass * joint->damping));
+		// gamma = 1/(h(hk + c))
+		joint->gamma = dt * (dt * stiffness + inverseEffectiveMass * joint->damping);
+		joint->gamma = (joint->gamma != 0.f ? 1.f/joint->gamma : 0.f);
 		// beta = hk/(hk + c)
-		// bias = beta/h * C(p)
+		// bias = beta/h * C
+		//      = C * h * k * gamma
+		// Bias is set to C in physJointDistancePersist().
 		joint->bias *= dt * stiffness * joint->gamma;
-		joint->inverseEffectiveMass = 1.f / (joint->inverseEffectiveMass + joint->gamma);
+		joint->inverseEffectiveMass += joint->gamma;
 
 	}
+
+	joint->inverseEffectiveMass = (joint->inverseEffectiveMass > 0.f ? 1.f/joint->inverseEffectiveMass : 0.f);
 
 }
 
@@ -98,18 +146,24 @@ static __FORCE_INLINE__ void physJointDistancePersist(physJointDistance *const r
 	// Transform the anchor points.
 	joint->rA = quatRotateVec3FastApproximate(
 		bodyA->configuration.orientation,
-		vec3VMultV(bodyA->configuration.scale, joint->anchorA)
+		vec3VMultV(
+			bodyA->configuration.scale,
+			vec3VSubV(((physJointDistance *)joint)->anchorA, bodyA->centroidLocal)
+		)
 	);
 	joint->rB = quatRotateVec3FastApproximate(
 		bodyB->configuration.orientation,
-		vec3VMultV(bodyB->configuration.scale, joint->anchorB)
+		vec3VMultV(
+			bodyB->configuration.scale,
+			vec3VSubV(((physJointDistance *)joint)->anchorB, bodyB->centroidLocal)
+		)
 	);
 
 	// Find the bodies' relative positions.
 	// This is the direction impulses will
 	// be applied in.
-	// p = (pB - pA)
-	//   = (cB + rB - cA - rA)
+	// n = (pB - pA)/||pB - pA||
+	//   = (cB + rB - cA - rA)/||cB + rB - cA - rA||
 	joint->rAB = vec3VSubV(
 		vec3VSubV(
 			vec3VAddV(bodyB->centroidGlobal, joint->rB),
@@ -121,15 +175,24 @@ static __FORCE_INLINE__ void physJointDistancePersist(physJointDistance *const r
 	// Normalize rAB and handle singularities.
 	distance = vec3Magnitude(joint->rAB);
 	if(distance > PHYSICS_LINEAR_SLOP){
-		vec3VDivS(joint->rAB, distance);
+		joint->rAB = vec3VMultS(joint->rAB, 1.f/distance);
 	}else{
 		vec3ZeroP(&joint->rAB);
 	}
 
-	// Calculate C(p) for the bias term.
+	// Calculate C for the bias term.
 	// beta = hk/(hk + c)
-	// bias = beta/h * C(p)
+	// bias = beta/h * C
+	//      = gamma * h * k * C
 	joint->bias = distance - joint->distance;
+
+	// Calculate the effective mass (not the inverse).
+	// This is used in physJointDistanceGenerateBias().
+	joint->inverseEffectiveMass = physJointDistanceEffectiveMass(
+		joint->rA, bodyA->inverseInertiaTensorGlobal,
+		joint->rB, bodyB->inverseInertiaTensorGlobal,
+		joint->rAB, bodyA->inverseMass + bodyB->inverseMass
+	);
 
 }
 
@@ -137,13 +200,10 @@ void physJointDistancePresolveConstraints(physJoint *const restrict joint, physR
 
 	// Initialize the constraints.
 	physJointDistancePersist((physJointDistance *)joint, bodyA, bodyB);
-	((physJointDistance *)joint)->inverseEffectiveMass = physJointDistanceEffectiveMass(
-		((physJointDistance *)joint)->rA, bodyA->inverseInertiaTensorGlobal,
-		((physJointDistance *)joint)->rB, bodyB->inverseInertiaTensorGlobal,
-		((physJointDistance *)joint)->rAB, bodyA->inverseMass + bodyB->inverseMass
-	);
 	physJointDistanceGenerateBias((physJointDistance *)joint, bodyA, bodyB, dt);
+	#ifdef PHYSICS_CONSTRAINT_WARM_START
 	physJointDistanceWarmStart((physJointDistance *)joint, bodyA, bodyB);
+	#endif
 
 }
 
@@ -153,8 +213,8 @@ void physJointDistanceSolveVelocityConstraints(physJoint *const restrict joint, 
 	vec3 impulse;
 
 	// Evaluate the constraint expression, JV.
-	// C = (pB - pA) . p
-	// C' = dC/dt = (((wB x rB) + vB) - ((wA x rA) + vA)) . p
+	// C = ||pB - pA|| - L
+	// C' = dC/dt = (((wB X rB) + vB) - ((wA X rA) + vA)) . n
 	// JV = C'
 	lambda = vec3Dot(
 		vec3VSubV(
@@ -188,7 +248,7 @@ void physJointDistanceSolveVelocityConstraints(physJoint *const restrict joint, 
 
 }
 
-#ifdef PHYSICS_SOLVER_GAUSS_SEIDEL
+#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 return_t physJointDistanceSolveConfigurationConstraints(physJoint *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB){
 
 	// Only apply positional corrections if
@@ -198,17 +258,23 @@ return_t physJointDistanceSolveConfigurationConstraints(physJoint *const restric
 		// Retransform the anchor points.
 		const vec3 rA = quatRotateVec3FastApproximate(
 			bodyA->configuration.orientation,
-			vec3VMultV(bodyA->configuration.scale, ((physJointDistance *)joint)->anchorA)
+			vec3VMultV(
+				bodyA->configuration.scale,
+				vec3VSubV(((physJointDistance *)joint)->anchorA, bodyA->centroidLocal)
+			)
 		);
 		const vec3 rB = quatRotateVec3FastApproximate(
 			bodyB->configuration.orientation,
-			vec3VMultV(bodyB->configuration.scale, ((physJointDistance *)joint)->anchorB)
+			vec3VMultV(
+				bodyB->configuration.scale,
+				vec3VSubV(((physJointDistance *)joint)->anchorB, bodyB->centroidLocal)
+			)
 		);
 
 		// Find the bodies' relative positions.
 		// This is the direction impulses will
 		// be applied in.
-		// p = (pB - pA)
+		// n = (pB - pA)
 		//   = (cB + rB - cA - rA)
 		vec3 rAB = vec3VSubV(
 			vec3VSubV(
@@ -231,7 +297,7 @@ return_t physJointDistanceSolveConfigurationConstraints(physJoint *const restric
 			);
 
 			float constraint = distance - ((physJointDistance *)joint)->distance;
-			// Clamp the constraint to prevent large corrections.
+			// Allow some slop and clamp the constraint to prevent large corrections.
 			if(constraint <= -PHYSICS_MAXIMUM_LINEAR_CORRECTION){
 				constraint = -PHYSICS_MAXIMUM_LINEAR_CORRECTION;
 			}else if(constraint > PHYSICS_MAXIMUM_LINEAR_CORRECTION){
@@ -260,3 +326,13 @@ return_t physJointDistanceSolveConfigurationConstraints(physJoint *const restric
 
 }
 #endif
+
+void physJointDistanceSetFrequency(physJointDistance *const restrict joint, const float frequency){
+	joint->damping /= joint->angularFrequency;
+	joint->angularFrequency = 2.f * M_PI * frequency;
+	joint->damping *= joint->angularFrequency;
+}
+
+void physJointDistanceSetDamping(physJointDistance *const restrict joint, const float damping){
+	joint->damping = 2.f * joint->angularFrequency * damping;
+}

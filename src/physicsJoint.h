@@ -25,7 +25,8 @@
 #define PHYSICS_JOINT_TYPE_SPHERE    4
 #define PHYSICS_JOINT_TYPE_NUM       5
 
-#define PHYSICS_JOINT_COLLIDE 0x01
+#define PHYSICS_JOINT_COLLISION_IGNORE  0x00
+#define PHYSICS_JOINT_COLLISION         0x01
 
 typedef int_least8_t physJointType_t;
 
@@ -46,8 +47,8 @@ typedef struct physJoint {
 	flags_t flags;
 
 	// Rigid body pointers.
-	// Body A is guaranteed to have a greater address
-	// than body B.
+	// Body A is guaranteed to have a
+	// greater address than body B.
 	physRigidBody *bodyA;
 	physRigidBody *bodyB;
 
@@ -64,7 +65,7 @@ extern void (* const physJointSolveVelocityConstraintsJumpTable[PHYSICS_JOINT_TY
 	physRigidBody *const restrict bodyA,
 	physRigidBody *const restrict bodyB
 );
-#ifdef PHYSICS_SOLVER_GAUSS_SEIDEL
+#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 extern return_t (* const physJointSolveConfigurationConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM])(
 	physJoint *const restrict joint,
 	physRigidBody *const restrict bodyA,
@@ -72,13 +73,13 @@ extern return_t (* const physJointSolveConfigurationConstraintsJumpTable[PHYSICS
 );
 #endif
 
-void physJointInit(physJoint *const restrict joint, const physJointType_t type);
-void physJointCreate(physJoint *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, const physJointType_t type);
+void physJointInit(physJoint *const restrict joint, const flags_t flags, const physJointType_t type);
 void physJointPresolveConstraints(physJoint *const restrict joint, const float dt);
 void physJointSolveVelocityConstraints(physJoint *const restrict joint);
-#ifdef PHYSICS_SOLVER_GAUSS_SEIDEL
+#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 return_t physJointSolveConfigurationConstraints(physJoint *const restrict joint);
 #endif
+void physJointAdd(physJoint *const joint, physRigidBody *bodyA, physRigidBody *bodyB);
 void physJointDelete(physJoint *const restrict joint);
 
 #endif

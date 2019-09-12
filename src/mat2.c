@@ -20,6 +20,48 @@ __HINT_INLINE__ void mat2ZeroP(mat2 *const restrict m){
 	memset(m->m, 0, sizeof(mat2));
 }
 
+__HINT_INLINE__ mat2 mat2DiagonalV(const vec2 v){
+	const mat2 r = {.m = {{v.x, 0.f},
+	                      {0.f, v.y}}};
+	return r;
+}
+__HINT_INLINE__ void mat2DiagonalVP(mat2 *const restrict m, const vec2 *const restrict v){
+	memset(m->m, 0, sizeof(mat2));
+	m->m[0][0] = v->x;
+	m->m[1][1] = v->y;
+}
+__HINT_INLINE__ mat2 mat2DiagonalS(const float s){
+	const mat2 r = {.m = {{s, 0.f},
+	                      {0.f, s}}};
+	return r;
+}
+__HINT_INLINE__ void mat2DiagonalSP(mat2 *const restrict m, const float s){
+	memset(m->m, 0, sizeof(mat2));
+	m->m[0][0] = s;
+	m->m[1][1] = s;
+}
+__HINT_INLINE__ mat2 mat2DiagonalN(const float x, const float y){
+	const mat2 r = {.m = {{x, 0.f},
+	                      {0.f, y}}};
+	return r;
+}
+__HINT_INLINE__ void mat2DiagonalNP(mat2 *const restrict m, const float x, const float y){
+	memset(m->m, 0, sizeof(mat2));
+	m->m[0][0] = x;
+	m->m[1][1] = y;
+}
+
+__HINT_INLINE__ mat2 mat2SkewSymmetric(const float s){
+	const mat2 r = {.m = {{0.f, -s},
+	                      {s, 0.f}}};
+	return r;
+}
+__HINT_INLINE__ void mat2SkewSymmetricP(mat2 *const restrict m, const float s){
+	memset(m->m, 0, sizeof(mat2));
+	m->m[0][1] = -s;
+	m->m[1][0] = s;
+}
+
 __HINT_INLINE__ mat2 mat2MMultM(const mat2 m1, const mat2 m2){
 
 	const mat2 r = {.m = {{m1.m[0][0]*m2.m[0][0] + m1.m[1][0]*m2.m[0][1],
@@ -174,4 +216,112 @@ __HINT_INLINE__ return_t mat2InvertPR(const mat2 *const restrict m, mat2 *const 
 		return 1;
 	}
 	return 0;
+}
+
+__HINT_INLINE__ vec2 mat2Solve(const mat2 A, const vec2 b){
+
+	// Solves Ax = b using Cramer's rule.
+	// Cramer's rule states that
+	//     b.x = det(A_x) / det(A)
+	//     b.y = det(A_y) / det(A)
+	// for matrices A_x, A_y that are the
+	// matrix A with the first and second
+	// columns replaced with the solution
+	// vector b.
+	// If the determinant of A is zero,
+	// Cramer's rule does not apply.
+
+	float invDetA = mat2Determinant(A);
+
+	if(invDetA != 0.f){
+
+		vec2 r; mat2 A_b;
+		invDetA = 1.f / invDetA;
+
+		memcpy(A_b.m[0], &b, sizeof(vec2));
+		memcpy(A_b.m[1], A.m[1], sizeof(vec2)+sizeof(vec2));
+		r.x = mat2Determinant(A_b) * invDetA;
+
+		memcpy(A_b.m[0], A.m[0], sizeof(vec2));
+		memcpy(A_b.m[1], &b, sizeof(vec2));
+		r.y = mat2Determinant(A_b) * invDetA;
+
+		return r;
+
+	}
+
+	return vec2Zero();
+
+}
+
+__HINT_INLINE__ return_t mat2SolveR(const mat2 A, const vec2 b, vec2 *const restrict r){
+
+	// Solves Ax = b using Cramer's rule.
+	// Cramer's rule states that
+	//     b.x = det(A_x) / det(A)
+	//     b.y = det(A_y) / det(A)
+	// for matrices A_x, A_y that are the
+	// matrix A with the first and second
+	// columns replaced with the solution
+	// vector b.
+	// If the determinant of A is zero,
+	// Cramer's rule does not apply.
+
+	float invDetA = mat2Determinant(A);
+
+	if(invDetA != 0.f){
+
+		mat2 A_b;
+		invDetA = 1.f / invDetA;
+
+		memcpy(A_b.m[0], &b, sizeof(vec2));
+		memcpy(A_b.m[1], A.m[1], sizeof(vec2)+sizeof(vec2));
+		r->x = mat2Determinant(A_b) * invDetA;
+
+		memcpy(A_b.m[0], A.m[0], sizeof(vec2));
+		memcpy(A_b.m[1], &b, sizeof(vec2));
+		r->y = mat2Determinant(A_b) * invDetA;
+
+		return 1;
+
+	}
+
+	return 0;
+
+}
+
+__HINT_INLINE__ return_t mat2SolvePR(const mat2 *const restrict A, const vec2 *const restrict b, vec2 *const restrict r){
+
+	// Solves Ax = b using Cramer's rule.
+	// Cramer's rule states that
+	//     b.x = det(A_x) / det(A)
+	//     b.y = det(A_y) / det(A)
+	// for matrices A_x, A_y that are the
+	// matrix A with the first and second
+	// columns replaced with the solution
+	// vector b.
+	// If the determinant of A is zero,
+	// Cramer's rule does not apply.
+
+	float invDetA = mat2DeterminantP(A);
+
+	if(invDetA != 0.f){
+
+		mat2 A_b;
+		invDetA = 1.f / invDetA;
+
+		memcpy(A_b.m[0], b, sizeof(vec2));
+		memcpy(A_b.m[1], A->m[1], sizeof(vec2)+sizeof(vec2));
+		r->x = mat2DeterminantP(&A_b) * invDetA;
+
+		memcpy(A_b.m[0], A->m[0], sizeof(vec2));
+		memcpy(A_b.m[1], b, sizeof(vec2));
+		r->y = mat2DeterminantP(&A_b) * invDetA;
+
+		return 1;
+
+	}
+
+	return 0;
+
 }

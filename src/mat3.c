@@ -23,6 +23,59 @@ __HINT_INLINE__ void mat3ZeroP(mat3 *const restrict m){
 	memset(m->m, 0, sizeof(mat3));
 }
 
+__HINT_INLINE__ mat3 mat3DiagonalV(const vec3 v){
+	const mat3 r = {.m = {{v.x, 0.f, 0.f},
+	                      {0.f, v.y, 0.f},
+	                      {0.f, 0.f, v.z}}};
+	return r;
+}
+__HINT_INLINE__ void mat3DiagonalVP(mat3 *const restrict m, const vec3 *const restrict v){
+	memset(m->m, 0, sizeof(mat3));
+	m->m[0][0] = v->x;
+	m->m[1][1] = v->y;
+	m->m[2][2] = v->z;
+}
+__HINT_INLINE__ mat3 mat3DiagonalS(const float s){
+	const mat3 r = {.m = {{s, 0.f, 0.f},
+	                      {0.f, s, 0.f},
+	                      {0.f, 0.f, s}}};
+	return r;
+}
+__HINT_INLINE__ void mat3DiagonalSP(mat3 *const restrict m, const float s){
+	memset(m->m, 0, sizeof(mat3));
+	m->m[0][0] = s;
+	m->m[1][1] = s;
+	m->m[2][2] = s;
+}
+__HINT_INLINE__ mat3 mat3DiagonalN(const float x, const float y, const float z){
+	const mat3 r = {.m = {{x, 0.f, 0.f},
+	                      {0.f, y, 0.f},
+	                      {0.f, 0.f, z}}};
+	return r;
+}
+__HINT_INLINE__ void mat3DiagonalNP(mat3 *const restrict m, const float x, const float y, const float z){
+	memset(m->m, 0, sizeof(mat3));
+	m->m[0][0] = x;
+	m->m[1][1] = y;
+	m->m[2][2] = z;
+}
+
+__HINT_INLINE__ mat3 mat3SkewSymmetric(const vec3 v){
+	const mat3 r = {.m = {{0.f, -v.z,  v.y},
+	                      {v.z,  0.f, -v.x},
+	                      {-v.y, v.x,  0.f}}};
+	return r;
+}
+__HINT_INLINE__ void mat3SkewSymmetricP(mat3 *const restrict m, const vec3 *const restrict v){
+	memset(m->m, 0, sizeof(mat3));
+	m->m[0][1] = -v->z;
+	m->m[0][2] = v->y;
+	m->m[1][0] = v->z;
+	m->m[1][2] = -v->x;
+	m->m[2][0] = -v->y;
+	m->m[2][1] = v->x;
+}
+
 __HINT_INLINE__ mat3 mat3MMultM(const mat3 m1, const mat3 m2){
 
 	const mat3 r = {.m = {{m1.m[0][0]*m2.m[0][0] + m1.m[1][0]*m2.m[0][1] + m1.m[2][0]*m2.m[0][2],
@@ -283,6 +336,129 @@ __HINT_INLINE__ return_t mat3InvertPR(const mat3 *const restrict m, mat3 *const 
 		r->m[2][0] = f2 * invDet;
 		r->m[2][1] = (temp.m[2][0] * temp.m[0][1] - temp.m[0][0] * temp.m[2][1]) * invDet;
 		r->m[2][2] = (temp.m[0][0] * temp.m[1][1] - temp.m[1][0] * temp.m[0][1]) * invDet;
+
+		return 1;
+
+	}
+
+	return 0;
+
+}
+
+__HINT_INLINE__ vec3 mat3Solve(const mat3 A, const vec3 b){
+
+	// Solves Ax = b using Cramer's rule.
+	// Cramer's rule states that
+	//     b.x = det(A_x) / det(A)
+	//     b.y = det(A_y) / det(A)
+	//     b.z = det(A_z) / det(A)
+	// for matrices A_x, A_y, A_z that are
+	// the matrix A with the first, second
+	// and third columns replaced with the
+	// solution vector b.
+	// If the determinant of A is zero,
+	// Cramer's rule does not apply.
+
+	float invDetA = mat3Determinant(A);
+
+	if(invDetA != 0.f){
+
+		vec3 r; mat3 A_b;
+		invDetA = 1.f / invDetA;
+
+		memcpy(A_b.m[0], &b, sizeof(vec3));
+		memcpy(A_b.m[1], A.m[1], sizeof(vec3)+sizeof(vec3));
+		r.x = mat3Determinant(A_b) * invDetA;
+
+		memcpy(A_b.m[0], A.m[0], sizeof(vec3));
+		memcpy(A_b.m[1], &b, sizeof(vec3));
+		r.y = mat3Determinant(A_b) * invDetA;
+
+		memcpy(A_b.m[1], A.m[1], sizeof(vec3));
+		memcpy(A_b.m[2], &b, sizeof(vec3));
+		r.z = mat3Determinant(A_b) * invDetA;
+
+		return r;
+
+	}
+
+	return vec3Zero();
+
+}
+
+__HINT_INLINE__ return_t mat3SolveR(const mat3 A, const vec3 b, vec3 *const restrict r){
+
+	// Solves Ax = b using Cramer's rule.
+	// Cramer's rule states that
+	//     b.x = det(A_x) / det(A)
+	//     b.y = det(A_y) / det(A)
+	//     b.z = det(A_z) / det(A)
+	// for matrices A_x, A_y, A_z that are
+	// the matrix A with the first, second
+	// and third columns replaced with the
+	// solution vector b.
+	// If the determinant of A is zero,
+	// Cramer's rule does not apply.
+
+	float invDetA = mat3Determinant(A);
+
+	if(invDetA != 0.f){
+
+		mat3 A_b;
+		invDetA = 1.f / invDetA;
+
+		memcpy(A_b.m[0], &b, sizeof(vec3));
+		memcpy(A_b.m[1], A.m[1], sizeof(vec3)+sizeof(vec3));
+		r->x = mat3Determinant(A_b) * invDetA;
+
+		memcpy(A_b.m[0], A.m[0], sizeof(vec3));
+		memcpy(A_b.m[1], &b, sizeof(vec3));
+		r->y = mat3Determinant(A_b) * invDetA;
+
+		memcpy(A_b.m[1], A.m[1], sizeof(vec3));
+		memcpy(A_b.m[2], &b, sizeof(vec3));
+		r->z = mat3Determinant(A_b) * invDetA;
+
+		return 1;
+
+	}
+
+	return 0;
+
+}
+
+__HINT_INLINE__ return_t mat3SolvePR(const mat3 *const restrict A, const vec3 *const restrict b, vec3 *const restrict r){
+
+	// Solves Ax = b using Cramer's rule.
+	// Cramer's rule states that
+	//     b.x = det(A_x) / det(A)
+	//     b.y = det(A_y) / det(A)
+	//     b.z = det(A_z) / det(A)
+	// for matrices A_x, A_y, A_z that are
+	// the matrix A with the first, second
+	// and third columns replaced with the
+	// solution vector b.
+	// If the determinant of A is zero,
+	// Cramer's rule does not apply.
+
+	float invDetA = mat3DeterminantP(A);
+
+	if(invDetA != 0.f){
+
+		mat3 A_b;
+		invDetA = 1.f / invDetA;
+
+		memcpy(A_b.m[0], b, sizeof(vec3));
+		memcpy(A_b.m[1], A->m[1], sizeof(vec3)+sizeof(vec3));
+		r->x = mat3DeterminantP(&A_b) * invDetA;
+
+		memcpy(A_b.m[0], A->m[0], sizeof(vec3));
+		memcpy(A_b.m[1], b, sizeof(vec3));
+		r->y = mat3DeterminantP(&A_b) * invDetA;
+
+		memcpy(A_b.m[1], A->m[1], sizeof(vec3));
+		memcpy(A_b.m[2], b, sizeof(vec3));
+		r->z = mat3DeterminantP(&A_b) * invDetA;
 
 		return 1;
 

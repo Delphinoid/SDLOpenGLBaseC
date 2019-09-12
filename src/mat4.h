@@ -21,6 +21,13 @@ mat4 mat4Zero();
 void mat4IdentityP(mat4 *const restrict m);
 void mat4ZeroP(mat4 *const restrict m);
 
+mat4 mat4DiagonalV(const vec4 v);
+void mat4DiagonalVP(mat4 *const restrict m, const vec4 *const restrict v);
+mat4 mat4DiagonalS(const float s);
+void mat4DiagonalSP(mat4 *const restrict m, const float s);
+mat4 mat4DiagonalN(const float x, const float y, const float z, const float w);
+void mat4DiagonalNP(mat4 *const restrict m, const float x, const float y, const float z, const float w);
+
 mat4 mat4MMultM(const mat4 m1, const mat4 m2);
 void mat4MMultMP1(mat4 *const restrict m1, const mat4 *const restrict m2);
 void mat4MMultMP2(const mat4 *const restrict m1, mat4 *const restrict m2);

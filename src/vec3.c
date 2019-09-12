@@ -402,6 +402,16 @@ __HINT_INLINE__ void vec3PerpendicularPR(const vec3 *const restrict v, vec3 *con
 	r->z = -v->y;
 }
 
+__HINT_INLINE__ void vec3OrthonormalBasis(const vec3 v1, vec3 *const restrict v2, vec3 *const restrict v3){
+	// Generates an orthonormal basis from v1.
+	*v3 = vec3Cross(v1, (*v2 = vec3Perpendicular(v1)));
+}
+__HINT_INLINE__ void vec3OrthonormalBasisP(const vec3 *const restrict v1, vec3 *const restrict v2, vec3 *const restrict v3){
+	// Generates an orthonormal basis from v1.
+	vec3PerpendicularPR(v1, v2);
+	vec3CrossPR(v1, v2, v3);
+}
+
 __HINT_INLINE__ vec3 vec3Lerp(const vec3 v1, const vec3 v2, const float t){
 	/*
 	** r = v1 + (v2 - v1) * t

@@ -107,7 +107,7 @@ return_t mdlWavefrontObjLoad(const char *const restrict filePath, vertexIndex_t 
 		if(generatePhysProperties){
 			*mass = 0.f;
 			*area = 0.f;
-			vec3Zero(centroid);
+			vec3ZeroP(centroid);
 		}**/
 		*vertexNum = 0;
 		*indexNum = 0;

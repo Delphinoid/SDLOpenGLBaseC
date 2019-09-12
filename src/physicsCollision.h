@@ -17,7 +17,7 @@
 	#define PHYSICS_SEPARATION_PAIR_MAX_INACTIVE_STEPS 0
 #endif
 
-#ifdef PHYSICS_SOLVER_GAUSS_SEIDEL
+#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 	// Error threshold for NGS configuration solving.
 	#ifndef PHYSICS_CONTACT_ERROR_THRESHOLD
 		#define PHYSICS_CONTACT_ERROR_THRESHOLD (-3.f * PHYSICS_LINEAR_SLOP)
@@ -49,7 +49,7 @@ typedef struct physContactPoint {
 	vec3 rA;
 	vec3 rB;
 
-	#ifdef PHYSICS_SOLVER_GAUSS_SEIDEL
+	#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 
 	// Contact point in both colliders' local spaces.
 	// "Untransforms" them using the conjugates of their
@@ -109,7 +109,7 @@ typedef struct physContact {
 
 	#endif
 
-	#if defined PHYSICS_SOLVER_GAUSS_SEIDEL
+	#if defined PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 
 	// The "untransformed" average normal relative to the average pointA.
 	vec3 normalA;
@@ -176,7 +176,7 @@ typedef struct physSeparationPair {
 
 } physSeparationPair;
 
-#ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
+#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 void physContactPresolveConstraints(physContact *const restrict contact, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float frequency);
 #else
 void physContactPresolveConstraints(physContact *const restrict contact, physCollider *const restrict colliderA, physCollider *const restrict colliderB);
@@ -194,7 +194,7 @@ void physSeparationPairDelete(physSeparationPair *const pair);
 return_t physCollisionQuery(aabbNode *const n1, aabbNode *const n2);
 
 void physContactSolveVelocityConstraints(physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB);
-#ifdef PHYSICS_SOLVER_GAUSS_SEIDEL
+#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 float physContactSolveConfigurationConstraints(physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, float error);
 #endif
 

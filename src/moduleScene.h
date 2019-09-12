@@ -24,7 +24,7 @@ scene *moduleSceneAllocate();
 void moduleSceneFree(scene *const restrict resource);
 void moduleSceneClear();
 
-#ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
+#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 void moduleSceneQueryIslands(const float frequency);
 #else
 void moduleSceneQueryIslands();

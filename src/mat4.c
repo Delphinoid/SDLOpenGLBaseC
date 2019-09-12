@@ -28,6 +28,49 @@ __HINT_INLINE__ void mat4ZeroP(mat4 *const restrict m){
 	memset(m->m, 0, sizeof(mat4));
 }
 
+__HINT_INLINE__ mat4 mat4DiagonalV(const vec4 v){
+	const mat4 r = {.m = {{v.x, 0.f, 0.f, 0.f},
+	                      {0.f, v.y, 0.f, 0.f},
+	                      {0.f, 0.f, v.z, 0.f},
+	                      {0.f, 0.f, 0.f, v.w}}};
+	return r;
+}
+__HINT_INLINE__ void mat4DiagonalVP(mat4 *const restrict m, const vec4 *const restrict v){
+	memset(m->m, 0, sizeof(mat4));
+	m->m[0][0] = v->x;
+	m->m[1][1] = v->y;
+	m->m[2][2] = v->z;
+	m->m[3][3] = v->w;
+}
+__HINT_INLINE__ mat4 mat4DiagonalS(const float s){
+	const mat4 r = {.m = {{s, 0.f, 0.f, 0.f},
+	                      {0.f, s, 0.f, 0.f},
+	                      {0.f, 0.f, s, 0.f},
+	                      {0.f, 0.f, 0.f, s}}};
+	return r;
+}
+__HINT_INLINE__ void mat4DiagonalSP(mat4 *const restrict m, const float s){
+	memset(m->m, 0, sizeof(mat4));
+	m->m[0][0] = s;
+	m->m[1][1] = s;
+	m->m[2][2] = s;
+	m->m[3][3] = s;
+}
+__HINT_INLINE__ mat4 mat4DiagonalN(const float x, const float y, const float z, const float w){
+	const mat4 r = {.m = {{x, 0.f, 0.f, 0.f},
+	                      {0.f, y, 0.f, 0.f},
+	                      {0.f, 0.f, z, 0.f},
+	                      {0.f, 0.f, 0.f, w}}};
+	return r;
+}
+__HINT_INLINE__ void mat4DiagonalNP(mat4 *const restrict m, const float x, const float y, const float z, const float w){
+	memset(m->m, 0, sizeof(mat4));
+	m->m[0][0] = x;
+	m->m[1][1] = y;
+	m->m[2][2] = z;
+	m->m[3][3] = w;
+}
+
 __HINT_INLINE__ mat4 mat4MMultM(const mat4 m1, const mat4 m2){
 
 	/*size_t i, j;

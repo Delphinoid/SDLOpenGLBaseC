@@ -178,7 +178,7 @@ void physRigidBodyIntegrateLeapfrogTest(physRigidBody *const restrict body, cons
 return_t physRigidBodyPermitCollision(const physRigidBody *const restrict body1, const physRigidBody *const restrict body2);
 
 void physRigidBodyAddCollider(physRigidBody *const restrict body, physCollider *const c, const float **const vertexMassArray);
-return_t physRigidBodyAddJoint(physRigidBody *const restrict body, physJoint *const joint);
+return_t physRigidBodyAddJoint(physRigidBody *const body, physJoint *const joint);
 
 void physRigidBodyDelete(physRigidBody *const restrict body);
 

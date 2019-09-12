@@ -20,6 +20,16 @@ mat2 mat2Zero();
 void mat2IdentityP(mat2 *const restrict m);
 void mat2ZeroP(mat2 *const restrict m);
 
+mat2 mat2DiagonalV(const vec2 v);
+void mat2DiagonalVP(mat2 *const restrict m, const vec2 *const restrict v);
+mat2 mat2DiagonalS(const float s);
+void mat2DiagonalSP(mat2 *const restrict m, const float s);
+mat2 mat2DiagonalN(const float x, const float y);
+void mat2DiagonalNP(mat2 *const restrict m, const float x, const float y);
+
+mat2 mat2SkewSymmetric(const float s);
+void mat2SkewSymmetricP(mat2 *const restrict m, const float s);
+
 mat2 mat2MMultM(const mat2 m1, const mat2 m2);
 void mat2MMultMP1(mat2 *const restrict m1, const mat2 *const restrict m2);
 void mat2MMultMP2(const mat2 *const restrict m1, mat2 *const restrict m2);
@@ -46,5 +56,9 @@ mat2 mat2Invert(const mat2 m);
 return_t mat2InvertR(const mat2 m, mat2 *const restrict r);
 return_t mat2InvertP(mat2 *const restrict m);
 return_t mat2InvertPR(const mat2 *const restrict m, mat2 *const restrict r);
+
+vec2 mat2Solve(const mat2 A, const vec2 b);
+return_t mat2SolveR(const mat2 A, const vec2 b, vec2 *const restrict r);
+return_t mat2SolvePR(const mat2 *const restrict A, const vec2 *const restrict b, vec2 *const restrict r);
 
 #endif
