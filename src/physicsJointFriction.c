@@ -86,12 +86,24 @@
 **
 ** Semi-implicit Euler:
 **
-** V = v + M^-1 * P.
+** V   = V_i + dt * M^-1 * F,
+** V_f = V   + dt * M^-1 * P.
 **
-** Where P = lambda * J^T and lambda is the impulse magnitude
-** (constraint Lagrange multiplier). Solving for lambda:
+** Where V_i is the initial velocity vector, V_f is the final
+** velocity vector, F is the external force on the body (e.g.
+** gravity), P is the constraint force and dt is the timestep.
 **
-** lambda = -(JV + b)/((JM^-1)J^T).
+** Using P = J^T * lambda and lambda' = dt * lambda, we can
+** solve for the impulse magnitude (constraint Lagrange
+** multiplier) lambda':
+**
+** JV_f + b = 0
+** J(V + dt * M^-1 * P) + b = 0
+** JV + dt * (JM^-1)P + b = 0
+** JV + dt * (JM^-1)J^T . lambda + b = 0
+** dt * (JM^-1)J^T . lambda = -(JV + b)
+** dt * lambda = -(JV + b)/((JM^-1)J^T)
+** lambda' = -(JV + b)/((JM^-1)J^T).
 **
 ** ----------------------------------------------------------------------
 */
