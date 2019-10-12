@@ -1,6 +1,7 @@
 #ifndef PHYSICSJOINTSPHERE_H
 #define PHYSICSJOINTSPHERE_H
 
+#include "physicsConstraint.h"
 #include "mat3.h"
 #include "flags.h"
 
@@ -13,6 +14,7 @@
 ** The angle may be constrained by a cone.
 */
 
+typedef struct physRigidBody physRigidBody;
 typedef struct physJoint physJoint;
 typedef struct {
 

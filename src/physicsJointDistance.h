@@ -1,6 +1,7 @@
 #ifndef PHYSICSJOINTDISTANCE_H
 #define PHYSICSJOINTDISTANCE_H
 
+#include "physicsConstraint.h"
 #include "vec3.h"
 
 /*

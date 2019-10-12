@@ -1,13 +1,11 @@
 #ifndef PHYSICSJOINT_H
 #define PHYSICSJOINT_H
 
-#include "physicsConstraint.h"
 #include "physicsJointFixed.h"
 #include "physicsJointDistance.h"
 #include "physicsJointPrismatic.h"
 #include "physicsJointRevolute.h"
 #include "physicsJointSphere.h"
-#include "flags.h"
 
 #ifndef PHYSICS_JOINT_VELOCITY_SOLVER_ITERATIONS
 	#define PHYSICS_JOINT_VELOCITY_SOLVER_ITERATIONS 4

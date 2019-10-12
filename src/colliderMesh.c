@@ -1397,7 +1397,7 @@ static __FORCE_INLINE__ void cMeshCollisionEPA(const cMesh *const restrict c1, c
 
 }
 
-static __FORCE_INLINE__ void cMeshCollisionGJKTriangle(int *const restrict simplexVertices, cMeshSupportVertex simplex[4], vec3 *const restrict axis){
+static __FORCE_INLINE__ void cMeshCollisionGJKTriangle(cMeshSupportVertex simplex[4], vec3 *const restrict axis){
 
 	const vec3 AO = vec3Negate(simplex[0].v);
 	const vec3 AB = vec3VSubV(simplex[1].v, simplex[0].v);
@@ -1411,6 +1411,7 @@ static __FORCE_INLINE__ void cMeshCollisionGJKTriangle(int *const restrict simpl
 		// remove vertex C by replacing it with vertex A.
 		*axis = vec3Cross(vec3Cross(AB, AO), AB);
 		simplex[2] = simplex[0];
+		//*simplexVertices = 2;
 
 	}else{
 
@@ -1421,6 +1422,7 @@ static __FORCE_INLINE__ void cMeshCollisionGJKTriangle(int *const restrict simpl
 			// remove vertex C by replacing it with vertex A.
 			*axis = vec3Cross(vec3Cross(AC, AO), AC);
 			simplex[1] = simplex[0];
+			//*simplexVertices = 2;
 
 		}else{
 
@@ -1440,7 +1442,8 @@ static __FORCE_INLINE__ void cMeshCollisionGJKTriangle(int *const restrict simpl
 				*axis = vec3Negate(ABC);
 			}
 
-			*simplexVertices = 4;
+			// No need to update simplexVertices, as it will be 3
+			// in preparation for the next iteration.
 
 		}
 
@@ -1448,7 +1451,7 @@ static __FORCE_INLINE__ void cMeshCollisionGJKTriangle(int *const restrict simpl
 
 }
 
-static __FORCE_INLINE__ return_t cMeshCollisionGJKTetrahedron(int *const restrict simplexVertices, cMeshSupportVertex *const restrict simplex, vec3 *const restrict axis){
+static __FORCE_INLINE__ return_t cMeshCollisionGJKTetrahedron(cMeshSupportVertex *const restrict simplex, vec3 *const restrict axis){
 
 	// Check if the normal of ABC is crossing the origin.
 	const vec3 AO = vec3Negate(simplex[0].v);
@@ -1504,7 +1507,9 @@ return_t cMeshCollisionGJK(const cMesh *const restrict c1, const cMesh *const re
 	// Set the current number of vertices of our simplex. We will be
 	// creating a line segment with vertices B and C before the main
 	// loop, so we can set this to 2 preemptively.
-	int simplexVertices = 2;
+	// If vertex D is uninitialized, we will have 3 vertices in the
+	// main loop, otherwise we will have 4.
+	simplex[3].s1 = NULL;  //int simplexVertices = 2;
 
 	// The first direction to check in is the direction of body2 from body1.
 	vec3 axis = vec3VSubV(c2->centroid, c1->centroid);
@@ -1512,7 +1517,6 @@ return_t cMeshCollisionGJK(const cMesh *const restrict c1, const cMesh *const re
 	// Create an initial vertex for the simplex.
 	cMeshCollisionMinkowskiSupport(c1, c2, axis, &simplex[2]);
 
-	// Create another vertex to form a line segment. B should be
 	// Create another vertex to form a line segment. B should be
 	// a vertex in the opposite direction of C from the origin.
 	axis = vec3Negate(simplex[2].v);
@@ -1541,8 +1545,9 @@ return_t cMeshCollisionGJK(const cMesh *const restrict c1, const cMesh *const re
 	for(i = 0; i < COLLISION_MAX_ITERATIONS; ++i){
 
 		// Add a new vertex to our simplex.
+		// Vertex A is the "working vertex".
 		cMeshCollisionMinkowskiSupport(c1, c2, axis, &simplex[0]);
-		if(vec3Dot(simplex[0].v, axis) <= 0.f){
+		if(vec3Dot(simplex[0].v, axis) < 0.f){
 			// If the new vertex has not crossed the origin on the given axis,
 			// the origin cannot lie within the "Minkowski difference" of the
 			// polygons. Therefore, the two polygons are not colliding.
@@ -1550,11 +1555,11 @@ return_t cMeshCollisionGJK(const cMesh *const restrict c1, const cMesh *const re
 		}
 
 		// Check if the origin is enclosed in our simplex.
-		if(++simplexVertices == 3){
+		if(simplex[3].s1 == NULL){  //++simplexVertices == 3
 			// We only have a triangle right now, find which
 			// direction to search for our next vertex in.
-			cMeshCollisionGJKTriangle(&simplexVertices, simplex, &axis);
-		}else if(cMeshCollisionGJKTetrahedron(&simplexVertices, simplex, &axis)){
+			cMeshCollisionGJKTriangle(simplex, &axis);
+		}else if(cMeshCollisionGJKTetrahedron(simplex, &axis)){
 			// The origin lies within our simplex, so we know there was
 			// a collision.
 			if(cm != NULL){
