@@ -1264,16 +1264,16 @@ __HINT_INLINE__ void physRigidBodyApplyConfigurationImpulse(physRigidBody *const
 
 		// Linear impulse.
 		if(
-			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR)/* &&
-			(body->linearVelocity.y != 0.f || body->linearVelocity.x != 0.f || body->linearVelocity.z != 0.f)*/
+			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR)// &&
+			//(body->linearVelocity.y != 0.f || body->linearVelocity.x != 0.f || body->linearVelocity.z != 0.f)
 		){
 			body->centroidGlobal = vec3VAddV(body->centroidGlobal, vec3VMultS(J, body->inverseMass));
 			flagsSet(body->flags, PHYSICS_BODY_TRANSLATED);
 		}
 		// Angular impulse.
 		if(
-			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR)/* &&
-			(body->angularVelocity.y != 0.f || body->angularVelocity.z != 0.f || body->angularVelocity.x != 0.f)*/
+			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR)// &&
+			//(body->angularVelocity.y != 0.f || body->angularVelocity.z != 0.f || body->angularVelocity.x != 0.f)
 		){
 			body->configuration.orientation = quatNormalizeFastAccurate(
 				quatQAddQ(
@@ -1304,16 +1304,16 @@ __HINT_INLINE__ void physRigidBodyApplyConfigurationImpulseInverse(physRigidBody
 
 		// Linear impulse.
 		if(
-			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR)/* &&
-			(body->linearVelocity.y != 0.f || body->linearVelocity.x != 0.f || body->linearVelocity.z != 0.f)*/
+			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR)// &&
+			//(body->linearVelocity.y != 0.f || body->linearVelocity.x != 0.f || body->linearVelocity.z != 0.f)
 		){
 			body->centroidGlobal = vec3VSubV(body->centroidGlobal, vec3VMultS(J, body->inverseMass));
 			flagsSet(body->flags, PHYSICS_BODY_TRANSLATED);
 		}
 		// Angular impulse.
 		if(
-			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR)/* &&
-			(body->angularVelocity.y != 0.f || body->angularVelocity.z != 0.f || body->angularVelocity.x != 0.f)*/
+			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR)// &&
+			//(body->angularVelocity.y != 0.f || body->angularVelocity.z != 0.f || body->angularVelocity.x != 0.f)
 		){
 			body->configuration.orientation = quatNormalizeFastAccurate(
 				quatQSubQ(
@@ -1603,8 +1603,8 @@ void physRigidBodyIntegrateConfiguration(physRigidBody *const restrict body, con
 
 		// Integrate position.
 		if(
-			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR)/* &&
-			(body->linearVelocity.y != 0.f || body->linearVelocity.x != 0.f || body->linearVelocity.z != 0.f)*/
+			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR)// &&
+			//(body->linearVelocity.y != 0.f || body->linearVelocity.x != 0.f || body->linearVelocity.z != 0.f)
 		){
 			body->centroidGlobal = vec3VAddV(body->centroidGlobal, vec3VMultS(body->linearVelocity, dt));
 			flagsSet(body->flags, PHYSICS_BODY_TRANSLATED);
@@ -1614,8 +1614,8 @@ void physRigidBodyIntegrateConfiguration(physRigidBody *const restrict body, con
 
 		// Integrate orientation.
 		if(
-			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR)/* &&
-			(body->angularVelocity.y != 0.f || body->angularVelocity.z != 0.f || body->angularVelocity.x != 0.f)*/
+			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR)// &&
+			//(body->angularVelocity.y != 0.f || body->angularVelocity.z != 0.f || body->angularVelocity.x != 0.f)
 		){
 			body->configuration.orientation = quatNormalizeFastAccurate(quatIntegrate(body->configuration.orientation, body->angularVelocity, dt));
 			flagsSet(body->flags, PHYSICS_BODY_ROTATED);

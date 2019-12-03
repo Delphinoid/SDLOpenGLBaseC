@@ -81,6 +81,7 @@ typedef struct {
 } sklAnimFragment;
 
 // Skeletal animation instance.
+/** Implement "intensity" value for blending. **/
 typedef struct {
 	sklAnimFragment *fragments;
 	float timeMod;

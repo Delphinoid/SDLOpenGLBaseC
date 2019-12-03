@@ -167,7 +167,7 @@ static __FORCE_INLINE__ void gfxRendererDrawElement(gfxRenderElement *const rest
 	switch(element->type){
 		case GFX_RNDR_ELEMENT_TYPE_OBJECT:
 			/// REMOVE THIS LINE EVENTUALLY
-			element->distance = camDistance(cam, &((const object *const)element->structure)->state.skeleton[0].position);
+			element->distance = camDistance(cam, ((const object *const)element->structure)->state.skeleton[0].position);
 			renderModel((const object *const)element->structure, element->distance, cam, interpT, gfxMngr);
 		break;
 	}

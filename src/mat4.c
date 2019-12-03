@@ -425,7 +425,6 @@ __HINT_INLINE__ void mat4PerspectiveP(mat4 *const restrict m, const float fovy, 
 	m->m[3][0] = 0.f;                  m->m[3][1] = 0.f;      m->m[3][2] = -(zFar+zFar)*zNear*invFarSubNear; m->m[3][3] = 0.f;
 }
 __HINT_INLINE__ mat4 mat4RotateToFace(const vec3 eye, const vec3 target, const vec3 up){
-	/** CHECK MATRIX ORDER (ROW OR COLUMN MAJOR?) **/
 	const vec3 zAxis = vec3NormalizeFast(vec3VSubV(target, eye));
 	const vec3 xAxis = vec3NormalizeFast(vec3Cross(zAxis, up));
 	const vec3 yAxis = vec3NormalizeFast(vec3Cross(xAxis, zAxis));
@@ -436,7 +435,6 @@ __HINT_INLINE__ mat4 mat4RotateToFace(const vec3 eye, const vec3 target, const v
 	return r;
 }
 __HINT_INLINE__ void mat4RotateToFaceP(mat4 *const restrict m, const vec3 *const restrict eye, const vec3 *const restrict target, const vec3 *const restrict up){
-	/** CHECK MATRIX ORDER (ROW OR COLUMN MAJOR?) **/
 	vec3 xAxis, yAxis, zAxis;
 	vec3VSubVPR(target, eye, &zAxis);
 	vec3NormalizeFastP(&zAxis);
@@ -450,6 +448,11 @@ __HINT_INLINE__ void mat4RotateToFaceP(mat4 *const restrict m, const vec3 *const
 	m->m[3][0] = 0.f;     m->m[3][1] = 0.f;     m->m[3][2] = 0.f;     m->m[3][3] = 1.f;
 }
 __HINT_INLINE__ mat4 mat4LookAt(const vec3 eye, const vec3 target, const vec3 up){
+	// The xAxis, yAxis and zAxis vectors appear as rows
+	// as we really need an inverse matrix. Because it is
+	// orthogonal, we can just take the transpose.
+	// The inverse of the translation component is just
+	// the additive inverse of the translation.
 	const vec3 zAxis = vec3NormalizeFast(vec3VSubV(eye, target));
 	const vec3 xAxis = vec3NormalizeFast(vec3Cross(up, zAxis));
 	const vec3 yAxis = vec3NormalizeFast(vec3Cross(zAxis, xAxis));
@@ -460,6 +463,11 @@ __HINT_INLINE__ mat4 mat4LookAt(const vec3 eye, const vec3 target, const vec3 up
 	return r;
 }
 __HINT_INLINE__ void mat4LookAtP(mat4 *const restrict m, const vec3 *const restrict eye, const vec3 *const restrict target, const vec3 *const restrict up){
+	// The xAxis, yAxis and zAxis vectors appear as rows
+	// as we really need an inverse matrix. Because it is
+	// orthogonal, we can just take the transpose.
+	// The inverse of the translation component is just
+	// the additive inverse of the translation.
 	vec3 xAxis, yAxis, zAxis;
 	vec3VSubVPR(eye, target, &zAxis);
 	vec3NormalizeFastP(&zAxis);

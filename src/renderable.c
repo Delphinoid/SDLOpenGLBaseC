@@ -1,5 +1,4 @@
 #include "renderable.h"
-/** **/
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL_image.h>
@@ -17,6 +16,7 @@ void rndriInit(rndrInstance *const restrict rndri){
 	rndri->alpha = 1.f;
 	rndri->alphaCurrent = 1.f;
 	rndri->alphaPrevious = 1.f;
+	rndri->flags = 0;
 }
 
 void rndriInstantiate(rndrInstance *const restrict rndri, const renderable *const base){

@@ -52,11 +52,9 @@ void renderModel(const object *const restrict obj, const float distance, const c
 		// Feed the texture coordinates to the shader.
 		glUniform4fv(gfxMngr->textureFragmentID, 1, texFrag);
 
-		/*
-		** Generate the renderable configuration based off the animated skeleton, if possible.
-		** The loop converts the global skeleton state in gfxMngr->sklTransformState to local
-		** model space for rendering.
-		*/
+		// Generate the renderable configuration based off the animated skeleton, if possible.
+		// The loop converts the global skeleton state in gfxMngr->sklTransformState to local
+		// model space for rendering.
 		if(currentRndr->mdl->skl != NULL){
 
 			const float alpha = floatLerp(currentRndr->alphaPrevious, currentRndr->alpha, interpT);
@@ -108,6 +106,11 @@ void renderModel(const object *const restrict obj, const float distance, const c
 						transform.m[3][0] -= bAccumulator->x;
 						transform.m[3][1] -= bAccumulator->y;
 						transform.m[3][2] -= bAccumulator->z;
+
+						// The bone is a root bone. Apply billboarding transformation if required.
+						if(obj->skeletonData.skl->bones[rndrBone].parent == rndrBone && currentRndr->flags != CAM_BILLBOARD_DISABLED){
+							transform = camBillboard(cam, transform, currentRndr->flags);
+						}
 
 						// Feed the bone configuration to the shader.
 						glUniformMatrix4fv(*bArray, 1, GL_FALSE, &transform.m[0][0]);

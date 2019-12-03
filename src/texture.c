@@ -27,7 +27,7 @@ void tInit(texture *const restrict tex){
 	tex->translucent = 0;
 }
 
-static void tInitFiltering(int_least8_t filtering, const int_least8_t mips){
+static void tInitFiltering(uint_least8_t filtering, const uint_least8_t mips){
 
 	GLint filteringMin, filteringMag;
 
@@ -243,7 +243,7 @@ return_t tLoad(texture *const restrict tex, const char *const restrict prgPath, 
 		const byte_t *pixels = (byte_t *)image->pixels;
 		byte_t *mipmap = memAllocate(mips[0][2] * mips[0][3] * bytes);
 		const GLsizei *mipCurrent = &mips[0][0];
-		const GLsizei *const mipLast = &mips[mipNum][4];
+		const GLsizei *const mipLast = &mips[mipNum][0];
 		int y;
 
 		tex->width = mips[0][2];
@@ -259,7 +259,8 @@ return_t tLoad(texture *const restrict tex, const char *const restrict prgPath, 
 			const GLsizei miph = mipCurrent[3];
 
 			// Copy each row of the MIP into a temporary buffer to feed to OpenGL.
-			for(y = 0; y < miph; ++y){//printf("%u\n", y);
+			for(y = 0; y < miph; ++y){
+				//printf("a %u\n", mipw * bytes);
 				memcpy((void *)(mipmap + y * mipw * bytes), (void *)(pixels + (mipy + y) * image->pitch + mipx * bytes), mipw * bytes);
 			}
 			glTexImage2D(GL_TEXTURE_2D, i, format, mipw, miph, 0, format, GL_UNSIGNED_BYTE, mipmap);
@@ -292,7 +293,7 @@ return_t tDefault(texture *const restrict tex){
 	GLenum glError;
 	GLsizei pixels[1024];
 	int x, y;
-	const int_least8_t mips = 1 + floor(log(fmax(tex->width, tex->height)));
+	const uint_least8_t mips = 1 + floor(log(fmax(tex->width, tex->height)));
 
 	tInit(tex);
 

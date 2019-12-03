@@ -423,8 +423,8 @@ return_t physJointSphereSolveConfigurationConstraints(physJoint *const restrict 
 
 			// Apply the cone limit impulse.
 			if(
-				flagsAreSet(bodyA->flags, PHYSICS_BODY_SIMULATE_ANGULAR)/* &&
-				(bodyA->angularVelocity.y != 0.f || bodyA->angularVelocity.z != 0.f || bodyA->angularVelocity.x != 0.f)*/
+				flagsAreSet(bodyA->flags, PHYSICS_BODY_SIMULATE_ANGULAR)// &&
+				//(bodyA->angularVelocity.y != 0.f || bodyA->angularVelocity.z != 0.f || bodyA->angularVelocity.x != 0.f)
 			){
 				bodyA->configuration.orientation = quatNormalizeFastAccurate(
 					quatQSubQ(
@@ -442,8 +442,8 @@ return_t physJointSphereSolveConfigurationConstraints(physJoint *const restrict 
 				flagsSet(bodyA->flags, PHYSICS_BODY_ROTATED);
 			}
 			if(
-				flagsAreSet(bodyB->flags, PHYSICS_BODY_SIMULATE_ANGULAR)/* &&
-				(bodyB->angularVelocity.y != 0.f || bodyB->angularVelocity.z != 0.f || bodyB->angularVelocity.x != 0.f)*/
+				flagsAreSet(bodyB->flags, PHYSICS_BODY_SIMULATE_ANGULAR)// &&
+				//(bodyB->angularVelocity.y != 0.f || bodyB->angularVelocity.z != 0.f || bodyB->angularVelocity.x != 0.f)
 			){
 				bodyB->configuration.orientation = quatNormalizeFastAccurate(
 					quatQAddQ(

@@ -330,7 +330,7 @@ return_t gfxMngrInit(graphicsManager *const restrict gfxMngr, const char *const 
 	gfxMngr->windowWidth = GFX_DEFAULT_WINDOW_WIDTH;
 	gfxMngr->windowHeight = GFX_DEFAULT_WINDOW_HEIGHT;
 	gfxMngr->windowStretchToFit = 0;
-	gfxMngr->windowModified = 1;
+	gfxMngr->windowModified = 2;
 	gfxMngr->biasMIP = GFX_DEFAULT_BIAS_MIP;
 	gfxMngr->biasLOD = GFX_DEFAULT_BIAS_LOD;
 
@@ -357,7 +357,7 @@ unsigned int gfxMngrWindowChanged(graphicsManager *const restrict gfxMngr){
 	if((int)gfxMngr->windowWidth != windowWidth || (int)gfxMngr->windowHeight != windowHeight){
 		gfxMngr->windowWidth = windowWidth;
 		gfxMngr->windowHeight = windowHeight;
-		gfxMngr->windowModified = 1;
+		gfxMngr->windowModified = 2;
 	}
 	return gfxMngr->windowModified;
 }
@@ -388,8 +388,10 @@ void gfxMngrUpdateViewport(graphicsManager *const restrict gfxMngr){
 }
 
 void gfxMngrUpdateWindow(graphicsManager *const restrict gfxMngr){
-	if(gfxMngrWindowChanged(gfxMngr)){
+	if(gfxMngrWindowChanged(gfxMngr) == 2){
 		gfxMngrUpdateViewport(gfxMngr);
+		gfxMngr->windowModified = 1;
+	}else if(gfxMngr->windowModified > 0){
 		gfxMngr->windowModified = 0;
 	}
 }
@@ -412,39 +414,39 @@ int gfxMngrSetWindowMode(graphicsManager *const restrict gfxMngr, const Uint32 m
 
 void gfxMngrSetWindowFill(graphicsManager *const restrict gfxMngr, const unsigned int fill){
 	gfxMngr->windowStretchToFit = fill;
-	gfxMngr->windowModified = 1;
+	gfxMngr->windowModified = 2;
 }
 
 void gfxMngrSetViewportAspectRatio(graphicsManager *const restrict gfxMngr, const float x, const float y){
 	gfxMngr->windowAspectRatioX = x;
 	gfxMngr->windowAspectRatioY = y;
-	gfxMngr->windowModified = 1;
+	gfxMngr->windowModified = 2;
 }
 
 void gfxMngrSetViewportAspectX(graphicsManager *const restrict gfxMngr, const float x){
 	gfxMngr->windowAspectRatioX = x;
-	gfxMngr->windowModified = 1;
+	gfxMngr->windowModified = 2;
 }
 
 void gfxMngrSetViewportAspectY(graphicsManager *const restrict gfxMngr, const float y){
 	gfxMngr->windowAspectRatioY = y;
-	gfxMngr->windowModified = 1;
+	gfxMngr->windowModified = 2;
 }
 
 void gfxMngrSetViewportSize(graphicsManager *const restrict gfxMngr, const unsigned int width, const unsigned int height){
 	gfxMngr->viewport.width = width;
 	gfxMngr->viewport.height = height;
-	gfxMngr->windowModified = 1;
+	gfxMngr->windowModified = 2;
 }
 
 void gfxMngrSetViewportWidth(graphicsManager *const restrict gfxMngr, const unsigned int width){
 	gfxMngr->viewport.width = width;
-	gfxMngr->windowModified = 1;
+	gfxMngr->windowModified = 2;
 }
 
 void gfxMngrSetViewportHeight(graphicsManager *const restrict gfxMngr, const unsigned int height){
 	gfxMngr->viewport.height = height;
-	gfxMngr->windowModified = 1;
+	gfxMngr->windowModified = 2;
 }
 
 __FORCE_INLINE__ void gfxMngrSwitchView(graphicsManager *const restrict gfxMngr, const gfxView *const restrict view){

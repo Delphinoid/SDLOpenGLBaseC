@@ -1,0 +1,2 @@
+skeleton "default"
+renderable "Kobold.obj" "Static\KoboldStatic.tdw"

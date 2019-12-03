@@ -10,7 +10,9 @@
 #define TEXTURE_FILTER_MODE_BILINEAR  3
 #define TEXTURE_FILTER_MODE_TRILINEAR 4
 
-#define TEXTURE_FILTER_MODE_DEFAULT TEXTURE_FILTER_MODE_BILINEAR
+#ifndef TEXTURE_FILTER_MODE_DEFAULT
+	#define TEXTURE_FILTER_MODE_DEFAULT TEXTURE_FILTER_MODE_BILINEAR
+#endif
 
 /*
 ** The texture struct should be 23 bytes (minus padding).
@@ -35,14 +37,14 @@ typedef struct {
 	char *name;
 
 	// Number of MIP levels.
-	int_least8_t mips;
+	uint_least8_t mips;
 
 	// Forced filtering mode.
-	int_least8_t filtering;
+	uint_least8_t filtering;
 
 	// If this is set, the texture contains translucency.
 	// Used when depth-sorting before rendering.
-	int_least8_t translucent;
+	uint_least8_t translucent;
 
 } texture;
 

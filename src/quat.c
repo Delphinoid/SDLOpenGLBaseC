@@ -44,6 +44,14 @@ __HINT_INLINE__ quat quatNewEuler(const float x, const float y, const float z){
 	};
 	return r;
 }
+__HINT_INLINE__ quat quatNewRotation(const vec3 v1, const vec3 v2){
+	// Rotation from v1 to v2.
+	const quat r = {
+		.w = sqrtf(vec3MagnitudeSquared(v1)*vec3MagnitudeSquared(v2)) + vec3Dot(v1, v2),
+		.v = vec3Cross(v1, v2)
+	};
+	return quatNormalizeFastAccurate(r);
+}
 quat quatZero(){
 	const quat r = {.w = 0.f, .v.x = 0.f, .v.y = 0.f, .v.z = 0.f};
 	return r;

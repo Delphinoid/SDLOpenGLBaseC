@@ -2,7 +2,9 @@
 #include "graphicsRenderer.h"
 #include "colliderMesh.h"
 #include "constantsMath.h"
+#include "helpersFileIO.h"
 #include <stdio.h>
+#include <fenv.h>
 
 /****/
 #include "moduleTexture.h"
@@ -15,20 +17,30 @@
 #include "moduleScene.h"
 #include "moduleCamera.h"
 
-/** Remember to do regular searches for these important comments when possible **/
-int main(int argc, char *argv[]){
+/**
+*** TREE ITERATION FIXES
+**/
 
-	char *const prgPath = (char*)argv[0];
+/** Objects should make a single big heap allocation rather than multiple smaller ones. **/
 
-	//memoryManager memMngr;
+/** Improve maths functions: not everything has to be 'passed by reference'. Possibly add support for SIMD intrinsics. **/
+
+/** Remember to do regular searches for these important comments when possible. **/
+int main(int argc, char **argv){
+
+	char prgPath[FILE_MAX_PATH_LENGTH];
 	graphicsManager gfxMngr;
-
+sleepm(1);
 	// Removes program name (everything after the last backslash) from the path.
-	prgPath[strrchr(prgPath, '\\') - prgPath + 1] = '\0';
-	/** prgPath can be replaced with ".\\", but it may present some problems when running directly from Code::Blocks. **/
+	{
+		const size_t length = strrchr(argv[0], FILE_PATH_DELIMITER_CHAR) + 1 - argv[0];
+		strncpy(&prgPath[0], argv[0], length);
+		prgPath[length] = '\0';
+		/** prgPath can be replaced with ".\\", but it may present some problems when running directly from Code::Blocks. **/
+	}
 
 	// Initialize the memory manager.
-	if(memMngrInit(MEMORY_MANAGER_DEFAULT_VIRTUAL_HEAP_SIZE, 1) == -1){
+	if(memMngrInit(MEMORY_MANAGER_DEFAULT_VIRTUAL_HEAP_SIZE, 1) < 0){
 		return 1;
 	}
 	// Initialize the graphics subsystem.
@@ -50,6 +62,35 @@ int main(int argc, char *argv[]){
 	moduleSceneResourcesInit();
 	moduleCameraResourcesInit();
 
+	printf("%u + ", memPoolBlockSize(RESOURCE_DEFAULT_TEXTURE_SIZE)*RESOURCE_DEFAULT_TEXTURE_NUM);
+
+	printf("%u + ", memPoolBlockSize(RESOURCE_DEFAULT_TEXTURE_WRAPPER_SIZE)*RESOURCE_DEFAULT_TEXTURE_WRAPPER_NUM);
+
+	printf("%u + ", memSLinkBlockSize(RESOURCE_DEFAULT_SKELETAL_ANIMATION_FRAGMENT_SIZE)*RESOURCE_DEFAULT_SKELETAL_ANIMATION_FRAGMENT_NUM);
+	printf("%u + ", memSLinkBlockSize(RESOURCE_DEFAULT_SKELETAL_ANIMATION_INSTANCE_SIZE)*RESOURCE_DEFAULT_SKELETAL_ANIMATION_INSTANCE_NUM);
+	printf("%u + ", memPoolBlockSize(RESOURCE_DEFAULT_SKELETAL_ANIMATION_SIZE)*RESOURCE_DEFAULT_SKELETAL_ANIMATION_NUM);
+	printf("%u + ", memPoolBlockSize(RESOURCE_DEFAULT_SKELETON_SIZE)*RESOURCE_DEFAULT_SKELETON_NUM);
+
+	printf("%u + ", memPoolBlockSize(RESOURCE_DEFAULT_MODEL_SIZE)*RESOURCE_DEFAULT_MODEL_NUM);
+
+	printf("%u + ", memSLinkBlockSize(RESOURCE_DEFAULT_RENDERABLE_INSTANCE_SIZE)*RESOURCE_DEFAULT_RENDERABLE_INSTANCE_NUM);
+	printf("%u + ", memSLinkBlockSize(RESOURCE_DEFAULT_RENDERABLE_SIZE)*RESOURCE_DEFAULT_RENDERABLE_NUM);
+
+	printf("%u + ", memSLinkBlockSize(RESOURCE_DEFAULT_RIGID_BODY_LOCAL_SIZE)*RESOURCE_DEFAULT_RIGID_BODY_LOCAL_NUM);
+	printf("%u + ", memSLinkBlockSize(RESOURCE_DEFAULT_RIGID_BODY_SIZE)*RESOURCE_DEFAULT_RIGID_BODY_NUM);
+	printf("%u + ", memSLinkBlockSize(RESOURCE_DEFAULT_COLLIDER_SIZE)*RESOURCE_DEFAULT_COLLIDER_NUM);
+	printf("%u + ", memQLinkBlockSize(RESOURCE_DEFAULT_JOINT_SIZE)*RESOURCE_DEFAULT_JOINT_NUM);
+	printf("%u + ", memQLinkBlockSize(RESOURCE_DEFAULT_CONTACT_PAIR_SIZE)*RESOURCE_DEFAULT_CONTACT_PAIR_NUM);
+	printf("%u + ", memQLinkBlockSize(RESOURCE_DEFAULT_SEPARATION_PAIR_SIZE)*RESOURCE_DEFAULT_SEPARATION_PAIR_NUM);
+	printf("%u + ", memListBlockSize(RESOURCE_DEFAULT_AABB_NODE_SIZE)*RESOURCE_DEFAULT_AABB_NODE_NUM);
+
+	printf("%u + ", memPoolBlockSize(RESOURCE_DEFAULT_OBJECT_LOCAL_SIZE)*RESOURCE_DEFAULT_OBJECT_LOCAL_NUM);
+	printf("%u + ", memPoolBlockSize(RESOURCE_DEFAULT_OBJECT_SIZE)*RESOURCE_DEFAULT_OBJECT_NUM);
+
+	printf("%u + ", memPoolBlockSize(RESOURCE_DEFAULT_SCENE_SIZE)*RESOURCE_DEFAULT_SCENE_NUM);
+
+	printf("%u\n", memPoolBlockSize(RESOURCE_DEFAULT_CAMERA_SIZE)*RESOURCE_DEFAULT_CAMERA_NUM);
+
 	moduleTextureResourcesInitConstants();
 	moduleTextureWrapperResourcesInitConstants();
 	moduleSkeletonResourcesInitConstants();
@@ -57,127 +98,220 @@ int main(int argc, char *argv[]){
 
 	// Textures.
 	texture *tempTex = moduleTextureAllocate();
-	tDefault(tempTex);
-	tempTex = moduleTextureAllocate();
-	tLoad(tempTex, prgPath, "Misc\\Kobold.tdt");
-	tempTex = moduleTextureAllocate();
-	tLoad(tempTex, prgPath, "Misc\\Avatar.tdt");
+	//tLoad(tempTex, prgPath, "Luna"FILE_PATH_DELIMITER_STRING"Luna.tdt");
+	//tempTex = moduleTextureAllocate();
+	//tLoad(tempTex, prgPath, "Misc"FILE_PATH_DELIMITER_STRING"ntrance.tdt");
+	//tempTex = moduleTextureAllocate();
+	//tLoad(tempTex, prgPath, "Misc"FILE_PATH_DELIMITER_STRING"ntrance.tdt");
+	//tempTex = moduleTextureAllocate();
+	tLoad(tempTex, prgPath, "Misc"FILE_PATH_DELIMITER_STRING"Kobold.tdt");
+	/*texture *tempTex;
+	resMngrPushResource(&resMngr, &memMngr, RESOURCE_TEXTURE, (byte_t **)&tempTex);
+	tDefault(tempTex, &memMngr);
+	resMngrPushResource(&resMngr, &memMngr, RESOURCE_TEXTURE, (byte_t **)&tempTex);
+	tLoad(tempTex, &memMngr, prgPath, "Resources"FILE_PATH_DELIMITER_STRING"Images"FILE_PATH_DELIMITER_STRING"Luna"FILE_PATH_DELIMITER_STRING"Luna1.png");
+	resMngrPushResource(&resMngr, &memMngr, RESOURCE_TEXTURE, (byte_t **)&tempTex);
+	tLoad(tempTex, &memMngr, prgPath, "Resources"FILE_PATH_DELIMITER_STRING"Images"FILE_PATH_DELIMITER_STRING"Luna"FILE_PATH_DELIMITER_STRING"Luna2.png");
+	resMngrPushResource(&resMngr, &memMngr, RESOURCE_TEXTURE, (byte_t **)&tempTex);
+	tLoad(tempTex, &memMngr, prgPath, "Resources"FILE_PATH_DELIMITER_STRING"Images"FILE_PATH_DELIMITER_STRING"Misc"FILE_PATH_DELIMITER_STRING"ntrance.png");*/
 
 	// Skeletons.
 	skeleton *tempSkl = moduleSkeletonAllocate();
-	sklDefault(tempSkl);
+	sklLoad(tempSkl, prgPath, "CubeTestSkeleton2.tds");
 
 	// Texture Wrappers.
 	textureWrapper *tempTexWrap = moduleTextureWrapperAllocate();
-	twDefault(tempTexWrap);
+	twLoad(tempTexWrap, prgPath, "Animated"FILE_PATH_DELIMITER_STRING"LunaSpr2.tdw");
 	tempTexWrap = moduleTextureWrapperAllocate();
-	twLoad(tempTexWrap, prgPath, "Static\\AvatarStatic.tdw");
+	twLoad(tempTexWrap, prgPath, "Static"FILE_PATH_DELIMITER_STRING"ntrance2.tdw");
 	tempTexWrap = moduleTextureWrapperAllocate();
-	twLoad(tempTexWrap, prgPath, "Static\\KoboldStatic.tdw");
+	twLoad(tempTexWrap, prgPath, "Static"FILE_PATH_DELIMITER_STRING"KoboldStatic.tdw");
+	/*textureWrapper tempTexWrap;
+	twDefault(&tempTexWrap, &resMngr, &memMngr);
+	cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));
+	//twLoad(&tempTexWrap, prgPath, "Animated"FILE_PATH_DELIMITER_STRING"LunaSpr2.tdt", &allTextures);
+	//cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));
+	twLoad(&tempTexWrap, &resMngr, &memMngr, prgPath, "Static"FILE_PATH_DELIMITER_STRING"ntrance2.tdt");
+	cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));*/
 
 	// Models.
 	model *tempMdl = moduleModelAllocate();
-	mdlDefault(tempMdl);
-	tempMdl = moduleModelAllocate();
-	mdlCreateSprite(tempMdl);
+	mdlLoad(tempMdl, prgPath, "CubeAnimated.obj");
+	//mdlLoad(&tempMdl, prgPath, "ntrance.obj", &allSkeletons);
+	//cvPush(&allModels, (void *)&tempMdl, sizeof(tempMdl));
 
 	// Objects.
 	objectBase *tempObj = moduleObjectBaseAllocate();
 	objBaseLoad(tempObj, prgPath, "CubeTest.tdo");
+	tempObj->stateMax = 1;
+	tempObj = moduleObjectBaseAllocate();
+	objBaseLoad(tempObj, prgPath, "Wall.tdo");
+	tempObj = moduleObjectBaseAllocate();
+	objBaseLoad(tempObj, prgPath, "CubeTest2.tdo");
+	tempObj->stateMax = 1;
+	tempObj = moduleObjectBaseAllocate();
+	objBaseLoad(tempObj, prgPath, "Kobold.tdo");
+	//objLoad(&tempObj, prgPath, "ntrance.tdo");
+	//cvPush(&allObjects, (void *)&tempObj, sizeof(tempObj));
 
 	// Object Instances.
+	object *tempObji2, *tempObji3, *tempObji4;
 	object *tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest.tdo"));
-	sklaiChange(skliAnimationNew(&tempObji->skeletonData), tempObji->skeletonData.skl, tempObji->base->animations[0], 0, 0.f);
-	//objiChangeAnimation(tempObji, 0, tempObji->base->animations[0], 0, 0.f);
-	//objNewRenderable(objGetState(&gameStateManager, tempID, 0));
-	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
-	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 1);
+	//sklaiChange(skliAnimationNew(&tempObji->skeletonData), tempObji->skeletonData.skl, tempObji->base->animations[0], 0, 0.f);
 	//objInitSkeleton(objGetState(&gameStateManager, tempID, 0), (skeleton *)cvGet(&allSkeletons, 1));
+	//objNewRenderable(objGetState(&gameStateManager, tempID, 0), (model *)cvGet(&allModels, 1), (textureWrapper *)cvGet(&allTexWrappers, 1));
+	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
+	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
+	//objInitSkeleton(objGetState(&gameStateManager, tempID, 0), (skeleton *)cvGet(&allSkeletons, 1));
+	//objInitPhysics(objGetState(&gameStateManager, tempID, 0));
+	//objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
+	//objGetState(&gameStateManager, tempID, 0)->configuration[0].position.y = 9.5f;
+	//objGetState(&gameStateManager, tempID, 0)->configuration[0].position.x = 9.f;
+	//objGetState(&gameStateManager, tempID, 0)->configuration[0].position.y = -3.f;
+	//quatSetEuler(&tempObji->configuration[0].orientation, 45.f*RADIAN_RATIO, 0.f, 45.f*RADIAN_RATIO);
+	///skliLoad(&tempObji->skeletonData, NULL, NULL);
+	//tempObji->configuration[0].position.x = 1.5f;
+	tempObji->configuration[0].position.y = -1.9f;
+	tempObji->skeletonBodies->hull->restitution = 0.f;
+	tempObji3 = tempObji;
+	//tempObji->configuration[0].position = vec3New(6.032421, -1.907336, -6.143989);
+	//tempObji->configuration[0].orientation = quatNew(-0.537948, 0.455196, 0.453047, -0.541063);
+	//
+	tempObji = moduleObjectAllocate();
+	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest2.tdo"));
+	//objInstantiate(objGetState(&gameStateManager, tempID, 0), (object *)cvGet(&allObjects, 0));
+	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
+	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
+	//objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
+	//objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
+	//objInitPhysics(objGetState(&gameStateManager, tempID, 0));
+	tempObji->configuration[0].position.y = 4.f-1.9f;//-0.65f;
+	tempObji->skeletonBodies->hull->restitution = 0.f;
+	//physRigidBodyIgnoreLinear(tempObji->skeletonBodies);
+	tempObji4 = tempObji;
+	//tempObji->configuration[0].scale.x = 8.f;
+	//tempObji->configuration[0].scale.y = 0.25f;
 	//
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest.tdo"));
-	//objiChangeAnimation(objGetState(&gameStateManager, tempID, 0), 0, objGetState(&gameStateManager, tempID, 0)->base->animations[0], 0, 0.f);
-	//objNewRenderable(objGetState(&gameStateManager, tempID, 0));
+	//objInstantiate(objGetState(&gameStateManager, tempID, 0), (object *)cvGet(&allObjects, 0));
 	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
-	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 2);
+	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
 	//objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
-	tempObji->configuration[0].position.x = 0.5f;
-	tempObji->configuration[0].position.y = 0.5f;
-	vec3SetS(&tempObji->configuration[0].scale, 0.15f);
-	quat changeRotation = quatNewEuler(45.f*RADIAN_RATIO, 45.f*RADIAN_RATIO, 0.f);
-	tempObji->configuration[0].orientation = quatQMultQ(changeRotation, tempObji->configuration[0].orientation);
-	tempObji->renderables[0].alpha = 0.5f;
+	//objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
+	//objInitPhysics(objGetState(&gameStateManager, tempID, 0));
+	tempObji->configuration[0].position.y = 10.f;
+	//tempObji->configuration[0].position = vec3New(6.013734, -1.933293, -6.431198);
+	//tempObji->configuration[0].orientation = quatNew(1.000000, 0.000000, 0.000000, 0.000000);
+	tempObji->skeletonBodies->hull->friction = 0.75f;
+	tempObji->skeletonBodies->flags &= ~(0x04);
+	tempObji->skeletonBodies->hull->restitution = 0.f;
+	tempObji2 = tempObji;
+	//
+	tempObji = moduleObjectAllocate();
+	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest.tdo"));
+	//objInstantiate(objGetState(&gameStateManager, tempID, 0), (object *)cvGet(&allObjects, 0));
+	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
+	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
+	//objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
+	//objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
+	//objInitPhysics(objGetState(&gameStateManager, tempID, 0));
+	tempObji->configuration[0].position.x = 11.f;
+	tempObji->configuration[0].position.y = 28.f;
+	//tempObji->skeletonBodies->hull->restitution = 1.f;
+	tempObji->skeletonBodies->hull->restitution = 0.f;
+	//
+	tempObji = moduleObjectAllocate();
+	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest.tdo"));
+	//objInstantiate(objGetState(&gameStateManager, tempID, 0), (object *)cvGet(&allObjects, 0));
+	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
+	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
+	//objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
+	//objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
+	//objInitPhysics(objGetState(&gameStateManager, tempID, 0));
+	tempObji->configuration[0].position.y = 6.f;
+	tempObji->skeletonBodies->hull->restitution = 0.f;
+	//
+	tempObji = moduleObjectAllocate();
+	objInstantiate(tempObji, moduleObjectBaseFind("Wall.tdo"));
+	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
+	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 1);
+	//objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
+	//objInitPhysics(objGetState(&gameStateManager, tempID, 0));
+	//objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_COLLIDE);
+	//objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
+	tempObji->configuration[0].position.y = -3.f;
+	tempObji->configuration[0].scale.x = 100.f;
+	tempObji->configuration[0].scale.y = 0.1f;
+	tempObji->configuration[0].scale.z = 100.f;
+	//
+	tempObji = moduleObjectAllocate();
+	objInstantiate(tempObji, moduleObjectBaseFind("Kobold.tdo"));
+	tempObji->configuration[0].orientation = quatNewEuler(0.f, 0.f*RADIAN_RATIO, 0.f);
+	tempObji->configuration[0].position.x = 6.f;
+	tempObji->configuration[0].position.y = -2.9f;
+	tempObji->configuration[0].position.z = 2.f;
+	tempObji->renderables->flags = CAM_BILLBOARD_TARGET_SPRITE | CAM_BILLBOARD_Y;
 
 	// Sprite Object Instances.
-	tempObji = moduleObjectAllocate();
-	objInit(tempObji);
-	objNewRenderable(tempObji, tempMdl, moduleTextureWrapperFind("Static\\AvatarStatic.tdw"));
-	objInitSkeleton(tempObji, tempObji->renderables[0].mdl->skl);
-	///tempObji->tempRndrConfig.sprite = 1;
-	tempObji->configuration[0].scale.x = 0.026f;
-	tempObji->configuration[0].scale.y = 0.026f;
 	//
-	tempObji = moduleObjectAllocate();
-	objInit(tempObji);
-	objNewRenderable(tempObji, tempMdl, moduleTextureWrapperFind("Static\\AvatarStatic.tdw"));
-	objInitSkeleton(tempObji, tempObji->renderables[0].mdl->skl);
-	///tempObji->tempRndrConfig.sprite = 1;
-	tempObji->configuration[0].position.y = 1.f;
-	///tempObji->tempRndrConfig.pivot.value.x = -0.5f;
-	///tempObji->tempRndrConfig.pivot.value.y = 0.5f;
-	tempObji->configuration[0].scale.x = 0.0026f;
-	tempObji->configuration[0].scale.y = 0.0026f;
-	//
-	tempObji = moduleObjectAllocate();
-	objInit(tempObji);
-	objNewRenderable(tempObji, tempMdl, moduleTextureWrapperFind("Static\\AvatarStatic.tdw"));
-	objInitSkeleton(tempObji, tempObji->renderables[0].mdl->skl);
-	///tempObji->tempRndrConfig.sprite = 1;
-	tempObji->configuration[0].position.x = 4.f;
-	tempObji->configuration[0].position.z = -3.f;
-	tempObji->configuration[0].scale.x = 0.026f;
-	tempObji->configuration[0].scale.y = 0.026f;
-	///tempObji->tempRndrConfig.flags |= RNDR_BILLBOARD_TARGET | RNDR_BILLBOARD_Y;
-	//
-	tempObji = moduleObjectAllocate();
-	objInit(tempObji);
-	objNewRenderable(tempObji, tempMdl, moduleTextureWrapperFind("Static\\KoboldStatic.tdw"));
-	objInitSkeleton(tempObji, tempObji->renderables[0].mdl->skl);
-	///tempObji->tempRndrConfig.sprite = 1;
-	tempObji->configuration[0].position.x = -3.f;
-	tempObji->configuration[0].position.y = -2.f;
-	tempObji->configuration[0].position.z = -3.f;
-	tempObji->configuration[0].scale.x = 0.0085f;
-	tempObji->configuration[0].scale.y = 0.0065f;
 
 	// Scenes.
 	scene *scnMain = moduleSceneAllocate();
-	scnInit(scnMain, 4, 4);
+	scnInit(scnMain, 3, 3);
 	*scnAllocate(scnMain) = moduleObjectIndex(0);
+	*scnAllocate(scnMain) = moduleObjectIndex(1);
 	*scnAllocate(scnMain) = moduleObjectIndex(2);
-	*scnAllocate(scnMain) = moduleObjectIndex(4);
+	*scnAllocate(scnMain) = moduleObjectIndex(3);
+	//*scnAllocate(scnMain) = moduleObjectIndex(4);
 	*scnAllocate(scnMain) = moduleObjectIndex(5);
+	*scnAllocate(scnMain) = moduleObjectIndex(6);
 	//
 	scene *scnHUD = moduleSceneAllocate();
-	scnInit(scnHUD, 2, 2);
-	*scnAllocate(scnHUD) = moduleObjectIndex(1);
-	*scnAllocate(scnHUD) = moduleObjectIndex(3);
+	scnInit(scnHUD, 0, 0);
 
 	// Cameras.
 	camera *camMain = moduleCameraAllocate();
 	camInit(camMain);
-	vec3Set(&camMain->position.value, 0.f, 2.f, 7.f);
+	//camMain->orientation.value = quatNewEuler(0.f, 0.f, 45.f*RADIAN_RATIO);
+	camMain->position.value = vec3New(0.f, 1.f, 7.f);
 	//
 	camera *camHUD = moduleCameraAllocate();
 	camInit(camHUD);
-	vec3Set(&camHUD->position.value, 0.f, 0.f, 0.f);
-	flagsSet(camHUD->flags, CAM_PROJECTION_ORTHO);
+	camHUD->position.value = vec3New(0.f, 0.f, 0.f);
+	flagsSet(camHUD->flags, CAM_PROJECTION_ORTHOGRAPHIC);
+
+	physJoint *joint = modulePhysicsJointAllocate();
+	physJointInit(joint, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_DISTANCE);
+	physJointAdd(joint, tempObji4->skeletonBodies, tempObji3->skeletonBodies);
+
+	/*physJointSphereInit(
+		&joint->data.sphere, tempObji3->skeletonBodies, tempObji4->skeletonBodies, vec3Zero(), vec3Zero(),
+		PHYSICS_JOINT_SPHERE_CONE_LIMIT_ENABLED, vec3New(1.f, 0.f, 0.f), 45.f*RADIAN_RATIO
+	);*/
+
+	physJointDistanceInit(&joint->data.distance, vec3Zero(), vec3Zero(), 4.f, 0.f, 0.f);
+
 
 
 	//memPrintAllBlocks();
 	//memPrintFreeBlocks(0);
 
+	/*uint32_t blahstart = SDL_GetTicks();
+	uint32_t blahend;
+	uint32_t count;
+	hbCollisionInfo separationInfo;
+	hbCollisionContactManifold collisionData;
+
+	for(count = 0; count < 1000000; ++count){
+		//hbCollision(&objGetState(&gameStateManager, 0, 0)->skeletonBodies[0].colliders[0].hb, &objGetState(&gameStateManager, 0, 0)->skeletonBodies[0].centroid,
+		//	        &objGetState(&gameStateManager, 2, 0)->skeletonBodies[0].colliders[0].hb, &objGetState(&gameStateManager, 2, 0)->skeletonBodies[0].centroid,
+		//	        &separationInfo, &collisionData);
+	}
+
+	blahend = SDL_GetTicks();
+	printf("%u - %u\n%u\n", blahstart, blahend, blahend-blahstart);*/
 
 	signed char prgRunning = 1;
 
@@ -186,7 +320,7 @@ int main(int argc, char *argv[]){
 
 	float framerate = 1000.f / 125.f;  // Desired milliseconds per render.
 	float tickrate = 1000.f / 125.f;   // Desired milliseconds per update.
-	float tickratio = tickrate / 1000.f;  // 1 / updates per second.
+	float tickratio = tickrate / 1000.f;  // Desired seconds per update.
 
 	float tickrateTimeMod = tickrate * timeMod;
 	float tickratioTimeMod = tickratio * timeMod;
@@ -197,6 +331,7 @@ int main(int argc, char *argv[]){
 	float nextUpdate = (float)SDL_GetTicks();
 	float startRender;
 	float nextRender = (float)SDL_GetTicks();
+	int nextEvent;
 
 	uint_least32_t updates = 0;
 	uint_least32_t renders = 0;
@@ -219,7 +354,7 @@ int main(int argc, char *argv[]){
 
 
 		// Take input.
-		/** Use command queuing system and poll input on another thread. **/
+		/** Use command queuing system and poll input on another thread? Probably not actually. **/
 		// Detect input.
 		SDL_PollEvent(&prgEventHandler);
 
@@ -272,58 +407,79 @@ int main(int argc, char *argv[]){
 
 
 		startUpdate = (float)SDL_GetTicks();
-		while(startUpdate >= nextUpdate){
+		if(startUpdate >= nextUpdate){
 
 			// Prepare the next game state.
 			/**smPrepareNextState(&gameStateManager);**/
-			camResetInterpolation((void *)camMain);
-			camResetInterpolation((void *)camHUD);
+			moduleCameraPrepare();
 
 			// Handle inputs.
 			if(UP){
-				timeMod = 1.f;
-				tickrateTimeMod = tickrate*timeMod;
-				tickratioTimeMod = tickratio*timeMod;
-				/** changeRotation is created to initialize the second renderable. **/
-				changeRotation = quatNewEuler(-90.f*RADIAN_RATIO, 0.f, 0.f);
-				moduleObjectIndex(0)->configuration[0].orientation = quatRotate(moduleObjectIndex(0)->configuration[0].orientation, changeRotation, tickratio);
+				//tempObji2->skeletonBodies->flags &= ~(0x04);
+				//moduleObjectIndex(0)->renderables[0].alpha = 1.f;
+				//globalTimeMod = 1.f;
+				//tickrateTimeMod = tickrate*globalTimeMod;
+				//tickratioTimeMod = tickratio*globalTimeMod;
+				//const quat changeRotation = quatNewEuler(-90.f*RADIAN_RATIO, 0.f, 0.f);
+				//quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, tickratioTimeMod, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
 				camMain->position.value.z += -5.f * tickratio;
-				//objGetState(&gameStateManager, 4, 0)->tempRndrConfig.targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
+				//objGetState(&gameStateManager, 6, 0)->tempRndrConfig.target.value = camMain->position.value;
+				if(tempObji2->skeletonBodies->linearVelocity.z > -9.f){
+					tempObji2->skeletonBodies->linearVelocity.z -= 62.5f * tickratio;
+				}else if(tempObji2->skeletonBodies->linearVelocity.z < -9.f){
+					tempObji2->skeletonBodies->linearVelocity.z = -9.f;
+				}
 			}
 			if(DOWN){
-				timeMod = -1.f;
-				tickrateTimeMod = tickrate*timeMod;
-				tickratioTimeMod = tickratio*timeMod;
-				/** changeRotation is created to initialize the second renderable. **/
-				changeRotation = quatNewEuler(90.f*RADIAN_RATIO, 0.f, 0.f);
-				moduleObjectIndex(0)->configuration[0].orientation = quatRotate(moduleObjectIndex(0)->configuration[0].orientation, changeRotation, tickratio);
+				//tempObji2->skeletonBodies->flags |= (0x04);
+				//moduleObjectIndex(0)->renderables[0].alpha = 0.f;
+				//globalTimeMod = -1.f;
+				//tickrateTimeMod = tickrate*globalTimeMod;
+				//tickratioTimeMod = tickratio*globalTimeMod;
+				//const quat changeRotation = quatNewEuler(90.f*RADIAN_RATIO, 0.f, 0.f);
+				//quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, tickratioTimeMod, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
 				camMain->position.value.z += 5.f * tickratio;
-				//objGetState(&gameStateManager, 4, 0)->tempRndrConfig.targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
+				//objGetState(&gameStateManager, 6, 0)->tempRndrConfig.target.value = camMain->position.value;
+				if(tempObji2->skeletonBodies->linearVelocity.z < 9.f){
+					tempObji2->skeletonBodies->linearVelocity.z += 62.5f * tickratio;
+				}else if(tempObji2->skeletonBodies->linearVelocity.z > 9.f){
+					tempObji2->skeletonBodies->linearVelocity.z = 9.f;
+				}
 			}
 			if(LEFT){
-				/** changeRotation is created to initialize the second renderable. **/
-				changeRotation = quatNewEuler(0.f, -90.f*RADIAN_RATIO, 0.f);
-				moduleObjectIndex(0)->configuration[0].orientation = quatRotate(moduleObjectIndex(0)->configuration[0].orientation, changeRotation, tickratio);
-				changeRotation = quatNewEuler(0.f, 0.f, -90.f*RADIAN_RATIO);
-				moduleObjectIndex(3)->configuration[0].orientation = quatRotate(moduleObjectIndex(3)->configuration[0].orientation, changeRotation, tickratio);
+				//const quat changeRotation =
+				//quatNewEuler(&changeRotation, 0.f, -90.f*RADIAN_RATIO, 0.f);
+				//quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, tickratioTimeMod, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
+				//quatNewEuler(0.f, 0.f, -90.f*RADIAN_RATIO);
+				//quatRotate(&objGetState(&gameStateManager, 5, 0)->configuration[0].orientation, &changeRotation, tickratioTimeMod, &objGetState(&gameStateManager, 5, 0)->configuration[0].orientation);
 				camMain->position.value.x += -5.f * tickratio;
-				//objGetState(&gameStateManager, 4, 0)->tempRndrConfig.targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
+				//objGetState(&gameStateManager, 6, 0)->tempRndrConfig.target.value = camMain->position.value;
+				if(tempObji2->skeletonBodies->linearVelocity.x > -9.f){
+					tempObji2->skeletonBodies->linearVelocity.x -= 62.5f * tickratio;
+				}else if(tempObji2->skeletonBodies->linearVelocity.x < -9.f){
+					tempObji2->skeletonBodies->linearVelocity.x = -9.f;
+				}
 			}
 			if(RIGHT){
-				/** changeRotation is created to initialize the second renderable. **/
-				changeRotation = quatNewEuler(0.f, 90.f*RADIAN_RATIO, 0.f);
-				moduleObjectIndex(0)->configuration[0].orientation = quatRotate(moduleObjectIndex(0)->configuration[0].orientation, changeRotation, tickratio);
-				changeRotation = quatNewEuler(0.f, 0.f, 90.f*RADIAN_RATIO);
-				moduleObjectIndex(3)->configuration[0].orientation = quatRotate(moduleObjectIndex(3)->configuration[0].orientation, changeRotation, tickratio);
+				//const quat changeRotation =
+				//quatNewEuler(&changeRotation, 0.f, 90.f*RADIAN_RATIO, 0.f);
+				//quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, tickratioTimeMod, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
+				//quatNewEuler(0.f, 0.f, 90.f*RADIAN_RATIO);
+				//quatRotate(&objGetState(&gameStateManager, 5, 0)->configuration[0].orientation, &changeRotation, tickratioTimeMod, &objGetState(&gameStateManager, 5, 0)->configuration[0].orientation);
 				camMain->position.value.x += 5.f * tickratio;
-				//objGetState(&gameStateManager, 4, 0)->tempRndrConfig.targetPosition.value = camGetState(&gameStateManager, 0, 0)->position.value;
+				//objGetState(&gameStateManager, 6, 0)->tempRndrConfig.target.value = camMain->position.value;
+				if(tempObji2->skeletonBodies->linearVelocity.x < 9.f){
+					tempObji2->skeletonBodies->linearVelocity.x += 62.5f * tickratio;
+				}else if(tempObji2->skeletonBodies->linearVelocity.x > 9.f){
+					tempObji2->skeletonBodies->linearVelocity.x = 9.f;
+				}
 			}
 
 			// Update scenes.
 			moduleSceneUpdate(tickrateTimeMod);
 
 			// Query physics islands.
-			#ifndef PHYSICS_SOLVER_GAUSS_SEIDEL
+			#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 			moduleSceneQueryIslands(tickratioTimeModFrequency);
 			#else
 			moduleSceneQueryIslands();
@@ -338,15 +494,12 @@ int main(int argc, char *argv[]){
 
 		}
 
-
-		// Render the scene.
 		startRender = (float)SDL_GetTicks();
 		if(startRender >= nextRender){
 
 			// Progress between current and next frame.
 			const float interpT = (startRender - (nextUpdate - tickrateUpdateMod)) / tickrateUpdateMod;
 
-			// Render.
 			/** Remove later **/
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			// Render the scene.
@@ -363,6 +516,9 @@ int main(int argc, char *argv[]){
 
 		}
 
+		// Sleep until the next event.
+		sleepm((int)(nextUpdate <= nextRender ? nextUpdate : nextRender) - (int)SDL_GetTicks());
+
 
 		if(SDL_GetTicks() - lastPrint > 1000){
 			printf("Updates: %u\n", updates);
@@ -373,7 +529,6 @@ int main(int argc, char *argv[]){
 		}
 
     }
-
 
 	moduleCameraResourcesDelete();
 	moduleSceneResourcesDelete();

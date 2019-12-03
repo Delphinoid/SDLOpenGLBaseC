@@ -9,10 +9,13 @@ uniform float alpha;
 // Per-call data.
 uniform sampler2D textureSampler0;
 
+// MIP bias.
+uniform float mip;
+
 out vec4 colour;
 
 void main(){
-	vec4 tempColour = texture(textureSampler0, UV).rgba;
+	vec4 tempColour = texture(textureSampler0, UV, mip).rgba;
 	tempColour.a *= alpha;
 	if(tempColour.a == 0.0){
 		discard;

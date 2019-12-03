@@ -1,0 +1,68 @@
+texture "Resources\Images\Luna\Luna1.png"
+texture "Resources\Images\Luna\Luna2.png"
+texture "Resources\Images\Luna\Luna3.png"
+texture "Resources\Images\Luna\Luna4.png"
+texture "Resources\Images\Luna\Luna5.png"
+texture "Resources\Images\Luna\Luna6.png"
+texture "Resources\Images\Luna\Luna7.png"
+texture "Resources\Images\Luna\Luna8.png"
+texture "Resources\Images\Luna\Luna9.png"
+texture "Resources\Images\Luna\Luna10.png"
+texture "Resources\Images\Luna\Luna11.png"
+texture "Resources\Images\Luna\Luna12.png"
+texture "Resources\Images\Luna\Luna13.png"
+texture "Resources\Images\Luna\Luna14.png"
+texture "Resources\Images\Luna\Luna15.png"
+texture "Resources\Images\Luna\Luna16.png"
+texture "Resources\Images\Luna\Luna17.png"
+texture "Resources\Images\Luna\Luna18.png"
+texture "Resources\Images\Luna\Luna19.png"
+texture "Resources\Images\Luna\Luna20.png"
+texture "Resources\Images\Luna\Luna21.png"
+texture "Resources\Images\Luna\Luna22.png"
+texture "Resources\Images\Luna\Luna23.png"
+texture "Resources\Images\Luna\Luna24.png"
+texture "Resources\Images\Luna\Luna25.png"
+texture "Resources\Images\Luna\Luna26.png"
+texture "Resources\Images\Luna\Luna27.png"
+texture "Resources\Images\Luna\Luna28.png"
+texture "Resources\Images\Luna\Luna29.png"
+texture "Resources\Images\Luna\Luna30.png"
+texture "Resources\Images\Luna\Luna31.png"
+
+animation {
+	loop -1
+	fMacro 0/30/0/0/33.33
+	// Not needed for this image because we now have the magic of frame macros!
+	// frame 0/0/33.33
+	// frame 1/0/33.33
+	// frame 2/0/33.33
+	// frame 3/0/33.33
+	// frame 4/0/33.33
+	// frame 5/0/33.33
+	// frame 6/0/33.33
+	// frame 7/0/33.33
+	// frame 8/0/33.33
+	// frame 9/0/33.33
+	// frame 10/0/33.33
+	// frame 11/0/33.33
+	// frame 12/0/33.33
+	// frame 13/0/33.33
+	// frame 14/0/33.33
+	// frame 15/0/33.33
+	// frame 16/0/33.33
+	// frame 17/0/33.33
+	// frame 18/0/33.33
+	// frame 19/0/33.33
+	// frame 20/0/33.33
+	// frame 21/0/33.33
+	// frame 22/0/33.33
+	// frame 23/0/33.33
+	// frame 24/0/33.33
+	// frame 25/0/33.33
+	// frame 26/0/33.33
+	// frame 27/0/33.33
+	// frame 28/0/33.33
+	// frame 29/0/33.33
+	// frame 30/0/33.33
+}
