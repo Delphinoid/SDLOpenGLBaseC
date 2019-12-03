@@ -96,16 +96,16 @@ mat4 camBillboard(const camera *const restrict cam, mat4 configuration, const fl
 			vec3 eye, target, up;
 
 			if(flagsAreSet(flags, CAM_BILLBOARD_TARGET_CAMERA)){
-				eye = cam->position.render;
-				target = position;
+				eye = position;
+				target = cam->position.render;
 				up = cam->up.render;
 			}else if(flagsAreSet(flags, CAM_BILLBOARD_TARGET)){
-				/**eye = rndri->target.render;
-				target = position;
+				/**eye = position;
+				target = rndri->target.render;
 				up = quatRotateVec3(rndri->targetOrientation.render, vec3New(0.f, 1.f, 0.f));**/
 			}else if(flagsAreSet(flags, CAM_BILLBOARD_TARGET_SPRITE)){
-				eye = cam->position.render;
-				target = cam->target.render;
+				eye = cam->target.render;
+				target = cam->position.render;
 				up = cam->up.render;
 			}
 

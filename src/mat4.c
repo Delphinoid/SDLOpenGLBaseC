@@ -426,8 +426,8 @@ __HINT_INLINE__ void mat4PerspectiveP(mat4 *const restrict m, const float fovy, 
 }
 __HINT_INLINE__ mat4 mat4RotateToFace(const vec3 eye, const vec3 target, const vec3 up){
 	const vec3 zAxis = vec3NormalizeFast(vec3VSubV(target, eye));
-	const vec3 xAxis = vec3NormalizeFast(vec3Cross(zAxis, up));
-	const vec3 yAxis = vec3NormalizeFast(vec3Cross(xAxis, zAxis));
+	const vec3 xAxis = vec3NormalizeFast(vec3Cross(up, zAxis));
+	const vec3 yAxis = vec3NormalizeFast(vec3Cross(zAxis, xAxis));
 	const mat4 r = {.m = {{xAxis.x, xAxis.y, xAxis.z, 0.f},
 	                      {yAxis.x, yAxis.y, yAxis.z, 0.f},
 	                      {zAxis.x, zAxis.y, zAxis.z, 0.f},
@@ -438,9 +438,9 @@ __HINT_INLINE__ void mat4RotateToFaceP(mat4 *const restrict m, const vec3 *const
 	vec3 xAxis, yAxis, zAxis;
 	vec3VSubVPR(target, eye, &zAxis);
 	vec3NormalizeFastP(&zAxis);
-	vec3CrossPR(&zAxis, up, &xAxis);
+	vec3CrossPR(up, &zAxis, &xAxis);
 	vec3NormalizeFastP(&xAxis);
-	vec3CrossPR(&xAxis, &zAxis, &yAxis);
+	vec3CrossPR(&zAxis, &xAxis, &yAxis);
 	vec3NormalizeFastP(&yAxis);
 	m->m[0][0] = xAxis.x; m->m[0][1] = xAxis.y; m->m[0][2] = xAxis.z; m->m[0][3] = 0.f;
 	m->m[1][0] = yAxis.x; m->m[1][1] = yAxis.y; m->m[1][2] = yAxis.z; m->m[1][3] = 0.f;
