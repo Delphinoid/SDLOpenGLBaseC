@@ -60,7 +60,7 @@ void camUpdateViewProjectionMatrix(camera *const restrict cam, const unsigned in
 
 float camDistance(const camera *const restrict cam, const vec3 target);
 
-mat4 camBillboard(const camera *const restrict cam, mat4 configuration, const flags_t flags);
+mat4 camBillboard(const camera *const restrict cam, const vec3 position, mat4 configuration, const flags_t flags);
 
 void camDelete(camera *const restrict cam);
 

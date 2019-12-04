@@ -562,9 +562,6 @@ return_t mdlWavefrontObjLoad(const char *const restrict filePath, vertexIndex_t 
 
 
 #define mdlSMDFreeReturns() \
-	if(*name != NULL){ \
-		memFree(*name); \
-	} \
 	if(*vertices != NULL){ \
 		memFree(*vertices); \
 	} \
@@ -573,9 +570,9 @@ return_t mdlWavefrontObjLoad(const char *const restrict filePath, vertexIndex_t 
 	} \
 
 #define mdlSMDFreeHelpers() \
-	sklDelete(&tempSkl);
+	sklDelete(skl);
 
-return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, size_t *indexNum, size_t **indices, char **name){
+return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndexNum_t *indexNum, size_t **indices, skeleton *const skl){
 	/*
 	** Temporary function by 8426THMY.
 	*/
@@ -592,11 +589,10 @@ return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, 
 		size_t indexCapacity = MDL_INDEX_START_CAPACITY;
 		*indices = memAllocate(indexCapacity * sizeof(**indices));
 		//Temporarily stores bones.
-		skeleton tempSkl;
-		tempSkl.name = NULL;
-		tempSkl.boneNum = 0;
+		skl->name = NULL;
+		skl->boneNum = 0;
 		size_t boneCapacity = 1;
-		tempSkl.bones = memAllocate(boneCapacity * sizeof(*tempSkl.bones));
+		skl->bones = memAllocate(boneCapacity * sizeof(*skl->bones));
 		//This indicates what sort of data we're currently supposed to be reading.
 		unsigned char dataType = 0;
 		//This variable stores data specific to the type we're currently loading.
@@ -631,8 +627,8 @@ return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, 
 				if(strcmp(line, "end") == 0){
 					//If we've finished identifying the skeleton's bones, shrink the vector!
 					if(dataType == 1){
-						boneCapacity = tempSkl.boneNum;
-						tempSkl.bones = memReallocate(tempSkl.bones, boneCapacity * sizeof(*tempSkl.bones));
+						boneCapacity = skl->boneNum;
+						skl->bones = memReallocate(skl->bones, boneCapacity * sizeof(*skl->bones));
 					}
 
 					dataType = 0;
@@ -645,7 +641,7 @@ return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, 
 
 						//Get this bone's ID.
 						size_t boneID = strtoul(tokPos, &tokPos, 10);
-						if(boneID == tempSkl.boneNum){
+						if(boneID == skl->boneNum){
 							//Get the bone's name.
 							size_t boneNameLength;
 							getDelimitedString(tokPos, line + lineLength - tokPos, "\" ", &tokPos, &boneNameLength);
@@ -655,22 +651,25 @@ return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, 
 
 							//Get the ID of this bone's parent.
 							tempBone.parent = strtoul(tokPos + boneNameLength + 1, NULL, 10);
+							if(tempBone.parent == 255){
+								tempBone.parent = boneID;
+							}
 
 
 							//If we're out of space, allocate some more!
-							if(tempSkl.boneNum >= boneCapacity){
-								boneCapacity = tempSkl.boneNum * 2;
-								tempSkl.bones = memReallocate(tempSkl.bones, boneCapacity * sizeof(*tempSkl.bones));
+							if(skl->boneNum >= boneCapacity){
+								boneCapacity = skl->boneNum * 2;
+								skl->bones = memReallocate(skl->bones, boneCapacity * sizeof(*skl->bones));
 							}
 							//Add the bone to our vector!
-							tempSkl.bones[tempSkl.boneNum] = tempBone;
-							++tempSkl.boneNum;
+							skl->bones[skl->boneNum] = tempBone;
+							++skl->boneNum;
 						}else{
 							printf("Error loading model!\n"
 							       "Path: %s\n"
 							       "Line: %s\n"
 							       "Error: Found node %lu when expecting node %u!\n",
-							       filePath, line, (unsigned long)boneID, tempSkl.boneNum);
+							       filePath, line, (unsigned long)boneID, skl->boneNum);
 							mdlSMDFreeReturns();
 							mdlSMDFreeHelpers();
 							return 0;
@@ -699,8 +698,8 @@ return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, 
 							//Get this bone's ID.
 							size_t boneID = strtoul(tokPos, &tokPos, 10);
 							//Make sure a bone with this ID actually exists.
-							if(boneID < tempSkl.boneNum){
-								sklNode *currentBone = &tempSkl.bones[boneID];
+							if(boneID < skl->boneNum){
+								sklNode *currentBone = &skl->bones[boneID];
 
 								//If the current frame timestamp is 0, set the bone's initial state!
 								if(data == 0){
@@ -721,8 +720,8 @@ return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, 
 
 
 									//If this bone has a parent, append its state to its parent's state!
-									if(currentBone->parent != -1){
-										//boneTransformAppend(&tempSkl.bones[currentBone->parent].defaultState, &currentBone->defaultState, &currentBone->defaultState);
+									if(currentBone->parent != boneID){
+										//currentBone->defaultState = boneTransformAppend(skl->bones[currentBone->parent].defaultState, currentBone->defaultState);
 									}
 								}
 							}else{
@@ -748,7 +747,7 @@ return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, 
 							//Read the vertex data from the line!
 							size_t parentBoneID = strtoul(tokPos, &tokPos, 10);
 							//Make sure a bone with this ID actually exists.
-							if(parentBoneID < tempSkl.boneNum){
+							if(parentBoneID < skl->boneNum){
 								tempVertex.position.x = strtod(tokPos, &tokPos) * 0.05f;
 								tempVertex.position.y = strtod(tokPos, &tokPos) * 0.05f;
 								tempVertex.position.z = strtod(tokPos, &tokPos) * 0.05f;
@@ -779,7 +778,7 @@ return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, 
 										//Load the bone's ID!
 										tempVertex.bIDs[i] = strtoul(tokPos, &tokPos, 10);
 										//Make sure it exists!
-										if(tempVertex.bIDs[i] > tempSkl.boneNum){
+										if(tempVertex.bIDs[i] > skl->boneNum){
 											printf("Error loading model!\n"
 											       "Path: %s\n"
 											       "Line: %s\n"

@@ -13,6 +13,10 @@ typedef struct {
 void boneInit(bone *const restrict b);
 mat4 boneMatrix(const bone b);
 
+bone boneNegate(const bone b);
+void boneNegateP(bone *const restrict b);
+void boneNegatePR(const bone *const restrict b, bone *const restrict r);
+
 bone boneInvert(const bone b);
 void boneInvertP(bone *const restrict b);
 void boneInvertPR(const bone *const restrict b, bone *const restrict r);

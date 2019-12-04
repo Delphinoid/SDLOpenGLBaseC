@@ -664,6 +664,9 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, co
 
 							//Get the ID of this bone's parent.
 							tempBone.parent = strtoul(tokPos + boneNameLength + 1, NULL, 10);
+							if(tempBone.parent == 255){
+								tempBone.parent = boneID;
+							}
 
 
 							//If we're out of space, allocate some more!
@@ -729,39 +732,19 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, co
 								float x = strtod(tokPos, &tokPos) * 0.05f;
 								float y = strtod(tokPos, &tokPos) * 0.05f;
 								float z = strtod(tokPos, &tokPos) * 0.05f;
-								/*The Source Engine uses Z as its up axis, so we need to fix that with the root bone.
-								if(boneID == 0){
-									vec3InitSet(&currentState->pos, x, z, y);
-								}else{*/
-									currentState->position = vec3New(x, y, z);
-								//}
-
-								//The Source Engine uses Z as its up axis, so we need to fix that with the root bone.
-								/*if(boneID == 0){
-									vec3InitSet(&currentState->pos, x, z, y);
-									x = strtod(tokPos, &tokPos) - 1.5707963267948966192313216916398f;
-								}else{
-									vec3InitSet(&currentState->pos, x, y, z);
-									x = strtod(tokPos, &tokPos);
-								}*/
+								currentState->position = vec3New(x, y, z);
 
 								//Load the bone's rotation!
 								x = strtod(tokPos, &tokPos);
 								y = strtod(tokPos, &tokPos);
 								z = strtod(tokPos, NULL);
-								/*Same idea here.
-								if(boneID == 0){
-									quatInitEulerRad(&currentState->rot, x - 1.5707963267948966192313216916398f, -z, y);
-								}else{*/
-									currentState->orientation = quatNewEuler(x, y, z);
-								//}
+								currentState->orientation = quatNormalize(quatNewEuler(x, y, z));
 
 								//Set the bone's scale!
 								currentState->scale = vec3New(1.f, 1.f, 1.f);
 
-								//bone thing = skl->bones[boneID].defaultState;
-								//boneStateInvert(&thing, &thing);
-								//boneTransformAppendPosition(currentState, &thing, currentState);
+								bone thing = boneInvert(skl->bones[boneID].defaultState);
+								*currentState = boneTransformAppend(thing, *currentState);
 
 							}else{
 								printf("Error loading skeletal animtion!\n"

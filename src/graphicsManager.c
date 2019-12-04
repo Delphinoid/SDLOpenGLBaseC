@@ -324,7 +324,7 @@ return_t gfxMngrInit(graphicsManager *const restrict gfxMngr, const char *const 
 
 	return_t r;
 
-	mat4Identity(&gfxMngr->identityMatrix);
+	gfxMngr->identityMatrix = mat4Identity();
 	gfxMngr->windowAspectRatioX = GFX_DEFAULT_WINDOW_ASPECT_RATIO_X;
 	gfxMngr->windowAspectRatioY = GFX_DEFAULT_WINDOW_ASPECT_RATIO_Y;
 	gfxMngr->windowWidth = GFX_DEFAULT_WINDOW_WIDTH;

@@ -18,7 +18,7 @@ mat4 boneMatrix(const bone b){
 	return transform;
 }
 
-bone boneInvert(const bone b){
+bone boneNegate(const bone b){
 	const bone r = {
 		.position = vec3Negate(b.position),
 		.orientation = quatNegate(b.orientation),
@@ -26,7 +26,7 @@ bone boneInvert(const bone b){
 	};
 	return r;
 }
-void boneInvertP(bone *const restrict b){
+void boneNegateP(bone *const restrict b){
 	b->position.x = -b->position.x;
 	b->position.y = -b->position.y;
 	b->position.z = -b->position.z;
@@ -36,12 +36,34 @@ void boneInvertP(bone *const restrict b){
 	b->scale.y = 1.f/b->scale.y;
 	b->scale.z = 1.f/b->scale.z;
 }
-void boneInvertPR(const bone *const restrict b, bone *const restrict r){
+void boneNegatePR(const bone *const restrict b, bone *const restrict r){
 	r->position.x = -b->position.x;
 	r->position.y = -b->position.y;
 	r->position.z = -b->position.z;
 	r->orientation.w = -b->orientation.w;
 	r->orientation.v = b->orientation.v;
+	r->scale.x = 1.f/b->scale.x;
+	r->scale.y = 1.f/b->scale.y;
+	r->scale.z = 1.f/b->scale.z;
+}
+
+bone boneInvert(const bone b){
+	bone r;
+	r.orientation = quatConjugateFast(b.orientation);
+	r.position = vec3Negate(quatRotateVec3FastApproximate(r.orientation, b.position));
+	r.scale = vec3SDivV(1.f, b.scale);
+	return r;
+}
+void boneInvertP(bone *const restrict b){
+	quatConjugateFastP(&b->orientation);
+	quatRotateVec3FastApproximateP(&b->orientation, &b->position);
+	vec3NegateP(&b->position);
+	vec3SDivVP(1.f, &b->scale);
+}
+void boneInvertPR(const bone *const restrict b, bone *const restrict r){
+	quatConjugateFastPR(&b->orientation, &r->orientation);
+	quatRotateVec3FastApproximatePR(&r->orientation, &b->position, &r->position);
+	vec3NegateP(&r->position);
 	r->scale.x = 1.f/b->scale.x;
 	r->scale.y = 1.f/b->scale.y;
 	r->scale.z = 1.f/b->scale.z;

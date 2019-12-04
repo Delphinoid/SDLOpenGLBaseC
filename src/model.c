@@ -12,7 +12,7 @@
 #define MODEL_RESOURCE_DIRECTORY_LENGTH 17
 
 return_t mdlWavefrontObjLoad(const char *const restrict filePath, vertexIndex_t *const vertexNum, vertex **const vertices, vertexIndexNum_t *const restrict indexNum, vertexIndex_t **const indices, size_t *const restrict lodNum, mdlLOD **const lods, char *const restrict sklPath);
-///return_t mdlSMDLoad(const char *filePath, size_t *vertexNum, vertex **vertices, size_t *indexNum, vertexIndex_t **indices);
+return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndexNum_t *indexNum, vertexIndex_t **indices, skeleton *const skl);
 
 void mdlInit(model *const restrict mdl){
 	mdl->name = NULL;
@@ -144,8 +144,16 @@ return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, 
 
 	mdlInit(mdl);
 
-	r = mdlWavefrontObjLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, &lodNum, &lods, &sklPath[0]);
-	//r = mdlSMDLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, allSkeletons);
+	if(filePath[fileLength-1] != 'd'){
+		r = mdlWavefrontObjLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, &lodNum, &lods, &sklPath[0]);
+	}else{
+		skeleton *const tempSkl = moduleSkeletonAllocate();
+		r = mdlSMDLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, tempSkl);
+		tempSkl->name = memAllocate(8*sizeof(char));
+		strncpy(tempSkl->name, "SMDTest", 7);
+		tempSkl->name[7] = '\0';
+		mdl->skl = tempSkl;
+	}
 	/** Replace and move the loading function here. **/
 	if(r <= 0){
 		return r;
@@ -158,7 +166,7 @@ return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, 
 	memFree(vertices);
 	memFree(indices);
 
-	if(sklPath[0] == '\0'){
+	if(mdl->skl == NULL){if(sklPath[0] == '\0'){
 		// Use the default skeleton.
         mdl->skl = moduleSkeletonGetDefault();
 	}else{
@@ -184,7 +192,7 @@ return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, 
 			mdlDelete(mdl);
 			return -1;
 		}
-	}
+	}}
 
 	if(r > 0){
 

@@ -71,7 +71,7 @@ float camDistance(const camera *const restrict cam, const vec3 target){
 	                  (target.z - cam->position.render.z) * (target.z - cam->position.render.z)));
 }
 
-mat4 camBillboard(const camera *const restrict cam, mat4 configuration, const flags_t flags){
+mat4 camBillboard(const camera *const restrict cam, const vec3 centroid, mat4 configuration, const flags_t flags){
 
 	// Generates a billboard transformation matrix.
 	// If no flags are set, returns the identity matrix.
@@ -96,11 +96,11 @@ mat4 camBillboard(const camera *const restrict cam, mat4 configuration, const fl
 			vec3 eye, target, up;
 
 			if(flagsAreSet(flags, CAM_BILLBOARD_TARGET_CAMERA)){
-				eye = position;
+				eye = centroid;
 				target = cam->position.render;
 				up = cam->up.render;
 			}else if(flagsAreSet(flags, CAM_BILLBOARD_TARGET)){
-				/**eye = position;
+				/**eye = centroid;
 				target = rndri->target.render;
 				up = quatRotateVec3(rndri->targetOrientation.render, vec3New(0.f, 1.f, 0.f));**/
 			}else if(flagsAreSet(flags, CAM_BILLBOARD_TARGET_SPRITE)){
@@ -128,7 +128,7 @@ mat4 camBillboard(const camera *const restrict cam, mat4 configuration, const fl
 	}
 
 	if(flagsAreSet(flags, CAM_BILLBOARD_SCALE)){
-		const float distance = camDistance(cam, position) * (1.f/CAM_BILLBOARD_SCALE_CALIBRATION_DISTANCE);
+		const float distance = camDistance(cam, centroid) * (1.f/CAM_BILLBOARD_SCALE_CALIBRATION_DISTANCE);
 		configuration = mat4Scale(configuration, distance, distance, distance);
 	}
 

@@ -14,8 +14,10 @@
 typedef uint_least8_t boneIndex_t;
 
 // Skeleton node, containing a bone and the index of its parent.
+// Bone states are stored as offsets from their parents.
 typedef struct {
 	bone defaultState;
+	/** Should this be set to (boneIndex_t)-1 instead? **/
 	boneIndex_t parent;  // If the node has no parent, this will be set to its own position in bones.
 	char *name;
 } sklNode;
@@ -45,6 +47,9 @@ typedef struct {
 **/
 
 // A full animation, containing a vector of keyframes.
+// Animation frames are independent and not relative to the previous frame.
+// They are, however, relative to the skeleton's bind position. For example,
+// translations are relative to the bind pose's axes, not the current frame's.
 typedef struct {
 	animationData animData;
 	boneIndex_t boneNum;  // The total number of unique bones in the animation.
@@ -60,6 +65,7 @@ typedef struct {
 */
 
 // Animation fragment, containing an animation pointer, an animator, a bone lookup and a blend.
+/** After implementing the intensity value, maybe remove animation fragments. **/
 typedef struct {
 
 	const sklAnim *animation;

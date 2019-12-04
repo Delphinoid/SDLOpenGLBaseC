@@ -328,7 +328,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 		twaInit(&tempAnim);
 
 		while(fileParseNextLine(texInfo, lineFeed, sizeof(lineFeed), &line, &lineLength)){
-printf("%s\n",line);
+
 			++currentLine;
 
 			// New texture frame

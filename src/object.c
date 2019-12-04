@@ -490,6 +490,7 @@ return_t objInstantiate(object *const restrict obj, const objectBase *const rest
 			collider *c = obj->skeletonColliders;
 			const collider *const cLast = &c[base->skl->boneNum];
 
+			/** Why do I still use malloc here? Was this incomplete? **/
 			obj->skeletonColliders = malloc(base->skl->boneNum * sizeof(collider));
 			if(obj->skeletonColliders == NULL){
 				/** Memory allocation failure. **/
@@ -893,19 +894,18 @@ return_t objUpdate(object *const restrict obj, physIsland *const restrict island
 			** Apply animation transformations.
 			*/
 
-			// Generate a new animated bone state.
 			/** Should configurations be optional? **/
 
-			*sklState = *configuration;
-			skliGenerateBoneState(&obj->skeletonData, i, sklBone->name, sklState);
+			// Apply configuration and the skeleton's bind transform.
+			// We can just set sklState to configuration we don't want
+			// global bone configurations. Doing this may break more
+			// complex physics objects, however. If this is removed,
+			// the transformation loop before rendering can also be
+			// safely removed.
+			*sklState = boneTransformAppend(*configuration, sklBone->defaultState);
 
-			// Apply the object skeleton's bind offsets.
-			sklState->position = boneTransformAppendPositionVec(
-				*sklState,
-				sklBone->defaultState.position.x,
-				sklBone->defaultState.position.y,
-				sklBone->defaultState.position.z
-			);
+			// Generate a new animated bone state.
+			skliGenerateBoneState(&obj->skeletonData, i, sklBone->name, sklState);
 
 			// Apply the parent's transformations to each bone.
 			if(!isRoot){

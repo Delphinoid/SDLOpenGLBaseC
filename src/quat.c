@@ -27,6 +27,7 @@ __HINT_INLINE__ quat quatNewAxisAngle(const float angle, const float axisX, cons
 	return r;
 }
 __HINT_INLINE__ quat quatNewEuler(const float x, const float y, const float z){
+	// Order of rotations: ZYX
 	const float hx = x*0.5f;
 	const float hy = y*0.5f;
 	const float hz = z*0.5f;

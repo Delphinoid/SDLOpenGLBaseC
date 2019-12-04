@@ -62,7 +62,7 @@ typedef struct {
 
 	// Uniform buffers.
 	vertex sprVertexBatchBuffer[SPRITE_MAX_BATCH_SIZE];  // An array of vertices used for batch rendering sprites.
-	vec3 sklBindAccumulator[SKELETON_MAX_BONE_NUM];      // Accumulates bind states for bones before rendering.
+	bone sklBindAccumulator[SKELETON_MAX_BONE_NUM];      // Accumulates bind states for bones before rendering.
 	mat4 sklTransformState[SKELETON_MAX_BONE_NUM];       // Stores the renderable's transform state before rendering.
 
 	// Texture samplers.

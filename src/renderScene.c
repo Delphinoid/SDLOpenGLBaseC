@@ -23,19 +23,50 @@ void renderModel(const object *const restrict obj, const float distance, const c
 	mat4 *transformCurrent = gfxMngr->sklTransformState;
 	const bone *bCurrent = obj->state.skeleton;
 	const bone *bPrevious = (obj->state.previous == NULL ? bCurrent : obj->state.previous->skeleton);
-	const bone *const bLast = &bCurrent[obj->skeletonData.skl->boneNum];
 
-	// Update the object's configuration for rendering.
-	//rndrConfigRenderUpdate(&obj->tempRndrConfig, interpT);  /** Only line that requires non-const object. **/
+	boneIndex_t boneNum = obj->skeletonData.skl->boneNum;
+	sklNode *nLayout = obj->skeletonData.skl->bones;
+	bone *bAccumulator = gfxMngr->sklBindAccumulator;
 
-	// Interpolate between the previous and last skeleton states.
-	for(; bCurrent < bLast; ++bCurrent, ++bPrevious, ++transformCurrent){
+	vec3 centroid;
 
-		// Interpolate between bone states and
-		// convert the interpolated bone to a
-		// matrix for the shader.
+	boneIndex_t i;
+
+	// Generate a transformation matrix for each bone. Steps:
+	//     1. Accumulate inverse bind offsets for the bone and each predecessor.
+	//     2. Interpolate between the previous and current animation frames.
+	//     3. Apply the accumulated inverse bind offsets.
+	//     4. Write to the transform state array.
+	//
+	// The inverse bind offsets are used to convert the global skeleton state
+	// used in updates to the local model space in preparation for rendering.
+	//
+	// Consider a rigged model in some reference position. When the bone
+	// transformations are identity transforms, the model will maintain this
+	// reference position correctly. However, we don't want the configuration
+	// of every bone to be identity when we access them during updates, and
+	// this would not work with physics objects (among other things). So before
+	// updates we must transform them into global space based on their bind
+	// positions, and then transform them back before passing their transforms
+	// to the shader.
+	for(i = 0; i < boneNum; ++bCurrent, ++bPrevious, ++transformCurrent, ++nLayout, ++bAccumulator, ++i){
+
+		// Interpolate between bone states.
+		const bone state = boneInterpolate(*bPrevious, *bCurrent, interpT);
+
+		// If the bone has a parent, add its inverse bind position,
+		// otherwise just use the current bone's inverse bind position.
+		if(nLayout->parent != i){
+			*bAccumulator = boneTransformAppend(boneInvert(nLayout->defaultState), gfxMngr->sklBindAccumulator[nLayout->parent]);
+		}else{
+			*bAccumulator = boneInvert(nLayout->defaultState);
+			centroid = state.position;
+		}
+
+		// Add the inverse bind offsets to the bone state and
+		// convert it to a transformation matrix for the shader.
 		*transformCurrent = boneMatrix(
-			boneInterpolate(*bPrevious, *bCurrent, interpT)
+			boneTransformAppend(state, *bAccumulator)
 		);
 
 	}
@@ -52,72 +83,43 @@ void renderModel(const object *const restrict obj, const float distance, const c
 		// Feed the texture coordinates to the shader.
 		glUniform4fv(gfxMngr->textureFragmentID, 1, texFrag);
 
-		// Generate the renderable configuration based off the animated skeleton, if possible.
-		// The loop converts the global skeleton state in gfxMngr->sklTransformState to local
-		// model space for rendering.
 		if(currentRndr->mdl->skl != NULL){
 
 			const float alpha = floatLerp(currentRndr->alphaPrevious, currentRndr->alpha, interpT);
 
 			if(alpha > 0.f){
 
-				const boneIndex_t boneNum = currentRndr->mdl->skl->boneNum;
-
-				boneIndex_t i;
-
-				sklNode *nLayout = currentRndr->mdl->skl->bones;
+				mat4 transform;
 				GLuint *bArray = gfxMngr->boneArrayID;
-				vec3 *bAccumulator = gfxMngr->sklBindAccumulator;
+
+				boneNum = currentRndr->mdl->skl->boneNum;
+				nLayout = currentRndr->mdl->skl->bones;
 
 				// If there is a valid animated skeleton, apply animation transformations.
-				for(i = 0; i < boneNum; ++i, ++bAccumulator, ++bArray, ++nLayout){
+				for(i = 0; i < boneNum; ++i, ++bArray, ++nLayout){
 
 					const boneIndex_t rndrBone = sklFindBone(obj->skeletonData.skl, i, nLayout->name);
-
-					// Accumulate the bind positions. We need to use global bone offsets.
-					// Also make sure the bone's parent isn't itself (that is, make sure it has a parent).
-					if(nLayout->parent < boneNum && i != nLayout->parent){
-						// Apply the parent's bind offsets.
-						*bAccumulator = gfxMngr->sklBindAccumulator[nLayout->parent];
-					}else{
-						vec3ZeroP(bAccumulator);
-					}
 
 					// If the animated bone is in the model, pass in its animation transforms.
 					/** Use a lookup, same in object.c. **/
 					if(rndrBone < obj->skeletonData.skl->boneNum){
 
-						mat4 transform = gfxMngr->sklTransformState[rndrBone];
+						transform = gfxMngr->sklTransformState[rndrBone];
 
-						// Rotate the bind pose position by the current bone's orientation
-						// and add this offset to the bind pose accumulator. Treats the
-						// vector as a bra vector so that column-major multiplication is
-						// invoked. OpenGL prefers column-major matrices.
-						const vec4 translation = mat4MMultNKet(transform,
-						                                       nLayout->defaultState.position.x,
-						                                       nLayout->defaultState.position.y,
-						                                       nLayout->defaultState.position.z,
-						                                       0.f);
-						bAccumulator->x += translation.x;
-						bAccumulator->y += translation.y;
-						bAccumulator->z += translation.z;
-
-						// Translate the bone by the inverse of the accumulated bind translations.
-						transform.m[3][0] -= bAccumulator->x;
-						transform.m[3][1] -= bAccumulator->y;
-						transform.m[3][2] -= bAccumulator->z;
-
-						// The bone is a root bone. Apply billboarding transformation if required.
-						if(obj->skeletonData.skl->bones[rndrBone].parent == rndrBone && currentRndr->flags != CAM_BILLBOARD_DISABLED){
-							transform = camBillboard(cam, transform, currentRndr->flags);
+						// Apply billboarding transformation if required.
+						if(currentRndr->flags != CAM_BILLBOARD_DISABLED){
+							// Use the root bone's global position as the centroid for billboarding.
+							transform = camBillboard(cam, centroid, transform, currentRndr->flags);
 						}
 
 						// Feed the bone configuration to the shader.
 						glUniformMatrix4fv(*bArray, 1, GL_FALSE, &transform.m[0][0]);
 
 					}else{
-						// Otherwise pass in an identity bone.
+
+						// Feed the bone configuration to the shader.
 						glUniformMatrix4fv(*bArray, 1, GL_FALSE, &gfxMngr->identityMatrix.m[0][0]);
+
 					}
 
 				}
