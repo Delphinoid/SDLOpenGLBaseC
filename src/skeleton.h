@@ -83,6 +83,7 @@ typedef struct {
 
 	float animBlendTime;      // How long to blend between this and the next animation for. A value of -1 means there is currently no blend.
 	float animBlendProgress;  // How long the animation has been blending for. A value of -1 means there is currently no blend.
+	float animBlendInterpT;
 
 	float intensity;
 

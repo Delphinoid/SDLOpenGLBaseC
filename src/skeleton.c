@@ -886,6 +886,7 @@ static return_t sklafInit(sklAnimFragment *const restrict sklaf, sklAnim *const 
 	sklaf->animInterpT = 0.f;
 	sklaf->animBlendTime = -1.f;
 	sklaf->animBlendProgress = -1.f;
+	sklaf->animBlendInterpT = 1.f;
 	sklaf->intensity = intensity;
 	sklaf->animation = anim;
 	animInstInit(&sklaf->animator);
@@ -928,26 +929,36 @@ static __FORCE_INLINE__ void sklaiUpdateFragments(sklAnimInstance *const restric
 		sklAnimFragment *previous = NULL;
 		sklAnimFragment *next = moduleSkeletonAnimationFragmentNext(frag);
 
+		frag->animBlendInterpT = 1.f;
+
 		// Loop through each sklAnimFragment, updating them.
-		while(next != NULL){
+		if(next != NULL){
 
-			/** **/
-			// Check if the animation has finished blending on its oldest state.
-			if(frag->animBlendProgress >= frag->animBlendTime){
-				// Since it's no longer being used in any state, it can be safely freed.
-				///sklafDelete(frag);
-				moduleSkeletonAnimationFragmentFree(&sklai->fragments, frag, previous);
-			}else{
-				// Advance animator, update the blend and go to the next fragment.
-				animAdvance(&frag->animator, &frag->animation->animData, elapsedTimeMod);
-				animGetRenderData(&frag->animator, &frag->animation->animData, interpT,
-				                  &frag->animStartFrame, &frag->animEndFrame, &frag->animInterpT);
-				frag->animBlendProgress += elapsedTimeMod;
+			for(;;){
+
+				/** **/
+				// Check if the animation has finished blending on its oldest state.
+				if(frag->animBlendProgress >= frag->animBlendTime){
+					// Since it's no longer being used in any state, it can be safely freed.
+					///sklafDelete(frag);
+					moduleSkeletonAnimationFragmentFree(&sklai->fragments, frag, previous);
+				}else{
+					// Advance animator, update the blend and go to the next fragment.
+					animAdvance(&frag->animator, &frag->animation->animData, elapsedTimeMod);
+					animGetRenderData(&frag->animator, &frag->animation->animData, interpT,
+									  &frag->animStartFrame, &frag->animEndFrame, &frag->animInterpT);
+					frag->animBlendProgress += elapsedTimeMod;
+					next->animBlendInterpT = frag->animBlendProgress / frag->animBlendTime;
+				}
+
+				previous = frag;
+				frag = next;
+				next = moduleSkeletonAnimationFragmentNext(next);
+				if(next == NULL){
+					break;
+				}
+
 			}
-
-			previous = frag;
-			frag = next;
-			next = moduleSkeletonAnimationFragmentNext(frag);
 
 		}
 
@@ -1269,7 +1280,6 @@ __FORCE_INLINE__ void skliUpdateAnimations(sklInstance *const restrict skli, con
 }
 void skliGenerateBoneState(const sklInstance *const restrict skli, const boneIndex_t id, const char *const restrict name, bone *const restrict state){
 
-	float animInterpTBlend = 1.f;
 	bone baseState = *state;
 	bone animationState;
 	bone fragmentState;
@@ -1283,44 +1293,35 @@ void skliGenerateBoneState(const sklInstance *const restrict skli, const boneInd
 		boneInit(&animationState);
 
 		// Loop through each animation fragment, blending between them and generating an animation state.
-		if(frag != NULL){
+		while(frag != NULL){
 
-			for(;;){
+			// If the bone exists in the current animation fragment, generate a fragment state and add it to the animation state.
+			//if(skli->animations[i].animFrags[j].animBoneLookup[boneID] != (boneIndex_t)-1){
+			boneIndex_t animBoneID = sklaFindBone(frag->animation, id, name);
+			if(animBoneID < frag->animation->boneNum && frag->intensity != 0.f){
 
-				sklAnimFragment *next;
+				// Interpolate between startFrame and endFrame, storing the result in fragmentState.
+				fragmentState = boneInterpolate(frag->animation->frames[frag->animStartFrame][animBoneID],
+												frag->animation->frames[frag->animEndFrame][animBoneID],
+												frag->animInterpT);
 
-				// If the bone exists in the current animation fragment, generate a fragment state and add it to the animation state.
-				//if(skli->animations[i].animFrags[j].animBoneLookup[boneID] != (boneIndex_t)-1){
-				boneIndex_t animBoneID = sklaFindBone(frag->animation, id, name);
-				if(animBoneID < frag->animation->boneNum && frag->intensity != 0.f){
-
-					// Interpolate between startFrame and endFrame, storing the result in fragmentState.
-					fragmentState = boneInterpolate(frag->animation->frames[frag->animStartFrame][animBoneID],
-					                                frag->animation->frames[frag->animEndFrame][animBoneID],
-					                                frag->animInterpT);
-
-					// Apply intensity.
-					if(frag->intensity != 1.f){
-						fragmentState = boneInterpolate(boneIdentity(), fragmentState, frag->intensity);
-					}
-
-					// Blend from the previous animation fragment. animInterpTBlend is always 1.f for the first animation fragment.
-					animationState = boneInterpolate(animationState, fragmentState, animInterpTBlend);
-
-				}else{
-					boneInit(&fragmentState);
+				// Apply intensity.
+				if(frag->intensity != 1.f){
+					fragmentState = boneInterpolate(boneIdentity(), fragmentState, frag->intensity);
 				}
 
-				next = moduleSkeletonAnimationFragmentNext(frag);
-				if(next != NULL){
-					// If this fragment marks the beginning of a valid blend, set animInterpTBlend for later.
-					animInterpTBlend = frag->animBlendProgress / frag->animBlendTime;
-					frag = next;
+				// Blend from the previous animation fragment. animBlendInterpT is always 1.f for the first animation fragment.
+				if(frag->animBlendInterpT != 1.f){
+					animationState = boneInterpolate(animationState, fragmentState, frag->animBlendInterpT);
 				}else{
-					break;
+					animationState = fragmentState;
 				}
 
+			}else{
+				boneInit(&fragmentState);
 			}
+
+			frag = moduleSkeletonAnimationFragmentNext(frag);
 
 		}
 
