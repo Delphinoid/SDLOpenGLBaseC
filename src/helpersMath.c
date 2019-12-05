@@ -397,11 +397,5 @@ __HINT_INLINE__ void segmentClosestPointIncidentP(const vec3 *const restrict s1,
 }
 
 __HINT_INLINE__ float floatLerp(const float f1, const float f2, const float t){
-	if(t == 0.f){
-		return f1;
-	}else if(t == 1.f){
-		return f2;
-	}else{
-		return f1 + (f2 - f1) * t;
-	}
+	return f1 + (f2 - f1) * t;
 }

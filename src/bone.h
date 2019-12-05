@@ -11,6 +11,7 @@ typedef struct {
 } bone;
 
 void boneInit(bone *const restrict b);
+bone boneIdentity();
 mat4 boneMatrix(const bone b);
 
 bone boneNegate(const bone b);

@@ -26,7 +26,7 @@ typedef struct {
 
 	const skeleton *skl;  // The object's recommended animation skeleton.
 
-	animIndex_t animationMax;  // The maximum number of animations that the object can play at once.
+	animIndex_t animationAllocate;  // The number of animations to allocate on instantiation.
 
 	animIndex_t animationNum;  // Number of animations.
 	sklAnim **animations;      // Array of pointers to animations associated with the object.

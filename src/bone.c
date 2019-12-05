@@ -5,6 +5,14 @@ void boneInit(bone *const restrict b){
 	b->orientation = quatIdentity();
 	b->scale = vec3NewS(1.f);
 }
+bone boneIdentity(){
+	const bone r = {
+		.position = vec3Zero(),
+		.orientation = quatIdentity(),
+		.scale = vec3NewS(1.f)
+	};
+	return r;
+}
 
 mat4 boneMatrix(const bone b){
 	// Don't ask.
@@ -74,12 +82,12 @@ bone boneInterpolate(const bone b1, const bone b2, const float t){
 	/*
 	** Calculate the interpolated delta transform for the bone.
 	*/
-	if(t <= 0.f){
+	if(t == 0.f){
 
 		// Only use the start frame if t exceeds the lower bounds.
 		return b1;
 
-	}else if(t >= 1.f){
+	}else if(t == 1.f){
 
 		// Only use the end frame if t exceeds the upper bounds.
 		return b2;
@@ -109,14 +117,12 @@ void boneInterpolateP1(bone *const restrict b1, const bone *const restrict b2, c
 	/*
 	** Calculate the interpolated delta transform for the bone.
 	*/
-	if(t >= 1.f){
+	if(t == 1.f){
 
 		// Only use the end frame if t exceeds the upper bounds.
-		b1->position    = b2->position;
-		b1->orientation = b2->orientation;
-		b1->scale       = b2->scale;
+		*b1 = *b2;
 
-	}else if(t > 0.f){
+	}else if(t != 0.f){
 
 		// LERP between the start position and end position.
 		vec3LerpP1(&b1->position, &b2->position, t);
@@ -135,14 +141,12 @@ void boneInterpolateP2(const bone *const restrict b1, bone *const restrict b2, c
 	/*
 	** Calculate the interpolated delta transform for the bone.
 	*/
-	if(t <= 0.f){
+	if(t == 0.f){
 
 		// Only use the start frame if t exceeds the lower bounds.
-		b2->position    = b1->position;
-		b2->orientation = b1->orientation;
-		b2->scale       = b1->scale;
+		*b2 = *b1;
 
-	}else if(t < 1.f){
+	}else if(t != 1.f){
 
 		// LERP between the start position and end position.
 		vec3LerpP2(&b1->position, &b2->position, t);
@@ -161,19 +165,15 @@ void boneInterpolatePR(const bone *const restrict b1, const bone *const restrict
 	/*
 	** Calculate the interpolated delta transform for the bone.
 	*/
-	if(t <= 0.f){
+	if(t == 0.f){
 
 		// Only use the start frame if t exceeds the lower bounds.
-		r->position    = b1->position;
-		r->orientation = b1->orientation;
-		r->scale       = b1->scale;
+		*r = *b1;
 
-	}else if(t >= 1.f){
+	}else if(t == 1.f){
 
 		// Only use the end frame if t exceeds the upper bounds.
-		r->position    = b2->position;
-		r->orientation = b2->orientation;
-		r->scale       = b2->scale;
+		*r = *b2;
 
 	}else{
 

@@ -728,17 +728,31 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, co
 							if(boneID < tempBonesSize){
 								bone *currentState = &skla->frames[skla->animData.frameNum - 1][boneID];
 
-								//Load the bone's position!
+								// Load the bone's position!
 								float x = strtod(tokPos, &tokPos) * 0.05f;
 								float y = strtod(tokPos, &tokPos) * 0.05f;
 								float z = strtod(tokPos, &tokPos) * 0.05f;
 								currentState->position = vec3New(x, y, z);
 
-								//Load the bone's rotation!
+								// Load the bone's rotation!
 								x = strtod(tokPos, &tokPos);
 								y = strtod(tokPos, &tokPos);
 								z = strtod(tokPos, NULL);
-								currentState->orientation = quatNormalize(quatNewEuler(x, y, z));
+								currentState->orientation = quatNewEuler(x, y, z);
+
+								//The Source Engine uses Z as its up axis, so we need to fix that with the root bone.
+								if(boneID == 0){
+									quat rotateUp;
+									rotateUp.w = 0.70710678118654752440084436210485f;
+									rotateUp.v.x = -0.70710678118654752440084436210485f;
+									rotateUp.v.y = 0.f;
+									rotateUp.v.z = 0.f;
+									currentState->orientation = quatQMultQ(rotateUp, currentState->orientation);
+
+									y = currentState->position.y;
+									currentState->position.y = currentState->position.z;
+									currentState->position.z = y;
+								}
 
 								//Set the bone's scale!
 								currentState->scale = vec3New(1.f, 1.f, 1.f);
@@ -858,7 +872,7 @@ void sklaDelete(sklAnim *const restrict skla){
 	animDataDelete(&skla->animData);
 }
 
-static return_t sklafInit(sklAnimFragment *const restrict sklaf, sklAnim *const restrict anim, const skeleton *const restrict skl, const frameIndex_t frame){
+static return_t sklafInit(sklAnimFragment *const restrict sklaf, sklAnim *const restrict anim, const skeleton *const restrict skl, const float intensity, const frameIndex_t frame){
 
 	// Initialize animBoneLookup.
 	/*uint_least8_t i;
@@ -872,6 +886,7 @@ static return_t sklafInit(sklAnimFragment *const restrict sklaf, sklAnim *const 
 	sklaf->animInterpT = 0.f;
 	sklaf->animBlendTime = -1.f;
 	sklaf->animBlendProgress = -1.f;
+	sklaf->intensity = intensity;
 	sklaf->animation = anim;
 	animInstInit(&sklaf->animator);
 
@@ -897,8 +912,8 @@ static return_t sklafInit(sklAnimFragment *const restrict sklaf, sklAnim *const 
 	}*
 }**/
 
-void sklaiInit(sklAnimInstance *const restrict sklai){
-	sklai->flags = 0;
+void sklaiInit(sklAnimInstance *const restrict sklai, const flags_t flags){
+	sklai->flags = flags;
 	sklai->timeMod = 1.f;
 	sklai->fragments = NULL;
 }
@@ -1047,7 +1062,7 @@ void sklaiGenerateAnimState(sklAnimInstance *sklai, bone *skeletonState, const b
 __FORCE_INLINE__ void sklaiSetType(sklAnimInstance *const restrict sklai, const flags_t additive){
 	sklai->flags = additive;
 }
-return_t sklaiChange(sklAnimInstance *const restrict sklai, const skeleton *const restrict skl, sklAnim *const restrict anim, const frameIndex_t frame, const float blendTime){
+return_t sklaiChange(sklAnimInstance *const restrict sklai, const skeleton *const restrict skl, sklAnim *const restrict anim, const float intensity, const frameIndex_t frame, const float blendTime){
 
 	sklAnimFragment *newFragment;
 
@@ -1082,14 +1097,14 @@ return_t sklaiChange(sklAnimInstance *const restrict sklai, const skeleton *cons
 	}
 
 	// Initialize the fragment.
-	return sklafInit(newFragment, anim, skl, frame);
+	return sklafInit(newFragment, anim, skl, intensity, frame);
 
 }
 void sklaiClearAnimation(sklAnimInstance *const restrict sklai){
 	if(sklai->fragments != NULL){
 		moduleSkeletonAnimationFragmentFreeArray(&sklai->fragments);
 	}
-	sklaiInit(sklai);
+	sklaiInit(sklai, SKELETON_ANIM_INSTANCE_ADDITIVE);
 }
 void sklaiDelete(sklAnimInstance *const restrict sklai){
 	if(sklai->fragments != NULL){
@@ -1105,7 +1120,7 @@ return_t skliInit(sklInstance *const restrict skli, const skeleton *const restri
 			if(newAnim == NULL){
 				break;
 			}
-			sklaiInit(newAnim);
+			sklaiInit(newAnim, SKELETON_ANIM_INSTANCE_ADDITIVE);
 			++i;
 		}
 		if(i != animationCapacity){
@@ -1225,18 +1240,18 @@ return_t skliLoad(sklInstance *const restrict skli, const char *const restrict p
 	skla->frames[2][1] = tempBoneTop;
 	skla->animData.frameDelays[2] = 3000.f;
 
-	sklai = skliAnimationNew(skli);
-	sklaiChange(sklai, skli->skl, skla, 0, 0.f);
+	sklai = skliAnimationNew(skli, 0);
+	sklaiChange(sklai, skli->skl, skla, 1.f, 0, 0.f);
 
 
 
 	return 1;
 
 }
-__FORCE_INLINE__ sklAnimInstance *skliAnimationNew(sklInstance *const restrict skli){
+__FORCE_INLINE__ sklAnimInstance *skliAnimationNew(sklInstance *const restrict skli, const flags_t flags){
 	sklAnimInstance *const r = moduleSkeletonAnimationInstanceAppend(&skli->animations);
 	if(r != NULL){
-		sklaiInit(r);
+		sklaiInit(r, flags);
 	}
 	return r;
 }
@@ -1277,12 +1292,17 @@ void skliGenerateBoneState(const sklInstance *const restrict skli, const boneInd
 				// If the bone exists in the current animation fragment, generate a fragment state and add it to the animation state.
 				//if(skli->animations[i].animFrags[j].animBoneLookup[boneID] != (boneIndex_t)-1){
 				boneIndex_t animBoneID = sklaFindBone(frag->animation, id, name);
-				if(animBoneID < frag->animation->boneNum){
+				if(animBoneID < frag->animation->boneNum && frag->intensity != 0.f){
 
 					// Interpolate between startFrame and endFrame, storing the result in fragmentState.
 					fragmentState = boneInterpolate(frag->animation->frames[frag->animStartFrame][animBoneID],
 					                                frag->animation->frames[frag->animEndFrame][animBoneID],
 					                                frag->animInterpT);
+
+					// Apply intensity.
+					if(frag->intensity != 1.f){
+						fragmentState = boneInterpolate(boneIdentity(), fragmentState, frag->intensity);
+					}
 
 					// Blend from the previous animation fragment. animInterpTBlend is always 1.f for the first animation fragment.
 					animationState = boneInterpolate(animationState, fragmentState, animInterpTBlend);

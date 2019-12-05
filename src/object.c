@@ -20,7 +20,7 @@
 void objBaseInit(objectBase *const restrict base){
 	base->name = NULL;
 	base->skl = NULL;
-	base->animationMax = 0;
+	base->animationAllocate = 0;
 	base->animationNum = 0;
 	base->animations = NULL;
 	base->skeletonBodies = NULL;
@@ -182,7 +182,7 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 
 			// Animation capacity
 			}else if(lineLength >= 20 && strncmp(line, "animationCapacity ", 19) == 0){
-				base->animationMax = strtoul(line+19, NULL, 0);
+				base->animationAllocate = strtoul(line+19, NULL, 0);
 
 
 			// Renderable
@@ -467,7 +467,7 @@ return_t objInstantiate(object *const restrict obj, const objectBase *const rest
 
 	renderable *j;
 
-	if(skliInit(&obj->skeletonData, base->skl, base->animationMax) < 0){
+	if(skliInit(&obj->skeletonData, base->skl, base->animationAllocate) < 0){
 		/** Memory allocation failure. **/
 		return -1;
 	}

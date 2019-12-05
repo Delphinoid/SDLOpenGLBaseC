@@ -8,8 +8,8 @@
 
 #define SKELETON_MAX_BONE_NUM 128
 
-#define SKELETON_ANIM_INSTANCE_OVERWRITE 0
-#define SKELETON_ANIM_INSTANCE_ADDITIVE  1
+#define SKELETON_ANIM_INSTANCE_ADDITIVE  0
+#define SKELETON_ANIM_INSTANCE_OVERWRITE 1
 
 typedef uint_least8_t boneIndex_t;
 
@@ -84,6 +84,8 @@ typedef struct {
 	float animBlendTime;      // How long to blend between this and the next animation for. A value of -1 means there is currently no blend.
 	float animBlendProgress;  // How long the animation has been blending for. A value of -1 means there is currently no blend.
 
+	float intensity;
+
 } sklAnimFragment;
 
 // Skeletal animation instance.
@@ -116,15 +118,15 @@ return_t sklaLoadSMD(sklAnim *const restrict skla, const skeleton *const restric
 boneIndex_t sklaFindBone(const sklAnim *const restrict skla, const boneIndex_t id, const char *const restrict name);
 void sklaDelete(sklAnim *const restrict skla);
 
-void sklaiInit(sklAnimInstance *const restrict sklai);
+void sklaiInit(sklAnimInstance *const restrict sklai, const flags_t flags);
 void sklaiSetType(sklAnimInstance *const restrict sklai, const flags_t additive);
-return_t sklaiChange(sklAnimInstance *const restrict sklai, const skeleton *const restrict skl, sklAnim *const restrict anim, const frameIndex_t frame, const float blendTime);
+return_t sklaiChange(sklAnimInstance *const restrict sklai, const skeleton *const restrict skl, sklAnim *const restrict anim, const float intensity, const frameIndex_t frame, const float blendTime);
 void sklaiClear(sklAnimInstance *const restrict sklai);
 void sklaiDelete(sklAnimInstance *const restrict sklai);
 
 return_t skliInit(sklInstance *const restrict skli, const skeleton *const restrict skl, const animIndex_t animationCapacity);
 return_t skliLoad(sklInstance *const restrict skli, const char *const restrict prgPath, const char *const restrict filePath);
-sklAnimInstance *skliAnimationNew(sklInstance *const restrict skli);
+sklAnimInstance *skliAnimationNew(sklInstance *const restrict skli, const flags_t flags);
 void skliAnimationDelete(sklInstance *const restrict skli, sklAnimInstance *const restrict anim, sklAnimInstance *const restrict previous);
 void skliUpdateAnimations(sklInstance *const restrict skli, const float elapsedTime, const float interpT);
 //void skliGenerateBoneState(sklInstance *skli, bone *boneState, const boneIndex_t boneID);

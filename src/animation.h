@@ -10,6 +10,8 @@
 ** structures (like texture wrappers and skeletons).
 */
 
+// Note: all time intervals are in milliseconds.
+
 typedef uint_least16_t animIndex_t;
 typedef uint_least16_t frameIndex_t;
 
