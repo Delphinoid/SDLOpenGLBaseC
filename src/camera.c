@@ -76,8 +76,6 @@ mat4 camBillboard(const camera *const restrict cam, const vec3 centroid, mat4 co
 	// Generates a billboard transformation matrix.
 	// If no flags are set, returns the identity matrix.
 
-	const vec3 position = *((vec3 *)&configuration.m[3][0]);
-
 	// If any of the billboard flags are set, continue.
 	if(flagsAreSet(flags, (CAM_BILLBOARD_SPRITE | CAM_BILLBOARD_TARGET | CAM_BILLBOARD_TARGET_CAMERA | CAM_BILLBOARD_TARGET_SPRITE))){
 
@@ -90,6 +88,11 @@ mat4 camBillboard(const camera *const restrict cam, const vec3 centroid, mat4 co
 			*((vec3 *)&configuration.m[1][0]) = vec3New(cam->viewMatrix.m[0][1], cam->viewMatrix.m[1][1], cam->viewMatrix.m[2][1]);
 			*((vec3 *)&configuration.m[2][0]) = vec3New(cam->viewMatrix.m[0][2], cam->viewMatrix.m[1][2], cam->viewMatrix.m[2][2]);
 			configuration.m[0][3] = 0.f; configuration.m[1][3] = 0.f; configuration.m[2][3] = 0.f; configuration.m[3][3] = 1.f;
+
+			if(flagsAreSet(flags, CAM_BILLBOARD_SCALE)){
+				const float distance = camDistance(cam, centroid) * (1.f/CAM_BILLBOARD_SCALE_CALIBRATION_DISTANCE);
+				configuration = mat4Scale(configuration, distance, distance, distance);
+			}
 
 		}else{
 
@@ -120,16 +123,30 @@ mat4 camBillboard(const camera *const restrict cam, const vec3 centroid, mat4 co
 				up = vec3New(0.f, 1.f, 0.f);
 			}
 
-			configuration = mat4MMultM(mat4RotateToFace(eye, target, up), configuration);
-			*((vec3 *)&configuration.m[3][0]) = position;
+			configuration = mat4TranslatePost(configuration, -centroid.x, -centroid.y, -centroid.z);
+
+			if(flagsAreSet(flags, CAM_BILLBOARD_SCALE)){
+				const float distance = camDistance(cam, centroid) * (1.f/CAM_BILLBOARD_SCALE_CALIBRATION_DISTANCE);
+				configuration = mat4ScalePost(configuration, distance, distance, distance);
+			}
+
+			configuration = mat4TranslatePost(
+				mat4MMultM(
+					mat4RotateToFace(eye, target, up),
+					configuration
+				),
+				centroid.x, centroid.y, centroid.z
+			);
 
 		}
 
-	}
+	}else{
 
-	if(flagsAreSet(flags, CAM_BILLBOARD_SCALE)){
-		const float distance = camDistance(cam, centroid) * (1.f/CAM_BILLBOARD_SCALE_CALIBRATION_DISTANCE);
-		configuration = mat4Scale(configuration, distance, distance, distance);
+		if(flagsAreSet(flags, CAM_BILLBOARD_SCALE)){
+			const float distance = camDistance(cam, centroid) * (1.f/CAM_BILLBOARD_SCALE_CALIBRATION_DISTANCE);
+			configuration = mat4Scale(configuration, distance, distance, distance);
+		}
+
 	}
 
 	return configuration;

@@ -3,6 +3,7 @@
 #include "colliderMesh.h"
 #include "constantsMath.h"
 #include "helpersFileIO.h"
+#include "sleep.h"
 #include <stdio.h>
 #include <fenv.h>
 
@@ -30,7 +31,7 @@ int main(int argc, char **argv){
 
 	char prgPath[FILE_MAX_PATH_LENGTH];
 	graphicsManager gfxMngr;
-sleepm(1);
+
 	// Removes program name (everything after the last backslash) from the path.
 	{
 		const size_t length = strrchr(argv[0], FILE_PATH_DELIMITER_CHAR) + 1 - argv[0];
@@ -331,7 +332,6 @@ sleepm(1);
 	float nextUpdate = (float)SDL_GetTicks();
 	float startRender;
 	float nextRender = (float)SDL_GetTicks();
-	int nextEvent;
 
 	uint_least32_t updates = 0;
 	uint_least32_t renders = 0;

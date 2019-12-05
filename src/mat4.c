@@ -519,6 +519,14 @@ __HINT_INLINE__ void mat4TranslatePR(const mat4 *const restrict m, const float x
 	r->m[3][2] = m->m[0][2] * x + m->m[1][2] * y + m->m[2][2] * z + m->m[3][2];
 	r->m[3][3] = m->m[0][3] * x + m->m[1][3] * y + m->m[2][3] * z + m->m[3][3];
 }
+__HINT_INLINE__ mat4 mat4TranslatePost(const mat4 m, const float x, const float y, const float z){
+	//return mat4MMultM(mat4TranslationMatrix(x, y, z), m);
+	const mat4 r = {.m = {{m.m[0][0] + x * m.m[0][3], m.m[0][1] + y * m.m[0][3], m.m[0][2] + z * m.m[0][3], m.m[0][3]},
+	                      {m.m[1][0] + x * m.m[1][3], m.m[1][1] + y * m.m[1][3], m.m[1][2] + z * m.m[1][3], m.m[1][3]},
+	                      {m.m[2][0] + x * m.m[2][3], m.m[2][1] + y * m.m[2][3], m.m[2][2] + z * m.m[2][3], m.m[2][3]},
+	                      {m.m[3][0] + x * m.m[3][3], m.m[3][1] + y * m.m[3][3], m.m[3][2] + z * m.m[3][3], m.m[3][3]}}};
+	return r;
+}
 
 __HINT_INLINE__ mat4 mat4RotationMatrix(const quat q){
 	return mat4Quaternion(q);
@@ -568,6 +576,14 @@ __HINT_INLINE__ void mat4ScalePR(const mat4 *const restrict m, const float x, co
 	r->m[0][0] = m->m[0][0] * x; r->m[0][1] = m->m[0][1] * x; r->m[0][2] = m->m[0][2] * x; r->m[0][3] = m->m[0][3] * x;
 	r->m[1][0] = m->m[1][0] * y; r->m[1][1] = m->m[1][1] * y; r->m[1][2] = m->m[1][2] * y; r->m[1][3] = m->m[1][3] * y;
 	r->m[2][0] = m->m[2][0] * z; r->m[2][1] = m->m[2][1] * z; r->m[2][2] = m->m[2][2] * z; r->m[2][3] = m->m[2][3] * z;
+}
+__HINT_INLINE__ mat4 mat4ScalePost(const mat4 m, const float x, const float y, const float z){
+	//return mat4MMultM(mat4ScaleMatrix(x, y, z), m);
+	const mat4 r = {.m = {{x * m.m[0][0], y * m.m[0][1], z * m.m[0][2], m.m[0][3]},
+	                      {x * m.m[1][0], y * m.m[1][1], z * m.m[1][2], m.m[1][3]},
+	                      {x * m.m[2][0], y * m.m[2][1], z * m.m[2][2], m.m[2][3]},
+	                      {x * m.m[3][0], y * m.m[3][1], z * m.m[3][2], m.m[3][3]}}};
+	return r;
 }
 
 __HINT_INLINE__ mat4 mat4Quaternion(const quat q){
