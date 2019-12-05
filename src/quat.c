@@ -6,7 +6,7 @@
 #include <float.h>
 #include <string.h>
 
-#define QUAT_LERP_ANGLE cos(RADIAN_RATIO)
+#define QUAT_LERP_ANGLE 0.99984769515639123915701155881391  //cos(RADIAN_RATIO)
 
 __HINT_INLINE__ quat quatNew(const float w, const float x, const float y, const float z){
 	const quat r = {.w = w, .v.x = x, .v.y = y, .v.z = z};

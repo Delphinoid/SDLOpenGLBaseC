@@ -3,11 +3,21 @@
 #include "memoryManager.h"
 #include "inline.h"
 
-memorySLink __RenderableResourceArray;          // Contains renderable.
-memorySLink __RenderableInstanceResourceArray;  // Contains rndrInstances.
+memorySLink __RenderableBaseResourceArray;  // Contains renderable.
+memorySLink __RenderableResourceArray;      // Contains rndrInstances.
 
 return_t moduleRenderableResourcesInit(){
 	void *memory = memAllocate(
+		memSLinkAllocationSize(
+			NULL,
+			RESOURCE_DEFAULT_RENDERABLE_BASE_SIZE,
+			RESOURCE_DEFAULT_RENDERABLE_BASE_NUM
+		)
+	);
+	if(memSLinkCreate(&__RenderableBaseResourceArray, memory, RESOURCE_DEFAULT_RENDERABLE_BASE_SIZE, RESOURCE_DEFAULT_RENDERABLE_BASE_NUM) == NULL){
+		return -1;
+	}
+	memory = memAllocate(
 		memSLinkAllocationSize(
 			NULL,
 			RESOURCE_DEFAULT_RENDERABLE_SIZE,
@@ -17,20 +27,18 @@ return_t moduleRenderableResourcesInit(){
 	if(memSLinkCreate(&__RenderableResourceArray, memory, RESOURCE_DEFAULT_RENDERABLE_SIZE, RESOURCE_DEFAULT_RENDERABLE_NUM) == NULL){
 		return -1;
 	}
-	memory = memAllocate(
-		memSLinkAllocationSize(
-			NULL,
-			RESOURCE_DEFAULT_RENDERABLE_INSTANCE_SIZE,
-			RESOURCE_DEFAULT_RENDERABLE_INSTANCE_NUM
-		)
-	);
-	if(memSLinkCreate(&__RenderableInstanceResourceArray, memory, RESOURCE_DEFAULT_RENDERABLE_INSTANCE_SIZE, RESOURCE_DEFAULT_RENDERABLE_INSTANCE_NUM) == NULL){
-		return -1;
-	}
 	return 1;
 }
 void moduleRenderableResourcesReset(){
 	memoryRegion *region;
+	moduleRenderableBaseClear();
+	region = __RenderableBaseResourceArray.region->next;
+	while(region != NULL){
+		memoryRegion *next = (memoryRegion *)region->next;
+		memFree(region->start);
+		region = next;
+	}
+	__RenderableResourceArray.region->next = NULL;
 	moduleRenderableClear();
 	region = __RenderableResourceArray.region->next;
 	while(region != NULL){
@@ -39,17 +47,16 @@ void moduleRenderableResourcesReset(){
 		region = next;
 	}
 	__RenderableResourceArray.region->next = NULL;
-	moduleRenderableInstanceClear();
-	region = __RenderableInstanceResourceArray.region->next;
+}
+void moduleRenderableResourcesDelete(){
+	memoryRegion *region;
+	moduleRenderableBaseClear();
+	region = __RenderableBaseResourceArray.region;
 	while(region != NULL){
 		memoryRegion *next = (memoryRegion *)region->next;
 		memFree(region->start);
 		region = next;
 	}
-	__RenderableInstanceResourceArray.region->next = NULL;
-}
-void moduleRenderableResourcesDelete(){
-	memoryRegion *region;
 	moduleRenderableClear();
 	region = __RenderableResourceArray.region;
 	while(region != NULL){
@@ -57,13 +64,74 @@ void moduleRenderableResourcesDelete(){
 		memFree(region->start);
 		region = next;
 	}
-	moduleRenderableInstanceClear();
-	region = __RenderableInstanceResourceArray.region;
-	while(region != NULL){
-		memoryRegion *next = (memoryRegion *)region->next;
-		memFree(region->start);
-		region = next;
+}
+
+__HINT_INLINE__ renderableBase *moduleRenderableBaseAppendStatic(renderableBase **const restrict array){
+	return memSLinkAppend(&__RenderableBaseResourceArray, (void **)array);
+}
+__HINT_INLINE__ renderableBase *moduleRenderableBaseAppend(renderableBase **const restrict array){
+	renderableBase *r = moduleRenderableBaseAppendStatic(array);
+	if(r == NULL){
+		// Attempt to extend the allocator.
+		void *const memory = memAllocate(
+			memSLinkAllocationSize(
+				NULL,
+				RESOURCE_DEFAULT_RENDERABLE_BASE_SIZE,
+				RESOURCE_DEFAULT_RENDERABLE_BASE_NUM
+			)
+		);
+		if(memSLinkExtend(&__RenderableBaseResourceArray, memory, RESOURCE_DEFAULT_RENDERABLE_BASE_SIZE, RESOURCE_DEFAULT_RENDERABLE_BASE_NUM)){
+			r = moduleRenderableBaseAppendStatic(array);
+		}
 	}
+	return r;
+}
+__HINT_INLINE__ renderableBase *moduleRenderableBaseInsertAfterStatic(renderableBase **const restrict array, renderableBase *const restrict resource){
+	return memSLinkInsertAfter(&__RenderableBaseResourceArray, (void **)array, (void *)resource);
+}
+__HINT_INLINE__ renderableBase *moduleRenderableBaseInsertAfter(renderableBase **const restrict array, renderableBase *const restrict resource){
+	renderableBase *r = moduleRenderableBaseInsertAfterStatic(array, resource);
+	if(r == NULL){
+		// Attempt to extend the allocator.
+		void *const memory = memAllocate(
+			memSLinkAllocationSize(
+				NULL,
+				RESOURCE_DEFAULT_RENDERABLE_BASE_SIZE,
+				RESOURCE_DEFAULT_RENDERABLE_BASE_NUM
+			)
+		);
+		if(memSLinkExtend(&__RenderableBaseResourceArray, memory, RESOURCE_DEFAULT_RENDERABLE_BASE_SIZE, RESOURCE_DEFAULT_RENDERABLE_BASE_NUM)){
+			r = moduleRenderableBaseInsertAfterStatic(array, resource);
+		}
+	}
+	return r;
+}
+__HINT_INLINE__ renderableBase *moduleRenderableBaseNext(const renderableBase *const restrict i){
+	return (renderableBase *)memSLinkDataGetNext(i);
+}
+__HINT_INLINE__ void moduleRenderableBaseFree(renderableBase **const restrict array, renderableBase *const restrict resource, const renderableBase *const restrict previous){
+	memSLinkFree(&__RenderableBaseResourceArray, (void **)array, (void *)resource, (const void *)previous);
+}
+void moduleRenderableBaseFreeArray(renderableBase **const restrict array){
+	renderableBase *resource = *array;
+	while(resource != NULL){
+		moduleRenderableBaseFree(array, resource, NULL);
+		resource = *array;
+	}
+}
+void moduleRenderableBaseClear(){
+
+	MEMORY_SLINK_LOOP_BEGIN(__RenderableBaseResourceArray, i, renderableBase *);
+
+		moduleRenderableBaseFree(NULL, i, NULL);
+		memSLinkDataSetFlags(i, MEMORY_SLINK_BLOCK_INVALID);
+
+	MEMORY_SLINK_LOOP_INACTIVE_CASE(i);
+
+		memSLinkDataSetFlags(i, MEMORY_SLINK_BLOCK_INVALID);
+
+	MEMORY_SLINK_LOOP_END(__RenderableBaseResourceArray, i, return;);
+
 }
 
 __HINT_INLINE__ renderable *moduleRenderableAppendStatic(renderable **const restrict array){
@@ -131,73 +199,5 @@ void moduleRenderableClear(){
 		memSLinkDataSetFlags(i, MEMORY_SLINK_BLOCK_INVALID);
 
 	MEMORY_SLINK_LOOP_END(__RenderableResourceArray, i, return;);
-
-}
-
-__HINT_INLINE__ rndrInstance *moduleRenderableInstanceAppendStatic(rndrInstance **const restrict array){
-	return memSLinkAppend(&__RenderableInstanceResourceArray, (void **)array);
-}
-__HINT_INLINE__ rndrInstance *moduleRenderableInstanceAppend(rndrInstance **const restrict array){
-	rndrInstance *r = moduleRenderableInstanceAppendStatic(array);
-	if(r == NULL){
-		// Attempt to extend the allocator.
-		void *const memory = memAllocate(
-			memSLinkAllocationSize(
-				NULL,
-				RESOURCE_DEFAULT_RENDERABLE_INSTANCE_SIZE,
-				RESOURCE_DEFAULT_RENDERABLE_INSTANCE_NUM
-			)
-		);
-		if(memSLinkExtend(&__RenderableInstanceResourceArray, memory, RESOURCE_DEFAULT_RENDERABLE_INSTANCE_SIZE, RESOURCE_DEFAULT_RENDERABLE_INSTANCE_NUM)){
-			r = moduleRenderableInstanceAppendStatic(array);
-		}
-	}
-	return r;
-}
-__HINT_INLINE__ rndrInstance *moduleRenderableInstanceInsertAfterStatic(rndrInstance **const restrict array, rndrInstance *const restrict resource){
-	return memSLinkInsertAfter(&__RenderableInstanceResourceArray, (void **)array, (void *)resource);
-}
-__HINT_INLINE__ rndrInstance *moduleRenderableInstanceInsertAfter(rndrInstance **const restrict array, rndrInstance *const restrict resource){
-	rndrInstance *r = moduleRenderableInstanceInsertAfterStatic(array, resource);
-	if(r == NULL){
-		// Attempt to extend the allocator.
-		void *const memory = memAllocate(
-			memSLinkAllocationSize(
-				NULL,
-				RESOURCE_DEFAULT_RENDERABLE_INSTANCE_SIZE,
-				RESOURCE_DEFAULT_RENDERABLE_INSTANCE_NUM
-			)
-		);
-		if(memSLinkExtend(&__RenderableInstanceResourceArray, memory, RESOURCE_DEFAULT_RENDERABLE_INSTANCE_SIZE, RESOURCE_DEFAULT_RENDERABLE_INSTANCE_NUM)){
-			r = moduleRenderableInstanceInsertAfterStatic(array, resource);
-		}
-	}
-	return r;
-}
-__HINT_INLINE__ rndrInstance *moduleRenderableInstanceNext(const rndrInstance *const restrict i){
-	return (rndrInstance *)memSLinkDataGetNext(i);
-}
-__HINT_INLINE__ void moduleRenderableInstanceFree(rndrInstance **const restrict array, rndrInstance *const restrict resource, const rndrInstance *const restrict previous){
-	memSLinkFree(&__RenderableInstanceResourceArray, (void **)array, (void *)resource, (const void *)previous);
-}
-void moduleRenderableInstanceFreeArray(rndrInstance **const restrict array){
-	rndrInstance *resource = *array;
-	while(resource != NULL){
-		moduleRenderableInstanceFree(array, resource, NULL);
-		resource = *array;
-	}
-}
-void moduleRenderableInstanceClear(){
-
-	MEMORY_SLINK_LOOP_BEGIN(__RenderableInstanceResourceArray, i, rndrInstance *);
-
-		moduleRenderableInstanceFree(NULL, i, NULL);
-		memSLinkDataSetFlags(i, MEMORY_SLINK_BLOCK_INVALID);
-
-	MEMORY_SLINK_LOOP_INACTIVE_CASE(i);
-
-		memSLinkDataSetFlags(i, MEMORY_SLINK_BLOCK_INVALID);
-
-	MEMORY_SLINK_LOOP_END(__RenderableInstanceResourceArray, i, return;);
 
 }

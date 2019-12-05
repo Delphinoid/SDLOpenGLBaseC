@@ -4,8 +4,8 @@
 #include "object.h"
 #include "memoryPool.h"
 
-#define RESOURCE_DEFAULT_OBJECT_LOCAL_SIZE sizeof(objectBase)
-#define RESOURCE_DEFAULT_OBJECT_LOCAL_NUM 1024
+#define RESOURCE_DEFAULT_OBJECT_BASE_SIZE sizeof(objectBase)
+#define RESOURCE_DEFAULT_OBJECT_BASE_NUM 1024
 
 #define RESOURCE_DEFAULT_OBJECT_SIZE sizeof(object)
 #define RESOURCE_DEFAULT_OBJECT_NUM 4096

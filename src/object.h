@@ -34,7 +34,7 @@ typedef struct {
 	physRigidBodyBase *skeletonBodies;  // Rigid bodies for each bone.
 	collider *skeletonColliders;        // Collider arrays for each bone.
 
-	renderable *renderables;  // Default renderable array.
+	renderableBase *renderables;  // Default renderable array.
 
 	stateIndex_t stateMax;  // Maximum number of previous states.
 
@@ -71,7 +71,7 @@ typedef struct {
 	physRigidBody *skeletonBodies;  // Rigid body instances for each bone.
 	collider *skeletonColliders;    // Collider arrays for each bone.
 
-	rndrInstance *renderables;  // Renderable instance array.
+	renderable *renderables;  // Renderable instance array.
 
 	const objectBase *base;
 
@@ -89,8 +89,8 @@ return_t objInstantiate(object *const restrict obj, const objectBase *const rest
 return_t objStatePreallocate(object *const restrict obj);
 
 return_t objNewRenderable(object *const restrict obj, model *const mdl, textureWrapper *const tw);
-return_t objNewRenderableFromBase(object *const restrict obj, const renderable *const rndr);
-return_t objNewRenderableFromInstance(object *const restrict obj, const rndrInstance *const rndr);
+return_t objNewRenderableFromBase(object *const restrict obj, const renderableBase *const rndr);
+return_t objNewRenderableFromInstance(object *const restrict obj, const renderable *const rndr);
 return_t objInitSkeleton(object *const restrict obj, const skeleton *const skl);
 ///return_t objInitPhysics(object *obj);
 
@@ -115,6 +115,6 @@ void objAddAngularVelocity(object *obj, const size_t boneID, const float angle, 
 return_t objUpdate(object *const restrict obj, physIsland *const restrict island, const float elapsedTime);
 
 gfxRenderGroup_t objRenderGroup(const object *const restrict obj, const float interpT);
-void objGenerateSprite(const object *const restrict obj, const rndrInstance *const restrict rndr, const float interpT, const float *const restrict texFrag, vertex *const restrict vertices);
+void objGenerateSprite(const object *const restrict obj, const renderable *const restrict rndr, const float interpT, const float *const restrict texFrag, vertex *const restrict vertices);
 
 #endif

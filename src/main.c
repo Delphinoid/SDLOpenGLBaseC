@@ -74,7 +74,7 @@ int main(int argc, char **argv){
 
 	printf("%u + ", memPoolBlockSize(RESOURCE_DEFAULT_MODEL_SIZE)*RESOURCE_DEFAULT_MODEL_NUM);
 
-	printf("%u + ", memSLinkBlockSize(RESOURCE_DEFAULT_RENDERABLE_INSTANCE_SIZE)*RESOURCE_DEFAULT_RENDERABLE_INSTANCE_NUM);
+	printf("%u + ", memSLinkBlockSize(RESOURCE_DEFAULT_RENDERABLE_BASE_SIZE)*RESOURCE_DEFAULT_RENDERABLE_BASE_NUM);
 	printf("%u + ", memSLinkBlockSize(RESOURCE_DEFAULT_RENDERABLE_SIZE)*RESOURCE_DEFAULT_RENDERABLE_NUM);
 
 	printf("%u + ", memSLinkBlockSize(RESOURCE_DEFAULT_RIGID_BODY_LOCAL_SIZE)*RESOURCE_DEFAULT_RIGID_BODY_LOCAL_NUM);
@@ -85,7 +85,7 @@ int main(int argc, char **argv){
 	printf("%u + ", memQLinkBlockSize(RESOURCE_DEFAULT_SEPARATION_PAIR_SIZE)*RESOURCE_DEFAULT_SEPARATION_PAIR_NUM);
 	printf("%u + ", memListBlockSize(RESOURCE_DEFAULT_AABB_NODE_SIZE)*RESOURCE_DEFAULT_AABB_NODE_NUM);
 
-	printf("%u + ", memPoolBlockSize(RESOURCE_DEFAULT_OBJECT_LOCAL_SIZE)*RESOURCE_DEFAULT_OBJECT_LOCAL_NUM);
+	printf("%u + ", memPoolBlockSize(RESOURCE_DEFAULT_OBJECT_BASE_SIZE)*RESOURCE_DEFAULT_OBJECT_BASE_NUM);
 	printf("%u + ", memPoolBlockSize(RESOURCE_DEFAULT_OBJECT_SIZE)*RESOURCE_DEFAULT_OBJECT_NUM);
 
 	printf("%u + ", memPoolBlockSize(RESOURCE_DEFAULT_SCENE_SIZE)*RESOURCE_DEFAULT_SCENE_NUM);
@@ -253,7 +253,7 @@ int main(int argc, char **argv){
 	tempObji->configuration[0].position.x = 6.f;
 	tempObji->configuration[0].position.y = -2.9f;
 	tempObji->configuration[0].position.z = 2.f;
-	tempObji->renderables->flags = CAM_BILLBOARD_TARGET_SPRITE | CAM_BILLBOARD_Y;
+	tempObji->renderables->state.flags = BILLBOARD_TARGET_SPRITE | BILLBOARD_LOCK_Y;
 
 	// Sprite Object Instances.
 	//

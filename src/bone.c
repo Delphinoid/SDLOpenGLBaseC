@@ -6,11 +6,10 @@ void boneInit(bone *const restrict b){
 	b->scale = vec3NewS(1.f);
 }
 bone boneIdentity(){
-	const bone r = {
-		.position = vec3Zero(),
-		.orientation = quatIdentity(),
-		.scale = vec3NewS(1.f)
-	};
+	bone r;
+	vec3ZeroP(&r.position);
+	r.orientation = quatIdentity();
+	r.scale = vec3NewS(1.f);
 	return r;
 }
 

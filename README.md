@@ -2,6 +2,7 @@ An extremely condensed version of the OpenGL / SDL application framework I'm cur
 
 List of features to be implemented in order of priority (or in reality, in order from the stuff that's easiest or most fun to the more annoying stuff):
 * Particle system.
+* GUI.
 * Multiple textures for models.
 * Finish command system.
 * Finish scenes / zones.

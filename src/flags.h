@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 typedef uint_least8_t flags_t;
+typedef uint_least16_t flags16_t;
 
 #define flagsSet(flags, bits) flags |= bits
 #define flagsUnset(flags, bits) flags &= ~(bits)

@@ -189,14 +189,14 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 			}else if(lineLength >= 14 && strncmp(line, "renderable ", 11) == 0){
 
 				/** Load model and texture. **/
-				renderable rndr;
-				renderable *rndrNew;
+				renderableBase rndr;
+				renderableBase *rndrNew;
 
 				size_t mdlPathBegin = 11;
 				size_t mdlPathLength = 0;
 				const char *mdlSecondQuote = NULL;
 
-				rndrInit(&rndr);
+				rndrBaseInit(&rndr);
 
 				// Get the model path.
 				if(line[mdlPathBegin] == '"'){
@@ -346,7 +346,7 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 				}
 
 				// Add the renderable.
-				rndrNew = moduleRenderableAppend(&base->renderables);
+				rndrNew = moduleRenderableBaseAppend(&base->renderables);
 				if(rndrNew == NULL){
 					/** Memory allocation failure. **/
 					objBaseDelete(base);
@@ -375,7 +375,7 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 	// If no renderables were loaded, load the default one.
 	if(base->renderables == NULL){
 		printf("Error loading object \"%s\": No renderables were loaded.\n", fullPath);
-		moduleRenderableAppend(&base->renderables);
+		moduleRenderableBaseAppend(&base->renderables);
 		if(base->renderables == NULL){
 			/** Memory allocation failure. **/
 			objBaseDelete(base);
@@ -418,7 +418,7 @@ void objBaseDelete(objectBase *const restrict base){
 		}
 	}
 	if(base->renderables != NULL){
-		moduleRenderableFreeArray(&base->renderables);
+		moduleRenderableBaseFreeArray(&base->renderables);
 	}
 }
 
@@ -458,14 +458,14 @@ void objDelete(object *const restrict obj){
 		free(obj->skeletonColliders);
 	}
 	if(obj->renderables != NULL){
-		moduleRenderableInstanceFreeArray(&obj->renderables);
+		moduleRenderableFreeArray(&obj->renderables);
 	}
 	skliDelete(&obj->skeletonData);
 }
 
 return_t objInstantiate(object *const restrict obj, const objectBase *const restrict base){
 
-	renderable *j;
+	renderableBase *j;
 
 	if(skliInit(&obj->skeletonData, base->skl, base->animationAllocate) < 0){
 		/** Memory allocation failure. **/
@@ -564,14 +564,14 @@ return_t objInstantiate(object *const restrict obj, const objectBase *const rest
 	// Instantiate each renderable.
 	j = base->renderables;
 	while(j != NULL){
-		rndrInstance *const resource = moduleRenderableInstanceAppend(&obj->renderables);
+		renderable *const resource = moduleRenderableAppend(&obj->renderables);
 		if(resource == NULL){
 			/** Memory allocation failure. **/
 			objDelete(obj);
 			return -1;
 		}
-		rndriInstantiate(resource, j);
-		j = moduleRenderableNext(j);
+		rndrInstantiate(resource, j);
+		j = moduleRenderableBaseNext(j);
 	}
 
 	obj->base = base;
@@ -625,7 +625,7 @@ return_t objNewRenderable(object *const restrict obj, model *const restrict mdl,
 	/*
 	** Allocate room for a new renderable and initialize it.
 	*/
-	rndrInstance *const rndr = moduleRenderableInstanceAppend(&obj->renderables);
+	renderable *const rndr = moduleRenderableAppend(&obj->renderables);
 	if(rndr == NULL){
 		/** Memory allocation failure. **/
 		return -1;
@@ -635,24 +635,24 @@ return_t objNewRenderable(object *const restrict obj, model *const restrict mdl,
 	return 1;
 }
 
-return_t objNewRenderableFromBase(object *const restrict obj, const renderable *const restrict rndr){
+return_t objNewRenderableFromBase(object *const restrict obj, const renderableBase *const restrict rndr){
 	/*
 	** Allocate room for a new renderable and initialize it.
 	*/
-	rndrInstance *const rndrNew = moduleRenderableInstanceAppend(&obj->renderables);
+	renderable *const rndrNew = moduleRenderableAppend(&obj->renderables);
 	if(rndrNew == NULL){
 		/** Memory allocation failure. **/
 		return -1;
 	}
-	rndriInstantiate(rndrNew, rndr);
+	rndrInstantiate(rndrNew, rndr);
 	return 1;
 }
 
-return_t objNewRenderableFromInstance(object *const restrict obj, const rndrInstance *rndr){
+return_t objNewRenderableFromInstance(object *const restrict obj, const renderable *rndr){
 	/*
 	** Allocate room for a new renderable and initialize it.
 	*/
-	rndrInstance *const rndrNew = moduleRenderableInstanceAppend(&obj->renderables);
+	renderable *const rndrNew = moduleRenderableAppend(&obj->renderables);
 	if(rndrNew == NULL){
 		/** Memory allocation failure. **/
 		return -1;
@@ -822,7 +822,7 @@ void objAddAngularVelocity(object *obj, const size_t boneID, const float angle, 
 return_t objUpdate(object *const restrict obj, physIsland *const restrict island, const float elapsedTime){
 
 	boneIndex_t i;
-	rndrInstance *j;
+	renderable *j;
 	sklNode *sklBone = obj->skeletonData.skl->bones;
 	bone *sklState = obj->state.skeleton;
 	bone *configuration = obj->configuration;
@@ -939,8 +939,8 @@ return_t objUpdate(object *const restrict obj, physIsland *const restrict island
 	// Update each of the object's renderables.
 	j = obj->renderables;
 	while(j != NULL){
-		rndriUpdate(j, elapsedTime);
-		j = moduleRenderableInstanceNext(j);
+		rndrUpdate(j, elapsedTime);
+		j = moduleRenderableNext(j);
 	}
 
 	return 1;
@@ -959,7 +959,7 @@ gfxRenderGroup_t objRenderGroup(const object *const restrict obj, const float in
 	*/
 
 	float totalAlpha = 0.f;
-	const rndrInstance *i = obj->renderables;
+	const renderable *i = obj->renderables;
 
 	while(i != NULL){
 
@@ -970,7 +970,7 @@ gfxRenderGroup_t objRenderGroup(const object *const restrict obj, const float in
 
 		}else{
 
-			const float alpha = floatLerp(i->alphaPrevious, i->alpha, interpT);
+			const float alpha = floatLerp(i->state.alphaPrevious, i->state.alpha, interpT);
 			if(alpha > 0.f && alpha < 1.f){
 				// The object contains translucency.
 				return GFX_RENDER_GROUP_TRANSLUCENT;
@@ -979,7 +979,7 @@ gfxRenderGroup_t objRenderGroup(const object *const restrict obj, const float in
 
 		}
 
-		i = moduleRenderableInstanceNext(i);
+		i = moduleRenderableNext(i);
 
 	}
 
@@ -993,7 +993,7 @@ gfxRenderGroup_t objRenderGroup(const object *const restrict obj, const float in
 
 }
 
-void objGenerateSprite(const object *const restrict obj, const rndrInstance *const restrict rndr, const float interpT, const float *const restrict texFrag, vertex *const restrict vertices){
+void objGenerateSprite(const object *const restrict obj, const renderable *const restrict rndr, const float interpT, const float *const restrict texFrag, vertex *const restrict vertices){
 
 	/*
 	** Generate the base sprite.

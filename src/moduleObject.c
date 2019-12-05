@@ -11,11 +11,11 @@ return_t moduleObjectResourcesInit(){
 	void *memory = memAllocate(
 		memPoolAllocationSize(
 			NULL,
-			RESOURCE_DEFAULT_OBJECT_LOCAL_SIZE,
-			RESOURCE_DEFAULT_OBJECT_LOCAL_NUM
+			RESOURCE_DEFAULT_OBJECT_BASE_SIZE,
+			RESOURCE_DEFAULT_OBJECT_BASE_NUM
 		)
 	);
-	if(memPoolCreate(&__ObjectBaseResourceArray, memory, RESOURCE_DEFAULT_OBJECT_LOCAL_SIZE, RESOURCE_DEFAULT_OBJECT_LOCAL_NUM) == NULL){
+	if(memPoolCreate(&__ObjectBaseResourceArray, memory, RESOURCE_DEFAULT_OBJECT_BASE_SIZE, RESOURCE_DEFAULT_OBJECT_BASE_NUM) == NULL){
 		return -1;
 	}
 	memory = memAllocate(
@@ -77,11 +77,11 @@ __HINT_INLINE__ objectBase *moduleObjectBaseAllocate(){
 		void *const memory = memAllocate(
 			memPoolAllocationSize(
 				NULL,
-				RESOURCE_DEFAULT_OBJECT_LOCAL_SIZE,
-				RESOURCE_DEFAULT_OBJECT_LOCAL_NUM
+				RESOURCE_DEFAULT_OBJECT_BASE_SIZE,
+				RESOURCE_DEFAULT_OBJECT_BASE_NUM
 			)
 		);
-		if(memPoolExtend(&__ObjectBaseResourceArray, memory, RESOURCE_DEFAULT_OBJECT_LOCAL_SIZE, RESOURCE_DEFAULT_OBJECT_LOCAL_NUM)){
+		if(memPoolExtend(&__ObjectBaseResourceArray, memory, RESOURCE_DEFAULT_OBJECT_BASE_SIZE, RESOURCE_DEFAULT_OBJECT_BASE_NUM)){
 			r = moduleObjectBaseAllocateStatic();
 		}
 	}

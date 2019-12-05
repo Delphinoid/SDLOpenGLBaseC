@@ -757,6 +757,8 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, co
 								//Set the bone's scale!
 								currentState->scale = vec3New(1.f, 1.f, 1.f);
 
+								/** SMD animations are different to how I do them. **/
+								/** See skliGenerateBoneState for more information. **/
 								bone thing = boneInvert(skl->bones[boneID].defaultState);
 								*currentState = boneTransformAppend(thing, *currentState);
 
@@ -1305,6 +1307,9 @@ void skliGenerateBoneState(const sklInstance *const restrict skli, const boneInd
 												frag->animation->frames[frag->animEndFrame][animBoneID],
 												frag->animInterpT);
 
+				/** This is necessary if animations include bind information, such as with SMDs. **/
+				///fragmentState = boneTransformAppend(boneInvert(skli->skl->bones[animBoneID].defaultState), fragmentState);
+//printf("(%f, %f, %f), (%f, %f, %f, %f)\n", fragmentState.position.x, fragmentState.position.y, fragmentState.position.z, fragmentState.orientation.v.x, fragmentState.orientation.v.y, fragmentState.orientation.v.z, fragmentState.orientation.w);
 				// Apply intensity.
 				if(frag->intensity != 1.f){
 					fragmentState = boneInterpolate(boneIdentity(), fragmentState, frag->intensity);

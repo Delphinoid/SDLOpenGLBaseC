@@ -18,7 +18,7 @@
 /** This should not be necessary! **/
 void renderModel(const object *const restrict obj, const float distance, const camera *const restrict cam, const float interpT, graphicsManager *const restrict gfxMngr){
 
-	const rndrInstance *currentRndr = obj->renderables;
+	const renderable *currentRndr = obj->renderables;
 
 	mat4 *transformCurrent = gfxMngr->sklTransformState;
 	const bone *bCurrent = obj->state.skeleton;
@@ -85,7 +85,7 @@ void renderModel(const object *const restrict obj, const float distance, const c
 
 		if(currentRndr->mdl->skl != NULL){
 
-			const float alpha = floatLerp(currentRndr->alphaPrevious, currentRndr->alpha, interpT);
+			const float alpha = floatLerp(currentRndr->state.alphaPrevious, currentRndr->state.alpha, interpT);
 
 			if(alpha > 0.f){
 
@@ -107,9 +107,9 @@ void renderModel(const object *const restrict obj, const float distance, const c
 						transform = gfxMngr->sklTransformState[rndrBone];
 
 						// Apply billboarding transformation if required.
-						if(currentRndr->flags != CAM_BILLBOARD_DISABLED){
+						if(currentRndr->state.flags != BILLBOARD_DISABLED){
 							// Use the root bone's global position as the centroid for billboarding.
-							transform = camBillboard(cam, centroid, transform, currentRndr->flags);
+							transform = rndrStateBillboard(currentRndr->state, cam, centroid, transform);
 						}
 
 						// Feed the bone configuration to the shader.
@@ -144,7 +144,7 @@ void renderModel(const object *const restrict obj, const float distance, const c
 
 		}
 
-		currentRndr = moduleRenderableInstanceNext(currentRndr);
+		currentRndr = moduleRenderableNext(currentRndr);
 
 	}
 
