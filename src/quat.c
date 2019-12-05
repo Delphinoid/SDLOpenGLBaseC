@@ -615,7 +615,7 @@ __HINT_INLINE__ quat quatSlerp(const quat q1, const quat q2, const float t){
 
 	// Cosine of the angle between the two quaternions.
 	const float cosTheta = quatDot(q1, q2);
-	const float cosThetaAbs = fabs(cosTheta);
+	const float cosThetaAbs = fabsf(cosTheta);
 
 	if(cosThetaAbs > QUAT_LERP_ANGLE){
 		// If the angle is small enough, we can just use linear interpolation.
@@ -661,7 +661,7 @@ __HINT_INLINE__ void quatSlerpP1(quat *const restrict q1, const quat *const rest
 
 	// Cosine of the angle between the two quaternions.
 	const float cosTheta = quatDotP(q1, q2);
-	const float cosThetaAbs = fabs(cosTheta);
+	const float cosThetaAbs = fabsf(cosTheta);
 
 	if(cosThetaAbs > QUAT_LERP_ANGLE){
 		// If the angle is small enough, we can just use linear interpolation.
@@ -707,7 +707,7 @@ __HINT_INLINE__ void quatSlerpP2(const quat *const restrict q1, quat *const rest
 
 	// Cosine of the angle between the two quaternions.
 	const float cosTheta = quatDotP(q1, q2);
-	const float cosThetaAbs = fabs(cosTheta);
+	const float cosThetaAbs = fabsf(cosTheta);
 
 	if(cosThetaAbs > QUAT_LERP_ANGLE){
 		// If the angle is small enough, we can just use linear interpolation.
@@ -753,7 +753,7 @@ __HINT_INLINE__ void quatSlerpPR(const quat *const restrict q1, const quat *cons
 
 	// Cosine of the angle between the two quaternions.
 	const float cosTheta = quatDotP(q1, q2);
-	const float cosThetaAbs = fabs(cosTheta);
+	const float cosThetaAbs = fabsf(cosTheta);
 
 	if(cosThetaAbs > QUAT_LERP_ANGLE){
 		// If the angle is small enough, we can just use linear interpolation.
