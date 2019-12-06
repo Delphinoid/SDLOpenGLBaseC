@@ -1309,7 +1309,7 @@ void skliGenerateBoneState(const sklInstance *const restrict skli, const boneInd
 
 				/** This is necessary if animations include bind information, such as with SMDs. **/
 				///fragmentState = boneTransformAppend(boneInvert(skli->skl->bones[animBoneID].defaultState), fragmentState);
-//printf("(%f, %f, %f), (%f, %f, %f, %f)\n", fragmentState.position.x, fragmentState.position.y, fragmentState.position.z, fragmentState.orientation.v.x, fragmentState.orientation.v.y, fragmentState.orientation.v.z, fragmentState.orientation.w);
+
 				// Apply intensity.
 				if(frag->intensity != 1.f){
 					fragmentState = boneInterpolate(boneIdentity(), fragmentState, frag->intensity);

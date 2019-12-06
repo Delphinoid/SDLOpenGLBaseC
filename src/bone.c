@@ -56,19 +56,19 @@ void boneNegatePR(const bone *const restrict b, bone *const restrict r){
 
 bone boneInvert(const bone b){
 	bone r;
-	r.orientation = quatConjugateFast(b.orientation);
+	r.orientation = quatConjugate(b.orientation);
 	r.position = vec3Negate(quatRotateVec3FastApproximate(r.orientation, b.position));
 	r.scale = vec3SDivV(1.f, b.scale);
 	return r;
 }
 void boneInvertP(bone *const restrict b){
-	quatConjugateFastP(&b->orientation);
+	quatConjugateP(&b->orientation);
 	quatRotateVec3FastApproximateP(&b->orientation, &b->position);
 	vec3NegateP(&b->position);
 	vec3SDivVP(1.f, &b->scale);
 }
 void boneInvertPR(const bone *const restrict b, bone *const restrict r){
-	quatConjugateFastPR(&b->orientation, &r->orientation);
+	quatConjugatePR(&b->orientation, &r->orientation);
 	quatRotateVec3FastApproximatePR(&r->orientation, &b->position, &r->position);
 	vec3NegateP(&r->position);
 	r->scale.x = 1.f/b->scale.x;

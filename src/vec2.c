@@ -257,29 +257,41 @@ __HINT_INLINE__ float vec2MagnitudeSquaredP(const vec2 *const restrict v){
 	return v->x*v->x + v->y*v->y;
 }
 __HINT_INLINE__ float vec2MagnitudeInverse(const vec2 v){
-	return fastInvSqrt(v.x*v.x + v.y*v.y);
+	return 1.f/sqrtf(v.x*v.x + v.y*v.y);
 }
 __HINT_INLINE__ float vec2MagnitudeInverseP(const vec2 *const restrict v){
-	return fastInvSqrt(v->x*v->x + v->y*v->y);
+	return 1.f/sqrtf(v->x*v->x + v->y*v->y);
+}
+__HINT_INLINE__ float vec2MagnitudeInverseFast(const vec2 v){
+	return rsqrt(v.x*v.x + v.y*v.y);
+}
+__HINT_INLINE__ float vec2MagnitudeInverseFastP(const vec2 *const restrict v){
+	return rsqrt(v->x*v->x + v->y*v->y);
+}
+__HINT_INLINE__ float vec2MagnitudeInverseFastAccurate(const vec2 v){
+	return rsqrtAccurate(v.x*v.x + v.y*v.y);
+}
+__HINT_INLINE__ float vec2MagnitudeInverseFastAccurateP(const vec2 *const restrict v){
+	return rsqrtAccurate(v->x*v->x + v->y*v->y);
 }
 
 __HINT_INLINE__ vec2 vec2Normalize(const vec2 v){
 	return vec2VMultS(v, vec2MagnitudeInverse(v));
 }
 __HINT_INLINE__ vec2 vec2NormalizeFast(const vec2 v){
-	return vec2VMultS(v, fastInvSqrt(vec2MagnitudeSquared(v)));
+	return vec2VMultS(v, vec2MagnitudeInverseFast(v));
 }
 __HINT_INLINE__ vec2 vec2NormalizeFastAccurate(const vec2 v){
-	return vec2VMultS(v, fastInvSqrtAccurate(vec2MagnitudeSquared(v)));
+	return vec2VMultS(v, vec2MagnitudeInverseFastAccurate(v));
 }
 __HINT_INLINE__ void vec2NormalizeP(vec2 *const restrict v){
 	vec2VMultSP(v, vec2MagnitudeInverseP(v));
 }
 __HINT_INLINE__ void vec2NormalizeFastP(vec2 *const restrict v){
-	vec2VMultSP(v, fastInvSqrt(vec2MagnitudeSquaredP(v)));
+	vec2VMultSP(v, vec2MagnitudeInverseFastP(v));
 }
 __HINT_INLINE__ void vec2NormalizeFastAccurateP(vec2 *const restrict v){
-	vec2VMultSP(v, fastInvSqrtAccurate(vec2MagnitudeSquaredP(v)));
+	vec2VMultSP(v, vec2MagnitudeInverseFastAccurateP(v));
 }
 
 __HINT_INLINE__ float vec2Dot(const vec2 v1, const vec2 v2){

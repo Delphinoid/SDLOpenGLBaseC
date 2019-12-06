@@ -1016,7 +1016,7 @@ static __FORCE_INLINE__ float cMeshCollisionSATEdgeSeparation(const vec3 pointA,
 	}
 
 	// Normalize.
-	normal = vec3VMultS(normal, fastInvSqrt(normalMagnitudeSquared));
+	normal = vec3VMultS(normal, rsqrtAccurate(normalMagnitudeSquared));
 
 	// Ensure the normal points from A to B.
 	if(vec3Dot(normal, vec3VSubV(pointA, centroid)) < 0.f){

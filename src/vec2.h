@@ -69,6 +69,10 @@ float vec2MagnitudeSquared(const vec2 v);
 float vec2MagnitudeSquaredP(const vec2 *const restrict v);
 float vec2MagnitudeInverse(const vec2 v);
 float vec2MagnitudeInverseP(const vec2 *const restrict v);
+float vec2MagnitudeInverseFast(const vec2 v);
+float vec2MagnitudeInverseFastP(const vec2 *const restrict v);
+float vec2MagnitudeInverseFastAccurate(const vec2 v);
+float vec2MagnitudeInverseFastAccurateP(const vec2 *const restrict v);
 
 vec2 vec2Normalize(const vec2 v);
 vec2 vec2NormalizeFast(const vec2 v);

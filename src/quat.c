@@ -6,7 +6,9 @@
 #include <float.h>
 #include <string.h>
 
-#define QUAT_LERP_ANGLE 0.99984769515639123915701155881391  //cos(RADIAN_RATIO)
+// The LERP threshold is the cosine of 1 radian.
+// Try 1/2 radians if spherical lerp results are bad: 0.99996192306417128873735516482698
+#define QUAT_LERP_THRESHOLD 0.99984769515639123915701155881391  // cos(RADIAN_RATIO)
 
 __HINT_INLINE__ quat quatNew(const float w, const float x, const float y, const float z){
 	const quat r = {.w = w, .v.x = x, .v.y = y, .v.z = z};
@@ -292,16 +294,30 @@ __HINT_INLINE__ float quatMagnitudeSquaredP(const quat *const restrict q){
 	return q->w*q->w + q->v.x*q->v.x + q->v.y*q->v.y + q->v.z*q->v.z;
 }
 __HINT_INLINE__ float quatMagnitudeInverse(const quat q){
-	return fastInvSqrt(q.w*q.w + q.v.x*q.v.x + q.v.y*q.v.y + q.v.z*q.v.z);
+	return 1.f/sqrtf(q.w*q.w + q.v.x*q.v.x + q.v.y*q.v.y + q.v.z*q.v.z);
 }
 __HINT_INLINE__ float quatMagnitudeInverseP(const quat *const restrict q){
-	return fastInvSqrt(q->w*q->w + q->v.x*q->v.x + q->v.y*q->v.y + q->v.z*q->v.z);
+	return 1.f/sqrtf(q->w*q->w + q->v.x*q->v.x + q->v.y*q->v.y + q->v.z*q->v.z);
+}
+__HINT_INLINE__ float quatMagnitudeInverseFast(const quat q){
+	return rsqrt(q.w*q.w + q.v.x*q.v.x + q.v.y*q.v.y + q.v.z*q.v.z);
+}
+__HINT_INLINE__ float quatMagnitudeInverseFastP(const quat *const restrict q){
+	return rsqrt(q->w*q->w + q->v.x*q->v.x + q->v.y*q->v.y + q->v.z*q->v.z);
+}
+__HINT_INLINE__ float quatMagnitudeInverseFastAccurate(const quat q){
+	return rsqrtAccurate(q.w*q.w + q.v.x*q.v.x + q.v.y*q.v.y + q.v.z*q.v.z);
+}
+__HINT_INLINE__ float quatMagnitudeInverseFastAccurateP(const quat *const restrict q){
+	return rsqrtAccurate(q->w*q->w + q->v.x*q->v.x + q->v.y*q->v.y + q->v.z*q->v.z);
 }
 
 __HINT_INLINE__ quat quatConjugate(const quat q){
 	return quatNew(q.w, -q.v.x, -q.v.y, -q.v.z);
 }
 __HINT_INLINE__ quat quatConjugateFast(const quat q){
+	// WARNING: This is technically incorrect, and may
+	// result in singularities during interpolation.
 	return quatNew(-q.w, q.v.x, q.v.y, q.v.z);
 }
 __HINT_INLINE__ void quatConjugateP(quat *const restrict q){
@@ -351,29 +367,22 @@ __HINT_INLINE__ void quatDifferenceP(const quat *const restrict q1, const quat *
 }
 
 __HINT_INLINE__ quat quatNormalize(const quat q){
-	const float magnitude = quatMagnitude(q);
-	if(magnitude != 0.f){
-		return quatQDivS(q, magnitude);
-	}
-	return q;
-}
-__HINT_INLINE__ quat quatNormalizeFast(const quat q){
 	return quatQMultS(q, quatMagnitudeInverse(q));
 }
+__HINT_INLINE__ quat quatNormalizeFast(const quat q){
+	return quatQMultS(q, quatMagnitudeInverseFast(q));
+}
 __HINT_INLINE__ quat quatNormalizeFastAccurate(const quat q){
-	return quatQMultS(q, fastInvSqrtAccurate(quatMagnitudeSquared(q)));
+	return quatQMultS(q, quatMagnitudeInverseFastAccurate(q));
 }
 __HINT_INLINE__ void quatNormalizeP(quat *const restrict q){
-	const float magnitude = quatMagnitudeP(q);
-	if(magnitude != 0.f){
-		quatQDivSP(q, magnitude);
-	}
-}
-__HINT_INLINE__ void quatNormalizeFastP(quat *const restrict q){
 	quatQMultSP(q, quatMagnitudeInverseP(q));
 }
+__HINT_INLINE__ void quatNormalizeFastP(quat *const restrict q){
+	quatQMultSP(q, quatMagnitudeInverseFastP(q));
+}
 __HINT_INLINE__ void quatNormalizeFastAccurateP(quat *const restrict q){
-	quatQMultSP(q, fastInvSqrtAccurate(quatMagnitudeSquaredP(q)));
+	quatQMultSP(q, quatMagnitudeInverseFastAccurateP(q));
 }
 
 __HINT_INLINE__ quat quatIdentity(){
@@ -386,15 +395,15 @@ __HINT_INLINE__ void quatSetIdentity(quat *const restrict q){
 
 __HINT_INLINE__ void quatAxisAngle(const quat q, float *angle, float *axisX, float *axisY, float *axisZ){
 	if(q.w != 1.f){  // We don't want to risk a potential divide-by-zero error.
-		const float scale = fastInvSqrt(1.f-q.w*q.w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1.
+		const float scale = rsqrt(1.f-q.w*q.w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1.
 		*angle = 2.f*acosf(q.w);
 		*axisX = q.v.x*scale;
 		*axisY = q.v.y*scale;
 		*axisZ = q.v.z*scale;
 	}
 }
-__HINT_INLINE__ void quatAxisAngleFast(const quat q, float *angle, float *axisX, float *axisY, float *axisZ){
-	const float scale = fastInvSqrt(1.f-q.w*q.w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1.
+__HINT_INLINE__ void quatAxisAngleUnsafe(const quat q, float *angle, float *axisX, float *axisY, float *axisZ){
+	const float scale = rsqrt(1.f-q.w*q.w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1.
 	*angle = 2.f*acosf(q.w);
 	*axisX = q.v.x*scale;
 	*axisY = q.v.y*scale;
@@ -402,15 +411,15 @@ __HINT_INLINE__ void quatAxisAngleFast(const quat q, float *angle, float *axisX,
 }
 __HINT_INLINE__ void quatAxisAngleP(const quat *const restrict q, float *angle, float *axisX, float *axisY, float *axisZ){
 	if(q->w != 1.f){  // We don't want to risk a potential divide-by-zero error.
-		const float scale = fastInvSqrt(1.f-q->w*q->w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1.
+		const float scale = rsqrt(1.f-q->w*q->w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1.
 		*angle = 2.f*acosf(q->w);
 		*axisX = q->v.x*scale;
 		*axisY = q->v.y*scale;
 		*axisZ = q->v.z*scale;
 	}
 }
-__HINT_INLINE__ void quatAxisAngleFastP(const quat *const restrict q, float *angle, float *axisX, float *axisY, float *axisZ){
-	const float scale = fastInvSqrt(1.f-q->w*q->w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1.
+__HINT_INLINE__ void quatAxisAngleUnsafeP(const quat *const restrict q, float *angle, float *axisX, float *axisY, float *axisZ){
+	const float scale = rsqrt(1.f-q->w*q->w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1.
 	*angle = 2.f*acosf(q->w);
 	*axisX = q->v.x*scale;
 	*axisY = q->v.y*scale;
@@ -617,7 +626,7 @@ __HINT_INLINE__ quat quatSlerp(const quat q1, const quat q2, const float t){
 	const float cosTheta = quatDot(q1, q2);
 	const float cosThetaAbs = fabsf(cosTheta);
 
-	if(cosThetaAbs > QUAT_LERP_ANGLE){
+	if(cosThetaAbs > QUAT_LERP_THRESHOLD){
 		// If the angle is small enough, we can just use linear interpolation.
 		return quatNormalizeFast(quatLerp(q1, q2, t));
 	}else{
@@ -625,7 +634,7 @@ __HINT_INLINE__ quat quatSlerp(const quat q1, const quat q2, const float t){
 		/*
 		** sin(x)^2 + cos(x)^2 = 1
 		** sin(x)^2 = 1 - cos(x)^2
-		** 1 / sin(x) = fastInvSqrt(1 - cos(x)^2)
+		** 1 / sin(x) = rsqrt(1 - cos(x)^2)
 		**
 		** Calculating the reciprocal of sin(x) allows us to do
 		** multiplications instead of divisions below, as the
@@ -635,7 +644,7 @@ __HINT_INLINE__ quat quatSlerp(const quat q1, const quat q2, const float t){
 		*/
 
 		const float theta = acosf(cosThetaAbs);
-		const float sinThetaInv = fastInvSqrt(1.f - cosThetaAbs * cosThetaAbs);
+		const float sinThetaInv = rsqrt(1.f - cosThetaAbs * cosThetaAbs);
 		const float sinThetaInvT = sinf(theta * (1.f - t)) * sinThetaInv;
 
 		// If q1 and q2 are > 90 degrees apart (cosTheta < 0), negate
@@ -663,7 +672,7 @@ __HINT_INLINE__ void quatSlerpP1(quat *const restrict q1, const quat *const rest
 	const float cosTheta = quatDotP(q1, q2);
 	const float cosThetaAbs = fabsf(cosTheta);
 
-	if(cosThetaAbs > QUAT_LERP_ANGLE){
+	if(cosThetaAbs > QUAT_LERP_THRESHOLD){
 		// If the angle is small enough, we can just use linear interpolation.
 		quatLerpP1(q1, q2, t);
 	}else{
@@ -671,7 +680,7 @@ __HINT_INLINE__ void quatSlerpP1(quat *const restrict q1, const quat *const rest
 		/*
 		** sin(x)^2 + cos(x)^2 = 1
 		** sin(x)^2 = 1 - cos(x)^2
-		** 1 / sin(x) = fastInvSqrt(1 - cos(x)^2)
+		** 1 / sin(x) = rsqrt(1 - cos(x)^2)
 		**
 		** Calculating the reciprocal of sin(x) allows us to do
 		** multiplications instead of divisions below, as the
@@ -681,7 +690,7 @@ __HINT_INLINE__ void quatSlerpP1(quat *const restrict q1, const quat *const rest
 		*/
 
 		const float theta = acosf(cosThetaAbs);
-		const float sinThetaInv = fastInvSqrt(1.f - cosThetaAbs * cosThetaAbs);
+		const float sinThetaInv = rsqrt(1.f - cosThetaAbs * cosThetaAbs);
 		const float sinThetaInvT = sinf(theta * (1.f - t)) * sinThetaInv;
 
 		// If q1 and q2 are > 90 degrees apart (cosTheta < 0), negate
@@ -709,7 +718,7 @@ __HINT_INLINE__ void quatSlerpP2(const quat *const restrict q1, quat *const rest
 	const float cosTheta = quatDotP(q1, q2);
 	const float cosThetaAbs = fabsf(cosTheta);
 
-	if(cosThetaAbs > QUAT_LERP_ANGLE){
+	if(cosThetaAbs > QUAT_LERP_THRESHOLD){
 		// If the angle is small enough, we can just use linear interpolation.
 		quatLerpP2(q1, q2, t);
 	}else{
@@ -717,7 +726,7 @@ __HINT_INLINE__ void quatSlerpP2(const quat *const restrict q1, quat *const rest
 		/*
 		** sin(x)^2 + cos(x)^2 = 1
 		** sin(x)^2 = 1 - cos(x)^2
-		** 1 / sin(x) = fastInvSqrt(1 - cos(x)^2)
+		** 1 / sin(x) = rsqrt(1 - cos(x)^2)
 		**
 		** Calculating the reciprocal of sin(x) allows us to do
 		** multiplications instead of divisions below, as the
@@ -727,7 +736,7 @@ __HINT_INLINE__ void quatSlerpP2(const quat *const restrict q1, quat *const rest
 		*/
 
 		const float theta = acosf(cosThetaAbs);
-		const float sinThetaInv = fastInvSqrt(1.f - cosThetaAbs * cosThetaAbs);
+		const float sinThetaInv = rsqrt(1.f - cosThetaAbs * cosThetaAbs);
 		const float sinThetaInvT = sinf(theta * (1.f - t)) * sinThetaInv;
 
 		// If q1 and q2 are > 90 degrees apart (cosTheta < 0), negate
@@ -755,7 +764,7 @@ __HINT_INLINE__ void quatSlerpPR(const quat *const restrict q1, const quat *cons
 	const float cosTheta = quatDotP(q1, q2);
 	const float cosThetaAbs = fabsf(cosTheta);
 
-	if(cosThetaAbs > QUAT_LERP_ANGLE){
+	if(cosThetaAbs > QUAT_LERP_THRESHOLD){
 		// If the angle is small enough, we can just use linear interpolation.
 		quatLerpPR(q1, q2, t, r);
 	}else{
@@ -763,7 +772,7 @@ __HINT_INLINE__ void quatSlerpPR(const quat *const restrict q1, const quat *cons
 		/*
 		** sin(x)^2 + cos(x)^2 = 1
 		** sin(x)^2 = 1 - cos(x)^2
-		** 1 / sin(x) = fastInvSqrt(1 - cos(x)^2)
+		** 1 / sin(x) = rsqrt(1 - cos(x)^2)
 		**
 		** Calculating the reciprocal of sin(x) allows us to do
 		** multiplications instead of divisions below, as the
@@ -773,7 +782,7 @@ __HINT_INLINE__ void quatSlerpPR(const quat *const restrict q1, const quat *cons
 		*/
 
 		const float theta = acosf(cosThetaAbs);
-		const float sinThetaInv = fastInvSqrt(1.f - cosThetaAbs * cosThetaAbs);
+		const float sinThetaInv = rsqrt(1.f - cosThetaAbs * cosThetaAbs);
 		const float sinThetaInvT = sinf(theta * (1.f - t)) * sinThetaInv;
 
 		// If q1 and q2 are > 90 degrees apart (cosTheta < 0), negate

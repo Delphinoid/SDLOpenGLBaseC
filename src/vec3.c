@@ -310,38 +310,50 @@ __HINT_INLINE__ float vec3MagnitudeSquaredP(const vec3 *const restrict v){
 	return v->x*v->x + v->y*v->y + v->z*v->z;
 }
 __HINT_INLINE__ float vec3MagnitudeInverse(const vec3 v){
-	return fastInvSqrt(v.x*v.x + v.y*v.y + v.z*v.z);
+	return 1.f/sqrtf(v.x*v.x + v.y*v.y + v.z*v.z);
 }
 __HINT_INLINE__ float vec3MagnitudeInverseP(const vec3 *const restrict v){
-	return fastInvSqrt(v->x*v->x + v->y*v->y + v->z*v->z);
+	return 1.f/sqrtf(v->x*v->x + v->y*v->y + v->z*v->z);
+}
+__HINT_INLINE__ float vec3MagnitudeInverseFast(const vec3 v){
+	return rsqrt(v.x*v.x + v.y*v.y + v.z*v.z);
+}
+__HINT_INLINE__ float vec3MagnitudeInverseFastP(const vec3 *const restrict v){
+	return rsqrt(v->x*v->x + v->y*v->y + v->z*v->z);
+}
+__HINT_INLINE__ float vec3MagnitudeInverseFastAccurate(const vec3 v){
+	return rsqrtAccurate(v.x*v.x + v.y*v.y + v.z*v.z);
+}
+__HINT_INLINE__ float vec3MagnitudeInverseFastAccurateP(const vec3 *const restrict v){
+	return rsqrtAccurate(v->x*v->x + v->y*v->y + v->z*v->z);
 }
 
 __HINT_INLINE__ vec3 vec3Normalize(const vec3 v){
-	return vec3VMultS(v, 1.f/vec3Magnitude(v));
-}
-__HINT_INLINE__ vec3 vec3NormalizeFast(const vec3 v){
 	return vec3VMultS(v, vec3MagnitudeInverse(v));
 }
+__HINT_INLINE__ vec3 vec3NormalizeFast(const vec3 v){
+	return vec3VMultS(v, vec3MagnitudeInverseFast(v));
+}
 __HINT_INLINE__ vec3 vec3NormalizeFastAccurate(const vec3 v){
-	return vec3VMultS(v, fastInvSqrtAccurate(vec3MagnitudeSquared(v)));
+	return vec3VMultS(v, vec3MagnitudeInverseFastAccurate(v));
 }
 __HINT_INLINE__ void vec3NormalizeP(vec3 *const restrict v){
-	vec3VMultSP(v, 1.f/vec3MagnitudeP(v));
-}
-__HINT_INLINE__ void vec3NormalizePR(const vec3 *const restrict v, vec3 *const restrict r){
-	vec3VMultSPR(v, 1.f/vec3MagnitudeP(v), r);
-}
-__HINT_INLINE__ void vec3NormalizeFastP(vec3 *const restrict v){
 	vec3VMultSP(v, vec3MagnitudeInverseP(v));
 }
-__HINT_INLINE__ void vec3NormalizeFastPR(const vec3 *const restrict v, vec3 *const restrict r){
+__HINT_INLINE__ void vec3NormalizePR(const vec3 *const restrict v, vec3 *const restrict r){
 	vec3VMultSPR(v, vec3MagnitudeInverseP(v), r);
 }
+__HINT_INLINE__ void vec3NormalizeFastP(vec3 *const restrict v){
+	vec3VMultSP(v, vec3MagnitudeInverseFastP(v));
+}
+__HINT_INLINE__ void vec3NormalizeFastPR(const vec3 *const restrict v, vec3 *const restrict r){
+	vec3VMultSPR(v, vec3MagnitudeInverseFastP(v), r);
+}
 __HINT_INLINE__ void vec3NormalizeFastAccurateP(vec3 *const restrict v){
-	vec3VMultSP(v, fastInvSqrtAccurate(vec3MagnitudeSquaredP(v)));
+	vec3VMultSP(v, vec3MagnitudeInverseFastAccurateP(v));
 }
 __HINT_INLINE__ void vec3NormalizeFastAccuratePR(const vec3 *const restrict v, vec3 *const restrict r){
-	vec3VMultSPR(v, fastInvSqrtAccurate(vec3MagnitudeSquaredP(v)), r);
+	vec3VMultSPR(v, vec3MagnitudeInverseFastAccurateP(v), r);
 }
 
 __HINT_INLINE__ float vec3Dot(const vec3 v1, const vec3 v2){

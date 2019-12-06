@@ -57,6 +57,10 @@ float quatMagnitudeSquared(const quat q);
 float quatMagnitudeSquaredP(const quat *const restrict q);
 float quatMagnitudeInverse(const quat q);
 float quatMagnitudeInverseP(const quat *const restrict q);
+float quatMagnitudeInverseFast(const quat q);
+float quatMagnitudeInverseFastP(const quat *const restrict q);
+float quatMagnitudeInverseFastAccurate(const quat q);
+float quatMagnitudeInverseFastAccurateP(const quat *const restrict q);
 
 quat quatConjugate(const quat q);
 quat quatConjugateFast(const quat q);
@@ -87,9 +91,9 @@ quat quatIdentity();
 void quatSetIdentity(quat *const restrict q);
 
 void quatAxisAngle(const quat q, float *angle, float *axisX, float *axisY, float *axisZ);
-void quatAxisAngleFast(const quat q, float *angle, float *axisX, float *axisY, float *axisZ);
+void quatAxisAngleUnsafe(const quat q, float *angle, float *axisX, float *axisY, float *axisZ);
 void quatAxisAngleP(const quat *const restrict q, float *angle, float *axisX, float *axisY, float *axisZ);
-void quatAxisAngleFastP(const quat *const restrict q, float *angle, float *axisX, float *axisY, float *axisZ);
+void quatAxisAngleUnsafeP(const quat *const restrict q, float *angle, float *axisX, float *axisY, float *axisZ);
 
 float quatDot(const quat q1, const quat q2);
 float quatDotP(const quat *const restrict q1, const quat *const restrict q2);

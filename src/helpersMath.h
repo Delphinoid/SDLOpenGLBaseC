@@ -4,6 +4,16 @@
 #include "vec3.h"
 #include "return.h"
 
+// Modern processors have reciprocal square root intrinsics,
+// which will be faster than a software implementation.
+#ifdef MATH_USE_FAST_INVERSE_SQRT
+	#define rsqrt(x)         fastInvSqrt(x)
+	#define rsqrtAccurate(x) fastInvSqrtAccurate(x)
+#else
+	#define rsqrt(x)         (1.f/sqrtf(x))
+	#define rsqrtAccurate(x) (1.f/sqrtf(x))
+#endif
+
 float fastInvSqrt(float x);
 float fastInvSqrtAccurate(float x);
 
