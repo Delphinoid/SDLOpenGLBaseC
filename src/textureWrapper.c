@@ -68,7 +68,7 @@ static return_t twaAddFrame(twAnim *const restrict twa, frameIndex_t *const rest
 			return -1;
 		}
 		twa->frames               = tempBuffer;
-		twa->animData.frameDelays = (float *)&twa->frames[*frameCapacity];
+		twa->animData.frameDelays = (float *)&tempBuffer[*frameCapacity];
 		// Shift frame delays to account for the extra capacity.
 		memmove(twa->animData.frameDelays, &tempBuffer[twa->animData.frameNum], twa->animData.frameNum*sizeof(float));
 	}
@@ -83,15 +83,16 @@ static return_t twaAddFrame(twAnim *const restrict twa, frameIndex_t *const rest
 }
 static return_t twaResizeToFit(twAnim *const restrict twa, const frameIndex_t frameCapacity){
 	if(twa->animData.frameNum != frameCapacity){
-		twFrame *tempBuffer = memReallocate(twa->frames, twa->animData.frameNum*(sizeof(twFrame) + sizeof(float)));
+		twFrame *tempBuffer;
+		// Shift frame delays to account for the extra capacity.
+		memmove(&twa->frames[twa->animData.frameNum], twa->animData.frameDelays, twa->animData.frameNum*sizeof(float));
+		tempBuffer = memReallocate(twa->frames, twa->animData.frameNum*(sizeof(twFrame) + sizeof(float)));
 		if(tempBuffer == NULL){
 			/** Memory allocation failure. **/
 			return -1;
 		}
 		twa->frames               = tempBuffer;
-		twa->animData.frameDelays = (float *)&twa->frames[frameCapacity];
-		// Shift frame delays to account for the extra capacity.
-		memmove(twa->animData.frameDelays, &tempBuffer[twa->animData.frameNum], twa->animData.frameNum*sizeof(float));
+		twa->animData.frameDelays = (float *)&tempBuffer[twa->animData.frameNum];
 	}
 	return 1;
 }
@@ -126,6 +127,8 @@ static void twDefragment(textureWrapper *const restrict tw){
 		tw->animations = memReallocate(tw->animations, tw->animationNum*sizeof(twAnim ));
 		a = tw->animations; aLast = &a[tw->animationNum];
 		for(; a < aLast; ++a){
+			// Shift frame delays to account for the extra capacity.
+			memmove(&a->frames[a->animData.frameNum], a->animData.frameDelays, a->animData.frameNum*sizeof(float));
 			a->frames = memReallocate(
 				a->frames,
 				a->animData.frameNum*(sizeof(twFrame) + sizeof(float))
