@@ -789,7 +789,6 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, co
 		return 0;
 	}
 
-
 	return 1;
 }
 boneIndex_t sklaFindBone(const sklAnim *const restrict skla, const boneIndex_t id, const char *const restrict name){
@@ -1281,7 +1280,6 @@ void skliGenerateBoneState(const sklInstance *const restrict skli, const boneInd
 		while(frag != NULL){
 
 			// If the bone exists in the current animation fragment, generate a fragment state and add it to the animation state.
-			//if(skli->animations[i].animFrags[j].animBoneLookup[boneID] != (boneIndex_t)-1){
 			boneIndex_t animBoneID = sklaFindBone(frag->animation, id, name);
 			if(animBoneID < frag->animation->boneNum && frag->intensity != 0.f){
 
@@ -1291,7 +1289,7 @@ void skliGenerateBoneState(const sklInstance *const restrict skli, const boneInd
 												frag->animInterpT);
 
 				/** This is necessary if animations include bind information, such as with SMDs. **/
-				///fragmentState = boneTransformAppend(boneInvert(skli->skl->bones[animBoneID].defaultState), fragmentState);
+				///fragmentState = boneTransformAppend(boneInvert(skli->skl->bones[id].defaultState), fragmentState);
 
 				// Apply intensity.
 				if(frag->intensity != 1.f){

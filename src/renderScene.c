@@ -96,29 +96,25 @@ void renderModel(const object *const restrict obj, const float distance, const c
 				// If there is a valid animated skeleton, apply animation transformations.
 				for(i = 0; i < boneNum; ++i, ++bArray, ++nLayout){
 
-					const boneIndex_t rndrBone = sklFindBone(obj->skeletonData.skl, i, nLayout->name);
-
-					// If the animated bone is in the model, pass in its animation transforms.
 					/** Use a lookup, same in object.c. **/
-					if(rndrBone < obj->skeletonData.skl->boneNum){
+					boneIndex_t rndrBone = sklFindBone(obj->skeletonData.skl, i, nLayout->name);
 
-						transform = gfxMngr->sklTransformState[rndrBone];
-
-						// Apply billboarding transformation if required.
-						if(currentRndr->state.flags != BILLBOARD_DISABLED){
-							// Use the root bone's global position as the centroid for billboarding.
-							transform = rndrStateBillboard(currentRndr->state, cam, centroid, transform);
-						}
-
-						// Feed the bone configuration to the shader.
-						glUniformMatrix4fv(*bArray, 1, GL_FALSE, &transform.m[0][0]);
-
-					}else{
-
-						// Feed the bone configuration to the shader.
-						glUniformMatrix4fv(*bArray, 1, GL_FALSE, &gfxMngr->identityMatrix.m[0][0]);
-
+					if(rndrBone >= obj->skeletonData.skl->boneNum){
+						// Use the root bone's transformation if
+						// the animated bone is not in the model.
+						rndrBone = 0;
 					}
+
+					// Apply billboarding transformation if required.
+					if(currentRndr->state.flags != BILLBOARD_DISABLED){
+						// Use the root bone's global position as the centroid for billboarding.
+						transform = rndrStateBillboard(currentRndr->state, cam, centroid, gfxMngr->sklTransformState[rndrBone]);
+					}else{
+						transform = gfxMngr->sklTransformState[rndrBone];
+					}
+
+					// Feed the bone configuration to the shader.
+					glUniformMatrix4fv(*bArray, 1, GL_FALSE, &transform.m[0][0]);
 
 				}
 

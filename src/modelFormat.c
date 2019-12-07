@@ -718,7 +718,6 @@ return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **ver
 									//Set the bone's scale!
 									vec3Set(&currentBone->defaultState.scale, 1.f, 1.f, 1.f);
 
-
 									//If this bone has a parent, append its state to its parent's state!
 									if(currentBone->parent != boneID){
 										//currentBone->defaultState = boneTransformAppend(skl->bones[currentBone->parent].defaultState, currentBone->defaultState);
