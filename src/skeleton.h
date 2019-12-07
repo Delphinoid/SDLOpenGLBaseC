@@ -105,9 +105,10 @@ typedef struct {
 	const skeleton *skl;
 } sklInstance;
 
+extern skeleton sklDefault;
+
 void sklInit(skeleton *const restrict skl);
 return_t sklLoad(skeleton *const restrict skl, const char *const restrict prgPath, const char *const restrict filePath);
-return_t sklDefault(skeleton *const restrict skl);
 /** If we're sticking with fixed bone lookups, change the return value to void. **/
 //return_t sklGenerateLookup(const skeleton *skl1, const skeleton *skl2, uint_least8_t *lookup);
 boneIndex_t sklFindBone(const skeleton *const restrict skl, const boneIndex_t id, const char *const restrict name);
@@ -115,7 +116,7 @@ void sklDelete(skeleton *const restrict skl);
 
 void sklaInit(sklAnim *const restrict skla);
 return_t sklaLoad(sklAnim *const restrict skla, const char *const restrict prgPath, const char *const restrict filePath);
-return_t sklaLoadSMD(sklAnim *const restrict skla, const skeleton *const restrict skl, const char *const restrict prgPath, const char *const restrict filePath);
+return_t sklaLoadSMD(sklAnim *const restrict skla, const skeleton *const restrict skl, const char *const restrict prgPath, const char *const restrict filePath, const int invert);
 boneIndex_t sklaFindBone(const sklAnim *const restrict skla, const boneIndex_t id, const char *const restrict name);
 void sklaDelete(sklAnim *const restrict skla);
 

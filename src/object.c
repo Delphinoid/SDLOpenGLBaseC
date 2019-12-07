@@ -81,7 +81,7 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 								return -1;
 							}
 							printf("Error loading object \"%s\": Skeleton \"%s\" at line %u does not exist.\n", fullPath, &loadPath[0], currentLine);
-							base->skl = moduleSkeletonGetDefault();
+							base->skl = &sklDefault;
 						}else{
 							base->skl = tempSkl;
 						}
@@ -281,7 +281,7 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 					// Use the default model if no model was loaded.
 					if(rndr.mdl == NULL){
 						printf("Error loading object \"%s\": Model \"%s\" at line %u does not exist.\n", fullPath, &loadPath[0], currentLine);
-						rndr.mdl = moduleModelGetDefault();
+						rndr.mdl = &mdlDefault;
 					}
 
 					if(texPathLength > 0){
@@ -331,18 +331,18 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 						// Use the default texture wrapper if no texture wrapper was loaded.
 						if(rndr.tw == NULL){
 							printf("Error loading object \"%s\": Texture wrapper \"%s\" at line %u does not exist.\n", fullPath, &loadPath[0], currentLine);
-							rndr.tw = moduleTextureWrapperGetDefault();
+							rndr.tw = &twDefault;
 						}
 
 					}else{
 						printf("Error loading object \"%s\": Could not parse texture wrapper for renderable at line %u.\n", fullPath, currentLine);
-						rndr.tw = moduleTextureWrapperGetDefault();
+						rndr.tw = &twDefault;
 					}
 
 				}else{
 					printf("Error loading object \"%s\": Could not parse model for renderable at line %u.\n", fullPath, currentLine);
-					rndr.mdl = moduleModelGetDefault();
-					rndr.tw = moduleTextureWrapperGetDefault();
+					rndr.mdl = &mdlDefault;
+					rndr.tw = &twDefault;
 				}
 
 				// Add the renderable.
@@ -369,7 +369,7 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 	// If no skeleton was loaded, load the default one.
 	if(base->skl == NULL){
 		//printf("Error loading object: No skeleton was loaded.\n");
-		base->skl = moduleSkeletonGetDefault();
+		base->skl = &sklDefault;
 	}
 
 	// If no renderables were loaded, load the default one.
@@ -381,8 +381,8 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 			objBaseDelete(base);
 			return -1;
 		}
-		base->renderables->mdl = moduleModelGetDefault();
-		base->renderables->tw = moduleTextureWrapperGetDefault();
+		base->renderables->mdl = &mdlDefault;
+		base->renderables->tw = &twDefault;
 	}
 
 	// Generate a name based off the file path.
@@ -963,7 +963,7 @@ gfxRenderGroup_t objRenderGroup(const object *const restrict obj, const float in
 
 	while(i != NULL){
 
-		if(twiContainsTranslucency(&i->twi)){
+		if(twiTranslucent(&i->twi)){
 
 			// The object contains translucency.
 			return GFX_RENDER_GROUP_TRANSLUCENT;
@@ -1065,8 +1065,8 @@ void objGenerateSprite(const object *const restrict obj, const renderable *const
 	/** Optimize? **/
 	//boneInterpolate(&obj->skeletonState[1][0], &obj->skeletonState[0][0], interpT, &transform);
 	transform = boneInterpolate(*previous, *current, interpT);
-	transform.scale.x *= twiGetFrameWidth(&rndr->twi) * twiGetTexWidth(&rndr->twi);
-	transform.scale.y *= twiGetFrameHeight(&rndr->twi) * twiGetTexHeight(&rndr->twi);
+	transform.scale.x *= twiFrameWidth(&rndr->twi) * twiTextureWidth(&rndr->twi);
+	transform.scale.y *= twiFrameHeight(&rndr->twi) * twiTextureHeight(&rndr->twi);
 	vertTransform(&vertices[0], transform.position, transform.orientation, transform.scale);
 	vertTransform(&vertices[1], transform.position, transform.orientation, transform.scale);
 	vertTransform(&vertices[2], transform.position, transform.orientation, transform.scale);

@@ -1,1 +1,4 @@
-texture "Misc\Avatar.tdt"
+animation {
+	loop 0
+	frameEntire 0 "Misc\Avatar.tdt"
+}

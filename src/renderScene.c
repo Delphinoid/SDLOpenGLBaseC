@@ -75,13 +75,11 @@ void renderModel(const object *const restrict obj, const float distance, const c
 	while(currentRndr != NULL){
 
 		// Get texture information for rendering and feed it to the shader.
-		float texFrag[4];  // The x, y, width and height of the fragment of the texture being rendered.
-		GLuint frameTexID;
-		twiGetFrameInfo(&currentRndr->twi, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &frameTexID, interpT);
+		const twFrame *const restrict frame = twiRenderState(&currentRndr->twi, interpT);
 		// Bind the texture (if needed).
-		gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, frameTexID);
+		gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, frame->image->diffuseID);
 		// Feed the texture coordinates to the shader.
-		glUniform4fv(gfxMngr->textureFragmentID, 1, texFrag);
+		glUniform4fv(gfxMngr->textureFragmentID, 1, (const GLfloat *)&frame->subframe);
 
 		if(currentRndr->mdl->skl != NULL){
 

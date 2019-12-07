@@ -19,14 +19,6 @@ return_t moduleTextureWrapperResourcesInit(){
 	}
 	return 1;
 }
-return_t moduleTextureWrapperResourcesInitConstants(){
-	textureWrapper *tempTw = moduleTextureWrapperAllocate();
-	if(tempTw == NULL){
-		return -1;
-	}
-	twDefault(tempTw);
-	return 1;
-}
 void moduleTextureWrapperResourcesReset(){
 	memoryRegion *region;
 	moduleTextureWrapperClear();
@@ -40,7 +32,6 @@ void moduleTextureWrapperResourcesReset(){
 }
 void moduleTextureWrapperResourcesDelete(){
 	memoryRegion *region;
-	twDelete(moduleTextureWrapperGetDefault());
 	moduleTextureWrapperClear();
 	region = __TextureWrapperResourceArray.region;
 	while(region != NULL){
@@ -50,9 +41,6 @@ void moduleTextureWrapperResourcesDelete(){
 	}
 }
 
-__HINT_INLINE__ textureWrapper *moduleTextureWrapperGetDefault(){
-	return memPoolFirst(__TextureWrapperResourceArray.region);
-}
 __HINT_INLINE__ textureWrapper *moduleTextureWrapperAllocateStatic(){
 	return memPoolAllocate(&__TextureWrapperResourceArray);
 }
@@ -79,6 +67,10 @@ __HINT_INLINE__ void moduleTextureWrapperFree(textureWrapper *const restrict res
 }
 textureWrapper *moduleTextureWrapperFind(const char *const restrict name){
 
+	if(strcmp(name, twDefault.name) == 0){
+		return &twDefault;
+	}
+
 	MEMORY_POOL_LOOP_BEGIN(__TextureWrapperResourceArray, i, textureWrapper *);
 
 		// Compare the resources' names.
@@ -93,11 +85,7 @@ textureWrapper *moduleTextureWrapperFind(const char *const restrict name){
 }
 void moduleTextureWrapperClear(){
 
-	MEMORY_POOL_OFFSET_LOOP_BEGIN(
-		__TextureWrapperResourceArray, i, textureWrapper *,
-		__TextureWrapperResourceArray.region,
-		(byte_t *)memPoolFirst(__TextureWrapperResourceArray.region) + RESOURCE_TEXTURE_WRAPPER_CONSTANTS * RESOURCE_TEXTURE_WRAPPER_BLOCK_SIZE
-	);
+	MEMORY_POOL_LOOP_BEGIN(__TextureWrapperResourceArray, i, textureWrapper *);
 
 		moduleTextureWrapperFree(i);
 		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
@@ -106,7 +94,7 @@ void moduleTextureWrapperClear(){
 
 		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
 
-	MEMORY_POOL_OFFSET_LOOP_END(__TextureWrapperResourceArray, i, return;);
+	MEMORY_POOL_LOOP_END(__TextureWrapperResourceArray, i, return;);
 
 
 }

@@ -632,12 +632,13 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const restrict bodies, const 
 
 							// Reallocate edge array if necessary.
 							if(cHull->edgeNum == edgeCapacity){
+								cMeshEdge *tempBuffer;
 								if(edgeCapacity == 0){
 									edgeCapacity = 3;
 								}else{
 									edgeCapacity *= 2;
 								}
-								cMeshEdge *const tempBuffer = memReallocate(cHull->edges, edgeCapacity*sizeof(cMeshEdge));
+								tempBuffer = memReallocate(cHull->edges, edgeCapacity*sizeof(cMeshEdge));
 								if(tempBuffer == NULL){
 									/** Memory allocation failure. **/
 									if(vertexMassArrays != NULL){

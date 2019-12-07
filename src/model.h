@@ -39,10 +39,13 @@ typedef struct {
 
 } model;
 
+extern model mdlDefault;
+extern model mdlSprite;
+
 void mdlInit(model *const restrict mdl);
 return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, const char *const restrict filePath);
-return_t mdlDefault(model *const restrict mdl);
-return_t mdlCreateSprite(model *const restrict mdl);
+return_t mdlDefaultInit();
+return_t mdlSpriteInit();
 void mdlFindCurrentLOD(const model *const restrict mdl, GLsizei *const restrict indexNum, const void **const restrict offset, const float distance, size_t bias);
 void mdlDelete(model *const restrict mdl);
 

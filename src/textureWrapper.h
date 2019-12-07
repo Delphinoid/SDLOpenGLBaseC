@@ -7,29 +7,19 @@
 
 // Contains details describing a single image.
 typedef struct {
-	rectangle *subframes;  // Represents frame bounds (always contains one element, or multiple for sprite sheets).
-	const texture *diffuse;
-	const texture *normals;
-	const texture *specular;
-	frameIndex_t subframeNum;
+	const texture *image;
+	rectangle subframe;  // Represents frame bounds.
 } twFrame;
-
-typedef struct {
-	frameIndex_t frameID;
-	frameIndex_t subframeID;
-} twFramePair;
 
 // Contains details describing an animation.
 typedef struct {
 	animationData animData;
-	twFramePair *frames;  // Represents the positions of the frames in textureWrapper.frames.
+	twFrame *frames;
 } twAnim;
 
 // Combines the above structures.
 typedef struct {
-	twFrame *frames;     // Holds twFrames.
 	twAnim *animations;  // Holds twAnims.
-	frameIndex_t frameNum;
 	animIndex_t animationNum;
 	char *name;
 } textureWrapper;
@@ -42,20 +32,21 @@ typedef struct {
 	animationInstance animator;
 } twInstance;
 
+extern textureWrapper twDefault;
+
 /** twLoad() and twiAnimate() may need some tidying up. **/
 void twInit(textureWrapper *const restrict tw);
 return_t twLoad(textureWrapper *const restrict tw, const char *const restrict prgPath, const char *const restrict filePath);
-return_t twDefault(textureWrapper *const restrict tw);
 void twDelete(textureWrapper *const restrict tw);
 
 void twiInit(twInstance *const restrict twi, const textureWrapper *const tw);
 void twiAnimate(twInstance *const restrict twi, const float elapsedTime);
-GLuint twiGetTexWidth(const twInstance *const restrict twi);
-GLuint twiGetTexHeight(const twInstance *const restrict twi);
-GLuint twiGetTexID(const twInstance *const restrict twi);
-float twiGetFrameWidth(const twInstance *const restrict twi);
-float twiGetFrameHeight(const twInstance *const restrict twi);
-void twiGetFrameInfo(const twInstance *const restrict twi, float *const restrict x, float *const restrict y, float *const restrict w, float *const restrict h, GLuint *const restrict frameTexID, const float interpT);
-return_t twiContainsTranslucency(const twInstance *const restrict twi);
+GLuint twiTextureWidth(const twInstance *const restrict twi);
+GLuint twiTextureHeight(const twInstance *const restrict twi);
+const texture *twiTexture(const twInstance *const restrict twi);
+float twiFrameWidth(const twInstance *const restrict twi);
+float twiFrameHeight(const twInstance *const restrict twi);
+const twFrame *twiRenderState(const twInstance *const restrict twi, const float interpT);
+return_t twiTranslucent(const twInstance *const restrict twi);
 
 #endif

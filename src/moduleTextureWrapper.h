@@ -17,11 +17,9 @@ extern memoryPool __TextureWrapperResourceArray;  // Contains textureWrappers.
 /** Use compiler constants for loop offsets?     **/
 
 return_t moduleTextureWrapperResourcesInit();
-return_t moduleTextureWrapperResourcesInitConstants();
 void moduleTextureWrapperResourcesReset();
 void moduleTextureWrapperResourcesDelete();
 
-textureWrapper *moduleTextureWrapperGetDefault();
 textureWrapper *moduleTextureWrapperAllocateStatic();
 textureWrapper *moduleTextureWrapperAllocate();
 void moduleTextureWrapperFree(textureWrapper *const restrict resource);

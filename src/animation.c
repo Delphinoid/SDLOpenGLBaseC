@@ -149,8 +149,8 @@ void animAdvance(animationInstance *const restrict animInst, const animationData
 
 }
 
-void animGetRenderData(const animationInstance *const restrict animInst, const animationData *const restrict animData, const float interpT,
-                       frameIndex_t *const restrict startFrame, frameIndex_t *const restrict endFrame, float *const restrict animInterpT){
+void animRenderState(const animationInstance *const restrict animInst, const animationData *const restrict animData, const float interpT,
+                     frameIndex_t *const restrict startFrame, frameIndex_t *const restrict endFrame, float *const restrict animInterpT){
 
 	/*
 	** Calculates the start frame, the end frame and the progress through the two based on the provided data.

@@ -52,17 +52,8 @@ return_t moduleSkeletonResourcesInit(){
 	}
 	return 1;
 }
-return_t moduleSkeletonResourcesInitConstants(){
-	skeleton *tempSkl = moduleSkeletonAllocateStatic();
-	if(tempSkl == NULL){
-		return -1;
-	}
-	sklDefault(tempSkl);
-	return 1;
-}
 void moduleSkeletonResourcesReset(){
 	memoryRegion *region;
-	moduleSkeletonAnimationClear();
 	moduleSkeletonClear();
 	region = __SkeletonResourceArray.region->next;
 	while(region != NULL){
@@ -71,6 +62,7 @@ void moduleSkeletonResourcesReset(){
 		region = next;
 	}
 	__SkeletonResourceArray.region->next = NULL;
+	moduleSkeletonAnimationClear();
 	region = __SkeletonAnimationResourceArray.region->next;
 	while(region != NULL){
 		memoryRegion *next = (memoryRegion *)region->next;
@@ -78,6 +70,7 @@ void moduleSkeletonResourcesReset(){
 		region = next;
 	}
 	__SkeletonAnimationResourceArray.region->next = NULL;
+	moduleSkeletonAnimationFragmentClear();
 	region = __SkeletonAnimationFragmentResourceArray.region->next;
 	while(region != NULL){
 		memoryRegion *next = (memoryRegion *)region->next;
@@ -85,6 +78,7 @@ void moduleSkeletonResourcesReset(){
 		region = next;
 	}
 	__SkeletonAnimationFragmentResourceArray.region->next = NULL;
+	moduleSkeletonAnimationInstanceClear();
 	region = __SkeletonAnimationInstanceResourceArray.region->next;
 	while(region != NULL){
 		memoryRegion *next = (memoryRegion *)region->next;
@@ -95,7 +89,6 @@ void moduleSkeletonResourcesReset(){
 }
 void moduleSkeletonResourcesDelete(){
 	memoryRegion *region;
-	sklDelete(moduleSkeletonGetDefault());
 	moduleSkeletonClear();
 	region = __SkeletonResourceArray.region;
 	while(region != NULL){
@@ -126,9 +119,6 @@ void moduleSkeletonResourcesDelete(){
 	}
 }
 
-__HINT_INLINE__ skeleton *moduleSkeletonGetDefault(){
-	return memPoolFirst(__SkeletonResourceArray.region);
-}
 __HINT_INLINE__ skeleton *moduleSkeletonAllocateStatic(){
 	return memPoolAllocate(&__SkeletonResourceArray);
 }
@@ -155,6 +145,10 @@ __HINT_INLINE__ void moduleSkeletonFree(skeleton *const restrict resource){
 }
 skeleton *moduleSkeletonFind(const char *const restrict name){
 
+	if(strcmp(name, sklDefault.name) == 0){
+		return &sklDefault;
+	}
+
 	MEMORY_POOL_LOOP_BEGIN(__SkeletonResourceArray, i, skeleton *);
 
 		// Compare the resources' names.
@@ -169,11 +163,7 @@ skeleton *moduleSkeletonFind(const char *const restrict name){
 }
 void moduleSkeletonClear(){
 
-	MEMORY_POOL_OFFSET_LOOP_BEGIN(
-		__SkeletonResourceArray, i, skeleton *,
-		__SkeletonResourceArray.region,
-		(byte_t *)memPoolFirst(__SkeletonResourceArray.region) + RESOURCE_SKELETON_CONSTANTS * RESOURCE_SKELETON_BLOCK_SIZE
-	);
+	MEMORY_POOL_LOOP_BEGIN(__SkeletonResourceArray, i, skeleton *);
 
 		moduleSkeletonFree(i);
 		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
@@ -182,7 +172,7 @@ void moduleSkeletonClear(){
 
 		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
 
-	MEMORY_POOL_OFFSET_LOOP_END(__SkeletonResourceArray, i, return;);
+	MEMORY_POOL_LOOP_END(__SkeletonResourceArray, i, return;);
 
 }
 

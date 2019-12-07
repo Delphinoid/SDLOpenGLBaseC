@@ -17,12 +17,9 @@ extern memoryPool __ModelResourceArray;  // Contains models.
 /** Use compiler constants for loop offsets?     **/
 
 return_t moduleModelResourcesInit();
-return_t moduleModelResourcesInitConstants();
 void moduleModelResourcesReset();
 void moduleModelResourcesDelete();
 
-model *moduleModelGetDefault();
-model *moduleModelGetSprite();
 model *moduleModelAllocateStatic();
 model *moduleModelAllocate();
 void moduleModelFree(model *const restrict resource);

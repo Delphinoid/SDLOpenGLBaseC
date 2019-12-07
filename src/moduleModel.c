@@ -7,7 +7,11 @@
 memoryPool __ModelResourceArray;  // Contains models.
 
 return_t moduleModelResourcesInit(){
-	void *const memory = memAllocate(
+	void *memory;
+	if(mdlDefaultInit() < 0 || mdlSpriteInit() < 0){
+		return -1;
+	}
+	memory = memAllocate(
 		memPoolAllocationSize(
 			NULL,
 			RESOURCE_DEFAULT_MODEL_SIZE,
@@ -17,19 +21,6 @@ return_t moduleModelResourcesInit(){
 	if(memPoolCreate(&__ModelResourceArray, memory, RESOURCE_DEFAULT_MODEL_SIZE, RESOURCE_DEFAULT_MODEL_NUM) == NULL){
 		return -1;
 	}
-	return 1;
-}
-return_t moduleModelResourcesInitConstants(){
-	model *tempMdl = moduleModelAllocateStatic();
-	if(tempMdl == NULL){
-		return -1;
-	}
-	mdlDefault(tempMdl);
-	tempMdl = moduleModelAllocateStatic();
-	if(tempMdl == NULL){
-		return -1;
-	}
-	mdlCreateSprite(tempMdl);
 	return 1;
 }
 void moduleModelResourcesReset(){
@@ -45,8 +36,6 @@ void moduleModelResourcesReset(){
 }
 void moduleModelResourcesDelete(){
 	memoryRegion *region;
-	mdlDelete(moduleModelGetDefault());
-	mdlDelete(moduleModelGetSprite());
 	moduleModelClear();
 	region = __ModelResourceArray.region;
 	while(region != NULL){
@@ -56,12 +45,6 @@ void moduleModelResourcesDelete(){
 	}
 }
 
-__HINT_INLINE__ model *moduleModelGetDefault(){
-	return memPoolFirst(__ModelResourceArray.region);
-}
-__HINT_INLINE__ model *moduleModelGetSprite(){
-	return (model *)((byte_t *)memPoolFirst(__ModelResourceArray.region) + RESOURCE_MODEL_BLOCK_SIZE);
-}
 __HINT_INLINE__ model *moduleModelAllocateStatic(){
 	return memPoolAllocate(&__ModelResourceArray);
 }
@@ -88,6 +71,12 @@ __HINT_INLINE__ void moduleModelFree(model *const restrict resource){
 }
 model *moduleModelFind(const char *const restrict name){
 
+	if(strcmp(name, mdlDefault.name) == 0){
+		return &mdlDefault;
+	}else if(strcmp(name, mdlSprite.name) == 0){
+		return &mdlSprite;
+	}
+
 	MEMORY_POOL_LOOP_BEGIN(__ModelResourceArray, i, model *);
 
 		// Compare the resources' names.
@@ -102,11 +91,7 @@ model *moduleModelFind(const char *const restrict name){
 }
 void moduleModelClear(){
 
-	MEMORY_POOL_OFFSET_LOOP_BEGIN(
-		__ModelResourceArray, i, model *,
-		__ModelResourceArray.region,
-		(byte_t *)memPoolFirst(__ModelResourceArray.region) + RESOURCE_MODEL_CONSTANTS * RESOURCE_MODEL_BLOCK_SIZE
-	);
+	MEMORY_POOL_LOOP_BEGIN(__ModelResourceArray, i, model *);
 
 		moduleModelFree(i);
 		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
@@ -115,6 +100,6 @@ void moduleModelClear(){
 
 		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
 
-	MEMORY_POOL_OFFSET_LOOP_END(__ModelResourceArray, i, return;);
+	MEMORY_POOL_LOOP_END(__ModelResourceArray, i, return;);
 
 }

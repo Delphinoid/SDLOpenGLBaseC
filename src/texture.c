@@ -15,10 +15,25 @@
 #define TEXTURE_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Textures"FILE_PATH_DELIMITER_STRING
 #define TEXTURE_RESOURCE_DIRECTORY_LENGTH 19
 
+// Default texture.
+texture tDefault = {
+	.diffuseID = 0,
+	.normalID = 0,
+	.specularID = 0,
+	.format = GL_RGBA8,
+	.width = 32,
+	.height = 32,
+	.name = "default",
+	.mips = 1,
+	.translucent = 0
+};
+
 /** Maybe remove printf()s? **/
 
 void tInit(texture *const restrict tex){
-	tex->id = 0;
+	tex->diffuseID = 0;
+	tex->normalID = 0;
+	tex->specularID = 0;
 	tex->format = 0;
 	tex->width = 0;
 	tex->height = 0;
@@ -188,8 +203,8 @@ return_t tLoad(texture *const restrict tex, const char *const restrict prgPath, 
 		return 0;
 	}
 
-	tex->id = tCreate();
-	if(tex->id == 0){
+	tex->diffuseID = tCreate();
+	if(tex->diffuseID == 0){
 		glError = glGetError();
 		if(glError != GL_NO_ERROR){
 			printf("Error generating mip levels for texture \"%s\": %u\nPlease make sure you specified valid mips.\n", fullPath, glError);
@@ -288,14 +303,11 @@ return_t tLoad(texture *const restrict tex, const char *const restrict prgPath, 
 
 }
 
-return_t tDefault(texture *const restrict tex){
+return_t tDefaultInit(){
 
 	GLenum glError;
 	GLsizei pixels[1024];
 	int x, y;
-	const uint_least8_t mips = 1 + floor(log(fmax(tex->width, tex->height)));
-
-	tInit(tex);
 
 	for(y = 0; y < 32; ++y){
 		for(x = 0; x < 32; ++x){
@@ -315,46 +327,35 @@ return_t tDefault(texture *const restrict tex){
 		}
 	}
 
-	tex->id = tCreate();
+	tDefault.diffuseID = tCreate();
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 	glGenerateMipmap(GL_TEXTURE_2D);
-	tInitFiltering(tex->filtering, mips);
+	tInitFiltering(tDefault.filtering, tDefault.mips);
 
 	glError = glGetError();
 	if(glError != GL_NO_ERROR){
 		printf("Error generating default texture: %u\n", glError);
-		tDelete(tex);
 		return 0;
 	}
-
-	tex->name = memAllocate(8*sizeof(char));
-	if(tex->name == NULL){
-		/** Memory allocation failure. **/
-		return -1;
-	}
-	tex->name[0] = 'd';
-	tex->name[1] = 'e';
-	tex->name[2] = 'f';
-	tex->name[3] = 'a';
-	tex->name[4] = 'u';
-	tex->name[5] = 'l';
-	tex->name[6] = 't';
-	tex->name[7] = '\0';
-	tex->format = GL_RGBA8;
-	tex->width = 32;
-	tex->height = 32;
-	tex->mips = mips;
 
 	return 1;
 
 }
 
 void tDelete(texture *const restrict tex){
-	if(tex->id != 0){
-		glDeleteTextures(1, &tex->id);
-		tex->id = 0;
+	if(tex->diffuseID != 0){
+		glDeleteTextures(1, &tex->diffuseID);
+		tex->diffuseID = 0;
 	}
-	if(tex->name != NULL){
+	if(tex->normalID != 0){
+		glDeleteTextures(1, &tex->normalID);
+		tex->normalID = 0;
+	}
+	if(tex->specularID != 0){
+		glDeleteTextures(1, &tex->specularID);
+		tex->specularID = 0;
+	}
+	if(tex->name != NULL && tex->name != tDefault.name){
 		memFree(tex->name);
 	}
 }

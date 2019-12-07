@@ -30,11 +30,9 @@ extern memorySLink __SkeletonAnimationInstanceResourceArray;  // Contains sklAni
 /** Use compiler constants for loop offsets?     **/
 
 return_t moduleSkeletonResourcesInit();
-return_t moduleSkeletonResourcesInitConstants();
 void moduleSkeletonResourcesReset();
 void moduleSkeletonResourcesDelete();
 
-skeleton *moduleSkeletonGetDefault();
 skeleton *moduleSkeletonAllocateStatic();
 skeleton *moduleSkeletonAllocate();
 void moduleSkeletonFree(skeleton *const restrict resource);

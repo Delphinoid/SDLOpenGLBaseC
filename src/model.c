@@ -14,6 +14,30 @@
 return_t mdlWavefrontObjLoad(const char *const restrict filePath, vertexIndex_t *const vertexNum, vertex **const vertices, vertexIndexNum_t *const restrict indexNum, vertexIndex_t **const indices, size_t *const restrict lodNum, mdlLOD **const lods, char *const restrict sklPath);
 return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndexNum_t *indexNum, vertexIndex_t **indices, skeleton *const skl);
 
+// Default models.
+model mdlDefault = {
+	.skl = &sklDefault,
+	.lodNum = 0,
+	.lods = NULL,
+	.vertexNum = 0,
+	.indexNum = 0,
+	.vaoID = 0,
+	.vboID = 0,
+	.iboID = 0,
+	.name = "default"
+};
+model mdlSprite = {
+	.skl = &sklDefault,
+	.lodNum = 0,
+	.lods = NULL,
+	.vertexNum = 0,
+	.indexNum = 0,
+	.vaoID = 0,
+	.vboID = 0,
+	.iboID = 0,
+	.name = "sprite"
+};
+
 void mdlInit(model *const restrict mdl){
 	mdl->name = NULL;
 	mdl->vertexNum = 0;
@@ -44,7 +68,7 @@ static void mdlVertexAttributes(){
 	glEnableVertexAttribArray(4);
 }
 
-static return_t mdlGenBufferObjects(model *const restrict mdl, const char *const restrict filePath, const vertexIndex_t vertexNum, const vertex *const restrict vertices, const vertexIndexNum_t indexNum, const vertexIndex_t *const restrict indices){
+static return_t mdlGenerateBuffers(model *const restrict mdl, const char *const restrict filePath, const vertexIndex_t vertexNum, const vertex *const restrict vertices, const vertexIndexNum_t indexNum, const vertexIndex_t *const restrict indices){
 
 	if(vertexNum > 0){
 		if(indexNum > 0){
@@ -159,8 +183,8 @@ return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, 
 		return r;
 	}
 
-	/** Should mdlGenBufferObjects() be here? **/
-	r = mdlGenBufferObjects(mdl, fullPath, vertexNum, vertices, indexNum, indices);
+	/** Should mdlGenerateBuffers() be here? **/
+	r = mdlGenerateBuffers(mdl, fullPath, vertexNum, vertices, indexNum, indices);
 	mdl->lodNum = lodNum;
 	mdl->lods = lods;
 	memFree(vertices);
@@ -168,7 +192,7 @@ return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, 
 
 	if(mdl->skl == NULL){if(sklPath[0] == '\0'){
 		// Use the default skeleton.
-        mdl->skl = moduleSkeletonGetDefault();
+        mdl->skl = &sklDefault;
 	}else{
 		/** Check if the skeleton already exists. If not, load it. **/
 		skeleton *const tempSkl = moduleSkeletonAllocate();
@@ -182,7 +206,7 @@ return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, 
 					mdlDelete(mdl);
 					return -1;
 				}
-				mdl->skl = moduleSkeletonGetDefault();
+				mdl->skl = &sklDefault;
 			}else{
 				mdl->skl = tempSkl;
 			}
@@ -222,20 +246,10 @@ return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, 
 
 }
 
-return_t mdlDefault(model *const restrict mdl){
+return_t mdlDefaultInit(){
 
 	vertex vertices[24];
 	vertexIndex_t indices[36];
-
-	mdlInit(mdl);
-
-	mdl->name = memAllocate(8*sizeof(char));
-	if(mdl->name == NULL){
-		/** Memory allocation failure. **/
-		return -1;
-	}
-	mdl->vertexNum = 24;
-	mdl->indexNum = 36;
 
 	vertices[0].position = vec3New(1.f, -1.f, 1.f);
 	vertices[0].u = 0.f; vertices[0].v = 0.f;
@@ -409,57 +423,29 @@ return_t mdlDefault(model *const restrict mdl){
 	indices[34] = 21;
 	indices[35] = 23;
 
-	mdl->name[0] = 'd';
-	mdl->name[1] = 'e';
-	mdl->name[2] = 'f';
-	mdl->name[3] = 'a';
-	mdl->name[4] = 'u';
-	mdl->name[5] = 'l';
-	mdl->name[6] = 't';
-	mdl->name[7] = '\0';
-
-	// Use the default skeleton.
-	mdl->skl = moduleSkeletonGetDefault();
-
-	if(mdlGenBufferObjects(mdl, NULL, mdl->vertexNum, vertices, mdl->indexNum, indices) <= 0){
-		mdlDelete(mdl);
+	if(mdlGenerateBuffers(&mdlDefault, NULL, 24, vertices, 36, indices) <= 0){
 		return 0;
 	}
+
+	mdlDefault.vertexNum = 24;
+	mdlDefault.indexNum = 36;
 
 	return 1;
 
 }
 
 /** Change this function later **/
-return_t mdlCreateSprite(model *const restrict mdl){
+return_t mdlSpriteInit(){
 
 	GLenum glError;
 
-	mdlInit(mdl);
-
-	mdl->name = memAllocate(7*sizeof(char));
-	if(mdl->name == NULL){
-		/** Memory allocation failure. **/
-		return -1;
-	}
-	mdl->name[0] = 's';
-	mdl->name[1] = 'p';
-	mdl->name[2] = 'r';
-	mdl->name[3] = 'i';
-	mdl->name[4] = 't';
-	mdl->name[5] = 'e';
-	mdl->name[6] = '\0';
-
-	// Use the default skeleton.
-	mdl->skl = moduleSkeletonGetDefault();
-
 	// Create and bind the VAO
-	glGenVertexArrays(1, &mdl->vaoID);
-	glBindVertexArray(mdl->vaoID);
+	glGenVertexArrays(1, &mdlSprite.vaoID);
+	glBindVertexArray(mdlSprite.vaoID);
 
 	// Create and bind the VBO
-	glGenBuffers(1, &mdl->vboID);
-	glBindBuffer(GL_ARRAY_BUFFER, mdl->vboID);
+	glGenBuffers(1, &mdlSprite.vboID);
+	glBindBuffer(GL_ARRAY_BUFFER, mdlSprite.vboID);
 	glError = glGetError();
 	if(glError != GL_NO_ERROR){
 		printf("Error creating vertex buffer: %u\n", glError);
@@ -468,8 +454,8 @@ return_t mdlCreateSprite(model *const restrict mdl){
 
 	/** Should sprites use IBOs? Probably, but they're not working at the moment **/
 	// Create and bind the IBO
-	/*glGenBuffers(1, &mdl->iboID);
-	glBindBuffer(GL_ARRAY_BUFFER, mdl->iboID);
+	/*glGenBuffers(1, &mdlSprite.iboID);
+	glBindBuffer(GL_ARRAY_BUFFER, mdlSprite.iboID);
 	glError = glGetError();
 	if(glError != GL_NO_ERROR){
 		printf("Error creating index buffer: %u\n", glError);
@@ -485,8 +471,8 @@ return_t mdlCreateSprite(model *const restrict mdl){
 		printf("Error creating vertex array buffer: %u\n", glError);
 	}
 
-	mdl->vertexNum = 4;
-	mdl->indexNum = 6;
+	mdlSprite.vertexNum = 4;
+	mdlSprite.indexNum = 6;
 
 	return 1;
 
@@ -542,7 +528,7 @@ __FORCE_INLINE__ void mdlFindCurrentLOD(const model *const restrict mdl, GLsizei
 }
 
 void mdlDelete(model *const restrict mdl){
-	if(mdl->name != NULL){
+	if(mdl->name != NULL && mdl->name != mdlDefault.name && mdl->name != mdlSprite.name){
 		memFree(mdl->name);
 	}
 	if(mdl->lods != NULL){
@@ -557,22 +543,4 @@ void mdlDelete(model *const restrict mdl){
 	if(mdl->iboID != 0){
 		glDeleteBuffers(1, &mdl->iboID);
 	}
-	/**if(mdl->bones != NULL){
-		for(i = 0; i < mdl->boneNum; ++i){
-			memFree(mdl->boneNames[i]);
-		}
-		memFree(mdl->boneNames);
-	}
-	if(mdl->bodies != NULL){
-		for(i = 0; i < mdl->boneNum; ++i){
-			physRigidBodyDelete(&mdl->bodies[i]);
-		}
-		memFree(mdl->bodies);
-	}
-	if(mdl->hitboxes != NULL){
-		for(i = 0; i < mdl->boneNum; ++i){
-			memFree(mdl->hitboxes[i]);
-		}
-		memFree(mdl->hitboxes);
-	}**/
 }

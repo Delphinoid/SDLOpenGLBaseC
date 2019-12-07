@@ -15,15 +15,17 @@
 #endif
 
 /*
-** The texture struct should be 23 bytes (minus padding).
+** The texture struct should be 31 bytes (minus padding).
 ** This, plus the extra byte overhead for the active flag
 ** in memory pools, makes the final block divisible by
 ** 8 bytes, reducing waste on 32-bit platforms.
 */
 typedef struct {
 
-	// OpenGL texture ID.
-	GLuint id;
+	// OpenGL texture IDs.
+	GLuint diffuseID;
+	GLuint normalID;
+	GLuint specularID;
 
 	// The internal pixel format of the texture.
 	// Used for retrieving pixel data later on.
@@ -48,9 +50,11 @@ typedef struct {
 
 } texture;
 
+extern texture tDefault;
+
 void tInit(texture *const restrict tex);
 return_t tLoad(texture *const restrict tex, const char *const restrict prgPath, const char *const restrict filePath);
-return_t tDefault(texture *const restrict tex);
+return_t tDefaultInit();
 void tDelete(texture *const restrict tex);
 
 #endif

@@ -7,7 +7,11 @@
 memoryPool __TextureResourceArray;  // Contains textures.
 
 return_t moduleTextureResourcesInit(){
-	void *const memory = memAllocate(
+	void *memory;
+	if(tDefaultInit() < 0){
+		return -1;
+	}
+	memory = memAllocate(
 		memPoolAllocationSize(
 			NULL,
 			RESOURCE_DEFAULT_TEXTURE_SIZE,
@@ -17,14 +21,6 @@ return_t moduleTextureResourcesInit(){
 	if(memPoolCreate(&__TextureResourceArray, memory, RESOURCE_DEFAULT_TEXTURE_SIZE, RESOURCE_DEFAULT_TEXTURE_NUM) == NULL){
 		return -1;
 	}
-	return 1;
-}
-return_t moduleTextureResourcesInitConstants(){
-	texture *tempTex = moduleTextureAllocate();
-	if(tempTex == NULL){
-		return -1;
-	}
-	tDefault(tempTex);
 	return 1;
 }
 void moduleTextureResourcesReset(){
@@ -40,7 +36,6 @@ void moduleTextureResourcesReset(){
 }
 void moduleTextureResourcesDelete(){
 	memoryRegion *region;
-	tDelete(moduleTextureGetDefault());
 	moduleTextureClear();
 	region = __TextureResourceArray.region;
 	while(region != NULL){
@@ -50,9 +45,6 @@ void moduleTextureResourcesDelete(){
 	}
 }
 
-__HINT_INLINE__ texture *moduleTextureGetDefault(){
-	return memPoolFirst(__TextureResourceArray.region);
-}
 __HINT_INLINE__ texture *moduleTextureAllocateStatic(){
 	return memPoolAllocate(&__TextureResourceArray);
 }
@@ -79,6 +71,10 @@ __HINT_INLINE__ void moduleTextureFree(texture *const restrict resource){
 }
 texture *moduleTextureFind(const char *const restrict name){
 
+	if(strcmp(name, tDefault.name) == 0){
+		return &tDefault;
+	}
+
 	MEMORY_POOL_LOOP_BEGIN(__TextureResourceArray, i, texture *);
 
 		// Compare the resources' names.
@@ -93,11 +89,7 @@ texture *moduleTextureFind(const char *const restrict name){
 }
 void moduleTextureClear(){
 
-	MEMORY_POOL_OFFSET_LOOP_BEGIN(
-		__TextureResourceArray, i, texture *,
-		__TextureResourceArray.region,
-		(byte_t *)memPoolFirst(__TextureResourceArray.region) + RESOURCE_TEXTURE_CONSTANTS * RESOURCE_TEXTURE_BLOCK_SIZE
-	);
+	MEMORY_POOL_LOOP_BEGIN(__TextureResourceArray, i, texture *);
 
 		moduleTextureFree(i);
 		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
@@ -106,6 +98,6 @@ void moduleTextureClear(){
 
 		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
 
-	MEMORY_POOL_OFFSET_LOOP_END(__TextureResourceArray, i, return;);
+	MEMORY_POOL_LOOP_END(__TextureResourceArray, i, return;);
 
 }

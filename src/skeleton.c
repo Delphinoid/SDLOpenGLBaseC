@@ -20,6 +20,22 @@
 
 #define SKELETON_ANIM_FRAGMENT_START_CAPACITY 1
 
+// Default skeleton.
+static sklNode sklNodeDefault = {
+	.name = "root",
+	.parent = 0,
+	.defaultState = {
+		.position = {.x = 0.f, .y = 0.f, .z = 0.f},
+		.orientation = {.w = 1.f, .v = {.x = 0.f, .y = 0.f, .z = 0.f}},
+		.scale = {.x = 1.f, .y = 1.f, .z = 1.f}
+	}
+};
+skeleton sklDefault = {
+	.name = "default",
+	.boneNum = 1,
+	.bones = &sklNodeDefault
+};
+
 static void sklDefragment(skeleton *const restrict skl){
 	frameIndex_t i;
 	skl->bones = memReallocate(skl->bones, skl->boneNum*sizeof(sklNode));
@@ -105,6 +121,9 @@ return_t sklLoad(skeleton *const restrict skl, const char *const restrict prgPat
 
 				if(token != NULL){
 
+					size_t i, j;
+					float data[3][3];  // Position, orientation (in Eulers) and scale
+
 					size_t nameLen = strlen(token);
 					skl->bones[skl->boneNum].name = memAllocate((nameLen+1)*sizeof(char));
 					if(skl->bones[skl->boneNum].name == NULL){
@@ -116,8 +135,6 @@ return_t sklLoad(skeleton *const restrict skl, const char *const restrict prgPat
 					memcpy(skl->bones[skl->boneNum].name, token, nameLen);
 					skl->bones[skl->boneNum].name[nameLen] = '\0';
 
-					float data[3][3];  // Position, orientation (in Eulers) and scale
-					size_t i, j;
 					for(i = 0; i < 3; ++i){
 						for(j = 0; j < 3; ++j){
 							token = strtok(NULL, "/");
@@ -179,43 +196,6 @@ return_t sklLoad(skeleton *const restrict skl, const char *const restrict prgPat
 	return 1;
 
 }
-return_t sklDefault(skeleton *const restrict skl){
-	skl->name = memAllocate(8*sizeof(char));
-	if(skl->name == NULL){
-		/** Memory allocation failure. **/
-		return -1;
-	}
-	skl->bones = memAllocate(sizeof(sklNode));
-	if(skl->bones == NULL){
-		/** Memory allocation failure. **/
-		memFree(skl->name);
-		return -1;
-	}
-	skl->bones[0].name = memAllocate(5*sizeof(char));
-	if(skl->bones[0].name == NULL){
-		/** Memory allocation failure. **/
-		memFree(skl->bones);
-		memFree(skl->name);
-		return -1;
-	}
-	skl->name[0] = 'd';
-	skl->name[1] = 'e';
-	skl->name[2] = 'f';
-	skl->name[3] = 'a';
-	skl->name[4] = 'u';
-	skl->name[5] = 'l';
-	skl->name[6] = 't';
-	skl->name[7] = '\0';
-	skl->boneNum = 1;
-	skl->bones[0].name[0] = 'r';
-	skl->bones[0].name[1] = 'o';
-	skl->bones[0].name[2] = 'o';
-	skl->bones[0].name[3] = 't';
-	skl->bones[0].name[4] = '\0';
-	boneInit(&skl->bones[0].defaultState);
-	skl->bones[0].parent = 0;
-	return 1;
-}
 boneIndex_t sklFindBone(const skeleton *const restrict skl, const boneIndex_t id, const char *const restrict name){
 	/*boneIndex_t i;
 	for(i = 0; i < skl->boneNum; ++i){
@@ -254,10 +234,10 @@ boneIndex_t sklFindBone(const skeleton *const restrict skl, const boneIndex_t id
 	return (boneIndex_t)-1;
 }
 void sklDelete(skeleton *const restrict skl){
-	if(skl->name != NULL){
+	if(skl->name != NULL && skl->name != sklDefault.name){
 		memFree(skl->name);
 	}
-	if(skl->bones != NULL){
+	if(skl->bones != NULL && skl->bones != &sklNodeDefault){
 		sklNode *n = skl->bones;
 		const sklNode *const nLast = &n[skl->boneNum];
 		for(; n < nLast; ++n){
@@ -373,8 +353,9 @@ return_t sklaLoad(sklAnim *const restrict skla, const char *const restrict prgPa
 				if(currentCommand != 1){
 					// Resize the bone name array if necessary.
 					if(skla->boneNum == boneCapacity){
+						char **tempBuffer;
 						boneCapacity *= 2;
-						char **const tempBuffer = memReallocate(skla->bones, boneCapacity*sizeof(char *));
+						tempBuffer = memReallocate(skla->bones, boneCapacity*sizeof(char *));
 						if(tempBuffer == NULL){
 							/** Memory allocation failure. **/
 							sklaDelete(skla);
@@ -565,7 +546,7 @@ return_t sklaLoad(sklAnim *const restrict skla, const char *const restrict prgPa
 
 }
 /** TEMPORARY **/
-return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, const char *filePath){
+return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, const char *filePath, const int invert){
 	/*
 	** Temporary function by 8426THMY.
 	*/
@@ -757,10 +738,12 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, co
 								//Set the bone's scale!
 								currentState->scale = vec3New(1.f, 1.f, 1.f);
 
-								/** SMD animations are different to how I do them. **/
+								/** Some SMD animations are different to how I do animations. **/
 								/** See skliGenerateBoneState for more information. **/
-								bone thing = boneInvert(skl->bones[boneID].defaultState);
-								*currentState = boneTransformAppend(thing, *currentState);
+								if(invert){
+									bone thing = boneInvert(skl->bones[boneID].defaultState);
+									*currentState = boneTransformAppend(thing, *currentState);
+								}
 
 							}else{
 								printf("Error loading skeletal animtion!\n"
@@ -947,8 +930,8 @@ static __FORCE_INLINE__ void sklaiUpdateFragments(sklAnimInstance *const restric
 				}else{
 					// Advance animator, update the blend and go to the next fragment.
 					animAdvance(&frag->animator, &frag->animation->animData, elapsedTimeMod);
-					animGetRenderData(&frag->animator, &frag->animation->animData, interpT,
-									  &frag->animStartFrame, &frag->animEndFrame, &frag->animInterpT);
+					animRenderState(&frag->animator, &frag->animation->animData, interpT,
+									&frag->animStartFrame, &frag->animEndFrame, &frag->animInterpT);
 					frag->animBlendProgress += elapsedTimeMod;
 					next->animBlendInterpT = frag->animBlendProgress / frag->animBlendTime;
 				}
@@ -966,8 +949,8 @@ static __FORCE_INLINE__ void sklaiUpdateFragments(sklAnimInstance *const restric
 
 		// Advance animator and exit.
 		animAdvance(&frag->animator, &frag->animation->animData, elapsedTimeMod);
-		animGetRenderData(&frag->animator, &frag->animation->animData, interpT,
-		                  &frag->animStartFrame, &frag->animEndFrame, &frag->animInterpT);
+		animRenderState(&frag->animator, &frag->animation->animData, interpT,
+		                &frag->animStartFrame, &frag->animEndFrame, &frag->animInterpT);
 
 	}
 
@@ -1023,8 +1006,8 @@ void sklaiGenerateAnimState(sklAnimInstance *sklai, bone *skeletonState, const b
 		size_t startFrame;
 		size_t endFrame;
 		float animInterpT;
-		animGetRenderData(&sklai->animFrags[fragmentID].animator, &sklai->animFrags[fragmentID].currentAnim->animData, interpT,
-		                  &startFrame, &endFrame, &animInterpT);
+		animRenderState(&sklai->animFrags[fragmentID].animator, &sklai->animFrags[fragmentID].currentAnim->animData, interpT,
+		                &startFrame, &endFrame, &animInterpT);
 
 		* Loop through each bone in the current animation fragment, running interpolation and writing to skeletonState. *
 		for(i = 0; i < sklai->animFrags[fragmentID].currentAnim->boneNum; ++i){

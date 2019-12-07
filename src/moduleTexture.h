@@ -17,11 +17,9 @@ extern memoryPool __TextureResourceArray;  // Contains textures.
 /** Use compiler constants for loop offsets?     **/
 
 return_t moduleTextureResourcesInit();
-return_t moduleTextureResourcesInitConstants();
 void moduleTextureResourcesReset();
 void moduleTextureResourcesDelete();
 
-texture *moduleTextureGetDefault();
 texture *moduleTextureAllocateStatic();
 texture *moduleTextureAllocate();
 void moduleTextureFree(texture *const restrict resource);
