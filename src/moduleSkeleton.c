@@ -117,6 +117,7 @@ void moduleSkeletonResourcesDelete(){
 		memFree(region->start);
 		region = next;
 	}
+	sklDelete(&sklDefault);
 }
 
 __HINT_INLINE__ skeleton *moduleSkeletonAllocateStatic(){

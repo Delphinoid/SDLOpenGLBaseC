@@ -43,6 +43,7 @@ void moduleTextureResourcesDelete(){
 		memFree(region->start);
 		region = next;
 	}
+	tDelete(&tDefault);
 }
 
 __HINT_INLINE__ texture *moduleTextureAllocateStatic(){

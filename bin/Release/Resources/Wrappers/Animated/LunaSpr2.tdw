@@ -1,4 +1,4 @@
 animation {
 	loop -1
-	frameMacro 31/x 33.33 0/0/320/180 "Luna\Luna.tdt"
+	frameMacro 31/x 0/0/320/180 33.33 "Luna\Luna.tdt"
 }

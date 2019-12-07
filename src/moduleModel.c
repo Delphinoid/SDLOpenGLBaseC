@@ -43,6 +43,8 @@ void moduleModelResourcesDelete(){
 		memFree(region->start);
 		region = next;
 	}
+	mdlDelete(&mdlDefault);
+	mdlDelete(&mdlSprite);
 }
 
 __HINT_INLINE__ model *moduleModelAllocateStatic(){

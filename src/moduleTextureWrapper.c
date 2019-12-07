@@ -39,6 +39,7 @@ void moduleTextureWrapperResourcesDelete(){
 		memFree(region->start);
 		region = next;
 	}
+	twDelete(&twDefault);
 }
 
 __HINT_INLINE__ textureWrapper *moduleTextureWrapperAllocateStatic(){

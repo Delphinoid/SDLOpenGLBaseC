@@ -92,11 +92,6 @@ int main(int argc, char **argv){
 
 	printf("%u\n", memPoolBlockSize(RESOURCE_DEFAULT_CAMERA_SIZE)*RESOURCE_DEFAULT_CAMERA_NUM);
 
-	moduleTextureResourcesInitConstants();
-	moduleTextureWrapperResourcesInitConstants();
-	moduleSkeletonResourcesInitConstants();
-	moduleModelResourcesInitConstants();
-
 	// Textures.
 	texture *tempTex = moduleTextureAllocate();
 	//tLoad(tempTex, prgPath, "Luna"FILE_PATH_DELIMITER_STRING"Luna.tdt");
