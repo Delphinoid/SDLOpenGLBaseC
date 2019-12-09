@@ -16,6 +16,7 @@ List of features to be implemented in order of priority (or in reality, in order
 
 List of potential modifications and ideas:
 * Replace strtok() with a better function.
+* Touch up skeletal animations. Animation fragments seem silly.
 * Research the Featherstone method for object kinematic chains.
 * Research post stabilization to prevent drift.
 * Every vertex of every physics object's collider should ideally not be transformed unless it needs to be.

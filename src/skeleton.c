@@ -722,18 +722,14 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, co
 								currentState->orientation = quatNewEuler(x, y, z);
 
 								//The Source Engine uses Z as its up axis, so we need to fix that with the root bone.
-								/**if(boneID == 0){
-									quat rotateUp;
-									rotateUp.w = 0.70710678118654752440084436210485f;
-									rotateUp.v.x = -0.70710678118654752440084436210485f;
-									rotateUp.v.y = 0.f;
-									rotateUp.v.z = 0.f;
-									currentState->orientation = quatQMultQ(rotateUp, currentState->orientation);
-
-									y = currentState->position.y;
-									currentState->position.y = currentState->position.z;
-									currentState->position.z = y;
-								}**/
+								if(boneID == 0 && invert){
+									bone rotateUp = {
+										.position.x = 0.f, .position.y = 0.f, .position.z = 0.f,
+										.orientation.w = 0.70710678118654752440084436210485f, .orientation.v.x = -0.70710678118654752440084436210485f, .orientation.v.y = 0.f, .orientation.v.z = 0.f,
+										.scale.x = 1.f, .scale.y = 1.f, .scale.z = 1.f
+									};
+									*currentState = boneTransformAppend(rotateUp, *currentState);
+								}
 
 								//Set the bone's scale!
 								currentState->scale = vec3New(1.f, 1.f, 1.f);
