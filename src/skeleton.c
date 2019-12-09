@@ -722,7 +722,7 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, co
 								currentState->orientation = quatNewEuler(x, y, z);
 
 								//The Source Engine uses Z as its up axis, so we need to fix that with the root bone.
-								if(boneID == 0){
+								/**if(boneID == 0){
 									quat rotateUp;
 									rotateUp.w = 0.70710678118654752440084436210485f;
 									rotateUp.v.x = -0.70710678118654752440084436210485f;
@@ -733,7 +733,7 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, co
 									y = currentState->position.y;
 									currentState->position.y = currentState->position.z;
 									currentState->position.z = y;
-								}
+								}**/
 
 								//Set the bone's scale!
 								currentState->scale = vec3New(1.f, 1.f, 1.f);
@@ -1314,10 +1314,10 @@ void skliGenerateBoneState(const sklInstance *const restrict skli, const boneInd
 		if(anim->flags == SKELETON_ANIM_INSTANCE_OVERWRITE){
 			// Set if the animation is not additive. Start from the
 			// base state so custom transformations aren't lost.
-			*state = boneTransformCombine(baseState, animationState);
+			*state = boneTransformAppend(baseState, animationState);
 		}else{
 			// Add the changes in lastState to skeletonState if the animation is additive.
-			*state = boneTransformCombine(*state, animationState);
+			*state = boneTransformAppend(*state, animationState);
 		}
 
 		anim = moduleSkeletonAnimationInstanceNext(anim);
