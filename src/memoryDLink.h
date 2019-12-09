@@ -3,24 +3,22 @@
 
 #include "memoryShared.h"
 
-/*
-** Doubly-linked list allocator.
-**
-** Effectively a free-list allocator
-** but each block has pointers to the
-** next and previous elements in the
-** array it is a part of, contained
-** in a header.
-**
-** Free-list pointers point to the
-** data, not the beginning of the block.
-**
-** It can also be treated as an object
-** pool if necessary.
-**
-** Block format:
-** [ Next block pointer + active flag ][ Previous block pointer ][ Data (or free-list pointer) ]
-*/
+// Doubly-linked list allocator.
+//
+// Effectively a free-list allocator
+// but each block has pointers to the
+// next and previous elements in the
+// array it is a part of, contained
+// in a header.
+//
+// Free-list pointers point to the
+// data, not the beginning of the block.
+//
+// It can also be treated as an object
+// pool if necessary.
+//
+// Block format:
+// [ Next block pointer + active flag ][ Previous block pointer ][ Data (or free-list pointer) ]
 
 #define MEMORY_DLINK_BLOCK_ACTIVE        (uintptr_t)0x00
 #define MEMORY_DLINK_BLOCK_INACTIVE      (uintptr_t)0x01

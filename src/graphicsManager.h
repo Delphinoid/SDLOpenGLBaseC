@@ -54,9 +54,9 @@ typedef struct {
 	GLuint vpMatrixID;
 	GLuint textureFragmentID;
 	GLuint boneArrayID[SKELETON_MAX_BONE_NUM];
-	/*GLuint bonePositionArrayID[SKELETON_MAX_BONE_NUM];
+	/**GLuint bonePositionArrayID[SKELETON_MAX_BONE_NUM];
 	GLuint boneOrientationArrayID[SKELETON_MAX_BONE_NUM];
-	GLuint boneScaleArrayID[SKELETON_MAX_BONE_NUM];*/
+	GLuint boneScaleArrayID[SKELETON_MAX_BONE_NUM];**/
 	GLuint alphaID;
 	GLuint mipID;
 

@@ -39,12 +39,10 @@ __FORCE_INLINE__ void memStackClear(memoryStack *const restrict stack){
 
 void *memStackExtend(memoryStack *const restrict stack, void *const start, const size_t bytes, const size_t length){
 
-	/*
-	** Extends the memory allocator.
-	** Its logical function is similar to a
-	** realloc, but it creates a new chunk
-	** and links it.
-	*/
+	// Extends the memory allocator.
+	// Its logical function is similar to a
+	// realloc, but it creates a new chunk
+	// and links it.
 
 	if(start){
 

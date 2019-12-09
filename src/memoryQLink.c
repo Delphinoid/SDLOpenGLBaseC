@@ -8,10 +8,8 @@ void memQLinkInit(memoryQLink *const restrict array){
 
 void *memQLinkCreate(memoryQLink *const restrict array, void *const start, const size_t bytes, const size_t length){
 
-	/*
-	** Initialize an array allocator with "length"-many
-	** elements of "bytes" size.
-	*/
+	// Initialize an array allocator with "length"-many
+	// elements of "bytes" size.
 
 	if(start){
 
@@ -32,10 +30,8 @@ void *memQLinkCreate(memoryQLink *const restrict array, void *const start, const
 
 void *memQLinkCreateInit(memoryQLink *const restrict array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
 
-	/*
-	** Initialize an array allocator with "length"-many
-	** elements of "bytes" size.
-	*/
+	// Initialize an array allocator with "length"-many
+	// elements of "bytes" size.
 
 	if(start){
 
@@ -56,11 +52,9 @@ void *memQLinkCreateInit(memoryQLink *const restrict array, void *const start, c
 
 void *memQLinkAllocate(memoryQLink *const restrict array){
 
-	/*
-	** Retrieves a new block of memory from the array
-	** allocator and updates the "free" pointer.
-	** Unspecified behaviour with variable element sizes.
-	*/
+	// Retrieves a new block of memory from the array
+	// allocator and updates the "free" pointer.
+	// Unspecified behaviour with variable element sizes.
 
 	byte_t *const r = array->free;
 	if(r){
@@ -123,10 +117,8 @@ void *memQLinkAllocateSorted(memoryQLink *const restrict array, void **const sta
 
 void memQLinkFree(memoryQLink *const restrict array, void *const element){
 
-	/*
-	** Removes an element from an array
-	** and frees the block.
-	*/
+	// Removes an element from an array
+	// and frees the block.
 
 	memQLinkDataGetFlags(element) = (uintptr_t)array->free | MEMORY_QLINK_BLOCK_INACTIVE;
 	array->free = element;
@@ -135,10 +127,8 @@ void memQLinkFree(memoryQLink *const restrict array, void *const element){
 
 void memQLinkFreeSorted(memoryQLink *const restrict array, void **const startA, void **const startB, void *const element){
 
-	/*
-	** Removes an element from a sorted
-	** array and frees the block.
-	*/
+	// Removes an element from a sorted
+	// array and frees the block.
 
 	byte_t *temp;
 
@@ -281,12 +271,10 @@ void memQLinkClearInit(memoryQLink *const restrict array, void (*func)(void *con
 
 void *memQLinkExtend(memoryQLink *const restrict array, void *const start, const size_t bytes, const size_t length){
 
-	/*
-	** Extends the memory allocator.
-	** Its logical function is similar to a
-	** realloc, but it creates a new chunk
-	** and links it.
-	*/
+	// Extends the memory allocator.
+	// Its logical function is similar to a
+	// realloc, but it creates a new chunk
+	// and links it.
 
 	if(start){
 
@@ -305,12 +293,10 @@ void *memQLinkExtend(memoryQLink *const restrict array, void *const start, const
 
 void *memQLinkExtendInit(memoryQLink *const restrict array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
 
-	/*
-	** Extends the memory allocator.
-	** Its logical function is similar to a
-	** realloc, but it creates a new chunk
-	** and links it.
-	*/
+	// Extends the memory allocator.
+	// Its logical function is similar to a
+	// realloc, but it creates a new chunk
+	// and links it.
 
 	if(start){
 

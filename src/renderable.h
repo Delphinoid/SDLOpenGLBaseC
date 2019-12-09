@@ -30,6 +30,7 @@ typedef struct {
 
 	// Render data.
 	float alpha;          // Updated alpha.
+	/** Is this really worth it? **/
 	float alphaCurrent;   // Current alpha for rendering.
 	float alphaPrevious;  // Previous alpha for rendering.
 

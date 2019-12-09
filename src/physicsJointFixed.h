@@ -3,11 +3,9 @@
 
 #include "physicsConstraint.h"
 
-/*
-** Keeps two bodies rigidly connected, preventing
-** relative translational or rotational changes
-** from occurring between them.
-*/
+// Keeps two bodies rigidly connected, preventing
+// relative translational or rotational changes
+// from occurring between them.
 
 typedef struct physRigidBody physRigidBody;
 typedef struct physJoint physJoint;

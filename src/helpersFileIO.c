@@ -118,7 +118,7 @@ __HINT_INLINE__ char *fileGenerateResourceName(const char *const restrict resour
 
 	// Check if there's a file extension.
 	// If there is, remove it.
-	/*size_t extension = 0;
+	/**size_t extension = 0;
 	char *c = resource[length-1];
 	while(c != resource){
 		if(*c == '.'){
@@ -128,13 +128,13 @@ __HINT_INLINE__ char *fileGenerateResourceName(const char *const restrict resour
 			break;
 		}
 		--c;
-	}*/
+	}**/
 
 	// Allocate the name.
-	name = memAllocate((length/*-extension*/+1)*sizeof(char));
+	name = memAllocate((length/**-extension**/+1)*sizeof(char));
 	if(name != NULL){
-		memcpy(name, resource, length/*-extension*/);
-		name[length/*-extension*/] = '\0';
+		memcpy(name, resource, length/**-extension**/);
+		name[length/**-extension**/] = '\0';
 	}
 
 	return name;

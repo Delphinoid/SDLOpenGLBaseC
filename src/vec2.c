@@ -302,9 +302,7 @@ __HINT_INLINE__ float vec2DotP(const vec2 *const restrict v1, const vec2 *const 
 }
 
 __HINT_INLINE__ vec2 vec2Lerp(const vec2 v1, const vec2 v2, const float t){
-	/*
-	** r = v1 + (v2 - v1) * t
-	*/
+	// r = v1 + (v2 - v1) * t
 	const vec2 r = {
 		.x = v1.x + (v2.x - v1.x) * t,
 		.y = v1.y + (v2.y - v1.y) * t
@@ -312,23 +310,17 @@ __HINT_INLINE__ vec2 vec2Lerp(const vec2 v1, const vec2 v2, const float t){
 	return r;
 }
 __HINT_INLINE__ void vec2LerpP1(vec2 *const restrict v1, const vec2 *const restrict v2, const float t){
-	/*
-	** r = v1 + (v2 - v1) * t
-	*/
+	// r = v1 + (v2 - v1) * t
 	v1->x += (v2->x - v1->x) * t;
 	v1->y += (v2->y - v1->y) * t;
 }
 __HINT_INLINE__ void vec2LerpP2(const vec2 *const restrict v1, vec2 *const restrict v2, const float t){
-	/*
-	** r = v1 + (v2 - v1) * t
-	*/
+	// r = v1 + (v2 - v1) * t
 	v2->x = v1->x + (v2->x - v1->x) * t;
 	v2->y = v1->y + (v2->y - v1->y) * t;
 }
 __HINT_INLINE__ void vec2LerpPR(const vec2 *const restrict v1, const vec2 *const restrict v2, const float t, vec2 *const restrict r){
-	/*
-	** r = v1 + (v2 - v1) * t
-	*/
+	// r = v1 + (v2 - v1) * t
 	r->x = v1->x + (v2->x - v1->x) * t;
 	r->y = v1->y + (v2->y - v1->y) * t;
 }

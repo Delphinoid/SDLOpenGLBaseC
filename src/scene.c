@@ -50,10 +50,7 @@ __FORCE_INLINE__ void scnFree(scene *const restrict scn, object **const restrict
 #include "moduleObject.h"
 return_t scnUpdate(scene *const restrict scn, const float elapsedTime/**, const float dt**/){
 
-	/*
-	** Update each object in the scene.
-	*/
-
+	// Update each object in the scene.
 	MEMORY_POOL_LOOP_BEGIN(scn->objects, i, object **);
 
 		// Update each object in the scene.
@@ -66,11 +63,7 @@ return_t scnUpdate(scene *const restrict scn, const float elapsedTime/**, const 
 }
 
 void scnReset(scene *const restrict scn){
-
-	/*
-	** Free each of the scene's memory regions.
-	*/
-
+	// Free each of the scene's memory regions.
 	memoryRegion *region = scn->objects.region->next;
 	while(region != NULL){
 		memoryRegion *next = memAllocatorNext(region);
@@ -79,15 +72,10 @@ void scnReset(scene *const restrict scn){
 	}
 	scn->objects.region->next = NULL;
 	physIslandDelete(&scn->island);
-
 }
 
 void scnDelete(scene *const restrict scn){
-
-	/*
-	** Free each of the scene's memory regions.
-	*/
-
+	// Free each of the scene's memory regions.
 	memoryRegion *region = scn->objects.region;
 	while(region != NULL){
 		memoryRegion *next = memAllocatorNext(region);
@@ -95,5 +83,4 @@ void scnDelete(scene *const restrict scn){
 		region = next;
 	}
 	physIslandDelete(&scn->island);
-
 }

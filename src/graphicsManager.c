@@ -12,9 +12,7 @@
 
 static return_t gfxMngrInitSDL(graphicsManager *const restrict gfxMngr){
 
-	/*
-	** Initialize SDL.
-	*/
+	// Initialize SDL.
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0){
 		printf("Error initializing SDL library: %s\n", SDL_GetError());
 		return 0;
@@ -53,9 +51,7 @@ static return_t gfxMngrInitSDL(graphicsManager *const restrict gfxMngr){
 
 static return_t gfxMngrInitOGL(graphicsManager *const restrict gfxMngr){
 
-	/*
-	** Initialize GLEW.
-	*/
+	// Initialize GLEW.
 	glewExperimental = GL_TRUE;
 
 	GLenum glewError = glewInit();
@@ -67,9 +63,7 @@ static return_t gfxMngrInitOGL(graphicsManager *const restrict gfxMngr){
 	glGetError();
 
 
-	/*
-	** Initialize OpenGL.
-	*/
+	// Initialize OpenGL.
 	glClearColor(0.f, 0.f, 0.f, 0.f);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -90,9 +84,7 @@ static return_t gfxMngrInitOGL(graphicsManager *const restrict gfxMngr){
 
 static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, const char *const restrict prgPath){
 
-	/*
-	** Vertex shader.
-	*/
+	// Vertex shader.
 	const char *const restrict vertexShaderExtra = "Resources"FILE_PATH_DELIMITER_STRING"Shaders"FILE_PATH_DELIMITER_STRING"s_vertex.gls";
 	const size_t pathLen = strlen(prgPath);
 	const size_t vsExtraLen = strlen(vertexShaderExtra);
@@ -151,9 +143,7 @@ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, cons
  	}
 
 
-	/*
-	** Fragment shader.
-	*/
+	// Fragment shader.
 	const char *const restrict fragmentShaderExtra = "Resources"FILE_PATH_DELIMITER_STRING"Shaders"FILE_PATH_DELIMITER_STRING"s_fragment.gls";
 	const size_t fsExtraLen = strlen(fragmentShaderExtra);
 	char *const restrict fragmentShaderPath = memAllocate((pathLen+fsExtraLen+1)*sizeof(char));
@@ -209,9 +199,7 @@ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, cons
  	}
 
 
-	/*
-	** Link the program.
-	*/
+	// Link the program.
 	gfxMngr->shaderProgramID = glCreateProgram();
  	glAttachShader(gfxMngr->shaderProgramID, gfxMngr->vertexShaderID);
  	glAttachShader(gfxMngr->shaderProgramID, gfxMngr->fragmentShaderID);
@@ -226,9 +214,7 @@ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, cons
 	glUseProgram(gfxMngr->shaderProgramID);
 
 
-	/*
-	** Link the uniform variables.
-	*/
+	// Link the uniform variables.
 	gfxMngr->vpMatrixID        = glGetUniformLocation(gfxMngr->shaderProgramID, "vpMatrix");
 	gfxMngr->textureFragmentID = glGetUniformLocation(gfxMngr->shaderProgramID, "textureFragment");
 	gfxMngr->alphaID           = glGetUniformLocation(gfxMngr->shaderProgramID, "alpha");
@@ -248,14 +234,14 @@ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, cons
 		uniformString[10+numLen+1] = '\0';
 		gfxMngr->boneArrayID[i] = glGetUniformLocation(gfxMngr->shaderProgramID, uniformString);
 
-		/*memcpy(&uniformString[10+numLen], "].position\0", 11*sizeof(char));
+		/**memcpy(&uniformString[10+numLen], "].position\0", 11*sizeof(char));
 		gfxMngr->bonePositionArrayID[i] = glGetUniformLocation(gfxMngr->shaderProgramID, uniformString);
 
 		memcpy(&uniformString[10+numLen], "].orientation\0", 14*sizeof(char));
 		gfxMngr->boneOrientationArrayID[i] = glGetUniformLocation(gfxMngr->shaderProgramID, uniformString);
 
 		memcpy(&uniformString[10+numLen], "].scale\0", 8*sizeof(char));
-		gfxMngr->boneScaleArrayID[i] = glGetUniformLocation(gfxMngr->shaderProgramID, uniformString);*/
+		gfxMngr->boneScaleArrayID[i] = glGetUniformLocation(gfxMngr->shaderProgramID, uniformString);**/
 
 	}
 
@@ -290,9 +276,7 @@ static return_t gfxMngrCreateBuffers(graphicsManager *const restrict gfxMngr){
 	// Set lastTexID to 0 since we haven't rendered anything yet.
 	gfxMngr->lastTexID = 0;
 
-	/*
-	** VAO and VBO for rendering sprites.
-	*/
+	// VAO and VBO for rendering sprites.
 	// Create and bind the sprite VAO.
 	/**glGenVertexArrays(1, &gfxMngr->spriteVaoID);
 	glBindVertexArray(gfxMngr->spriteVaoID);

@@ -152,11 +152,8 @@ void (* const physColliderGenerateMassJumpTable[COLLIDER_TYPE_NUM])(
 };
 __FORCE_INLINE__ void physColliderGenerateMass(collider *const restrict local, float *const restrict mass, float *const restrict inverseMass, vec3 *const restrict centroid, const float **const vertexMassArray){
 
-	/*
-	** Calculates the collider's center of mass
-	** and default AABB. Returns the total mass.
-	*/
-
+	// Calculates the collider's center of mass
+	// and default AABB. Returns the total mass.
 	physColliderGenerateMassJumpTable[local->type](&local->data, mass, inverseMass, centroid, vertexMassArray);
 
 }
@@ -267,10 +264,7 @@ void (* const physColliderGenerateMomentJumpTable[COLLIDER_TYPE_NUM])(
 };
 __FORCE_INLINE__ void physColliderGenerateMoment(collider *const restrict local, mat3 *const restrict inertiaTensor, vec3 *const restrict centroid, const float **const vertexMassArray){
 
-	/*
-	** Calculates the collider's moment of inertia tensor.
-	*/
-
+	// Calculates the collider's moment of inertia tensor.
 	physColliderGenerateMomentJumpTable[local->type](&local->data, inertiaTensor, centroid, vertexMassArray);
 
 }
@@ -311,10 +305,7 @@ return_t (* const physColliderTransformJumpTable[COLLIDER_TYPE_NUM])(
 };
 __FORCE_INLINE__ return_t physColliderTransform(physCollider *const restrict c, physIsland *const restrict island){
 
-	/*
-	** Transforms a physics collider, updating its AABB in the AABB tree.
-	*/
-
+	// Transforms a physics collider, updating its AABB in the AABB tree.
 	return physColliderTransformJumpTable[c->c.type](c, island);
 
 }
@@ -322,15 +313,13 @@ __FORCE_INLINE__ return_t physColliderTransform(physCollider *const restrict c, 
 
 physContactPair *physColliderFindContact(const physCollider *const c1, const physCollider *const c2, physContactPair **const previous, physContactPair **const next){
 
-	/*
-	** Find a pair from a previous successful narrowphase collision check.
-	**
-	** Pairs are cached in increasing order of colliderB address, so once we find
-	** an address greater than the supplied address we can perform an early exit.
-	**
-	** We also need to return the pair directly before it in the SLink
-	** so we can perform an insertion or removal later on if we need to.
-	*/
+	// Find a pair from a previous successful narrowphase collision check.
+	//
+	// Pairs are cached in increasing order of colliderB address, so once we find
+	// an address greater than the supplied address we can perform an early exit.
+	//
+	// We also need to return the pair directly before it in the SLink
+	// so we can perform an insertion or removal later on if we need to.
 
 	physContactPair *p = NULL;
 	physContactPair *i = c1->contactCache;
@@ -353,15 +342,13 @@ physContactPair *physColliderFindContact(const physCollider *const c1, const phy
 }
 physSeparationPair *physColliderFindSeparation(const physCollider *const c1, const physCollider *const c2, physSeparationPair **const previous, physSeparationPair **const next){
 
-	/*
-	** Find a pair from a previous failed narrowphase collision check.
-	**
-	** Pairs are cached in increasing order of colliderB address, so once we find
-	** an address greater than the supplied address we can perform an early exit.
-	**
-	** We also need to return the pair directly before it in the SLink
-	** so we can perform an insertion or removal later on if we need to.
-	*/
+	// Find a pair from a previous failed narrowphase collision check.
+	//
+	// Pairs are cached in increasing order of colliderB address, so once we find
+	// an address greater than the supplied address we can perform an early exit.
+	//
+	// We also need to return the pair directly before it in the SLink
+	// so we can perform an insertion or removal later on if we need to.
 
 	physSeparationPair *p = NULL;
 	physSeparationPair *i = c1->separationCache;
@@ -389,9 +376,7 @@ void physColliderUpdateContacts(physCollider *const c, const float frequency){
 void physColliderUpdateContacts(physCollider *const c){
 #endif
 
-	/*
-	** Removes any contact that has been inactive for too long.
-	*/
+	// Removes any contact that has been inactive for too long.
 
 	physContactPair *i = c->contactCache;
 
@@ -420,9 +405,7 @@ void physColliderUpdateContacts(physCollider *const c){
 
 void physColliderUpdateSeparations(physCollider *const c){
 
-	/*
-	** Removes any separation that has been inactive for too long.
-	*/
+	// Removes any separation that has been inactive for too long.
 
 	physSeparationPair *i = c->separationCache;
 

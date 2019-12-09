@@ -557,10 +557,8 @@ void modulePhysicsAABBNodeClear(){
 void modulePhysicsSolveConstraints(const float dt){
 
 
-	/*
-	** Solves all active constraints
-	** for all systems being simulated.
-	*/
+	// Solves all active constraints
+	// for all systems being simulated.
 
 	size_t i;
 

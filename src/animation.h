@@ -4,13 +4,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/*
-** NOTE: These structures are just dumb groups of data that make
-** animation easier and more consistent across other larger data
-** structures (like texture wrappers and skeletons).
-*/
-
-// Note: all time intervals are in milliseconds.
+// NOTE: These structures are just dumb groups of data that make
+// animation easier and more consistent across other larger data
+// structures (like texture wrappers and skeletons).
+//
+// Additionally, all time intervals are in milliseconds.
 
 typedef uint_least16_t animIndex_t;
 typedef uint_least16_t frameIndex_t;

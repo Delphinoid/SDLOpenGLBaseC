@@ -573,9 +573,7 @@ return_t mdlWavefrontObjLoad(const char *const restrict filePath, vertexIndex_t 
 	sklDelete(skl);
 
 return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndexNum_t *indexNum, size_t **indices, skeleton *const skl){
-	/*
-	** Temporary function by 8426THMY.
-	*/
+	// Temporary function by 8426THMY.
 	//Load the textureGroup!
 	FILE *mdlFile = fopen(filePath, "r");
 	if(mdlFile != NULL){

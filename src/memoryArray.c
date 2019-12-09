@@ -8,10 +8,8 @@ void memArrayInit(memoryArray *const restrict array){
 
 void *memArrayCreate(memoryArray *const restrict array, void *const start, const size_t bytes, const size_t length){
 
-	/*
-	** Initialize a memory array with "length"-many
-	** elements of "bytes" size.
-	*/
+	// Initialize a memory array with "length"-many
+	// elements of "bytes" size.
 
 	if(start){
 
@@ -60,9 +58,7 @@ void memArrayPop(memoryArray *const restrict array){
 
 void *memArrayIndex(memoryArray *const restrict array, const size_t i){
 
-	/*
-	** Finds the element at index i.
-	*/
+	// Finds the element at index i.
 
 	size_t offset = array->block * i;
 
@@ -88,9 +84,7 @@ void *memArrayIndex(memoryArray *const restrict array, const size_t i){
 
 void *memArrayIndexRegion(memoryArray *const restrict array, const size_t i, memoryRegion **const container){
 
-	/*
-	** Finds the element at index i.
-	*/
+	// Finds the element at index i.
 
 	size_t offset = array->block * i;
 
@@ -121,12 +115,10 @@ void memArrayClear(memoryArray *const restrict array){
 
 void *memArrayExtend(memoryArray *const restrict array, void *const start, const size_t bytes, const size_t length){
 
-	/*
-	** Extends the memory allocator.
-	** Its logical function is similar to a
-	** realloc, but it creates a new chunk
-	** and links it.
-	*/
+	// Extends the memory allocator.
+	// Its logical function is similar to a
+	// realloc, but it creates a new chunk
+	// and links it.
 
 	if(start){
 

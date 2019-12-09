@@ -6,92 +6,90 @@
 
 #define PHYSICS_JOINT_SPHERE_CONE_LIMIT_LOWER 0x02
 
-/*
-** ----------------------------------------------------------------------
-**
-** Sphere joints involve a linear "point-to-point" constraint
-** and potentially a cone constraint to limit the relative angle
-** of the bodies with respect to some axis.
-**
-** ----------------------------------------------------------------------
-**
-** Cone constraint equation:
-**
-** C = (u2 . u1) - cos(coneAngle / 2) >= 0
-**   = cos(upAngle) - cos(coneAngle / 2) >= 0.
-**
-** Differentiating so we can solve w.r.t. velocity:
-**
-** C' = dC/dt = (u2 . (w1 X u1)) + (u1 . (w2 X u2)) >= 0,
-**
-** where n = (u2 X u1) and u1, u2 are the second column vectors
-** from the bodies' rotation matrices. The column vectors of a
-** rotation matrix form an orthonormal basis, describing the
-** transformation of the standard basis vectors. Hence u1 and u2
-** are the local "up" vectors of the bodies.
-**
-** ----------------------------------------------------------------------
-**
-** Given the velocity vector
-**
-**     [vA]
-**     [wA]
-** V = [vB]
-**     [wB]
-**
-** and the identity JV = C', we can solve for the Jacobian J:
-**
-** J = J = [0, -n, 0, n].
-**
-** Finally, adding a potential bias term, we have
-**
-** C' = JV + b >= 0.
-**
-** ----------------------------------------------------------------------
-**
-** The effective mass for the constraint is given by (JM^-1)J^T,
-** where M^-1 is the inverse mass matrix and J^T is the transposed
-** Jacobian.
-**
-**        [mA^-1  0    0    0  ]
-**        [  0  IA^-1  0    0  ]
-** M^-1 = [  0    0  mB^-1  0  ]
-**        [  0    0    0  IB^-1],
-**
-**       [ 0]
-**       [-n]
-** J^T = [ 0]
-**       [ n].
-**
-** Expanding results in
-**
-** (JM^-1)J^T = ((IA^-1 + IB^-1) X n) . n.
-**
-** ----------------------------------------------------------------------
-**
-** Semi-implicit Euler:
-**
-** V   = V_i + dt * M^-1 * F,
-** V_f = V   + dt * M^-1 * P.
-**
-** Where V_i is the initial velocity vector, V_f is the final
-** velocity vector, F is the external force on the body (e.g.
-** gravity), P is the constraint force and dt is the timestep.
-**
-** Using P = J^T * lambda and lambda' = dt * lambda, we can
-** solve for the impulse magnitude (constraint Lagrange
-** multiplier) lambda':
-**
-** JV_f + b = 0
-** J(V + dt * M^-1 * P) + b = 0
-** JV + dt * (JM^-1)P + b = 0
-** JV + dt * (JM^-1)J^T . lambda + b = 0
-** dt * (JM^-1)J^T . lambda = -(JV + b)
-** dt * lambda = -(JV + b)/((JM^-1)J^T)
-** lambda' = -(JV + b)/((JM^-1)J^T).
-**
-** ----------------------------------------------------------------------
-*/
+// ----------------------------------------------------------------------
+//
+// Sphere joints involve a linear "point-to-point" constraint
+// and potentially a cone constraint to limit the relative angle
+// of the bodies with respect to some axis.
+//
+// ----------------------------------------------------------------------
+//
+// Cone constraint equation:
+//
+// C = (u2 . u1) - cos(coneAngle / 2) >= 0
+//   = cos(upAngle) - cos(coneAngle / 2) >= 0.
+//
+// Differentiating so we can solve w.r.t. velocity:
+//
+// C' = dC/dt = (u2 . (w1 X u1)) + (u1 . (w2 X u2)) >= 0,
+//
+// where n = (u2 X u1) and u1, u2 are the second column vectors
+// from the bodies' rotation matrices. The column vectors of a
+// rotation matrix form an orthonormal basis, describing the
+// transformation of the standard basis vectors. Hence u1 and u2
+// are the local "up" vectors of the bodies.
+//
+// ----------------------------------------------------------------------
+//
+// Given the velocity vector
+//
+//     [vA]
+//     [wA]
+// V = [vB]
+//     [wB]
+//
+// and the identity JV = C', we can solve for the Jacobian J:
+//
+// J = J = [0, -n, 0, n].
+//
+// Finally, adding a potential bias term, we have
+//
+// C' = JV + b >= 0.
+//
+// ----------------------------------------------------------------------
+//
+// The effective mass for the constraint is given by (JM^-1)J^T,
+// where M^-1 is the inverse mass matrix and J^T is the transposed
+// Jacobian.
+//
+//        [mA^-1  0    0    0  ]
+//        [  0  IA^-1  0    0  ]
+// M^-1 = [  0    0  mB^-1  0  ]
+//        [  0    0    0  IB^-1],
+//
+//       [ 0]
+//       [-n]
+// J^T = [ 0]
+//       [ n].
+//
+// Expanding results in
+//
+// (JM^-1)J^T = ((IA^-1 + IB^-1) X n) . n.
+//
+// ----------------------------------------------------------------------
+//
+// Semi-implicit Euler:
+//
+// V   = V_i + dt * M^-1 * F,
+// V_f = V   + dt * M^-1 * P.
+//
+// Where V_i is the initial velocity vector, V_f is the final
+// velocity vector, F is the external force on the body (e.g.
+// gravity), P is the constraint force and dt is the timestep.
+//
+// Using P = J^T * lambda and lambda' = dt * lambda, we can
+// solve for the impulse magnitude (constraint Lagrange
+// multiplier) lambda':
+//
+// JV_f + b = 0
+// J(V + dt * M^-1 * P) + b = 0
+// JV + dt * (JM^-1)P + b = 0
+// JV + dt * (JM^-1)J^T . lambda + b = 0
+// dt * (JM^-1)J^T . lambda = -(JV + b)
+// dt * lambda = -(JV + b)/((JM^-1)J^T)
+// lambda' = -(JV + b)/((JM^-1)J^T).
+//
+// ----------------------------------------------------------------------
 
 void physJointSphereInit(physJointSphere *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, const vec3 anchorA, const vec3 anchorB, const flags_t coneLimitState, const vec3 coneAxis, const float coneAngle){
 

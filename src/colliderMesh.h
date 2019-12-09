@@ -5,14 +5,12 @@
 #include "return.h"
 #include <stddef.h>
 
-/*
-** Convex mesh data structure optimized for collision
-** detection. There is only one edge per unique
-** vertex pair; this means a separate cMeshEdge is
-** not stored for twin edges. Instead, when using
-** cMeshFaces, you must check if its index is equal
-** to the edge's face or twinFace.
-*/
+// Convex mesh data structure optimized for collision
+// detection. There is only one edge per unique
+// vertex pair; this means a separate cMeshEdge is
+// not stored for twin edges. Instead, when using
+// cMeshFaces, you must check if its index is equal
+// to the edge's face or twinFace.
 
 #define COLLIDER_MESH_SEPARATION_FEATURE_NULL   0
 #define COLLIDER_MESH_SEPARATION_FEATURE_FACE_1 1  // The separation contains a face from the first

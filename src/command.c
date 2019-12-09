@@ -9,9 +9,7 @@ static void cmdTrieInit(cmdTrieNode *const restrict node, const char c){
 	node->cmd = NULL;
 }
 static size_t cmdTrieNext(cmdTrieNode **const restrict node, const char c){
-	/*
-	** Gets the next node when finding a command.
-	*/
+	// Gets the next node when finding a command.
 	// Loop through node's children until we find a child
 	// that matches c.
 	cmdNodeIndex_t index = 0;
@@ -28,9 +26,7 @@ static size_t cmdTrieNext(cmdTrieNode **const restrict node, const char c){
 }
 
 static return_t cmdTrieAddNode(cmdTrieNode **const restrict node, const char c){
-	/*
-	** Same as trieNext(), but creates a new node when necessary.
-	*/
+	// Same as trieNext(), but creates a new node when necessary.
 	cmdNodeIndex_t index = 0;
 	while(index < (*node)->childNum){
 		if(c == (*node)->children[index].value){

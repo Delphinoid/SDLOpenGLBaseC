@@ -8,20 +8,17 @@
 
 /** Should these store currentValue (known as render now)? **/
 
-/*
-** typedef struct {
-**     type previous;  // Stores the previous value of the variable.
-**     type value;     // Stores the current value of the variable.
-**     type render;    // Stores the value used for rendering. Used to tell when the
-**                     // variable has been changed to potentially save time with
-**                     // matrix calculations before rendering.
-** } interpType;
-**
-** Generally, clients will only need to store one previous value and one current value. It becomes
-** much more useful for servers, which may need to know what the values of certain variables were
-** many states earlier.
-**
-*/
+// typedef struct {
+//     type previous;  // Stores the previous value of the variable.
+//     type value;     // Stores the current value of the variable.
+//     type render;    // Stores the value used for rendering. Used to tell when the
+//                     // variable has been changed to potentially save time with
+//                     // matrix calculations before rendering.
+// } interpType;
+//
+// Generally, clients will only need to store one previous value and one current value. It becomes
+// much more useful for servers, which may need to know what the values of certain variables were
+// many states earlier.
 
 /** Remove the ResetInterp() functions. **/
 /** Merge previous and update functions. **/
@@ -71,7 +68,7 @@ void iQuatInit(interpQuat *iQuat);
 void iQuatResetInterp(interpQuat *iQuat);
 return_t iQuatUpdate(interpQuat *iQuat, const float interpT);
 
-/*
+/**
 typedef struct {
 	float previous;
 	float value;
@@ -110,6 +107,6 @@ typedef struct {
 void iQuatInit(interpQuat *iQuat);
 void iQuatResetInterp(interpQuat *iQuat);
 void iQuatInterpolate(const interpQuat *iQuat, const float interpT, quat *r);
-*/
+**/
 
 #endif

@@ -8,10 +8,8 @@ void memSLinkInit(memorySLink *const restrict array){
 
 void *memSLinkCreate(memorySLink *const restrict array, void *const start, const size_t bytes, const size_t length){
 
-	/*
-	** Initialize an array allocator with "length"-many
-	** elements of "bytes" size.
-	*/
+	// Initialize an array allocator with "length"-many
+	// elements of "bytes" size.
 
 	if(start){
 
@@ -32,10 +30,8 @@ void *memSLinkCreate(memorySLink *const restrict array, void *const start, const
 
 void *memSLinkCreateInit(memorySLink *const restrict array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
 
-	/*
-	** Initialize an array allocator with "length"-many
-	** elements of "bytes" size.
-	*/
+	// Initialize an array allocator with "length"-many
+	// elements of "bytes" size.
 
 	if(start){
 
@@ -56,11 +52,9 @@ void *memSLinkCreateInit(memorySLink *const restrict array, void *const start, c
 
 void *memSLinkAllocate(memorySLink *const restrict array){
 
-	/*
-	** Retrieves a new block of memory from the array
-	** allocator and updates the "free" pointer.
-	** Unspecified behaviour with variable element sizes.
-	*/
+	// Retrieves a new block of memory from the array
+	// allocator and updates the "free" pointer.
+	// Unspecified behaviour with variable element sizes.
 
 	byte_t *const r = array->free;
 	if(r){
@@ -73,9 +67,7 @@ void *memSLinkAllocate(memorySLink *const restrict array){
 
 void *memSLinkPrepend(memorySLink *const restrict array, void **const start){
 
-	/*
-	** Prepends a new block to the array.
-	*/
+	// Prepends a new block to the array.
 
 	byte_t *const r = array->free;
 	if(r){
@@ -91,9 +83,7 @@ void *memSLinkPrepend(memorySLink *const restrict array, void **const start){
 
 void *memSLinkAppend(memorySLink *const restrict array, void **const start){
 
-	/*
-	** Appends a new block to the array.
-	*/
+	// Appends a new block to the array.
 
 	byte_t *const r = array->free;
 	if(r){
@@ -113,9 +103,7 @@ void *memSLinkAppend(memorySLink *const restrict array, void **const start){
 
 void *memSLinkInsertBefore(memorySLink *const restrict array, void **const start, void *const element, const void *const previous){
 
-	/*
-	** Inserts a new item before the specified element.
-	*/
+	// Inserts a new item before the specified element.
 
 	byte_t *const r = array->free;
 	if(r){
@@ -135,9 +123,7 @@ void *memSLinkInsertBefore(memorySLink *const restrict array, void **const start
 
 void *memSLinkInsertAfter(memorySLink *const restrict array, void **const start, void *const element){
 
-	/*
-	** Inserts a new item after the specified element.
-	*/
+	// Inserts a new item after the specified element.
 
 	byte_t *const r = array->free;
 	if(r){
@@ -159,10 +145,8 @@ void *memSLinkInsertAfter(memorySLink *const restrict array, void **const start,
 
 void memSLinkFree(memorySLink *const restrict array, void **const start, void *const element, const void *const previous){
 
-	/*
-	** Removes an element from an array
-	** and frees the block.
-	*/
+	// Removes an element from an array
+	// and frees the block.
 
 	if(previous != NULL){
 		// Set the previous element's next pointer.
@@ -276,12 +260,10 @@ void memSLinkClearInit(memorySLink *const restrict array, void (*func)(void *con
 
 void *memSLinkExtend(memorySLink *const restrict array, void *const start, const size_t bytes, const size_t length){
 
-	/*
-	** Extends the memory allocator.
-	** Its logical function is similar to a
-	** realloc, but it creates a new chunk
-	** and links it.
-	*/
+	// Extends the memory allocator.
+	// Its logical function is similar to a
+	// realloc, but it creates a new chunk
+	// and links it.
 
 	if(start){
 
@@ -300,12 +282,10 @@ void *memSLinkExtend(memorySLink *const restrict array, void *const start, const
 
 void *memSLinkExtendInit(memorySLink *const restrict array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
 
-	/*
-	** Extends the memory allocator.
-	** Its logical function is similar to a
-	** realloc, but it creates a new chunk
-	** and links it.
-	*/
+	// Extends the memory allocator.
+	// Its logical function is similar to a
+	// realloc, but it creates a new chunk
+	// and links it.
 
 	if(start){
 

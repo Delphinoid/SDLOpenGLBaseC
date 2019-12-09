@@ -73,7 +73,7 @@ __HINT_INLINE__ void mat4DiagonalNP(mat4 *const restrict m, const float x, const
 
 __HINT_INLINE__ mat4 mat4MMultM(const mat4 m1, const mat4 m2){
 
-	/*size_t i, j;
+	/**size_t i, j;
 	for(i = 0; i < 4; ++i){
 		for(j = 0; j < 4; ++j){
 			r.m[i][j] = (m2->m[i][0] * m1->m[0][j]) +
@@ -81,7 +81,7 @@ __HINT_INLINE__ mat4 mat4MMultM(const mat4 m1, const mat4 m2){
 			            (m2->m[i][2] * m1->m[2][j]) +
 			            (m2->m[i][3] * m1->m[3][j]);
 		}
-	}*/
+	}**/
 
 	const mat4 r = {.m = {{m1.m[0][0]*m2.m[0][0] + m1.m[1][0]*m2.m[0][1] + m1.m[2][0]*m2.m[0][2] + m1.m[3][0]*m2.m[0][3],
 	                       m1.m[0][1]*m2.m[0][0] + m1.m[1][1]*m2.m[0][1] + m1.m[2][1]*m2.m[0][2] + m1.m[3][1]*m2.m[0][3],
@@ -344,30 +344,22 @@ __HINT_INLINE__ void mat4TransposePR(const mat4 *const restrict m, mat4 *const r
 }
 
 __HINT_INLINE__ mat4 mat4Invert(const mat4 m){
-	/*
-	** Find the inverse using Gauss-Jordan elimination.
-	*/
+	// Find the inverse using Gauss-Jordan elimination.
 	///
 	return m;
 }
 __HINT_INLINE__ return_t mat4InvertR(const mat4 m, mat4 *const restrict r){
-	/*
-	** Find the inverse using Gauss-Jordan elimination.
-	*/
+	// Find the inverse using Gauss-Jordan elimination.
 	///
 	return 0;
 }
 __HINT_INLINE__ return_t mat4InvertP(mat4 *const restrict m){
-	/*
-	** Find the inverse using Gauss-Jordan elimination.
-	*/
+	// Find the inverse using Gauss-Jordan elimination.
 	///
 	return 0;
 }
 __HINT_INLINE__ return_t mat4InvertPR(const mat4 *const restrict m, mat4 *const restrict r){
-	/*
-	** Find the inverse using Gauss-Jordan elimination.
-	*/
+	// Find the inverse using Gauss-Jordan elimination.
 	///
 	return 0;
 }

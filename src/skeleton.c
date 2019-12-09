@@ -49,12 +49,12 @@ static void sklDefragment(skeleton *const restrict skl){
 }
 
 static return_t sklResizeToFit(skeleton *const restrict skl){
-	/*bone *const tempBuffer = memReallocate(skl->bones, skl->boneNum*sizeof(sklNode));
+	/**bone *const tempBuffer = memReallocate(skl->bones, skl->boneNum*sizeof(sklNode));
 	if(tempBuffer == NULL){
-		** Memory allocation failure. **
+		// Memory allocation failure. **
 		sklDelete(skl);
 		return 0;
-	}*/
+	}**/
 	/**
 	*** Defrag until I create a new
 	*** binary skeleton file format
@@ -197,13 +197,13 @@ return_t sklLoad(skeleton *const restrict skl, const char *const restrict prgPat
 
 }
 boneIndex_t sklFindBone(const skeleton *const restrict skl, const boneIndex_t id, const char *const restrict name){
-	/*boneIndex_t i;
+	/** boneIndex_t i;
 	for(i = 0; i < skl->boneNum; ++i){
 		if(skl->bones[i].name != NULL && strcmp(skl->bones[i].name, name) == 0){
 			return i;
 		}
 	}
-	return (boneIndex_t)-1;*/
+	return (boneIndex_t)-1; **/
 	boneIndex_t i;
 	const sklNode *n;
 	if(id < skl->boneNum){
@@ -270,10 +270,10 @@ static void sklaDefragment(sklAnim *const restrict skla){
 	}
 }
 static return_t sklaResizeToFit(sklAnim *const restrict skla, const size_t boneCapacity, const size_t frameCapacity){
-	/*if(skla->boneNum != boneCapacity){
+	/**if(skla->boneNum != boneCapacity){
 		skla->bones = memReallocate(skla->bones, skla->boneNum*sizeof(bone *));
 		if(skla->bones == NULL){
-			** Memory allocation failure. **
+			// Memory allocation failure. **
 			sklaDelete(skla);
 			return -1;
 		}
@@ -281,17 +281,17 @@ static return_t sklaResizeToFit(sklAnim *const restrict skla, const size_t boneC
 	if(skla->animData.frameNum != frameCapacity){
 		skla->frames = memReallocate(skla->frames, skla->animData.frameNum*sizeof(char *));
 		if(skla->frames == NULL){
-			** Memory allocation failure. **
+			// Memory allocation failure. **
 			sklaDelete(skla);
 			return -1;
 		}
 		skla->animData.frameDelays = memReallocate(skla->animData.frameDelays, skla->animData.frameNum*sizeof(char *));
 		if(skla->animData.frameDelays == NULL){
-			** Memory allocation failure. **
+			// Memory allocation failure. **
 			sklaDelete(skla);
 			return -1;
 		}
-	}*/
+	}**/
 	/**
 	*** Defrag until I create a new
 	*** binary skeletal animation
@@ -455,7 +455,7 @@ return_t sklaLoad(sklAnim *const restrict skla, const char *const restrict prgPa
 					++skla->animData.frameNum;
 					currentCommand = 1;
 				}else{
-					/// Worth it?
+					/** Worth it? **/
 					printf("Error loading skeletal animation \"%s\": Frame command at line %u does not contain a brace.\n", fullPath, currentLine);
 				}
 
@@ -547,9 +547,7 @@ return_t sklaLoad(sklAnim *const restrict skla, const char *const restrict prgPa
 }
 /** TEMPORARY **/
 return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, const char *filePath, const int invert){
-	/*
-	** Temporary function by 8426THMY.
-	*/
+	// Temporary function by 8426THMY.
 	//Create and initialize the animation!
 	sklaInit(skla);
 
@@ -855,11 +853,11 @@ void sklaDelete(sklAnim *const restrict skla){
 static return_t sklafInit(sklAnimFragment *const restrict sklaf, sklAnim *const restrict anim, const skeleton *const restrict skl, const float intensity, const frameIndex_t frame){
 
 	// Initialize animBoneLookup.
-	/*uint_least8_t i;
+	/**uint_least8_t i;
 	for(i = 0; i < anim->boneNum; ++i){
-		** Create a proper lookup below. **
+		// Create a proper lookup below. **
 		sklaf->animBoneLookup[i] = i;
-	}*/
+	}**/
 
 	sklaf->animStartFrame = 0;
 	sklaf->animEndFrame = 0;
@@ -916,7 +914,7 @@ static __FORCE_INLINE__ void sklaiUpdateFragments(sklAnimInstance *const restric
 
 			for(;;){
 
-				/** **/
+				/****/
 				// Check if the animation has finished blending on its oldest state.
 				if(frag->animBlendProgress >= frag->animBlendTime){
 					// Since it's no longer being used in any state, it can be safely freed.
@@ -960,7 +958,7 @@ static __FORCE_INLINE__ void sklaiUpdateFragments(sklAnimInstance *const restric
 
 		// Check if the fragment is blending into another.
 		if(fragmentID+1 < sklai->animFragNum){
-			** **
+			// **
 			// Check if the animation has finished blending on its oldest state.
 			if(sklai->animFrags[fragmentID].animBlendProgress >= sklai->animFrags[fragmentID].animBlendTime){
 				// Since it's no longer being used in any state, it can be safely freed.
@@ -1132,7 +1130,7 @@ return_t skliLoad(sklInstance *const restrict skli, const char *const restrict p
 
 	//skliInit(skli, 1);
 
-	/*sklAnim *skla = memAllocate(sizeof(sklAnim));
+	/**sklAnim *skla = memAllocate(sizeof(sklAnim));
 	skla->name = memAllocate(5*sizeof(char));
 	memcpy(skla->name, "test\0", 5);
 	//skla->additive = 1;
@@ -1182,7 +1180,7 @@ return_t skliLoad(sklInstance *const restrict skli, const char *const restrict p
 	skli->animations[0].animFrags[0].animBoneLookup[0] = 0;
 	skli->animations[0].animFrags[0].animBoneLookup[1] = 1;
 	skli->animations[0].animFrags[0].animBoneLookup[2] = 5;
-	++skli->animationNum;*/
+	++skli->animationNum;**/
 
 
 
@@ -1389,11 +1387,11 @@ void skliGenerateBoneStateFromLocal(const bone *const restrict skeletonState, co
 		                              -mskl->bones[boneID].defaultState.position.y,
 		                              -mskl->bones[boneID].defaultState.position.z);
 		/** Probably won't keep what's below. **/
-		/*quatInverseR(&mskl->bones[boneID].defaultState.orientation, &inverseOrientation);
+		/**quatInverseR(&mskl->bones[boneID].defaultState.orientation, &inverseOrientation);
 		mat4Rotate(&state[boneID], &inverseOrientation);
 		mat4Scale(&state[boneID], 1.f/mskl->bones[boneID].defaultState.scale.x,
 		                          1.f/mskl->bones[boneID].defaultState.scale.y,
-		                          1.f/mskl->bones[boneID].defaultState.scale.z);*/
+		                          1.f/mskl->bones[boneID].defaultState.scale.z);**/
 
 		// Apply object's default state transformations.
 		// This makes more sense when diagrammed.
@@ -1404,9 +1402,9 @@ void skliGenerateBoneStateFromLocal(const bone *const restrict skeletonState, co
 		state[boneID] = mat4Rotate(state[boneID], oskl->bones[animBone].defaultState.orientation);
 		/** Probably won't keep what's below. **/
 		state[boneID] = mat4Scale(state[boneID],
-		                          oskl->bones[animBone].defaultState.scale.x,//*oskl->bones[animBone].defaultState.scale.x,
-		                          oskl->bones[animBone].defaultState.scale.y,//*oskl->bones[animBone].defaultState.scale.y,
-		                          oskl->bones[animBone].defaultState.scale.z);//*oskl->bones[animBone].defaultState.scale.z);
+		                          oskl->bones[animBone].defaultState.scale.x, ///*oskl->bones[animBone].defaultState.scale.x,
+		                          oskl->bones[animBone].defaultState.scale.y, ///*oskl->bones[animBone].defaultState.scale.y,
+		                          oskl->bones[animBone].defaultState.scale.z); ///*oskl->bones[animBone].defaultState.scale.z);
 
 	}
 

@@ -1,8 +1,8 @@
 #include "graphicsRenderer.h"
 #include "memoryManager.h"
-/// Shouldn't need to include object.h. Use gfxRenderStructure.
+/** Shouldn't need to include object.h. Use gfxRenderStructure. **/
 #include "object.h"
-/// Shouldn't need to include object.h. Use gfxRenderStructure.
+/** Shouldn't need to include object.h. Use gfxRenderStructure. **/
 #include "inline.h"
 
 typedef struct {
@@ -60,12 +60,11 @@ static __FORCE_INLINE__ return_t gfxRendererInitQueues(gfxRenderer *const restri
 
 }
 
+/** UNUSED **/
 static __FORCE_INLINE__ void gfxRendererGenerateQueuesArray(gfxRenderer *const restrict renderer, const size_t objectNum, const object **const restrict objects){
 
-	/*
-	** Generates opaque and translucent render
-	** queues from a regular array of objects.
-	*/
+	// Generates opaque and translucent render
+	// queues from a regular array of objects.
 
 	gfxRenderElement *array = &renderer->qOpaque.elements[renderer->qOpaque.elementNum];
 
@@ -104,10 +103,8 @@ static __FORCE_INLINE__ void gfxRendererGenerateQueuesArray(gfxRenderer *const r
 
 static __FORCE_INLINE__ void gfxRendererGenerateQueuesList(gfxRenderer *const restrict renderer, const size_t objectNum, memoryPool objects){
 
-	/*
-	** Generates opaque and translucent render
-	** queues from a memoryPool.
-	*/
+	// Generates opaque and translucent render
+	// queues from a memoryPool.
 
 	gfxRenderElement *array = &renderer->qOpaque.elements[renderer->qOpaque.elementNum];
 
@@ -166,7 +163,7 @@ void renderModel(const object *const restrict obj, const float distance, const c
 static __FORCE_INLINE__ void gfxRendererDrawElement(gfxRenderElement *const restrict element, const camera *const restrict cam, const float interpT, const graphicsManager *const restrict gfxMngr){
 	switch(element->type){
 		case GFX_RNDR_ELEMENT_TYPE_OBJECT:
-			/// REMOVE THIS LINE EVENTUALLY
+			/** REMOVE THIS LINE EVENTUALLY **/
 			element->distance = camDistance(cam, ((const object *const)element->structure)->state.skeleton[0].position);
 			renderModel((const object *const)element->structure, element->distance, cam, interpT, gfxMngr);
 		break;
@@ -184,7 +181,7 @@ return_t gfxRendererDrawScene(graphicsManager *const restrict gfxMngr, camera *c
 		return -1;
 	}
 
-	/// Generate camera render data. Don't store it with the camera.
+	/** Generate camera render data. Don't store it with the camera. **/
 
 	// Update the camera's VP matrix.
 	camUpdateViewProjectionMatrix(

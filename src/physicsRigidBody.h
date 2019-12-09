@@ -5,21 +5,19 @@
 #include "skeleton.h"
 #include "mat3.h"
 
-/*
-** physRigidBody defines a physical rigid body.
-**
-** Note: the definition of the rigid body may change
-** depending on the preprocessor directives.
-**
-** If PHYSICS_BODY_SCALE_INERTIA_TENSORS is defined, rigid
-** bodies and rigid body bases will store regular inertia
-** tensors rather than inverses to make scaling more
-** efficient. If your application will not be making much
-** use of scaling or the effects of scaling on the
-** simulation are negligible, please consider undefining
-** this and manually invoking the physRigidBodyScale()
-** function instead.
-*/
+// physRigidBody defines a physical rigid body.
+//
+// Note: the definition of the rigid body may change
+// depending on the preprocessor directives.
+//
+// If PHYSICS_BODY_SCALE_INERTIA_TENSORS is defined, rigid
+// bodies and rigid body bases will store regular inertia
+// tensors rather than inverses to make scaling more
+// efficient. If your application will not be making much
+// use of scaling or the effects of scaling on the
+// simulation are negligible, please consider undefining
+// this and manually invoking the physRigidBodyScale()
+// function instead.
 
 #define PHYSICS_BODY_UNINITIALIZED      0x01  // Whether or not the simulation has just begun on this frame.
 #define PHYSICS_BODY_SIMULATE_LINEAR    0x02  // Simulate linear velocity.
@@ -65,7 +63,7 @@ typedef struct {
 	// Default flags.
 	flags_t flags;
 
-	/** char *name; **/
+	/**char *name;**/
 
 } physRigidBodyBase;
 

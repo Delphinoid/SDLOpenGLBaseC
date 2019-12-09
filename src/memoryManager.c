@@ -55,9 +55,7 @@ byte_t *memMngrAllocateVirtualHeap(memoryManager *const restrict memMngr, const 
 byte_t *memMngrAllocateVirtualHeap(const size_t bytes){
 #endif
 
-	/*
-	** Allocate a new virtual heap.
-	*/
+	// Allocate a new virtual heap.
 
 	void *data;
 
@@ -98,10 +96,7 @@ return_t memMngrInit(memoryManager *const restrict memMngr, const size_t bytes, 
 return_t memMngrInit(const size_t bytes, size_t num){
 #endif
 
-	/*
-	** Initialize the memory manager.
-	*/
-
+	// Initialize the memory manager.
 	memInit();
 
 	// Allocate "num" virtual heaps.
@@ -121,18 +116,14 @@ return_t memMngrInit(const size_t bytes, size_t num){
 #ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION
 
 void memMngrDelete(memoryManager *const restrict memMngr){
-	/*
-	** Free each virtual heap.
-	*/
+	// Free each virtual heap.
 	memRegionFree(&memMngr->allocator);
 }
 
 #else
 
 void memMngrDelete(){
-	/*
-	** Free each virtual heap.
-	*/
+	// Free each virtual heap.
 	memTreeDelete(&__memmngr.allocator);
 }
 

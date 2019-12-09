@@ -35,15 +35,10 @@ return_t (* const cInstantiateJumpTable[COLLIDER_TYPE_NUM])(
 	cInstantiateComposite
 };
 __FORCE_INLINE__ return_t cInstantiate(collider *const instance, const collider *const local){
-
-	/*
-	** Instantiates a collider by performing a copy.
-	*/
-
+	// Instantiates a collider by performing a copy.
 	instance->type = local->type;
 	instance->flags = local->flags | COLLIDER_INSTANCE;
 	return cInstantiateJumpTable[local->type](&instance->data, &local->data);
-
 }
 
 
@@ -64,9 +59,7 @@ cAABB cTransformMesh(void *const instance, const vec3 instanceCentroid, const vo
 		// Extrapolate the collider's centroid from its position.
 		cMeshCentroidFromPosition(cInstance, cLocal, position, orientation, scale);
 
-		/*
-		** First iteration.
-		*/
+		// First iteration.
 		// Transform the vertex.
 		*vGlobal = vec3VAddV(quatRotateVec3FastApproximate(orientation, vec3VMultV(vec3VSubV(*vLocal, localCentroid), scale)), instanceCentroid);
 
@@ -74,9 +67,7 @@ cAABB cTransformMesh(void *const instance, const vec3 instanceCentroid, const vo
 		tempAABB.min = *vGlobal;
 		tempAABB.max = *vGlobal;
 
-		/*
-		** Remaining iterations.
-		*/
+		// Remaining iterations.
 		// Update each vertex.
 		for(++vLocal, ++vGlobal; vGlobal < vLast; ++vLocal, ++vGlobal){
 
@@ -134,14 +125,10 @@ cAABB cTransformComposite(void *const instance, const vec3 instanceCentroid, con
 	// Update each collider and find the total bounding box.
 	if(c1 < cLast){
 
-		/*
-		** First iteration.
-		*/
+		// First iteration.
 		tempAABB = cTransform(c1, instanceCentroid, c2, localCentroid, position, orientation, scale);
 
-		/*
-		** Remaining iterations.
-		*/
+		// Remaining iterations.
 		for(++c1, ++c2; c1 < cLast; ++c1, ++c2){
 
 			const cAABB colliderAABB = cTransform(c1, instanceCentroid, c2, localCentroid, position, orientation, scale);
@@ -198,19 +185,14 @@ cAABB (* const cTransformJumpTable[COLLIDER_TYPE_NUM])(
 };
 __FORCE_INLINE__ cAABB cTransform(collider *const instance, const vec3 instanceCentroid, const collider *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale){
 
-	/*
-	** Updates the collider by transforming it.
-	*/
-
+	// Updates the collider by transforming it.
 	return cTransformJumpTable[instance->type](&instance->data, instanceCentroid, &local->data, localCentroid, position, orientation, scale);
 
 }
 
 
 void cDelete(collider *const restrict c){
-	/*
-	** Handle deletions for base and instance colliders.
-	*/
+	// Handle deletions for base and instance colliders.
 	if(flagsAreSet(c->flags, COLLIDER_INSTANCE)){
 		if(c->type == COLLIDER_TYPE_MESH){
 			cMeshDelete((cMesh *)&c->data);

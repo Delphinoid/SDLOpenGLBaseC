@@ -4,13 +4,11 @@
 #include "physicsConstraint.h"
 #include "vec3.h"
 
-/*
-** Constrains two bodies so that they
-** stay at a certain distance from each
-** other. Can be rigid (by setting the
-** angular frequency to 0) or soft and
-** "springy".
-*/
+// Constrains two bodies so that they
+// stay at a certain distance from each
+// other. Can be rigid (by setting the
+// angular frequency to 0) or soft and
+// "springy".
 
 typedef struct physRigidBody physRigidBody;
 typedef struct physJoint physJoint;

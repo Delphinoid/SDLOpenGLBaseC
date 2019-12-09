@@ -3,18 +3,16 @@
 
 #include "memoryShared.h"
 
-/*
-** Stack allocator.
-**
-** Relies on user remembering how much memory
-** they've allocated if they wish to make a
-** deallocation. In my opinion it's good
-** practice (and even necessary in many cases)
-** to keep track of how much memory you're
-** allocating. This also eliminates overhead
-** for cases that don't need it, i.e. stacks
-** that will only ever be added to or cleared.
-*/
+// Stack allocator.
+//
+// Relies on user remembering how much memory
+// they've allocated if they wish to make a
+// deallocation. In my opinion it's good
+// practice (and even necessary in many cases)
+// to keep track of how much memory you're
+// allocating. This also eliminates overhead
+// for cases that don't need it, i.e. stacks
+// that will only ever be added to or cleared.
 
 #define MEMORY_STACK_UNSPECIFIED_LENGTH MEMORY_UNSPECIFIED_LENGTH
 

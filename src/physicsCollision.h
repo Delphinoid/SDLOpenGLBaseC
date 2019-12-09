@@ -24,18 +24,16 @@
 	#endif
 #endif
 
-/*
-** Contact constraints are separated from other constraints
-** solely because of their size. The size of the contact manifold
-** significantly exceeds the size of all other types of
-** constraints, which would lead to an unacceptable amount of
-** internal fragmentation.
-**
-** This, however, has an additional bonus of allowing contacts
-** to be more conveniently solved separately to constraints.
-** This means we can solve them after solving all regular joints,
-** giving them "priority".
-*/
+// Contact constraints are separated from other constraints
+// solely because of their size. The size of the contact manifold
+// significantly exceeds the size of all other types of
+// constraints, which would lead to an unacceptable amount of
+// internal fragmentation.
+//
+// This, however, has an additional bonus of allowing contacts
+// to be more conveniently solved separately to constraints.
+// This means we can solve them after solving all regular joints,
+// giving them "priority".
 
 typedef struct aabbNode aabbNode;
 typedef struct physRigidBody physRigidBody;

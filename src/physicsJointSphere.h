@@ -8,11 +8,9 @@
 #define PHYSICS_JOINT_SPHERE_CONE_LIMIT_DISABLED 0x00
 #define PHYSICS_JOINT_SPHERE_CONE_LIMIT_ENABLED  0x01
 
-/*
-** Allows bodies to rotate around each other
-** while maintaining their relative rotation.
-** The angle may be constrained by a cone.
-*/
+// Allows bodies to rotate around each other
+// while maintaining their relative rotation.
+// The angle may be constrained by a cone.
 
 typedef struct physRigidBody physRigidBody;
 typedef struct physJoint physJoint;

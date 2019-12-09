@@ -4,44 +4,40 @@
 #include "memoryTree.h"
 #include "return.h"
 
-/*
-** The memory manager maintains a linked
-** list of "virtual heaps", which contain
-** their own collections of memory arenas.
-**
-** Each arena is assigned to a specific
-** module and data type, e.g. physics
-** rigid bodies.
-**
-** When an allocation that will not fit
-** into the virtual heap is requested,
-** it will check for room in each of
-** the previously allocated heaps. If
-** none of them can accommodate the data,
-** a new virtual heap is created and
-** the memory manager's "heap" member is
-** updated.
-**
-** MEMORY_MANAGER_ENFORCE_STATIC_VIRTUAL_HEAP
-** may be defined in memorySettings.h to
-** prevent the automatic allocation of new
-** virtual heaps.
-*/
+// The memory manager maintains a linked
+// list of "virtual heaps", which contain
+// their own collections of memory arenas.
+//
+// Each arena is assigned to a specific
+// module and data type, e.g. physics
+// rigid bodies.
+//
+// When an allocation that will not fit
+// into the virtual heap is requested,
+// it will check for room in each of
+// the previously allocated heaps. If
+// none of them can accommodate the data,
+// a new virtual heap is created and
+// the memory manager's "heap" member is
+// updated.
+//
+// MEMORY_MANAGER_ENFORCE_STATIC_VIRTUAL_HEAP
+// may be defined in memorySettings.h to
+// prevent the automatic allocation of new
+// virtual heaps.
 
 #ifndef MEMORY_MANAGER_DEFAULT_VIRTUAL_HEAP_SIZE
 
-	/*
-	** Ideally the minimum recommended
-	** memory should be the heap size so
-	** that only a single heap is necessary
-	** for the entire application.
-	**
-	** For more demanding applications,
-	** however, this may not be possible,
-	** as a large, contiguous block of
-	** memory may not be available without
-	** relying on slow virtual memory.
-	*/
+	// Ideally the minimum recommended
+	// memory should be the heap size so
+	// that only a single heap is necessary
+	// for the entire application.
+	//
+	// For more demanding applications,
+	// however, this may not be possible,
+	// as a large, contiguous block of
+	// memory may not be available without
+	// relying on slow virtual memory.
 
 	#define MEMORY_MANAGER_DEFAULT_VIRTUAL_HEAP_SIZE 536870912
 
@@ -53,10 +49,8 @@
 
 typedef struct {
 
-	/*
-	** The allocator used for managing
-	** all of the allocated virtual heaps.
-	*/
+	// The allocator used for managing
+	// all of the allocated virtual heaps.
 	memoryTree allocator;
 
 } memoryManager;

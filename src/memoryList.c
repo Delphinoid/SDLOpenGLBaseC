@@ -8,10 +8,8 @@ void memListInit(memoryList *const restrict list){
 
 void *memListCreate(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length){
 
-	/*
-	** Initialize a memory list with "length"-many
-	** elements of "bytes" size.
-	*/
+	// Initialize a memory list with "length"-many
+	// elements of "bytes" size.
 
 	if(start){
 
@@ -32,10 +30,8 @@ void *memListCreate(memoryList *const restrict list, void *const start, const si
 
 void *memListCreateInit(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
 
-	/*
-	** Initialize a memory list with "length"-many
-	** elements of "bytes" size.
-	*/
+	// Initialize a memory list with "length"-many
+	// elements of "bytes" size.
 
 	if(start){
 
@@ -56,11 +52,9 @@ void *memListCreateInit(memoryList *const restrict list, void *const start, cons
 
 void *memListAllocate(memoryList *const restrict list){
 
-	/*
-	** Retrieves a new block of memory from the list
-	** and updates the "free" pointer.
-	** Unspecified behaviour with variable element sizes.
-	*/
+	// Retrieves a new block of memory from the list
+	// and updates the "free" pointer.
+	// Unspecified behaviour with variable element sizes.
 
 	byte_t *const r = list->free;
 	if(r){
@@ -72,9 +66,7 @@ void *memListAllocate(memoryList *const restrict list){
 
 void memListFree(memoryList *const restrict list, void *const block){
 
-	/*
-	** Frees a block of memory from the list.
-	*/
+	// Frees a block of memory from the list.
 
 	*((byte_t **)block) = list->free;
 	list->free = block;
@@ -139,9 +131,7 @@ void *memListSetupMemoryInit(void *start, const size_t bytes, const size_t lengt
 
 void *memListIndex(memoryList *const restrict list, const size_t i){
 
-	/*
-	** Finds the element at index i.
-	*/
+	// Finds the element at index i.
 
 	size_t offset = list->block * i;
 
@@ -167,9 +157,7 @@ void *memListIndex(memoryList *const restrict list, const size_t i){
 
 void *memListIndexRegion(memoryList *const restrict list, const size_t i, memoryRegion **const container){
 
-	/*
-	** Finds the element at index i.
-	*/
+	// Finds the element at index i.
 
 	size_t offset = list->block * i;
 
@@ -238,12 +226,10 @@ void memListClearInit(memoryList *const restrict list, void (*func)(void *const 
 
 void *memListExtend(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length){
 
-	/*
-	** Extends the memory allocator.
-	** Its logical function is similar to a
-	** realloc, but it creates a new chunk
-	** and links it.
-	*/
+	// Extends the memory allocator.
+	// Its logical function is similar to a
+	// realloc, but it creates a new chunk
+	// and links it.
 
 	if(start){
 
@@ -262,12 +248,10 @@ void *memListExtend(memoryList *const restrict list, void *const start, const si
 
 void *memListExtendInit(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
 
-	/*
-	** Extends the memory allocator.
-	** Its logical function is similar to a
-	** realloc, but it creates a new chunk
-	** and links it.
-	*/
+	// Extends the memory allocator.
+	// Its logical function is similar to a
+	// realloc, but it creates a new chunk
+	// and links it.
 
 	if(start){
 

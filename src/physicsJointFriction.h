@@ -5,11 +5,9 @@
 #include "vec3.h"
 #include "mat2.h"
 
-/*
-** The friction joint is a special kind of motor.
-** It is only intended to be used in physics contacts,
-** when "PHYSICS_CONTACT_FRICTION_CONSTRAINT" is defined.
-*/
+// The friction joint is a special kind of motor.
+// It is only intended to be used in physics contacts,
+// when "PHYSICS_CONTACT_FRICTION_CONSTRAINT" is defined.
 
 typedef struct physRigidBody physRigidBody;
 

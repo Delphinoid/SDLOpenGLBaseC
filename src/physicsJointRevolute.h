@@ -3,11 +3,9 @@
 
 #include "physicsConstraint.h"
 
-/*
-** Keeps the bodies at a fixed distance
-** and allows rotation along only one axis.
-** Acts as a hinge joint.
-*/
+// Keeps the bodies at a fixed distance
+// and allows rotation along only one axis.
+// Acts as a hinge joint.
 
 typedef struct physRigidBody physRigidBody;
 typedef struct physJoint physJoint;

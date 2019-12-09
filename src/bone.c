@@ -78,9 +78,7 @@ void boneInvertPR(const bone *const restrict b, bone *const restrict r){
 
 bone boneInterpolate(const bone b1, const bone b2, const float t){
 
-	/*
-	** Calculate the interpolated delta transform for the bone.
-	*/
+	// Calculate the interpolated delta transform for the bone.
 	if(t == 0.f){
 
 		// Only use the start frame if t exceeds the lower bounds.
@@ -113,9 +111,7 @@ bone boneInterpolate(const bone b1, const bone b2, const float t){
 }
 void boneInterpolateP1(bone *const restrict b1, const bone *const restrict b2, const float t){
 
-	/*
-	** Calculate the interpolated delta transform for the bone.
-	*/
+	// Calculate the interpolated delta transform for the bone.
 	if(t == 1.f){
 
 		// Only use the end frame if t exceeds the upper bounds.
@@ -137,9 +133,7 @@ void boneInterpolateP1(bone *const restrict b1, const bone *const restrict b2, c
 }
 void boneInterpolateP2(const bone *const restrict b1, bone *const restrict b2, const float t){
 
-	/*
-	** Calculate the interpolated delta transform for the bone.
-	*/
+	// Calculate the interpolated delta transform for the bone.
 	if(t == 0.f){
 
 		// Only use the start frame if t exceeds the lower bounds.
@@ -161,9 +155,7 @@ void boneInterpolateP2(const bone *const restrict b1, bone *const restrict b2, c
 }
 void boneInterpolatePR(const bone *const restrict b1, const bone *const restrict b2, const float t, bone *const restrict r){
 
-	/*
-	** Calculate the interpolated delta transform for the bone.
-	*/
+	// Calculate the interpolated delta transform for the bone.
 	if(t == 0.f){
 
 		// Only use the start frame if t exceeds the lower bounds.
@@ -271,10 +263,8 @@ void boneTransformAppendScalePR(const bone *const restrict b1, const bone *const
 }
 
 bone boneTransformAppend(const bone b1, const bone b2){
-	/*
-	** Adds the transformations for b2 to b1 and stores the result in r.
-	** Used for getting the total sum of all transformations of a bone.
-	*/
+	// Adds the transformations for b2 to b1 and stores the result in r.
+	// Used for getting the total sum of all transformations of a bone.
 	const bone r = {
 		.position = vec3VAddV(b1.position, quatRotateVec3FastApproximate(b1.orientation, vec3VMultV(b2.position, b1.scale))),
 		.orientation = quatNormalizeFast(quatQMultQ(b1.orientation, b2.orientation)),
@@ -283,10 +273,8 @@ bone boneTransformAppend(const bone b1, const bone b2){
 	return r;
 }
 void boneTransformAppendP1(bone *const restrict b1, const bone *const restrict b2){
-	/*
-	** Adds the transformations for b2 to b1 and stores the result in b1.
-	** Used for getting the total sum of all transformations of a bone.
-	*/
+	// Adds the transformations for b2 to b1 and stores the result in b1.
+	// Used for getting the total sum of all transformations of a bone.
 	// Calculate total translation.
 	vec3 tempVec3;
 	vec3VMultVPR(&b2->position, &b1->scale, &tempVec3);  // Scale
@@ -300,10 +288,8 @@ void boneTransformAppendP1(bone *const restrict b1, const bone *const restrict b
 	vec3VMultVP(&b1->scale, &b2->scale);
 }
 void boneTransformAppendP2(const bone *const restrict b1, bone *const restrict b2){
-	/*
-	** Adds the transformations for b2 to b1 and stores the result in b2.
-	** Used for getting the total sum of all transformations of a bone.
-	*/
+	// Adds the transformations for b2 to b1 and stores the result in b2.
+	// Used for getting the total sum of all transformations of a bone.
 	// Calculate total translation.
 	vec3VMultVP(&b2->position, &b1->scale);                // Scale
 	quatRotateVec3FastApproximateP(&b1->orientation, &b2->position);  // Rotate
@@ -316,10 +302,8 @@ void boneTransformAppendP2(const bone *const restrict b1, bone *const restrict b
 	vec3VMultVP(&b2->scale, &b1->scale);
 }
 void boneTransformAppendPR(const bone *const restrict b1, const bone *const restrict b2, bone *const restrict r){
-	/*
-	** Adds the transformations for b2 to b1 and stores the result in r.
-	** Used for getting the total sum of all transformations of a bone.
-	*/
+	// Adds the transformations for b2 to b1 and stores the result in r.
+	// Used for getting the total sum of all transformations of a bone.
 	// Calculate total translation.
 	vec3VMultVPR(&b2->position, &b1->scale, &r->position);  // Scale
 	quatRotateVec3FastApproximateP(&b1->orientation, &r->position);    // Rotate
@@ -333,10 +317,8 @@ void boneTransformAppendPR(const bone *const restrict b1, const bone *const rest
 }
 
 bone boneTransformCombine(const bone b1, const bone b2){
-	/*
-	** Combines the transformations for b2 with b1 and stores the result in r.
-	** Used for getting the total sum of all transformations of a bone.
-	*/
+	// Combines the transformations for b2 with b1 and stores the result in r.
+	// Used for getting the total sum of all transformations of a bone.
 	const bone r = {
 		.position = vec3VAddV(b1.position, b2.position),
 		.orientation = quatNormalizeFast(quatQMultQ(b1.orientation, b2.orientation)),
@@ -345,10 +327,8 @@ bone boneTransformCombine(const bone b1, const bone b2){
 	return r;
 }
 void boneTransformCombineP1(bone *const restrict b1, const bone *const restrict b2){
-	/*
-	** Combines the transformations for b2 with b1 and stores the result in b1.
-	** Used for getting the total sum of all transformations of a bone.
-	*/
+	// Combines the transformations for b2 with b1 and stores the result in b1.
+	// Used for getting the total sum of all transformations of a bone.
 	// Calculate total translation.
 	vec3VAddVP(&b1->position, &b2->position);
 	// Calculate total orientation.
@@ -359,10 +339,8 @@ void boneTransformCombineP1(bone *const restrict b1, const bone *const restrict 
 	vec3VMultVP(&b1->scale, &b2->scale);
 }
 void boneTransformCombineP2(const bone *const restrict b1, bone *const restrict b2){
-	/*
-	** Combines the transformations for b2 with b1 and stores the result in b2.
-	** Used for getting the total sum of all transformations of a bone.
-	*/
+	// Combines the transformations for b2 with b1 and stores the result in b2.
+	// Used for getting the total sum of all transformations of a bone.
 	// Calculate total translation.
 	vec3VAddVP(&b2->position, &b1->position);
 	// Calculate total orientation.
@@ -373,10 +351,8 @@ void boneTransformCombineP2(const bone *const restrict b1, bone *const restrict 
 	vec3VMultVP(&b2->scale, &b1->scale);
 }
 void boneTransformCombinePR(const bone *const restrict b1, const bone *const restrict b2, bone *const restrict r){
-	/*
-	** Combines the transformations for b2 with b1 and stores the result in r.
-	** Used for getting the total sum of all transformations of a bone.
-	*/
+	// Combines the transformations for b2 with b1 and stores the result in r.
+	// Used for getting the total sum of all transformations of a bone.
 	// Calculate total translation.
 	vec3VAddVPR(&b1->position, &b2->position, &r->position);
 	// Calculate total orientation.

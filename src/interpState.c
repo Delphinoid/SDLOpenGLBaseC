@@ -1,9 +1,7 @@
 #include "interpState.h"
 #include <string.h>
 
-/*
-** INTERPOLATED FLOAT FUNCTIONS
-*/
+// INTERPOLATED FLOAT FUNCTIONS
 void iFloatInit(interpFloat *const restrict iFloat, const float s){
 	iFloat->previous = s;
 	iFloat->value = s;
@@ -30,7 +28,7 @@ return_t iFloatUpdate(interpFloat *const restrict iFloat, const float interpT){
 	}
 	return 1;
 }
-/*
+/**
 void iFloatInterpolate(const interpFloat *const restrict iFloat, const float interpT, float *const restrict r){
 	if(iFloat->previous == iFloat->value){
 		*r = iFloat->value;
@@ -39,14 +37,12 @@ void iFloatInterpolate(const interpFloat *const restrict iFloat, const float int
 	}
 	return 1;
 }
-*/
+**/
 
 
 
 
-/*
-** INTERPOLATED SIZE_T FUNCTIONS
-*/
+// INTERPOLATED SIZE_T FUNCTIONS
 void iSizeTInit(interpSizeT *const restrict iSizeT, const size_t s){
 	iSizeT->previous = s;
 	iSizeT->value = s;
@@ -76,7 +72,7 @@ return_t iSizeTUpdate(interpSizeT *const restrict iSizeT, const float interpT){
 	}
 	return 1;
 }
-/*
+/**
 void iSizeTInterpolate(const interpSizeT *const restrict iSizeT, const float interpT, size_t *const restrict r){
 	if(iSizeT->previous == iSizeT->value){
 		*r = iSizeT->value;
@@ -88,14 +84,12 @@ void iSizeTInterpolate(const interpSizeT *const restrict iSizeT, const float int
 	}
 	return 1;
 }
-*/
+**/
 
 
 
 
-/*
-** INTERPOLATED 3D VECTOR FUNCTIONS
-*/
+// INTERPOLATED 3D VECTOR FUNCTIONS
 void iVec3Init(interpVec3 *const restrict iVec3, const float x, const float y, const float z){
 	iVec3->previous = vec3New(x, y, z);
 	iVec3->value    = vec3New(x, y, z);
@@ -129,7 +123,7 @@ return_t iVec3Update(interpVec3 *const restrict iVec3, const float interpT){
 	}
 	return 1;
 }
-/*
+/**
 void iVec3Interpolate(const interpVec3 *const restrict iVec3, const float interpT, vec3 *const restrict r){
 	if(iVec3->previous.x == iVec3->value.x &&
 	   iVec3->previous.y == iVec3->value.y &&
@@ -142,14 +136,12 @@ void iVec3Interpolate(const interpVec3 *const restrict iVec3, const float interp
 	}
 	return 1;
 }
-*/
+**/
 
 
 
 
-/*
-** INTERPOLATED QUATERNION FUNCTIONS
-*/
+// INTERPOLATED QUATERNION FUNCTIONS
 void iQuatInit(interpQuat *const restrict iQuat){
 	iQuat->previous = quatIdentity();
 	iQuat->value = quatIdentity();
@@ -186,7 +178,7 @@ return_t iQuatUpdate(interpQuat *const restrict iQuat, const float interpT){
 	}
 	return 1;
 }
-/*
+/**
 void iQuatInterpolate(const interpQuat *const restrict iQuat, const float interpT, quat *const restrict r){
 	if(iQuat->previous.w   == iQuat->value.w   &&
 	   iQuat->previous.v.x == iQuat->value.v.x &&
@@ -200,5 +192,4 @@ void iQuatInterpolate(const interpQuat *const restrict iQuat, const float interp
 	}
 	return 1;
 }
-*/
-
+**/

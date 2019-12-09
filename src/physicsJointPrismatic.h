@@ -3,10 +3,8 @@
 
 #include "physicsConstraint.h"
 
-/*
-** Restricts relative translation between
-** two bodies to a certain axis.
-*/
+// Restricts relative translation between
+// two bodies to a certain axis.
 
 typedef struct physRigidBody physRigidBody;
 typedef struct physJoint physJoint;

@@ -9,13 +9,11 @@ void memTreeInit(memoryTree *const restrict tree){
 
 void *memTreeCreate(memoryTree *const restrict tree, void *const start, const size_t bytes, const size_t length){
 
-	/*
-	** Initialize a general purpose memory allocator.
-	**
-	** If "length" is specified, it will optimize the size for
-	** "length"-many allocations of size "bytes", otherwise
-	** the total allocated size will be "bytes".
-	*/
+	// Initialize a general purpose memory allocator.
+	//
+	// If "length" is specified, it will optimize the size for
+	// "length"-many allocations of size "bytes", otherwise
+	// the total allocated size will be "bytes".
 
 	if(start != NULL){
 
@@ -33,9 +31,7 @@ void *memTreeCreate(memoryTree *const restrict tree, void *const start, const si
 
 static __FORCE_INLINE__ void memTreeRotateLeft(memoryTree *const restrict tree, byte_t *const node){
 
-	/*
-	** Rotate the red-black tree to the left.
-	*/
+	// Rotate the red-black tree to the left.
 
 	byte_t *const right = memTreeNodeGetRight(node);
 	// Temp initially stores the right node's left
@@ -66,9 +62,7 @@ static __FORCE_INLINE__ void memTreeRotateLeft(memoryTree *const restrict tree, 
 
 static __FORCE_INLINE__ void memTreeRotateRight(memoryTree *const restrict tree, byte_t *const node){
 
-	/*
-	** Rotate the red-black tree to the right.
-	*/
+	// Rotate the red-black tree to the right.
 
 	byte_t *const left = memTreeNodeGetLeft(node);
 	// Temp initially stores the left node's right
@@ -99,10 +93,8 @@ static __FORCE_INLINE__ void memTreeRotateRight(memoryTree *const restrict tree,
 
 static __FORCE_INLINE__ void memTreeRepairTree(memoryTree *const restrict tree, byte_t *node, byte_t *parent){
 
-	/*
-	** Fix any violations of the red-black
-	** tree's rules, starting at "node".
-	*/
+	// Fix any violations of the red-black
+	// tree's rules, starting at "node".
 
 	byte_t *grandparent = memTreeNodeGetParentColourless(parent);
 
@@ -204,9 +196,7 @@ static __FORCE_INLINE__ void memTreeRepairTree(memoryTree *const restrict tree, 
 
 static __FORCE_INLINE__ void memTreeInsert(memoryTree *const restrict tree, void *const block, const size_t bytes){
 
-	/*
-	** Add a free block to the red-black tree.
-	*/
+	// Add a free block to the red-black tree.
 
 	byte_t *node = memTreeBlockGetData(block);
 
@@ -260,9 +250,7 @@ static __FORCE_INLINE__ void memTreeInsert(memoryTree *const restrict tree, void
 
 static __FORCE_INLINE__ void memTreeRemove(memoryTree *const restrict tree, void *const block){
 
-	/*
-	** Remove a free block from the red-black tree.
-	*/
+	// Remove a free block from the red-black tree.
 
 	byte_t *const node = memTreeBlockGetNode(block);
 
@@ -458,10 +446,8 @@ static __FORCE_INLINE__ void memTreeRemove(memoryTree *const restrict tree, void
 
 void *memTreeAllocate(memoryTree *const restrict tree, const size_t bytes){
 
-	/*
-	** Retrieves a new block of memory from the general
-	** purpose allocator and updates the "next" pointer.
-	*/
+	// Retrieves a new block of memory from the general
+	// purpose allocator and updates the "next" pointer.
 
 	if(tree->root == NULL){
 		return NULL;
@@ -612,13 +598,11 @@ void *memTreeAllocate(memoryTree *const restrict tree, const size_t bytes){
 
 void memTreeFree(memoryTree *const restrict tree, void *const restrict block){
 
-	/*
-	** Frees a block of memory from the general
-	** purpose allocator.
-	**
-	** Coalesces the previous and next blocks
-	** if they are free.
-	*/
+	// Frees a block of memory from the general
+	// purpose allocator.
+	//
+	// Coalesces the previous and next blocks
+	// if they are free.
 
 	byte_t *cBlock = memTreeDataGetBlock(block);
 	size_t cBytes = memTreeBlockGetCurrent(cBlock);
@@ -674,14 +658,12 @@ void memTreeFree(memoryTree *const restrict tree, void *const restrict block){
 
 void *memTreeReallocate(memoryTree *const restrict tree, void *const block, const size_t bytes){
 
-	/*
-	** Reallocates a block of memory. Can potentially
-	** be called to try and "defragment" a particular
-	** block.
-	**
-	** If no defragmentation is possible, this function
-	** is effectively the same as an alloc + copy + free.
-	*/
+	// Reallocates a block of memory. Can potentially
+	// be called to try and "defragment" a particular
+	// block.
+	//
+	// If no defragmentation is possible, this function
+	// is effectively the same as an alloc + copy + free.
 
 	byte_t *rBlock = block;
 
@@ -834,12 +816,10 @@ void memTreeClear(memoryTree *const restrict tree){
 
 void *memTreeExtend(memoryTree *const restrict tree, void *const start, const size_t bytes, const size_t length){
 
-	/*
-	** Extends the memory allocator.
-	** Its logical function is similar to a
-	** realloc, but it creates a new chunk
-	** and links it.
-	*/
+	// Extends the memory allocator.
+	// Its logical function is similar to a
+	// realloc, but it creates a new chunk
+	// and links it.
 
 	if(start){
 
@@ -868,10 +848,8 @@ void memTreeDelete(memoryTree *const restrict tree){
 
 void memTreePrintFreeBlocks(memoryTree *const restrict tree, const unsigned int recursions){
 
-	/*
-	** Inorder tree traversal where
-	** each node's size is printed.
-	*/
+	// Inorder tree traversal where
+	// each node's size is printed.
 
 	const byte_t *node = tree->root;
 

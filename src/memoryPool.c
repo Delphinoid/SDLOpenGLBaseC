@@ -8,10 +8,8 @@ void memPoolInit(memoryPool *const restrict pool){
 
 void *memPoolCreate(memoryPool *const restrict pool, void *start, const size_t bytes, const size_t length){
 
-	/*
-	** Initialize a memory pool with "length"-many
-	** elements of "bytes" size.
-	*/
+	// Initialize a memory pool with "length"-many
+	// elements of "bytes" size.
 
 	if(start){
 
@@ -32,10 +30,8 @@ void *memPoolCreate(memoryPool *const restrict pool, void *start, const size_t b
 
 void *memPoolCreateInit(memoryPool *const restrict pool, void *start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
 
-	/*
-	** Initialize a memory pool with "length"-many
-	** elements of "bytes" size.
-	*/
+	// Initialize a memory pool with "length"-many
+	// elements of "bytes" size.
 
 	if(start){
 
@@ -56,11 +52,9 @@ void *memPoolCreateInit(memoryPool *const restrict pool, void *start, const size
 
 void *memPoolAllocate(memoryPool *const restrict pool){
 
-	/*
-	** Retrieves a new block of memory from the pool
-	** and updates the "free" pointer.
-	** Unspecified behaviour with variable element sizes.
-	*/
+	// Retrieves a new block of memory from the pool
+	// and updates the "free" pointer.
+	// Unspecified behaviour with variable element sizes.
 	byte_t *const r = pool->free;
 	if(r){
 		pool->free = memPoolDataGetNextFree(r);
@@ -72,9 +66,7 @@ void *memPoolAllocate(memoryPool *const restrict pool){
 
 void memPoolFree(memoryPool *const restrict pool, void *const block){
 
-	/*
-	** Frees a block of memory from the pool.
-	*/
+	// Frees a block of memory from the pool.
 
 	memPoolDataGetFlags(block) = MEMORY_POOL_BLOCK_INACTIVE;
 	memPoolDataGetNextFree(block) = pool->free;
@@ -144,9 +136,7 @@ void *memPoolSetupMemoryInit(void *start, const size_t bytes, const size_t lengt
 
 void *memPoolIndex(memoryPool *const restrict pool, const size_t i){
 
-	/*
-	** Finds the element at index i.
-	*/
+	// Finds the element at index i.
 
 	size_t offset = pool->block * i;
 
@@ -172,9 +162,7 @@ void *memPoolIndex(memoryPool *const restrict pool, const size_t i){
 
 void *memPoolIndexRegion(memoryPool *const restrict pool, const size_t i, memoryRegion **const container){
 
-	/*
-	** Finds the element at index i.
-	*/
+	// Finds the element at index i.
 
 	size_t offset = pool->block * i;
 
@@ -247,12 +235,10 @@ void memPoolClearInit(memoryPool *const restrict pool, void (*func)(void *const 
 
 void *memPoolExtend(memoryPool *const restrict pool, void *const start, const size_t bytes, const size_t length){
 
-	/*
-	** Extends the memory allocator.
-	** Its logical function is similar to a
-	** realloc, but it creates a new chunk
-	** and links it.
-	*/
+	// Extends the memory allocator.
+	// Its logical function is similar to a
+	// realloc, but it creates a new chunk
+	// and links it.
 
 	if(start){
 
@@ -271,12 +257,10 @@ void *memPoolExtend(memoryPool *const restrict pool, void *const start, const si
 
 void *memPoolExtendInit(memoryPool *const restrict pool, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
 
-	/*
-	** Extends the memory allocator.
-	** Its logical function is similar to a
-	** realloc, but it creates a new chunk
-	** and links it.
-	*/
+	// Extends the memory allocator.
+	// Its logical function is similar to a
+	// realloc, but it creates a new chunk
+	// and links it.
 
 	if(start){
 

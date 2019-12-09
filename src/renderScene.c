@@ -4,7 +4,7 @@
 #include "camera.h"
 #include <math.h>
 
-/** **/
+/****/
 #include "moduleRenderable.h"
 
 /** THIS FILE IS TEMPORARY **/
@@ -169,10 +169,10 @@ void renderModel(const object *const restrict obj, const float distance, const c
 	// Bind its VAO and use its VBO to draw every other sprite.
 	for(i = 0; i < allSprites->size; ++i){
 		currentSpr = *((object **)cvGet(allSprites, i));
-		if(currentSpr != NULL){  ** Remove? **
+		if(currentSpr != NULL){  // Remove? **
 			currentRndr = currentSpr->renderables;
 			while(currentRndr != NULL){
-				if(currentRndr->mdl != NULL){  ** Remove? **
+				if(currentRndr->mdl != NULL){  // Remove? **
 					// Bind the VAO.
 					glBindVertexArray(currentRndr->mdl->vaoID);
 					vboID = currentRndr->mdl->vboID;
@@ -186,22 +186,22 @@ void renderModel(const object *const restrict obj, const float distance, const c
 
 	while(i < allSprites->size){
 
-		if(currentSpr != NULL){  ** Remove? **
+		if(currentSpr != NULL){  // Remove? **
 
 			//rndrConfigRenderUpdate(&currentSpr->tempRndrConfig, interpT);
 
 			while(currentRndr != NULL){
 
-				if(currentRndr->mdl != NULL){  ** Remove? **
+				if(currentRndr->mdl != NULL){  // Remove? **
 
 					twiGetFrameInfo(&currentRndr->twi, &texFrag[0], &texFrag[1], &texFrag[2], &texFrag[3], &currentTexID, interpT);
 
 					// If the current texture ID differs from the last, render and clear the VBO.
 					if((gfxMngr->lastTexID != currentTexID && currentVertexBatchSize >= **4**6) || currentVertexBatchSize >= SPRITE_MAX_BATCH_SIZE){
 						// We need the texture width and height to get around texture offset calculations in the shader.
-						** This shouldn't be necessary! **
+						// This shouldn't be necessary! **
 						glBindTexture(GL_TEXTURE_2D, gfxMngr->lastTexID);
-						glBindBuffer(GL_ARRAY_BUFFER, vboID);  ** Why does this need to be bound...? **
+						glBindBuffer(GL_ARRAY_BUFFER, vboID);  // Why does this need to be bound...? **
 						glBufferData(GL_ARRAY_BUFFER, sizeof(gfxMngr->sprVertexBatchBuffer), &gfxMngr->sprVertexBatchBuffer[0], GL_DYNAMIC_DRAW);
 						glDrawArrays(GL_TRIANGLES, 0, currentVertexBatchSize);
 						currentVertexBatchSize = 0;
@@ -232,9 +232,9 @@ void renderModel(const object *const restrict obj, const float distance, const c
 
 	// Renders the final batch if necessary.
 	if(currentVertexBatchSize >= **4**6){
-		** This STILL shouldn't be necessary! **
+		// This STILL shouldn't be necessary! **
 		glBindTexture(GL_TEXTURE_2D, gfxMngr->lastTexID);
-		glBindBuffer(GL_ARRAY_BUFFER, vboID);  ** Why does this need to be bound...? **
+		glBindBuffer(GL_ARRAY_BUFFER, vboID);  // Why does this need to be bound...? **
 		glBufferData(GL_ARRAY_BUFFER, sizeof(gfxMngr->sprVertexBatchBuffer), &gfxMngr->sprVertexBatchBuffer[0], GL_DYNAMIC_DRAW);
 		glDrawArrays(GL_TRIANGLES, 0, currentVertexBatchSize);
 	}
@@ -243,7 +243,7 @@ void renderModel(const object *const restrict obj, const float distance, const c
 
 void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *cam){
 
-	** Use quick sort and potentially some sort of linked list data structure? **
+	// Use quick sort and potentially some sort of linked list data structure? **
 
 	cVector translucentModels; cvInit(&translucentModels, 1);  // Holds object pointers
 	cVector distances;  cvInit(&distances, 1);  // Holds floats
@@ -304,7 +304,7 @@ void depthSortModels(cVector *allModels, cVector *mdlRenderList, const camera *c
                   cVector *modelsScene,  cVector *modelsHUD,
                   cVector *spritesScene, cVector *spritesHUD){
 
-	** Merge with camera updating? **
+	// Merge with camera updating? **
 	**
 	*** Use separate vectors for translucent objects, or render
 	*** opaque objects after a glEnable(GL_CULL_FACE).
@@ -375,8 +375,8 @@ void renderScene(graphicsManager *gfxMngr, scene *scn, camera *cam, const float 
 
 }
 
-** stateManager should be const. **
-** This entire function should be part of the camera. **
+// stateManager should be const. **
+// This entire function should be part of the camera. **
 **void renderScene(stateManager *gameStateManager, const size_t stateID, const float interpT, graphicsManager *gfxMngr){
 
 	// Update cameras.
@@ -421,7 +421,7 @@ void renderScene(graphicsManager *gfxMngr, scene *scn, camera *cam, const float 
 		// Feed the view-projection matrix into the shader.
 		glUniformMatrix4fv(gfxMngr->vpMatrixID, 1, GL_FALSE, &camGetState(gameStateManager, 1, stateID)->viewProjectionMatrix.m[0][0]);
 		// Render HUD models.
-		** HUD camera? Streamline this to make handling different cameras easily **
+		// HUD camera? Streamline this to make handling different cameras easily **
 		for(i = 0; i < modelsHUD.size; ++i){
 			renderModel(*((object **)cvGet(&modelsHUD, i)), camGetState(gameStateManager, 1, stateID), interpT, gfxMngr);
 		}

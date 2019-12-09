@@ -3,82 +3,80 @@
 #include <math.h>
 #include "inline.h"
 
-/*
-** ----------------------------------------------------------------------
-**
-** Distance constraint equation:
-**
-** C = ||pB - pA|| - L = 0.
-**
-** Differentiating so we can solve w.r.t. velocity:
-**
-** C' = dC/dt = (((wB X rB) + vB) - ((wA X rA) + vA)) . n = 0,
-**
-** where n = (pB - pA)/||pB - pA|| and the p terms are the
-** transformed anchor points in global space.
-**
-** ----------------------------------------------------------------------
-**
-** Given the velocity vector
-**
-**     [vA]
-**     [wA]
-** V = [vB]
-**     [wB]
-**
-** and the identity JV = C', we can solve for the Jacobian J:
-**
-** J = [-n, -(rA X n), n, (rB X n)].
-**
-** Finally, adding a potential bias term, we have
-**
-** C' = JV + b >= 0.
-**
-** ----------------------------------------------------------------------
-**
-** The effective mass for the constraint is given by (JM^-1)J^T,
-** where M^-1 is the inverse mass matrix and J^T is the transposed
-** Jacobian.
-**
-**        [mA^-1  0    0    0  ]
-**        [  0  IA^-1  0    0  ]
-** M^-1 = [  0    0  mB^-1  0  ]
-**        [  0    0    0  IB^-1],
-**
-**       [    -n   ]
-**       [-(rA X n)]
-** J^T = [     n   ]
-**       [ (rB X n)].
-**
-** Expanding results in
-**
-** (JM^-1)J^T = mA^-1 + mB^-1 + ((rA X n) . (IA^-1 * (rA X n))) + ((rB X n) . (IB^-1 * (rB X n))).
-**
-** ----------------------------------------------------------------------
-**
-** Semi-implicit Euler:
-**
-** V   = V_i + dt * M^-1 * F,
-** V_f = V   + dt * M^-1 * P.
-**
-** Where V_i is the initial velocity vector, V_f is the final
-** velocity vector, F is the external force on the body (e.g.
-** gravity), P is the constraint force and dt is the timestep.
-**
-** Using P = J^T * lambda and lambda' = dt * lambda, we can
-** solve for the impulse magnitude (constraint Lagrange
-** multiplier) lambda':
-**
-** JV_f + b = 0
-** J(V + dt * M^-1 * P) + b = 0
-** JV + dt * (JM^-1)P + b = 0
-** JV + dt * (JM^-1)J^T . lambda + b = 0
-** dt * (JM^-1)J^T . lambda = -(JV + b)
-** dt * lambda = -(JV + b)/((JM^-1)J^T)
-** lambda' = -(JV + b)/((JM^-1)J^T).
-**
-** ----------------------------------------------------------------------
-*/
+// ----------------------------------------------------------------------
+//
+// Distance constraint equation:
+//
+// C = ||pB - pA|| - L = 0.
+//
+// Differentiating so we can solve w.r.t. velocity:
+//
+// C' = dC/dt = (((wB X rB) + vB) - ((wA X rA) + vA)) . n = 0,
+//
+// where n = (pB - pA)/||pB - pA|| and the p terms are the
+// transformed anchor points in global space.
+//
+// ----------------------------------------------------------------------
+//
+// Given the velocity vector
+//
+//     [vA]
+//     [wA]
+// V = [vB]
+//     [wB]
+//
+// and the identity JV = C', we can solve for the Jacobian J:
+//
+// J = [-n, -(rA X n), n, (rB X n)].
+//
+// Finally, adding a potential bias term, we have
+//
+// C' = JV + b >= 0.
+//
+// ----------------------------------------------------------------------
+//
+// The effective mass for the constraint is given by (JM^-1)J^T,
+// where M^-1 is the inverse mass matrix and J^T is the transposed
+// Jacobian.
+//
+//        [mA^-1  0    0    0  ]
+//        [  0  IA^-1  0    0  ]
+// M^-1 = [  0    0  mB^-1  0  ]
+//        [  0    0    0  IB^-1],
+//
+//       [    -n   ]
+//       [-(rA X n)]
+// J^T = [     n   ]
+//       [ (rB X n)].
+//
+// Expanding results in
+//
+// (JM^-1)J^T = mA^-1 + mB^-1 + ((rA X n) . (IA^-1 * (rA X n))) + ((rB X n) . (IB^-1 * (rB X n))).
+//
+// ----------------------------------------------------------------------
+//
+// Semi-implicit Euler:
+//
+// V   = V_i + dt * M^-1 * F,
+// V_f = V   + dt * M^-1 * P.
+//
+// Where V_i is the initial velocity vector, V_f is the final
+// velocity vector, F is the external force on the body (e.g.
+// gravity), P is the constraint force and dt is the timestep.
+//
+// Using P = J^T * lambda and lambda' = dt * lambda, we can
+// solve for the impulse magnitude (constraint Lagrange
+// multiplier) lambda':
+//
+// JV_f + b = 0
+// J(V + dt * M^-1 * P) + b = 0
+// JV + dt * (JM^-1)P + b = 0
+// JV + dt * (JM^-1)J^T . lambda + b = 0
+// dt * (JM^-1)J^T . lambda = -(JV + b)
+// dt * lambda = -(JV + b)/((JM^-1)J^T)
+// lambda' = -(JV + b)/((JM^-1)J^T).
+//
+// ----------------------------------------------------------------------
 
 void physJointDistanceInit(physJointDistance *const restrict joint, const vec3 anchorA, const vec3 anchorB, const float distance, const float frequency, const float damping){
 	joint->distance = distance;

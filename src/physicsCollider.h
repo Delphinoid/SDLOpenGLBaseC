@@ -5,19 +5,17 @@
 #include "collider.h"
 #include "mat3.h"
 
-/*
-** The pair linked lists are ordered from
-** smallest colliderB address to largest.
-**
-** The collider with the larger address
-** is the "owner" of a particular pair.
-**
-** The last linked list node points to the
-** last pair that the collider is involved
-** in but doesn't own. This list may be
-** traversed with "prevB" and "nextB". It
-** is not sorted.
-*/
+// The pair linked lists are ordered from
+// smallest colliderB address to largest.
+//
+// The collider with the larger address
+// is the "owner" of a particular pair.
+//
+// The last linked list node points to the
+// last pair that the collider is involved
+// in but doesn't own. This list may be
+// traversed with "prevB" and "nextB". It
+// is not sorted.
 
 typedef struct aabbNode aabbNode;
 typedef struct physContactPair physContactPair;

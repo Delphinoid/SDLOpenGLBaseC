@@ -3,15 +3,13 @@
 
 #include "memoryShared.h"
 
-/*
-** Quadruply-linked list allocator.
-**
-** Implements a doubly-linked list that
-** may have two distinct, separate owners.
-**
-** Block format:
-** [ Next block pointer A + active flag ][ Previous block pointer A ][ Next block pointer B ][ Previous block pointer B ][ Data (or free-list pointer) ]
-*/
+// Quadruply-linked list allocator.
+//
+// Implements a doubly-linked list that
+// may have two distinct, separate owners.
+//
+// Block format:
+// [ Next block pointer A + active flag ][ Previous block pointer A ][ Next block pointer B ][ Previous block pointer B ][ Data (or free-list pointer) ]
 
 #define MEMORY_QLINK_BLOCK_ACTIVE        (uintptr_t)0x00
 #define MEMORY_QLINK_BLOCK_INACTIVE      (uintptr_t)0x01

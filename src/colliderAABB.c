@@ -2,16 +2,12 @@
 #include "inline.h"
 
 __HINT_INLINE__ void cAABBExpand(cAABB *const restrict c, const float addend){
-	/*
-	** Expand the AABB by a specified amount.
-	*/
+	// Expand the AABB by a specified amount.
 	c->min = vec3VSubS(c->min, addend);
 	c->max = vec3VAddS(c->max, addend);
 }
 __HINT_INLINE__ void cAABBExpandVelocity(cAABB *const restrict c, const vec3 velocity, const float factor){
-	/*
-	** Expand the AABB using a linear velocity.
-	*/
+	// Expand the AABB using a linear velocity.
 	const vec3 product = vec3VMultS(velocity, factor);
 	if(product.x >= 0.f){
 		c->max.x += product.x;
@@ -31,9 +27,7 @@ __HINT_INLINE__ void cAABBExpandVelocity(cAABB *const restrict c, const vec3 vel
 }
 
 __HINT_INLINE__ void cAABBCombine(cAABB *const restrict c1, cAABB *const restrict c2, cAABB *const restrict r){
-	/*
-	** Merge the two AABBs to create one that can contain them both.
-	*/
+	// Merge the two AABBs to create one that can contain them both.
 	r->min = vec3Min(c1->min, c2->min);
 	r->max = vec3Max(c1->max, c2->max);
 }

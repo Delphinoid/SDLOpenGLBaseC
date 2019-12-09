@@ -3,26 +3,24 @@
 
 #include "memoryShared.h"
 
-/*
-** Singly-linked list allocator.
-**
-** Effectively a free-list allocator
-** but each block has a pointer to the
-** next element in the array it is a
-** part of, contained in a header.
-**
-** If the block is inactive, the pointer
-** will contain a 1 in its LSB.
-**
-** Free-list pointers point to the
-** data, not the beginning of the block.
-**
-** It can also be treated as an object
-** pool if necessary.
-**
-** Block format:
-** [ Next block pointer + active flag ][ Data (or free-list pointer) ]
-*/
+// Singly-linked list allocator.
+//
+// Effectively a free-list allocator
+// but each block has a pointer to the
+// next element in the array it is a
+// part of, contained in a header.
+//
+// If the block is inactive, the pointer
+// will contain a 1 in its LSB.
+//
+// Free-list pointers point to the
+// data, not the beginning of the block.
+//
+// It can also be treated as an object
+// pool if necessary.
+//
+// Block format:
+// [ Next block pointer + active flag ][ Data (or free-list pointer) ]
 
 #define MEMORY_SLINK_BLOCK_ACTIVE        (uintptr_t)0x00
 #define MEMORY_SLINK_BLOCK_INACTIVE      (uintptr_t)0x01

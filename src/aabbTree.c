@@ -6,12 +6,11 @@ void aabbTreeInit(aabbTree *const restrict tree){
 	tree->leaves = NULL;
 }
 
+/** UNUSED **/
 static __FORCE_INLINE__ aabbNode *aabbTreeBalanceNode(aabbTree *const restrict tree, aabbNode *const node){
 
-	/*
-	** Rotate the tree to the left or right to
-	** restore balance to the specified node.
-	*/
+	// Rotate the tree to the left or right to
+	// restore balance to the specified node.
 
 	// We only need to perform a rotation of this node
 	// is not a leaf and it does not parent any leaves.
@@ -135,29 +134,9 @@ static __FORCE_INLINE__ aabbNode *aabbTreeBalanceNode(aabbTree *const restrict t
 
 static __FORCE_INLINE__ void aabbTreeBalanceHierarchy(aabbTree *const restrict tree, aabbNode *node){
 
-	/*
-	** Iteratively restore balance to the tree
-	** by looping through and balancing the
-	** specified node and all of its ancestors.
-	*/
-
-	/*do {
-
-		aabbNode *left;
-		aabbNode *right;
-
-		node  = aabbTreeBalanceNode(tree, node);
-		left  = node->data.children.left;
-		right = node->data.children.right;
-
-		// Repair the node's properties to represent its new children.
-		cAABBCombine(&left->aabb, &right->aabb, &node->aabb);
-		node->height = (left->height >= right->height ? left->height : right->height) + 1;
-
-		// Continue with the node's parent.
-		node = node->parent;
-
-	} while(node != NULL);*/
+	// Iteratively restore balance to the tree
+	// by looping through and balancing the
+	// specified node and all of its ancestors.
 
 	do {
 
@@ -177,9 +156,7 @@ static __FORCE_INLINE__ void aabbTreeBalanceHierarchy(aabbTree *const restrict t
 
 static __FORCE_INLINE__ void aabbTreeInsertLeaf(aabbTree *const restrict tree, aabbNode *const node, aabbNode *const parent){
 
-	/*
-	** Insert a leaf node into the tree.
-	*/
+	// Insert a leaf node into the tree.
 
 	aabbNode *siblingParent;
 	aabbNode *sibling = tree->root;
@@ -262,9 +239,7 @@ static __FORCE_INLINE__ void aabbTreeInsertLeaf(aabbTree *const restrict tree, a
 
 static __FORCE_INLINE__ void aabbTreeRemoveLeaf(aabbTree *const restrict tree, const aabbNode *const node){
 
-	/*
-	** Remove a leaf node from the tree.
-	*/
+	// Remove a leaf node from the tree.
 
 	const aabbNode *const parent = node->parent;
 	aabbNode *const grandparent = parent->parent;
@@ -295,11 +270,9 @@ static __FORCE_INLINE__ void aabbTreeRemoveLeaf(aabbTree *const restrict tree, c
 
 return_t aabbTreeInsert(aabbTree *const restrict tree, aabbNode **node, void *const restrict value, const cAABB *const restrict aabb, aabbNode *(*const allocator)()){
 
-	/*
-	** Insert a user-specified value into the tree.
-	** Takes in a pointer to an allocator.
-	** This is for modularity's sake with allocation.
-	*/
+	// Insert a user-specified value into the tree.
+	// Takes in a pointer to an allocator.
+	// This is for modularity's sake with allocation.
 
 	*node = allocator();
 	if(*node != NULL){
@@ -339,11 +312,9 @@ return_t aabbTreeInsert(aabbTree *const restrict tree, aabbNode **node, void *co
 
 void aabbTreeRemove(aabbTree *const restrict tree, aabbNode *const node, void (*const deallocator)(aabbNode *const restrict)){
 
-	/*
-	** Remove a user-specified value from the tree.
-	** Takes in a pointer to an deallocator.
-	** This is for modularity's sake with deallocation.
-	*/
+	// Remove a user-specified value from the tree.
+	// Takes in a pointer to an deallocator.
+	// This is for modularity's sake with deallocation.
 
 	if(node != tree->root){
 		aabbTreeRemoveLeaf(tree, node);
@@ -362,12 +333,9 @@ void aabbTreeRemove(aabbTree *const restrict tree, aabbNode *const node, void (*
 
 void aabbTreeUpdate(aabbTree *const restrict tree, aabbNode *const node){
 
-	/*
-	** Update a node in an AABB tree.
-	** Tries to re-use nodes in order to do as few
-	** allocations and deallocations as possible.
-	*/
-
+	// Update a node in an AABB tree.
+	// Tries to re-use nodes in order to do as few
+	// allocations and deallocations as possible.
 	if(node != tree->root){
 		aabbTreeRemoveLeaf(tree, node);
 		aabbTreeInsertLeaf(tree, node, node->parent);
@@ -377,9 +345,7 @@ void aabbTreeUpdate(aabbTree *const restrict tree, aabbNode *const node){
 
 __HINT_INLINE__ return_t aabbTreeQueryNodeStack(const aabbTree *const restrict tree, aabbNode *const node, return_t (*const func)(aabbNode *const, aabbNode *const)){
 
-	/*
-	** Runs "func()" on each potential leaf that could collide with node.
-	*/
+	// Runs "func()" on each potential leaf that could collide with node.
 
 	aabbNode *stack[AABB_TREE_QUERY_STACK_SIZE];
 	size_t i = 1;
@@ -411,9 +377,7 @@ __HINT_INLINE__ return_t aabbTreeQueryNodeStack(const aabbTree *const restrict t
 
 __HINT_INLINE__ return_t aabbTreeQueryNode(const aabbTree *const restrict tree, aabbNode *const node, return_t (*const func)(aabbNode *const, aabbNode *const)){
 
-	/*
-	** Runs "func()" on each potential leaf that could collide with node.
-	*/
+	// Runs "func()" on each potential leaf that could collide with node.
 
 	aabbNode *test = tree->root;
 
@@ -484,9 +448,7 @@ __HINT_INLINE__ return_t aabbTreeQueryNode(const aabbTree *const restrict tree, 
 
 return_t aabbTreeQueryStack(const aabbTree *const restrict tree, return_t (*const func)(aabbNode *const, aabbNode *const)){
 
-	/*
-	** Queries every leaf node in the tree.
-	*/
+	// Queries every leaf node in the tree.
 
 	aabbNode *node = tree->leaves;
 	while(node != NULL){
@@ -502,11 +464,7 @@ return_t aabbTreeQueryStack(const aabbTree *const restrict tree, return_t (*cons
 }
 
 return_t aabbTreeQuery(const aabbTree *const restrict tree, return_t (*const func)(aabbNode *const, aabbNode *const)){
-
-	/*
-	** Queries every leaf node in the tree.
-	*/
-
+	// Queries every leaf node in the tree.
 	aabbNode *node = tree->leaves;
 	while(node != NULL){
 		const return_t r = aabbTreeQueryNode(tree, node, func);
@@ -517,16 +475,13 @@ return_t aabbTreeQuery(const aabbTree *const restrict tree, return_t (*const fun
 		node = node->data.leaf.next;
 	}
 	return 1;
-
 }
 
 void aabbTreeTraverse(aabbTree *const restrict tree, void (*const func)(aabbNode *const restrict)){
 
-	/*
-	** Postorder tree traversal where
-	** "func()" is run on each node.
-	** Primarily used for tree deallocation.
-	*/
+	// Postorder tree traversal where
+	// "func()" is run on each node.
+	// Primarily used for tree deallocation.
 
 	aabbNode *node = tree->root;
 

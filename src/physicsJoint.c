@@ -84,9 +84,7 @@ __FORCE_INLINE__ return_t physJointSolveConfigurationConstraints(physJoint *cons
 
 void physJointAdd(physJoint *const joint, physRigidBody *bodyA, physRigidBody *bodyB){
 
-	/*
-	** Sort a new joint into its bodies.
-	*/
+	// Sort a new joint into its bodies.
 
 	// Set the joint's miscellaneous variables.
 	// bodyA must be the body with the greater address.
@@ -153,9 +151,7 @@ void physJointAdd(physJoint *const joint, physRigidBody *bodyA, physRigidBody *b
 
 void physJointDelete(physJoint *const joint){
 
-	/*
-	** Removes a joint from its linked lists.
-	*/
+	// Removes a joint from its linked lists.
 
 	physJoint *temp;
 

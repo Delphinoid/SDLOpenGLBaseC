@@ -30,9 +30,7 @@ void physRigidBodyBaseInit(physRigidBodyBase *const restrict local){
 
 __FORCE_INLINE__ static void physRigidBodyBaseAddCollider(physRigidBodyBase *const restrict local, physCollider *const c, const float **const vertexMassArray){
 
-	/*
-	** Adds a single collider to the body.
-	*/
+	// Adds a single collider to the body.
 
 	float mass;
 	float inverseMass;
@@ -97,11 +95,9 @@ __FORCE_INLINE__ static void physRigidBodyBaseAddCollider(physRigidBodyBase *con
 
 __FORCE_INLINE__ static void physRigidBodyBaseGenerateProperties(physRigidBodyBase *const restrict local, const float **const vertexMassArray){
 
-	/*
-	** Calculates the rigid body's total mass, inverse mass,
-	** centroid and inertia tensor, as well as the mass
-	** properties for each of its colliders.
-	*/
+	// Calculates the rigid body's total mass, inverse mass,
+	// centroid and inertia tensor, as well as the mass
+	// properties for each of its colliders.
 
 	physCollider *c;
 	const float **m;
@@ -267,12 +263,10 @@ static return_t physColliderResizeToFit(physCollider *const restrict local){
 
 return_t physRigidBodyBaseLoad(physRigidBodyBase **const restrict bodies, const skeleton *const restrict skl, const char *const restrict prgPath, const char *const restrict filePath){
 
-	/*
-	** Loads a series of rigid bodies.
-	**
-	** If skeleton is not NULL, it constrains them using
-	** the specified bone names.
-	*/
+	// Loads a series of rigid bodies.
+	//
+	// If skeleton is not NULL, it constrains them using
+	// the specified bone names.
 
 	return_t success = 0;
 
@@ -1122,11 +1116,9 @@ __FORCE_INLINE__ return_t physRigidBodyWasInitialized(const physRigidBody *const
 
 __FORCE_INLINE__ return_t physRigidBodyUpdateColliders(physRigidBody *const restrict body, physIsland *const restrict island){
 
-	/*
-	** Transform the vertices of each body into global space.
-	** If the body is set to not collide, remove the colliders
-	** from the island that they are a part of.
-	*/
+	// Transform the vertices of each body into global space.
+	// If the body is set to not collide, remove the colliders
+	// from the island that they are a part of.
 
 	if(physRigidBodyIsCollidable(body)){
 
@@ -1160,26 +1152,20 @@ __FORCE_INLINE__ return_t physRigidBodyUpdateColliders(physRigidBody *const rest
 }
 
 __HINT_INLINE__ void physRigidBodyApplyLinearForce(physRigidBody *const restrict body, const vec3 F){
-	/*
-	** Apply a linear force.
-	*/
+	// Apply a linear force.
 	body->netForce = vec3VAddV(body->netForce, F);
 }
 
 __HINT_INLINE__ void physRigidBodyApplyAngularForce(physRigidBody *const restrict body, const vec3 F, const vec3 r){
-	/*
-	** Apply an angular force in global space.
-	*/
+	// Apply an angular force in global space.
 	// T = r x F
 	body->netTorque = vec3VAddV(body->netTorque, vec3Cross(vec3VSubV(r, body->centroidGlobal), F));
 }
 
 __HINT_INLINE__ void physRigidBodyApplyForce(physRigidBody *const restrict body, const vec3 F, const vec3 r){
 
-	/*
-	** Accumulate the net force and torque.
-	** r is where the force F is applied, in global space.
-	*/
+	// Accumulate the net force and torque.
+	// r is where the force F is applied, in global space.
 
 	// Accumulate torque.
 	physRigidBodyApplyAngularForce(body, F, r);
@@ -1191,82 +1177,72 @@ __HINT_INLINE__ void physRigidBodyApplyForce(physRigidBody *const restrict body,
 
 __HINT_INLINE__ void physRigidBodyApplyVelocityImpulse(physRigidBody *const restrict body, const vec3 x, const vec3 J){
 
-	/*
-	** Applies an impulse J at point x in global space.
-	*/
+	// Applies an impulse J at point x in global space.
 
-	//if(body->inverseMass > 0.f){
+	///if(body->inverseMass > 0.f){
 
 		// Linear impulse.
 		body->linearVelocity = vec3VAddV(body->linearVelocity, vec3VMultS(J, body->inverseMass));
 		// Angular impulse.
 		body->angularVelocity = vec3VAddV(body->angularVelocity, mat3MMultVKet(body->inverseInertiaTensorGlobal, vec3Cross(x, J)));
 
-	//}
+	///}
 
 }
 __HINT_INLINE__ void physRigidBodyApplyVelocityImpulseInverse(physRigidBody *const restrict body, const vec3 x, const vec3 J){
 
-	/*
-	** Applies an impulse -J at point x in global space.
-	*/
+	// Applies an impulse -J at point x in global space.
 
-	//if(body->inverseMass > 0.f){
+	///if(body->inverseMass > 0.f){
 
 		// Linear impulse.
 		body->linearVelocity = vec3VSubV(body->linearVelocity, vec3VMultS(J, body->inverseMass));
 		// Angular impulse.
 		body->angularVelocity = vec3VSubV(body->angularVelocity, mat3MMultVKet(body->inverseInertiaTensorGlobal, vec3Cross(x, J)));
 
-	//}
+	///}
 
 }
 
 __HINT_INLINE__ void physRigidBodyApplyVelocityImpulseAngular(physRigidBody *const restrict body, const vec3 x, const vec3 J, const vec3 a){
 
-	/*
-	** Applies an impulse J at point x in global space.
-	*/
+	// Applies an impulse J at point x in global space.
 
-	//if(body->inverseMass > 0.f){
+	///if(body->inverseMass > 0.f){
 
 		// Linear impulse.
 		body->linearVelocity = vec3VAddV(body->linearVelocity, vec3VMultS(J, body->inverseMass));
 		// Angular impulse.
 		body->angularVelocity = vec3VAddV(body->angularVelocity, mat3MMultVKet(body->inverseInertiaTensorGlobal, vec3VAddV(vec3Cross(x, J), a)));
 
-	//}
+	///}
 
 }
 __HINT_INLINE__ void physRigidBodyApplyVelocityImpulseAngularInverse(physRigidBody *const restrict body, const vec3 x, const vec3 J, const vec3 a){
 
-	/*
-	** Applies an impulse -J at point x in global space.
-	*/
+	// Applies an impulse -J at point x in global space.
 
-	//if(body->inverseMass > 0.f){
+	///if(body->inverseMass > 0.f){
 
 		// Linear impulse.
 		body->linearVelocity = vec3VSubV(body->linearVelocity, vec3VMultS(J, body->inverseMass));
 		// Angular impulse.
 		body->angularVelocity = vec3VSubV(body->angularVelocity, mat3MMultVKet(body->inverseInertiaTensorGlobal, vec3VAddV(vec3Cross(x, J), a)));
 
-	//}
+	///}
 
 }
 
 __HINT_INLINE__ void physRigidBodyApplyConfigurationImpulse(physRigidBody *const restrict body, const vec3 x, const vec3 J){
 
-	/*
-	** Applies an impulse J at point x in global space.
-	*/
+	// Applies an impulse J at point x in global space.
 
-	//if(body->inverseMass > 0.f){
+	///if(body->inverseMass > 0.f){
 
 		// Linear impulse.
 		if(
 			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR)// &&
-			//(body->linearVelocity.y != 0.f || body->linearVelocity.x != 0.f || body->linearVelocity.z != 0.f)
+			///(body->linearVelocity.y != 0.f || body->linearVelocity.x != 0.f || body->linearVelocity.z != 0.f)
 		){
 			body->centroidGlobal = vec3VAddV(body->centroidGlobal, vec3VMultS(J, body->inverseMass));
 			flagsSet(body->flags, PHYSICS_BODY_TRANSLATED);
@@ -1274,7 +1250,7 @@ __HINT_INLINE__ void physRigidBodyApplyConfigurationImpulse(physRigidBody *const
 		// Angular impulse.
 		if(
 			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR)// &&
-			//(body->angularVelocity.y != 0.f || body->angularVelocity.z != 0.f || body->angularVelocity.x != 0.f)
+			///(body->angularVelocity.y != 0.f || body->angularVelocity.z != 0.f || body->angularVelocity.x != 0.f)
 		){
 			body->configuration.orientation = quatNormalizeFastAccurate(
 				quatQAddQ(
@@ -1292,21 +1268,19 @@ __HINT_INLINE__ void physRigidBodyApplyConfigurationImpulse(physRigidBody *const
 			flagsSet(body->flags, PHYSICS_BODY_ROTATED);
 		}
 
-	//}
+	///}
 
 }
 __HINT_INLINE__ void physRigidBodyApplyConfigurationImpulseInverse(physRigidBody *const restrict body, const vec3 x, const vec3 J){
 
-	/*
-	** Applies an impulse -J at point x in global space.
-	*/
+	// Applies an impulse -J at point x in global space.
 
-	//if(body->inverseMass > 0.f){
+	///if(body->inverseMass > 0.f){
 
 		// Linear impulse.
 		if(
 			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR)// &&
-			//(body->linearVelocity.y != 0.f || body->linearVelocity.x != 0.f || body->linearVelocity.z != 0.f)
+			///(body->linearVelocity.y != 0.f || body->linearVelocity.x != 0.f || body->linearVelocity.z != 0.f)
 		){
 			body->centroidGlobal = vec3VSubV(body->centroidGlobal, vec3VMultS(J, body->inverseMass));
 			flagsSet(body->flags, PHYSICS_BODY_TRANSLATED);
@@ -1314,7 +1288,7 @@ __HINT_INLINE__ void physRigidBodyApplyConfigurationImpulseInverse(physRigidBody
 		// Angular impulse.
 		if(
 			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR)// &&
-			//(body->angularVelocity.y != 0.f || body->angularVelocity.z != 0.f || body->angularVelocity.x != 0.f)
+			///(body->angularVelocity.y != 0.f || body->angularVelocity.z != 0.f || body->angularVelocity.x != 0.f)
 		){
 			body->configuration.orientation = quatNormalizeFastAccurate(
 				quatQSubQ(
@@ -1332,7 +1306,7 @@ __HINT_INLINE__ void physRigidBodyApplyConfigurationImpulseInverse(physRigidBody
 			flagsSet(body->flags, PHYSICS_BODY_ROTATED);
 		}
 
-	//}
+	///}
 
 }
 
@@ -1374,30 +1348,26 @@ __FORCE_INLINE__ static mat3 physRigidBodyScaleInertia(mat3 I, const vec3 scale)
 	const float sqrX = (I.m[1][1] - sqrZ) * scale.x * scale.x;
 	sqrZ *= scale.z * scale.z;
 
-	/*
-	** I[0][0] = J[0] = y^2 + z^2
-	** I[1][1] = J[1] = x^2 + z^2
-	** I[2][2] = J[2] = x^2 + y^2
-	**
-	** Therefore:
-	** x^2 = (J[1] - J[0] + J[2])/2
-	** y^2 = (J[0] - J[1] + J[2])/2
-	** z^2 = (J[0] - J[2] + J[1])/2
-	**
-	** To scale, multiply by the scale coefficient squared.
-	*/
+	// I[0][0] = J[0] = y^2 + z^2
+	// I[1][1] = J[1] = x^2 + z^2
+	// I[2][2] = J[2] = x^2 + y^2
+	//
+	// Therefore:
+	// x^2 = (J[1] - J[0] + J[2])/2
+	// y^2 = (J[0] - J[1] + J[2])/2
+	// z^2 = (J[0] - J[2] + J[1])/2
+	/
+	// To scale, multiply by the scale coefficient squared.
 	I.m[0][0] = sqrY + sqrZ;
 	I.m[1][1] = sqrX + sqrZ;
 	I.m[2][2] = sqrX + sqrY;
 
-	/*
-	** I[0][1] = I[1][0] = J[3] -= x * y;
-	** I[0][2] = I[2][0] = J[4] -= x * z;
-	** I[1][2] = I[2][1] = J[5] -= y * z;
-	**
-	** To scale, just multiply each element by the
-	** product of the two scale coefficients.
-	*/
+	// I[0][1] = I[1][0] = J[3] -= x * y;
+	// I[0][2] = I[2][0] = J[4] -= x * z;
+	// I[1][2] = I[2][1] = J[5] -= y * z;
+	//
+	// To scale, just multiply each element by the
+	// product of the two scale coefficients.
 	I.m[0][1] *= xy;
 	I.m[0][2] *= xz;
 	I.m[1][2] *= yz;
@@ -1424,30 +1394,26 @@ void physRigidBodyScale(physRigidBody *const restrict body, const vec3 scale){
 		const float sqrX = (I.m[1][1] - sqrZ) * scale.x * scale.x;
 		sqrZ *= scale.z * scale.z;
 
-		/*
-		** I[0][0] = J[0] = y^2 + z^2
-		** I[1][1] = J[1] = x^2 + z^2
-		** I[2][2] = J[2] = x^2 + y^2
-		**
-		** Therefore:
-		** x^2 = (J[1] - J[0] + J[2])/2
-		** y^2 = (J[0] - J[1] + J[2])/2
-		** z^2 = (J[0] - J[2] + J[1])/2
-		**
-		** To scale, multiply by the scale coefficient squared.
-		*/
+		// I[0][0] = J[0] = y^2 + z^2
+		// I[1][1] = J[1] = x^2 + z^2
+		// I[2][2] = J[2] = x^2 + y^2
+		//
+		// Therefore:
+		// x^2 = (J[1] - J[0] + J[2])/2
+		// y^2 = (J[0] - J[1] + J[2])/2
+		// z^2 = (J[0] - J[2] + J[1])/2
+		//
+		// To scale, multiply by the scale coefficient squared.
 		I.m[0][0] = sqrY + sqrZ;
 		I.m[1][1] = sqrX + sqrZ;
 		I.m[2][2] = sqrX + sqrY;
 
-		/*
-		** I[0][1] = I[1][0] = J[3] -= x * y;
-		** I[0][2] = I[2][0] = J[4] -= x * z;
-		** I[1][2] = I[2][1] = J[5] -= y * z;
-		**
-		** To scale, just multiply each element by the
-		** product of the two scale coefficients.
-		*/
+		// I[0][1] = I[1][0] = J[3] -= x * y;
+		// I[0][2] = I[2][0] = J[4] -= x * z;
+		// I[1][2] = I[2][1] = J[5] -= y * z;
+		//
+		// To scale, just multiply each element by the
+		// product of the two scale coefficients.
 		I.m[0][1] *= xy;
 		I.m[0][2] *= xz;
 		I.m[1][2] *= yz;
@@ -1478,30 +1444,26 @@ void physRigidBodySetScale(physRigidBody *const restrict body, const vec3 scale)
 		const float sqrX = (I.m[1][1] - sqrZ) * scaleRelative.x * scaleRelative.x;
 		sqrZ *= scaleRelative.z * scaleRelative.z;
 
-		/*
-		** I[0][0] = J[0] = y^2 + z^2
-		** I[1][1] = J[1] = x^2 + z^2
-		** I[2][2] = J[2] = x^2 + y^2
-		**
-		** Therefore:
-		** x^2 = (J[1] - J[0] + J[2])/2
-		** y^2 = (J[0] - J[1] + J[2])/2
-		** z^2 = (J[0] - J[2] + J[1])/2
-		**
-		** To scale, multiply by the scale coefficient squared.
-		*/
+		// I[0][0] = J[0] = y^2 + z^2
+		// I[1][1] = J[1] = x^2 + z^2
+		// I[2][2] = J[2] = x^2 + y^2
+		//
+		// Therefore:
+		// x^2 = (J[1] - J[0] + J[2])/2
+		// y^2 = (J[0] - J[1] + J[2])/2
+		// z^2 = (J[0] - J[2] + J[1])/2
+		//
+		// To scale, multiply by the scale coefficient squared.
 		I.m[0][0] = sqrY + sqrZ;
 		I.m[1][1] = sqrX + sqrZ;
 		I.m[2][2] = sqrX + sqrY;
 
-		/*
-		** I[0][1] = I[1][0] = J[3] -= x * y;
-		** I[0][2] = I[2][0] = J[4] -= x * z;
-		** I[1][2] = I[2][1] = J[5] -= y * z;
-		**
-		** To scale, just multiply each element by the
-		** product of the two scale coefficients.
-		*/
+		// I[0][1] = I[1][0] = J[3] -= x * y;
+		// I[0][2] = I[2][0] = J[4] -= x * z;
+		// I[1][2] = I[2][1] = J[5] -= y * z;
+		//
+		// To scale, just multiply each element by the
+		// product of the two scale coefficients.
 		I.m[0][1] *= xy;
 		I.m[0][2] *= xz;
 		I.m[1][2] *= yz;
@@ -1552,7 +1514,7 @@ __FORCE_INLINE__ void physRigidBodyResetAccumulators(physRigidBody *const restri
 
 void physRigidBodyIntegrateVelocity(physRigidBody *const restrict body, const float dt){
 
-	//if(body->inverseMass > 0.f){
+	///if(body->inverseMass > 0.f){
 
 		const float modifier = body->inverseMass * dt;
 
@@ -1590,22 +1552,22 @@ void physRigidBodyIntegrateVelocity(physRigidBody *const restrict body, const fl
 			vec3ZeroP(&body->angularVelocity);
 		}
 
-	/*}else{
+	/**}else{
 
 		mat3ZeroP(&body->inverseInertiaTensorGlobal);
 
-	}*/
+	}**/
 
 }
 
 void physRigidBodyIntegrateConfiguration(physRigidBody *const restrict body, const float dt){
 
-	//if(body->inverseMass > 0.f){
+	///if(body->inverseMass > 0.f){
 
 		// Integrate position.
 		if(
 			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR)// &&
-			//(body->linearVelocity.y != 0.f || body->linearVelocity.x != 0.f || body->linearVelocity.z != 0.f)
+			///(body->linearVelocity.y != 0.f || body->linearVelocity.x != 0.f || body->linearVelocity.z != 0.f)
 		){
 			body->centroidGlobal = vec3VAddV(body->centroidGlobal, vec3VMultS(body->linearVelocity, dt));
 			flagsSet(body->flags, PHYSICS_BODY_TRANSLATED);
@@ -1616,7 +1578,7 @@ void physRigidBodyIntegrateConfiguration(physRigidBody *const restrict body, con
 		// Integrate orientation.
 		if(
 			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR)// &&
-			//(body->angularVelocity.y != 0.f || body->angularVelocity.z != 0.f || body->angularVelocity.x != 0.f)
+			///(body->angularVelocity.y != 0.f || body->angularVelocity.z != 0.f || body->angularVelocity.x != 0.f)
 		){
 			body->configuration.orientation = quatNormalizeFastAccurate(quatIntegrate(body->configuration.orientation, body->angularVelocity, dt));
 			flagsSet(body->flags, PHYSICS_BODY_ROTATED);
@@ -1624,7 +1586,7 @@ void physRigidBodyIntegrateConfiguration(physRigidBody *const restrict body, con
 			flagsUnset(body->flags, PHYSICS_BODY_ROTATED);
 		}
 
-	//}
+	///}
 
 }
 
@@ -1679,9 +1641,7 @@ __FORCE_INLINE__ void physRigidBodyIntegrateLeapfrogTest(physRigidBody *const re
 
 return_t physRigidBodyPermitCollision(const physRigidBody *const body1, const physRigidBody *const body2){
 
-	/*
-	** Check if two rigid bodies may collide.
-	*/
+	// Check if two rigid bodies may collide.
 
 	// Check if they share any joints that forbid collision.
 	// "Ownership" of the joint is delegated to the body with
@@ -1741,9 +1701,7 @@ return_t physRigidBodyPermitCollision(const physRigidBody *const body1, const ph
 
 void physRigidBodyAddCollider(physRigidBody *const restrict body, physCollider *const c, const float **const vertexMassArray){
 
-	/*
-	** Adds a single collider to the body.
-	*/
+	// Adds a single collider to the body.
 
 	float mass;
 	float inverseMass;

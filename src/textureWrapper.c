@@ -57,7 +57,7 @@ static return_t twaAddFrame(twAnim *const restrict twa, frameIndex_t *const rest
 	if(twa->animData.frameNum == *frameCapacity){
 		twFrame *tempBuffer;
 		if(*frameCapacity > 0){
-			//*frameCapacity *= 2;
+			///*frameCapacity *= 2;
 			++(*frameCapacity);
 		}else{
 			*frameCapacity = 1;
@@ -106,7 +106,7 @@ static return_t twAddAnim(textureWrapper *const restrict tw, const twAnim *const
 	if(tw->animationNum == *animationCapacity){
 		twAnim *tempBuffer;
 		if(*animationCapacity > 0){
-			//*animationCapacity *= 2;
+			///*animationCapacity *= 2;
 			++(*animationCapacity);
 		}else{
 			*animationCapacity = 1;

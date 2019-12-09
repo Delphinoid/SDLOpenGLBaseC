@@ -37,9 +37,7 @@ __FORCE_INLINE__ return_t physIslandQuery(const physIsland *const restrict islan
 __FORCE_INLINE__ return_t physIslandQuery(const physIsland *const restrict island){
 #endif
 
-	/*
-	** Maintain contact and separation pairs for each collider.
-	*/
+	// Maintain contact and separation pairs for each collider.
 
 	aabbNode *node = island->tree.leaves;
 

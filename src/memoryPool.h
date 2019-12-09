@@ -3,26 +3,24 @@
 
 #include "memoryShared.h"
 
-/*
-** Object pool allocator.
-**
-** Effectively a free-list allocator
-** but each block has an "active"
-** flag for iterations, stored in a
-** header before the main block data.
-**
-** The flag may have three potential
-** states:
-** MEMORY_POOL_BLOCK_ACTIVE   - Currently in use.
-** MEMORY_POOL_BLOCK_INACTIVE - Currently not in use.
-** MEMORY_POOL_BLOCK_INVALID  - End of the pool.
-**
-** Free-list pointers point to the
-** data, not the beginning of the block.
-**
-** Block format:
-** [ Active flag ][ Data (or free-list pointer) ]
-*/
+// Object pool allocator.
+//
+// Effectively a free-list allocator
+// but each block has an "active"
+// flag for iterations, stored in a
+// header before the main block data.
+//
+// The flag may have three potential
+// states:
+// MEMORY_POOL_BLOCK_ACTIVE   - Currently in use.
+// MEMORY_POOL_BLOCK_INACTIVE - Currently not in use.
+// MEMORY_POOL_BLOCK_INVALID  - End of the pool.
+//
+// Free-list pointers point to the
+// data, not the beginning of the block.
+//
+// Block format:
+// [ Active flag ][ Data (or free-list pointer) ]
 
 /**
 *** Instead of using an "active" flag,

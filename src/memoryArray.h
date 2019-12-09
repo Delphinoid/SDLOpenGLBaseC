@@ -3,12 +3,10 @@
 
 #include "memoryShared.h"
 
-/*
-** Regular array allocator.
-**
-** Not much more sophisticated than the stack.
-** Very finnicky, as it has very specific use-cases.
-*/
+// Regular array allocator.
+//
+// Not much more sophisticated than the stack.
+// Very finnicky, as it has very specific use-cases.
 
 #ifdef MEMORY_ARRAY_LEAN
 	#define MEMORY_ARRAY_ALIGN(x) x

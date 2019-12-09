@@ -12,12 +12,10 @@ typedef struct {
 
 } cmdVariables;
 
-/*
-** A command is effectively a pointer to a function that fits
-** the following prototype:
-**
-** int func(const cmdVariables *cmdv, const cmdInput *cmdi);
-*/
+// A command is effectively a pointer to a function that fits
+// the following prototype:
+//
+// int func(const cmdVariables *cmdv, const cmdInput *cmdi);
 typedef struct {
 	size_t argc;
 	void *argv;

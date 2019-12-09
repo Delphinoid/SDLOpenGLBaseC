@@ -60,10 +60,7 @@ typedef struct {
 	char *name;
 } sklAnim;
 
-/*
-** Skeletal animation blending works using "animation fragments".
-*/
-
+// Skeletal animation blending works using "animation fragments".
 // Animation fragment, containing an animation pointer, an animator, a bone lookup and a blend.
 /** After implementing the intensity value, maybe remove animation fragments. **/
 typedef struct {

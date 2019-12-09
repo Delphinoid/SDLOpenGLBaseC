@@ -3,18 +3,16 @@
 
 #include "memoryShared.h"
 
-/*
-** Free-list allocator.
-**
-** Also defines list pool functions,
-** which differ only in that they
-** store the free-list pointer at the
-** end of the block, allowing active
-** flags to be stored at the beginning.
-**
-** Block format:
-** [ Data (or free-list pointer) ]
-*/
+// Free-list allocator.
+//
+// Also defines list pool functions,
+// which differ only in that they
+// store the free-list pointer at the
+// end of the block, allowing active
+// flags to be stored at the beginning.
+//
+// Block format:
+// [ Data (or free-list pointer) ]
 
 #define MEMORY_LIST_BLOCK_POINTER_SIZE sizeof(byte_t *)
 #define MEMORY_LIST_BLOCK_HEADER_SIZE  0

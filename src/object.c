@@ -622,9 +622,7 @@ static __FORCE_INLINE__ void objStateCopyBone(object *const restrict obj, const 
 }
 
 return_t objNewRenderable(object *const restrict obj, model *const restrict mdl, textureWrapper *const restrict tw){
-	/*
-	** Allocate room for a new renderable and initialize it.
-	*/
+	// Allocate room for a new renderable and initialize it.
 	renderable *const rndr = moduleRenderableAppend(&obj->renderables);
 	if(rndr == NULL){
 		/** Memory allocation failure. **/
@@ -636,9 +634,7 @@ return_t objNewRenderable(object *const restrict obj, model *const restrict mdl,
 }
 
 return_t objNewRenderableFromBase(object *const restrict obj, const renderableBase *const restrict rndr){
-	/*
-	** Allocate room for a new renderable and initialize it.
-	*/
+	// Allocate room for a new renderable and initialize it.
 	renderable *const rndrNew = moduleRenderableAppend(&obj->renderables);
 	if(rndrNew == NULL){
 		/** Memory allocation failure. **/
@@ -649,9 +645,7 @@ return_t objNewRenderableFromBase(object *const restrict obj, const renderableBa
 }
 
 return_t objNewRenderableFromInstance(object *const restrict obj, const renderable *rndr){
-	/*
-	** Allocate room for a new renderable and initialize it.
-	*/
+	// Allocate room for a new renderable and initialize it.
 	renderable *const rndrNew = moduleRenderableAppend(&obj->renderables);
 	if(rndrNew == NULL){
 		/** Memory allocation failure. **/
@@ -693,7 +687,7 @@ return_t objInitSkeleton(object *const restrict obj, const skeleton *const restr
 		size_t i;
 		physRigidBody *const tempBuffer = malloc(obj->skl->boneNum*sizeof(physRigidBody));
 		if(tempBuffer == NULL){
-			** Memory allocation failure. **
+			// Memory allocation failure. **
 			return 0;
 		}
 		obj->skeletonBodies = tempBuffer;
@@ -706,10 +700,8 @@ return_t objInitSkeleton(object *const restrict obj, const skeleton *const restr
 
 physRigidBody *objBoneGetPhysicsBody(const object *const restrict obj, const boneIndex_t boneID){
 
-	/*
-	** Finds the body attached to the
-	** specified bone, if one exists.
-	*/
+	// Finds the body attached to the
+	// specified bone, if one exists.
 
 	boneIndex_t i;
 	physRigidBody *body = obj->skeletonBodies;
@@ -848,9 +840,7 @@ return_t objUpdate(object *const restrict obj, physIsland *const restrict island
 
 		if(body != NULL && body->base->id == i && physRigidBodyIsSimulated(body)){
 
-			/*
-			** Simulate the body attached to the bone.
-			*/
+			// Simulate the body attached to the bone.
 
 			/** TEMPORARILY ADD GRAVITY. **/
 			const vec3 gravity = {.x = 0.f, .y = -9.80665f * body->mass, .z = 0.f};
@@ -890,9 +880,7 @@ return_t objUpdate(object *const restrict obj, physIsland *const restrict island
 
 		}else{
 
-			/*
-			** Apply animation transformations.
-			*/
+			// Apply animation transformations.
 
 			/** Should configurations be optional? **/
 
@@ -953,10 +941,8 @@ void objBoneLastState(object *const restrict obj, const float dt){
 
 gfxRenderGroup_t objRenderGroup(const object *const restrict obj, const float interpT){
 
-	/*
-	** Check if the object will have
-	** any translucent renderables.
-	*/
+	// Check if the object will have
+	// any translucent renderables.
 
 	float totalAlpha = 0.f;
 	const renderable *i = obj->renderables;
@@ -995,14 +981,12 @@ gfxRenderGroup_t objRenderGroup(const object *const restrict obj, const float in
 
 void objGenerateSprite(const object *const restrict obj, const renderable *const restrict rndr, const float interpT, const float *const restrict texFrag, vertex *const restrict vertices){
 
-	/*
-	** Generate the base sprite.
-	*/
-	const float left   = -0.5f; /// - obj->tempRndrConfig.pivot.render.x;
-	const float top    = -0.5f; /// - obj->tempRndrConfig.pivot.render.y;
-	const float right  =  0.5f; /// - obj->tempRndrConfig.pivot.render.x;
-	const float bottom =  0.5f; /// - obj->tempRndrConfig.pivot.render.y;
-	const float z      =  0.f;  /// - obj->tempRndrConfig.pivot.render.z;
+	// Generate the base sprite.
+	const float left   = -0.5f;
+	const float top    = -0.5f;
+	const float right  =  0.5f;
+	const float bottom =  0.5f;
+	const float z      =  0.f;
 	const bone *const current  = obj->state.skeleton;
 	const bone *const previous = (obj->state.previous == NULL ? current : obj->state.previous->skeleton);
 	bone transform;
@@ -1059,11 +1043,9 @@ void objGenerateSprite(const object *const restrict obj, const renderable *const
 	vertices[3].bIDs[3] = -1;
 	memset(&vertices[0].bWeights[0], 0, sizeof(float)*VERTEX_MAX_BONES);
 
-	/*
-	** Generate a transformation for the sprite and transform each vertex.
-	*/
+	// Generate a transformation for the sprite and transform each vertex.
 	/** Optimize? **/
-	//boneInterpolate(&obj->skeletonState[1][0], &obj->skeletonState[0][0], interpT, &transform);
+	///boneInterpolate(&obj->skeletonState[1][0], &obj->skeletonState[0][0], interpT, &transform);
 	transform = boneInterpolate(*previous, *current, interpT);
 	transform.scale.x *= twiFrameWidth(&rndr->twi) * twiTextureWidth(&rndr->twi);
 	transform.scale.y *= twiFrameHeight(&rndr->twi) * twiTextureHeight(&rndr->twi);

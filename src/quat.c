@@ -163,14 +163,7 @@ __HINT_INLINE__ void quatQSubWP(quat *const restrict q, const float w){
 }
 
 __HINT_INLINE__ quat quatQMultQ(const quat q1, const quat q2){
-	/*float prodW = q1.w * q2.w - vec3Dot(q1.v, q2.v);
-	vec3 prodV = vec3VMultS(q2.v, q1.w);
-	vec3AddVToV(&prodV, vec3VMultS(q1.v, q2.w));
-	vec3AddVToV(&prodV, vec3CrossR(q1.v, q2.v));
-	return quatNew(prodW, prodV.x, prodV.y, prodV.z);*/
-	/*
-	** Calculates the Grassmann product of two quaternions.
-	*/
+	// Calculates the Grassmann product of two quaternions.
 	const quat r = {.w   = q1.w * q2.w   - q1.v.x * q2.v.x - q1.v.y * q2.v.y - q1.v.z * q2.v.z,
 	                .v.x = q1.w * q2.v.x + q1.v.x * q2.w   + q1.v.y * q2.v.z - q1.v.z * q2.v.y,
 	                .v.y = q1.w * q2.v.y + q1.v.y * q2.w   + q1.v.z * q2.v.x - q1.v.x * q2.v.z,
@@ -185,9 +178,7 @@ __HINT_INLINE__ quat quatQMultS(const quat q, const float s){
 	return r;
 }
 __HINT_INLINE__ void quatQMultQP1(quat *const restrict q1, const quat *const restrict q2){
-	/*
-	** Calculates the Grassmann product of two quaternions.
-	*/
+	// Calculates the Grassmann product of two quaternions.
 	const quat r = {.w   = q1->w * q2->w   - q1->v.x * q2->v.x - q1->v.y * q2->v.y - q1->v.z * q2->v.z,
 	                .v.x = q1->w * q2->v.x + q1->v.x * q2->w   + q1->v.y * q2->v.z - q1->v.z * q2->v.y,
 	                .v.y = q1->w * q2->v.y + q1->v.y * q2->w   + q1->v.z * q2->v.x - q1->v.x * q2->v.z,
@@ -195,9 +186,7 @@ __HINT_INLINE__ void quatQMultQP1(quat *const restrict q1, const quat *const res
 	*q1 = r;
 }
 __HINT_INLINE__ void quatQMultQP2(const quat *const restrict q1, quat *const restrict q2){
-	/*
-	** Calculates the Grassmann product of two quaternions.
-	*/
+	// Calculates the Grassmann product of two quaternions.
 	const quat r = {.w   = q1->w * q2->w   - q1->v.x * q2->v.x - q1->v.y * q2->v.y - q1->v.z * q2->v.z,
 	                .v.x = q1->w * q2->v.x + q1->v.x * q2->w   + q1->v.y * q2->v.z - q1->v.z * q2->v.y,
 	                .v.y = q1->w * q2->v.y + q1->v.y * q2->w   + q1->v.z * q2->v.x - q1->v.x * q2->v.z,
@@ -205,9 +194,7 @@ __HINT_INLINE__ void quatQMultQP2(const quat *const restrict q1, quat *const res
 	*q2 = r;
 }
 __HINT_INLINE__ void quatQMultQPR(const quat *const restrict q1, const quat *const restrict q2, quat *const restrict r){
-	/*
-	** Calculates the Grassmann product of two quaternions.
-	*/
+	// Calculates the Grassmann product of two quaternions.
 	r->w   = q1->w * q2->w   - q1->v.x * q2->v.x - q1->v.y * q2->v.y - q1->v.z * q2->v.z;
 	r->v.x = q1->w * q2->v.x + q1->v.x * q2->w   + q1->v.y * q2->v.z - q1->v.z * q2->v.y;
 	r->v.y = q1->w * q2->v.y + q1->v.y * q2->w   + q1->v.z * q2->v.x - q1->v.x * q2->v.z;
@@ -577,10 +564,8 @@ __HINT_INLINE__ void quatLookAtP(quat *const restrict q, const vec3 *const restr
 }
 
 __HINT_INLINE__ quat quatLerp(const quat q1, const quat q2, const float t){
-	/*
-	**               ^
-	** r = (q1 + (q2 - q1) * t)
-	*/
+	//               ^
+	// r = (q1 + (q2 - q1) * t)
 	const quat r = {
 		.w   = q1.w   + (q2.w   - q1.w)   * t,
 		.v.x = q1.v.x + (q2.v.x - q1.v.x) * t,
@@ -590,30 +575,24 @@ __HINT_INLINE__ quat quatLerp(const quat q1, const quat q2, const float t){
 	return r;
 }
 __HINT_INLINE__ void quatLerpP1(quat *const restrict q1, const quat *const restrict q2, const float t){
-	/*
-	**               ^
-	** r = (q1 + (q2 - q1) * t)
-	*/
+	//               ^
+	// r = (q1 + (q2 - q1) * t)
 	q1->w   += (q2->w   - q1->w)   * t;
 	q1->v.x += (q2->v.x - q1->v.x) * t;
 	q1->v.y += (q2->v.y - q1->v.y) * t;
 	q1->v.z += (q2->v.z - q1->v.z) * t;
 }
 __HINT_INLINE__ void quatLerpP2(const quat *const restrict q1, quat *const restrict q2, const float t){
-	/*
-	**               ^
-	** r = (q1 + (q2 - q1) * t)
-	*/
+	//               ^
+	// r = (q1 + (q2 - q1) * t)
 	q2->w   = q1->w   + (q2->w   - q1->w)   * t;
 	q2->v.x = q1->v.x + (q2->v.x - q1->v.x) * t;
 	q2->v.y = q1->v.y + (q2->v.y - q1->v.y) * t;
 	q2->v.z = q1->v.z + (q2->v.z - q1->v.z) * t;
 }
 __HINT_INLINE__ void quatLerpPR(const quat *const restrict q1, const quat *const restrict q2, const float t, quat *const restrict r){
-	/*
-	**               ^
-	** r = (q1 + (q2 - q1) * t)
-	*/
+	//               ^
+	// r = (q1 + (q2 - q1) * t)
 	r->w   = q1->w   + (q2->w   - q1->w)   * t;
 	r->v.x = q1->v.x + (q2->v.x - q1->v.x) * t;
 	r->v.y = q1->v.y + (q2->v.y - q1->v.y) * t;
@@ -631,17 +610,15 @@ __HINT_INLINE__ quat quatSlerp(const quat q1, const quat q2, const float t){
 		return quatNormalizeFast(quatLerp(q1, q2, t));
 	}else{
 
-		/*
-		** sin(x)^2 + cos(x)^2 = 1
-		** sin(x)^2 = 1 - cos(x)^2
-		** 1 / sin(x) = rsqrt(1 - cos(x)^2)
-		**
-		** Calculating the reciprocal of sin(x) allows us to do
-		** multiplications instead of divisions below, as the
-		** following holds true:
-		**
-		** x * (1 / y) = x / y
-		*/
+		// sin(x)^2 + cos(x)^2 = 1
+		// sin(x)^2 = 1 - cos(x)^2
+		// 1 / sin(x) = rsqrt(1 - cos(x)^2)
+		//
+		// Calculating the reciprocal of sin(x) allows us to do
+		// multiplications instead of divisions below, as the
+		// following holds true:
+		//
+		// x * (1 / y) = x / y
 
 		const float theta = acosf(cosThetaAbs);
 		const float sinThetaInv = rsqrt(1.f - cosThetaAbs * cosThetaAbs);
@@ -677,17 +654,15 @@ __HINT_INLINE__ void quatSlerpP1(quat *const restrict q1, const quat *const rest
 		quatLerpP1(q1, q2, t);
 	}else{
 
-		/*
-		** sin(x)^2 + cos(x)^2 = 1
-		** sin(x)^2 = 1 - cos(x)^2
-		** 1 / sin(x) = rsqrt(1 - cos(x)^2)
-		**
-		** Calculating the reciprocal of sin(x) allows us to do
-		** multiplications instead of divisions below, as the
-		** following holds true:
-		**
-		** x * (1 / y) = x / y
-		*/
+		// sin(x)^2 + cos(x)^2 = 1
+		// sin(x)^2 = 1 - cos(x)^2
+		// 1 / sin(x) = rsqrt(1 - cos(x)^2)
+		//
+		// Calculating the reciprocal of sin(x) allows us to do
+		// multiplications instead of divisions below, as the
+		// following holds true:
+		//
+		// x * (1 / y) = x / y
 
 		const float theta = acosf(cosThetaAbs);
 		const float sinThetaInv = rsqrt(1.f - cosThetaAbs * cosThetaAbs);
@@ -723,17 +698,15 @@ __HINT_INLINE__ void quatSlerpP2(const quat *const restrict q1, quat *const rest
 		quatLerpP2(q1, q2, t);
 	}else{
 
-		/*
-		** sin(x)^2 + cos(x)^2 = 1
-		** sin(x)^2 = 1 - cos(x)^2
-		** 1 / sin(x) = rsqrt(1 - cos(x)^2)
-		**
-		** Calculating the reciprocal of sin(x) allows us to do
-		** multiplications instead of divisions below, as the
-		** following holds true:
-		**
-		** x * (1 / y) = x / y
-		*/
+		// sin(x)^2 + cos(x)^2 = 1
+		// sin(x)^2 = 1 - cos(x)^2
+		// 1 / sin(x) = rsqrt(1 - cos(x)^2)
+		//
+		// Calculating the reciprocal of sin(x) allows us to do
+		// multiplications instead of divisions below, as the
+		// following holds true:
+		//
+		// x * (1 / y) = x / y
 
 		const float theta = acosf(cosThetaAbs);
 		const float sinThetaInv = rsqrt(1.f - cosThetaAbs * cosThetaAbs);
@@ -769,17 +742,15 @@ __HINT_INLINE__ void quatSlerpPR(const quat *const restrict q1, const quat *cons
 		quatLerpPR(q1, q2, t, r);
 	}else{
 
-		/*
-		** sin(x)^2 + cos(x)^2 = 1
-		** sin(x)^2 = 1 - cos(x)^2
-		** 1 / sin(x) = rsqrt(1 - cos(x)^2)
-		**
-		** Calculating the reciprocal of sin(x) allows us to do
-		** multiplications instead of divisions below, as the
-		** following holds true:
-		**
-		** x * (1 / y) = x / y
-		*/
+		// sin(x)^2 + cos(x)^2 = 1
+		// sin(x)^2 = 1 - cos(x)^2
+		// 1 / sin(x) = rsqrt(1 - cos(x)^2)
+		//
+		// Calculating the reciprocal of sin(x) allows us to do
+		// multiplications instead of divisions below, as the
+		// following holds true:
+		//
+		// x * (1 / y) = x / y
 
 		const float theta = acosf(cosThetaAbs);
 		const float sinThetaInv = rsqrt(1.f - cosThetaAbs * cosThetaAbs);

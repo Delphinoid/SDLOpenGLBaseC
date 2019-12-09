@@ -34,9 +34,7 @@ void animAdvance(animationInstance *const restrict animInst, const animationData
 			animInst->totalElapsedTime += elapsedTime;
 			if(elapsedTime >= 0.f){
 
-				/*
-				** Animation is going forwards.
-				*/
+				// Animation is going forwards.
 				// Handle loops if totalElapsedTime indicates the end of the animation has been passed.
 				if(animInst->totalElapsedTime > animationLength){
 					// Iteratively reset totalElapsedTime so it is once again within the bounds of 0 and animationLength.
@@ -47,8 +45,8 @@ void animAdvance(animationInstance *const restrict animInst, const animationData
 						*** current and next frame variables to overflow very
 						*** quickly. Why???
 						**/
-						//animInst->currentFrame -= animData->frameNum;
-						//animInst->nextFrame = animInst->currentFrame;
+						///animInst->currentFrame -= animData->frameNum;
+						///animInst->nextFrame = animInst->currentFrame;
 						animInst->totalElapsedTime -= animationLength;
 						++animInst->currentLoops;
 					} while(animInst->totalElapsedTime > animationLength);
@@ -80,9 +78,7 @@ void animAdvance(animationInstance *const restrict animInst, const animationData
 
 			}else{
 
-				/*
-				** Animation is going backwards.
-				*/
+				// Animation is going backwards.
 				frameIndex_t currentFrameStart;
 
 				// Handle loops if totalElapsedTime indicates the end of the animation has been passed.
@@ -90,11 +86,9 @@ void animAdvance(animationInstance *const restrict animInst, const animationData
 					uint_least8_t prevLoops = animInst->currentLoops;
 					// Iteratively reset totalElapsedTime so it is once again within the bounds of 0 and animationLength.
 					do {
-						/**
-						*** Same as the comment above.
-						**/
-						//animInst->currentFrame += animData->frameNum;
-						//animInst->nextFrame = animInst->currentFrame;
+						/** Same as the comment above. **/
+						///animInst->currentFrame += animData->frameNum;
+						///animInst->nextFrame = animInst->currentFrame;
 						animInst->totalElapsedTime += animationLength;
 						--animInst->currentLoops;
 					} while(animInst->totalElapsedTime < 0.f);
@@ -152,10 +146,7 @@ void animAdvance(animationInstance *const restrict animInst, const animationData
 void animRenderState(const animationInstance *const restrict animInst, const animationData *const restrict animData, const float interpT,
                      frameIndex_t *const restrict startFrame, frameIndex_t *const restrict endFrame, float *const restrict animInterpT){
 
-	/*
-	** Calculates the start frame, the end frame and the progress through the two based on the provided data.
-	*/
-
+	// Calculates the start frame, the end frame and the progress through the two based on the provided data.
 
 	const float animLength = animData->frameDelays[animData->frameNum-1];
 	const float *restrict currentDelay;
