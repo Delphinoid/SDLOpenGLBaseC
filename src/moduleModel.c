@@ -1,8 +1,12 @@
 #include "moduleModel.h"
 #include "moduleSettings.h"
+#include "model.h"
 #include "memoryManager.h"
 #include "inline.h"
 #include <string.h>
+
+#define RESOURCE_DEFAULT_MODEL_SIZE sizeof(model)
+#define RESOURCE_MODEL_BLOCK_SIZE memPoolBlockSize(sizeof(model))
 
 memoryPool __ModelResourceArray;  // Contains models.
 

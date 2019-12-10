@@ -1,8 +1,11 @@
 #include "moduleCamera.h"
 #include "moduleSettings.h"
+#include "camera.h"
 #include "memoryManager.h"
 #include "inline.h"
 #include <string.h>
+
+#define RESOURCE_DEFAULT_CAMERA_SIZE sizeof(camera)
 
 memoryPool __CameraResourceArray;  // Contains cameras.
 

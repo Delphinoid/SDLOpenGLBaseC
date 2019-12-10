@@ -1,4 +1,9 @@
+#include "physicsCollision.h"
+#include "physicsCollider.h"
+#include "physicsRigidBody.h"
 #include "modulePhysics.h"
+#include "physicsConstraint.h"
+#include "aabbTree.h"
 #include "inline.h"
 #include <string.h>
 #include <math.h>

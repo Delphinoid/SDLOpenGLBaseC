@@ -1,8 +1,15 @@
 #include "moduleSkeleton.h"
 #include "moduleSettings.h"
+#include "skeleton.h"
 #include "memoryManager.h"
 #include "inline.h"
 #include <string.h>
+
+#define RESOURCE_DEFAULT_SKELETON_SIZE sizeof(skeleton)
+#define RESOURCE_DEFAULT_SKELETAL_ANIMATION_SIZE sizeof(sklAnim)
+#define RESOURCE_DEFAULT_SKELETAL_ANIMATION_FRAGMENT_SIZE sizeof(sklAnimFragment)
+#define RESOURCE_DEFAULT_SKELETAL_ANIMATION_INSTANCE_SIZE sizeof(sklAnimInstance)
+#define RESOURCE_SKELETON_BLOCK_SIZE memPoolBlockSize(sizeof(skeleton))
 
 memoryPool  __SkeletonResourceArray;                   // Contains skeletons.
 memoryPool  __SkeletonAnimationResourceArray;          // Contains sklAnims.

@@ -1,7 +1,9 @@
 #ifndef SCENE_H
 #define SCENE_H
 
-#include "object.h"
+#include "sceneSettings.h"
+#include "collider.h"
+#include "physicsIsland.h"
 #include "memoryPool.h"
 
 #ifndef SCENE_ZONE_DEFAULT_OBJECT_NUM
@@ -16,6 +18,8 @@
 /** Scene transformation (translation, scale, rotation for updating)? **/
 
 //typedef uint_least32_t objectIndex_t;
+
+typedef struct object object;
 
 typedef struct scnZone scnZone;
 typedef struct {
@@ -54,7 +58,7 @@ typedef struct scnZone {
 
 } scnZone;
 
-typedef struct {
+typedef struct scene {
 
 	/**
 	*** Eventually, the object pool should

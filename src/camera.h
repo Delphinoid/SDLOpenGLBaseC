@@ -11,7 +11,7 @@
 #define CAM_PROJECTION_FRUSTUM      0x01
 #define CAM_PROJECTION_ORTHOGRAPHIC 0x02
 
-typedef struct {
+typedef struct camera {
 
 	/** Should be in a struct? **/
 	interpVec3 position;

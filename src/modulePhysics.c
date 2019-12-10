@@ -1,7 +1,21 @@
 #include "modulePhysics.h"
 #include "moduleSettings.h"
+#include "physicsRigidBody.h"
+#include "physicsCollider.h"
+#include "physicsJoint.h"
+#include "physicsCollision.h"
+#include "physicsConstraint.h"
+#include "aabbTree.h"
 #include "memoryManager.h"
 #include "inline.h"
+
+#define RESOURCE_DEFAULT_RIGID_BODY_LOCAL_SIZE sizeof(physRigidBodyBase)
+#define RESOURCE_DEFAULT_RIGID_BODY_SIZE sizeof(physRigidBody)
+#define RESOURCE_DEFAULT_COLLIDER_SIZE sizeof(physCollider)
+#define RESOURCE_DEFAULT_JOINT_SIZE sizeof(physJoint)
+#define RESOURCE_DEFAULT_CONTACT_PAIR_SIZE sizeof(physContactPair)
+#define RESOURCE_DEFAULT_SEPARATION_PAIR_SIZE sizeof(physSeparationPair)
+#define RESOURCE_DEFAULT_AABB_NODE_SIZE sizeof(aabbNode)
 
 memorySLink __PhysicsRigidBodyBaseResourceArray;   // Contains physRigidBodyBases.
 memorySLink __PhysicsRigidBodyResourceArray;       // Contains physRigidBodies.

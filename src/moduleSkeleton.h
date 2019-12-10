@@ -1,30 +1,26 @@
 #ifndef MODULESKELETON_H
 #define MODULESKELETON_H
 
-#include "skeleton.h"
 #include "memoryPool.h"
 #include "memorySLink.h"
+#include "return.h"
 
-#define RESOURCE_DEFAULT_SKELETON_SIZE sizeof(skeleton)
 #define RESOURCE_DEFAULT_SKELETON_NUM 4096
-
-#define RESOURCE_DEFAULT_SKELETAL_ANIMATION_SIZE sizeof(sklAnim)
 #define RESOURCE_DEFAULT_SKELETAL_ANIMATION_NUM 4096
-
-#define RESOURCE_DEFAULT_SKELETAL_ANIMATION_FRAGMENT_SIZE sizeof(sklAnimFragment)
 #define RESOURCE_DEFAULT_SKELETAL_ANIMATION_FRAGMENT_NUM 4096
-
-#define RESOURCE_DEFAULT_SKELETAL_ANIMATION_INSTANCE_SIZE sizeof(sklAnimInstance)
 #define RESOURCE_DEFAULT_SKELETAL_ANIMATION_INSTANCE_NUM 4096
-
 #define RESOURCE_SKELETON_CONSTANTS 1
-#define RESOURCE_SKELETON_BLOCK_SIZE memPoolBlockSize(sizeof(skeleton))
 
 // Forward declarations for inlining.
 extern memoryPool  __SkeletonResourceArray;                   // Contains skeletons.
 extern memoryPool  __SkeletonAnimationResourceArray;          // Contains sklAnims.
 extern memorySLink __SkeletonAnimationFragmentResourceArray;  // Contains sklAnimFragments.
 extern memorySLink __SkeletonAnimationInstanceResourceArray;  // Contains sklAnimInstances.
+
+typedef struct skeleton skeleton;
+typedef struct sklAnim sklAnim;
+typedef struct sklAnimFragment sklAnimFragment;
+typedef struct sklAnimInstance sklAnimInstance;
 
 /** Support locals? Merge all module containers? **/
 /** Use compiler constants for loop offsets?     **/

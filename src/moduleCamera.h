@@ -1,14 +1,15 @@
 #ifndef MODULECAMERA_H
 #define MODULECAMERA_H
 
-#include "camera.h"
 #include "memoryPool.h"
+#include "return.h"
 
-#define RESOURCE_DEFAULT_CAMERA_SIZE sizeof(camera)
 #define RESOURCE_DEFAULT_CAMERA_NUM 2
 
 // Forward declaration for inlining.
 extern memoryPool __CameraResourceArray;  // Contains cameras.
+
+typedef struct camera camera;
 
 /** Support locals? Merge all module containers? **/
 /** Use compiler constants for loop offsets?     **/

@@ -1,3 +1,7 @@
+#include "physicsCollider.h"
+#include "physicsCollision.h"
+#include "physicsRigidBody.h"
+#include "physicsIsland.h"
 #include "modulePhysics.h"
 #include "memoryManager.h"
 #include "mat3.h"

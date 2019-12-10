@@ -1,17 +1,16 @@
 #ifndef MODULEMODEL_H
 #define MODULEMODEL_H
 
-#include "model.h"
 #include "memoryPool.h"
+#include "return.h"
 
-#define RESOURCE_DEFAULT_MODEL_SIZE sizeof(model)
 #define RESOURCE_DEFAULT_MODEL_NUM 4096
-
 #define RESOURCE_MODEL_CONSTANTS 2
-#define RESOURCE_MODEL_BLOCK_SIZE memPoolBlockSize(sizeof(model))
 
 // Forward declaration for inlining.
 extern memoryPool __ModelResourceArray;  // Contains models.
+
+typedef struct model model;
 
 /** Support locals? Merge all module containers? **/
 /** Use compiler constants for loop offsets?     **/

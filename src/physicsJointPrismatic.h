@@ -1,7 +1,7 @@
 #ifndef PHYSICSJOINTPRISMATIC_H
 #define PHYSICSJOINTPRISMATIC_H
 
-#include "physicsConstraint.h"
+#include "physicsSettings.h"
 
 // Restricts relative translation between
 // two bodies to a certain axis.

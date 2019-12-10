@@ -1,10 +1,10 @@
 #ifndef INTERPSTATE_H
 #define INTERPSTATE_H
 
-#include <stddef.h>
 #include "vec3.h"
 #include "quat.h"
 #include "return.h"
+#include <stddef.h>
 
 /** Should these store currentValue (known as render now)? **/
 

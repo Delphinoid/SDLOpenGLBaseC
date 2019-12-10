@@ -1,7 +1,12 @@
 #include "object.h"
+#include "model.h"
+#include "renderable.h"
+#include "collider.h"
+#include "physicsRigidBody.h"
 #include "memoryManager.h"
 #include "helpersMath.h"
 #include "helpersFileIO.h"
+#include "vertex.h"
 #include "inline.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -427,7 +432,7 @@ return_t objInit(object *const restrict obj){
 	obj->configuration = NULL;
 	obj->stateMax = 0;
 	obj->stateNum = 0;
-	obj->state.skeleton = NULL;
+	obj->state.configuration = NULL;
 	obj->state.previous = NULL;
 	obj->oldestStatePrevious = &obj->state.previous;
 	obj->skeletonBodies = NULL;
@@ -481,7 +486,7 @@ return_t objInstantiate(object *const restrict obj, const objectBase *const rest
 			skliDelete(&obj->skeletonData);
 			return -1;
 		}
-		obj->state.skeleton = &obj->configuration[base->skl->boneNum];
+		obj->state.configuration = &obj->configuration[base->skl->boneNum];
 
 		// Allocate memory for and initialize the colliders if necessary.
 		if(base->skeletonColliders != NULL){
@@ -586,7 +591,7 @@ return_t objInstantiate(object *const restrict obj, const objectBase *const rest
 static __FORCE_INLINE__ return_t objStateAllocate(object *const restrict obj){
 	objState *const state = memAllocate(sizeof(objState) + obj->skeletonData.skl->boneNum * sizeof(bone));
 	if(state != NULL){
-		state->skeleton = (bone *)((byte_t *)state + sizeof(objState));
+		state->configuration = (bone *)((byte_t *)state + sizeof(objState));
 		state->previous = NULL;
 		*obj->oldestStatePrevious = state;
 		obj->oldestStatePrevious = &state->previous;
@@ -608,12 +613,12 @@ return_t objStatePreallocate(object *const restrict obj){
 static __FORCE_INLINE__ void objStateCopyBone(object *const restrict obj, const boneIndex_t i){
 
 	objState *state = &obj->state;
-	bone last = state->skeleton[i];
+	bone last = state->configuration[i];
 
 	while(state->previous != NULL){
 
-		const bone swap = state->previous->skeleton[i];
-		state->previous->skeleton[i] = last;
+		const bone swap = state->previous->configuration[i];
+		state->previous->configuration[i] = last;
 		last = swap;
 		state = state->previous;
 
@@ -673,7 +678,7 @@ return_t objInitSkeleton(object *const restrict obj, const skeleton *const restr
 		free(obj->skeletonColliders);
 	}
 	obj->configuration = tempBuffer;
-	obj->state.skeleton = &tempBuffer[skl->boneNum];
+	obj->state.configuration = &tempBuffer[skl->boneNum];
 	for(; tempBuffer < bLast; ++tempBuffer){
 		boneInit(tempBuffer);
 	}
@@ -816,7 +821,7 @@ return_t objUpdate(object *const restrict obj, physIsland *const restrict island
 	boneIndex_t i;
 	renderable *j;
 	sklNode *sklBone = obj->skeletonData.skl->bones;
-	bone *sklState = obj->state.skeleton;
+	bone *sklState = obj->state.configuration;
 	bone *configuration = obj->configuration;
 	physRigidBody *body = obj->skeletonBodies;
 
@@ -897,7 +902,7 @@ return_t objUpdate(object *const restrict obj, physIsland *const restrict island
 
 			// Apply the parent's transformations to each bone.
 			if(!isRoot){
-				*sklState = boneTransformAppend(obj->state.skeleton[sklBone->parent], *sklState);
+				*sklState = boneTransformAppend(obj->state.configuration[sklBone->parent], *sklState);
 			}
 
 			if(body != NULL && body->base->id == i){
@@ -987,8 +992,8 @@ void objGenerateSprite(const object *const restrict obj, const renderable *const
 	const float right  =  0.5f;
 	const float bottom =  0.5f;
 	const float z      =  0.f;
-	const bone *const current  = obj->state.skeleton;
-	const bone *const previous = (obj->state.previous == NULL ? current : obj->state.previous->skeleton);
+	const bone *const current  = obj->state.configuration;
+	const bone *const previous = (obj->state.previous == NULL ? current : obj->state.previous->configuration);
 	bone transform;
 
 	// Create the top left vertex.

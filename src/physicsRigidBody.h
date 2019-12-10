@@ -2,8 +2,9 @@
 #define PHYSICSRIGIDBODY_H
 
 #include "physicsShared.h"
-#include "skeleton.h"
+#include "bone.h"
 #include "mat3.h"
+#include "flags.h"
 
 // physRigidBody defines a physical rigid body.
 //
@@ -39,8 +40,9 @@
 typedef struct physCollider physCollider;
 typedef struct physJoint physJoint;
 typedef struct physIsland physIsland;
+typedef struct skeleton skeleton;
 
-typedef struct {
+typedef struct physRigidBodyBase {
 
 	// Physical collider.
 	physCollider *hull;  // The body's convex collider SLink.

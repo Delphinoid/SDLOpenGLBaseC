@@ -1,3 +1,7 @@
+#include "physicsIsland.h"
+#include "physicsCollision.h"
+#include "physicsCollider.h"
+#include "physicsRigidBody.h"
 #include "modulePhysics.h"
 #include "inline.h"
 

@@ -1,17 +1,16 @@
 #ifndef MODULETEXTUREWRAPPER_H
 #define MODULETEXTUREWRAPPER_H
 
-#include "textureWrapper.h"
 #include "memoryPool.h"
+#include "return.h"
 
-#define RESOURCE_DEFAULT_TEXTURE_WRAPPER_SIZE sizeof(textureWrapper)
 #define RESOURCE_DEFAULT_TEXTURE_WRAPPER_NUM 4096
-
 #define RESOURCE_TEXTURE_WRAPPER_CONSTANTS 1
-#define RESOURCE_TEXTURE_WRAPPER_BLOCK_SIZE memPoolBlockSize(sizeof(textureWrapper))
 
 // Forward declaration for inlining.
 extern memoryPool __TextureWrapperResourceArray;  // Contains textureWrappers.
+
+typedef struct textureWrapper textureWrapper;
 
 /** Support locals? Merge all module containers? **/
 /** Use compiler constants for loop offsets?     **/

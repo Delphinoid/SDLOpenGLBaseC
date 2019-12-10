@@ -7,7 +7,7 @@
 //          as the shader still expects 4 values.
 #define VERTEX_MAX_BONES 4
 
-typedef struct {
+typedef struct vertex {
 	vec3  position;
 	float u, v;
 	vec3 normal;

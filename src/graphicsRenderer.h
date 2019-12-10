@@ -2,11 +2,12 @@
 #define GRAPHICSRENDERER_H
 
 #include "graphicsManager.h"
-#include "camera.h"
-#include "scene.h"
 #include <stdint.h>
 
 #define GFX_RNDR_ELEMENT_TYPE_OBJECT 0
+
+typedef struct camera camera;
+typedef struct scene scene;
 
 typedef struct {
 

@@ -1,8 +1,12 @@
 #include "moduleObject.h"
 #include "moduleSettings.h"
+#include "object.h"
 #include "memoryManager.h"
 #include "inline.h"
 #include <string.h>
+
+#define RESOURCE_DEFAULT_OBJECT_BASE_SIZE sizeof(objectBase)
+#define RESOURCE_DEFAULT_OBJECT_SIZE sizeof(object)
 
 memoryPool __ObjectBaseResourceArray;  // Contains objectBases.
 memoryPool __ObjectResourceArray;      // Contains objects.

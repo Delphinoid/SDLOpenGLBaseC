@@ -1,18 +1,18 @@
 #ifndef MODULEOBJECT_H
 #define MODULEOBJECT_H
 
-#include "object.h"
 #include "memoryPool.h"
+#include "return.h"
 
-#define RESOURCE_DEFAULT_OBJECT_BASE_SIZE sizeof(objectBase)
 #define RESOURCE_DEFAULT_OBJECT_BASE_NUM 1024
-
-#define RESOURCE_DEFAULT_OBJECT_SIZE sizeof(object)
 #define RESOURCE_DEFAULT_OBJECT_NUM 4096
 
 // Forward declarations for inlining.
 extern memoryPool __ObjectBaseResourceArray;  // Contains objectBases.
 extern memoryPool __ObjectResourceArray;      // Contains objects.
+
+typedef struct objectBase objectBase;
+typedef struct object object;
 
 /** Support locals? Merge all module containers? **/
 /** Use compiler constants for loop offsets?     **/

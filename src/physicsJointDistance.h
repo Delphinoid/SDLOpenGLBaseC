@@ -1,7 +1,7 @@
 #ifndef PHYSICSJOINTDISTANCE_H
 #define PHYSICSJOINTDISTANCE_H
 
-#include "physicsConstraint.h"
+#include "physicsSettings.h"
 #include "vec3.h"
 
 // Constrains two bodies so that they

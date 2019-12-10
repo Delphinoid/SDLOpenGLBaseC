@@ -1,9 +1,12 @@
 #ifndef TEXTUREWRAPPER_H
 #define TEXTUREWRAPPER_H
 
-#include "texture.h"
+#include <SDL2/SDL_opengl.h>
 #include "animation.h"
 #include "rectangle.h"
+#include "return.h"
+
+typedef struct texture texture;
 
 // Contains details describing a single image.
 typedef struct {
@@ -18,7 +21,7 @@ typedef struct {
 } twAnim;
 
 // Combines the above structures.
-typedef struct {
+typedef struct textureWrapper {
 	twAnim *animations;  // Holds twAnims.
 	animIndex_t animationNum;
 	char *name;

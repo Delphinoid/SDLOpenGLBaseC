@@ -1,8 +1,8 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
-#include "return.h"
 #include <SDL2/SDL_opengl.h>
+#include "return.h"
 
 #define TEXTURE_FILTER_MODE_ANY       0
 #define TEXTURE_FILTER_MODE_NEAREST   1
@@ -18,7 +18,7 @@
 // This, plus the extra byte overhead for the active flag
 // in memory pools, makes the final block divisible by
 // 8 bytes, reducing waste on 32-bit platforms.
-typedef struct {
+typedef struct texture {
 
 	// OpenGL texture IDs.
 	GLuint diffuseID;

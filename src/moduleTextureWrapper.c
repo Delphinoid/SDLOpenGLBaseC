@@ -1,8 +1,12 @@
 #include "moduleTextureWrapper.h"
 #include "moduleSettings.h"
+#include "textureWrapper.h"
 #include "memoryManager.h"
 #include "inline.h"
 #include <string.h>
+
+#define RESOURCE_DEFAULT_TEXTURE_WRAPPER_SIZE sizeof(textureWrapper)
+#define RESOURCE_TEXTURE_WRAPPER_BLOCK_SIZE memPoolBlockSize(sizeof(textureWrapper))
 
 memoryPool __TextureWrapperResourceArray;  // Contains textureWrappers.
 

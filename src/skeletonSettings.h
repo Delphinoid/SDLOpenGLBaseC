@@ -1,0 +1,8 @@
+#ifndef SKELETONSETTINGS_H
+#define SKELETONSETTINGS_H
+
+#ifndef SKELETON_MAX_BONE_NUM
+	#define SKELETON_MAX_BONE_NUM 128
+#endif
+
+#endif

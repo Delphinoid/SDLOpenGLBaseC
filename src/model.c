@@ -1,12 +1,12 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include "model.h"
-#include "memoryManager.h"
+#include "vertex.h"
+#include "skeleton.h"
 #include "moduleSkeleton.h"
+#include "memoryManager.h"
 #include "helpersFileIO.h"
 #include "inline.h"
-#include <float.h>
-#include <string.h>
 
 #define MODEL_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Models"FILE_PATH_DELIMITER_STRING
 #define MODEL_RESOURCE_DIRECTORY_LENGTH 17

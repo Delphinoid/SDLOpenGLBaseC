@@ -1,5 +1,7 @@
 #include "graphicsRenderer.h"
 #include "memoryManager.h"
+#include "camera.h"
+#include "scene.h"
 /** Shouldn't need to include object.h. Use gfxRenderStructure. **/
 #include "object.h"
 /** Shouldn't need to include object.h. Use gfxRenderStructure. **/
@@ -164,7 +166,7 @@ static __FORCE_INLINE__ void gfxRendererDrawElement(gfxRenderElement *const rest
 	switch(element->type){
 		case GFX_RNDR_ELEMENT_TYPE_OBJECT:
 			/** REMOVE THIS LINE EVENTUALLY **/
-			element->distance = camDistance(cam, ((const object *const)element->structure)->state.skeleton[0].position);
+			element->distance = camDistance(cam, ((const object *const)element->structure)->state.configuration[0].position);
 			renderModel((const object *const)element->structure, element->distance, cam, interpT, gfxMngr);
 		break;
 	}

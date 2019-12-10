@@ -1,10 +1,10 @@
 #include "model.h"
+#include "skeleton.h"
+#include "vertex.h"
 #include "memoryManager.h"
 #include "helpersFileIO.h"
 #include "helpersMisc.h"
 #include <stdlib.h>
-#include <string.h>
-#include <float.h>
 
 /** Merge mdlWavefrontObjLoad() with mdlLoad(). **/
 

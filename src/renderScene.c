@@ -1,6 +1,9 @@
 #include "graphicsManager.h"
 #include "helpersMath.h"
 #include "object.h"
+#include "texture.h"
+#include "model.h"
+#include "renderable.h"
 #include "camera.h"
 #include <math.h>
 
@@ -21,8 +24,8 @@ void renderModel(const object *const restrict obj, const float distance, const c
 	const renderable *currentRndr = obj->renderables;
 
 	mat4 *transformCurrent = gfxMngr->sklTransformState;
-	const bone *bCurrent = obj->state.skeleton;
-	const bone *bPrevious = (obj->state.previous == NULL ? bCurrent : obj->state.previous->skeleton);
+	const bone *bCurrent = obj->state.configuration;
+	const bone *bPrevious = (obj->state.previous == NULL ? bCurrent : obj->state.previous->configuration);
 
 	boneIndex_t boneNum = obj->skeletonData.skl->boneNum;
 	sklNode *nLayout = obj->skeletonData.skl->bones;

@@ -1,17 +1,16 @@
 #ifndef MODULETEXTURE_H
 #define MODULETEXTURE_H
 
-#include "texture.h"
 #include "memoryPool.h"
+#include "return.h"
 
-#define RESOURCE_DEFAULT_TEXTURE_SIZE sizeof(texture)
 #define RESOURCE_DEFAULT_TEXTURE_NUM 4096
-
 #define RESOURCE_TEXTURE_CONSTANTS 1
-#define RESOURCE_TEXTURE_BLOCK_SIZE memPoolBlockSize(sizeof(texture))
 
 // Forward declaration for inlining.
 extern memoryPool __TextureResourceArray;  // Contains textures.
+
+typedef struct texture texture;
 
 /** Support locals? Merge all module containers? **/
 /** Use compiler constants for loop offsets?     **/

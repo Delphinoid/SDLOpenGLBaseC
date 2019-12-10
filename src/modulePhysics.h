@@ -1,34 +1,18 @@
 #ifndef MODULEPHYSICS_H
 #define MODULEPHYSICS_H
 
-#include "physicsRigidBody.h"
-#include "physicsCollider.h"
-#include "physicsJoint.h"
-#include "physicsCollision.h"
-#include "physicsIsland.h"
+#include "skeletonSettings.h"
 #include "memoryList.h"
 #include "memorySLink.h"
 #include "memoryQLink.h"
+#include "return.h"
 
-#define RESOURCE_DEFAULT_RIGID_BODY_LOCAL_SIZE sizeof(physRigidBodyBase)
 #define RESOURCE_DEFAULT_RIGID_BODY_LOCAL_NUM 512*SKELETON_MAX_BONE_NUM
-
-#define RESOURCE_DEFAULT_RIGID_BODY_SIZE sizeof(physRigidBody)
 #define RESOURCE_DEFAULT_RIGID_BODY_NUM SKELETON_MAX_BONE_NUM*2048
-
-#define RESOURCE_DEFAULT_COLLIDER_SIZE sizeof(physCollider)
 #define RESOURCE_DEFAULT_COLLIDER_NUM RESOURCE_DEFAULT_RIGID_BODY_NUM
-
-#define RESOURCE_DEFAULT_JOINT_SIZE sizeof(physJoint)
 #define RESOURCE_DEFAULT_JOINT_NUM RESOURCE_DEFAULT_RIGID_BODY_NUM
-
-#define RESOURCE_DEFAULT_CONTACT_PAIR_SIZE sizeof(physContactPair)
 #define RESOURCE_DEFAULT_CONTACT_PAIR_NUM RESOURCE_DEFAULT_RIGID_BODY_NUM
-
-#define RESOURCE_DEFAULT_SEPARATION_PAIR_SIZE sizeof(physSeparationPair)
 #define RESOURCE_DEFAULT_SEPARATION_PAIR_NUM RESOURCE_DEFAULT_RIGID_BODY_NUM
-
-#define RESOURCE_DEFAULT_AABB_NODE_SIZE sizeof(aabbNode)
 #define RESOURCE_DEFAULT_AABB_NODE_NUM RESOURCE_DEFAULT_RIGID_BODY_NUM
 
 // Forward declarations for inlining.
@@ -39,6 +23,14 @@ extern memoryQLink __PhysicsJointResourceArray;           // Contains physJoints
 extern memoryQLink __PhysicsContactPairResourceArray;     // Contains physContactPairs.
 extern memoryQLink __PhysicsSeparationPairResourceArray;  // Contains physSeparationPairs.
 extern memoryList  __PhysicsAABBNodeResourceArray;        // Contains aabbNodes.
+
+typedef struct physRigidBodyBase physRigidBodyBase;
+typedef struct physRigidBody physRigidBody;
+typedef struct physCollider physCollider;
+typedef struct physJoint physJoint;
+typedef struct physContactPair physContactPair;
+typedef struct physSeparationPair physSeparationPair;
+typedef struct aabbNode aabbNode;
 
 /** Support locals? Merge all module containers? **/
 /** Use compiler constants for loop offsets?     **/

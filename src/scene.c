@@ -1,4 +1,5 @@
 #include "scene.h"
+#include "object.h"
 #include "memoryManager.h"
 #include "inline.h"
 

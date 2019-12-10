@@ -1,9 +1,9 @@
 #ifndef RENDERABLE_H
 #define RENDERABLE_H
 
-#include "model.h"
 #include "textureWrapper.h"
-#include "camera.h"
+#include "mat4.h"
+#include "flags.h"
 
 #define BILLBOARD_DISABLED         0x00
 #define BILLBOARD_LOCK_X           0x01  // Whether or not the object uses the camera's rotated X axis.
@@ -20,19 +20,16 @@
 	#define BILLBOARD_SCALE_CALIBRATION_DISTANCE 7.5f  // How far away an object should be for a 1:1 scale.
 #endif
 
+typedef struct model model;
+typedef struct camera camera;
+
 /** Add default state data to renderable base. **/
-typedef struct {
+typedef struct renderableBase {
 	model *mdl;          // A pointer to the renderable's associated model.
 	textureWrapper *tw;  // A pointer to the renderable's associated texture wrapper.
 } renderableBase;
 
 typedef struct {
-
-	// Render data.
-	float alpha;          // Updated alpha.
-	/** Is this really worth it? **/
-	float alphaCurrent;   // Current alpha for rendering.
-	float alphaPrevious;  // Previous alpha for rendering.
 
 	// Billboard data.
 	flags_t flags;
@@ -40,9 +37,15 @@ typedef struct {
 	vec3 *target;  // Pointer to billboard target. NULL if not using an arbitrary target.
 	float scale;   // Scale option calibration distance. Should be between 0 and 1.
 
+	// Render data.
+	float alpha;          // Updated alpha.
+	/** Is this really worth it? **/
+	float alphaCurrent;   // Current alpha for rendering.
+	float alphaPrevious;  // Previous alpha for rendering.
+
 } rndrState;
 
-typedef struct {
+typedef struct renderable {
 	model *mdl;
 	twInstance twi;
 	rndrState state;

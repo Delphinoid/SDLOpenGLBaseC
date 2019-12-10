@@ -1,8 +1,12 @@
 #include "moduleTexture.h"
 #include "moduleSettings.h"
+#include "texture.h"
 #include "memoryManager.h"
 #include "inline.h"
 #include <string.h>
+
+#define RESOURCE_DEFAULT_TEXTURE_SIZE sizeof(texture)
+#define RESOURCE_TEXTURE_BLOCK_SIZE memPoolBlockSize(sizeof(texture))
 
 memoryPool __TextureResourceArray;  // Contains textures.
 

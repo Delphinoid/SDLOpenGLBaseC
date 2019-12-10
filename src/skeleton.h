@@ -1,17 +1,14 @@
 #ifndef SKELETON_H
 #define SKELETON_H
 
+#include "skeletonShared.h"
 #include "bone.h"
 #include "animation.h"
 #include "flags.h"
 #include "return.h"
 
-#define SKELETON_MAX_BONE_NUM 128
-
 #define SKELETON_ANIM_INSTANCE_ADDITIVE  0
 #define SKELETON_ANIM_INSTANCE_OVERWRITE 1
-
-typedef uint_least8_t boneIndex_t;
 
 // Skeleton node, containing a bone and the index of its parent.
 // Bone states are stored as offsets from their parents.
@@ -23,7 +20,7 @@ typedef struct {
 } sklNode;
 
 // Combines the above structures.
-typedef struct {
+typedef struct skeleton {
 	sklNode *bones;  // Depth-first vector of each bone.
 	boneIndex_t boneNum;
 	char *name;
@@ -50,7 +47,7 @@ typedef struct {
 // Animation frames are independent and not relative to the previous frame.
 // They are, however, relative to the skeleton's bind position. For example,
 // translations are relative to the bind pose's axes, not the current frame's.
-typedef struct {
+typedef struct sklAnim {
 	animationData animData;
 	boneIndex_t boneNum;  // The total number of unique bones in the animation.
 	/** char* rather than char**? **/
@@ -63,7 +60,7 @@ typedef struct {
 // Skeletal animation blending works using "animation fragments".
 // Animation fragment, containing an animation pointer, an animator, a bone lookup and a blend.
 /** After implementing the intensity value, maybe remove animation fragments. **/
-typedef struct {
+typedef struct sklAnimFragment {
 
 	const sklAnim *animation;
 	animationInstance animator;
@@ -88,7 +85,7 @@ typedef struct {
 
 // Skeletal animation instance.
 /** Implement "intensity" value for blending. **/
-typedef struct {
+typedef struct sklAnimInstance {
 	sklAnimFragment *fragments;
 	float timeMod;
 	flags_t flags;
@@ -96,7 +93,7 @@ typedef struct {
 
 // Skeleton instance.
 /** Restructure for proper element attachments (and I've forgotten again, fantastic) **/
-typedef struct {
+typedef struct sklInstance {
 	sklAnimInstance *animations;
 	float timeMod;
 	const skeleton *skl;

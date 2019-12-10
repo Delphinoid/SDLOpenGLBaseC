@@ -1,6 +1,7 @@
 #include "textureWrapper.h"
-#include "memoryManager.h"
+#include "texture.h"
 #include "moduleTexture.h"
+#include "memoryManager.h"
 #include "helpersFileIO.h"
 #include "inline.h"
 #include <SDL2/SDL.h>

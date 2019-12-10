@@ -1,16 +1,19 @@
 #ifndef MODULESCENE_H
 #define MODULESCENE_H
 
-#include "scene.h"
-#include "memoryList.h"
+#include "sceneSettings.h"
+#include "memoryPool.h"
 #include "memorySLink.h"
+#include "return.h"
 
-#define RESOURCE_DEFAULT_SCENE_SIZE sizeof(scene)
 #define RESOURCE_DEFAULT_SCENE_NUM 2
 
 // Forward declarations for inlining.
 extern memoryPool  __SceneResourceArray;      // Contains scenes.
 extern memorySLink __SceneZoneResourceArray;  // Contains zones.
+
+typedef struct scene scene;
+typedef struct scnZone scnZone;
 
 /** Support locals? Merge all module containers? **/
 /** Use compiler constants for loop offsets?     **/

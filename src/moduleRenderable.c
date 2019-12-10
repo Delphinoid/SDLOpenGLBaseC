@@ -1,7 +1,11 @@
 #include "moduleRenderable.h"
 #include "moduleSettings.h"
+#include "renderable.h"
 #include "memoryManager.h"
 #include "inline.h"
+
+#define RESOURCE_DEFAULT_RENDERABLE_BASE_SIZE sizeof(renderableBase)
+#define RESOURCE_DEFAULT_RENDERABLE_SIZE sizeof(renderable)
 
 memorySLink __RenderableBaseResourceArray;  // Contains renderable.
 memorySLink __RenderableResourceArray;      // Contains rndrInstances.

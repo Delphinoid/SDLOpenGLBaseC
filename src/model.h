@@ -2,8 +2,7 @@
 #define MODEL_H
 
 #include <SDL2/SDL_opengl.h>
-#include "vertex.h"
-#include "skeleton.h"
+#include "return.h"
 
 /** LODs? **/
 
@@ -11,13 +10,15 @@ typedef uint_least8_t lodNum_t;
 typedef GLsizei vertexIndex_t;
 typedef GLsizei vertexIndexNum_t;
 
+typedef struct skeleton skeleton;
+
 typedef struct {
 	float distance;
 	const void *offset;  // Technically a uintptr_t, but stored as a void pointer for OpenGL.
 	vertexIndexNum_t indexNum;
 } mdlLOD;
 
-typedef struct {
+typedef struct model {
 
 	// Skeleton associated with the model.
 	const skeleton *skl;

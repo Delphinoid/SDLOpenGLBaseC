@@ -1,7 +1,8 @@
 #ifndef PHYSICSJOINTFIXED_H
 #define PHYSICSJOINTFIXED_H
 
-#include "physicsConstraint.h"
+#include "physicsSettings.h"
+#include "return.h"
 
 // Keeps two bodies rigidly connected, preventing
 // relative translational or rotational changes

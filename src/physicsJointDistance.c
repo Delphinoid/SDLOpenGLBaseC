@@ -1,7 +1,8 @@
 #include "physicsJoint.h"
 #include "physicsRigidBody.h"
-#include <math.h>
+#include "physicsConstraint.h"
 #include "inline.h"
+#include <math.h>
 
 // ----------------------------------------------------------------------
 //

@@ -2,11 +2,7 @@
 #define OBJECT_H
 
 #include "graphicsRenderGroup.h"
-#include "physicsRigidBody.h"
-#include "physicsIsland.h"
-#include "renderable.h"
 #include "skeleton.h"
-#include "collider.h"
 #include "state.h"
 
 /** Fix skeletons then physics structs. **/
@@ -19,8 +15,19 @@
 
 typedef uint_least8_t renderableIndex_t;
 
+typedef struct model model;
+typedef struct textureWrapper textureWrapper;
+typedef struct renderableBase renderableBase;
+typedef struct renderable renderable;
+typedef struct skeleton skeleton;
+typedef struct physRigidBodyBase physRigidBodyBase;
+typedef struct physRigidBody physRigidBody;
+typedef struct physIsland physIsland;
+typedef struct collider collider;
+typedef struct vertex vertex;
+
 /** TODO: Make the instance in all base / instance pairs less reliant on the base if possible. **/
-typedef struct {
+typedef struct objectBase {
 
 	/** Include previous state num. **/
 
@@ -46,13 +53,13 @@ typedef struct {
 typedef struct objState objState;
 typedef struct objState {
 
-	bone *skeleton;      // Skeleton state.
-	objState *previous;  // Previous state.
+	bone *configuration;  // Skeleton state.
+	objState *previous;   // Previous state.
 
 } objState;
 
 /** Store pointer to previous bones / hitboxes. **/
-typedef struct {
+typedef struct object {
 
 	/** Access base object animations array? **/
 	/** Store model matrix here, update only when changed? **/

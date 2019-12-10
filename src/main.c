@@ -18,6 +18,16 @@
 #include "moduleScene.h"
 #include "moduleCamera.h"
 
+#include "texture.h"
+#include "model.h"
+#include "renderable.h"
+#include "physicsRigidBody.h"
+#include "physicsCollider.h"
+#include "physicsJoint.h"
+#include "object.h"
+#include "scene.h"
+#include "camera.h"
+
 /**
 *** TREE ITERATION FIXES
 **/
@@ -63,7 +73,7 @@ int main(int argc, char **argv){
 	moduleSceneResourcesInit();
 	moduleCameraResourcesInit();
 
-	printf("%u + ", memPoolBlockSize(RESOURCE_DEFAULT_TEXTURE_SIZE)*RESOURCE_DEFAULT_TEXTURE_NUM);
+	/**printf("%u + ", memPoolBlockSize(RESOURCE_DEFAULT_TEXTURE_SIZE)*RESOURCE_DEFAULT_TEXTURE_NUM);
 
 	printf("%u + ", memPoolBlockSize(RESOURCE_DEFAULT_TEXTURE_WRAPPER_SIZE)*RESOURCE_DEFAULT_TEXTURE_WRAPPER_NUM);
 
@@ -90,7 +100,7 @@ int main(int argc, char **argv){
 
 	printf("%u + ", memPoolBlockSize(RESOURCE_DEFAULT_SCENE_SIZE)*RESOURCE_DEFAULT_SCENE_NUM);
 
-	printf("%u\n", memPoolBlockSize(RESOURCE_DEFAULT_CAMERA_SIZE)*RESOURCE_DEFAULT_CAMERA_NUM);
+	printf("%u\n", memPoolBlockSize(RESOURCE_DEFAULT_CAMERA_SIZE)*RESOURCE_DEFAULT_CAMERA_NUM);**/
 
 	// Textures.
 	texture *tempTex = moduleTextureAllocate();

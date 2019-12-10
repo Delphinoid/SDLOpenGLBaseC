@@ -1,18 +1,18 @@
 #ifndef MODULERENDERABLE_H
 #define MODULERENDERABLE_H
 
-#include "renderable.h"
 #include "memorySLink.h"
+#include "return.h"
 
-#define RESOURCE_DEFAULT_RENDERABLE_BASE_SIZE sizeof(renderableBase)
 #define RESOURCE_DEFAULT_RENDERABLE_BASE_NUM 1024
-
-#define RESOURCE_DEFAULT_RENDERABLE_SIZE sizeof(renderable)
 #define RESOURCE_DEFAULT_RENDERABLE_NUM 4096
 
 // Forward declarations for inlining.
-extern memorySLink __RenderableResourceArray;          // Contains renderable.
-extern memorySLink __RenderableInstanceResourceArray;  // Contains rndrInstances.
+extern memorySLink __RenderableBaseResourceArray;  // Contains renderable.
+extern memorySLink __RenderableResourceArray;      // Contains rndrInstances.
+
+typedef struct renderableBase renderableBase;
+typedef struct renderable renderable;
 
 /** Support locals? Merge all module containers? **/
 /** Use compiler constants for loop offsets?     **/

@@ -1,8 +1,9 @@
 #include "physicsJoint.h"
 #include "physicsRigidBody.h"
+#include "physicsConstraint.h"
+#include "inline.h"
 #include <math.h>
 #include <string.h>
-#include "inline.h"
 
 #define PHYSICS_JOINT_SPHERE_CONE_LIMIT_LOWER 0x02
 

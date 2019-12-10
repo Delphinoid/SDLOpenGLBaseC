@@ -1,11 +1,10 @@
 #ifndef PHYSICSCOLLISION_H
 #define PHYSICSCOLLISION_H
 
-#include "physicsShared.h"
+#include "physicsSettings.h"
 #ifdef PHYSICS_CONTACT_FRICTION_CONSTRAINT
 #include "physicsJointFriction.h"
 #endif
-#include "physicsConstraint.h"
 #include "collision.h"
 #include "mat2.h"
 

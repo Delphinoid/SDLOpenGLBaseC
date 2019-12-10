@@ -5,10 +5,10 @@
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
 #include "graphicsViewport.h"
+#include "skeletonShared.h"
+#include "bone.h"
 #include "vertex.h"
-#include "skeleton.h"
 #include "memoryShared.h"
-#include "mat4.h"
 
 #define GFX_DEFAULT_GL_VERSION_MAJOR 3
 #define GFX_DEFAULT_GL_VERSION_MINOR 3

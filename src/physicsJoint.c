@@ -1,5 +1,8 @@
-#include "modulePhysics.h"
+#include "physicsJoint.h"
+#include "physicsRigidBody.h"
+#include "memoryQLink.h"
 #include "inline.h"
+#include <stddef.h>
 
 void physJointInit(physJoint *const restrict joint, const flags_t flags, const physJointType_t type){
 	joint->type = type;

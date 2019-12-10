@@ -1,8 +1,11 @@
 #include "moduleScene.h"
 #include "moduleSettings.h"
+#include "scene.h"
 #include "memoryManager.h"
 #include "inline.h"
 #include <string.h>
+
+#define RESOURCE_DEFAULT_SCENE_SIZE sizeof(scene)
 
 memoryPool __SceneResourceArray;  // Contains scenes.
 
