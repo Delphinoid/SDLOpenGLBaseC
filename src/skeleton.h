@@ -124,7 +124,7 @@ return_t skliInit(sklInstance *const restrict skli, const skeleton *const restri
 return_t skliLoad(sklInstance *const restrict skli, const char *const restrict prgPath, const char *const restrict filePath);
 sklAnimInstance *skliAnimationNew(sklInstance *const restrict skli, const flags_t flags);
 void skliAnimationDelete(sklInstance *const restrict skli, sklAnimInstance *const restrict anim, sklAnimInstance *const restrict previous);
-void skliUpdateAnimations(sklInstance *const restrict skli, const float elapsedTime, const float interpT);
+void skliTick(sklInstance *const restrict skli, const float elapsedTime, const float interpT);
 //void skliGenerateBoneState(sklInstance *skli, bone *boneState, const boneIndex_t boneID);
 void skliGenerateBoneState(const sklInstance *const restrict skli, const boneIndex_t id, const char *const restrict name, bone *const restrict state);
 ///void skliSetAnimationType(sklInstance *skli, const animIndex_t slot, const flags_t additive);

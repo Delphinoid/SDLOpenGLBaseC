@@ -591,8 +591,8 @@ void twiInit(twInstance *const restrict twi, const textureWrapper *const tw){
 	animInstInit(&twi->animator);
 }
 
-__FORCE_INLINE__ void twiAnimate(twInstance *const restrict twi, const float elapsedTime){
-	animAdvance(&twi->animator, &twi->tw->animations[twi->currentAnim].animData, elapsedTime*twi->timeMod);
+__FORCE_INLINE__ void twiTick(twInstance *const restrict twi, const float elapsedTime){
+	animTick(&twi->animator, &twi->tw->animations[twi->currentAnim].animData, elapsedTime*twi->timeMod);
 }
 
 __FORCE_INLINE__ GLuint twiTextureWidth(const twInstance *const restrict twi){
@@ -630,7 +630,7 @@ __FORCE_INLINE__ float twiFrameHeight(const twInstance *const restrict twi){
 	return twAnimationSubframe(twi->tw, twi->currentAnim, twi->animator.currentFrame)->h;
 }
 
-const twFrame *twiRenderState(const twInstance *const restrict twi, const float interpT){
+const twFrame *twiState(const twInstance *const restrict twi, const float interpT){
 
 	// Make sure the current animation and frame are valid (within proper bounds)
 	//if(
@@ -639,7 +639,7 @@ const twFrame *twiRenderState(const twInstance *const restrict twi, const float 
 	//){
 
 		frameIndex_t frame;
-		animRenderState(&twi->animator, &twAnimation(twi->tw, twi->currentAnim)->animData, interpT, &frame, NULL, NULL);
+		animState(&twi->animator, &twAnimation(twi->tw, twi->currentAnim)->animData, interpT, &frame, NULL, NULL);
 		return &twi->tw->animations[twi->currentAnim].frames[frame];
 
 	//}else{

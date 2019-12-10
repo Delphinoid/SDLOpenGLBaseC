@@ -78,7 +78,7 @@ void renderModel(const object *const restrict obj, const float distance, const c
 	while(currentRndr != NULL){
 
 		// Get texture information for rendering and feed it to the shader.
-		const twFrame *const restrict frame = twiRenderState(&currentRndr->twi, interpT);
+		const twFrame *const restrict frame = twiState(&currentRndr->twi, interpT);
 		// Bind the texture (if needed).
 		gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, frame->image->diffuseID);
 		// Feed the texture coordinates to the shader.

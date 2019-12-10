@@ -32,6 +32,6 @@ void moduleSceneQueryIslands(const float frequency);
 #else
 void moduleSceneQueryIslands();
 #endif
-void moduleSceneUpdate(const float elapsedTime/**, const float dt**/);
+void moduleSceneTick(const float elapsedTime/**, const float dt**/);
 
 #endif

@@ -43,13 +43,13 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 void twDelete(textureWrapper *const restrict tw);
 
 void twiInit(twInstance *const restrict twi, const textureWrapper *const tw);
-void twiAnimate(twInstance *const restrict twi, const float elapsedTime);
+void twiTick(twInstance *const restrict twi, const float elapsedTime);
 GLuint twiTextureWidth(const twInstance *const restrict twi);
 GLuint twiTextureHeight(const twInstance *const restrict twi);
 const texture *twiTexture(const twInstance *const restrict twi);
 float twiFrameWidth(const twInstance *const restrict twi);
 float twiFrameHeight(const twInstance *const restrict twi);
-const twFrame *twiRenderState(const twInstance *const restrict twi, const float interpT);
+const twFrame *twiState(const twInstance *const restrict twi, const float interpT);
 return_t twiTranslucent(const twInstance *const restrict twi);
 
 #endif

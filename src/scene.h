@@ -82,7 +82,7 @@ return_t scnInit(scene *scn, size_t objectNum, size_t bodyNum);
 object **scnAllocate(scene *scn);
 void scnFree(scene *scn, object **obj);
 
-return_t scnUpdate(scene *scn, const float elapsedTime/**, const float dt**/);
+return_t scnTick(scene *scn, const float elapsedTime/**, const float dt**/);
 
 void scnReset(scene *scn);
 void scnDelete(scene *scn);

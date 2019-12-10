@@ -481,7 +481,7 @@ int main(int argc, char **argv){
 			}
 
 			// Update scenes.
-			moduleSceneUpdate(tickrateTimeMod);
+			moduleSceneTick(tickrateTimeMod);
 
 			// Query physics islands.
 			#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL

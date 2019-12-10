@@ -896,7 +896,7 @@ void sklaiInit(sklAnimInstance *const restrict sklai, const flags_t flags){
 	sklai->timeMod = 1.f;
 	sklai->fragments = NULL;
 }
-static __FORCE_INLINE__ void sklaiUpdateFragments(sklAnimInstance *const restrict sklai, const float elapsedTime, const float interpT){
+static __FORCE_INLINE__ void sklaiTick(sklAnimInstance *const restrict sklai, const float elapsedTime, const float interpT){
 
 	const float elapsedTimeMod = elapsedTime * sklai->timeMod;
 
@@ -922,9 +922,11 @@ static __FORCE_INLINE__ void sklaiUpdateFragments(sklAnimInstance *const restric
 					moduleSkeletonAnimationFragmentFree(&sklai->fragments, frag, previous);
 				}else{
 					// Advance animator, update the blend and go to the next fragment.
-					animAdvance(&frag->animator, &frag->animation->animData, elapsedTimeMod);
-					animRenderState(&frag->animator, &frag->animation->animData, interpT,
-									&frag->animStartFrame, &frag->animEndFrame, &frag->animInterpT);
+					animTick(&frag->animator, &frag->animation->animData, elapsedTimeMod);
+					animState(
+						&frag->animator, &frag->animation->animData, interpT,
+						&frag->animStartFrame, &frag->animEndFrame, &frag->animInterpT
+					);
 					frag->animBlendProgress += elapsedTimeMod;
 					next->animBlendInterpT = frag->animBlendProgress / frag->animBlendTime;
 				}
@@ -941,9 +943,11 @@ static __FORCE_INLINE__ void sklaiUpdateFragments(sklAnimInstance *const restric
 		}
 
 		// Advance animator and exit.
-		animAdvance(&frag->animator, &frag->animation->animData, elapsedTimeMod);
-		animRenderState(&frag->animator, &frag->animation->animData, interpT,
-		                &frag->animStartFrame, &frag->animEndFrame, &frag->animInterpT);
+		animTick(&frag->animator, &frag->animation->animData, elapsedTimeMod);
+		animState(
+			&frag->animator, &frag->animation->animData, interpT,
+			&frag->animStartFrame, &frag->animEndFrame, &frag->animInterpT
+		);
 
 	}
 
@@ -1248,11 +1252,11 @@ __FORCE_INLINE__ void skliAnimationDelete(sklInstance *const restrict skli, sklA
 	sklaiDelete(anim);
 	moduleSkeletonAnimationInstanceFree(&skli->animations, anim, previous);
 }
-__FORCE_INLINE__ void skliUpdateAnimations(sklInstance *const restrict skli, const float elapsedTime, const float interpT){
+__FORCE_INLINE__ void skliTick(sklInstance *const restrict skli, const float elapsedTime, const float interpT){
 	const float elapsedTimeMod = elapsedTime * skli->timeMod;
 	sklAnimInstance *anim = skli->animations;
 	while(anim != NULL){
-		sklaiUpdateFragments(anim, elapsedTimeMod, interpT);
+		sklaiTick(anim, elapsedTimeMod, interpT);
 		anim = moduleSkeletonAnimationInstanceNext(anim);
 	}
 }

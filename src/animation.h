@@ -31,8 +31,8 @@ typedef struct {
 void animInstInit(animationInstance *const restrict animInst);
 void animDataInit(animationData *const restrict animData);
 void animDataDelete(animationData *const restrict animData);
-void animAdvance(animationInstance *const restrict animInst, const animationData *const restrict animData, const float elapsedTime);
-void animRenderState(const animationInstance *const restrict animInst, const animationData *const restrict animData, const float interpT,
-                     frameIndex_t *const restrict startFrame, frameIndex_t *const restrict endFrame, float *const restrict animInterpT);
+void animTick(animationInstance *const restrict animInst, const animationData *const restrict animData, const float elapsedTime);
+void animState(const animationInstance *const restrict animInst, const animationData *const restrict animData, const float interpT,
+               frameIndex_t *const restrict startFrame, frameIndex_t *const restrict endFrame, float *const restrict animInterpT);
 
 #endif

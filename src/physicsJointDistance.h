@@ -4,6 +4,8 @@
 #include "physicsSettings.h"
 #include "vec3.h"
 
+/** Velocity seems to be exploding under certain circumstances. Investigate? **/
+
 // Constrains two bodies so that they
 // stay at a certain distance from each
 // other. Can be rigid (by setting the

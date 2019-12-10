@@ -101,11 +101,11 @@ void moduleSceneQueryIslands(){
 
 }
 
-void moduleSceneUpdate(const float elapsedTime/**, const float dt**/){
+void moduleSceneTick(const float elapsedTime/**, const float dt**/){
 
 	MEMORY_POOL_LOOP_BEGIN(__SceneResourceArray, i, scene *);
 
-		scnUpdate(i, elapsedTime/**, dt**/);
+		scnTick(i, elapsedTime/**, dt**/);
 
 	MEMORY_POOL_LOOP_END(__SceneResourceArray, i, return;);
 

@@ -21,7 +21,7 @@ void animDataDelete(animationData *animData){
 	}
 }
 
-void animAdvance(animationInstance *const restrict animInst, const animationData *const restrict animData, const float elapsedTime){
+void animTick(animationInstance *const restrict animInst, const animationData *const restrict animData, const float elapsedTime){
 
 	if(animData->frameNum > 1){
 
@@ -143,8 +143,8 @@ void animAdvance(animationInstance *const restrict animInst, const animationData
 
 }
 
-void animRenderState(const animationInstance *const restrict animInst, const animationData *const restrict animData, const float interpT,
-                     frameIndex_t *const restrict startFrame, frameIndex_t *const restrict endFrame, float *const restrict animInterpT){
+void animState(const animationInstance *const restrict animInst, const animationData *const restrict animData, const float interpT,
+               frameIndex_t *const restrict startFrame, frameIndex_t *const restrict endFrame, float *const restrict animInterpT){
 
 	// Calculates the start frame, the end frame and the progress through the two based on the provided data.
 

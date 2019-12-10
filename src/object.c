@@ -816,7 +816,7 @@ void objAddAngularVelocity(object *obj, const size_t boneID, const float angle, 
 	physRigidBodyAddAngularVelocity(&obj->skeletonBodies[boneID], angle, x, y, z);
 }**/
 
-return_t objUpdate(object *const restrict obj, physIsland *const restrict island, const float elapsedTime){
+return_t objTick(object *const restrict obj, physIsland *const restrict island, const float elapsedTime){
 
 	boneIndex_t i;
 	renderable *j;
@@ -833,7 +833,7 @@ return_t objUpdate(object *const restrict obj, physIsland *const restrict island
 	}
 
 	// Update each skeletal animation.
-	skliUpdateAnimations(&obj->skeletonData, elapsedTime, 1.f);
+	skliTick(&obj->skeletonData, elapsedTime, 1.f);
 
 	// Update the object's skeleton.
 	for(i = 0; i < obj->skeletonData.skl->boneNum; ++i, ++sklBone, ++sklState, ++configuration){
@@ -932,7 +932,7 @@ return_t objUpdate(object *const restrict obj, physIsland *const restrict island
 	// Update each of the object's renderables.
 	j = obj->renderables;
 	while(j != NULL){
-		rndrUpdate(j, elapsedTime);
+		rndrTick(j, elapsedTime);
 		j = moduleRenderableNext(j);
 	}
 

@@ -55,7 +55,7 @@ void rndrBaseInit(renderableBase *const restrict base);
 
 void rndrInit(renderable *const restrict rndr);
 void rndrInstantiate(renderable *const restrict rndr, const renderableBase *const base);
-void rndrUpdate(renderable *const restrict rndr, const float elapsedTime);
+void rndrTick(renderable *const restrict rndr, const float elapsedTime);
 
 mat4 rndrStateBillboard(const rndrState state, const camera *const restrict cam, const vec3 centroid, mat4 configuration);
 

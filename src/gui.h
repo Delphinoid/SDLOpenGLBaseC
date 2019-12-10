@@ -19,28 +19,18 @@ typedef struct guiElement {
 	renderable rndr;
 
 	// Various function pointers.
-	void (*cursorEnter)();
-	void (*cursorExit)();
-	void (*mouseClick)(const int button);
-	void (*mouseDoubleClick)(const int button);
-	void (*mouseScroll)(const int steps);
-	void (*mouseRelease)(const int button);
-	void (*keyboardInput)(const int key);
+	void (*cursorEnter)(guiElement *const element);
+	void (*cursorExit)(guiElement *const element);
+	void (*mouseClick)(guiElement *const element, const int button);
+	///void (*mouseDoubleClick)(guiElement *const element, const int button);
+	void (*mouseRelease)(guiElement *const element, const int button);
+	void (*mouseScroll)(guiElement *const element, const int steps);
+	void (*keyboardInput)(guiElement *const element, const int key);
 
 	flags_t flags;
 
 } guiElement;
 
-typedef struct {
-
-	// Tree of GUI elements.
-	guiElement root;
-
-	// Linked list of renderables.
-	// These will be things like window / panel templates,
-	// graphics for interactive elements and so on.
-	renderableBase *renderables;
-
-} gui;
+void guiElementTick(guiElement *const element)
 
 #endif

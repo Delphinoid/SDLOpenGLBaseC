@@ -184,7 +184,12 @@ static __FORCE_INLINE__ void physContactInit(physContact *const restrict contact
 	// Normalize the new total normal and generate tangents.
 	normal = vec3NormalizeFastAccurate(normal);
 	physContactNormal(contact) = normal;
+	#ifdef PHYSICS_CONTACT_FRICTION_DELAY
+	vec3ZeroP(&physContactTangent1(contact));
+	vec3ZeroP(&physContactTangent2(contact));
+	#else
 	vec3OrthonormalBasis(normal, &physContactTangent1(contact), &physContactTangent2(contact));
+	#endif
 	//physContactTangent1(contact) = vec3Perpendicular(normal);
 	//physContactTangent2(contact) = vec3Cross(normal, physContactTangent1(contact));
 	#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL

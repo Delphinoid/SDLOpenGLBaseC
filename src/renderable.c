@@ -33,8 +33,8 @@ void rndrInstantiate(renderable *const restrict rndr, const renderableBase *cons
 	rndrStateInit(&rndr->state);
 }
 
-__FORCE_INLINE__ void rndrUpdate(renderable *const restrict rndr, const float elapsedTime){
-	twiAnimate(&rndr->twi, elapsedTime);
+__FORCE_INLINE__ void rndrTick(renderable *const restrict rndr, const float elapsedTime){
+	twiTick(&rndr->twi, elapsedTime);
 	rndr->state.alphaPrevious = rndr->state.alphaCurrent;
 	rndr->state.alphaCurrent = rndr->state.alpha;
 }

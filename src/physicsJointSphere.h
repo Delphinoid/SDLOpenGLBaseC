@@ -8,6 +8,8 @@
 #define PHYSICS_JOINT_SPHERE_CONE_LIMIT_DISABLED 0x00
 #define PHYSICS_JOINT_SPHERE_CONE_LIMIT_ENABLED  0x01
 
+/** This implementation seems utterly wrong. **/
+
 // Allows bodies to rotate around each other
 // while maintaining their relative rotation.
 // The angle may be constrained by a cone.
