@@ -28,6 +28,8 @@
 #include "scene.h"
 #include "camera.h"
 
+#include "gui.h"
+
 /**
 *** TREE ITERATION FIXES
 **/
@@ -132,6 +134,10 @@ int main(int argc, char **argv){
 	twLoad(tempTexWrap, prgPath, "Static"FILE_PATH_DELIMITER_STRING"ntrance2.tdw");
 	tempTexWrap = moduleTextureWrapperAllocate();
 	twLoad(tempTexWrap, prgPath, "Static"FILE_PATH_DELIMITER_STRING"KoboldStatic.tdw");
+	tempTexWrap = moduleTextureWrapperAllocate();
+	twLoad(tempTexWrap, prgPath, "gui"FILE_PATH_DELIMITER_STRING"body.tdw");
+	tempTexWrap = moduleTextureWrapperAllocate();
+	twLoad(tempTexWrap, prgPath, "gui"FILE_PATH_DELIMITER_STRING"border.tdw");
 	/*textureWrapper tempTexWrap;
 	twDefault(&tempTexWrap, &resMngr, &memMngr);
 	cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));
@@ -258,7 +264,7 @@ int main(int argc, char **argv){
 	tempObji->configuration[0].position.x = 6.f;
 	tempObji->configuration[0].position.y = -2.9f;
 	tempObji->configuration[0].position.z = 2.f;
-	tempObji->renderables->state.flags = BILLBOARD_TARGET_SPRITE | BILLBOARD_LOCK_Y;
+	tempObji->renderables->billboardData.flags = BILLBOARD_TARGET_SPRITE | BILLBOARD_LOCK_Y;
 
 	// Sprite Object Instances.
 	//
@@ -282,11 +288,17 @@ int main(int argc, char **argv){
 	camInit(camMain);
 	//camMain->orientation.value = quatNewEuler(0.f, 0.f, 45.f*RADIAN_RATIO);
 	camMain->position.value = vec3New(0.f, 1.f, 7.f);
+	flagsSet(camMain->flags, CAM_PROJECTION_FRUSTUM);
 	//
 	camera *camHUD = moduleCameraAllocate();
 	camInit(camHUD);
 	camHUD->position.value = vec3New(0.f, 0.f, 0.f);
 	flagsSet(camHUD->flags, CAM_PROJECTION_ORTHOGRAPHIC);
+	//
+	camera *camGUI = moduleCameraAllocate();
+	camInit(camGUI);
+	camGUI->position.value = vec3New(0.f, 0.f, 0.f);
+	flagsSet(camGUI->flags, CAM_PROJECTION_OVERLAY);
 
 	physJoint *joint = modulePhysicsJointAllocate();
 	physJointInit(joint, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_DISTANCE);
@@ -298,6 +310,34 @@ int main(int argc, char **argv){
 	);*/
 
 	physJointDistanceInit(&joint->data.distance, vec3Zero(), vec3Zero(), 4.f, 0.f, 0.f);
+
+	guiElement gEl;
+	boneInit(&gEl.root);
+	gEl.root.scale.x = 0.f;
+	gEl.root.scale.y = 0.f;
+	/*vec2ZeroP(&gEl.data.panel.configuration[0]);
+	vec2ZeroP(&gEl.data.panel.configuration[1]);
+	vec2ZeroP(&gEl.data.panel.configuration[2]);
+	vec2ZeroP(&gEl.data.panel.configuration[3]);*/
+	/*rectangle areas[4] = {
+		{.x = 0.f, .y = 0.f, .w = 1.f/3.f, .h = 1.f/3.f},
+		{.x = 2.f/3.f, .y = 0.f, .w = 1.f/3.f, .h = 1.f/3.f},
+		{.x = 0.f, .y = 2.f/3.f, .w = 1.f/3.f, .h = 1.f/3.f},
+		{.x = 2.f/3.f, .y = 2.f/3.f, .w = 1.f/3.f, .h = 1.f/3.f}
+	};*/
+	gEl.flags = GUI_ELEMENT_TYPE_PANEL;
+	//guiPanelInit(&gEl, areas);
+	//rndrStateInit(&gEl.data.panel.rndr.stateData);
+	twiInit(&gEl.data.panel.body, moduleTextureWrapperFind("gui"FILE_PATH_DELIMITER_STRING"body.tdw"));
+	twiInit(&gEl.data.panel.border, moduleTextureWrapperFind("gui"FILE_PATH_DELIMITER_STRING"border.tdw"));
+	gEl.data.panel.offsets[0].x = 3.f/4.f; gEl.data.panel.offsets[0].y = 0.f; gEl.data.panel.offsets[0].w = 1.f/4.f; gEl.data.panel.offsets[0].h = 1.f/5.f;
+	gEl.data.panel.offsets[1].x = 0.f; gEl.data.panel.offsets[1].y = 0.f; gEl.data.panel.offsets[1].w = 1.f/4.f; gEl.data.panel.offsets[1].h = 1.f/5.f;
+	gEl.data.panel.offsets[2].x = 1.f/4.f; gEl.data.panel.offsets[2].y = 0.f; gEl.data.panel.offsets[2].w = 1.f/4.f; gEl.data.panel.offsets[2].h = 1.f/5.f;
+	gEl.data.panel.offsets[3].x = 2.f/4.f; gEl.data.panel.offsets[3].y = 0.f; gEl.data.panel.offsets[3].w = 1.f/4.f; gEl.data.panel.offsets[3].h = 1.f/5.f;
+	gEl.data.panel.offsets[4].x = 0.f; gEl.data.panel.offsets[4].y = 4.f/5.f; gEl.data.panel.offsets[4].w = 1.f; gEl.data.panel.offsets[4].h = 1.f/5.f;
+	gEl.data.panel.offsets[5].x = 0.f; gEl.data.panel.offsets[5].y = 1.f/5.f; gEl.data.panel.offsets[5].w = 1.f; gEl.data.panel.offsets[5].h = 1.f/5.f;
+	gEl.data.panel.offsets[6].x = 0.f; gEl.data.panel.offsets[6].y = 2.f/5.f; gEl.data.panel.offsets[6].w = 1.f; gEl.data.panel.offsets[6].h = 1.f/5.f;
+	gEl.data.panel.offsets[7].x = 0.f; gEl.data.panel.offsets[7].y = 3.f/5.f; gEl.data.panel.offsets[7].w = 1.f; gEl.data.panel.offsets[7].h = 1.f/5.f;
 
 
 
@@ -434,8 +474,10 @@ int main(int argc, char **argv){
 				}else if(tempObji2->skeletonBodies->linearVelocity.z < -9.f){
 					tempObji2->skeletonBodies->linearVelocity.z = -9.f;
 				}
+				--gEl.root.scale.y;
 			}
 			if(DOWN){
+				++gEl.root.scale.y;
 				//tempObji2->skeletonBodies->flags |= (0x04);
 				//moduleObjectIndex(0)->renderables[0].alpha = 0.f;
 				//globalTimeMod = -1.f;
@@ -449,6 +491,9 @@ int main(int argc, char **argv){
 					tempObji2->skeletonBodies->linearVelocity.z += 62.5f * tickratio;
 				}else if(tempObji2->skeletonBodies->linearVelocity.z > 9.f){
 					tempObji2->skeletonBodies->linearVelocity.z = 9.f;
+				}
+				if(tempObji->skeletonData.animations->fragments->animBlendProgress == -1.f){
+					///sklaiChange(&tempObji->skeletonData.animations[0], tempObji->skeletonData.skl, tempObji->base->animations[1], 1.4f, 0, 1000.f);
 				}
 			}
 			if(LEFT){
@@ -464,8 +509,10 @@ int main(int argc, char **argv){
 				}else if(tempObji2->skeletonBodies->linearVelocity.x < -9.f){
 					tempObji2->skeletonBodies->linearVelocity.x = -9.f;
 				}
+				--gEl.root.scale.x;
 			}
 			if(RIGHT){
+				++gEl.root.scale.x;
 				//const quat changeRotation =
 				//quatNewEuler(&changeRotation, 0.f, 90.f*RADIAN_RATIO, 0.f);
 				//quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, tickratioTimeMod, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
@@ -478,7 +525,7 @@ int main(int argc, char **argv){
 				}else if(tempObji2->skeletonBodies->linearVelocity.x > 9.f){
 					tempObji2->skeletonBodies->linearVelocity.x = 9.f;
 				}
-			}
+			}///camMain->target.value = tempObji2->configuration[0].position;
 
 			// Update scenes.
 			moduleSceneTick(tickrateTimeMod);
@@ -511,6 +558,25 @@ int main(int argc, char **argv){
 			gfxRendererDrawScene(&gfxMngr, camMain, scnMain, interpT);
 			// Render the HUD.
 			gfxRendererDrawScene(&gfxMngr, camHUD, scnHUD, interpT);
+
+
+			///
+			// Update the camera's VP matrix.
+			camUpdateViewProjectionMatrix(
+				camGUI,
+				gfxMngr.windowModified,
+				gfxMngr.viewport.width,
+				gfxMngr.viewport.height,
+				interpT
+			);
+			// Switch to the camera's view.
+			gfxMngrSwitchView(&gfxMngr, &camGUI->view);
+			// Feed the camera's view-projection matrix into the shader.
+			glUniformMatrix4fv(gfxMngr.vpMatrixID, 1, GL_FALSE, &camGUI->viewProjectionMatrix.m[0][0]);
+			guiElementRender(&gEl, &gfxMngr, camGUI, 0.f, interpT);
+			///
+
+
 			// Update the window.
 			SDL_GL_SwapWindow(gfxMngr.window);
 

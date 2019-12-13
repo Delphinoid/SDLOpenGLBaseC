@@ -4,42 +4,14 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
+#include "graphicsManagerSettings.h"
 #include "graphicsViewport.h"
 #include "skeletonShared.h"
 #include "bone.h"
 #include "vertex.h"
 #include "memoryShared.h"
 
-#define GFX_DEFAULT_GL_VERSION_MAJOR 3
-#define GFX_DEFAULT_GL_VERSION_MINOR 3
-
-#define GFX_DEFAULT_WINDOW_ASPECT_RATIO_X 16.f
-#define GFX_DEFAULT_WINDOW_ASPECT_RATIO_Y 9.f
-#define GFX_DEFAULT_WINDOW_WIDTH 800
-#define GFX_DEFAULT_WINDOW_HEIGHT 450
-#define GFX_DEFAULT_WINDOW_FLAGS (SDL_WINDOW_OPENGL | \
-                                  SDL_WINDOW_ALLOW_HIGHDPI | \
-                                  SDL_WINDOW_RESIZABLE | \
-                                  SDL_WINDOW_INPUT_FOCUS | \
-                                  SDL_WINDOW_MOUSE_FOCUS)
-
-#define GFX_DEFAULT_FREQUENCY 22050
-#define GFX_DEFAULT_CHANNELS 2
-#define GFX_DEFAULT_CHUNKSIZE 2048
-
-#define SPRITE_MAX_BATCH_SIZE (6*64)  /** Move this! **/
-#define GFX_TEXTURE_SAMPLER_NUM 1
-
-#define GFX_DEFAULT_BIAS_MIP 0.f
-#define GFX_DEFAULT_BIAS_LOD 0
-
-#define GFX_WINDOW_MODE_WINDOWED   0
-#define GFX_WINDOW_MODE_FULLSCREEN SDL_WINDOW_FULLSCREEN
-
-#define GFX_WINDOW_FILL_WINDOWBOX 0
-#define GFX_WINDOW_FILL_STRETCH   1
-
-typedef struct {
+typedef struct graphicsManager {
 
 	// OpenGL / SDL window and context.
 	SDL_Window *window;
@@ -52,11 +24,8 @@ typedef struct {
 
 	// Per-instance uniforms.
 	GLuint vpMatrixID;
-	GLuint textureFragmentID;
+	GLuint textureFragmentID[GFX_TEXTURE_SAMPLER_NUM];
 	GLuint boneArrayID[SKELETON_MAX_BONE_NUM];
-	/**GLuint bonePositionArrayID[SKELETON_MAX_BONE_NUM];
-	GLuint boneOrientationArrayID[SKELETON_MAX_BONE_NUM];
-	GLuint boneScaleArrayID[SKELETON_MAX_BONE_NUM];**/
 	GLuint alphaID;
 	GLuint mipID;
 
@@ -70,10 +39,6 @@ typedef struct {
 
 	// Previously bound texture ID for more efficient binding.
 	GLuint lastTexID;
-
-	// VAO and VBO for rendering sprites.
-	GLuint spriteVaoID;
-	GLuint spriteVboID;
 
 	// Identity matrix.
 	mat4 identityMatrix;

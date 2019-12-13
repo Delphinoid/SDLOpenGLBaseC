@@ -25,6 +25,8 @@ typedef struct physRigidBody physRigidBody;
 typedef struct physIsland physIsland;
 typedef struct collider collider;
 typedef struct vertex vertex;
+typedef struct camera camera;
+typedef struct graphicsManager graphicsManager;
 
 /** TODO: Make the instance in all base / instance pairs less reliant on the base if possible. **/
 typedef struct objectBase {
@@ -121,7 +123,9 @@ void objAddAngularVelocity(object *obj, const size_t boneID, const float angle, 
 
 return_t objTick(object *const restrict obj, physIsland *const restrict island, const float elapsedTime);
 
-gfxRenderGroup_t objRenderGroup(const object *const restrict obj, const float interpT);
 void objGenerateSprite(const object *const restrict obj, const renderable *const restrict rndr, const float interpT, const float *const restrict texFrag, vertex *const restrict vertices);
+
+gfxRenderGroup_t objRenderGroup(const object *const restrict obj, const float interpT);
+void objRender(const object *const restrict obj, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const float interpT);
 
 #endif

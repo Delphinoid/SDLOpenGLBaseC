@@ -21,7 +21,7 @@
 
 typedef struct object object;
 
-typedef struct scnZone scnZone;
+///typedef struct scnZone scnZone;
 typedef struct {
 
 	// Maximum render distance.
@@ -31,11 +31,18 @@ typedef struct {
 	cAABB bounds;
 
 	// Zone pointer.
-	scnZone *zone;
+	///scnZone *zone;
 
 } scnPortal;
 
 typedef struct scnZone {
+
+	/**
+	*** Eventually, the object pool should
+	*** replace __ObjectResourceArray.
+	*** Or just use an SLink, depending on
+	*** performance.
+	**/
 
 	// Objects in the zone.
 	memoryPool objects;  // Contains object pointers.
@@ -71,6 +78,9 @@ typedef struct scene {
 	memoryPool objects;  // Contains object pointers.
 	size_t objectNum;    // The number of objects in each region.
 	                     // Allows preallocations when rendering.
+
+	// SLink of scene zones.
+	///scnZone *zones;
 
 	// The scene's physics island.
 	physIsland island;

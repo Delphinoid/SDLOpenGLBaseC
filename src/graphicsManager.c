@@ -216,7 +216,6 @@ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, cons
 
 	// Link the uniform variables.
 	gfxMngr->vpMatrixID        = glGetUniformLocation(gfxMngr->shaderProgramID, "vpMatrix");
-	gfxMngr->textureFragmentID = glGetUniformLocation(gfxMngr->shaderProgramID, "textureFragment");
 	gfxMngr->alphaID           = glGetUniformLocation(gfxMngr->shaderProgramID, "alpha");
 	gfxMngr->mipID             = glGetUniformLocation(gfxMngr->shaderProgramID, "mip");
 
@@ -234,15 +233,6 @@ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, cons
 		uniformString[10+numLen+1] = '\0';
 		gfxMngr->boneArrayID[i] = glGetUniformLocation(gfxMngr->shaderProgramID, uniformString);
 
-		/**memcpy(&uniformString[10+numLen], "].position\0", 11*sizeof(char));
-		gfxMngr->bonePositionArrayID[i] = glGetUniformLocation(gfxMngr->shaderProgramID, uniformString);
-
-		memcpy(&uniformString[10+numLen], "].orientation\0", 14*sizeof(char));
-		gfxMngr->boneOrientationArrayID[i] = glGetUniformLocation(gfxMngr->shaderProgramID, uniformString);
-
-		memcpy(&uniformString[10+numLen], "].scale\0", 8*sizeof(char));
-		gfxMngr->boneScaleArrayID[i] = glGetUniformLocation(gfxMngr->shaderProgramID, uniformString);**/
-
 	}
 
 	// Create references to each texture sampler.
@@ -250,7 +240,13 @@ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, cons
 
 		char num[LTOSTR_MAX_LENGTH];
 		const size_t numLen = ltostr(i, &num[0]);
-		char uniformString[16+LTOSTR_MAX_LENGTH];  // LTOSTR_MAX_LENGTH includes NULL terminator.
+		char uniformString[17+LTOSTR_MAX_LENGTH];  // LTOSTR_MAX_LENGTH includes NULL terminator.
+
+		memcpy(&uniformString[0], "textureFragment[", 16);
+		memcpy(&uniformString[16], num, numLen);
+		uniformString[16+numLen] = ']';
+		uniformString[16+numLen+1] = '\0';
+		gfxMngr->textureFragmentID[i] = glGetUniformLocation(gfxMngr->shaderProgramID, uniformString);
 
 		memcpy(&uniformString[0], "textureSampler[", 15);
 		memcpy(&uniformString[15], num, numLen);
@@ -464,12 +460,5 @@ void gfxMngrDestroyProgram(graphicsManager *const restrict gfxMngr){
 	SDL_Quit();
 
 	glDeleteProgram(gfxMngr->shaderProgramID);
-
-	if(gfxMngr->spriteVaoID != 0){
-		glDeleteVertexArrays(1, &gfxMngr->spriteVaoID);
-	}
-	if(gfxMngr->spriteVboID != 0){
-		glDeleteBuffers(1, &gfxMngr->spriteVboID);
-	}
 
 }

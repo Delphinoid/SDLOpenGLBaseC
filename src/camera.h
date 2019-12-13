@@ -10,6 +10,8 @@
 #define CAM_INACTIVE                0x00
 #define CAM_PROJECTION_FRUSTUM      0x01
 #define CAM_PROJECTION_ORTHOGRAPHIC 0x02
+#define CAM_PROJECTION_OVERLAY      0x04
+#define CAM_PROJECTION_IDENTITY     0x08
 
 typedef struct camera {
 
@@ -40,8 +42,8 @@ void camResetInterpolation(camera *const restrict cam);
 
 void camCalculateUp(camera *const restrict cam);
 void camUpdateViewMatrix(camera *const restrict cam, const float interpT);
-void camUpdateProjectionMatrix(camera *const restrict cam, const float windowAspectRatioX, const float windowAspectRatioY, const float interpT);
-void camUpdateViewProjectionMatrix(camera *const restrict cam, const unsigned int windowModified, const float windowAspectRatioX, const float windowAspectRatioY, const float interpT);
+void camUpdateProjectionMatrix(camera *const restrict cam, const float windowWidth, const float windowHeight, const float interpT);
+void camUpdateViewProjectionMatrix(camera *const restrict cam, const unsigned int windowModified, const float windowWidth, const float windowHeight, const float interpT);
 
 float camDistance(const camera *const restrict cam, const vec3 target);
 

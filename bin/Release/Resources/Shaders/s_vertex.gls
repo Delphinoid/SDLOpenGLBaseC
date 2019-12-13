@@ -22,7 +22,7 @@ layout(location = 4) in vec4  vertexBoneWeights;
 
 // Per-instance data (same as per-call for now since we're not using instancing).
 uniform mat4 vpMatrix;
-uniform vec4 textureFragment;
+uniform vec4 textureFragment[GFX_TEXTURE_SAMPLER_NUM];
 uniform mat4 boneArray[SKELETON_MAX_BONE_NUM];
 
 // Per-call data.
@@ -57,13 +57,7 @@ void main(){
 	ivec2 textureDimensions = textureSize(textureSampler[0], 0);
 	
 	// Calculate UVs for the current vertex based on the texture dimensions.
-	if(textureFragment[0] != 0.0 || textureFragment[1] != 0.0 || textureFragment[2] != 1.0 || textureFragment[3] != 1.0){
-		UV.x = vertexUV.x * textureFragment[2] + textureFragment[0];
-		UV.y = vertexUV.y * textureFragment[3] + textureFragment[1];
-	}else{
-		// Mostly used for sprites, since the offset calculations are done on the CPU.
-		UV.x = vertexUV.x;
-		UV.y = vertexUV.y;
-	}
+	UV.x = vertexUV.x * textureFragment[0][2] + textureFragment[0][0];
+	UV.y = vertexUV.y * textureFragment[0][3] + textureFragment[0][1];
 
 }

@@ -1,4 +1,5 @@
 #include "graphicsRenderer.h"
+#include "graphicsRendererSettings.h"
 #include "memoryManager.h"
 #include "camera.h"
 #include "scene.h"
@@ -29,7 +30,13 @@ static __FORCE_INLINE__ void gfxRenderQueueInit(gfxRenderQueue *const restrict q
 	queue->elements = 0;
 }
 
+/** This should be done by the scene using a spatial partitioning system. **/
 static __FORCE_INLINE__ void gfxRenderQueueDepthSort(gfxRenderQueue *const restrict queue){
+
+	//
+
+}
+static __FORCE_INLINE__ void gfxRenderQueueDepthSortReverse(gfxRenderQueue *const restrict queue){
 
 	//
 
@@ -77,7 +84,7 @@ static __FORCE_INLINE__ void gfxRendererGenerateQueuesArray(gfxRenderer *const r
 
 		const gfxRenderGroup_t group = objRenderGroup(*o, renderer->interpT);
 
-		if(group == GFX_RENDER_GROUP_OPAQUE){
+		if(group == GFX_RNDR_GROUP_OPAQUE){
 
 			// The object is fully opaque.
 			array->structure = (const void *)(*o);
@@ -86,7 +93,7 @@ static __FORCE_INLINE__ void gfxRendererGenerateQueuesArray(gfxRenderer *const r
 			++array;
 			++renderer->qOpaque.elementNum;
 
-		}else if(group == GFX_RENDER_GROUP_TRANSLUCENT){
+		}else if(group == GFX_RNDR_GROUP_TRANSLUCENT){
 
 			// The object contains translucency.
 			// It will have to be depth-sorted and
@@ -122,7 +129,7 @@ static __FORCE_INLINE__ void gfxRendererGenerateQueuesList(gfxRenderer *const re
 				const object *const obj = *i;
 				const gfxRenderGroup_t group = objRenderGroup(obj, renderer->interpT);
 
-				if(group == GFX_RENDER_GROUP_OPAQUE){
+				if(group == GFX_RNDR_GROUP_OPAQUE){
 
 					// The object is fully opaque.
 					array->structure = (const void *)obj;
@@ -131,7 +138,7 @@ static __FORCE_INLINE__ void gfxRendererGenerateQueuesList(gfxRenderer *const re
 					++array;
 					++renderer->qOpaque.elementNum;
 
-				}else if(group == GFX_RENDER_GROUP_TRANSLUCENT){
+				}else if(group == GFX_RNDR_GROUP_TRANSLUCENT){
 
 					// The object contains translucency.
 					// It will have to be depth-sorted and
@@ -158,16 +165,12 @@ static __FORCE_INLINE__ void gfxRendererDelete(const gfxRenderer *const restrict
 	memFree(renderer->qOpaque.elements);
 }
 
-/** MOVE AND RENAME renderModel!!!! **/
-void renderModel(const object *const restrict obj, const float distance, const camera *const restrict cam, const float interpT, const graphicsManager *const restrict gfxMngr);
-/** MOVE AND RENAME renderModel!!!! **/
-
-static __FORCE_INLINE__ void gfxRendererDrawElement(gfxRenderElement *const restrict element, const camera *const restrict cam, const float interpT, const graphicsManager *const restrict gfxMngr){
+static __FORCE_INLINE__ void gfxRendererDrawElement(gfxRenderElement *const restrict element, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float interpT){
 	switch(element->type){
 		case GFX_RNDR_ELEMENT_TYPE_OBJECT:
 			/** REMOVE THIS LINE EVENTUALLY **/
 			element->distance = camDistance(cam, ((const object *const)element->structure)->state.configuration[0].position);
-			renderModel((const object *const)element->structure, element->distance, cam, interpT, gfxMngr);
+			objRender((const object *const)element->structure, gfxMngr, cam, element->distance, interpT);
 		break;
 	}
 }
@@ -183,14 +186,12 @@ return_t gfxRendererDrawScene(graphicsManager *const restrict gfxMngr, camera *c
 		return -1;
 	}
 
-	/** Generate camera render data. Don't store it with the camera. **/
-
 	// Update the camera's VP matrix.
 	camUpdateViewProjectionMatrix(
 		cam,
 		gfxMngr->windowModified,
-		gfxMngr->windowAspectRatioX,
-		gfxMngr->windowAspectRatioY,
+		gfxMngr->viewport.width,
+		gfxMngr->viewport.height,
 		interpT
 	);
 
@@ -204,18 +205,22 @@ return_t gfxRendererDrawScene(graphicsManager *const restrict gfxMngr, camera *c
 	/** For each zone: **/
 	gfxRendererGenerateQueuesList(&renderer, scn->objectNum, scn->objects);
 
-	// Depth-sort the scene's translucent objects.
-	gfxRenderQueueDepthSort(&renderer.qTranslucent);
+	// Depth-sort the scene's objects.
+	/** This should be done by the scene using a spatial partitioning system. **/
+	#ifdef GFX_DEPTH_SORT_OPAQUE
+	gfxRenderQueueDepthSort(&renderer.qOpaque);
+	#endif
+	gfxRenderQueueDepthSortReverse(&renderer.qTranslucent);
 
 	// Render the scene's objects.
 	queue = renderer.qOpaque.elements;
 	for(i = renderer.qOpaque.elementNum; i > 0; --i){
-		gfxRendererDrawElement(queue, cam, interpT, gfxMngr);
+		gfxRendererDrawElement(queue, gfxMngr, cam, interpT);
 		++queue;
 	}
 	queue = renderer.qTranslucent.elements;
 	for(i = renderer.qTranslucent.elementNum; i > 0; --i){
-		gfxRendererDrawElement(queue, cam, interpT, gfxMngr);
+		gfxRendererDrawElement(queue, gfxMngr, cam, interpT);
 		++queue;
 	}
 

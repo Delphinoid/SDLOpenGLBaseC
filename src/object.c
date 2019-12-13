@@ -1,4 +1,6 @@
+#include "graphicsManager.h"
 #include "object.h"
+#include "texture.h"
 #include "model.h"
 #include "renderable.h"
 #include "collider.h"
@@ -944,46 +946,6 @@ void objBoneLastState(object *const restrict obj, const float dt){
 	//
 }
 
-gfxRenderGroup_t objRenderGroup(const object *const restrict obj, const float interpT){
-
-	// Check if the object will have
-	// any translucent renderables.
-
-	float totalAlpha = 0.f;
-	const renderable *i = obj->renderables;
-
-	while(i != NULL){
-
-		if(twiTranslucent(&i->twi)){
-
-			// The object contains translucency.
-			return GFX_RENDER_GROUP_TRANSLUCENT;
-
-		}else{
-
-			const float alpha = floatLerp(i->state.alphaPrevious, i->state.alpha, interpT);
-			if(alpha > 0.f && alpha < 1.f){
-				// The object contains translucency.
-				return GFX_RENDER_GROUP_TRANSLUCENT;
-			}
-			totalAlpha += alpha;
-
-		}
-
-		i = moduleRenderableNext(i);
-
-	}
-
-	if(totalAlpha == 0.f){
-		// The model is fully transparent.
-		return GFX_RENDER_GROUP_UNKNOWN;
-	}
-
-	// The model is fully opaque.
-	return GFX_RENDER_GROUP_OPAQUE;
-
-}
-
 void objGenerateSprite(const object *const restrict obj, const renderable *const restrict rndr, const float interpT, const float *const restrict texFrag, vertex *const restrict vertices){
 
 	// Generate the base sprite.
@@ -1069,5 +1031,174 @@ void objGenerateSprite(const object *const restrict obj, const renderable *const
 	vertices[2].v = vertices[2].v * texFrag[3] + texFrag[1];
 	vertices[3].u = vertices[3].u * texFrag[2] + texFrag[0];
 	vertices[3].v = vertices[3].v * texFrag[3] + texFrag[1];
+
+}
+
+gfxRenderGroup_t objRenderGroup(const object *const restrict obj, const float interpT){
+
+	// Check if the object will have
+	// any translucent renderables.
+
+	float totalAlpha = 0.f;
+	const renderable *i = obj->renderables;
+
+	while(i != NULL){
+
+		if(twiTranslucent(&i->twi)){
+
+			// The object contains translucency.
+			return GFX_RNDR_GROUP_TRANSLUCENT;
+
+		}else{
+
+			/** We have to calculate the alpha again when rendering. Maybe avoid this? **/
+			const float alpha = rndrAlpha(i, interpT);
+			if(alpha > 0.f && alpha < 1.f){
+				// The object contains translucency.
+				return GFX_RNDR_GROUP_TRANSLUCENT;
+			}
+			totalAlpha += alpha;
+
+		}
+
+		i = moduleRenderableNext(i);
+
+	}
+
+	if(totalAlpha == 0.f){
+		// The model is fully transparent.
+		return GFX_RNDR_GROUP_UNKNOWN;
+	}
+
+	// The model is fully opaque.
+	return GFX_RNDR_GROUP_OPAQUE;
+
+}
+
+void objRender(const object *const restrict obj, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const float interpT){
+
+	const renderable *currentRndr = obj->renderables;
+
+	mat4 *transformCurrent = gfxMngr->sklTransformState;
+	const bone *bCurrent = obj->state.configuration;
+	const bone *bPrevious = (obj->state.previous == NULL ? bCurrent : obj->state.previous->configuration);
+
+	boneIndex_t boneNum = obj->skeletonData.skl->boneNum;
+	sklNode *nLayout = obj->skeletonData.skl->bones;
+	bone *bAccumulator = gfxMngr->sklBindAccumulator;
+
+	vec3 centroid = {.x = 0.f, .y = 0.f, .z = 0.f};
+
+	boneIndex_t i;
+
+	// Generate a transformation matrix for each bone. Steps:
+	//     1. Accumulate inverse bind offsets for the bone and each predecessor.
+	//     2. Interpolate between the previous and current animation frames.
+	//     3. Apply the accumulated inverse bind offsets.
+	//     4. Write to the transform state array.
+	//
+	// The inverse bind offsets are used to convert the global skeleton state
+	// used in updates to the local model space in preparation for rendering.
+	//
+	// Consider a rigged model in some reference position. When the bone
+	// transformations are identity transforms, the model will maintain this
+	// reference position correctly. However, we don't want the configuration
+	// of every bone to be identity when we access them during updates, and
+	// this would not work with physics objects (among other things). So before
+	// updates we must transform them into global space based on their bind
+	// positions, and then transform them back before passing their transforms
+	// to the shader.
+	for(i = 0; i < boneNum; ++bCurrent, ++bPrevious, ++transformCurrent, ++nLayout, ++bAccumulator, ++i){
+
+		// Interpolate between bone states.
+		const bone state = boneInterpolate(*bPrevious, *bCurrent, interpT);
+
+		// If the bone has a parent, add its inverse bind position,
+		// otherwise just use the current bone's inverse bind position.
+		if(nLayout->parent != i){
+			*bAccumulator = boneTransformAppend(boneInvert(nLayout->defaultState), gfxMngr->sklBindAccumulator[nLayout->parent]);
+		}else{
+			*bAccumulator = boneInvert(nLayout->defaultState);
+			centroid = state.position;
+		}
+
+		// Add the inverse bind offsets to the bone state and
+		// convert it to a transformation matrix for the shader.
+		*transformCurrent = boneMatrix(
+			boneTransformAppend(state, *bAccumulator)
+		);
+
+	}
+
+	// Draw each renderable.
+	while(currentRndr != NULL){
+
+		// Get texture information for rendering and feed it to the shader.
+		const twFrame *const restrict frame = twiState(&currentRndr->twi, interpT);
+		// Bind the texture (if needed).
+		gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, frame->image->diffuseID);
+		// Feed the texture coordinates to the shader.
+		glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&frame->subframe);
+
+		if(currentRndr->mdl->skl != NULL){
+
+			const float alpha = rndrAlpha(currentRndr, interpT);
+
+			if(alpha > 0.f){
+
+				mat4 transform;
+				GLuint *bArray = gfxMngr->boneArrayID;
+
+				boneNum = currentRndr->mdl->skl->boneNum;
+				nLayout = currentRndr->mdl->skl->bones;
+
+				// If there is a valid animated skeleton, apply animation transformations.
+				for(i = 0; i < boneNum; ++i, ++bArray, ++nLayout){
+
+					/** Use a lookup, same in object.c. **/
+					boneIndex_t rndrBone = sklFindBone(obj->skeletonData.skl, i, nLayout->name);
+
+					if(rndrBone >= obj->skeletonData.skl->boneNum){
+						// Use the root bone's transformation if
+						// the animated bone is not in the model.
+						rndrBone = 0;
+					}
+
+					// Apply billboarding transformation if required.
+					if(currentRndr->billboardData.flags != BILLBOARD_DISABLED){
+						// Use the root bone's global position as the centroid for billboarding.
+						transform = billboardState(currentRndr->billboardData, cam, centroid, gfxMngr->sklTransformState[rndrBone]);
+					}else{
+						transform = gfxMngr->sklTransformState[rndrBone];
+					}
+
+					// Feed the bone configuration to the shader.
+					glUniformMatrix4fv(*bArray, 1, GL_FALSE, &transform.m[0][0]);
+
+				}
+
+				// Feed the translucency multiplier to the shader
+				glUniform1f(gfxMngr->alphaID, alpha);
+
+				// Render the model.
+				glBindVertexArray(currentRndr->mdl->vaoID);
+				if(currentRndr->mdl->indexNum > 0){
+					GLsizei indexNum;
+					const void *offset;
+					mdlFindCurrentLOD(currentRndr->mdl, &indexNum, &offset, distance, gfxMngr->biasLOD);
+					if(indexNum){
+						glDrawElements(GL_TRIANGLES, indexNum, GL_UNSIGNED_INT, offset);
+					}
+				}else{
+					glDrawArrays(GL_TRIANGLES, 0, currentRndr->mdl->vertexNum);
+				}
+
+			}
+
+		}
+
+		currentRndr = moduleRenderableNext(currentRndr);
+
+	}
 
 }

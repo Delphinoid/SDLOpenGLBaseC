@@ -68,7 +68,7 @@ static void mdlVertexAttributes(){
 	glEnableVertexAttribArray(4);
 }
 
-static return_t mdlGenerateBuffers(model *const restrict mdl, const char *const restrict filePath, const vertexIndex_t vertexNum, const vertex *const restrict vertices, const vertexIndexNum_t indexNum, const vertexIndex_t *const restrict indices){
+return_t mdlGenerateBuffers(const vertexIndex_t vertexNum, const vertex *const restrict vertices, const vertexIndexNum_t indexNum, const vertexIndex_t *const restrict indices, GLuint *vaoID, GLuint *vboID, GLuint *iboID, const char *const restrict filePath){
 
 	if(vertexNum > 0){
 		if(indexNum > 0){
@@ -76,12 +76,12 @@ static return_t mdlGenerateBuffers(model *const restrict mdl, const char *const 
 			GLenum glError;
 
 			// Create and bind the VAO
-			glGenVertexArrays(1, &mdl->vaoID);
-			glBindVertexArray(mdl->vaoID);
+			glGenVertexArrays(1, vaoID);
+			glBindVertexArray(*vaoID);
 
 			// Create and bind the VBO
-			glGenBuffers(1, &mdl->vboID);
-			glBindBuffer(GL_ARRAY_BUFFER, mdl->vboID);
+			glGenBuffers(1, vboID);
+			glBindBuffer(GL_ARRAY_BUFFER, *vboID);
 			glBufferData(GL_ARRAY_BUFFER, vertexNum*sizeof(vertex), vertices, GL_STATIC_DRAW);
 			// Check for errors
 			glError = glGetError();
@@ -93,11 +93,10 @@ static return_t mdlGenerateBuffers(model *const restrict mdl, const char *const 
 				printf(": %u\n", glError);
 				return 0;
 			}
-			mdl->vertexNum = vertexNum;
 
 			// Create and bind the IBO
-			glGenBuffers(1, &mdl->iboID);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mdl->iboID);
+			glGenBuffers(1, iboID);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *iboID);
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexNum*sizeof(vertexIndex_t), indices, GL_STATIC_DRAW);
 			// Check for errors
 			glError = glGetError();
@@ -109,7 +108,6 @@ static return_t mdlGenerateBuffers(model *const restrict mdl, const char *const 
 				printf(": %u\n", glError);
 				return 0;
 			}
-			mdl->indexNum = indexNum;
 
 			mdlVertexAttributes();
 			glBindVertexArray(0);
@@ -184,7 +182,9 @@ return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, 
 	}
 
 	/** Should mdlGenerateBuffers() be here? **/
-	r = mdlGenerateBuffers(mdl, fullPath, vertexNum, vertices, indexNum, indices);
+	r = mdlGenerateBuffers(vertexNum, vertices, indexNum, indices, &mdl->vaoID, &mdl->vboID, &mdl->iboID, fullPath);
+	mdl->vertexNum = vertexNum;
+	mdl->indexNum = indexNum;
 	mdl->lodNum = lodNum;
 	mdl->lods = lods;
 	memFree(vertices);
@@ -423,7 +423,7 @@ return_t mdlDefaultInit(){
 	indices[34] = 21;
 	indices[35] = 23;
 
-	if(mdlGenerateBuffers(&mdlDefault, NULL, 24, vertices, 36, indices) <= 0){
+	if(mdlGenerateBuffers(24, vertices, 36, indices, &mdlDefault.vaoID, &mdlDefault.vboID, &mdlDefault.iboID, NULL) <= 0){
 		return 0;
 	}
 
@@ -437,7 +437,7 @@ return_t mdlDefaultInit(){
 /** Change this function later **/
 return_t mdlSpriteInit(){
 
-	GLenum glError;
+	/**GLenum glError;
 
 	// Create and bind the VAO
 	glGenVertexArrays(1, &mdlSprite.vaoID);
@@ -452,7 +452,7 @@ return_t mdlSpriteInit(){
 		return 0;
 	}
 
-	/** Should sprites use IBOs? Probably, but they're not working at the moment **/
+	/** Should sprites use IBOs? Probably, but they're not working at the moment **
 	// Create and bind the IBO
 	/*glGenBuffers(1, &mdlSprite.iboID);
 	glBindBuffer(GL_ARRAY_BUFFER, mdlSprite.iboID);
@@ -460,7 +460,7 @@ return_t mdlSpriteInit(){
 	if(glError != GL_NO_ERROR){
 		printf("Error creating index buffer: %u\n", glError);
 		return 0;
-	}*/
+	}*
 
 	mdlVertexAttributes();
 	glBindVertexArray(0);
@@ -469,6 +469,46 @@ return_t mdlSpriteInit(){
 	glError = glGetError();
 	if(glError != GL_NO_ERROR){
 		printf("Error creating vertex array buffer: %u\n", glError);
+	}
+
+	mdlSprite.vertexNum = 4;
+	mdlSprite.indexNum = 6;
+
+	return 1;**/
+
+	vertex vertices[4];
+	vertexIndex_t indices[6];
+
+	vertices[0].position = vec3New(-0.5f, 0.5f, 0.f);
+	vertices[0].u = 0.f; vertices[0].v = -1.f;
+	vertices[0].normal = vec3New(0.f, 1.f, 0.f);
+	vertices[0].bIDs[0] = 0; vertices[0].bIDs[1] = -1; vertices[0].bIDs[2] = -1; vertices[0].bIDs[3] = -1;
+	vertices[0].bWeights[0] = 1.f; vertices[0].bWeights[1] = 0.f; vertices[0].bWeights[2] = 0.f; vertices[0].bWeights[3] = 0.f;
+	vertices[1].position = vec3New(0.5f, 0.5f, 0.f);
+	vertices[1].u = 1.f; vertices[1].v = -1.f;
+	vertices[1].normal = vec3New(0.f, 1.f, 0.f);
+	vertices[1].bIDs[0] = 0; vertices[1].bIDs[1] = -1; vertices[1].bIDs[2] = -1; vertices[1].bIDs[3] = -1;
+	vertices[1].bWeights[0] = 1.f; vertices[1].bWeights[1] = 0.f; vertices[1].bWeights[2] = 0.f; vertices[1].bWeights[3] = 0.f;
+	vertices[2].position = vec3New(-0.5f, -0.5f, 0.f);
+	vertices[2].u = 0.f; vertices[2].v = 0.f;
+	vertices[2].normal = vec3New(0.f, 1.f, 0.f);
+	vertices[2].bIDs[0] = 0; vertices[2].bIDs[1] = -1; vertices[2].bIDs[2] = -1; vertices[2].bIDs[3] = -1;
+	vertices[2].bWeights[0] = 1.f; vertices[2].bWeights[1] = 0.f; vertices[2].bWeights[2] = 0.f; vertices[2].bWeights[3] = 0.f;
+	vertices[3].position = vec3New(0.5f, -0.5f, 0.f);
+	vertices[3].u = 1.f; vertices[3].v = 0.f;
+	vertices[3].normal = vec3New(0.f, 1.f, 0.f);
+	vertices[3].bIDs[0] = 0; vertices[3].bIDs[1] = -1; vertices[3].bIDs[2] = -1; vertices[3].bIDs[3] = -1;
+	vertices[3].bWeights[0] = 1.f; vertices[3].bWeights[1] = 0.f; vertices[3].bWeights[2] = 0.f; vertices[3].bWeights[3] = 0.f;
+
+	indices[0] = 2;
+	indices[1] = 1;
+	indices[2] = 0;
+	indices[3] = 2;
+	indices[4] = 3;
+	indices[5] = 1;
+
+	if(mdlGenerateBuffers(4, vertices, 6, indices, &mdlSprite.vaoID, &mdlSprite.vboID, &mdlSprite.iboID, NULL) <= 0){
+		return 0;
 	}
 
 	mdlSprite.vertexNum = 4;

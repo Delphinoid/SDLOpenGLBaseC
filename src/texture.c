@@ -42,7 +42,7 @@ void tInit(texture *const restrict tex){
 	tex->translucent = 0;
 }
 
-static void tInitFiltering(uint_least8_t filtering, const uint_least8_t mips){
+static void tInitParameters(uint_least8_t filtering, const uint_least8_t mips){
 
 	GLint filteringMin, filteringMag;
 
@@ -90,6 +90,9 @@ static void tInitFiltering(uint_least8_t filtering, const uint_least8_t mips){
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filteringMin);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filteringMag);
 
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
 }
 
 static SDL_Surface *tLoadImage(const char *const restrict path){
@@ -111,6 +114,7 @@ return_t tLoad(texture *const restrict tex, const char *const restrict prgPath, 
 	GLuint bytes;
 	GLint mipNum = 0;
 	GLsizei mips[32][4];
+	long int generate = 0;
 
 	char fullPath[FILE_MAX_PATH_LENGTH];
 	const size_t fileLength = strlen(filePath);
@@ -169,7 +173,13 @@ return_t tLoad(texture *const restrict tex, const char *const restrict prgPath, 
 
 			// MIPs
 			}else if(lineLength >= 11 && strncmp(line, "mip ", 4) == 0){
-				if(mipNum < 32){
+				if(mipNum == 0 && lineLength >= 12 && strncmp(line+4, "generate", 8) == 0){
+					// Generate MIPs automatically.
+					generate = 1;
+				}else if(mipNum == 0 && lineLength >= 12 && strncmp(line+4, "none", 4) == 0){
+					// Don't generate MIPs.
+					generate = 0;
+				}else if(mipNum < 32){
 					// Loads start and end textures, start and end subframes and the frame delays.
 					int i;
 					const char *token = strtok(line+4, "/");
@@ -247,10 +257,13 @@ return_t tLoad(texture *const restrict tex, const char *const restrict prgPath, 
 
 		tex->width = image->w;
 		tex->height = image->h;
-		tex->mips = 1 + floor(log(fmax(tex->width, tex->height)));
-
 		glTexImage2D(GL_TEXTURE_2D, 0, format, image->w, image->h, 0, format, GL_UNSIGNED_BYTE, image->pixels);
-		glGenerateMipmap(GL_TEXTURE_2D);
+		if(generate){
+			tex->mips = 1 + floor(log(fmax(tex->width, tex->height)));
+			glGenerateMipmap(GL_TEXTURE_2D);
+		}else{
+			tex->mips = 1;
+		}
 
 	}else{
 
@@ -289,7 +302,7 @@ return_t tLoad(texture *const restrict tex, const char *const restrict prgPath, 
 	SDL_FreeSurface(image);
 
 	// Change the texture's filtering mode.
-	tInitFiltering(tex->filtering, tex->mips);
+	tInitParameters(tex->filtering, tex->mips);
 
 	// Generate a name based off the file path.
 	tex->name = fileGenerateResourceName(filePath, fileLength);
@@ -330,7 +343,7 @@ return_t tDefaultInit(){
 	tDefault.diffuseID = tCreate();
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 	glGenerateMipmap(GL_TEXTURE_2D);
-	tInitFiltering(tDefault.filtering, tDefault.mips);
+	tInitParameters(tDefault.filtering, tDefault.mips);
 
 	glError = glGetError();
 	if(glError != GL_NO_ERROR){
