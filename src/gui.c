@@ -193,7 +193,7 @@ return_t guiPanelInit(guiElement *const restrict element, const rectangle areas[
 }
 **/
 
-static void guiElementRenderPanel(const guiElement *const restrict element, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const float interpT){
+static void guiElementRenderWindow(const guiElement *const restrict element, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const float interpT){
 
 	/**
 	// Get texture information for rendering and feed it to the shader.
@@ -247,24 +247,19 @@ static void guiElementRenderPanel(const guiElement *const restrict element, grap
 	glDrawElements(GL_TRIANGLES, element->data.panel.rndr.mdl->indexNum, GL_UNSIGNED_INT, 0);
 	**/
 
-	const twFrame *const restrict frameBody = twiState(&element->data.panel.body, interpT);
-	const twFrame *const restrict frameBorder = twiState(&element->data.panel.border, interpT);
+	const twFrame *const restrict frameBody = twiState(&element->data.window.body, interpT);
+	const twFrame *const restrict frameBorder = twiState(&element->data.window.border, interpT);
 
-	// Generate bone states for the panel corners.
+	// Generate bone states for the window corners.
 	const bone root = {
 		.position = {
 			// Move the origin to the top left corner.
-			.x = element->root.position.x + element->root.scale.x*0.5f + element->data.panel.offsets[0].w * frameBorder->image->width,
-			.y = element->root.position.y - element->root.scale.y*0.5f - element->data.panel.offsets[0].h * frameBorder->image->height,
+			.x = element->root.position.x + element->root.scale.x*0.5f + element->data.window.offsets[0].w * frameBorder->image->width,
+			.y = element->root.position.y - element->root.scale.y*0.5f - element->data.window.offsets[0].h * frameBorder->image->height,
 			.z = element->root.position.z
 		},
 		.orientation = element->root.orientation,
-		.scale = {
-			// Scale to suit the subimage size.
-			.x = element->root.scale.x * frameBody->subframe.w,
-			.y = element->root.scale.y * frameBody->subframe.h,
-			.z = element->root.scale.z
-		}
+		.scale = element->root.scale
 	};
 
 	// Border element offset vectors.
@@ -281,7 +276,7 @@ static void guiElementRenderPanel(const guiElement *const restrict element, grap
 		{.x = 0.f, .y = -0.5f}
 	};
 	const vec2 *o1 = &offsets[0];
-	const rectangle *o2 = &element->data.panel.offsets[0];
+	const rectangle *o2 = &element->data.window.offsets[0];
 	const vec2 *oLast;
 	int rotate = 0;
 
@@ -303,11 +298,11 @@ static void guiElementRenderPanel(const guiElement *const restrict element, grap
 			.h = frameBorder->subframe.h * o2->h
 		};
 		// Translation to each of the four corners.
-		const mat4 bTransform = {
+		const mat4 transform = {
 			.m = {
-				{1.f, 0.f, 0.f, 0.f},
-				{0.f, 1.f, 0.f, 0.f},
-				{0.f, 0.f, 1.f, 0.f},
+				{thickness.x, 0.f,         0.f, 0.f},
+				{0.f,         thickness.y, 0.f, 0.f},
+				{0.f,         0.f,         1.f, 0.f},
 				{
 					root.position.x + o1->x * (root.scale.x + thickness.x),
 					root.position.y + o1->y * (root.scale.y + thickness.y),
@@ -316,8 +311,6 @@ static void guiElementRenderPanel(const guiElement *const restrict element, grap
 				}
 			}
 		};
-		// Scale to the image size.
-		const mat4 transform = mat4Scale(bTransform, thickness.x, thickness.y, 0.f);
 
 		// Feed the texture coordinates to the shader.
 		glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&subframe);
@@ -336,7 +329,7 @@ static void guiElementRenderPanel(const guiElement *const restrict element, grap
 	for(++o1; o1 <= oLast; ++o1, ++o2){
 
 		const float thickness = o2->h * frameBorder->image->height;
-		const vec2 translation = {.x = rotate ? 0.f : o1->x * (root.scale.x + thickness), .y = rotate ? o1->y * (root.scale.y + thickness) : 0.f};
+		const vec2 scale = {.x = rotate ? 2.f*element->root.scale.x : 2.f*element->root.scale.y, .y = 2.f*thickness};
 		const rectangle subframe = {
 			.x = frameBorder->subframe.x + o2->x,
 			.y = frameBorder->subframe.y + o2->y,
@@ -344,26 +337,19 @@ static void guiElementRenderPanel(const guiElement *const restrict element, grap
 			.h = frameBorder->subframe.h * o2->h
 		};
 		// Translation to each of the four sides.
-		const mat4 bTransform = {
+		const mat4 transform = {
 			.m = {
-				{(o1-1)->x, (o1-1)->y, 0.f, 0.f},
-				{o1->x, o1->y, 0.f, 0.f},
-				{0.f, 0.f, 1.f, 0.f},
+				{(o1-1)->x * scale.x, (o1-1)->y * scale.x, 0.f, 0.f},
+				{o1->x * scale.y,     o1->y * scale.y,     0.f, 0.f},
+				{0.f,                 0.f,                 1.f, 0.f},
 				{
-					root.position.x + translation.x,
-					root.position.y + translation.y,
+					root.position.x + o1->x * (root.scale.x + thickness),
+					root.position.y + o1->y * (root.scale.y + thickness),
 					root.position.z,
 					1.f
 				}
 			}
 		};
-		// Scale to the image size.
-		const mat4 transform = mat4Scale(
-			bTransform,
-			2.f*(rotate ? element->root.scale.x : element->root.scale.y),
-			2.f*thickness,
-			0.f
-		);
 
 		// Feed the texture coordinates to the shader.
 		glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&subframe);
@@ -383,11 +369,11 @@ static void guiElementRenderPanel(const guiElement *const restrict element, grap
 
 		const rectangle subframe = {
 			.x = frameBody->subframe.x,
-			.y = flagsAreSet(element->data.panel.flags, GUI_PANEL_STRETCH_BODY) ? frameBody->subframe.y : element->root.scale.y/frameBody->image->height,
-			.w = flagsAreSet(element->data.panel.flags, GUI_PANEL_STRETCH_BODY) ? frameBody->subframe.w : element->root.scale.x/frameBody->image->width,
-			.h = flagsAreSet(element->data.panel.flags, GUI_PANEL_STRETCH_BODY) ? frameBody->subframe.h : element->root.scale.y/frameBody->image->height,
+			.y = flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBody->subframe.y : frameBody->subframe.y + element->root.scale.y/frameBody->image->height,
+			.w = flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBody->subframe.w : element->root.scale.x/frameBody->image->width,
+			.h = flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBody->subframe.h : element->root.scale.y/frameBody->image->height,
 		};
-		const mat4 rTransform = boneMatrix(root);
+		const mat4 transform = boneMatrix(root);
 
 		// Bind the texture.
 		gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, frameBody->image->diffuseID);
@@ -398,7 +384,7 @@ static void guiElementRenderPanel(const guiElement *const restrict element, grap
 		glUniform1f(gfxMngr->alphaID, 1.f);
 
 		// Feed the bone configuration to the shader.
-		glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &rTransform.m[0][0]);
+		glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
 
 		// Render the model.
 		glBindVertexArray(mdlSprite.vaoID);
@@ -417,7 +403,7 @@ void (* const guiElementRenderJumpTable[4])(
 	const guiElement *const restrict element, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const float interpT
 ) = {
 	guiElementRenderRenderable,
-	guiElementRenderPanel,
+	guiElementRenderWindow,
 	guiElementRenderText,
 	guiElementRenderObject
 };

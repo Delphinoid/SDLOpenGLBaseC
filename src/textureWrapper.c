@@ -78,7 +78,8 @@ static return_t twaAddFrame(twAnim *const restrict twa, frameIndex_t *const rest
 	twf.subframe.w /= twf.image->width;
 	twf.subframe.h /= twf.image->height;
 	twa->frames[twa->animData.frameNum] = twf;
-	twa->animData.frameDelays[twa->animData.frameNum] = d;
+	// Convert frameDelay to frameEnd.
+	twa->animData.frameDelays[twa->animData.frameNum] = twa->animData.frameNum > 0 ? d + twa->animData.frameDelays[twa->animData.frameNum-1] : d;
 	++twa->animData.frameNum;
 	return 1;
 }
@@ -340,6 +341,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 					frameIndex_t i;
 					frameIndex_t frameNum;
 					char macroDirection = ' ';
+					float u, v;
 					twFrame tempFrame;
 					texture *tempTex;
 					float delay;
@@ -355,6 +357,10 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 					// Load the macro direction.
 					macroDirection = token[1];
 					++token;
+
+					// Load the UV translations.
+					u = strtod(++token, &token);
+					v = strtod(++token, &token);
 
 					// Load the base subframe boundaries.
 					tempFrame.subframe.x = strtod(++token, &token);
@@ -407,29 +413,21 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 					currentTexW = tempFrame.image->width;
 					currentTexH = tempFrame.image->height;
 					for(i = 1; i <= frameNum; ++i){
-						if(
-							tempFrame.subframe.x + tempFrame.subframe.w <= currentTexW &&
-							tempFrame.subframe.y + tempFrame.subframe.h <= currentTexH
-						){
-							if(twaAddFrame(&tempAnim, &frameCapacity, tempFrame, delay) < 0){
-								/** Memory allocation failure. **/
-								twaDelete(&tempAnim);
-								twDelete(tw);
-								fclose(texInfo);
-								return -1;
-							}
-							if(macroDirection == 'x'){  // Adds frames from left to right before resetting and moving down
-								tempFrame.subframe.x = (GLsizei)(i * tempFrame.subframe.w) % currentTexW;
-								tempFrame.subframe.y = (GLsizei)(i * tempFrame.subframe.w) / currentTexW * tempFrame.subframe.h;
-							}else if(macroDirection == 'y'){  // Adds frames from top to bottom before resetting and moving right
-								tempFrame.subframe.x = (GLsizei)(i * tempFrame.subframe.h) / currentTexH * tempFrame.subframe.w;
-								tempFrame.subframe.y = (GLsizei)(i * tempFrame.subframe.h) % currentTexH;
-							}else{
-								printf("Error loading texture wrapper \"%s\": frameMacro command at line %u has an invalid direction. Only one frame could be loaded.\n", fullPath, currentLine);
-								break;
-							}
+						if(twaAddFrame(&tempAnim, &frameCapacity, tempFrame, delay) < 0){
+							/** Memory allocation failure. **/
+							twaDelete(&tempAnim);
+							twDelete(tw);
+							fclose(texInfo);
+							return -1;
+						}
+						if(macroDirection == 'x'){  // Adds frames from left to right before resetting and moving down
+							tempFrame.subframe.x = (GLsizei)(i * (tempFrame.subframe.w + u)) % currentTexW;
+							tempFrame.subframe.y = (GLsizei)(i * tempFrame.subframe.w) / currentTexW * tempFrame.subframe.h + i * v;
+						}else if(macroDirection == 'y'){  // Adds frames from top to bottom before resetting and moving right
+							tempFrame.subframe.x = (GLsizei)(i * tempFrame.subframe.h) / currentTexH * tempFrame.subframe.w + i * u;
+							tempFrame.subframe.y = (GLsizei)(i * (tempFrame.subframe.h + v)) % currentTexH;
 						}else{
-							printf("Error loading texture wrapper \"%s\": frameMacro command at line %u could not load %u frame(s).\n", fullPath, currentLine, frameNum-i+1);
+							printf("Error loading texture wrapper \"%s\": frameMacro command at line %u has an invalid direction. Only one frame could be loaded.\n", fullPath, currentLine);
 							break;
 						}
 					}

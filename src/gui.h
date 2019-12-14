@@ -6,10 +6,10 @@
 #include "bone.h"
 #include "vec2.h"
 
-#define GUI_PANEL_STRETCH_BODY 0x01
+#define GUI_WINDOW_STRETCH_BODY 0x01
 
 // If no type is defined, defaults to renderable.
-#define GUI_ELEMENT_TYPE_PANEL  0x01
+#define GUI_ELEMENT_TYPE_WINDOW 0x01
 #define GUI_ELEMENT_TYPE_TEXT   0x02
 #define GUI_ELEMENT_TYPE_OBJECT 0x04
 #define GUI_ELEMENT_TYPE_MASK   0x07
@@ -18,13 +18,13 @@ typedef struct object object;
 
 typedef struct {
 	// Border element UV offsets for rendering.
-	/// Move this to guiPanelBase.
+	/// Move this to guiWindowBase.
 	rectangle offsets[8];
-	// Texture wrappers for the panel body and border.
+	// Texture wrappers for the window body and border.
 	twInstance body;
 	twInstance border;
 	flags_t flags;
-} guiPanel;
+} guiWindow;
 
 /*typedef struct {
 	// Panel renderable.
@@ -49,7 +49,7 @@ typedef struct guiElement {
 	// Render variables.
 	union {
 		renderable rndr;
-		guiPanel panel;
+		guiWindow window;
 		///guiText text;
 		object *obj;
 	} data;

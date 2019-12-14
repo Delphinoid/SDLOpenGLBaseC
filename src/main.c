@@ -325,19 +325,19 @@ int main(int argc, char **argv){
 		{.x = 0.f, .y = 2.f/3.f, .w = 1.f/3.f, .h = 1.f/3.f},
 		{.x = 2.f/3.f, .y = 2.f/3.f, .w = 1.f/3.f, .h = 1.f/3.f}
 	};*/
-	gEl.flags = GUI_ELEMENT_TYPE_PANEL;
+	gEl.flags = GUI_ELEMENT_TYPE_WINDOW;
 	//guiPanelInit(&gEl, areas);
 	//rndrStateInit(&gEl.data.panel.rndr.stateData);
-	twiInit(&gEl.data.panel.body, moduleTextureWrapperFind("gui"FILE_PATH_DELIMITER_STRING"body.tdw"));
-	twiInit(&gEl.data.panel.border, moduleTextureWrapperFind("gui"FILE_PATH_DELIMITER_STRING"border.tdw"));
-	gEl.data.panel.offsets[0].x = 3.f/4.f; gEl.data.panel.offsets[0].y = 0.f; gEl.data.panel.offsets[0].w = 1.f/4.f; gEl.data.panel.offsets[0].h = 1.f/5.f;
-	gEl.data.panel.offsets[1].x = 0.f; gEl.data.panel.offsets[1].y = 0.f; gEl.data.panel.offsets[1].w = 1.f/4.f; gEl.data.panel.offsets[1].h = 1.f/5.f;
-	gEl.data.panel.offsets[2].x = 1.f/4.f; gEl.data.panel.offsets[2].y = 0.f; gEl.data.panel.offsets[2].w = 1.f/4.f; gEl.data.panel.offsets[2].h = 1.f/5.f;
-	gEl.data.panel.offsets[3].x = 2.f/4.f; gEl.data.panel.offsets[3].y = 0.f; gEl.data.panel.offsets[3].w = 1.f/4.f; gEl.data.panel.offsets[3].h = 1.f/5.f;
-	gEl.data.panel.offsets[4].x = 0.f; gEl.data.panel.offsets[4].y = 4.f/5.f; gEl.data.panel.offsets[4].w = 1.f; gEl.data.panel.offsets[4].h = 1.f/5.f;
-	gEl.data.panel.offsets[5].x = 0.f; gEl.data.panel.offsets[5].y = 1.f/5.f; gEl.data.panel.offsets[5].w = 1.f; gEl.data.panel.offsets[5].h = 1.f/5.f;
-	gEl.data.panel.offsets[6].x = 0.f; gEl.data.panel.offsets[6].y = 2.f/5.f; gEl.data.panel.offsets[6].w = 1.f; gEl.data.panel.offsets[6].h = 1.f/5.f;
-	gEl.data.panel.offsets[7].x = 0.f; gEl.data.panel.offsets[7].y = 3.f/5.f; gEl.data.panel.offsets[7].w = 1.f; gEl.data.panel.offsets[7].h = 1.f/5.f;
+	twiInit(&gEl.data.window.body, moduleTextureWrapperFind("gui"FILE_PATH_DELIMITER_STRING"body.tdw"));
+	twiInit(&gEl.data.window.border, moduleTextureWrapperFind("gui"FILE_PATH_DELIMITER_STRING"border.tdw"));
+	gEl.data.window.offsets[0].x = 3.f/4.f; gEl.data.window.offsets[0].y = 0.f; gEl.data.window.offsets[0].w = 1.f/4.f; gEl.data.window.offsets[0].h = 1.f/5.f;
+	gEl.data.window.offsets[1].x = 0.f; gEl.data.window.offsets[1].y = 0.f; gEl.data.window.offsets[1].w = 1.f/4.f; gEl.data.window.offsets[1].h = 1.f/5.f;
+	gEl.data.window.offsets[2].x = 1.f/4.f; gEl.data.window.offsets[2].y = 0.f; gEl.data.window.offsets[2].w = 1.f/4.f; gEl.data.window.offsets[2].h = 1.f/5.f;
+	gEl.data.window.offsets[3].x = 2.f/4.f; gEl.data.window.offsets[3].y = 0.f; gEl.data.window.offsets[3].w = 1.f/4.f; gEl.data.window.offsets[3].h = 1.f/5.f;
+	gEl.data.window.offsets[4].x = 0.f; gEl.data.window.offsets[4].y = 4.f/5.f; gEl.data.window.offsets[4].w = 1.f; gEl.data.window.offsets[4].h = 1.f/5.f;
+	gEl.data.window.offsets[5].x = 0.f; gEl.data.window.offsets[5].y = 1.f/5.f; gEl.data.window.offsets[5].w = 1.f; gEl.data.window.offsets[5].h = 1.f/5.f;
+	gEl.data.window.offsets[6].x = 0.f; gEl.data.window.offsets[6].y = 2.f/5.f; gEl.data.window.offsets[6].w = 1.f; gEl.data.window.offsets[6].h = 1.f/5.f;
+	gEl.data.window.offsets[7].x = 0.f; gEl.data.window.offsets[7].y = 3.f/5.f; gEl.data.window.offsets[7].w = 1.f; gEl.data.window.offsets[7].h = 1.f/5.f;
 
 
 
@@ -527,6 +527,9 @@ int main(int argc, char **argv){
 				}
 			}///camMain->target.value = tempObji2->configuration[0].position;
 
+			///
+			twiTick(&gEl.data.window.body, tickrateTimeMod);
+			///
 			// Update scenes.
 			moduleSceneTick(tickrateTimeMod);
 

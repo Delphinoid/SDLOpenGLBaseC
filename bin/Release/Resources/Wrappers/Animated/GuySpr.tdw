@@ -1,4 +1,4 @@
 animation {
 	loop -1
-	frameMacro 14/x 0/0/200/170 41.66 "Guy\Guy.tdt"
+	frameMacro 14/x 0/0 0/0/200/170 41.66 "Guy\Guy.tdt"
 }
