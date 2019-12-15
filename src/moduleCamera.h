@@ -4,7 +4,7 @@
 #include "memoryPool.h"
 #include "return.h"
 
-#define RESOURCE_DEFAULT_CAMERA_NUM 2
+#define RESOURCE_DEFAULT_CAMERA_NUM 3
 
 // Forward declaration for inlining.
 extern memoryPool __CameraResourceArray;  // Contains cameras.

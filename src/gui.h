@@ -15,6 +15,7 @@
 #define GUI_ELEMENT_TYPE_MASK   0x07
 
 typedef struct object object;
+typedef struct graphicsManager graphicsManager;
 
 typedef struct {
 	// Border element UV offsets for rendering.

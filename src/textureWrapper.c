@@ -421,10 +421,10 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 							return -1;
 						}
 						if(macroDirection == 'x'){  // Adds frames from left to right before resetting and moving down
-							tempFrame.subframe.x = (GLsizei)(i * (tempFrame.subframe.w + u)) % currentTexW;
+							tempFrame.subframe.x = (GLsizei)(i * (tempFrame.subframe.w - u)) % currentTexW;
 							tempFrame.subframe.y = (GLsizei)(i * tempFrame.subframe.w) / currentTexW * tempFrame.subframe.h + i * v;
 						}else if(macroDirection == 'y'){  // Adds frames from top to bottom before resetting and moving right
-							tempFrame.subframe.x = (GLsizei)(i * tempFrame.subframe.h) / currentTexH * tempFrame.subframe.w + i * u;
+							tempFrame.subframe.x = (GLsizei)(i * tempFrame.subframe.h) / currentTexH * tempFrame.subframe.w - i * u;
 							tempFrame.subframe.y = (GLsizei)(i * (tempFrame.subframe.h + v)) % currentTexH;
 						}else{
 							printf("Error loading texture wrapper \"%s\": frameMacro command at line %u has an invalid direction. Only one frame could be loaded.\n", fullPath, currentLine);
