@@ -193,6 +193,10 @@ return_t guiPanelInit(guiElement *const restrict element, const rectangle areas[
 }
 **/
 
+guiElement *guiElementAddChild(guiElement *const restrict element){
+	//
+}
+
 static void guiElementRenderWindow(const guiElement *const restrict element, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const float interpT){
 
 	/**
@@ -329,11 +333,11 @@ static void guiElementRenderWindow(const guiElement *const restrict element, gra
 	for(++o1; o1 <= oLast; ++o1, ++o2){
 
 		const float thickness = o2->h * frameBorder->image->height;
-		const vec2 scale = {.x = rotate ? 2.f*element->root.scale.x : 2.f*element->root.scale.y, .y = 2.f*thickness};
+		const vec2 scale = {.x = rotate ? 2.f*root.scale.x : 2.f*root.scale.y, .y = 2.f*thickness};
 		const rectangle subframe = {
-			.x = frameBorder->subframe.x + o2->x,
+			.x = (flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) || o1 == &offsets[5] || o1 == &offsets[6]) ? frameBorder->subframe.x + o2->x : frameBorder->subframe.x + o2->x + scale.x/frameBorder->image->width,
 			.y = frameBorder->subframe.y + o2->y,
-			.w = frameBorder->subframe.w * o2->w,
+			.w = flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.w*o2->w : ((o1 == &offsets[7] && o1 == oLast) ? scale.x/frameBorder->image->width : -scale.x/frameBorder->image->width),
 			.h = frameBorder->subframe.h * o2->h
 		};
 		// Translation to each of the four sides.
@@ -369,9 +373,9 @@ static void guiElementRenderWindow(const guiElement *const restrict element, gra
 
 		const rectangle subframe = {
 			.x = frameBody->subframe.x,
-			.y = flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBody->subframe.y : frameBody->subframe.y + element->root.scale.y/frameBody->image->height,
-			.w = flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBody->subframe.w : element->root.scale.x/frameBody->image->width,
-			.h = flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBody->subframe.h : element->root.scale.y/frameBody->image->height,
+			.y = flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBody->subframe.y : frameBody->subframe.y + root.scale.y/frameBody->image->height,
+			.w = flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBody->subframe.w : root.scale.x/frameBody->image->width,
+			.h = flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBody->subframe.h : root.scale.y/frameBody->image->height,
 		};
 		const mat4 transform = boneMatrix(root);
 
@@ -409,4 +413,8 @@ void (* const guiElementRenderJumpTable[4])(
 };
 __FORCE_INLINE__ void guiElementRender(const guiElement *const restrict element, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const float interpT){
 	guiElementRenderJumpTable[element->flags & GUI_ELEMENT_TYPE_MASK](element, gfxMngr, cam, distance, interpT);
+}
+
+void guiElementDelete(guiElement *element){
+	//
 }

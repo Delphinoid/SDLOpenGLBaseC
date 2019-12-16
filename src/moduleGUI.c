@@ -88,7 +88,7 @@ __HINT_INLINE__ guiElement *moduleGUIElementNext(const guiElement *const restric
 	return (guiElement *)memSLinkDataGetNext(i);
 }
 __HINT_INLINE__ void moduleGUIElementFree(guiElement **const restrict array, guiElement *const restrict resource, const guiElement *const restrict previous){
-	///guiElementDelete(resource);
+	guiElementDelete(resource);
 	memSLinkFree(&__GUIElementResourceArray, (void **)array, (void *)resource, (const void *)previous);
 }
 void moduleGUIElementFreeArray(guiElement **const restrict array){

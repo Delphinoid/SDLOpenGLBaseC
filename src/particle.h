@@ -6,14 +6,18 @@
 typedef uint_least8_t particleIndex_t;
 
 typedef struct {
+	renderableBase rndr;
+} particleBase;
+
+typedef struct {
 	bone configuration;
 	rndrState rndr;
 	float lifetime;
-	particleIndex_t type;
+	const particleBase *base;
 } particle;
 
 typedef struct {
-	// Particle types.
+	// SLink of particle types.
 	size_t particleTypes;
 	renderableBase *types;
 } particleEmitterBase;

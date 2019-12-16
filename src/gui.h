@@ -75,7 +75,8 @@ typedef struct guiElement {
 
 } guiElement;
 
-return_t guiPanelInit(guiElement *const restrict element, const rectangle areas[4]);
+guiElement *guiElementAddChild(guiElement *const restrict element);
 void guiElementRender(const guiElement *const restrict element, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const float interpT);
+void guiElementDelete(guiElement *element);
 
 #endif
