@@ -248,6 +248,8 @@ return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, 
 
 return_t mdlDefaultInit(){
 
+	/** 24 vertices and 36 indices for a cube? What was I thinking? **/
+
 	vertex vertices[24];
 	vertexIndex_t indices[36];
 

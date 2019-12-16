@@ -204,8 +204,20 @@ return_t tLoad(texture *const restrict tex, const char *const restrict prgPath, 
 		fclose(texInfo);
 
 	}else{
-		printf("Error loading texture \"%s\": Could not open file.\n", fullPath);
-		return 0;
+
+		// Try and load a single image instead of a texture file.
+		fileGenerateFullPath(fullPath, prgPath, strlen(prgPath), IMAGE_RESOURCE_DIRECTORY_STRING, IMAGE_RESOURCE_DIRECTORY_LENGTH, filePath, fileLength);
+		texInfo = fopen(fullPath, "r");
+		if(texInfo != NULL){
+			image = tLoadImage(&fullPath[0]);
+			if(image == NULL){
+				printf("Error generating SDL_Surface for texture \"%s\": %s\n", fullPath, SDL_GetError());
+			}
+		}else{
+			printf("Error loading texture \"%s\": Could not open file.\n", fullPath);
+			return 0;
+		}
+
 	}
 
 	if(image == NULL){

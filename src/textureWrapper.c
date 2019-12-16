@@ -276,7 +276,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 					char *token = line+12;
 
 					// Load the frame delay.
-					delay = strtod(++token, &token);
+					delay = strtod(token, &token);
 
 					// Create a new texture frame.
 					tempFrame.image = NULL;

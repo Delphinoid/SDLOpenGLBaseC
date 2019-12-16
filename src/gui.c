@@ -193,6 +193,13 @@ return_t guiPanelInit(guiElement *const restrict element, const rectangle areas[
 }
 **/
 
+void guiElementTick(guiElement *const restrict element, const float elapsedTime){
+	if(flagsAreSet(element->flags, GUI_ELEMENT_TYPE_WINDOW)){
+		twiTick(&element->data.window.body, elapsedTime);
+		twiTick(&element->data.window.border, elapsedTime);
+	}
+}
+
 guiElement *guiElementAddChild(guiElement *const restrict element){
 	//
 }

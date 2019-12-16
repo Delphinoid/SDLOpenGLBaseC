@@ -528,7 +528,7 @@ int main(int argc, char **argv){
 			}///camMain->target.value = tempObji2->configuration[0].position;
 
 			///
-			twiTick(&gEl.data.window.body, tickrateTimeMod);
+			guiElementTick(&gEl, tickrateTimeMod);
 			///
 			// Update scenes.
 			moduleSceneTick(tickrateTimeMod);
