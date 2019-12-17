@@ -262,146 +262,234 @@ static void guiElementRenderWindow(const guiElement *const restrict element, gra
 	const twFrame *const restrict frameBorder = twiState(&element->data.window.border, interpT);
 
 	// Generate bone states for the window corners.
+	const rectangle *offsets = &element->data.window.offsets[0];
 	const bone root = {
 		.position = {
 			// Move the origin to the top left corner.
-			.x = element->root.position.x + element->root.scale.x*0.5f + element->data.window.offsets[0].w * frameBorder->image->width,
-			.y = element->root.position.y - element->root.scale.y*0.5f - element->data.window.offsets[0].h * frameBorder->image->height,
+			.x = element->root.position.x + element->root.scale.x*0.5f + offsets->w * frameBorder->image->width,
+			.y = element->root.position.y - element->root.scale.y*0.5f - offsets->h * frameBorder->image->height,
 			.z = element->root.position.z
 		},
 		.orientation = element->root.orientation,
 		.scale = element->root.scale
 	};
 
-	// Border element offset vectors.
-	// Border side elements use these as their "up" vectors,
-	// and the previous entry as their "right" vectors.
-	const vec2 offsets[9] = {
-		{.x = 0.5f, .y = -0.5f},
-		{.x = 0.5f, .y = 0.5f},
-		{.x = -0.5f, .y = 0.5f},
-		{.x = -0.5f, .y = -0.5f},
-		{.x = 0.f, .y = -0.5f}, {.x = 0.5f, .y = 0.f},
-		{.x = 0.f, .y = 0.5f},
-		{.x = -0.5f, .y = 0.f},
-		{.x = 0.f, .y = -0.5f}
-	};
-	const vec2 *o1 = &offsets[0];
-	const rectangle *o2 = &element->data.window.offsets[0];
-	const vec2 *oLast;
-	int rotate = 0;
+	const float inverseWidth = 1.f/frameBorder->image->width;
+	const float inverseHeight = 1.f/frameBody->image->height;
+
+	vec2 size;
+	rectangle subframe;
+	mat4 transform;
 
 	// Bind the texture.
 	gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, frameBorder->image->diffuseID);
+	// Feed the translucency multiplier to the shader
+	glUniform1f(gfxMngr->alphaID, 1.f);
 
-	// Render the border corners.
-	oLast = &offsets[3];
-	for(; o1 <= oLast; ++o1, ++o2){
+	// Draw the bottom right corner.
+	// Border corner size, in pixels.
+	size.x = offsets->w * frameBorder->image->width;
+	size.y = offsets->h * frameBorder->image->height;
+	// UV subframe.
+	subframe.x = frameBorder->subframe.x + offsets->x;
+	subframe.y = frameBorder->subframe.y + offsets->y;
+	subframe.w = frameBorder->subframe.w * offsets->w;
+	subframe.h = frameBorder->subframe.h * offsets->h;
+	// Transformation matrix.
+	transform.m[0][0] = size.x; transform.m[1][0] = 0.f;    transform.m[2][0] = 0.f; transform.m[3][0] = root.position.x + 0.5f * (root.scale.x + size.x);
+	transform.m[0][1] = 0.f;    transform.m[1][1] = size.y; transform.m[2][1] = 0.f; transform.m[3][1] = root.position.y - 0.5f * (root.scale.y + size.y);
+	transform.m[0][2] = 0.f;    transform.m[1][2] = 0.f;    transform.m[2][2] = 1.f; transform.m[3][2] = root.position.z;
+	transform.m[0][3] = 0.f;    transform.m[1][3] = 0.f;    transform.m[2][3] = 0.f; transform.m[3][3] = 1.f;
+	// Feed the texture coordinates to the shader.
+	glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&subframe);
+	// Feed the bone configuration to the shader.
+	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
+	// Render the model.
+	glBindVertexArray(mdlSprite.vaoID);
+	glDrawElements(GL_TRIANGLES, mdlSprite.indexNum, GL_UNSIGNED_INT, 0);
 
-		const vec2 thickness = {
-			.x = o2->w * frameBorder->image->width,
-			.y = o2->h * frameBorder->image->height
-		};
-		const rectangle subframe = {
-			.x = frameBorder->subframe.x + o2->x,
-			.y = frameBorder->subframe.y + o2->y,
-			.w = frameBorder->subframe.w * o2->w,
-			.h = frameBorder->subframe.h * o2->h
-		};
-		// Translation to each of the four corners.
-		const mat4 transform = {
-			.m = {
-				{thickness.x, 0.f,         0.f, 0.f},
-				{0.f,         thickness.y, 0.f, 0.f},
-				{0.f,         0.f,         1.f, 0.f},
-				{
-					root.position.x + o1->x * (root.scale.x + thickness.x),
-					root.position.y + o1->y * (root.scale.y + thickness.y),
-					root.position.z,
-					1.f
-				}
-			}
-		};
+	// Draw the top right corner.
+	++offsets;
+	// Border corner size, in pixels.
+	size.x = offsets->w * frameBorder->image->width;
+	size.y = offsets->h * frameBorder->image->height;
+	// UV subframe.
+	subframe.x = frameBorder->subframe.x + offsets->x;
+	subframe.y = frameBorder->subframe.y + offsets->y;
+	subframe.w = frameBorder->subframe.w * offsets->w;
+	subframe.h = frameBorder->subframe.h * offsets->h;
+	// Transformation matrix. We need only overwrite what's different from the previous setup.
+	transform.m[0][0] = size.x;
+	transform.m[1][1] = size.y;
+	transform.m[3][0] = root.position.x + 0.5f * (root.scale.x + size.x);
+	transform.m[3][1] = root.position.y + 0.5f * (root.scale.y + size.y);
+	// Feed the texture coordinates to the shader.
+	glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&subframe);
+	// Feed the bone configuration to the shader.
+	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
+	// Render the model.
+	glBindVertexArray(mdlSprite.vaoID);
+	glDrawElements(GL_TRIANGLES, mdlSprite.indexNum, GL_UNSIGNED_INT, 0);
 
-		// Feed the texture coordinates to the shader.
-		glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&subframe);
+	// Draw the top left corner.
+	++offsets;
+	// Border corner size, in pixels.
+	size.x = offsets->w * frameBorder->image->width;
+	size.y = offsets->h * frameBorder->image->height;
+	// UV subframe.
+	subframe.x = frameBorder->subframe.x + offsets->x;
+	subframe.y = frameBorder->subframe.y + offsets->y;
+	subframe.w = frameBorder->subframe.w * offsets->w;
+	subframe.h = frameBorder->subframe.h * offsets->h;
+	// Transformation matrix. We need only overwrite what's different from the previous setup.
+	transform.m[0][0] = size.x;
+	transform.m[1][1] = size.y;
+	transform.m[3][0] = root.position.x - 0.5f * (root.scale.x + size.x);
+	transform.m[3][1] = root.position.y + 0.5f * (root.scale.y + size.y);
+	// Feed the texture coordinates to the shader.
+	glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&subframe);
+	// Feed the bone configuration to the shader.
+	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
+	// Render the model.
+	glBindVertexArray(mdlSprite.vaoID);
+	glDrawElements(GL_TRIANGLES, mdlSprite.indexNum, GL_UNSIGNED_INT, 0);
 
-		// Feed the bone configuration to the shader.
-		glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
+	// Draw the bottom left corner.
+	++offsets;
+	// Border corner size, in pixels.
+	size.x = offsets->w * frameBorder->image->width;
+	size.y = offsets->h * frameBorder->image->height;
+	// UV subframe.
+	subframe.x = frameBorder->subframe.x + offsets->x;
+	subframe.y = frameBorder->subframe.y + offsets->y;
+	subframe.w = frameBorder->subframe.w * offsets->w;
+	subframe.h = frameBorder->subframe.h * offsets->h;
+	// Transformation matrix. We need only overwrite what's different from the previous setup.
+	transform.m[0][0] = size.x;
+	transform.m[1][1] = size.y;
+	transform.m[3][0] = root.position.x - 0.5f * (root.scale.x + size.x);
+	transform.m[3][1] = root.position.y - 0.5f * (root.scale.y + size.y);
+	// Feed the texture coordinates to the shader.
+	glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&subframe);
+	// Feed the bone configuration to the shader.
+	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
+	// Render the model.
+	glBindVertexArray(mdlSprite.vaoID);
+	glDrawElements(GL_TRIANGLES, mdlSprite.indexNum, GL_UNSIGNED_INT, 0);
 
-		// Render the model.
-		glBindVertexArray(mdlSprite.vaoID);
-		glDrawElements(GL_TRIANGLES, mdlSprite.indexNum, GL_UNSIGNED_INT, 0);
+	// Draw the right side.
+	++offsets;
+	// Border side thickness, in pixels.
+	size.x = offsets->h * frameBorder->image->height;
+	// UV subframe.
+	subframe.x = frameBorder->subframe.x + offsets->x;
+	subframe.y = frameBorder->subframe.y + offsets->y;
+	subframe.w = flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.w * offsets->w : -2.f*root.scale.y*inverseWidth;
+	subframe.h = frameBorder->subframe.h * offsets->h;
+	// Transformation matrix. We need only overwrite what's different from the previous setup.
+	transform.m[0][0] = 0.f;
+	transform.m[0][1] = -root.scale.y;
+	transform.m[1][0] = size.x;
+	transform.m[1][1] = 0.f;
+	transform.m[3][0] = root.position.x + 0.5f * (root.scale.x + size.x);
+	transform.m[3][1] = root.position.y;
+	// Feed the texture coordinates to the shader.
+	glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&subframe);
+	// Feed the bone configuration to the shader.
+	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
+	// Render the model.
+	glBindVertexArray(mdlSprite.vaoID);
+	glDrawElements(GL_TRIANGLES, mdlSprite.indexNum, GL_UNSIGNED_INT, 0);
 
-	}
+	// Draw the top side.
+	++offsets;
+	// Border side thickness, in pixels.
+	size.x = offsets->h * frameBorder->image->height;
+	// UV subframe.
+	subframe.x = frameBorder->subframe.x + offsets->x;
+	subframe.y = frameBorder->subframe.y + offsets->y;
+	subframe.w = flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.w * offsets->w : -2.f*root.scale.x*inverseWidth;
+	subframe.h = frameBorder->subframe.h * offsets->h;
+	// Transformation matrix. We need only overwrite what's different from the previous setup.
+	transform.m[0][0] = root.scale.x;
+	transform.m[0][1] = 0.f;
+	transform.m[1][0] = 0.f;
+	transform.m[1][1] = size.x;
+	transform.m[3][0] = root.position.x;
+	transform.m[3][1] = root.position.y + 0.5f * (root.scale.y + size.x);
+	// Feed the texture coordinates to the shader.
+	glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&subframe);
+	// Feed the bone configuration to the shader.
+	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
+	// Render the model.
+	glBindVertexArray(mdlSprite.vaoID);
+	glDrawElements(GL_TRIANGLES, mdlSprite.indexNum, GL_UNSIGNED_INT, 0);
 
-	// Render the border edges.
-	oLast = &offsets[8];
-	for(++o1; o1 <= oLast; ++o1, ++o2){
+	// Draw the left side.
+	++offsets;
+	// Border side thickness, in pixels.
+	size.x = offsets->h * frameBorder->image->height;
+	// UV subframe.
+	subframe.x = flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.x + offsets->x : frameBorder->subframe.x + offsets->x + 2.f*root.scale.y*inverseWidth;
+	subframe.y = frameBorder->subframe.y + offsets->y;
+	subframe.w = flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.w * offsets->w : 2.f*root.scale.y*inverseWidth;
+	subframe.h = frameBorder->subframe.h * offsets->h;
+	// Transformation matrix. We need only overwrite what's different from the previous setup.
+	transform.m[0][0] = 0.f;
+	transform.m[0][1] = root.scale.y;
+	transform.m[1][0] = -size.x;
+	transform.m[1][1] = 0.f;
+	transform.m[3][0] = root.position.x - 0.5f * (root.scale.x + size.x);
+	transform.m[3][1] = root.position.y;
+	// Feed the texture coordinates to the shader.
+	glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&subframe);
+	// Feed the bone configuration to the shader.
+	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
+	// Render the model.
+	glBindVertexArray(mdlSprite.vaoID);
+	glDrawElements(GL_TRIANGLES, mdlSprite.indexNum, GL_UNSIGNED_INT, 0);
 
-		const float thickness = o2->h * frameBorder->image->height;
-		const vec2 scale = {.x = rotate ? 2.f*root.scale.x : 2.f*root.scale.y, .y = 2.f*thickness};
-		const rectangle subframe = {
-			.x = (flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) || o1 == &offsets[5] || o1 == &offsets[6]) ? frameBorder->subframe.x + o2->x : frameBorder->subframe.x + o2->x + scale.x/frameBorder->image->width,
-			.y = frameBorder->subframe.y + o2->y,
-			.w = flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.w*o2->w : ((o1 == &offsets[7] && o1 == oLast) ? scale.x/frameBorder->image->width : -scale.x/frameBorder->image->width),
-			.h = frameBorder->subframe.h * o2->h
-		};
-		// Translation to each of the four sides.
-		const mat4 transform = {
-			.m = {
-				{(o1-1)->x * scale.x, (o1-1)->y * scale.x, 0.f, 0.f},
-				{o1->x * scale.y,     o1->y * scale.y,     0.f, 0.f},
-				{0.f,                 0.f,                 1.f, 0.f},
-				{
-					root.position.x + o1->x * (root.scale.x + thickness),
-					root.position.y + o1->y * (root.scale.y + thickness),
-					root.position.z,
-					1.f
-				}
-			}
-		};
+	// Draw the bottom side.
+	++offsets;
+	// Border side thickness, in pixels.
+	size.x = offsets->h * frameBorder->image->height;
+	// UV subframe.
+	subframe.x = flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.x + offsets->x : frameBorder->subframe.x + offsets->x + 2.f*root.scale.x*inverseWidth;
+	subframe.y = frameBorder->subframe.y + offsets->y;
+	subframe.w = flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.w * offsets->w : 2.f*root.scale.x*inverseWidth;
+	subframe.h = frameBorder->subframe.h * offsets->h;
+	// Transformation matrix. We need only overwrite what's different from the previous setup.
+	transform.m[0][0] = -root.scale.x;
+	transform.m[0][1] = 0.f;
+	transform.m[1][0] = 0.f;
+	transform.m[1][1] = -size.x;
+	transform.m[3][0] = root.position.x;
+	transform.m[3][1] = root.position.y - 0.5f * (root.scale.y + size.x);
+	// Feed the texture coordinates to the shader.
+	glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&subframe);
+	// Feed the bone configuration to the shader.
+	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
+	// Render the model.
+	glBindVertexArray(mdlSprite.vaoID);
+	glDrawElements(GL_TRIANGLES, mdlSprite.indexNum, GL_UNSIGNED_INT, 0);
 
-		// Feed the texture coordinates to the shader.
-		glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&subframe);
-
-		// Feed the bone configuration to the shader.
-		glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
-
-		// Render the model.
-		glBindVertexArray(mdlSprite.vaoID);
-		glDrawElements(GL_TRIANGLES, mdlSprite.indexNum, GL_UNSIGNED_INT, 0);
-
-		rotate = !rotate;
-
-	}
-
-	{
-
-		const rectangle subframe = {
-			.x = frameBody->subframe.x,
-			.y = flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBody->subframe.y : frameBody->subframe.y + root.scale.y/frameBody->image->height,
-			.w = flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBody->subframe.w : root.scale.x/frameBody->image->width,
-			.h = flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBody->subframe.h : root.scale.y/frameBody->image->height,
-		};
-		const mat4 transform = boneMatrix(root);
-
-		// Bind the texture.
-		gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, frameBody->image->diffuseID);
-		// Feed the texture coordinates to the shader.
-		glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&subframe);
-
-		// Feed the translucency multiplier to the shader
-		glUniform1f(gfxMngr->alphaID, 1.f);
-
-		// Feed the bone configuration to the shader.
-		glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
-
-		// Render the model.
-		glBindVertexArray(mdlSprite.vaoID);
-		glDrawElements(GL_TRIANGLES, mdlSprite.indexNum, GL_UNSIGNED_INT, 0);
-
-	}
+	// Draw the body.
+	// UV subframe.
+	subframe.x = frameBody->subframe.x;
+	subframe.y = flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBody->subframe.y : frameBody->subframe.y + root.scale.y*inverseHeight;
+	subframe.w = flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBody->subframe.w : root.scale.x/frameBody->image->width;
+	subframe.h = flagsAreSet(element->data.window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBody->subframe.h : root.scale.y*inverseHeight;
+	// Transformation matrix.
+	transform = boneMatrix(root);
+	// Bind the texture.
+	gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, frameBody->image->diffuseID);
+	// Feed the texture coordinates to the shader.
+	glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&subframe);
+	// Feed the bone configuration to the shader.
+	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
+	// Render the model.
+	glBindVertexArray(mdlSprite.vaoID);
+	glDrawElements(GL_TRIANGLES, mdlSprite.indexNum, GL_UNSIGNED_INT, 0);
 
 }
 
