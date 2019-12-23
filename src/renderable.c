@@ -1,5 +1,6 @@
 #include "graphicsManager.h"
 #include "renderable.h"
+#include "renderableSettings.h"
 #include "texture.h"
 #include "model.h"
 #include "skeleton.h"
@@ -15,6 +16,7 @@ void rndrStateInit(rndrState *const restrict state){
 	state->alpha = 1.f;
 	state->alphaCurrent = 1.f;
 	state->alphaPrevious = 1.f;
+	state->flags = RENDERABLE_DEFAULT_ALPHA_MODE;
 }
 
 void rndrInit(renderable *const restrict rndr){

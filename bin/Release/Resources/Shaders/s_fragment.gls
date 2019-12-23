@@ -35,7 +35,7 @@ void main(){
 		//);
 		//
 		// If the fragment is below the alpha threshold, discard it.
-		//if(fragColour.a < ditherMatrix[coords.x][coords.y]){
+		//if(fragColour.a < ditherMatrix[int(gl_FragCoord.x) % 4][int(gl_FragCoord.y) % 4]){
 		//	discard;
 		//}else{
 		//	fragColour.a = 1.f;
