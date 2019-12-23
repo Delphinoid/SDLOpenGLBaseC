@@ -27,125 +27,49 @@ void main(){
 	
 		// 4x4 Bayer ordered dithering matrix.
 		// Each element represents an alpha threshold.
-		//const mat4 ditherMatrix = mat4(
-		//	vec4(1.f/17.f,  9.f/17.f,  3.f/17.f,  11.f/17.f),
-		//	vec4(13.f/17.f, 5.f/17.f,  15.f/17.f, 7.f/17.f),
-		//	vec4(4.f/17.f,  12.f/17.f, 2.f/17.f,  10.f/17.f),
-		//	vec4(16.f/17.f, 8.f/17.f,  14.f/17.f, 6.f/17.f)
-		//);
-		//
+		const mat4 ditherMatrix = mat4(
+			vec4(-1.f/17.f,  -9.f/17.f,  -3.f/17.f,  -11.f/17.f),
+			vec4(-13.f/17.f, -5.f/17.f,  -15.f/17.f, -7.f/17.f),
+			vec4(-4.f/17.f,  -12.f/17.f, -2.f/17.f,  -10.f/17.f),
+			vec4(-16.f/17.f, -8.f/17.f,  -14.f/17.f, -6.f/17.f)
+		);
+		vec4 ditherRow;
+		float ditherThreshold;
+		
+		// Determine which row of the dither matrix to use.
+		switch(int(gl_FragCoord.x) % 4){
+			case 0:
+				ditherRow = ditherMatrix[0];
+			break;
+			case 1:
+				ditherRow = ditherMatrix[1];
+			break;
+			case 2:
+				ditherRow = ditherMatrix[2];
+			break;
+			default:
+				ditherRow = ditherMatrix[3];
+		}
+		// Now find the column and get the threshold value.
+		switch(int(gl_FragCoord.y) % 4){
+			case 0:
+				ditherThreshold = ditherRow[0];
+			break;
+			case 1:
+				ditherThreshold = ditherRow[1];
+			break;
+			case 2:
+				ditherThreshold = ditherRow[2];
+			break;
+			default:
+				ditherThreshold = ditherRow[3];
+		}
+			
 		// If the fragment is below the alpha threshold, discard it.
-		//if(fragColour.a < ditherMatrix[int(gl_FragCoord.x) % 4][int(gl_FragCoord.y) % 4]){
-		//	discard;
-		//}else{
-		//	fragColour.a = 1.f;
-		//}
-		
-		// Dynamic array indexing in fragment shaders is not
-		// guaranteed to be supported by the GLSL standard
-		// (although it is for vertex shaders?!?!).
-		ivec2 coords = ivec2(int(gl_FragCoord.x) % 4, int(gl_FragCoord.y) % 4);
-		fragColour.a *= -alpha;
-		
-		// The alternative to dynamic array indexing is really,
-		// really, REALLY bad. Maybe a better solution exists,
-		// but for the time being this is all I can think of.
-		if(coords.x == 0 && coords.y == 0){
-			if(fragColour.a < 1.f/17.f){
-				discard;
-			}else{
-				fragColour.a = 1.f;
-			}
-		}else if(coords.x == 1 && coords.y == 0){
-			if(fragColour.a < 9.f/17.f){
-				discard;
-			}else{
-				fragColour.a = 1.f;
-			}
-		}else if(coords.x == 2 && coords.y == 0){
-			if(fragColour.a < 3.f/17.f){
-				discard;
-			}else{
-				fragColour.a = 1.f;
-			}
-		}else if(coords.x == 3 && coords.y == 0){
-			if(fragColour.a < 11.f/17.f){
-				discard;
-			}else{
-				fragColour.a = 1.f;
-			}
-		}else if(coords.x == 0 && coords.y == 1){
-			if(fragColour.a < 13.f/17.f){
-				discard;
-			}else{
-				fragColour.a = 1.f;
-			}
-		}else if(coords.x == 1 && coords.y == 1){
-			if(fragColour.a < 5.f/17.f){
-				discard;
-			}else{
-				fragColour.a = 1.f;
-			}
-		}else if(coords.x == 2 && coords.y == 1){
-			if(fragColour.a < 15.f/17.f){
-				discard;
-			}else{
-				fragColour.a = 1.f;
-			}
-		}else if(coords.x == 3 && coords.y == 1){
-			if(fragColour.a < 7.f/17.f){
-				discard;
-			}else{
-				fragColour.a = 1.f;
-			}
-		}else if(coords.x == 0 && coords.y == 2){
-			if(fragColour.a < 4.f/17.f){
-				discard;
-			}else{
-				fragColour.a = 1.f;
-			}
-		}else if(coords.x == 1 && coords.y == 2){
-			if(fragColour.a < 12.f/17.f){
-				discard;
-			}else{
-				fragColour.a = 1.f;
-			}
-		}else if(coords.x == 2 && coords.y == 2){
-			if(fragColour.a < 2.f/17.f){
-				discard;
-			}else{
-				fragColour.a = 1.f;
-			}
-		}else if(coords.x == 3 && coords.y == 2){
-			if(fragColour.a < 10.f/17.f){
-				discard;
-			}else{
-				fragColour.a = 1.f;
-			}
-		}else if(coords.x == 0 && coords.y == 3){
-			if(fragColour.a < 16.f/17.f){
-				discard;
-			}else{
-				fragColour.a = 1.f;
-			}
-		}else if(coords.x == 1 && coords.y == 3){
-			if(fragColour.a < 8.f/17.f){
-				discard;
-			}else{
-				fragColour.a = 1.f;
-			}
-		}else if(coords.x == 2 && coords.y == 3){
-			if(fragColour.a < 14.f/17.f){
-				discard;
-			}else{
-				fragColour.a = 1.f;
-			}
-		}else if(coords.x == 3 && coords.y == 3){
-			if(fragColour.a < 6.f/17.f){
-				discard;
-			}else{
-				fragColour.a = 1.f;
-			}
+		if(fragColour.a*alpha > ditherThreshold){
+			discard;
+		}else{
+			fragColour.a = 1.f;
 		}
 		
 	}else{
