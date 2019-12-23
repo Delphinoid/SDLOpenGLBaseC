@@ -22,8 +22,6 @@ typedef struct physContactPair physContactPair;
 typedef struct physSeparationPair physSeparationPair;
 typedef struct physIsland physIsland;
 
-typedef uint_least16_t physCollisionMask_t;
-
 typedef struct physCollider {
 
 	collider c;  // Convex collider in global space.
@@ -44,7 +42,7 @@ typedef struct physCollider {
 	collider *base;  // Convex collider in local space.
 
 	// Collision layer bitmask.
-	physCollisionMask_t layers;
+	colliderMask_t layers;
 
 } physCollider;
 

@@ -1,6 +1,7 @@
 #ifndef COLLIDER_H
 #define COLLIDER_H
 
+#include "colliderShared.h"
 #include "colliderComposite.h"
 #include "colliderMesh.h"
 #include "colliderCapsule.h"
@@ -20,8 +21,7 @@
 
 #define COLLIDER_INSTANCE 0x01
 
-typedef int_least8_t  colliderType_t;
-typedef uint_least8_t colliderIndex_t;
+typedef int_least8_t colliderType_t;
 
 typedef struct collider {
 	// Calculate the size of the largest collider type.

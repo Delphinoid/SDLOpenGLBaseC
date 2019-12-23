@@ -40,6 +40,7 @@ extern textureWrapper twDefault;
 /** twLoad() and twiAnimate() may need some tidying up. **/
 void twInit(textureWrapper *const restrict tw);
 return_t twLoad(textureWrapper *const restrict tw, const char *const restrict prgPath, const char *const restrict filePath);
+const twFrame *twState(const textureWrapper *const restrict tw, const animationInstance *const restrict animator, const animIndex_t currentAnim, const float interpT);
 void twDelete(textureWrapper *const restrict tw);
 
 void twiInit(twInstance *const restrict twi, const textureWrapper *const tw);

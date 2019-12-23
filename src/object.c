@@ -1049,11 +1049,13 @@ gfxRenderGroup_t objRenderGroup(const object *const restrict obj, const float in
 			// The object contains translucency.
 			return GFX_RNDR_GROUP_TRANSLUCENT;
 
-		}else{
+		// Treat dithered renderables as opaque.
+		// The check should eventually be moved up here once rndrAlpha is removed.
+		}else{/// if(flagsAreUnset(i->stateData.flags, RENDERABLE_ALPHA_DITHER)){
 
 			/** We have to calculate the alpha again when rendering. Maybe avoid this? **/
 			const float alpha = rndrAlpha(i, interpT);
-			if(alpha > 0.f && alpha < 1.f){
+			if(alpha > 0.f && alpha < 1.f && flagsAreUnset(i->stateData.flags, RENDERABLE_ALPHA_DITHER)){
 				// The object contains translucency.
 				return GFX_RNDR_GROUP_TRANSLUCENT;
 			}
@@ -1065,7 +1067,7 @@ gfxRenderGroup_t objRenderGroup(const object *const restrict obj, const float in
 
 	}
 
-	if(totalAlpha == 0.f){
+	if(totalAlpha <= 0.f){
 		// The model is fully transparent.
 		return GFX_RNDR_GROUP_UNKNOWN;
 	}
@@ -1133,70 +1135,7 @@ void objRender(const object *const restrict obj, graphicsManager *const restrict
 	// Draw each renderable.
 	while(currentRndr != NULL){
 
-		// Get texture information for rendering and feed it to the shader.
-		const twFrame *const restrict frame = twiState(&currentRndr->twi, interpT);
-		// Bind the texture (if needed).
-		gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, frame->image->diffuseID);
-		// Feed the texture coordinates to the shader.
-		glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&frame->subframe);
-
-		if(currentRndr->mdl->skl != NULL){
-
-			const float alpha = rndrAlpha(currentRndr, interpT);
-
-			if(alpha > 0.f){
-
-				mat4 transform;
-				GLuint *bArray = gfxMngr->boneArrayID;
-
-				boneNum = currentRndr->mdl->skl->boneNum;
-				nLayout = currentRndr->mdl->skl->bones;
-
-				// If there is a valid animated skeleton, apply animation transformations.
-				for(i = 0; i < boneNum; ++i, ++bArray, ++nLayout){
-
-					/** Use a lookup, same in object.c. **/
-					boneIndex_t rndrBone = sklFindBone(obj->skeletonData.skl, i, nLayout->name);
-
-					if(rndrBone >= obj->skeletonData.skl->boneNum){
-						// Use the root bone's transformation if
-						// the animated bone is not in the model.
-						rndrBone = 0;
-					}
-
-					// Apply billboarding transformation if required.
-					if(currentRndr->billboardData.flags != BILLBOARD_DISABLED){
-						// Use the root bone's global position as the centroid for billboarding.
-						transform = billboardState(currentRndr->billboardData, cam, centroid, gfxMngr->sklTransformState[rndrBone]);
-					}else{
-						transform = gfxMngr->sklTransformState[rndrBone];
-					}
-
-					// Feed the bone configuration to the shader.
-					glUniformMatrix4fv(*bArray, 1, GL_FALSE, &transform.m[0][0]);
-
-				}
-
-				// Feed the translucency multiplier to the shader
-				glUniform1f(gfxMngr->alphaID, alpha);
-
-				// Render the model.
-				glBindVertexArray(currentRndr->mdl->vaoID);
-				if(currentRndr->mdl->indexNum > 0){
-					GLsizei indexNum;
-					const void *offset;
-					mdlFindCurrentLOD(currentRndr->mdl, &indexNum, &offset, distance, gfxMngr->biasLOD);
-					if(indexNum){
-						glDrawElements(GL_TRIANGLES, indexNum, GL_UNSIGNED_INT, offset);
-					}
-				}else{
-					glDrawArrays(GL_TRIANGLES, 0, currentRndr->mdl->vertexNum);
-				}
-
-			}
-
-		}
-
+		rndrRender(currentRndr, obj->skeletonData.skl, gfxMngr, cam, distance, centroid, interpT);
 		currentRndr = moduleRenderableNext(currentRndr);
 
 	}

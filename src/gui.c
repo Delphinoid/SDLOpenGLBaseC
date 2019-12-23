@@ -305,8 +305,8 @@ static void guiElementRenderWindow(const guiElement *const restrict element, gra
 	// Feed the bone configuration to the shader.
 	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
 	// Render the model.
-	glBindVertexArray(mdlSprite.vaoID);
-	glDrawElements(GL_TRIANGLES, mdlSprite.indexNum, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(meshSprite.vaoID);
+	glDrawElements(GL_TRIANGLES, meshSprite.indexNum, GL_UNSIGNED_INT, 0);
 
 	// Draw the top right corner.
 	++offsets;
@@ -328,8 +328,8 @@ static void guiElementRenderWindow(const guiElement *const restrict element, gra
 	// Feed the bone configuration to the shader.
 	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
 	// Render the model.
-	glBindVertexArray(mdlSprite.vaoID);
-	glDrawElements(GL_TRIANGLES, mdlSprite.indexNum, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(meshSprite.vaoID);
+	glDrawElements(GL_TRIANGLES, meshSprite.indexNum, GL_UNSIGNED_INT, 0);
 
 	// Draw the top left corner.
 	++offsets;
@@ -351,8 +351,8 @@ static void guiElementRenderWindow(const guiElement *const restrict element, gra
 	// Feed the bone configuration to the shader.
 	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
 	// Render the model.
-	glBindVertexArray(mdlSprite.vaoID);
-	glDrawElements(GL_TRIANGLES, mdlSprite.indexNum, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(meshSprite.vaoID);
+	glDrawElements(GL_TRIANGLES, meshSprite.indexNum, GL_UNSIGNED_INT, 0);
 
 	// Draw the bottom left corner.
 	++offsets;
@@ -374,8 +374,8 @@ static void guiElementRenderWindow(const guiElement *const restrict element, gra
 	// Feed the bone configuration to the shader.
 	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
 	// Render the model.
-	glBindVertexArray(mdlSprite.vaoID);
-	glDrawElements(GL_TRIANGLES, mdlSprite.indexNum, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(meshSprite.vaoID);
+	glDrawElements(GL_TRIANGLES, meshSprite.indexNum, GL_UNSIGNED_INT, 0);
 
 	// Draw the right side.
 	++offsets;
@@ -398,8 +398,8 @@ static void guiElementRenderWindow(const guiElement *const restrict element, gra
 	// Feed the bone configuration to the shader.
 	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
 	// Render the model.
-	glBindVertexArray(mdlSprite.vaoID);
-	glDrawElements(GL_TRIANGLES, mdlSprite.indexNum, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(meshSprite.vaoID);
+	glDrawElements(GL_TRIANGLES, meshSprite.indexNum, GL_UNSIGNED_INT, 0);
 
 	// Draw the top side.
 	++offsets;
@@ -422,8 +422,8 @@ static void guiElementRenderWindow(const guiElement *const restrict element, gra
 	// Feed the bone configuration to the shader.
 	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
 	// Render the model.
-	glBindVertexArray(mdlSprite.vaoID);
-	glDrawElements(GL_TRIANGLES, mdlSprite.indexNum, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(meshSprite.vaoID);
+	glDrawElements(GL_TRIANGLES, meshSprite.indexNum, GL_UNSIGNED_INT, 0);
 
 	// Draw the left side.
 	++offsets;
@@ -446,8 +446,8 @@ static void guiElementRenderWindow(const guiElement *const restrict element, gra
 	// Feed the bone configuration to the shader.
 	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
 	// Render the model.
-	glBindVertexArray(mdlSprite.vaoID);
-	glDrawElements(GL_TRIANGLES, mdlSprite.indexNum, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(meshSprite.vaoID);
+	glDrawElements(GL_TRIANGLES, meshSprite.indexNum, GL_UNSIGNED_INT, 0);
 
 	// Draw the bottom side.
 	++offsets;
@@ -470,8 +470,8 @@ static void guiElementRenderWindow(const guiElement *const restrict element, gra
 	// Feed the bone configuration to the shader.
 	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
 	// Render the model.
-	glBindVertexArray(mdlSprite.vaoID);
-	glDrawElements(GL_TRIANGLES, mdlSprite.indexNum, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(meshSprite.vaoID);
+	glDrawElements(GL_TRIANGLES, meshSprite.indexNum, GL_UNSIGNED_INT, 0);
 
 	// Draw the body.
 	// UV subframe.
@@ -488,8 +488,8 @@ static void guiElementRenderWindow(const guiElement *const restrict element, gra
 	// Feed the bone configuration to the shader.
 	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
 	// Render the model.
-	glBindVertexArray(mdlSprite.vaoID);
-	glDrawElements(GL_TRIANGLES, mdlSprite.indexNum, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(meshSprite.vaoID);
+	glDrawElements(GL_TRIANGLES, meshSprite.indexNum, GL_UNSIGNED_INT, 0);
 
 }
 

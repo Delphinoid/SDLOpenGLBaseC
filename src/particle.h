@@ -1,43 +1,43 @@
 #ifndef PARTICLE_H
 #define PARTICLE_H
 
+#include "colliderShared.h"
 #include "renderable.h"
-
-typedef uint_least8_t particleIndex_t;
+#include "bone.h"
 
 typedef struct {
+
+	// Render data.
 	renderableBase rndr;
+	flags_t billboardFlags;
+
+	// Particle lifetime.
+	float lifetime;
+
+	// Physical data.
+	float density;
+	float friction;
+	float restitution;
+	colliderMask_t layers;
+
 } particleBase;
 
 typedef struct {
+
+	// Particle space configuration.
 	bone configuration;
-	rndrState rndr;
+
+	// Texture wrapper animation information.
+	animIndex_t currentAnim;
+	animationInstance animator;
+
+	// Particle properties.
+	vec3 velocity;
 	float lifetime;
-	const particleBase *base;
+
 } particle;
 
-typedef struct {
-	// SLink of particle types.
-	size_t particleTypes;
-	renderableBase *types;
-} particleEmitterBase;
-
-typedef struct {
-
-	// Array of particles.
-	size_t particleNum;
-	particle *particles;
-
-	// Particle emitters may contain either their
-	// own configuration in space or a pointer to
-	// another object's configuration.
-	//union {
-		//bone local;
-		bone *configuration;
-	//} configuration;
-
-	const particleEmitterBase *base;
-
-} particleEmitter;
+void particleBaseInit(particleBase *const restrict base);
+void particleInit(particle *const restrict p);
 
 #endif

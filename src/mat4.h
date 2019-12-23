@@ -79,7 +79,7 @@ void mat4TranslationMatrixP(mat4 *const restrict r, const float x, const float y
 mat4 mat4Translate(const mat4 m, const float x, const float y, const float z);
 void mat4TranslateP(mat4 *const restrict m, const float x, const float y, const float z);
 void mat4TranslatePR(const mat4 *const restrict m, const float x, const float y, const float z, mat4 *const restrict r);
-mat4 mat4TranslatePost(const mat4 m, const float x, const float y, const float z);
+mat4 mat4TranslatePre(const mat4 m, const float x, const float y, const float z);
 
 mat4 mat4RotationMatrix(const quat q);
 void mat4RotationMatrixP(mat4 *const restrict m, const quat *const restrict q);
@@ -92,7 +92,7 @@ void mat4ScaleMatrixP(mat4 *const restrict m, const float x, const float y, cons
 mat4 mat4Scale(const mat4 m, const float x, const float y, const float z);
 void mat4ScaleP(mat4 *const restrict m, const float x, const float y, const float z);
 void mat4ScalePR(const mat4 *const restrict m, const float x, const float y, const float z, mat4 *const restrict r);
-mat4 mat4ScalePost(const mat4 m, const float x, const float y, const float z);
+mat4 mat4ScalePre(const mat4 m, const float x, const float y, const float z);
 
 mat4 mat4Quaternion(const quat q);
 void mat4QuaternionP(mat4 *const restrict m, const quat *const restrict q);

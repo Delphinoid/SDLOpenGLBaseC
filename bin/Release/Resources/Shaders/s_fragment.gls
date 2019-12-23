@@ -15,10 +15,143 @@ uniform float mip;
 out vec4 colour;
 
 void main(){
-	vec4 tempColour = texture(textureSampler0, UV, mip).rgba;
-	tempColour.a *= alpha;
-	if(tempColour.a == 0.0){
+
+	vec4 fragColour = texture(textureSampler0, UV, mip).rgba;
+	
+	if(fragColour.a == 0.f){
+	
 		discard;
+	
+	// Negative alpha values indicate dithering.
+	}else if(alpha < 0.f){
+	
+		// 4x4 Bayer ordered dithering matrix.
+		// Each element represents an alpha threshold.
+		//const mat4 ditherMatrix = mat4(
+		//	vec4(1.f/17.f,  9.f/17.f,  3.f/17.f,  11.f/17.f),
+		//	vec4(13.f/17.f, 5.f/17.f,  15.f/17.f, 7.f/17.f),
+		//	vec4(4.f/17.f,  12.f/17.f, 2.f/17.f,  10.f/17.f),
+		//	vec4(16.f/17.f, 8.f/17.f,  14.f/17.f, 6.f/17.f)
+		//);
+		//
+		// If the fragment is below the alpha threshold, discard it.
+		//if(fragColour.a < ditherMatrix[coords.x][coords.y]){
+		//	discard;
+		//}else{
+		//	fragColour.a = 1.f;
+		//}
+		
+		// Dynamic array indexing in fragment shaders is not
+		// guaranteed to be supported by the GLSL standard
+		// (although it is for vertex shaders?!?!).
+		ivec2 coords = ivec2(int(gl_FragCoord.x) % 4, int(gl_FragCoord.y) % 4);
+		fragColour.a *= -alpha;
+		
+		// The alternative to dynamic array indexing is really,
+		// really, REALLY bad. Maybe a better solution exists,
+		// but for the time being this is all I can think of.
+		if(coords.x == 0 && coords.y == 0){
+			if(fragColour.a < 1.f/17.f){
+				discard;
+			}else{
+				fragColour.a = 1.f;
+			}
+		}else if(coords.x == 1 && coords.y == 0){
+			if(fragColour.a < 9.f/17.f){
+				discard;
+			}else{
+				fragColour.a = 1.f;
+			}
+		}else if(coords.x == 2 && coords.y == 0){
+			if(fragColour.a < 3.f/17.f){
+				discard;
+			}else{
+				fragColour.a = 1.f;
+			}
+		}else if(coords.x == 3 && coords.y == 0){
+			if(fragColour.a < 11.f/17.f){
+				discard;
+			}else{
+				fragColour.a = 1.f;
+			}
+		}else if(coords.x == 0 && coords.y == 1){
+			if(fragColour.a < 13.f/17.f){
+				discard;
+			}else{
+				fragColour.a = 1.f;
+			}
+		}else if(coords.x == 1 && coords.y == 1){
+			if(fragColour.a < 5.f/17.f){
+				discard;
+			}else{
+				fragColour.a = 1.f;
+			}
+		}else if(coords.x == 2 && coords.y == 1){
+			if(fragColour.a < 15.f/17.f){
+				discard;
+			}else{
+				fragColour.a = 1.f;
+			}
+		}else if(coords.x == 3 && coords.y == 1){
+			if(fragColour.a < 7.f/17.f){
+				discard;
+			}else{
+				fragColour.a = 1.f;
+			}
+		}else if(coords.x == 0 && coords.y == 2){
+			if(fragColour.a < 4.f/17.f){
+				discard;
+			}else{
+				fragColour.a = 1.f;
+			}
+		}else if(coords.x == 1 && coords.y == 2){
+			if(fragColour.a < 12.f/17.f){
+				discard;
+			}else{
+				fragColour.a = 1.f;
+			}
+		}else if(coords.x == 2 && coords.y == 2){
+			if(fragColour.a < 2.f/17.f){
+				discard;
+			}else{
+				fragColour.a = 1.f;
+			}
+		}else if(coords.x == 3 && coords.y == 2){
+			if(fragColour.a < 10.f/17.f){
+				discard;
+			}else{
+				fragColour.a = 1.f;
+			}
+		}else if(coords.x == 0 && coords.y == 3){
+			if(fragColour.a < 16.f/17.f){
+				discard;
+			}else{
+				fragColour.a = 1.f;
+			}
+		}else if(coords.x == 1 && coords.y == 3){
+			if(fragColour.a < 8.f/17.f){
+				discard;
+			}else{
+				fragColour.a = 1.f;
+			}
+		}else if(coords.x == 2 && coords.y == 3){
+			if(fragColour.a < 14.f/17.f){
+				discard;
+			}else{
+				fragColour.a = 1.f;
+			}
+		}else if(coords.x == 3 && coords.y == 3){
+			if(fragColour.a < 6.f/17.f){
+				discard;
+			}else{
+				fragColour.a = 1.f;
+			}
+		}
+		
+	}else{
+		fragColour.a *= alpha;
 	}
-	colour = tempColour;
+	
+	colour = fragColour;
+	
 }

@@ -14,7 +14,7 @@ void physColliderInit(physCollider *const restrict c, const colliderType_t type,
 	c->density = 0.f;
 	c->friction = 1.f;
 	c->restitution = 1.f;
-	c->layers = ~((physCollisionMask_t)0);
+	c->layers = ~((colliderMask_t)0);
 	c->node = NULL;
 	c->contactCache = NULL;
 	c->separationCache = NULL;
@@ -336,7 +336,7 @@ physContactPair *physColliderFindContact(const physCollider *const c1, const phy
 			return i;
 		}
 		p = i;
-		i = (physContactPair *)memQLinkNextA(i);
+		i = (physContactPair *)memQLinkNextA(p);
 	}
 
 	*previous = p;
@@ -365,7 +365,7 @@ physSeparationPair *physColliderFindSeparation(const physCollider *const c1, con
 			return i;
 		}
 		p = i;
-		i = (physSeparationPair *)memQLinkNextA(i);
+		i = (physSeparationPair *)memQLinkNextA(p);
 	}
 
 	*previous = p;

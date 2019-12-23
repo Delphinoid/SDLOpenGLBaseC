@@ -12,9 +12,10 @@ memoryPool __ModelResourceArray;  // Contains models.
 
 return_t moduleModelResourcesInit(){
 	void *memory;
-	if(mdlDefaultInit() < 0 || mdlSpriteInit() < 0){
+	if(meshDefaultInit() < 0 || meshSpriteInit() < 0){
 		return -1;
 	}
+	mdlDefaultInit(); mdlSpriteInit();
 	memory = memAllocate(
 		memPoolAllocationSize(
 			NULL,

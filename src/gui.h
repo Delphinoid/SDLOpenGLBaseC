@@ -52,7 +52,7 @@ typedef struct guiElement {
 		renderable rndr;
 		guiWindow window;
 		///guiText text;
-		object *obj;
+		object *obj;  ///void *obj;
 	} data;
 	bone root;
 

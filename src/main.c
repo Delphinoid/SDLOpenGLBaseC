@@ -219,6 +219,8 @@ int main(int argc, char **argv){
 	tempObji->skeletonBodies->hull->friction = 0.75f;
 	tempObji->skeletonBodies->flags &= ~(0x04);
 	tempObji->skeletonBodies->hull->restitution = 0.f;
+	tempObji->renderables->stateData.alpha = 0.5f;
+	tempObji->renderables->stateData.flags = RENDERABLE_ALPHA_DITHER;
 	tempObji2 = tempObji;
 	//
 	tempObji = moduleObjectAllocate();

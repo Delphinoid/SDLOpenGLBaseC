@@ -20,11 +20,11 @@ typedef struct {
 } animationData;
 
 typedef struct {
-	uint_least8_t currentLoops;
 	frameIndex_t currentFrame;
 	frameIndex_t nextFrame;
 	float prevElapsedTime;
 	float totalElapsedTime;
+	uint_least8_t currentLoops;
 } animationInstance;
 
 /** The two functions below are REALLY bad, redo them later. **/

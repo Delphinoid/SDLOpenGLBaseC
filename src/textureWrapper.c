@@ -652,6 +652,12 @@ const twFrame *twiState(const twInstance *const restrict twi, const float interp
 
 }
 
+const twFrame *twState(const textureWrapper *const restrict tw, const animationInstance *const restrict animator, const animIndex_t currentAnim, const float interpT){
+	frameIndex_t frame;
+	animState(animator, &twAnimation(tw, currentAnim)->animData, interpT, &frame, NULL, NULL);
+	return &tw->animations[currentAnim].frames[frame];
+}
+
 return_t twiTranslucent(const twInstance *const restrict twi){
 	// Make sure the current animation and frame are valid (within proper bounds)
 	if(twi->currentAnim < twi->tw->animationNum &&

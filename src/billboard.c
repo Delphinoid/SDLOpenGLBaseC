@@ -32,7 +32,7 @@ mat4 billboardState(const billboard data, const camera *const restrict cam, cons
 
 		if(flagsAreSet(data.flags, BILLBOARD_SCALE)){
 			const float distance = camDistance(cam, centroid) * data.scale;
-			configuration = mat4Scale(configuration, distance, distance, distance);
+			configuration = mat4ScalePre(configuration, distance, distance, distance);
 		}
 
 	}else if(flagsAreSet(data.flags, BILLBOARD_LOCK_XYZ)){
@@ -71,16 +71,16 @@ mat4 billboardState(const billboard data, const camera *const restrict cam, cons
 		}
 
 		// Translate the transformation to the "origin".
-		configuration = mat4TranslatePost(configuration, -centroid.x, -centroid.y, -centroid.z);
+		configuration = mat4TranslatePre(configuration, -centroid.x, -centroid.y, -centroid.z);
 
 		// Scale based on distance if necessary.
 		if(flagsAreSet(data.flags, BILLBOARD_SCALE)){
 			const float distance = camDistance(cam, centroid) * data.scale;
-			configuration = mat4ScalePost(configuration, distance, distance, distance);
+			configuration = mat4ScalePre(configuration, distance, distance, distance);
 		}
 
 		// Rotate to face and translate back.
-		configuration = mat4TranslatePost(
+		configuration = mat4TranslatePre(
 			mat4MMultM(
 				mat4RotateToFace(eye, target, up),
 				configuration
@@ -92,7 +92,7 @@ mat4 billboardState(const billboard data, const camera *const restrict cam, cons
 
 		if(flagsAreSet(data.flags, BILLBOARD_SCALE)){
 			const float distance = camDistance(cam, centroid) * data.scale;
-			configuration = mat4Scale(configuration, distance, distance, distance);
+			configuration = mat4ScalePre(configuration, distance, distance, distance);
 		}
 
 	}
