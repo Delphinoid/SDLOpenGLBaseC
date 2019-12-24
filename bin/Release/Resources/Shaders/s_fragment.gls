@@ -19,61 +19,57 @@ void main(){
 	vec4 fragColour = texture(textureSampler0, UV, mip).rgba;
 	
 	if(fragColour.a == 0.f){
-	
 		discard;
+	}
+	
+	fragColour.a *= alpha;
 	
 	// Negative alpha values indicate dithering.
-	}else if(alpha < 0.f){
+	if(alpha < 0.f){
 	
 		// 4x4 Bayer ordered dithering matrix.
 		// Each element represents an alpha threshold.
-		const mat4 ditherMatrix = mat4(
-			vec4(-1.f/17.f,  -9.f/17.f,  -3.f/17.f,  -11.f/17.f),
-			vec4(-13.f/17.f, -5.f/17.f,  -15.f/17.f, -7.f/17.f),
-			vec4(-4.f/17.f,  -12.f/17.f, -2.f/17.f,  -10.f/17.f),
-			vec4(-16.f/17.f, -8.f/17.f,  -14.f/17.f, -6.f/17.f)
-		);
-		vec4 ditherRow;
-		float ditherThreshold;
+		//const mat4 ditherMatrix = mat4(
+		//	vec4(1.f/17.f,  9.f/17.f,  3.f/17.f,  11.f/17.f),
+		//	vec4(13.f/17.f, 5.f/17.f,  15.f/17.f, 7.f/17.f),
+		//	vec4(4.f/17.f,  12.f/17.f, 2.f/17.f,  10.f/17.f),
+		//	vec4(16.f/17.f, 8.f/17.f,  14.f/17.f, 6.f/17.f)
+		//);
+		//
+		// If the fragment is below the alpha threshold, discard it.
+		//if(fragColour.a < ditherMatrix[int(gl_FragCoord.x) % 4][int(gl_FragCoord.y) % 4]){
+		//	discard;
+		//}else{
+		//	fragColour.a = 1.f;
+		//}
 		
-		// Determine which row of the dither matrix to use.
-		switch(int(gl_FragCoord.x) % 4){
-			case 0:
-				ditherRow = ditherMatrix[0];
-			break;
-			case 1:
-				ditherRow = ditherMatrix[1];
-			break;
-			case 2:
-				ditherRow = ditherMatrix[2];
-			break;
-			default:
-				ditherRow = ditherMatrix[3];
-		}
-		// Now find the column and get the threshold value.
-		switch(int(gl_FragCoord.y) % 4){
-			case 0:
-				ditherThreshold = ditherRow[0];
-			break;
-			case 1:
-				ditherThreshold = ditherRow[1];
-			break;
-			case 2:
-				ditherThreshold = ditherRow[2];
-			break;
-			default:
-				ditherThreshold = ditherRow[3];
-		}
+		float threshold;
+		int index = (int(gl_FragCoord.x) % 4) + (int(gl_FragCoord.y) % 4) * 4;
+		
+		// Doing every conditional helps prevent wavefront desynchronizations.
+		if(index == 0)  threshold = -1.f/17.f;
+		if(index == 1)  threshold = -9.f/17.f;
+		if(index == 2)  threshold = -3.f/17.f;
+		if(index == 3)  threshold = -11.f/17.f;
+		if(index == 4)  threshold = -13.f/17.f;
+		if(index == 5)  threshold = -5.f/17.f;
+		if(index == 6)  threshold = -15.f/17.f;
+		if(index == 7)  threshold = -7.f/17.f;
+		if(index == 8)  threshold = -4.f/17.f;
+		if(index == 9)  threshold = -12.f/17.f;
+		if(index == 10) threshold = -2.f/17.f;
+		if(index == 11) threshold = -10.f/17.f;
+		if(index == 12) threshold = -16.f/17.f;
+		if(index == 13) threshold = -8.f/17.f;
+		if(index == 14) threshold = -14.f/17.f;
+		if(index == 15) threshold = -6.f/17.f;
 			
 		// If the fragment is below the alpha threshold, discard it.
-		if(fragColour.a*alpha > ditherThreshold){
+		if(fragColour.a > threshold){
 			discard;
-		}else{
-			fragColour.a = 1.f;
 		}
+		fragColour.a = 1.f;
 		
-	}else{
-		fragColour.a *= alpha;
 	}
 	
 	colour = fragColour;
