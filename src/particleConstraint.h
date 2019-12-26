@@ -6,7 +6,7 @@ typedef struct particleConstraint {
 	union {
 
 	} data;
-	void (*func)(particleConstraint *const restrict pConstraint, particle *const restrict p);
+	void (*func)(particleConstraint *const restrict constraint, particle *const restrict p);
 } particleConstraint;
 
 #endif

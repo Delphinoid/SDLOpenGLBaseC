@@ -1,5 +1,7 @@
 #include "graphicsManager.h"
 #include "memoryManager.h"
+#include "skeletonShared.h"
+#include "particle.h"
 #include "helpersFileIO.h"
 #include "helpersMisc.h"
 #include "inline.h"
@@ -269,29 +271,18 @@ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, cons
 
 static return_t gfxMngrCreateBuffers(graphicsManager *const restrict gfxMngr){
 
+	GLenum glError;
+
 	// Set lastTexID to 0 since we haven't rendered anything yet.
 	gfxMngr->lastTexID = 0;
 
-	// VAO and VBO for rendering sprites.
-	// Create and bind the sprite VAO.
-	/**glGenVertexArrays(1, &gfxMngr->spriteVaoID);
-	glBindVertexArray(gfxMngr->spriteVaoID);
-	// Create and bind the sprite VBO
-	glGenBuffers(1, &gfxMngr->spriteVboID);
-	glBindBuffer(GL_ARRAY_BUFFER, gfxMngr->spriteVboID);
-	// Position offset
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, pos));
-	glEnableVertexAttribArray(0);
-	// UV offset
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, u));
-	glEnableVertexAttribArray(1);
-	// Normals offset
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, nx));
-	glEnableVertexAttribArray(2);
-	// We don't want anything else to modify the VAO
-	glBindVertexArray(0);**/
+	// Create and bind the particle state buffer object.
+	glGenBuffers(1, &gfxMngr->stateBufferID);
+	glBindBuffer(GL_ARRAY_BUFFER, gfxMngr->stateBufferID);
+	// Use buffer orphaning and write to the buffer before rendering.
+	glBufferData(GL_ARRAY_BUFFER, PARTICLE_SYSTEM_MAX_PARTICLES*sizeof(particleState), NULL, GL_STREAM_DRAW);
 
-	GLenum glError = glGetError();
+	glError = glGetError();
 	if(glError != GL_NO_ERROR){
 		printf("Error creating buffers: %u\n", glError);
 		return 0;

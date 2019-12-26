@@ -444,12 +444,12 @@ return_t objInit(object *const restrict obj){
 }
 
 void objDelete(object *const restrict obj){
-	objState *state = obj->state.previous;
+	objectState *state = obj->state.previous;
 	if(obj->configuration != NULL){
 		memFree(obj->configuration);
 	}
 	while(state != NULL){
-		objState *next = state->previous;
+		objectState *next = state->previous;
 		memFree(state);
 		state = next;
 	}
@@ -587,44 +587,6 @@ return_t objInstantiate(object *const restrict obj, const objectBase *const rest
 	obj->state.previous = NULL;
 	obj->oldestStatePrevious = &obj->state.previous;
 	return 1;
-
-}
-
-static __FORCE_INLINE__ return_t objStateAllocate(object *const restrict obj){
-	objState *const state = memAllocate(sizeof(objState) + obj->skeletonData.skl->boneNum * sizeof(bone));
-	if(state != NULL){
-		state->configuration = (bone *)((byte_t *)state + sizeof(objState));
-		state->previous = NULL;
-		*obj->oldestStatePrevious = state;
-		obj->oldestStatePrevious = &state->previous;
-		++obj->stateNum;
-		return 1;
-	}
-	return -1;
-}
-
-return_t objStatePreallocate(object *const restrict obj){
-	while(obj->stateNum < obj->stateMax){
-		if(objStateAllocate(obj) < 0){
-			return -1;
-		}
-	}
-	return 1;
-}
-
-static __FORCE_INLINE__ void objStateCopyBone(object *const restrict obj, const boneIndex_t i){
-
-	objState *state = &obj->state;
-	bone last = state->configuration[i];
-
-	while(state->previous != NULL){
-
-		const bone swap = state->previous->configuration[i];
-		state->previous->configuration[i] = last;
-		last = swap;
-		state = state->previous;
-
-	}
 
 }
 
@@ -829,9 +791,10 @@ return_t objTick(object *const restrict obj, physIsland *const restrict island, 
 
 	// If we can create a new previous state, do so.
 	if(obj->stateNum < obj->stateMax){
-		if(objStateAllocate(obj) < 0){
+		if(objStateAllocate(&obj->oldestStatePrevious, &obj->skeletonData) < 0){
 			return -1;
 		}
+		++obj->stateNum;
 	}
 
 	// Update each skeletal animation.
@@ -843,7 +806,7 @@ return_t objTick(object *const restrict obj, physIsland *const restrict island, 
 		const unsigned int isRoot = (i == sklBone->parent) || (sklBone->parent >= obj->skeletonData.skl->boneNum);
 
 		// Update the previous states.
-		objStateCopyBone(obj, i);
+		objStateCopyBone(&obj->state, i);
 
 		if(body != NULL && body->base->id == i && physRigidBodyIsSimulated(body)){
 
@@ -1051,11 +1014,11 @@ gfxRenderGroup_t objRenderGroup(const object *const restrict obj, const float in
 
 		// Treat dithered renderables as opaque.
 		// The check should eventually be moved up here once rndrAlpha is removed.
-		}else{/// if(flagsAreUnset(i->stateData.flags, RENDERABLE_ALPHA_DITHER)){
+		}else{/// if(flagsAreUnset(i->state.flags, RENDERABLE_STATE_ALPHA_DITHER)){
 
 			/** We have to calculate the alpha again when rendering. Maybe avoid this? **/
-			const float alpha = rndrAlpha(i, interpT);
-			if(alpha > 0.f && alpha < 1.f && flagsAreUnset(i->stateData.flags, RENDERABLE_ALPHA_DITHER)){
+			const float alpha = rndrStateAlpha(&i->state, interpT);
+			if(alpha > 0.f && alpha < 1.f && flagsAreUnset(i->state.flags, RENDERABLE_STATE_ALPHA_DITHER)){
 				// The object contains translucency.
 				return GFX_RNDR_GROUP_TRANSLUCENT;
 			}
@@ -1081,13 +1044,13 @@ void objRender(const object *const restrict obj, graphicsManager *const restrict
 
 	const renderable *currentRndr = obj->renderables;
 
-	mat4 *transformCurrent = gfxMngr->sklTransformState;
+	mat4 *transformCurrent = gfxMngr->skeletonTransformState;
 	const bone *bCurrent = obj->state.configuration;
 	const bone *bPrevious = (obj->state.previous == NULL ? bCurrent : obj->state.previous->configuration);
 
 	boneIndex_t boneNum = obj->skeletonData.skl->boneNum;
 	sklNode *nLayout = obj->skeletonData.skl->bones;
-	bone *bAccumulator = gfxMngr->sklBindAccumulator;
+	bone *bAccumulator = gfxMngr->skeletonBindAccumulator;
 
 	vec3 centroid = {.x = 0.f, .y = 0.f, .z = 0.f};
 
@@ -1118,7 +1081,7 @@ void objRender(const object *const restrict obj, graphicsManager *const restrict
 		// If the bone has a parent, add its inverse bind position,
 		// otherwise just use the current bone's inverse bind position.
 		if(nLayout->parent != i){
-			*bAccumulator = boneTransformAppend(boneInvert(nLayout->defaultState), gfxMngr->sklBindAccumulator[nLayout->parent]);
+			*bAccumulator = boneTransformAppend(boneInvert(nLayout->defaultState), gfxMngr->skeletonBindAccumulator[nLayout->parent]);
 		}else{
 			*bAccumulator = boneInvert(nLayout->defaultState);
 			centroid = state.position;

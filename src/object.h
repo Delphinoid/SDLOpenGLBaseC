@@ -1,8 +1,9 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
-#include "graphicsRenderGroup.h"
+#include "objectState.h"
 #include "skeleton.h"
+#include "graphicsRenderGroup.h"
 #include "state.h"
 
 /** Fix skeletons then physics structs. **/
@@ -19,7 +20,6 @@ typedef struct model model;
 typedef struct textureWrapper textureWrapper;
 typedef struct renderableBase renderableBase;
 typedef struct renderable renderable;
-typedef struct skeleton skeleton;
 typedef struct physRigidBodyBase physRigidBodyBase;
 typedef struct physRigidBody physRigidBody;
 typedef struct physIsland physIsland;
@@ -51,15 +51,6 @@ typedef struct objectBase {
 
 } objectBase;
 
-/** This should have its own allocator. **/
-typedef struct objState objState;
-typedef struct objState {
-
-	bone *configuration;  // Skeleton state.
-	objState *previous;   // Previous state.
-
-} objState;
-
 /** Store pointer to previous bones / hitboxes. **/
 typedef struct object {
 
@@ -74,8 +65,8 @@ typedef struct object {
 	stateIndex_t stateMax;  // Maximum number of previous states.
 
 	stateIndex_t stateNum;  // Number of previous states.
-	objState state;
-	objState **oldestStatePrevious;  // The oldest state's previous pointer.
+	objectState state;
+	objectState **oldestStatePrevious;  // The oldest state's previous pointer.
 
 	physRigidBody *skeletonBodies;  // Rigid body instances for each bone.
 	collider *skeletonColliders;    // Collider arrays for each bone.

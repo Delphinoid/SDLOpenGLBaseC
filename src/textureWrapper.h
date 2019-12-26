@@ -1,7 +1,8 @@
 #ifndef TEXTUREWRAPPER_H
 #define TEXTUREWRAPPER_H
 
-#include <SDL2/SDL_opengl.h>
+#define GLEW_STATIC
+#include <GL/glew.h>
 #include "animation.h"
 #include "rectangle.h"
 #include "return.h"

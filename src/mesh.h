@@ -1,7 +1,8 @@
 #ifndef MESH_H
 #define MESH_H
 
-#include <SDL2/SDL_opengl.h>
+#define GLEW_STATIC
+#include <GL/glew.h>
 #include "return.h"
 
 typedef GLsizei vertexIndex_t;
@@ -10,11 +11,14 @@ typedef GLsizei vertexIndexNum_t;
 typedef struct vertex vertex;
 
 typedef struct {
+	// Vertex array object ID.
+	GLuint vaoID;
+	// Vertex buffer object ID.
+	GLuint vboID;
+	// Index buffer object ID.
+	GLuint iboID;
 	vertexIndex_t vertexNum;
 	vertexIndexNum_t indexNum;
-	GLuint vaoID;  // Vertex array object ID.
-	GLuint vboID;  // Vertex buffer object ID.
-	GLuint iboID;  // Index buffer object ID.
 } mesh;
 
 extern mesh meshDefault;

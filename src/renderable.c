@@ -1,10 +1,8 @@
 #include "graphicsManager.h"
 #include "renderable.h"
-#include "renderableSettings.h"
 #include "texture.h"
 #include "model.h"
 #include "skeleton.h"
-#include "helpersMath.h"
 #include "inline.h"
 
 void rndrBaseInit(renderableBase *const restrict rndr){
@@ -12,35 +10,24 @@ void rndrBaseInit(renderableBase *const restrict rndr){
 	rndr->tw = NULL;
 }
 
-void rndrStateInit(rndrState *const restrict state){
-	state->alpha = 1.f;
-	state->alphaCurrent = 1.f;
-	state->alphaPrevious = 1.f;
-	state->flags = RENDERABLE_DEFAULT_ALPHA_MODE;
-}
-
 void rndrInit(renderable *const restrict rndr){
 	rndr->mdl = NULL;
 	twiInit(&rndr->twi, NULL);
-	rndrStateInit(&rndr->stateData);
+	rndrStateInit(&rndr->state);
 	billboardInit(&rndr->billboardData);
 }
 
 void rndrInstantiate(renderable *const restrict rndr, const renderableBase *const base){
 	rndr->mdl = base->mdl;
 	twiInit(&rndr->twi, base->tw);
-	rndrStateInit(&rndr->stateData);
+	rndrStateInit(&rndr->state);
 	billboardInit(&rndr->billboardData);
 }
 
 __FORCE_INLINE__ void rndrTick(renderable *const restrict rndr, const float elapsedTime){
 	twiTick(&rndr->twi, elapsedTime);
-	rndr->stateData.alphaPrevious = rndr->stateData.alphaCurrent;
-	rndr->stateData.alphaCurrent = rndr->stateData.alpha;
-}
-
-__FORCE_INLINE__ float rndrAlpha(const renderable *const restrict rndr, const float interpT){
-	return floatLerp(rndr->stateData.alphaPrevious, rndr->stateData.alpha, interpT);
+	rndr->state.alphaPrevious = rndr->state.alphaCurrent;
+	rndr->state.alphaCurrent = rndr->state.alpha;
 }
 
 void rndrRender(const renderable *const restrict rndr, const skeleton *const restrict skl, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const vec3 centroid, const float interpT){
@@ -54,9 +41,12 @@ void rndrRender(const renderable *const restrict rndr, const skeleton *const res
 
 	if(rndr->mdl->skl != NULL){
 
-		float alpha = rndrAlpha(rndr, interpT);
+		float alpha = rndrStateAlpha(&rndr->state, interpT);
 
 		if(alpha > 0.f){
+
+			vertexIndexNum_t indexNum;
+			const void *offset;
 
 			mat4 transform;
 			GLuint *bArray = gfxMngr->boneArrayID;
@@ -80,9 +70,9 @@ void rndrRender(const renderable *const restrict rndr, const skeleton *const res
 				// Apply billboarding transformation if required.
 				if(rndr->billboardData.flags != BILLBOARD_DISABLED){
 					// Use the root bone's global position as the centroid for billboarding.
-					transform = billboardState(rndr->billboardData, cam, centroid, gfxMngr->sklTransformState[rndrBone]);
+					transform = billboardState(rndr->billboardData, cam, centroid, gfxMngr->skeletonTransformState[rndrBone]);
 				}else{
-					transform = gfxMngr->sklTransformState[rndrBone];
+					transform = gfxMngr->skeletonTransformState[rndrBone];
 				}
 
 				// Feed the bone configuration to the shader.
@@ -91,7 +81,7 @@ void rndrRender(const renderable *const restrict rndr, const skeleton *const res
 			}
 
 			// Feed the translucency multiplier to the shader.
-			if(flagsAreSet(rndr->stateData.flags, RENDERABLE_ALPHA_DITHER)){
+			if(flagsAreSet(rndr->state.flags, RENDERABLE_STATE_ALPHA_DITHER)){
 				// Negative alpha values indicate dithering.
 				alpha = -alpha;
 			}
@@ -99,16 +89,14 @@ void rndrRender(const renderable *const restrict rndr, const skeleton *const res
 
 			// Render the model.
 			glBindVertexArray(rndr->mdl->buffers.vaoID);
-			if(rndr->mdl->buffers.indexNum > 0){
-				vertexIndexNum_t indexNum;
-				const void *offset;
+			/**if(rndr->mdl->buffers.indexNum > 0){**/
 				mdlFindCurrentLOD(rndr->mdl, &indexNum, &offset, distance, gfxMngr->biasLOD);
 				if(indexNum){
 					glDrawElements(GL_TRIANGLES, indexNum, GL_UNSIGNED_INT, offset);
 				}
-			}else{
+			/**}else{
 				glDrawArrays(GL_TRIANGLES, 0, rndr->mdl->buffers.vertexNum);
-			}
+			}**/
 
 		}
 

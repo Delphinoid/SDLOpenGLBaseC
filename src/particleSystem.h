@@ -5,19 +5,27 @@
 
 // Modular particle system inspired by Source.
 
-#define PARTICLE_SYSTEM_MAX_PARTICLES 1024
-
 typedef struct particleInitializer particleInitializer;
 typedef struct particleEmitterBase particleEmitterBase;
 typedef struct particleEmitter particleEmitter;
 typedef struct particleOperator particleOperator;
 typedef struct particleConstraint particleConstraint;
 
-typedef struct particleSystemChildBase particleSystemChildBase;
+typedef struct particleSystemBase particleSystemBase;
 typedef struct {
 
+	particleSystemBase *system;
+
+	// How long to delay instantiation
+	// of this effect from the parent.
+	float delay;
+
+} particleSystemChildBase;
+
+typedef struct particleSystemBase {
+
 	// Particle information.
-	particleBase effect;
+	particleBase properties;
 	size_t particleInitial;
 	size_t particleMax;
 
@@ -35,20 +43,14 @@ typedef struct {
 	float lifetime;
 
 	// Child systems.
-	particleSystemChildBase *children;
+	/** THIS SHOULD BE particleSystemChildBase **/
+	particleSystemBase *children;
+	/** THIS SHOULD BE particleSystemChildBase **/
 	size_t childNum;
 
+	char *name;
+
 } particleSystemBase;
-
-typedef struct particleSystemChildBase {
-
-	particleSystemBase system;
-
-	// How long to delay instantiation
-	// of this effect from the parent.
-	float delay;
-
-} particleSystemChildBase;
 
 typedef struct particleSystem particleSystem;
 typedef struct particleSystem {
@@ -58,9 +60,9 @@ typedef struct particleSystem {
 
 	particleEmitter *emitters;
 
-	/// Control points?
+	/** Control points? **/
 	bone configuration;
-	/// Control points?
+	/** Control points? **/
 	float lifetime;
 
 	particleSystem *children;
@@ -71,6 +73,13 @@ typedef struct particleSystem {
 
 void particleSystemBaseInit(particleSystemBase *const restrict base);
 void particleSystemInit(particleSystem *const restrict system);
+
 void particleSystemInstantiate(particleSystem *const restrict system, const particleSystemBase *const base);
+
+return_t particleSystemTick(particleSystem *const restrict system, const float elapsedTime);
+void particleSystemRender(const particleSystem *const restrict system, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const float interpT);
+
+void particleSystemBaseDelete(particleSystemBase *const restrict base);
+void particleSystemDelete(particleSystem *const restrict system);
 
 #endif

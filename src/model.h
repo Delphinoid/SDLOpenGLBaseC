@@ -17,6 +17,9 @@ typedef struct {
 
 typedef struct model {
 
+	// Model data for rendering.
+	mesh buffers;
+
 	// Skeleton associated with the model.
 	const skeleton *skl;
 
@@ -25,9 +28,6 @@ typedef struct model {
 	// If there is only one LOD, the array will be NULL.
 	lodNum_t lodNum;
 	mdlLOD *lods;
-
-	// Model data for rendering.
-	mesh buffers;
 
 	char *name;
 

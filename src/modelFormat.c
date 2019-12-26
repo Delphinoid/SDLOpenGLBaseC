@@ -5,6 +5,7 @@
 #include "helpersFileIO.h"
 #include "helpersMisc.h"
 #include <stdlib.h>
+#include <string.h>
 
 /** Merge mdlWavefrontObjLoad() with mdlLoad(). **/
 

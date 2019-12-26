@@ -6,10 +6,14 @@
 #include <SDL2/SDL.h>
 #include "graphicsManagerSettings.h"
 #include "graphicsViewport.h"
-#include "skeletonShared.h"
+#include "skeletonSettings.h"
+#include "particleSettings.h"
+#include "particleState.h"
 #include "bone.h"
 #include "vertex.h"
 #include "memoryShared.h"
+
+/** Should default models, textures and perhaps skeletons be here? **/
 
 typedef struct graphicsManager {
 
@@ -22,17 +26,21 @@ typedef struct graphicsManager {
 	GLuint fragmentShaderID;
 	GLuint shaderProgramID;
 
-	// Per-instance uniforms.
+	// Buffer objects.
+	/** Extend for sprites (GUI elements)? **/
+	GLuint stateBufferID;  // Holds PARTICLE_SYSTEM_MAX_PARTICLES particle states.
+
+	// Uniform objects.
 	GLuint vpMatrixID;
 	GLuint textureFragmentID[GFX_TEXTURE_SAMPLER_NUM];
 	GLuint boneArrayID[SKELETON_MAX_BONE_NUM];
 	GLuint alphaID;
 	GLuint mipID;
 
-	// Uniform buffers.
-	vertex sprVertexBatchBuffer[SPRITE_MAX_BATCH_SIZE];  // An array of vertices used for batch rendering sprites.
-	bone sklBindAccumulator[SKELETON_MAX_BONE_NUM];      // Accumulates bind states for bones before rendering.
-	mat4 sklTransformState[SKELETON_MAX_BONE_NUM];       // Stores the renderable's transform state before rendering.
+	// Buffer data.
+	bone skeletonBindAccumulator[SKELETON_MAX_BONE_NUM];  // Accumulates bind states for bones before rendering.
+	mat4 skeletonTransformState[SKELETON_MAX_BONE_NUM];   // Stores the renderable's transform state before rendering.
+	particleState particleTransformState[PARTICLE_SYSTEM_MAX_PARTICLES];
 
 	// Texture samplers.
 	GLuint textureSamplerArrayID[GFX_TEXTURE_SAMPLER_NUM];

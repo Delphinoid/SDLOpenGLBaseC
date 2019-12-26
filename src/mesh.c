@@ -45,15 +45,15 @@ return_t meshGenerateBuffers(mesh *const restrict m, const vertexIndex_t vertexN
 
 			GLenum glError;
 
-			// Create and bind the VAO
+			// Create and bind the VAO.
 			glGenVertexArrays(1, &m->vaoID);
 			glBindVertexArray(m->vaoID);
 
-			// Create and bind the VBO
+			// Create and bind the VBO.
 			glGenBuffers(1, &m->vboID);
 			glBindBuffer(GL_ARRAY_BUFFER, m->vboID);
 			glBufferData(GL_ARRAY_BUFFER, vertexNum*sizeof(vertex), vertices, GL_STATIC_DRAW);
-			// Check for errors
+			// Check for errors.
 			glError = glGetError();
 			if(glError != GL_NO_ERROR){
 				printf("Error creating vertex buffer for model");
@@ -64,11 +64,11 @@ return_t meshGenerateBuffers(mesh *const restrict m, const vertexIndex_t vertexN
 				return 0;
 			}
 
-			// Create and bind the IBO
+			// Create and bind the IBO.
 			glGenBuffers(1, &m->iboID);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m->iboID);
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexNum*sizeof(vertexIndexNum_t), indices, GL_STATIC_DRAW);
-			// Check for errors
+			// Check for errors.
 			glError = glGetError();
 			if(glError != GL_NO_ERROR){
 				printf("Error creating index buffer for model");
@@ -80,9 +80,8 @@ return_t meshGenerateBuffers(mesh *const restrict m, const vertexIndex_t vertexN
 			}
 
 			meshVertexAttributes();
-			glBindVertexArray(0);
 
-			// Check for errors
+			// Check for errors.
 			glError = glGetError();
 			if(glError != GL_NO_ERROR){
 				printf("Error creating vertex array buffer for model");

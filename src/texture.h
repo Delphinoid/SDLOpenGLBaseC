@@ -1,7 +1,8 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
-#include <SDL2/SDL_opengl.h>
+#define GLEW_STATIC
+#include <GL/glew.h>
 #include "return.h"
 
 #define TEXTURE_FILTER_MODE_ANY       0

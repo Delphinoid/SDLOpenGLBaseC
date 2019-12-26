@@ -5,6 +5,7 @@
 #include "memoryManager.h"
 #include "helpersFileIO.h"
 #include "inline.h"
+#include <string.h>
 
 #define MODEL_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Models"FILE_PATH_DELIMITER_STRING
 #define MODEL_RESOURCE_DIRECTORY_LENGTH 17

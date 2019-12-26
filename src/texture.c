@@ -7,6 +7,7 @@
 #include <SDL2/SDL_image.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 
 #define IMAGE_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Images"FILE_PATH_DELIMITER_STRING

@@ -1,11 +1,9 @@
 #ifndef RENDERABLE_H
 #define RENDERABLE_H
 
+#include "renderableState.h"
 #include "textureWrapper.h"
 #include "billboard.h"
-
-#define RENDERABLE_ALPHA_BLEND  0x00
-#define RENDERABLE_ALPHA_DITHER 0x01
 
 typedef struct model model;
 typedef struct skeleton skeleton;
@@ -18,21 +16,10 @@ typedef struct renderableBase {
 	textureWrapper *tw;  // A pointer to the renderable's associated texture wrapper.
 } renderableBase;
 
-typedef struct {
-
-	// Render data.
-	float alpha;          // Updated alpha.
-	/** Is this really worth it? **/
-	float alphaCurrent;   // Current alpha for rendering.
-	float alphaPrevious;  // Previous alpha for rendering.
-	flags_t flags;
-
-} rndrState;
-
 typedef struct renderable {
 	model *mdl;
 	twInstance twi;
-	rndrState stateData;
+	renderableState state;
 	billboard billboardData;
 } renderable;
 
