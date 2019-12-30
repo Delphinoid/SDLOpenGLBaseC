@@ -4,16 +4,13 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
-#include "graphicsManagerSettings.h"
 #include "graphicsViewport.h"
-#include "skeletonSettings.h"
-#include "particleSettings.h"
-#include "particleState.h"
-#include "bone.h"
-#include "vertex.h"
+#include "shader.h"
 #include "memoryShared.h"
 
 /** Should default models, textures and perhaps skeletons be here? **/
+/** Actually, maybe work on eliminating this entire structure. **/
+/** Shaders and the window / context should be separated. **/
 
 typedef struct graphicsManager {
 
@@ -21,35 +18,10 @@ typedef struct graphicsManager {
 	SDL_Window *window;
 	SDL_GLContext context;
 
-	// Shaders.
-	GLuint vertexShaderID;
-	GLuint fragmentShaderID;
-	GLuint shaderProgramID;
-
-	// Buffer objects.
-	/** Extend for sprites (GUI elements)? **/
-	GLuint stateBufferID;  // Holds PARTICLE_SYSTEM_MAX_PARTICLES particle states.
-
-	// Uniform objects.
-	GLuint vpMatrixID;
-	GLuint textureFragmentID[GFX_TEXTURE_SAMPLER_NUM];
-	GLuint boneArrayID[SKELETON_MAX_BONE_NUM];
-	GLuint alphaID;
-	GLuint mipID;
-
-	// Buffer data.
-	bone skeletonBindAccumulator[SKELETON_MAX_BONE_NUM];  // Accumulates bind states for bones before rendering.
-	mat4 skeletonTransformState[SKELETON_MAX_BONE_NUM];   // Stores the renderable's transform state before rendering.
-	particleState particleTransformState[PARTICLE_SYSTEM_MAX_PARTICLES];
-
-	// Texture samplers.
-	GLuint textureSamplerArrayID[GFX_TEXTURE_SAMPLER_NUM];
-
-	// Previously bound texture ID for more efficient binding.
-	GLuint lastTexID;
-
-	// Identity matrix.
-	mat4 identityMatrix;
+	// Shader programs.
+	shaderProgramObject shdrPrgObj;
+	shaderProgramSprite shdrPrgSpr;
+	shaderShared shdrShared;
 
 	// Master viewport and last view rendered.
 	gfxViewport viewport;
@@ -62,10 +34,6 @@ typedef struct graphicsManager {
 	unsigned int windowHeight;
 	unsigned int windowStretchToFit;
 	unsigned int windowModified;
-
-	// Current MIP and LODs biases.
-	float  biasMIP;
-	size_t biasLOD;
 
 } graphicsManager;
 

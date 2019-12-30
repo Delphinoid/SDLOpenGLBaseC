@@ -48,8 +48,6 @@ typedef struct particle {
 void particleBaseInit(particleBase *const restrict base);
 void particleInit(particle *const restrict p);
 
-return_t particleBaseSetupBufferAttributes(const particleBase *const restrict base, const GLuint stateBufferID);
-
 /** TEMPORARY **/
 void particleTick(particle *const restrict p, const float elapsedTime);
 #ifdef PARTICLE_ALLOW_INTERPOLATION

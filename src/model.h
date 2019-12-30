@@ -35,11 +35,13 @@ typedef struct model {
 
 extern model mdlDefault;
 extern model mdlSprite;
+extern model mdlBillboard;
 
 void mdlInit(model *const restrict mdl);
 return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, const char *const restrict filePath);
 void mdlDefaultInit();
 void mdlSpriteInit();
+void mdlBillboardInit();
 void mdlFindCurrentLOD(const model *const restrict mdl, vertexIndexNum_t *const restrict indexNum, const void **const restrict offset, const float distance, size_t bias);
 void mdlDelete(model *const restrict mdl);
 

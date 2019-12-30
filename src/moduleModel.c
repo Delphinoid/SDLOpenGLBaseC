@@ -1,6 +1,7 @@
 #include "moduleModel.h"
 #include "moduleSettings.h"
 #include "model.h"
+#include "sprite.h"
 #include "memoryManager.h"
 #include "inline.h"
 #include <string.h>
@@ -10,12 +11,12 @@
 
 memoryPool __ModelResourceArray;  // Contains models.
 
-return_t moduleModelResourcesInit(){
+return_t moduleModelResourcesInit(const GLuint stateBufferID){
 	void *memory;
-	if(meshDefaultInit() < 0 || meshSpriteInit() < 0){
+	if(meshDefaultInit() < 0 || sprDefaultInit(stateBufferID) < 0 || meshBillboardInit() < 0){
 		return -1;
 	}
-	mdlDefaultInit(); mdlSpriteInit();
+	mdlDefaultInit(); mdlSpriteInit(); mdlBillboardInit();
 	memory = memAllocate(
 		memPoolAllocationSize(
 			NULL,

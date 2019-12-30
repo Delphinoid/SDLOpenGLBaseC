@@ -199,7 +199,7 @@ return_t gfxRendererDrawScene(graphicsManager *const restrict gfxMngr, camera *c
 	gfxMngrSwitchView(gfxMngr, &cam->view);
 
 	// Feed the camera's view-projection matrix into the shader.
-	glUniformMatrix4fv(gfxMngr->vpMatrixID, 1, GL_FALSE, &cam->viewProjectionMatrix.m[0][0]);
+	glUniformMatrix4fv(gfxMngr->shdrPrgObj.vpMatrixID, 1, GL_FALSE, &cam->viewProjectionMatrix.m[0][0]);
 
 	// Find which zones should be rendered.
 	/** For each zone: **/

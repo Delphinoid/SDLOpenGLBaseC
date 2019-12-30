@@ -1,6 +1,8 @@
 #ifndef MODULEMODEL_H
 #define MODULEMODEL_H
 
+#define GLEW_STATIC
+#include <GL/glew.h>
 #include "memoryPool.h"
 #include "return.h"
 
@@ -15,7 +17,7 @@ typedef struct model model;
 /** Support locals? Merge all module containers? **/
 /** Use compiler constants for loop offsets?     **/
 
-return_t moduleModelResourcesInit();
+return_t moduleModelResourcesInit(const GLuint stateBufferID);
 void moduleModelResourcesReset();
 void moduleModelResourcesDelete();
 

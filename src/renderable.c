@@ -37,7 +37,7 @@ void rndrRender(const renderable *const restrict rndr, const skeleton *const res
 	// Bind the texture (if needed).
 	gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, frame->image->diffuseID);
 	// Feed the texture coordinates to the shader.
-	glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&frame->subframe);
+	glUniform4fv(gfxMngr->shdrPrgObj.textureFragmentID[0], 1, (const GLfloat *)&frame->subframe);
 
 	if(rndr->mdl->skl != NULL){
 
@@ -49,7 +49,7 @@ void rndrRender(const renderable *const restrict rndr, const skeleton *const res
 			const void *offset;
 
 			mat4 transform;
-			GLuint *bArray = gfxMngr->boneArrayID;
+			GLuint *bArray = gfxMngr->shdrPrgObj.boneArrayID;
 
 			boneIndex_t boneNum = rndr->mdl->skl->boneNum;
 			sklNode *nLayout = rndr->mdl->skl->bones;
@@ -70,9 +70,9 @@ void rndrRender(const renderable *const restrict rndr, const skeleton *const res
 				// Apply billboarding transformation if required.
 				if(rndr->billboardData.flags != BILLBOARD_DISABLED){
 					// Use the root bone's global position as the centroid for billboarding.
-					transform = billboardState(rndr->billboardData, cam, centroid, gfxMngr->skeletonTransformState[rndrBone]);
+					transform = billboardState(rndr->billboardData, cam, centroid, gfxMngr->shdrPrgObj.skeletonTransformState[rndrBone]);
 				}else{
-					transform = gfxMngr->skeletonTransformState[rndrBone];
+					transform = gfxMngr->shdrPrgObj.skeletonTransformState[rndrBone];
 				}
 
 				// Feed the bone configuration to the shader.
@@ -85,12 +85,12 @@ void rndrRender(const renderable *const restrict rndr, const skeleton *const res
 				// Negative alpha values indicate dithering.
 				alpha = -alpha;
 			}
-			glUniform1f(gfxMngr->alphaID, alpha);
+			glUniform1f(gfxMngr->shdrPrgObj.alphaID, alpha);
 
 			// Render the model.
 			glBindVertexArray(rndr->mdl->buffers.vaoID);
 			/**if(rndr->mdl->buffers.indexNum > 0){**/
-				mdlFindCurrentLOD(rndr->mdl, &indexNum, &offset, distance, gfxMngr->biasLOD);
+				mdlFindCurrentLOD(rndr->mdl, &indexNum, &offset, distance, gfxMngr->shdrShared.biasLOD);
 				if(indexNum){
 					glDrawElements(GL_TRIANGLES, indexNum, GL_UNSIGNED_INT, offset);
 				}

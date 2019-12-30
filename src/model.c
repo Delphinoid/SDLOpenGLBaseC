@@ -1,4 +1,5 @@
 #include "model.h"
+#include "sprite.h"
 #include "vertex.h"
 #include "skeleton.h"
 #include "moduleSkeleton.h"
@@ -26,7 +27,7 @@ model mdlDefault = {
 	.name = "default"
 };
 model mdlSprite = {
-	.skl = &sklDefault,
+	.skl = NULL,
 	.lodNum = 0,
 	.lods = NULL,
 	.buffers.vertexNum = 0,
@@ -35,6 +36,17 @@ model mdlSprite = {
 	.buffers.vboID = 0,
 	.buffers.iboID = 0,
 	.name = "sprite"
+};
+model mdlBillboard = {
+	.skl = &sklDefault,
+	.lodNum = 0,
+	.lods = NULL,
+	.buffers.vertexNum = 0,
+	.buffers.indexNum = 0,
+	.buffers.vaoID = 0,
+	.buffers.vboID = 0,
+	.buffers.iboID = 0,
+	.name = "billboard"
 };
 
 void mdlInit(model *const restrict mdl){
@@ -86,7 +98,7 @@ return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, 
 	}
 
 	/** Should mdlGenerateBuffers() be here? **/
-	r = meshGenerateBuffers(&mdl->buffers, vertexNum, vertices, indexNum, indices, fullPath);
+	r = meshGenerateBuffers(&mdl->buffers, vertexNum, vertices, indexNum, indices);
 	mdl->lodNum = lodNum;
 	mdl->lods = lods;
 	memFree(vertices);
@@ -154,6 +166,9 @@ void mdlDefaultInit(){
 void mdlSpriteInit(){
 	mdlSprite.buffers = meshSprite;
 }
+void mdlBillboardInit(){
+	mdlBillboard.buffers = meshBillboard;
+}
 
 __FORCE_INLINE__ void mdlFindCurrentLOD(const model *const restrict mdl, vertexIndexNum_t *const restrict indexNum, const void **const restrict offset, const float distance, size_t bias){
 
@@ -188,7 +203,7 @@ __FORCE_INLINE__ void mdlFindCurrentLOD(const model *const restrict mdl, vertexI
 					++i;
 				}
 			}else{
-				// If the bias is negative, get some
+				// If the bias is positive, get some
 				// lower-detail LODs.
 				while(lod->distance != 0.f && bias != 0){
 					--lod;

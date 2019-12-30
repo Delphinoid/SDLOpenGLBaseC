@@ -12,7 +12,7 @@ mesh meshDefault = {
 	.vboID = 0,
 	.iboID = 0
 };
-mesh meshSprite = {
+mesh meshBillboard = {
 	.vertexNum = 0,
 	.indexNum = 0,
 	.vaoID = 0,
@@ -21,24 +21,24 @@ mesh meshSprite = {
 };
 
 static void meshVertexAttributes(){
-	// Position offset
+	// Position offset.
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, position));
 	glEnableVertexAttribArray(0);
-	// UV offset
+	// UV offset.
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, u));
 	glEnableVertexAttribArray(1);
-	// Normals offset
+	// Normals offset.
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, normal));
 	glEnableVertexAttribArray(2);
-	// Bone index offset
+	// Bone index offset.
 	glVertexAttribIPointer(3, VERTEX_MAX_BONES, GL_INT, sizeof(vertex), (GLvoid*)offsetof(vertex, bIDs));
 	glEnableVertexAttribArray(3);
-	// Bone weight offset
+	// Bone weight offset.
 	glVertexAttribPointer(4, VERTEX_MAX_BONES, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, bWeights));
 	glEnableVertexAttribArray(4);
 }
 
-return_t meshGenerateBuffers(mesh *const restrict m, const vertexIndex_t vertexNum, const vertex *const restrict vertices, const vertexIndexNum_t indexNum, const vertexIndexNum_t *const restrict indices, const char *const restrict filePath){
+return_t meshGenerateBuffers(mesh *const restrict m, const vertexIndex_t vertexNum, const vertex *const restrict vertices, const vertexIndexNum_t indexNum, const vertexIndexNum_t *const restrict indices){
 
 	if(vertexNum > 0){
 		if(indexNum > 0){
@@ -56,11 +56,7 @@ return_t meshGenerateBuffers(mesh *const restrict m, const vertexIndex_t vertexN
 			// Check for errors.
 			glError = glGetError();
 			if(glError != GL_NO_ERROR){
-				printf("Error creating vertex buffer for model");
-				if(filePath != NULL){
-					printf(" \"%s\"", filePath);
-				}
-				printf(": %u\n", glError);
+				printf("Error creating vertex buffer for mesh: %u\n", glError);
 				return 0;
 			}
 
@@ -71,11 +67,7 @@ return_t meshGenerateBuffers(mesh *const restrict m, const vertexIndex_t vertexN
 			// Check for errors.
 			glError = glGetError();
 			if(glError != GL_NO_ERROR){
-				printf("Error creating index buffer for model");
-				if(filePath != NULL){
-					printf(" \"%s\"", filePath);
-				}
-				printf(": %u\n", glError);
+				printf("Error creating index buffer for mesh: %u\n", glError);
 				return 0;
 			}
 
@@ -84,29 +76,17 @@ return_t meshGenerateBuffers(mesh *const restrict m, const vertexIndex_t vertexN
 			// Check for errors.
 			glError = glGetError();
 			if(glError != GL_NO_ERROR){
-				printf("Error creating vertex array buffer for model");
-				if(filePath != NULL){
-					printf(" \"%s\"", filePath);
-				}
-				printf(": %u\n", glError);
+				printf("Error creating vertex array buffer for mesh: %u\n", glError);
 				return 0;
 			}
 
 		}else{
-			printf("Error creating buffers for model");
-			if(filePath != NULL){
-				printf(" \"%s\"", filePath);
-			}
-			printf(": model has no indices.\n");
+			printf("Error creating buffers for mesh: mesh has no indices.\n");
 			return 0;
 		}
 
 	}else{
-		printf("Error creating buffers for model");
-		if(filePath != NULL){
-			printf(" \"%s\"", filePath);
-		}
-		printf(": model has no vertices.\n");
+		printf("Error creating buffers for mesh: mesh has no vertices.\n");
 		return 0;
 	}
 
@@ -115,8 +95,6 @@ return_t meshGenerateBuffers(mesh *const restrict m, const vertexIndex_t vertexN
 	return 1;
 
 }
-
-
 
 return_t meshDefaultInit(){
 
@@ -297,7 +275,7 @@ return_t meshDefaultInit(){
 	indices[34] = 21;
 	indices[35] = 23;
 
-	if(meshGenerateBuffers(&meshDefault, 24, vertices, 36, indices, NULL) <= 0){
+	if(meshGenerateBuffers(&meshDefault, 24, vertices, 36, indices) <= 0){
 		return 0;
 	}
 
@@ -306,7 +284,7 @@ return_t meshDefaultInit(){
 }
 
 /** Change this function later **/
-return_t meshSpriteInit(){
+return_t meshBillboardInit(){
 
 	/**GLenum glError;
 
@@ -378,7 +356,7 @@ return_t meshSpriteInit(){
 	indices[4] = 3;
 	indices[5] = 1;
 
-	if(meshGenerateBuffers(&meshSprite, 4, vertices, 6, indices, NULL) <= 0){
+	if(meshGenerateBuffers(&meshBillboard, 4, vertices, 6, indices) <= 0){
 		return 0;
 	}
 

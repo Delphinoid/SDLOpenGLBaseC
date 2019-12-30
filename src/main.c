@@ -30,6 +30,10 @@
 #include "camera.h"
 
 #include "gui.h"
+#include "particleSystem.h"
+#include "particleInitializer.h"
+#include "particleEmitter.h"
+#include "particleOperator.h"
 
 /**
 *** TREE ITERATION FIXES
@@ -69,7 +73,7 @@ int main(int argc, char **argv){
 	moduleTextureResourcesInit();
 	moduleTextureWrapperResourcesInit();
 	moduleSkeletonResourcesInit();
-	moduleModelResourcesInit();
+	moduleModelResourcesInit(gfxMngr.shdrPrgSpr.stateBufferID);
 	moduleRenderableResourcesInit();
 	modulePhysicsResourcesInit();
 	moduleObjectResourcesInit();
@@ -330,7 +334,7 @@ int main(int argc, char **argv){
 	};*/
 	gEl.flags = GUI_ELEMENT_TYPE_WINDOW;
 	//guiPanelInit(&gEl, areas);
-	//rndrStateInit(&gEl.data.panel.rndr.stateData);
+	//rndrStateInit(&gEl.data.panel.rndr.state);
 	twiInit(&gEl.data.window.body, moduleTextureWrapperFind("gui"FILE_PATH_DELIMITER_STRING"body.tdw"));
 	twiInit(&gEl.data.window.border, moduleTextureWrapperFind("gui"FILE_PATH_DELIMITER_STRING"border.tdw"));
 	gEl.data.window.offsets[0].x = 3.f/4.f; gEl.data.window.offsets[0].y = 0.f; gEl.data.window.offsets[0].w = 1.f/4.f; gEl.data.window.offsets[0].h = 1.f/5.f;
@@ -341,6 +345,20 @@ int main(int argc, char **argv){
 	gEl.data.window.offsets[5].x = 0.f; gEl.data.window.offsets[5].y = 1.f/5.f; gEl.data.window.offsets[5].w = 1.f; gEl.data.window.offsets[5].h = 1.f/5.f;
 	gEl.data.window.offsets[6].x = 0.f; gEl.data.window.offsets[6].y = 2.f/5.f; gEl.data.window.offsets[6].w = 1.f; gEl.data.window.offsets[6].h = 1.f/5.f;
 	gEl.data.window.offsets[7].x = 0.f; gEl.data.window.offsets[7].y = 3.f/5.f; gEl.data.window.offsets[7].w = 1.f; gEl.data.window.offsets[7].h = 1.f/5.f;
+
+	particleBase a; particleBaseInit(&a); a.rndr.mdl = &mdlSprite; a.rndr.tw = &twDefault;
+	particleSystemBase b; particleSystemBaseInit(&b); b.properties = a;
+	b.initializers = memAllocate(sizeof(particleInitializer));
+	b.initializers->func = &particleInitializerSphereRandom;
+	b.initializerLast = b.initializers;
+	b.emitters = memAllocate(sizeof(particleEmitterBase));
+	b.emitters->func = &particleEmitterContinuous;
+	b.emitterNum = 1;
+	b.operators = memAllocate(sizeof(particleOperator));
+	b.operators->func = &particleOperatorAddGravity;
+	b.operatorLast = b.operators;
+	particleSystem c; particleSystemInstantiate(&c, &b);
+
 
 
 
@@ -532,6 +550,7 @@ int main(int argc, char **argv){
 
 			///
 			guiElementTick(&gEl, tickrateTimeMod);
+			particleSystemTick(&c, tickratioTimeMod);
 			///
 			// Update scenes.
 			moduleSceneTick(tickrateTimeMod);
@@ -578,8 +597,15 @@ int main(int argc, char **argv){
 			// Switch to the camera's view.
 			gfxMngrSwitchView(&gfxMngr, &camGUI->view);
 			// Feed the camera's view-projection matrix into the shader.
-			glUniformMatrix4fv(gfxMngr.vpMatrixID, 1, GL_FALSE, &camGUI->viewProjectionMatrix.m[0][0]);
+			glUniformMatrix4fv(gfxMngr.shdrPrgObj.vpMatrixID, 1, GL_FALSE, &camGUI->viewProjectionMatrix.m[0][0]);
 			guiElementRender(&gEl, &gfxMngr, camGUI, 0.f, interpT);
+
+			// Switch to the camera's view.
+			glUseProgram(gfxMngr.shdrPrgSpr.id);
+			gfxMngrSwitchView(&gfxMngr, &camMain->view);
+			glUniformMatrix4fv(gfxMngr.shdrPrgSpr.vpMatrixID, 1, GL_FALSE, &camMain->viewProjectionMatrix.m[0][0]);
+			particleSystemRender(&c, &gfxMngr, camMain, 0.f, interpT);
+			glUseProgram(gfxMngr.shdrPrgObj.id);
 			///
 
 

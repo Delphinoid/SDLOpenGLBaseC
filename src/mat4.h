@@ -8,10 +8,9 @@
 /** Use an alias? **/
 // All matrices are stored in column-major
 // order, despite this being non-standard
-// mathematically and C preferring row-major.
-// This is both to keep it consistent with
-// OpenGL and to make accessing column
-// vectors faster.
+// mathematically. This is both to keep
+// it consistent with OpenGL and to make
+// accessing column vectors faster.
 typedef struct {
 	float m[4][4];
 } mat4;

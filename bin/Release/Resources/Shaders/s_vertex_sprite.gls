@@ -1,0 +1,31 @@
+#version 330 core
+
+// Texture samplers.
+#define GFX_TEXTURE_SAMPLER_NUM 1
+
+// Per-vertex data.
+layout(location = 0) in vec3 vertexPosition;
+layout(location = 1) in vec2 vertexUV;
+
+// Per-instance data.
+layout(location = 2) in mat4 transformation;
+layout(location = 6) in vec4 textureFragment;
+
+// Per-call data.
+uniform mat4 vpMatrix;
+
+// Per-call data.
+uniform sampler2D textureSampler;
+
+out vec2 UV;
+
+void main(){
+	
+	// Generate the vertex position for the sprite.
+	gl_Position = vpMatrix * transformation * vec4(vertexPosition, 1.f);
+	
+	// Calculate UVs for the current vertex based on the texture dimensions.
+	UV.x = vertexUV.x * textureFragment[2] + textureFragment[0];
+	UV.y = vertexUV.y * textureFragment[3] + textureFragment[1];
+	
+}

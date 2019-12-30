@@ -284,7 +284,7 @@ static void guiElementRenderWindow(const guiElement *const restrict element, gra
 	// Bind the texture.
 	gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, frameBorder->image->diffuseID);
 	// Feed the translucency multiplier to the shader
-	glUniform1f(gfxMngr->alphaID, 1.f);
+	glUniform1f(gfxMngr->shdrPrgObj.alphaID, 1.f);
 
 	// Draw the bottom right corner.
 	// Border corner size, in pixels.
@@ -301,12 +301,12 @@ static void guiElementRenderWindow(const guiElement *const restrict element, gra
 	transform.m[0][2] = 0.f;    transform.m[1][2] = 0.f;    transform.m[2][2] = 1.f; transform.m[3][2] = root.position.z;
 	transform.m[0][3] = 0.f;    transform.m[1][3] = 0.f;    transform.m[2][3] = 0.f; transform.m[3][3] = 1.f;
 	// Feed the texture coordinates to the shader.
-	glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&subframe);
+	glUniform4fv(gfxMngr->shdrPrgObj.textureFragmentID[0], 1, (const GLfloat *)&subframe);
 	// Feed the bone configuration to the shader.
-	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
+	glUniformMatrix4fv(gfxMngr->shdrPrgObj.boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
 	// Render the model.
-	glBindVertexArray(meshSprite.vaoID);
-	glDrawElements(GL_TRIANGLES, meshSprite.indexNum, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(meshBillboard.vaoID);
+	glDrawElements(GL_TRIANGLES, meshBillboard.indexNum, GL_UNSIGNED_INT, 0);
 
 	// Draw the top right corner.
 	++offsets;
@@ -324,12 +324,12 @@ static void guiElementRenderWindow(const guiElement *const restrict element, gra
 	transform.m[3][0] = root.position.x + 0.5f * (root.scale.x + size.x);
 	transform.m[3][1] = root.position.y + 0.5f * (root.scale.y + size.y);
 	// Feed the texture coordinates to the shader.
-	glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&subframe);
+	glUniform4fv(gfxMngr->shdrPrgObj.textureFragmentID[0], 1, (const GLfloat *)&subframe);
 	// Feed the bone configuration to the shader.
-	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
+	glUniformMatrix4fv(gfxMngr->shdrPrgObj.boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
 	// Render the model.
-	glBindVertexArray(meshSprite.vaoID);
-	glDrawElements(GL_TRIANGLES, meshSprite.indexNum, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(meshBillboard.vaoID);
+	glDrawElements(GL_TRIANGLES, meshBillboard.indexNum, GL_UNSIGNED_INT, 0);
 
 	// Draw the top left corner.
 	++offsets;
@@ -347,12 +347,12 @@ static void guiElementRenderWindow(const guiElement *const restrict element, gra
 	transform.m[3][0] = root.position.x - 0.5f * (root.scale.x + size.x);
 	transform.m[3][1] = root.position.y + 0.5f * (root.scale.y + size.y);
 	// Feed the texture coordinates to the shader.
-	glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&subframe);
+	glUniform4fv(gfxMngr->shdrPrgObj.textureFragmentID[0], 1, (const GLfloat *)&subframe);
 	// Feed the bone configuration to the shader.
-	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
+	glUniformMatrix4fv(gfxMngr->shdrPrgObj.boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
 	// Render the model.
-	glBindVertexArray(meshSprite.vaoID);
-	glDrawElements(GL_TRIANGLES, meshSprite.indexNum, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(meshBillboard.vaoID);
+	glDrawElements(GL_TRIANGLES, meshBillboard.indexNum, GL_UNSIGNED_INT, 0);
 
 	// Draw the bottom left corner.
 	++offsets;
@@ -370,12 +370,12 @@ static void guiElementRenderWindow(const guiElement *const restrict element, gra
 	transform.m[3][0] = root.position.x - 0.5f * (root.scale.x + size.x);
 	transform.m[3][1] = root.position.y - 0.5f * (root.scale.y + size.y);
 	// Feed the texture coordinates to the shader.
-	glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&subframe);
+	glUniform4fv(gfxMngr->shdrPrgObj.textureFragmentID[0], 1, (const GLfloat *)&subframe);
 	// Feed the bone configuration to the shader.
-	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
+	glUniformMatrix4fv(gfxMngr->shdrPrgObj.boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
 	// Render the model.
-	glBindVertexArray(meshSprite.vaoID);
-	glDrawElements(GL_TRIANGLES, meshSprite.indexNum, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(meshBillboard.vaoID);
+	glDrawElements(GL_TRIANGLES, meshBillboard.indexNum, GL_UNSIGNED_INT, 0);
 
 	// Draw the right side.
 	++offsets;
@@ -394,12 +394,12 @@ static void guiElementRenderWindow(const guiElement *const restrict element, gra
 	transform.m[3][0] = root.position.x + 0.5f * (root.scale.x + size.x);
 	transform.m[3][1] = root.position.y;
 	// Feed the texture coordinates to the shader.
-	glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&subframe);
+	glUniform4fv(gfxMngr->shdrPrgObj.textureFragmentID[0], 1, (const GLfloat *)&subframe);
 	// Feed the bone configuration to the shader.
-	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
+	glUniformMatrix4fv(gfxMngr->shdrPrgObj.boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
 	// Render the model.
-	glBindVertexArray(meshSprite.vaoID);
-	glDrawElements(GL_TRIANGLES, meshSprite.indexNum, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(meshBillboard.vaoID);
+	glDrawElements(GL_TRIANGLES, meshBillboard.indexNum, GL_UNSIGNED_INT, 0);
 
 	// Draw the top side.
 	++offsets;
@@ -418,12 +418,12 @@ static void guiElementRenderWindow(const guiElement *const restrict element, gra
 	transform.m[3][0] = root.position.x;
 	transform.m[3][1] = root.position.y + 0.5f * (root.scale.y + size.x);
 	// Feed the texture coordinates to the shader.
-	glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&subframe);
+	glUniform4fv(gfxMngr->shdrPrgObj.textureFragmentID[0], 1, (const GLfloat *)&subframe);
 	// Feed the bone configuration to the shader.
-	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
+	glUniformMatrix4fv(gfxMngr->shdrPrgObj.boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
 	// Render the model.
-	glBindVertexArray(meshSprite.vaoID);
-	glDrawElements(GL_TRIANGLES, meshSprite.indexNum, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(meshBillboard.vaoID);
+	glDrawElements(GL_TRIANGLES, meshBillboard.indexNum, GL_UNSIGNED_INT, 0);
 
 	// Draw the left side.
 	++offsets;
@@ -442,12 +442,12 @@ static void guiElementRenderWindow(const guiElement *const restrict element, gra
 	transform.m[3][0] = root.position.x - 0.5f * (root.scale.x + size.x);
 	transform.m[3][1] = root.position.y;
 	// Feed the texture coordinates to the shader.
-	glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&subframe);
+	glUniform4fv(gfxMngr->shdrPrgObj.textureFragmentID[0], 1, (const GLfloat *)&subframe);
 	// Feed the bone configuration to the shader.
-	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
+	glUniformMatrix4fv(gfxMngr->shdrPrgObj.boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
 	// Render the model.
-	glBindVertexArray(meshSprite.vaoID);
-	glDrawElements(GL_TRIANGLES, meshSprite.indexNum, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(meshBillboard.vaoID);
+	glDrawElements(GL_TRIANGLES, meshBillboard.indexNum, GL_UNSIGNED_INT, 0);
 
 	// Draw the bottom side.
 	++offsets;
@@ -466,12 +466,12 @@ static void guiElementRenderWindow(const guiElement *const restrict element, gra
 	transform.m[3][0] = root.position.x;
 	transform.m[3][1] = root.position.y - 0.5f * (root.scale.y + size.x);
 	// Feed the texture coordinates to the shader.
-	glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&subframe);
+	glUniform4fv(gfxMngr->shdrPrgObj.textureFragmentID[0], 1, (const GLfloat *)&subframe);
 	// Feed the bone configuration to the shader.
-	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
+	glUniformMatrix4fv(gfxMngr->shdrPrgObj.boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
 	// Render the model.
-	glBindVertexArray(meshSprite.vaoID);
-	glDrawElements(GL_TRIANGLES, meshSprite.indexNum, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(meshBillboard.vaoID);
+	glDrawElements(GL_TRIANGLES, meshBillboard.indexNum, GL_UNSIGNED_INT, 0);
 
 	// Draw the body.
 	// UV subframe.
@@ -484,12 +484,12 @@ static void guiElementRenderWindow(const guiElement *const restrict element, gra
 	// Bind the texture.
 	gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, frameBody->image->diffuseID);
 	// Feed the texture coordinates to the shader.
-	glUniform4fv(gfxMngr->textureFragmentID[0], 1, (const GLfloat *)&subframe);
+	glUniform4fv(gfxMngr->shdrPrgObj.textureFragmentID[0], 1, (const GLfloat *)&subframe);
 	// Feed the bone configuration to the shader.
-	glUniformMatrix4fv(gfxMngr->boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
+	glUniformMatrix4fv(gfxMngr->shdrPrgObj.boneArrayID[0], 1, GL_FALSE, &transform.m[0][0]);
 	// Render the model.
-	glBindVertexArray(meshSprite.vaoID);
-	glDrawElements(GL_TRIANGLES, meshSprite.indexNum, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(meshBillboard.vaoID);
+	glDrawElements(GL_TRIANGLES, meshBillboard.indexNum, GL_UNSIGNED_INT, 0);
 
 }
 

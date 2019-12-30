@@ -1,9 +1,5 @@
 #include "graphicsManager.h"
-#include "memoryManager.h"
-#include "skeletonShared.h"
-#include "particle.h"
-#include "helpersFileIO.h"
-#include "helpersMisc.h"
+#include "graphicsManagerSettings.h"
 #include "inline.h"
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
@@ -12,7 +8,7 @@
 
 /** Tidy loading code, put variable declarations in blocks. **/
 
-static return_t gfxMngrInitSDL(graphicsManager *const restrict gfxMngr){
+__FORCE_INLINE__ static return_t gfxMngrInitSDL(graphicsManager *const restrict gfxMngr){
 
 	// Initialize SDL.
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0){
@@ -51,12 +47,15 @@ static return_t gfxMngrInitSDL(graphicsManager *const restrict gfxMngr){
 
 }
 
-static return_t gfxMngrInitOGL(graphicsManager *const restrict gfxMngr){
+__FORCE_INLINE__ static return_t gfxMngrInitOGL(graphicsManager *const restrict gfxMngr){
+
+	GLenum glError;
+	GLenum glewError;
 
 	// Initialize GLEW.
 	glewExperimental = GL_TRUE;
 
-	GLenum glewError = glewInit();
+	glewError = glewInit();
 	if(glewError != GLEW_OK){
 		printf("Error initializing GLEW: %s\n", glewGetErrorString(glewError));
 		return 0;
@@ -73,7 +72,7 @@ static return_t gfxMngrInitOGL(graphicsManager *const restrict gfxMngr){
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-	GLenum glError = glGetError();
+	glError = glGetError();
 	if(glError != GL_NO_ERROR){
 		printf("Error initializing OpenGL: %u\n", glError);
 		return 0;
@@ -84,226 +83,29 @@ static return_t gfxMngrInitOGL(graphicsManager *const restrict gfxMngr){
 
 }
 
-static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, const char *const restrict prgPath){
-
-	// Vertex shader.
-	const char *const restrict vertexShaderExtra = "Resources"FILE_PATH_DELIMITER_STRING"Shaders"FILE_PATH_DELIMITER_STRING"s_vertex.gls";
-	const size_t pathLen = strlen(prgPath);
-	const size_t vsExtraLen = strlen(vertexShaderExtra);
-	char *const restrict vertexShaderPath = memAllocate((pathLen+vsExtraLen+1)*sizeof(char));
-	if(vertexShaderPath == NULL){
-		/** Memory allocation failure. **/
-		return -1;
-	}
-	memcpy(vertexShaderPath, prgPath, pathLen);
-	memcpy(vertexShaderPath+pathLen, vertexShaderExtra, vsExtraLen);
-	vertexShaderPath[pathLen+vsExtraLen] = '\0';
-
-	// Load vertex shader.
-	FILE *const restrict vertexShaderFile = fopen(vertexShaderPath, "rb");
-	fseek(vertexShaderFile, 0, SEEK_END);
-	long size = ftell(vertexShaderFile);
-	rewind(vertexShaderFile);
-	char *const vertexShaderCode = memAllocate((size+1)*sizeof(char));
-	if(vertexShaderCode == NULL){
-		/** Memory allocation failure. **/
-		memFree(vertexShaderPath);
-		fclose(vertexShaderFile);
-		return -1;
-	}
-	if(fread(vertexShaderCode, sizeof(char), size, vertexShaderFile) != size){
-		memFree(vertexShaderPath);
-		fclose(vertexShaderFile);
-		return -1;
-	}
-	vertexShaderCode[size] = '\0';
-	fclose(vertexShaderFile);
-
-	// Compile vertex shader.
-	gfxMngr->vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-	const char *const vertexShaderCodePointer = vertexShaderCode;
-	glShaderSource(gfxMngr->vertexShaderID, 1, &vertexShaderCodePointer, NULL);
-	glCompileShader(gfxMngr->vertexShaderID);
-	memFree(vertexShaderPath);
-	memFree(vertexShaderCode);
-
-	// Validate vertex shader.
-	GLint compileStatus = GL_FALSE;
- 	int infoLogLength;
-	glGetShaderiv(gfxMngr->vertexShaderID, GL_COMPILE_STATUS, &compileStatus);
- 	glGetShaderiv(gfxMngr->vertexShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
- 	if(infoLogLength > 1){
-		char *const restrict vertexShaderError = memAllocate((infoLogLength+1)*sizeof(char));
-		if(vertexShaderError == NULL){
-			/** Memory allocation failure. **/
-			return -1;
-		}
- 		glGetShaderInfoLog(gfxMngr->vertexShaderID, infoLogLength, NULL, &vertexShaderError[0]);
- 		printf("Error validating vertex shader: %s", &vertexShaderError[0]);
- 		memFree(vertexShaderError);
- 		return 0;
- 	}
-
-
-	// Fragment shader.
-	const char *const restrict fragmentShaderExtra = "Resources"FILE_PATH_DELIMITER_STRING"Shaders"FILE_PATH_DELIMITER_STRING"s_fragment.gls";
-	const size_t fsExtraLen = strlen(fragmentShaderExtra);
-	char *const restrict fragmentShaderPath = memAllocate((pathLen+fsExtraLen+1)*sizeof(char));
-	if(fragmentShaderPath == NULL){
-		/** Memory allocation failure. **/
-		return -1;
-	}
-	memcpy(fragmentShaderPath, prgPath, pathLen);
-	memcpy(fragmentShaderPath+pathLen, fragmentShaderExtra, fsExtraLen);
-	fragmentShaderPath[pathLen+fsExtraLen] = '\0';
-
-	// Load fragment shader.
-	FILE *const restrict fragmentShaderFile = fopen(fragmentShaderPath, "rb");
-	fseek(fragmentShaderFile, 0, SEEK_END);
-	size = ftell(fragmentShaderFile);
-	rewind(fragmentShaderFile);
-	char *const fragmentShaderCode = memAllocate((size+1)*sizeof(char));
-	if(fragmentShaderCode == NULL){
-		/** Memory allocation failure. **/
-		memFree(fragmentShaderPath);
-		fclose(fragmentShaderFile);
-		return -1;
-	}
-	if(fread(fragmentShaderCode, sizeof(char), size, fragmentShaderFile) != size){
-		memFree(fragmentShaderPath);
-		fclose(fragmentShaderFile);
-		return -1;
-	}
-	fragmentShaderCode[size] = '\0';
-	fclose(fragmentShaderFile);
-
-	// Compile fragment shader.
-	gfxMngr->fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-	const char *const fragmentShaderCodePointer = fragmentShaderCode;
-	glShaderSource(gfxMngr->fragmentShaderID, 1, &fragmentShaderCodePointer, NULL);
-	glCompileShader(gfxMngr->fragmentShaderID);
-	memFree(fragmentShaderPath);
-	memFree(fragmentShaderCode);
-
-	// Validate fragment shader.
-	glGetShaderiv(gfxMngr->fragmentShaderID, GL_COMPILE_STATUS, &compileStatus);
- 	glGetShaderiv(gfxMngr->fragmentShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
- 	if(infoLogLength > 1){
-		char *const restrict fragmentShaderError = memAllocate((infoLogLength+1)*sizeof(char));
-		if(fragmentShaderError == NULL){
-			/** Memory allocation failure. **/
-			return -1;
-		}
- 		glGetShaderInfoLog(gfxMngr->fragmentShaderID, infoLogLength, NULL, &fragmentShaderError[0]);
- 		printf("Error validating fragment shader: %s", &fragmentShaderError[0]);
- 		memFree(fragmentShaderError);
- 		return 0;
- 	}
-
-
-	// Link the program.
-	gfxMngr->shaderProgramID = glCreateProgram();
- 	glAttachShader(gfxMngr->shaderProgramID, gfxMngr->vertexShaderID);
- 	glAttachShader(gfxMngr->shaderProgramID, gfxMngr->fragmentShaderID);
- 	glLinkProgram(gfxMngr->shaderProgramID);
-
- 	glDetachShader(gfxMngr->shaderProgramID, gfxMngr->vertexShaderID);
- 	glDetachShader(gfxMngr->shaderProgramID, gfxMngr->fragmentShaderID);
- 	glDeleteShader(gfxMngr->vertexShaderID);
- 	glDeleteShader(gfxMngr->fragmentShaderID);
-
-	// Use the program.
-	glUseProgram(gfxMngr->shaderProgramID);
-
-
-	// Link the uniform variables.
-	gfxMngr->vpMatrixID        = glGetUniformLocation(gfxMngr->shaderProgramID, "vpMatrix");
-	gfxMngr->alphaID           = glGetUniformLocation(gfxMngr->shaderProgramID, "alpha");
-	gfxMngr->mipID             = glGetUniformLocation(gfxMngr->shaderProgramID, "mip");
-
-	// Create references to each bone.
-	boneIndex_t i;
-	for(i = 0; i < SKELETON_MAX_BONE_NUM; ++i){
-
-		char num[LTOSTR_MAX_LENGTH];
-		const size_t numLen = ltostr(i, &num[0]);
-		char uniformString[11+LTOSTR_MAX_LENGTH];  // LTOSTR_MAX_LENGTH includes NULL terminator.
-
-		memcpy(&uniformString[0], "boneArray[", 10*sizeof(char));
-		memcpy(&uniformString[10], num, numLen*sizeof(char));
-		uniformString[10+numLen] = ']';
-		uniformString[10+numLen+1] = '\0';
-		gfxMngr->boneArrayID[i] = glGetUniformLocation(gfxMngr->shaderProgramID, uniformString);
-
-	}
-
-	// Create references to each texture sampler.
-	for(i = 0; i < GFX_TEXTURE_SAMPLER_NUM; ++i){
-
-		char num[LTOSTR_MAX_LENGTH];
-		const size_t numLen = ltostr(i, &num[0]);
-		char uniformString[17+LTOSTR_MAX_LENGTH];  // LTOSTR_MAX_LENGTH includes NULL terminator.
-
-		memcpy(&uniformString[0], "textureFragment[", 16);
-		memcpy(&uniformString[16], num, numLen);
-		uniformString[16+numLen] = ']';
-		uniformString[16+numLen+1] = '\0';
-		gfxMngr->textureFragmentID[i] = glGetUniformLocation(gfxMngr->shaderProgramID, uniformString);
-
-		memcpy(&uniformString[0], "textureSampler[", 15);
-		memcpy(&uniformString[15], num, numLen);
-		uniformString[15+numLen] = ']';
-		uniformString[15+numLen+1] = '\0';
-		gfxMngr->textureSamplerArrayID[i] = glGetUniformLocation(gfxMngr->shaderProgramID, uniformString);
-		glUniform1i(gfxMngr->textureSamplerArrayID[i], 0);
-
-	}
-
-
-	GLenum glError = glGetError();
-	if(glError != GL_NO_ERROR){
-		printf("Error loading shaders: %u\n", glError);
-		return 0;
-	}
- 	return 1;
-
-}
-
-static return_t gfxMngrCreateBuffers(graphicsManager *const restrict gfxMngr){
-
-	GLenum glError;
-
-	// Set lastTexID to 0 since we haven't rendered anything yet.
-	gfxMngr->lastTexID = 0;
-
-	// Create and bind the particle state buffer object.
-	glGenBuffers(1, &gfxMngr->stateBufferID);
-	glBindBuffer(GL_ARRAY_BUFFER, gfxMngr->stateBufferID);
-	// Use buffer orphaning and write to the buffer before rendering.
-	glBufferData(GL_ARRAY_BUFFER, PARTICLE_SYSTEM_MAX_PARTICLES*sizeof(particleState), NULL, GL_STREAM_DRAW);
-
-	glError = glGetError();
-	if(glError != GL_NO_ERROR){
-		printf("Error creating buffers: %u\n", glError);
-		return 0;
+__FORCE_INLINE__ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, const char *const restrict prgPath){
+	return_t r;
+	if(
+		(r = shdrPrgLoad(&gfxMngr->shdrPrgSpr.id, prgPath, "s_vertex_sprite.gls", "s_fragment.gls")) <= 0 ||
+		(r = shdrPrgSprLink(&gfxMngr->shdrPrgSpr)) <= 0 ||
+		(r = shdrPrgLoad(&gfxMngr->shdrPrgObj.id, prgPath, "s_vertex.gls", "s_fragment.gls")) <= 0 ||
+		(r = shdrPrgObjLink(&gfxMngr->shdrPrgObj)) <= 0
+	){
+		return r;
 	}
 	return 1;
-
 }
 
 return_t gfxMngrInit(graphicsManager *const restrict gfxMngr, const char *const restrict prgPath){
 
 	return_t r;
 
-	gfxMngr->identityMatrix = mat4Identity();
 	gfxMngr->windowAspectRatioX = GFX_DEFAULT_WINDOW_ASPECT_RATIO_X;
 	gfxMngr->windowAspectRatioY = GFX_DEFAULT_WINDOW_ASPECT_RATIO_Y;
 	gfxMngr->windowWidth = GFX_DEFAULT_WINDOW_WIDTH;
 	gfxMngr->windowHeight = GFX_DEFAULT_WINDOW_HEIGHT;
 	gfxMngr->windowStretchToFit = 0;
 	gfxMngr->windowModified = 2;
-	gfxMngr->biasMIP = GFX_DEFAULT_BIAS_MIP;
-	gfxMngr->biasLOD = GFX_DEFAULT_BIAS_LOD;
 
 	r = gfxMngrInitSDL(gfxMngr);
 	if(r <= 0){
@@ -313,12 +115,8 @@ return_t gfxMngrInit(graphicsManager *const restrict gfxMngr, const char *const 
 	if(r <= 0){
 		return r;
 	}
-	r = gfxMngrLoadShaders(gfxMngr, prgPath);
-	if(r <= 0){
-		return r;
-	}
-	glUniform1f(gfxMngr->mipID, GFX_DEFAULT_BIAS_MIP);
-	return gfxMngrCreateBuffers(gfxMngr);
+	shdrSharedInit(&gfxMngr->shdrShared);
+	return gfxMngrLoadShaders(gfxMngr, prgPath);
 
 }
 
@@ -434,8 +232,8 @@ __FORCE_INLINE__ void gfxMngrSwitchView(graphicsManager *const restrict gfxMngr,
 
 __FORCE_INLINE__ void gfxMngrBindTexture(graphicsManager *const restrict gfxMngr, const GLenum texture, const GLuint textureID){
 	glActiveTexture(texture);
-	if(textureID != gfxMngr->lastTexID){
-		gfxMngr->lastTexID = textureID;
+	if(textureID != gfxMngr->shdrShared.lastTexID){
+		gfxMngr->shdrShared.lastTexID = textureID;
 		glBindTexture(GL_TEXTURE_2D, textureID);
 	}
 }
@@ -450,6 +248,7 @@ void gfxMngrDestroyProgram(graphicsManager *const restrict gfxMngr){
 	SDL_DestroyWindow(gfxMngr->window);
 	SDL_Quit();
 
-	glDeleteProgram(gfxMngr->shaderProgramID);
+	shdrPrgDelete(&gfxMngr->shdrPrgObj);
+	shdrPrgDelete(&gfxMngr->shdrPrgSpr);
 
 }

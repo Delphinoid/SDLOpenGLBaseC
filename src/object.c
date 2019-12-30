@@ -1044,13 +1044,13 @@ void objRender(const object *const restrict obj, graphicsManager *const restrict
 
 	const renderable *currentRndr = obj->renderables;
 
-	mat4 *transformCurrent = gfxMngr->skeletonTransformState;
+	mat4 *transformCurrent = gfxMngr->shdrPrgObj.skeletonTransformState;
 	const bone *bCurrent = obj->state.configuration;
 	const bone *bPrevious = (obj->state.previous == NULL ? bCurrent : obj->state.previous->configuration);
 
 	boneIndex_t boneNum = obj->skeletonData.skl->boneNum;
 	sklNode *nLayout = obj->skeletonData.skl->bones;
-	bone *bAccumulator = gfxMngr->skeletonBindAccumulator;
+	bone *bAccumulator = gfxMngr->shdrPrgObj.skeletonBindAccumulator;
 
 	vec3 centroid = {.x = 0.f, .y = 0.f, .z = 0.f};
 
@@ -1081,7 +1081,7 @@ void objRender(const object *const restrict obj, graphicsManager *const restrict
 		// If the bone has a parent, add its inverse bind position,
 		// otherwise just use the current bone's inverse bind position.
 		if(nLayout->parent != i){
-			*bAccumulator = boneTransformAppend(boneInvert(nLayout->defaultState), gfxMngr->skeletonBindAccumulator[nLayout->parent]);
+			*bAccumulator = boneTransformAppend(boneInvert(nLayout->defaultState), gfxMngr->shdrPrgObj.skeletonBindAccumulator[nLayout->parent]);
 		}else{
 			*bAccumulator = boneInvert(nLayout->defaultState);
 			centroid = state.position;

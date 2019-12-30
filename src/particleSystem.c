@@ -14,7 +14,7 @@
 
 void particleSystemBaseInit(particleSystemBase *const restrict base){
 	particleBaseInit(&base->properties);
-	base->particleMax = PARTICLE_SYSTEM_MAX_PARTICLES;
+	base->particleMax = PARTICLE_SYSTEM_MAX_PARTICLE_NUM;
 	base->initializers = NULL;
 	base->initializerLast = NULL;
 	base->emitters = NULL;
@@ -39,8 +39,8 @@ void particleSystemInit(particleSystem *const restrict system){
 
 __FORCE_INLINE__ static void particleSystemParticleInitialize(const particleSystem *const restrict system, particle *const p){
 	particleInitializer *i = system->base->initializers;
-	const particleInitializer *const iLast = system->base->initializers;
-	for(; i < iLast; ++i){
+	const particleInitializer *const iLast = system->base->initializerLast;
+	for(; i <= iLast; ++i){
 		particleInit(p);
 		(*i->func)((void *)(&i->data), p);
 	}
@@ -50,7 +50,7 @@ __FORCE_INLINE__ static void particleSystemParticleInitialize(const particleSyst
 __FORCE_INLINE__ static void particleSystemParticleOperate(const particleSystemBase *const restrict base, particle *const p, const float elapsedTime){
 	particleOperator *o = base->operators;
 	const particleOperator *const oLast = base->operatorLast;
-	for(; o < oLast; ++o){
+	for(; o <= oLast; ++o){
 		(*o->func)((void *)(&o->data), p, elapsedTime);
 	}
 }
@@ -58,7 +58,7 @@ __FORCE_INLINE__ static void particleSystemParticleOperate(const particleSystemB
 __FORCE_INLINE__ static void particleSystemParticleConstrain(const particleSystemBase *const restrict base, particle *const p, const float elapsedTime){
 	particleConstraint *c = base->constraints;
 	const particleConstraint *const cLast = base->constraintLast;
-	for(; c < cLast; ++c){
+	for(; c <= cLast; ++c){
 		///(*c->func)((void *)(&c->data), p, elapsedTime);
 	}
 }
@@ -133,20 +133,26 @@ __FORCE_INLINE__ static void particleSystemEmittersTick(particleSystem *const re
 
 	size_t remaining = system->base->particleMax - system->particleNum;
 
-	particleEmitter *e = system->emitters;
-	particleEmitterBase *eBase = system->base->emitters;
-	const particleEmitter *const eLast = &e[system->base->emitterNum];
+	if(remaining > 0){
 
-	for(; e < eLast; ++e, ++eBase){
+		particleEmitter *e = system->emitters;
+		particleEmitterBase *eBase = system->base->emitters;
+		const particleEmitter *const eLast = &e[system->base->emitterNum];
 
-		const size_t count = particleEmitterTick(e, eBase, elapsedTime);
+		for(; e < eLast; ++e, ++eBase){
 
-		if(count < remaining){
-			particleSystemParticleSpawn(system, count);
-			remaining -= count;
-		}else{
-			particleSystemParticleSpawn(system, remaining);
-			break;
+			const size_t count = particleEmitterTick(e, eBase, elapsedTime);
+
+			if(count > 0){
+				if(count < remaining){
+					particleSystemParticleSpawn(system, count);
+					remaining -= count;
+				}else{
+					particleSystemParticleSpawn(system, remaining);
+					break;
+				}
+			}
+
 		}
 
 	}
@@ -161,13 +167,13 @@ __FORCE_INLINE__ static void particleSystemParticlesTick(particleSystem *const r
 
 	for(; p < pLast; ++p){
 		p->lifetime -= elapsedTime;
-		if(p->lifetime > 0.f){
+		///if(p->lifetime > 0.f){
 			particleSystemParticleOperate(base, p, elapsedTime);
 			particleSystemParticleConstrain(base, p, elapsedTime);
 			particleTick(p, elapsedTime);
-		}else{
-			particleInit(p);
-		}
+		///}else{
+		///	particleInit(p);
+		///}
 	}
 
 }
@@ -198,7 +204,7 @@ return_t particleSystemTick(particleSystem *const restrict system, const float e
 	}
 
 }
-
+int a = 0;
 void particleSystemRender(const particleSystem *const restrict system, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const float interpT){
 
 	const renderableBase *const rndr = &system->base->properties.rndr;
@@ -208,9 +214,8 @@ void particleSystemRender(const particleSystem *const restrict system, graphicsM
 	particle *p = system->particles;
 	const particle *pLast = &p[system->particleNum];
 
-	particleState *state = &gfxMngr->particleTransformState[0];
+	particleState *state = &gfxMngr->shdrPrgSpr.particleTransformState[0];
 
-	// Bind the texture (if needed).
 	gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, rndr->tw->animations[p->currentAnim].frames[p->animator.currentFrame].image->diffuseID);
 
 	// Generate state buffers.
@@ -219,12 +224,14 @@ void particleSystemRender(const particleSystem *const restrict system, graphicsM
 		state->frame = twState(rndr->tw, &p->animator, p->currentAnim, interpT)->subframe;
 	}
 
+	glBindVertexArray(rndr->mdl->buffers.vaoID);
+
 	// Upload the state data to the shader.
-	glBufferSubData(GL_ARRAY_BUFFER, 0, system->particleNum*sizeof(particleState), &gfxMngr->particleTransformState[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, gfxMngr->shdrPrgSpr.stateBufferID);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, system->particleNum*sizeof(particleState), &gfxMngr->shdrPrgSpr.particleTransformState[0]);
 
 	// Render the model.
-	glBindVertexArray(rndr->mdl->buffers.vaoID);
-	mdlFindCurrentLOD(rndr->mdl, &indexNum, &offset, distance, gfxMngr->biasLOD);
+	mdlFindCurrentLOD(rndr->mdl, &indexNum, &offset, distance, gfxMngr->shdrShared.biasLOD);
 	if(indexNum){
 		glDrawElementsInstanced(GL_TRIANGLES, indexNum, GL_UNSIGNED_INT, offset, system->particleNum);
 	}
