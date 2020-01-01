@@ -4,7 +4,6 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include "particleSettings.h"
-#include "particleState.h"
 #include "colliderShared.h"
 #include "renderable.h"
 #include "bone.h"

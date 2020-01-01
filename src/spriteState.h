@@ -1,13 +1,13 @@
-#ifndef PARTICLESTATE_H
-#define PARTICLESTATE_H
+#ifndef SPRITESTATE_H
+#define SPRITESTATE_H
 
 #include "mat4.h"
 #include "rectangle.h"
 
 typedef struct {
     mat4 transformation;
-    ///float alpha;
     rectangle frame;
-} particleState;
+    ///float alpha;
+} spriteState;
 
 #endif

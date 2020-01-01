@@ -11,7 +11,7 @@
 #define MODEL_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Models"FILE_PATH_DELIMITER_STRING
 #define MODEL_RESOURCE_DIRECTORY_LENGTH 17
 
-return_t mdlWavefrontObjLoad(const char *const restrict filePath, vertexIndex_t *const vertexNum, vertex **const vertices, vertexIndexNum_t *const restrict indexNum, vertexIndex_t **const indices, size_t *const restrict lodNum, mdlLOD **const lods, char *const restrict sklPath);
+return_t mdlWavefrontObjLoad(const char *const restrict filePath, vertexIndex_t *const vertexNum, vertex **const vertices, vertexIndexNum_t *const restrict indexNum, vertexIndex_t **const indices, size_t *const restrict lodNum, mdlLOD **const lods, int *const restrict sprite, char *const restrict sklPath);
 return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndexNum_t *indexNum, vertexIndex_t **indices, skeleton *const skl);
 
 // Default models.
@@ -72,6 +72,7 @@ return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, 
 	vertexIndex_t *indices;
 	size_t lodNum;
 	mdlLOD *lods;
+	int sprite;
 
 	char fullPath[FILE_MAX_PATH_LENGTH];
 	char sklPath[FILE_MAX_PATH_LENGTH];
@@ -83,7 +84,7 @@ return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, 
 	mdlInit(mdl);
 
 	if(filePath[fileLength-1] != 'd'){
-		r = mdlWavefrontObjLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, &lodNum, &lods, &sklPath[0]);
+		r = mdlWavefrontObjLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, &lodNum, &lods, &sprite, &sklPath[0]);
 	}else{
 		skeleton *const tempSkl = moduleSkeletonAllocate();
 		r = mdlSMDLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, tempSkl);
@@ -91,6 +92,7 @@ return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, 
 		strncpy(tempSkl->name, "SMDTest", 7);
 		tempSkl->name[7] = '\0';
 		mdl->skl = tempSkl;
+		sprite = 0;
 	}
 	/** Replace and move the loading function here. **/
 	if(r <= 0){
@@ -98,7 +100,12 @@ return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, 
 	}
 
 	/** Should mdlGenerateBuffers() be here? **/
-	r = meshGenerateBuffers(&mdl->buffers, vertexNum, vertices, indexNum, indices);
+	//if(sprite){
+		//sprPackVertexBuffer(vertexNum, vertices);
+		//r = sprGenerateBuffers(&mdl->buffers, vertexNum, vertices, indexNum, indices);
+	//}else{
+		r = meshGenerateBuffers(&mdl->buffers, vertexNum, vertices, indexNum, indices);
+	//}
 	mdl->lodNum = lodNum;
 	mdl->lods = lods;
 	memFree(vertices);
@@ -220,7 +227,7 @@ __FORCE_INLINE__ void mdlFindCurrentLOD(const model *const restrict mdl, vertexI
 }
 
 void mdlDelete(model *const restrict mdl){
-	if(mdl->name != NULL && mdl->name != mdlDefault.name && mdl->name != mdlSprite.name){
+	if(mdl->name != NULL && mdl->name != mdlDefault.name && mdl->name != mdlSprite.name && mdl->name != mdlBillboard.name){
 		memFree(mdl->name);
 	}
 	if(mdl->lods != NULL){

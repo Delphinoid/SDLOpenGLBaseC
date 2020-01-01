@@ -39,6 +39,8 @@ mat4 billboardState(const billboard data, const camera *const restrict cam, cons
 
 		vec3 eye, target, up;
 
+		///const vec3 translation = *((vec3 *)&configuration.m[3][0]);
+
 		// Set the up vector. This corresponds
 		// to the billboard rotation axis.
 		if(data.axis != NULL){
@@ -72,6 +74,7 @@ mat4 billboardState(const billboard data, const camera *const restrict cam, cons
 
 		// Translate the transformation to the "origin".
 		configuration = mat4TranslatePre(configuration, -centroid.x, -centroid.y, -centroid.z);
+		///vec3ZeroP((vec3 *)&configuration.m[3][0]);
 
 		// Scale based on distance if necessary.
 		if(flagsAreSet(data.flags, BILLBOARD_SCALE)){
@@ -87,6 +90,9 @@ mat4 billboardState(const billboard data, const camera *const restrict cam, cons
 			),
 			centroid.x, centroid.y, centroid.z
 		);
+
+		// Translate back.
+		///*((vec3 *)&configuration.m[3][0]) = translation;
 
 	}else{
 

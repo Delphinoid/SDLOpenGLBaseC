@@ -98,8 +98,6 @@ return_t meshGenerateBuffers(mesh *const restrict m, const vertexIndex_t vertexN
 
 return_t meshDefaultInit(){
 
-	/** 24 vertices and 36 indices for a cube? What was I thinking? **/
-
 	vertex vertices[24];
 	vertexIndex_t indices[36];
 

@@ -1,10 +1,13 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include "sprite.h"
+#include "spriteState.h"
+#include "spriteSettings.h"
 #include "vertex.h"
-#include "particleState.h"
 #include <stdio.h>
 #include <string.h>
+
+GLuint sprStateBufferID = 0;
 
 typedef struct {
 	vec3 position;
@@ -19,6 +22,26 @@ mesh meshSprite = {
 	.vboID = 0,
 	.iboID = 0
 };
+
+return_t sprGenerateStateBuffer(){
+
+	GLenum glError;
+
+	// Create and bind the sprite state buffer object.
+	glGenBuffers(1, &sprStateBufferID);
+	glBindBuffer(GL_ARRAY_BUFFER, sprStateBufferID);
+	// Use buffer orphaning and write to the buffer before rendering.
+	glBufferData(GL_ARRAY_BUFFER, SPRITE_STATE_BUFFER_SIZE*sizeof(spriteState), NULL, GL_STREAM_DRAW);
+
+	glError = glGetError();
+	if(glError != GL_NO_ERROR){
+		printf("Error generating sprite state buffer: %u\n", glError);
+		return 0;
+	}
+
+	return 1;
+
+}
 
 void sprPackVertexBuffer(const vertexIndex_t vertexNum, vertex *vertices){
 	// Tightly packs an array of vertices for sprites.
@@ -41,28 +64,28 @@ static void sprVertexAttributes(){
 
 static void sprStateAttributes(){
 	// First transformation state column offset.
-	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(particleState), (GLvoid *)offsetof(particleState, transformation.m[0]));
+	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(spriteState), (GLvoid *)offsetof(spriteState, transformation.m[0]));
 	glEnableVertexAttribArray(2);
 	glVertexAttribDivisor(2, 1);
 	// Second transformation state column offset.
-	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(particleState), (GLvoid *)offsetof(particleState, transformation.m[1]));
+	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(spriteState), (GLvoid *)offsetof(spriteState, transformation.m[1]));
 	glEnableVertexAttribArray(3);
 	glVertexAttribDivisor(3, 1);
 	// Third transformation state column offset.
-	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(particleState), (GLvoid *)offsetof(particleState, transformation.m[2]));
+	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(spriteState), (GLvoid *)offsetof(spriteState, transformation.m[2]));
 	glEnableVertexAttribArray(4);
 	glVertexAttribDivisor(4, 1);
 	// Fourth transformation state column offset.
-	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(particleState), (GLvoid *)offsetof(particleState, transformation.m[3]));
+	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(spriteState), (GLvoid *)offsetof(spriteState, transformation.m[3]));
 	glEnableVertexAttribArray(5);
 	glVertexAttribDivisor(5, 1);
 	// Animated UV offset.
-	glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(particleState), (GLvoid *)offsetof(particleState, frame));
+	glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(spriteState), (GLvoid *)offsetof(spriteState, frame));
 	glEnableVertexAttribArray(6);
 	glVertexAttribDivisor(6, 1);
 }
 
-return_t sprGenerateBuffers(mesh *const restrict spr, const GLuint stateBufferID, const vertexIndex_t vertexNum, const vertex *const restrict vertices, const vertexIndexNum_t indexNum, const vertexIndexNum_t *const restrict indices){
+return_t sprGenerateBuffers(mesh *const restrict spr, const vertexIndex_t vertexNum, const vertex *const restrict vertices, const vertexIndexNum_t indexNum, const vertexIndexNum_t *const restrict indices){
 
 	if(vertexNum == 4){
 		if(indexNum == 6){
@@ -97,7 +120,7 @@ return_t sprGenerateBuffers(mesh *const restrict spr, const GLuint stateBufferID
 
 			sprVertexAttributes();
 
-			glBindBuffer(GL_ARRAY_BUFFER, stateBufferID);
+			glBindBuffer(GL_ARRAY_BUFFER, sprStateBufferID);
 			sprStateAttributes();
 
 			// Check for errors.
@@ -123,7 +146,7 @@ return_t sprGenerateBuffers(mesh *const restrict spr, const GLuint stateBufferID
 
 }
 
-return_t sprDefaultInit(const GLuint stateBufferID){
+return_t sprDefaultInit(){
 
 	sprVertex vertices[4];
 	vertexIndex_t indices[6];
@@ -156,10 +179,16 @@ return_t sprDefaultInit(const GLuint stateBufferID){
 	indices[4] = 3;
 	indices[5] = 1;
 
-	if(sprGenerateBuffers(&meshSprite, stateBufferID, 4, (const vertex *const restrict)vertices, 6, indices) <= 0){
+	if(sprGenerateBuffers(&meshSprite, 4, (const vertex *const restrict)vertices, 6, indices) <= 0){
 		return 0;
 	}
 
 	return 1;
 
+}
+
+void sprDeleteStateBuffer(){
+	if(sprStateBufferID != 0){
+		glDeleteBuffers(1, &sprStateBufferID);
+	}
 }

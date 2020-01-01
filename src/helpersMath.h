@@ -3,6 +3,7 @@
 
 #include "vec3.h"
 #include "return.h"
+#include <math.h>
 
 // Modern processors have reciprocal square root intrinsics,
 // which will be faster than a software implementation.
@@ -46,6 +47,12 @@ void segmentClosestPointReferenceP(const vec3 *const restrict s1, const vec3 *co
 vec3 segmentClosestPointIncident(const vec3 s1, const vec3 e1, const vec3 s2, const vec3 e2);
 void segmentClosestPointIncidentP(const vec3 *const restrict s1, const vec3 *const restrict e1, const vec3 *const restrict s2, const vec3 *const restrict e2, vec3 *const restrict p2);
 
+#ifdef FP_FAST_FMAF
+#define floatLerp(f1, f2, t) fmaf(t, f2-f1, f1)
+#define floatMA(f1, f2, t) fmaf(t, f2, f1)
+#else
 float floatLerp(const float f1, const float f2, const float t);
+float floatMA(const float f1, const float f2, const float t);
+#endif
 
 #endif

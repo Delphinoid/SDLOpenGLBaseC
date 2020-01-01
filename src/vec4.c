@@ -1,7 +1,6 @@
 #include "vec4.h"
 #include "helpersMath.h"
 #include "inline.h"
-#include <math.h>
 #include <string.h>
 
 __HINT_INLINE__ vec4 vec4New(const float x, const float y, const float z, const float w){
@@ -400,30 +399,30 @@ __HINT_INLINE__ float vec4DotP(const vec4 *const restrict v1, const vec4 *const 
 
 __HINT_INLINE__ vec4 vec4Lerp(const vec4 v1, const vec4 v2, const float t){
 	// r = v1 + (v2 - v1) * t
-	const vec4 r = {.x = v1.x + (v2.x - v1.x) * t,
-	                .y = v1.y + (v2.y - v1.y) * t,
-	                .z = v1.z + (v2.z - v1.z) * t,
-	                .w = v1.w + (v2.w - v1.w) * t};
+	const vec4 r = {.x = floatLerp(v1.x, v2.x, t),
+	                .y = floatLerp(v1.y, v2.y, t),
+	                .z = floatLerp(v1.z, v2.z, t),
+	                .w = floatLerp(v1.w, v2.w, t)};
 	return r;
 }
 __HINT_INLINE__ void vec4LerpP1(vec4 *const restrict v1, const vec4 *const restrict v2, const float t){
 	// r = v1 + (v2 - v1) * t
-	v1->x += (v2->x - v1->x) * t;
-	v1->y += (v2->y - v1->y) * t;
-	v1->z += (v2->z - v1->z) * t;
-	v1->w += (v2->w - v1->w) * t;
+	v1->x = floatLerp(v1->x, v2->x, t);
+	v1->y = floatLerp(v1->y, v2->y, t);
+	v1->z = floatLerp(v1->z, v2->z, t);
+	v1->w = floatLerp(v1->w, v2->w, t);
 }
 __HINT_INLINE__ void vec4LerpP2(const vec4 *const restrict v1, vec4 *const restrict v2, const float t){
 	// r = v1 + (v2 - v1) * t
-	v2->x = v1->x + (v2->x - v1->x) * t;
-	v2->y = v1->y + (v2->y - v1->y) * t;
-	v2->z = v1->z + (v2->z - v1->z) * t;
-	v2->w = v1->w + (v2->w - v1->w) * t;
+	v2->x = floatLerp(v1->x, v2->x, t);
+	v2->y = floatLerp(v1->y, v2->y, t);
+	v2->z = floatLerp(v1->z, v2->z, t);
+	v2->w = floatLerp(v1->w, v2->w, t);
 }
 __HINT_INLINE__ void vec4LerpPR(const vec4 *const restrict v1, const vec4 *const restrict v2, const float t, vec4 *const restrict r){
 	// r = v1 + (v2 - v1) * t
-	r->x = v1->x + (v2->x - v1->x) * t;
-	r->y = v1->y + (v2->y - v1->y) * t;
-	r->z = v1->z + (v2->z - v1->z) * t;
-	r->w = v1->w + (v2->w - v1->w) * t;
+	r->x = floatLerp(v1->x, v2->x, t);
+	r->y = floatLerp(v1->y, v2->y, t);
+	r->z = floatLerp(v1->z, v2->z, t);
+	r->w = floatLerp(v1->w, v2->w, t);
 }

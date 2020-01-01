@@ -4,6 +4,8 @@
 #include "particleEmitter.h"
 #include "particleOperator.h"
 #include "particleConstraint.h"
+#include "spriteSettings.h"
+#include "sprite.h"
 #include "texture.h"
 #include "model.h"
 #include "inline.h"
@@ -14,7 +16,7 @@
 
 void particleSystemBaseInit(particleSystemBase *const restrict base){
 	particleBaseInit(&base->properties);
-	base->particleMax = PARTICLE_SYSTEM_MAX_PARTICLE_NUM;
+	base->particleMax = SPRITE_STATE_BUFFER_SIZE;
 	base->initializers = NULL;
 	base->initializerLast = NULL;
 	base->emitters = NULL;
@@ -40,17 +42,17 @@ void particleSystemInit(particleSystem *const restrict system){
 __FORCE_INLINE__ static void particleSystemParticleInitialize(const particleSystem *const restrict system, particle *const p){
 	particleInitializer *i = system->base->initializers;
 	const particleInitializer *const iLast = system->base->initializerLast;
-	for(; i <= iLast; ++i){
+	for(; i < iLast; ++i){
 		particleInit(p);
 		(*i->func)((void *)(&i->data), p);
 	}
-	/** Apply system configuration. **/
+	/** Apply system configuration? **/
 }
 
 __FORCE_INLINE__ static void particleSystemParticleOperate(const particleSystemBase *const restrict base, particle *const p, const float elapsedTime){
 	particleOperator *o = base->operators;
 	const particleOperator *const oLast = base->operatorLast;
-	for(; o <= oLast; ++o){
+	for(; o < oLast; ++o){
 		(*o->func)((void *)(&o->data), p, elapsedTime);
 	}
 }
@@ -58,8 +60,8 @@ __FORCE_INLINE__ static void particleSystemParticleOperate(const particleSystemB
 __FORCE_INLINE__ static void particleSystemParticleConstrain(const particleSystemBase *const restrict base, particle *const p, const float elapsedTime){
 	particleConstraint *c = base->constraints;
 	const particleConstraint *const cLast = base->constraintLast;
-	for(; c <= cLast; ++c){
-		///(*c->func)((void *)(&c->data), p, elapsedTime);
+	for(; c < cLast; ++c){
+		(*c->func)((void *)(&c->data), p, elapsedTime);
 	}
 }
 
@@ -204,7 +206,7 @@ return_t particleSystemTick(particleSystem *const restrict system, const float e
 	}
 
 }
-int a = 0;
+
 void particleSystemRender(const particleSystem *const restrict system, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const float interpT){
 
 	const renderableBase *const rndr = &system->base->properties.rndr;
@@ -214,7 +216,7 @@ void particleSystemRender(const particleSystem *const restrict system, graphicsM
 	particle *p = system->particles;
 	const particle *pLast = &p[system->particleNum];
 
-	particleState *state = &gfxMngr->shdrPrgSpr.particleTransformState[0];
+	spriteState *state = &gfxMngr->shdrData.spriteTransformState[0];
 
 	gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, rndr->tw->animations[p->currentAnim].frames[p->animator.currentFrame].image->diffuseID);
 
@@ -227,11 +229,11 @@ void particleSystemRender(const particleSystem *const restrict system, graphicsM
 	glBindVertexArray(rndr->mdl->buffers.vaoID);
 
 	// Upload the state data to the shader.
-	glBindBuffer(GL_ARRAY_BUFFER, gfxMngr->shdrPrgSpr.stateBufferID);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, system->particleNum*sizeof(particleState), &gfxMngr->shdrPrgSpr.particleTransformState[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, sprStateBufferID);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, system->particleNum*sizeof(spriteState), &gfxMngr->shdrData.spriteTransformState[0]);
 
 	// Render the model.
-	mdlFindCurrentLOD(rndr->mdl, &indexNum, &offset, distance, gfxMngr->shdrShared.biasLOD);
+	mdlFindCurrentLOD(rndr->mdl, &indexNum, &offset, distance, gfxMngr->shdrData.biasLOD);
 	if(indexNum){
 		glDrawElementsInstanced(GL_TRIANGLES, indexNum, GL_UNSIGNED_INT, offset, system->particleNum);
 	}

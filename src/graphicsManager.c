@@ -1,5 +1,6 @@
 #include "graphicsManager.h"
 #include "graphicsManagerSettings.h"
+#include "sprite.h"
 #include "inline.h"
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
@@ -115,7 +116,7 @@ return_t gfxMngrInit(graphicsManager *const restrict gfxMngr, const char *const 
 	if(r <= 0){
 		return r;
 	}
-	shdrSharedInit(&gfxMngr->shdrShared);
+	shdrDataInit(&gfxMngr->shdrData);
 	return gfxMngrLoadShaders(gfxMngr, prgPath);
 
 }
@@ -232,8 +233,8 @@ __FORCE_INLINE__ void gfxMngrSwitchView(graphicsManager *const restrict gfxMngr,
 
 __FORCE_INLINE__ void gfxMngrBindTexture(graphicsManager *const restrict gfxMngr, const GLenum texture, const GLuint textureID){
 	glActiveTexture(texture);
-	if(textureID != gfxMngr->shdrShared.lastTexID){
-		gfxMngr->shdrShared.lastTexID = textureID;
+	if(textureID != gfxMngr->shdrData.lastTexID){
+		gfxMngr->shdrData.lastTexID = textureID;
 		glBindTexture(GL_TEXTURE_2D, textureID);
 	}
 }

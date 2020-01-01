@@ -10,11 +10,11 @@
 #define SHADER_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Shaders"FILE_PATH_DELIMITER_STRING
 #define SHADER_RESOURCE_DIRECTORY_LENGTH 18
 
-void shdrSharedInit(shaderShared *const restrict shdrShared){
-	shdrShared->lastTexID = 0;
-	shdrShared->identityMatrix = mat4Identity();
-	shdrShared->biasMIP = SHADER_DEFAULT_BIAS_MIP;
-	shdrShared->biasLOD = SHADER_DEFAULT_BIAS_LOD;
+void shdrDataInit(shaderData *const restrict shdrData){
+	shdrData->lastTexID = 0;
+	shdrData->identityMatrix = mat4Identity();
+	shdrData->biasMIP = SHADER_DEFAULT_BIAS_MIP;
+	shdrData->biasLOD = SHADER_DEFAULT_BIAS_LOD;
 }
 
 static __FORCE_INLINE__ return_t shdrLoad(GLuint *const restrict id, GLenum type, const char *const restrict prgPath, const char *const restrict filePath){
@@ -180,12 +180,6 @@ return_t shdrPrgSprLink(shaderProgramSprite *const restrict shdrPrg){
 	glUniform1f(shdrPrg->alphaID, 1.f);
 	glUniform1f(shdrPrg->mipID, SHADER_DEFAULT_BIAS_MIP);
 	glUniform1i(shdrPrg->textureSamplerID, 0);
-
-	// Create and bind the particle state buffer object.
-	glGenBuffers(1, &shdrPrg->stateBufferID);
-	glBindBuffer(GL_ARRAY_BUFFER, shdrPrg->stateBufferID);
-	// Use buffer orphaning and write to the buffer before rendering.
-	glBufferData(GL_ARRAY_BUFFER, PARTICLE_SYSTEM_MAX_PARTICLE_NUM*sizeof(particleState), NULL, GL_STREAM_DRAW);
 
 	glError = glGetError();
 	if(glError != GL_NO_ERROR){

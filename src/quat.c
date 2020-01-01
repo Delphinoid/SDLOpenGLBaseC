@@ -2,7 +2,6 @@
 #include "helpersMath.h"
 #include "constantsMath.h"
 #include "inline.h"
-#include <math.h>
 #include <float.h>
 #include <string.h>
 
@@ -567,36 +566,36 @@ __HINT_INLINE__ quat quatLerp(const quat q1, const quat q2, const float t){
 	//               ^
 	// r = (q1 + (q2 - q1) * t)
 	const quat r = {
-		.w   = q1.w   + (q2.w   - q1.w)   * t,
-		.v.x = q1.v.x + (q2.v.x - q1.v.x) * t,
-		.v.y = q1.v.y + (q2.v.y - q1.v.y) * t,
-		.v.z = q1.v.z + (q2.v.z - q1.v.z) * t
+		.w   = floatLerp(q1.w, q2.w, t),
+		.v.x = floatLerp(q1.v.x, q2.v.x, t),
+		.v.y = floatLerp(q1.v.y, q2.v.y, t),
+		.v.z = floatLerp(q1.v.z, q2.v.z, t)
 	};
 	return r;
 }
 __HINT_INLINE__ void quatLerpP1(quat *const restrict q1, const quat *const restrict q2, const float t){
 	//               ^
 	// r = (q1 + (q2 - q1) * t)
-	q1->w   += (q2->w   - q1->w)   * t;
-	q1->v.x += (q2->v.x - q1->v.x) * t;
-	q1->v.y += (q2->v.y - q1->v.y) * t;
-	q1->v.z += (q2->v.z - q1->v.z) * t;
+	q1->w   = floatLerp(q1->w, q2->w, t);
+	q1->v.x = floatLerp(q1->v.x, q2->v.x, t);
+	q1->v.y = floatLerp(q1->v.y, q2->v.y, t);
+	q1->v.z = floatLerp(q1->v.z, q2->v.z, t);
 }
 __HINT_INLINE__ void quatLerpP2(const quat *const restrict q1, quat *const restrict q2, const float t){
 	//               ^
 	// r = (q1 + (q2 - q1) * t)
-	q2->w   = q1->w   + (q2->w   - q1->w)   * t;
-	q2->v.x = q1->v.x + (q2->v.x - q1->v.x) * t;
-	q2->v.y = q1->v.y + (q2->v.y - q1->v.y) * t;
-	q2->v.z = q1->v.z + (q2->v.z - q1->v.z) * t;
+	q2->w   = floatLerp(q1->w, q2->w, t);
+	q2->v.x = floatLerp(q1->v.x, q2->v.x, t);
+	q2->v.y = floatLerp(q1->v.y, q2->v.y, t);
+	q2->v.z = floatLerp(q1->v.z, q2->v.z, t);
 }
 __HINT_INLINE__ void quatLerpPR(const quat *const restrict q1, const quat *const restrict q2, const float t, quat *const restrict r){
 	//               ^
 	// r = (q1 + (q2 - q1) * t)
-	r->w   = q1->w   + (q2->w   - q1->w)   * t;
-	r->v.x = q1->v.x + (q2->v.x - q1->v.x) * t;
-	r->v.y = q1->v.y + (q2->v.y - q1->v.y) * t;
-	r->v.z = q1->v.z + (q2->v.z - q1->v.z) * t;
+	r->w   = floatLerp(q1->w, q2->w, t);
+	r->v.x = floatLerp(q1->v.x, q2->v.x, t);
+	r->v.y = floatLerp(q1->v.y, q2->v.y, t);
+	r->v.z = floatLerp(q1->v.z, q2->v.z, t);
 }
 
 __HINT_INLINE__ quat quatSlerp(const quat q1, const quat q2, const float t){
@@ -801,20 +800,20 @@ __HINT_INLINE__ void quatIntegrateP(quat *const restrict q, const vec3 *const re
 	quat r = {.w = 0.f, .v = *w};
 	quatQMultQP1(&r, q);
 	dt *= 0.5f;
-	q->w   += r.w   * dt;
-	q->v.x += r.v.x * dt;
-	q->v.y += r.v.y * dt;
-	q->v.z += r.v.z * dt;
+	q->w   = floatMA(q->w, r.w, dt);
+	q->v.x = floatMA(q->v.x, r.v.x, dt);
+	q->v.y = floatMA(q->v.y, r.v.y, dt);
+	q->v.z = floatMA(q->v.z, r.v.z, dt);
 }
 __HINT_INLINE__ void quatIntegratePR(const quat *const restrict q, const vec3 *const restrict w, float dt, quat *const restrict r){
 	r->w = 0.f;
 	r->v = *w;
 	quatQMultQP1(r, q);
 	dt *= 0.5f;
-	r->w   = r->w   * dt + q->w;
-	r->v.x = r->v.x * dt + q->v.x;
-	r->v.y = r->v.y * dt + q->v.y;
-	r->v.z = r->v.z * dt + q->v.z;
+	r->w   = floatMA(q->w, r->w, dt);
+	r->v.x = floatMA(q->v.x, r->v.x, dt);
+	r->v.y = floatMA(q->v.y, r->v.y, dt);
+	r->v.z = floatMA(q->v.z, r->v.z, dt);
 }
 
 __HINT_INLINE__ quat quatRotate(const quat q1, const quat q2, const float t){

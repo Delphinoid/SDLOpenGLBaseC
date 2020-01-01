@@ -73,7 +73,7 @@ int main(int argc, char **argv){
 	moduleTextureResourcesInit();
 	moduleTextureWrapperResourcesInit();
 	moduleSkeletonResourcesInit();
-	moduleModelResourcesInit(gfxMngr.shdrPrgSpr.stateBufferID);
+	moduleModelResourcesInit();
 	moduleRenderableResourcesInit();
 	modulePhysicsResourcesInit();
 	moduleObjectResourcesInit();
@@ -350,13 +350,13 @@ int main(int argc, char **argv){
 	particleSystemBase b; particleSystemBaseInit(&b); b.properties = a;
 	b.initializers = memAllocate(sizeof(particleInitializer));
 	b.initializers->func = &particleInitializerSphereRandom;
-	b.initializerLast = b.initializers;
+	b.initializerLast = b.initializers+1;
 	b.emitters = memAllocate(sizeof(particleEmitterBase));
 	b.emitters->func = &particleEmitterContinuous;
 	b.emitterNum = 1;
 	b.operators = memAllocate(sizeof(particleOperator));
 	b.operators->func = &particleOperatorAddGravity;
-	b.operatorLast = b.operators;
+	b.operatorLast = b.operators+1;
 	particleSystem c; particleSystemInstantiate(&c, &b);
 
 
@@ -586,6 +586,8 @@ int main(int argc, char **argv){
 
 
 			///
+			glUseProgram(gfxMngr.shdrPrgSpr.id);
+
 			// Update the camera's VP matrix.
 			camUpdateViewProjectionMatrix(
 				camGUI,
@@ -597,14 +599,15 @@ int main(int argc, char **argv){
 			// Switch to the camera's view.
 			gfxMngrSwitchView(&gfxMngr, &camGUI->view);
 			// Feed the camera's view-projection matrix into the shader.
-			glUniformMatrix4fv(gfxMngr.shdrPrgObj.vpMatrixID, 1, GL_FALSE, &camGUI->viewProjectionMatrix.m[0][0]);
+			glUniformMatrix4fv(gfxMngr.shdrPrgSpr.vpMatrixID, 1, GL_FALSE, &camGUI->viewProjectionMatrix.m[0][0]);
 			guiElementRender(&gEl, &gfxMngr, camGUI, 0.f, interpT);
 
 			// Switch to the camera's view.
-			glUseProgram(gfxMngr.shdrPrgSpr.id);
 			gfxMngrSwitchView(&gfxMngr, &camMain->view);
+			// Feed the camera's view-projection matrix into the shader.
 			glUniformMatrix4fv(gfxMngr.shdrPrgSpr.vpMatrixID, 1, GL_FALSE, &camMain->viewProjectionMatrix.m[0][0]);
 			particleSystemRender(&c, &gfxMngr, camMain, 0.f, interpT);
+
 			glUseProgram(gfxMngr.shdrPrgObj.id);
 			///
 
@@ -632,6 +635,11 @@ int main(int argc, char **argv){
 		}
 
     }
+
+    /****/
+	particleSystemBaseDelete(&b);
+	particleSystemDelete(&c);
+    /****/
 
 	moduleCameraResourcesDelete();
 	moduleSceneResourcesDelete();

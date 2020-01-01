@@ -11,9 +11,9 @@
 
 memoryPool __ModelResourceArray;  // Contains models.
 
-return_t moduleModelResourcesInit(const GLuint stateBufferID){
+return_t moduleModelResourcesInit(){
 	void *memory;
-	if(meshDefaultInit() < 0 || sprDefaultInit(stateBufferID) < 0 || meshBillboardInit() < 0){
+	if(sprGenerateStateBuffer() < 0 || meshDefaultInit() < 0 || sprDefaultInit() < 0 || meshBillboardInit() < 0){
 		return -1;
 	}
 	mdlDefaultInit(); mdlSpriteInit(); mdlBillboardInit();
@@ -51,6 +51,8 @@ void moduleModelResourcesDelete(){
 	}
 	mdlDelete(&mdlDefault);
 	mdlDelete(&mdlSprite);
+	mdlDelete(&mdlBillboard);
+	sprDeleteStateBuffer();
 }
 
 __HINT_INLINE__ model *moduleModelAllocateStatic(){

@@ -350,6 +350,11 @@ __HINT_INLINE__ void segmentClosestPointIncidentP(const vec3 *const restrict s1,
 	vec3VAddVPR(s2, &v3, p2);
 }
 
+#ifndef FP_FAST_FMAF
 __HINT_INLINE__ float floatLerp(const float f1, const float f2, const float t){
 	return f1 + (f2 - f1) * t;
 }
+__HINT_INLINE__ float floatMA(const float f1, const float f2, const float t){
+	return f1 + f2 * t;
+}
+#endif

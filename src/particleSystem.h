@@ -31,13 +31,13 @@ typedef struct particleSystemBase {
 
 	// Particle behaviour controls.
 	particleInitializer *initializers;
-	particleInitializer *initializerLast;
+	particleInitializer *initializerLast;  // Last element in initializers + 1.
 	particleEmitterBase *emitters;
 	size_t emitterNum;
 	particleOperator *operators;
-	particleOperator *operatorLast;
+	particleOperator *operatorLast;  // Last element in operators + 1.
 	particleConstraint *constraints;
-	particleConstraint *constraintLast;
+	particleConstraint *constraintLast;  // Last element in constraints + 1.
 
 	// System lifetime.
 	float lifetime;

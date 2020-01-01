@@ -21,7 +21,7 @@ typedef struct graphicsManager {
 	// Shader programs.
 	shaderProgramObject shdrPrgObj;
 	shaderProgramSprite shdrPrgSpr;
-	shaderShared shdrShared;
+	shaderData shdrData;
 
 	// Master viewport and last view rendered.
 	gfxViewport viewport;

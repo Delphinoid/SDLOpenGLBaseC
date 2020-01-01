@@ -43,7 +43,7 @@
 		memFree(tempBoneWeights); \
 	}
 
-return_t mdlWavefrontObjLoad(const char *const restrict filePath, vertexIndex_t *const restrict vertexNum, vertex **const vertices, vertexIndexNum_t *const restrict indexNum, size_t **const indices, size_t *const restrict lodNum, mdlLOD **const lods, char *const restrict sklPath){
+return_t mdlWavefrontObjLoad(const char *const restrict filePath, vertexIndex_t *const restrict vertexNum, vertex **const vertices, vertexIndexNum_t *const restrict indexNum, size_t **const indices, size_t *const restrict lodNum, mdlLOD **const lods, int *const restrict sprite, char *const restrict sklPath){
 
 	FILE *const restrict mdlInfo = fopen(filePath, "r");
 
@@ -194,6 +194,10 @@ return_t mdlWavefrontObjLoad(const char *const restrict filePath, vertexIndex_t 
 				}
 				strncpy(sklPath, line+pathBegin, pathLength);
 				sklPath[pathLength] = '\0';
+
+			// Sprite
+			}else if(lineLength >= 6 && strncmp(line, "sprite ", 7) == 0){
+				*sprite = strtoul(line+6, NULL, 0);
 
 			// LOD
 			}else if(lineLength >= 5 && strncmp(line, "lod ", 4) == 0){
@@ -578,28 +582,27 @@ return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **ver
 	//Load the textureGroup!
 	FILE *mdlFile = fopen(filePath, "r");
 	if(mdlFile != NULL){
-		//Temporarily stores only unique vertices.
-		*vertexNum = 0;
 		size_t vertexCapacity = MDL_VERTEX_START_CAPACITY;
-		*vertices = memAllocate(vertexCapacity * sizeof(**vertices));
-		//Temporarily stores vertex indices for faces.
-		//We can use the model's totalIndices variable for the size so we don't have to set it later.
-		*indexNum = 0;
 		size_t indexCapacity = MDL_INDEX_START_CAPACITY;
-		*indices = memAllocate(indexCapacity * sizeof(**indices));
-		//Temporarily stores bones.
-		skl->name = NULL;
-		skl->boneNum = 0;
 		size_t boneCapacity = 1;
-		skl->bones = memAllocate(boneCapacity * sizeof(*skl->bones));
 		//This indicates what sort of data we're currently supposed to be reading.
 		unsigned char dataType = 0;
 		//This variable stores data specific to the type we're currently loading.
 		unsigned int data = 0;
-
 		char lineFeed[1024];
 		char *line;
 		size_t lineLength;
+		//Temporarily stores only unique vertices.
+		*vertexNum = 0;
+		*vertices = memAllocate(vertexCapacity * sizeof(**vertices));
+		//Temporarily stores vertex indices for faces.
+		//We can use the model's totalIndices variable for the size so we don't have to set it later.
+		*indexNum = 0;
+		*indices = memAllocate(indexCapacity * sizeof(**indices));
+		//Temporarily stores bones.
+		skl->name = NULL;
+		skl->boneNum = 0;
+		skl->bones = memAllocate(boneCapacity * sizeof(*skl->bones));
 
 
 		while(fileParseNextLine(mdlFile, lineFeed, sizeof(lineFeed), &line, &lineLength)){

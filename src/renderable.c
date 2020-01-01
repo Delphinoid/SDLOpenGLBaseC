@@ -67,12 +67,13 @@ void rndrRender(const renderable *const restrict rndr, const skeleton *const res
 					rndrBone = 0;
 				}
 
+				/** Not sure I like billboarding being per-bone. Can we use a model matrix? **/
 				// Apply billboarding transformation if required.
 				if(rndr->billboardData.flags != BILLBOARD_DISABLED){
 					// Use the root bone's global position as the centroid for billboarding.
-					transform = billboardState(rndr->billboardData, cam, centroid, gfxMngr->shdrPrgObj.skeletonTransformState[rndrBone]);
+					transform = billboardState(rndr->billboardData, cam, centroid, gfxMngr->shdrData.skeletonTransformState[rndrBone]);
 				}else{
-					transform = gfxMngr->shdrPrgObj.skeletonTransformState[rndrBone];
+					transform = gfxMngr->shdrData.skeletonTransformState[rndrBone];
 				}
 
 				// Feed the bone configuration to the shader.
@@ -90,7 +91,7 @@ void rndrRender(const renderable *const restrict rndr, const skeleton *const res
 			// Render the model.
 			glBindVertexArray(rndr->mdl->buffers.vaoID);
 			/**if(rndr->mdl->buffers.indexNum > 0){**/
-				mdlFindCurrentLOD(rndr->mdl, &indexNum, &offset, distance, gfxMngr->shdrShared.biasLOD);
+				mdlFindCurrentLOD(rndr->mdl, &indexNum, &offset, distance, gfxMngr->shdrData.biasLOD);
 				if(indexNum){
 					glDrawElements(GL_TRIANGLES, indexNum, GL_UNSIGNED_INT, offset);
 				}

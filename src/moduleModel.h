@@ -17,7 +17,7 @@ typedef struct model model;
 /** Support locals? Merge all module containers? **/
 /** Use compiler constants for loop offsets?     **/
 
-return_t moduleModelResourcesInit(const GLuint stateBufferID);
+return_t moduleModelResourcesInit();
 void moduleModelResourcesReset();
 void moduleModelResourcesDelete();
 

@@ -1,0 +1,8 @@
+#ifndef SPRITESETTINGS_H
+#define SPRITESETTINGS_H
+
+#ifndef SPRITE_STATE_BUFFER_SIZE
+	#define SPRITE_STATE_BUFFER_SIZE 1024
+#endif
+
+#endif

@@ -11,6 +11,8 @@
 	#include <alloca.h>
 #endif
 
+#define COLLIDER_MESH_SAT_USE_STACK_ALLOCATION
+
 #define COLLISION_MAX_ITERATIONS 64
 #define COLLISION_MAX_FACE_NUM_EPA 64
 #define COLLISION_MAX_EDGE_NUM_EPA 32
@@ -491,7 +493,7 @@ static __HINT_INLINE__ void cMeshClipFaceContact(const cMesh *const reference, c
 
 	// Allocate two arrays of vertices for each edge on the face.
 	cMeshClipVertex *const vertices =
-	#ifndef COLLIDER_MESH_SAT_USE_HEAP_ALLOCATION
+	#if defined(COLLIDER_MESH_SAT_USE_STACK_ALLOCATION) && !defined(_STDC_NO_VLA_)
 	alloca(incident->edgeMax * 2 * sizeof(cMeshClipVertex) * 2);
 	#else
 	memAllocate(incident->edgeMax * 2 * sizeof(cMeshClipVertex) * 2);
@@ -800,7 +802,7 @@ static __HINT_INLINE__ void cMeshClipFaceContact(const cMesh *const reference, c
 		#endif
 
 
-	#ifdef COLLIDER_MESH_SAT_USE_HEAP_ALLOCATION
+	#if !defined(COLLIDER_MESH_SAT_USE_STACK_ALLOCATION) || defined(_STDC_NO_VLA_)
 		memFree(vertices);
 
 	}else{
