@@ -19,6 +19,12 @@ guiElement *guiElementAddChild(guiElement *const restrict element){
 	//
 }
 
+static void guiElementRenderText(const guiElement *const restrict element, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const float interpT){
+
+	//
+
+}
+
 static void guiElementRenderWindow(const guiElement *const restrict element, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const float interpT){
 
 	const twFrame *const restrict frameBody = twiState(&element->data.window.body, interpT);
@@ -196,15 +202,14 @@ static void guiElementRenderWindow(const guiElement *const restrict element, gra
 
 /** The lines below should eventually be removed. **/
 #define guiElementRenderRenderable NULL
-#define guiElementRenderText       NULL
 #define guiElementRenderObject     NULL
 
 void (* const guiElementRenderJumpTable[4])(
 	const guiElement *const restrict element, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const float interpT
 ) = {
-	guiElementRenderRenderable,
-	guiElementRenderWindow,
 	guiElementRenderText,
+	guiElementRenderWindow,
+	guiElementRenderRenderable,
 	guiElementRenderObject
 };
 __FORCE_INLINE__ void guiElementRender(const guiElement *const restrict element, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const float interpT){

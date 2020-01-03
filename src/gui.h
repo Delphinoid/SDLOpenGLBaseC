@@ -2,17 +2,18 @@
 #define GUI_H
 
 #include "renderable.h"
-#include "rectangle.h"
+#include "text.h"
 #include "bone.h"
 #include "vec2.h"
 
 #define GUI_WINDOW_STRETCH_BODY 0x01
 
 // If no type is defined, defaults to renderable.
-#define GUI_ELEMENT_TYPE_WINDOW 0x01
-#define GUI_ELEMENT_TYPE_TEXT   0x02
-#define GUI_ELEMENT_TYPE_OBJECT 0x04
-#define GUI_ELEMENT_TYPE_MASK   0x07
+#define GUI_ELEMENT_TYPE_TEXT       0x00
+#define GUI_ELEMENT_TYPE_WINDOW     0x01
+#define GUI_ELEMENT_TYPE_RENDERABLE 0x02
+#define GUI_ELEMENT_TYPE_OBJECT     0x03
+#define GUI_ELEMENT_TYPE_MASK       0x03
 
 typedef struct object object;
 typedef struct graphicsManager graphicsManager;
@@ -27,18 +28,12 @@ typedef struct {
 	flags_t flags;
 } guiWindow;
 
-/*typedef struct {
-	// Panel renderable.
-	renderable rndr;
-	// Offsets for the four corners.
-	// We can inherit other properties from the root.
-	vec2 configuration[4];
-} guiPanel;*/
-
-/**typedef struct {
-	char *text;
+typedef struct {
+	// Text buffer.
+	txtBuffer buffer;
+	// Text box boundaries.
 	rectangle bounds;
-} guiText;**/
+} guiText;
 
 typedef struct guiElement guiElement;
 typedef struct guiElement {

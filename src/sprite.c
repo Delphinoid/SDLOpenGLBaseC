@@ -87,8 +87,8 @@ static void sprStateAttributes(){
 
 return_t sprGenerateBuffers(mesh *const restrict spr, const vertexIndex_t vertexNum, const vertex *const restrict vertices, const vertexIndexNum_t indexNum, const vertexIndexNum_t *const restrict indices){
 
-	if(vertexNum == 4){
-		if(indexNum == 6){
+	if(vertexNum > 0){
+		if(indexNum > 0){
 
 			GLenum glError;
 
@@ -131,12 +131,12 @@ return_t sprGenerateBuffers(mesh *const restrict spr, const vertexIndex_t vertex
 			}
 
 		}else{
-			printf("Error creating buffers for sprite: sprite does not have 6 indices.\n");
+			printf("Error creating buffers for sprite: sprite has no indices.\n");
 			return 0;
 		}
 
 	}else{
-		printf("Error creating buffers for sprite: sprite does not have 4 vertices.\n");
+		printf("Error creating buffers for sprite: sprite has no vertices.\n");
 		return 0;
 	}
 
