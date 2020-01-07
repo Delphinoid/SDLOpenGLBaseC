@@ -1,55 +1,69 @@
 #ifndef TEXT_H
 #define TEXT_H
 
-#include "memoryShared.h"
+#include "textCMap.h"
 #include "texture.h"
 #include "rectangle.h"
 #include "flags.h"
 
-#define TEXT_FONT_STYLES 3
-#define TEXT_FONT_STYLE_NORMAL  0
-#define TEXT_FONT_STYLE_ITALICS 1
-#define TEXT_FONT_STYLE_BOLD    2
+// Text strings can invoke the following commands, which
+// will be processed during rendering / texture generation.
+//
+//     <sn> - Change the size of the text that follows,
+//            where 'n' is the desired size.
+//
+//     <fn> - Change the font, where 'n' is the index in
+//            the parent typeface or font family.
+//
+//     <bn> - If 'n' = 1, bold the following characters
+//            in the GPU, otherwise do not bold them.
+//
+//     <in> - If 'n' = 1, italicize the following characters
+//            in the GPU, otherwise do not italicize them.
+//
+// Note that the '<' character can be escaped with a '\',
+// and that 'n' in each of these commands is encoded as a
+// character.
 
-// Whether or not the first byte of a character
-// is less than these values determines how many
-// bytes long it is.
-#define TEXT_CHARACTER_UTF8_1_BYTE_LIMIT 0x80
-#define TEXT_CHARACTER_UTF8_2_BYTE_LIMIT 0xE0
-#define TEXT_CHARACTER_UTF8_3_BYTE_LIMIT 0xF0
-#define TEXT_CHARACTER_UTF8_4_BYTE_LIMIT 0xF8
-
-// The n-1 bytes following the first byte of
-// an n-byte character must be less than 0xC0.
-#define TEXT_CHARACTER_UTF8_MULTIBYTE_LIMIT 0xC0
-
-typedef uint32_t txtCode;
+// Font types.
+#define TEXT_FONT_TYPE_BMP 0x00
+#define TEXT_FONT_TYPE_SDF 0x01
 
 typedef struct {
-	// The Unicode for the glyph.
-	txtCode code;
-	// Area in the texture map.
-	rectangle bounds;
-	// Physical dimensions of the glyph, in pixels.
-	// This may be smaller or larger than the area
-	// in the texture map for tightly packed or
+	// The Unicode code unit for the glyph.
+	txtCodeUnit_t code;
+	// Area in the font atlas.
+	rectangle frame;
+	// Kerning for the glyph.  This may be
+	// smaller or larger than the area in
+	// the texture for tightly packed or
 	// monospace fonts.
-	rectangle dimensions;
+	float kerningX;
+	float kerningY;
+	// How much to advance the cursor by.
+	float advanceX;
 } txtGlyph;
 
-/** Need to think of a new way of storing glyphs and fonts. **/
 typedef struct {
-	const texture *map;
-	txtGlyph *glyphs;
-	txtCode glyphNum;
-	// The height, in pixels, of the font.
-	float size;
-	flags_t style;
+	const texture *atlas;
+	// Array of glyphs.
+	// The first glyph should be the missing / invalid glyph.
+	const txtGlyph *glyphs;
+	// Maps code units to glyphs.
+	// Check the format to know what to cast it to.
+	const txtCMap *cmap;
+	// Line height. That is, how much to
+	// advance the cursor by on each new line.
+	float height;
+	// BMP or SDF.
+	flags_t type;
 } txtFont;
 
 typedef struct {
+	// Note: all styles must be of the same type.
+	// Doing otherwise may present problems
+	// during rendering.
 	txtFont *styles;
-	size_t styleNum;
 } txtTypeface;
 
 typedef struct {
@@ -62,11 +76,7 @@ typedef struct {
 	const txtTypeface *typeface;
 } txtBuffer;
 
-/** I don't really like these searches. Surely there's a better way? **/
-const txtGlyph *txtFontFindGlyph(const txtFont *const restrict font, const txtCode c);
-const txtFont *txtTypefaceFindFont(const txtTypeface *const restrict typeface, const flags_t style, const float size);
-
 return_t txtBufferNextCharacter(const txtBuffer *const restrict buffer, const byte_t **i);
-txtCode txtBufferParseCharacter(const txtBuffer *const restrict buffer, const byte_t **i, flags_t *const restrict style, float *const restrict size);
+uint32_t txtBufferParseCharacter(const txtBuffer *const restrict buffer, const byte_t **i, flags_t *const restrict style, float *const restrict size);
 
 #endif

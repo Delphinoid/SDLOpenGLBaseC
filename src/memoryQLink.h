@@ -2,6 +2,7 @@
 #define MEMORYQLINK_H
 
 #include "memoryShared.h"
+#include <stdint.h>
 
 // Quadruply-linked list allocator.
 //

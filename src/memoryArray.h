@@ -2,6 +2,7 @@
 #define MEMORYARRAY_H
 
 #include "memoryShared.h"
+#include <stdint.h>
 
 // Regular array allocator.
 //

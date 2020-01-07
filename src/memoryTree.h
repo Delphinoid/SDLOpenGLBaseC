@@ -2,6 +2,7 @@
 #define MEMORYTREE_H
 
 #include "memoryShared.h"
+#include <stdint.h>
 
 // General purpose allocator.
 //

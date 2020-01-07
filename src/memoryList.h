@@ -2,6 +2,7 @@
 #define MEMORYLIST_H
 
 #include "memoryShared.h"
+#include <stdint.h>
 
 // Free-list allocator.
 //

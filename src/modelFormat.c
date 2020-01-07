@@ -409,7 +409,8 @@ return_t mdlWavefrontObjLoad(const char *const restrict filePath, vertexIndex_t 
 					pos = uvIndex[i]<<1;
 					if(pos+1 < tempTexCoordsSize){
 						tempVert.u = tempTexCoords[pos];
-						tempVert.v = -tempTexCoords[pos+1];
+						// Handle OpenGL UV coordinate system.
+						tempVert.v = 1.f-tempTexCoords[pos+1];
 					}else{
 						tempVert.u = 0.f;
 						tempVert.v = 0.f;
@@ -756,7 +757,8 @@ return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **ver
 								tempVertex.normal.y = strtod(tokPos, &tokPos);
 								tempVertex.normal.z = strtod(tokPos, &tokPos);
 								tempVertex.u = strtod(tokPos, &tokPos);
-								tempVertex.v = -strtod(tokPos, &tokPos);
+								// Handle OpenGL UV coordinate system.
+								tempVertex.v = 1.f-strtod(tokPos, &tokPos);
 								size_t numLinks = strtoul(tokPos, &tokPos, 10);
 								//Make sure some links were specified.
 								if(numLinks > 0){

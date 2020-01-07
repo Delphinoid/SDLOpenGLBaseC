@@ -2,6 +2,7 @@
 #define MEMORYDLINK_H
 
 #include "memoryShared.h"
+#include <stdint.h>
 
 // Doubly-linked list allocator.
 //

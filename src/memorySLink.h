@@ -2,6 +2,7 @@
 #define MEMORYSLINK_H
 
 #include "memoryShared.h"
+#include <stdint.h>
 
 // Singly-linked list allocator.
 //

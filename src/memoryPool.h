@@ -2,6 +2,7 @@
 #define MEMORYPOOL_H
 
 #include "memoryShared.h"
+#include <stdint.h>
 
 // Object pool allocator.
 //

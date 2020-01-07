@@ -8,6 +8,8 @@
 
 #define GUI_WINDOW_STRETCH_BODY 0x01
 
+#define GUI_TEXT_WORD_WRAP 0x01
+
 // If no type is defined, defaults to renderable.
 #define GUI_ELEMENT_TYPE_TEXT       0x00
 #define GUI_ELEMENT_TYPE_WINDOW     0x01
@@ -30,9 +32,10 @@ typedef struct {
 
 typedef struct {
 	// Text buffer.
-	txtBuffer buffer;
+	///txtBuffer buffer;
 	// Text box boundaries.
 	rectangle bounds;
+	flags_t flags;
 } guiText;
 
 typedef struct guiElement guiElement;

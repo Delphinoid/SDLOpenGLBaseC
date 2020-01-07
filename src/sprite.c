@@ -152,22 +152,22 @@ return_t sprDefaultInit(){
 	vertexIndex_t indices[6];
 
 	vertices[0].position = vec3New(-0.5f, 0.5f, 0.f);
-	vertices[0].u = 0.f; vertices[0].v = -1.f;
+	vertices[0].u = 0.f; vertices[0].v = 0.f;
 	/**vertices[0].normal = vec3New(0.f, 1.f, 0.f);
 	vertices[0].bIDs[0] = 0; vertices[0].bIDs[1] = -1; vertices[0].bIDs[2] = -1; vertices[0].bIDs[3] = -1;
 	vertices[0].bWeights[0] = 1.f; vertices[0].bWeights[1] = 0.f; vertices[0].bWeights[2] = 0.f; vertices[0].bWeights[3] = 0.f;**/
 	vertices[1].position = vec3New(0.5f, 0.5f, 0.f);
-	vertices[1].u = 1.f; vertices[1].v = -1.f;
+	vertices[1].u = 1.f; vertices[1].v = 0.f;
 	/**vertices[1].normal = vec3New(0.f, 1.f, 0.f);
 	vertices[1].bIDs[0] = 0; vertices[1].bIDs[1] = -1; vertices[1].bIDs[2] = -1; vertices[1].bIDs[3] = -1;
 	vertices[1].bWeights[0] = 1.f; vertices[1].bWeights[1] = 0.f; vertices[1].bWeights[2] = 0.f; vertices[1].bWeights[3] = 0.f;**/
 	vertices[2].position = vec3New(-0.5f, -0.5f, 0.f);
-	vertices[2].u = 0.f; vertices[2].v = 0.f;
+	vertices[2].u = 0.f; vertices[2].v = 1.f;
 	/**vertices[2].normal = vec3New(0.f, 1.f, 0.f);
 	vertices[2].bIDs[0] = 0; vertices[2].bIDs[1] = -1; vertices[2].bIDs[2] = -1; vertices[2].bIDs[3] = -1;
 	vertices[2].bWeights[0] = 1.f; vertices[2].bWeights[1] = 0.f; vertices[2].bWeights[2] = 0.f; vertices[2].bWeights[3] = 0.f;**/
 	vertices[3].position = vec3New(0.5f, -0.5f, 0.f);
-	vertices[3].u = 1.f; vertices[3].v = 0.f;
+	vertices[3].u = 1.f; vertices[3].v = 1.f;
 	/**vertices[3].normal = vec3New(0.f, 1.f, 0.f);
 	vertices[3].bIDs[0] = 0; vertices[3].bIDs[1] = -1; vertices[3].bIDs[2] = -1; vertices[3].bIDs[3] = -1;
 	vertices[3].bWeights[0] = 1.f; vertices[3].bWeights[1] = 0.f; vertices[3].bWeights[2] = 0.f; vertices[3].bWeights[3] = 0.f;**/
