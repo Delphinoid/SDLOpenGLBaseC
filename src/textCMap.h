@@ -44,9 +44,9 @@ typedef struct {
 	// only needs to be 8-bit for our purposes.
 	// We also use a linear map for formats rather
 	// than powers of 2 for the jump table.
-	uint8_t format;
-	//uint16_t length;
-	//uint16_t language;
+	uint16_t format;
+	uint16_t length;
+	uint16_t language;
 } txtCMap;
 
 typedef struct {
@@ -60,9 +60,9 @@ typedef struct {
 	// only needs to be 8-bit for our purposes.
 	// We also use a linear map for formats rather
 	// than powers of 2 for the jump table.
-	uint8_t format;
-	//uint16_t length;
-	//uint16_t language;
+	uint16_t format;
+	uint16_t length;
+	uint16_t language;
 
 	// Simple 1:1 mapping from code units to glyph indices.
 	uint8_t glyphIdArray[TEXT_CMAP_FORMAT_0_CODEUNIT_LIMIT];
@@ -74,10 +74,13 @@ typedef struct {
 	// SubHeaders map the second byte of a 16-bit
 	// code unit to a glyph under cmap format 2.
 	//
-	// Each SubHeader defines a subrange; a sequence
+	// Each SubHeader defines a subrange: a sequence
 	// of adjacent code units all beginning with the
 	// same byte. As such, subranges stay within the
-	// [0, 255] range of the first (high) byte.
+	// [0, 255] range of the first (low) byte.
+	//
+	// Single byte code units will always be mapped to
+	// SubHeader 0.
 	//
 	// The offset of the desired code unit in the
 	// subrange is used as the index of a subarray in
@@ -91,12 +94,12 @@ typedef struct {
 	// This is 16-bit in the standard, but only needs to
 	// be 8-bit and store the second byte of the code unit.
 	// The first byte is used to index the SubHeader.
-	uint8_t firstCode;
+	uint16_t firstCode;
 	// The number of code units mapped in the subrange.
 	// In other words, the length of the subrange.
 	// This is 16-bit in the standard, but only needs to
 	// be 8-bit, as the maximum length is 255.
-	uint8_t entryCount;
+	uint16_t entryCount;
 	// If the value obtained from the subarray does
 	// not indicate a missing glyph, idDelta is added.
 	// This permits multiple subarrays to use the same
@@ -141,13 +144,13 @@ typedef struct {
 	// only needs to be 8-bit for our purposes.
 	// We also use a linear map for formats rather
 	// than powers of 2 for the jump table.
-	uint8_t format;
-	//uint16_t length;
-	//uint16_t language;
+	uint16_t format;
+	uint16_t length;
+	uint16_t language;
 
 	// Maps the first byte of a code unit to a SubHeader.
 	// Contains a byte offset of the corresponding
-	// SubHeader in subHeaders.
+	// SubHeader in subHeaders. Element 0 will always be 0.
 	uint16_t subHeaderKeys[256];
 	// SubHeaders map the second byte to a glyph.
 	// A second byte is not needed for SubHeader 0.
@@ -177,14 +180,14 @@ typedef struct {
 	// uint16_t *start = startCode;
 	// uint16_t *end = endCode;
 	// uint16_t *delta = idDelta;
-	// uint16_t *offset = idRangeOffset;
+	// uint16_t *rangeOffset = idRangeOffset;
 	// while(*end < c){
-	//      ++start; ++end; ++delta; ++offset;
+	//      ++start; ++end; ++delta; ++rangeOffset;
 	// }
 	// if(c <= *start){
 	//     glyph = glyphs[TEXT_CMAP_MISSING_GLYPH_ID];
 	// }else{
-	//     uint16_t glyphIndex = *((*offset >> 2) + (code - *start) + offset);
+	//     uint16_t glyphIndex = *((*rangeOffset >> 2) + (code - *start) + rangeOffset);
 	//     if(glyphIndex != TEXT_CMAP_MISSING_GLYPH_ID){
 	//         glyphIndex += *delta;
 	//     }
@@ -196,15 +199,15 @@ typedef struct {
 	// only needs to be 8-bit for our purposes.
 	// We also use a linear map for formats rather
 	// than powers of 2 for the jump table.
-	uint8_t format;
-	//uint16_t length;
-	//uint16_t language;
+	uint16_t format;
+	uint16_t length;
+	uint16_t language;
 
 	// These are totally useless and ignored.
-	//uint16_t segCountX2;
-	//uint16_t searchRange;
-	//uint16_t entrySelector;
-	//uint16_t rangeShift;
+	uint16_t segCountX2;
+	uint16_t searchRange;
+	uint16_t entrySelector;
+	uint16_t rangeShift;
 
 	// Array of start code units for each segment.
 	uint16_t *startCode;

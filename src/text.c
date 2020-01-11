@@ -84,3 +84,9 @@ uint32_t txtBufferParseCharacter(const txtBuffer *const restrict buffer, const b
 	return code._32;
 
 }
+
+void txtGlyphRender(const txtGlyph *const restrict glyph, flags_t *const restrict style, float *const restrict size){
+
+	//
+
+}

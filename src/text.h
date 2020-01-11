@@ -79,4 +79,6 @@ typedef struct {
 return_t txtBufferNextCharacter(const txtBuffer *const restrict buffer, const byte_t **i);
 uint32_t txtBufferParseCharacter(const txtBuffer *const restrict buffer, const byte_t **i, flags_t *const restrict style, float *const restrict size);
 
+void txtGlyphRender(const txtGlyph *const restrict glyph, flags_t *const restrict style, float *const restrict size);
+
 #endif

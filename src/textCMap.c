@@ -17,10 +17,10 @@ uint32_t txtCMapIndexFormat2(const txtCMap *const cmap, const txtCodeUnit_t code
 		return TEXT_CMAP_MISSING_GLYPH_ID;
 	}else{
 		// See textCMap.h for an explanation.
-		const txtCMap2 cmap2 = *((txtCMap2 *)cmap);
-		const txtCMap2SubHeader subHeader = cmap2.subHeaders[cmap2.subHeaderKeys[code.byte._1]];
-		const uint16_t *const subarray = (uint16_t *)(((byte_t *)cmap2.glyphIndexArray) + subHeader.idRangeOffset);
-		const uint8_t subarrayIndex = code.byte._2 - subHeader.firstCode;
+		const txtCMap2 *const cmap2 = (txtCMap2 *)cmap;
+		const txtCMap2SubHeader subHeader = *((txtCMap2SubHeader *)(((byte_t *)cmap2->subHeaders) + cmap2->subHeaderKeys[code.byte._2]));
+		const uint16_t *const subarray = (uint16_t *)(((byte_t *)cmap2->glyphIndexArray) + subHeader.idRangeOffset);
+		const uint16_t subarrayIndex = code._16 - subHeader.firstCode;  //const uint8_t subarrayIndex = code.byte._1 - subHeader.firstCode;
 		if(subarrayIndex >= subHeader.entryCount){
 			return TEXT_CMAP_MISSING_GLYPH_ID;
 		}else{
@@ -39,22 +39,27 @@ uint32_t txtCMapIndexFormat4(const txtCMap *const cmap, const txtCodeUnit_t code
 		return TEXT_CMAP_MISSING_GLYPH_ID;
 	}else{
 		// See textCMap.h for an explanation.
-		const txtCMap4 cmap4 = *((txtCMap4 *)cmap);
-		const uint16_t *start = cmap4.startCode;
-		const uint16_t *end = cmap4.endCode;
-		const int16_t *delta = cmap4.idDelta;
-		const uint16_t *offset = cmap4.idRangeOffset;
+		// This uses some weird pointer arithmetic tricks to reduce
+		// the number of increments each iteration in the while loop.
+		const txtCMap4 *const cmap4 = (txtCMap4 *)cmap;
+		uintptr_t offset = 0;
+		const uint16_t *end = cmap4->endCode;
 		while(*end < code._16){
-			 ++start; ++end; ++delta; ++offset;
+			 offset += sizeof(uint16_t);
+			 end = (uint16_t *)(((byte_t *)end) + offset);
 		}
-		if(code._16 <= *start){
-			return TEXT_CMAP_MISSING_GLYPH_ID;
-		}else{
-			uint16_t glyphIndex = *(((*offset) >> 2) + (code._16 - *start) + offset);
-			if(glyphIndex != TEXT_CMAP_MISSING_GLYPH_ID){
-				glyphIndex += *delta;
+		{
+			const uint16_t start = *((uint16_t *)(((byte_t *)cmap4->startCode) + offset));
+			if(code._16 <= start){
+				return TEXT_CMAP_MISSING_GLYPH_ID;
+			}else{
+				const uint16_t *const rangeOffset = (uint16_t *)(((byte_t *)cmap4->idRangeOffset) + offset);
+				uint16_t glyphIndex = *(((*rangeOffset) >> 2) + (code._16 - start) + rangeOffset);
+				if(glyphIndex != TEXT_CMAP_MISSING_GLYPH_ID){
+					glyphIndex += *((uint16_t *)(((byte_t *)cmap4->idDelta) + offset));
+				}
+				return glyphIndex;
 			}
-			return glyphIndex;
 		}
 	}
 }
