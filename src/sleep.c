@@ -30,14 +30,14 @@ __FORCE_INLINE__ void sleepm(const int ms){
 
 __FORCE_INLINE__ void sleep(const unsigned int s, const unsigned int us){
 	struct timeval tv = {.tv_sec = s, .tv_usec = us};
-	select(0, NULL, NULL, NULL, &tv);
+	select(0, 0, 0, 0, &tv);
 }
 
 __FORCE_INLINE__ void sleepc(const unsigned int us){
 	// Controlled sleep.
 	if(us <= SLEEP_MAXIMUM_CPU_TICK_US){
 		struct timeval tv = {.tv_sec = 0, .tv_usec = us};
-		select(0, NULL, NULL, NULL, &tv);
+		select(0, 0, 0, 0, &tv);
 	}
 }
 
@@ -47,7 +47,7 @@ __FORCE_INLINE__ void sleepm(const int ms){
 	if(mss >= 0){
 		const int ss = mss%1000;
 		struct timeval tv = {.tv_sec = ss, .tv_usec = (mss - ss*1000)*1000};
-		select(0, NULL, NULL, NULL, &tv);
+		select(0, 0, 0, 0, &tv);
 	}
 }
 

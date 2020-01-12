@@ -85,7 +85,7 @@ static void sprStateAttributes(){
 	glVertexAttribDivisor(6, 1);
 }
 
-return_t sprGenerateBuffers(mesh *const restrict spr, const vertexIndex_t vertexNum, const vertex *const restrict vertices, const vertexIndexNum_t indexNum, const vertexIndexNum_t *const restrict indices){
+return_t sprGenerateBuffers(mesh *const restrict spr, const vertexIndex_t vertexNum, const vertex *const restrict vertices, const vertexIndex_t indexNum, const vertexIndex_t *const restrict indices){
 
 	if(vertexNum > 0){
 		if(indexNum > 0){
@@ -110,7 +110,7 @@ return_t sprGenerateBuffers(mesh *const restrict spr, const vertexIndex_t vertex
 			// Create and bind the IBO.
 			glGenBuffers(1, &spr->iboID);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, spr->iboID);
-			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexNum*sizeof(vertexIndexNum_t), indices, GL_STATIC_DRAW);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexNum*sizeof(vertexIndex_t), indices, GL_STATIC_DRAW);
 			// Check for errors.
 			glError = glGetError();
 			if(glError != GL_NO_ERROR){

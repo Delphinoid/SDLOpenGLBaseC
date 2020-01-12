@@ -45,7 +45,7 @@ void rndrRender(const renderable *const restrict rndr, const skeleton *const res
 
 		if(alpha > 0.f){
 
-			vertexIndexNum_t indexNum;
+			vertexIndex_t indexNum;
 			const void *offset;
 
 			mat4 transform;

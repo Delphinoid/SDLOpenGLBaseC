@@ -11,8 +11,8 @@
 #define MODEL_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Models"FILE_PATH_DELIMITER_STRING
 #define MODEL_RESOURCE_DIRECTORY_LENGTH 17
 
-return_t mdlWavefrontObjLoad(const char *const restrict filePath, vertexIndex_t *const vertexNum, vertex **const vertices, vertexIndexNum_t *const restrict indexNum, vertexIndex_t **const indices, size_t *const restrict lodNum, mdlLOD **const lods, int *const restrict sprite, char *const restrict sklPath);
-return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndexNum_t *indexNum, vertexIndex_t **indices, skeleton *const skl);
+return_t mdlWavefrontObjLoad(const char *const restrict filePath, vertexIndex_t *const vertexNum, vertex **const vertices, vertexIndex_t *const restrict indexNum, vertexIndex_t **const indices, size_t *const restrict lodNum, mdlLOD **const lods, int *const restrict sprite, char *const restrict sklPath);
+return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndex_t *indexNum, vertexIndex_t **indices, skeleton *const skl);
 
 // Default models.
 model mdlDefault = {
@@ -68,7 +68,7 @@ return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, 
 
 	vertexIndex_t vertexNum;
 	vertex *vertices;
-	vertexIndexNum_t indexNum;
+	vertexIndex_t indexNum;
 	vertexIndex_t *indices;
 	size_t lodNum;
 	mdlLOD *lods;
@@ -177,7 +177,7 @@ void mdlBillboardInit(){
 	mdlBillboard.buffers = meshBillboard;
 }
 
-__FORCE_INLINE__ void mdlFindCurrentLOD(const model *const restrict mdl, vertexIndexNum_t *const restrict indexNum, const void **const restrict offset, const float distance, size_t bias){
+__FORCE_INLINE__ void mdlFindCurrentLOD(const model *const restrict mdl, vertexIndex_t *const restrict indexNum, const void **const restrict offset, const float distance, size_t bias){
 
 	if(mdl->lods == NULL){
 		*indexNum = mdl->buffers.indexNum;

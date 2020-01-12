@@ -43,7 +43,7 @@
 		memFree(tempBoneWeights); \
 	}
 
-return_t mdlWavefrontObjLoad(const char *const restrict filePath, vertexIndex_t *const restrict vertexNum, vertex **const vertices, vertexIndexNum_t *const restrict indexNum, size_t **const indices, size_t *const restrict lodNum, mdlLOD **const lods, int *const restrict sprite, char *const restrict sklPath){
+return_t mdlWavefrontObjLoad(const char *const restrict filePath, vertexIndex_t *const restrict vertexNum, vertex **const vertices, vertexIndex_t *const restrict indexNum, vertexIndex_t **const indices, size_t *const restrict lodNum, mdlLOD **const lods, int *const restrict sprite, char *const restrict sklPath){
 
 	FILE *const restrict mdlInfo = fopen(filePath, "r");
 
@@ -578,7 +578,7 @@ return_t mdlWavefrontObjLoad(const char *const restrict filePath, vertexIndex_t 
 #define mdlSMDFreeHelpers() \
 	sklDelete(skl);
 
-return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndexNum_t *indexNum, size_t **indices, skeleton *const skl){
+return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndex_t *indexNum, vertexIndex_t **indices, skeleton *const skl){
 	// Temporary function by 8426THMY.
 	//Load the textureGroup!
 	FILE *mdlFile = fopen(filePath, "r");
@@ -898,6 +898,10 @@ return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **ver
 		       "Path: %s\n", filePath);
 		return 0;
 	}
+int i;FILE *kool = fopen("/home/danny/Documents/blah3.txt", "w");
+		for(i = 0; i < *indexNum; i+=3){
+			fprintf(kool,"%u %u %u\n", (*indices)[i], (*indices)[i+1], (*indices)[i+2]);
+		}
 
 	return 1;
 }

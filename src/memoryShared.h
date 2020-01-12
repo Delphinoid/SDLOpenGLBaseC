@@ -19,9 +19,15 @@ typedef signed char   signed_byte_t;
 
 typedef byte_t padding_t;
 
+#ifndef MEMORY_ALLOCATOR_USE_MALLOC
 void *memHeapLowLevelAllocate(const size_t bytes);
 void *memHeapLowLevelReallocate(void *const restrict block, const size_t bytes);
 int memHeapLowLevelFree(void *const restrict block);
+#else
+#define memHeapLowLevelAllocate(bytes) malloc(bytes)
+#define memHeapLowLevelReallocate(block, bytes) realloc(bytes)
+#define memHeapLowLevelFree(block) free(block)
+#endif
 
 // Defines the region in memory that an
 // allocator consumes. The end of the

@@ -210,7 +210,7 @@ return_t particleSystemTick(particleSystem *const restrict system, const float e
 void particleSystemRender(const particleSystem *const restrict system, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const float interpT){
 
 	const renderableBase *const rndr = &system->base->properties.rndr;
-	vertexIndexNum_t indexNum;
+	vertexIndex_t indexNum;
 	const void *offset;
 
 	particle *p = system->particles;

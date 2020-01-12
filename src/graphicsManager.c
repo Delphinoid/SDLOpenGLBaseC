@@ -241,6 +241,9 @@ __FORCE_INLINE__ void gfxMngrBindTexture(graphicsManager *const restrict gfxMngr
 
 void gfxMngrDestroyProgram(graphicsManager *const restrict gfxMngr){
 
+	shdrPrgDelete(&gfxMngr->shdrPrgObj);
+	shdrPrgDelete(&gfxMngr->shdrPrgSpr);
+
 	IMG_Quit();
 	Mix_Quit();
 
@@ -248,8 +251,5 @@ void gfxMngrDestroyProgram(graphicsManager *const restrict gfxMngr){
 	SDL_GL_DeleteContext(gfxMngr->context);
 	SDL_DestroyWindow(gfxMngr->window);
 	SDL_Quit();
-
-	shdrPrgDelete(&gfxMngr->shdrPrgObj);
-	shdrPrgDelete(&gfxMngr->shdrPrgSpr);
 
 }

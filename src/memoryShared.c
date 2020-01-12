@@ -9,6 +9,7 @@
 	#include <unistd.h>
 #endif
 
+#ifndef MEMORY_ALLOCATOR_USE_MALLOC
 void *memHeapLowLevelAllocate(const size_t bytes){
 #ifdef _WIN32
 	return HeapAlloc(GetProcessHeap(), 0x01, bytes);
@@ -35,6 +36,7 @@ int memHeapLowLevelFree(void *const restrict block){
 	return brk(block);
 #endif
 }
+#endif
 
 #define memRegionAppendMacro(first, region) \
 	while(*first != NULL){ \
