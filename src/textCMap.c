@@ -57,11 +57,8 @@ uint32_t txtCMapIndexFormat4(const txtCMap *const cmap, const txtCodeUnit_t code
 		// the number of increments each iteration in the while loop.
 		const uint16_t *end = txtCMapFormat4GetEndCodes(cmap);
 		uint16_t start;
-		uintptr_t offset = 0;
-		while(*end < code._16){
-			 offset += sizeof(uint16_t);
-			 end = (uint16_t *)(((byte_t *)end) + offset);
-		}
+		uintptr_t offset;
+		for(offset = 0; *end < code._16; ++end, offset += sizeof(uint16_t));
 		start = *txtCMapFormat4GetStartCode(cmap, offset);
 		if(code._16 > start){
 			const uint16_t *const rangeOffset = txtCMapFormat4GetRangeOffset(cmap, offset);
