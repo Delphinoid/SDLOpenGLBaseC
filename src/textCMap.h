@@ -152,12 +152,18 @@ typedef struct {
 	// Contains a byte offset of the corresponding
 	// SubHeader in subHeaders. Element 0 will always be 0.
 	uint16_t subHeaderKeys[256];
+
 	// SubHeaders map the second byte to a glyph.
 	// A second byte is not needed for SubHeader 0.
-	txtCMap2SubHeader *subHeaders;
+	//txtCMap2SubHeader *subHeaders;
 	// This array sits in the area of memory directly
 	// following that used by all of the SubHeaders.
-	uint16_t *glyphIndexArray;
+	//uint16_t *glyphIndexArray;
+
+	// First element of subHeaders. The other elements and
+	// glyphIndexArray are stored directly after this in
+	// memory.
+	uint16_t data;
 
 } txtCMap2;
 
@@ -203,30 +209,36 @@ typedef struct {
 	uint16_t length;
 	uint16_t language;
 
-	// These are totally useless and ignored.
+	// Allows convenient indexing of segment arrays.
 	uint16_t segCountX2;
+	// These are totally useless and ignored.
 	uint16_t searchRange;
 	uint16_t entrySelector;
 	uint16_t rangeShift;
 
 	// Array of start code units for each segment.
-	uint16_t *startCode;
+	//uint16_t *startCode;
 	// Array of end code units for each segment.
 	// Because of how segments are sorted, these will
 	// be in increasing order.
 	// This array also has an extra element at the end
 	// containing 0xFFFF, for loop termination.
-	uint16_t *endCode;
+	//uint16_t *endCode;
 	// Array of deltas for each segment. These serve
 	// the same purpose as the SubHeader deltas.
-	int16_t *idDelta;
+	//int16_t *idDelta;
 	// Array of range offsets for each segment. Again,
 	// these serve a similar purpose to the SubHeader
 	// range offsets.
-	uint16_t *idRangeOffset;
+	//uint16_t *idRangeOffset;
 	// This array sits in the area of memory directly
 	// following that used by the idRangeOffset array.
-	uint16_t *glyphIdArray;
+	//uint16_t *glyphIdArray;
+
+	// First element of startCode. The other elements and
+	// all of the other arrays are stored directly after
+	// this in memory.
+	uint16_t data;
 
 } txtCMap4;
 
