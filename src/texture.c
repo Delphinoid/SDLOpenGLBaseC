@@ -17,7 +17,7 @@
 #define TEXTURE_RESOURCE_DIRECTORY_LENGTH 19
 
 // Default texture.
-texture tDefault = {
+texture g_tDefault = {
 	.diffuseID = 0,
 	.normalID = 0,
 	.specularID = 0,
@@ -353,10 +353,10 @@ return_t tDefaultInit(){
 		}
 	}
 
-	tDefault.diffuseID = tCreate();
+	g_tDefault.diffuseID = tCreate();
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 	glGenerateMipmap(GL_TEXTURE_2D);
-	tInitParameters(tDefault.filtering, tDefault.mips);
+	tInitParameters(g_tDefault.filtering, g_tDefault.mips);
 
 	glError = glGetError();
 	if(glError != GL_NO_ERROR){
@@ -381,7 +381,7 @@ void tDelete(texture *const restrict tex){
 		glDeleteTextures(1, &tex->specularID);
 		tex->specularID = 0;
 	}
-	if(tex->name != NULL && tex->name != tDefault.name){
+	if(tex->name != NULL && tex->name != g_tDefault.name){
 		memFree(tex->name);
 	}
 }

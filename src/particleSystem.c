@@ -229,10 +229,10 @@ void particleSystemRender(const particleSystem *const restrict system, graphicsM
 	glBindVertexArray(rndr->mdl->buffers.vaoID);
 
 	// Upload the state data to the shader.
-	glBindBuffer(GL_ARRAY_BUFFER, sprStateBufferID);
+	glBindBuffer(GL_ARRAY_BUFFER, g_sprStateBufferID);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, system->particleNum*sizeof(spriteState), &gfxMngr->shdrData.spriteTransformState[0]);
 
-	// Render the model.
+	// Render the system.
 	mdlFindCurrentLOD(rndr->mdl, &indexNum, &offset, distance, gfxMngr->shdrData.biasLOD);
 	if(indexNum){
 		glDrawElementsInstanced(GL_TRIANGLES, indexNum, GL_UNSIGNED_INT, offset, system->particleNum);

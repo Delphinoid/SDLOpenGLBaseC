@@ -14,13 +14,13 @@ void boneInit(bone *const restrict b);
 bone boneIdentity();
 mat4 boneMatrix(const bone b);
 
-bone boneNegate(const bone b);
-void boneNegateP(bone *const restrict b);
-void boneNegatePR(const bone *const restrict b, bone *const restrict r);
-
 bone boneInvert(const bone b);
 void boneInvertP(bone *const restrict b);
 void boneInvertPR(const bone *const restrict b, bone *const restrict r);
+
+bone boneInvertFast(const bone b);
+void boneInvertFastP(bone *const restrict b);
+void boneInvertFastPR(const bone *const restrict b, bone *const restrict r);
 
 bone boneInterpolate(const bone b1, const bone b2, const float t);
 void boneInterpolateP1(bone *const restrict b1, const bone *const restrict b2, const float t);

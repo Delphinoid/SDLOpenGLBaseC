@@ -49,7 +49,7 @@ typedef struct texture {
 
 } texture;
 
-extern texture tDefault;
+extern texture g_tDefault;
 
 void tInit(texture *const restrict tex);
 return_t tLoad(texture *const restrict tex, const char *const restrict prgPath, const char *const restrict filePath);

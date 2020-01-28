@@ -16,13 +16,13 @@
 #define RESOURCE_DEFAULT_AABB_NODE_NUM RESOURCE_DEFAULT_RIGID_BODY_NUM
 
 // Forward declarations for inlining.
-extern memorySLink __PhysicsRigidBodyBaseResourceArray;   // Contains physRigidBodyBases.
-extern memorySLink __PhysicsRigidBodyResourceArray;       // Contains physRigidBodies.
-extern memorySLink __PhysicsColliderResourceArray;        // Contains physColliders.
-extern memoryQLink __PhysicsJointResourceArray;           // Contains physJoints.
-extern memoryQLink __PhysicsContactPairResourceArray;     // Contains physContactPairs.
-extern memoryQLink __PhysicsSeparationPairResourceArray;  // Contains physSeparationPairs.
-extern memoryList  __PhysicsAABBNodeResourceArray;        // Contains aabbNodes.
+extern memorySLink __g_PhysicsRigidBodyBaseResourceArray;   // Contains physRigidBodyBases.
+extern memorySLink __g_PhysicsRigidBodyResourceArray;       // Contains physRigidBodies.
+extern memorySLink __g_PhysicsColliderResourceArray;        // Contains physColliders.
+extern memoryQLink __g_PhysicsJointResourceArray;           // Contains physJoints.
+extern memoryQLink __g_PhysicsContactPairResourceArray;     // Contains physContactPairs.
+extern memoryQLink __g_PhysicsSeparationPairResourceArray;  // Contains physSeparationPairs.
+extern memoryList  __g_PhysicsAABBNodeResourceArray;        // Contains aabbNodes.
 
 typedef struct physRigidBodyBase physRigidBodyBase;
 typedef struct physRigidBody physRigidBody;

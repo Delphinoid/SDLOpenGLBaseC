@@ -10,7 +10,7 @@
 #define RESOURCE_MODEL_CONSTANTS 2
 
 // Forward declaration for inlining.
-extern memoryPool __ModelResourceArray;  // Contains models.
+extern memoryPool __g_ModelResourceArray;  // Contains models.
 
 typedef struct model model;
 

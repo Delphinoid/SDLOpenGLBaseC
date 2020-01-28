@@ -25,9 +25,23 @@
 // and that 'n' in each of these commands is encoded as a
 // character.
 
+// Maximum value for an unsigned 32-bit integer.
+#define TEXT_UTF8_INVALID_CODEUNIT ((uint32_t)-1)
+
 // Font types.
 #define TEXT_FONT_TYPE_BMP 0x00
 #define TEXT_FONT_TYPE_SDF 0x01
+
+// Format flags.
+#define TEXT_FORMAT_FONT_UPDATED  0x01
+#define TEXT_FORMAT_SIZE_UPDATED  0x02
+#define TEXT_FORMAT_STYLE_UPDATED 0x04
+#define TEXT_FORMAT_UPDATED       0x07
+
+typedef struct {
+	float x;
+	float y;
+} txtCursor;
 
 typedef struct {
 	// The Unicode code unit for the glyph.
@@ -54,31 +68,36 @@ typedef struct {
 	const txtCMap *cmap;
 	// Line height. That is, how much to
 	// advance the cursor by on each new line.
+	// The maximum height value of each font
+	// in a line is taken to be advanceY.
 	float height;
 	// BMP or SDF.
 	flags_t type;
 } txtFont;
 
 typedef struct {
-	// Note: all styles must be of the same type.
-	// Doing otherwise may present problems
-	// during rendering.
 	txtFont *styles;
 } txtTypeface;
 
 typedef struct {
+	size_t font;
+	float size;
+	flags_t style;
+} txtFormat;
+
+typedef struct {
 	// Where to start reading text from.
 	byte_t *offset;
-	// Buffer beginning and end.
+	// Stream beginning and end.
 	byte_t *front;
 	byte_t *back;
 	// Typeface information.
 	const txtTypeface *typeface;
-} txtBuffer;
+} txtStream;
 
-return_t txtBufferNextCharacter(const txtBuffer *const restrict buffer, const byte_t **i);
-uint32_t txtBufferParseCharacter(const txtBuffer *const restrict buffer, const byte_t **i, flags_t *const restrict style, float *const restrict size);
+return_t txtStreamNextCharacter(const txtStream *const restrict stream, const byte_t **i);
+uint32_t txtStreamParseCharacter(const txtStream *const restrict stream, const byte_t **i, txtFormat *const restrict format);
 
-void txtGlyphRender(const txtGlyph *const restrict glyph, flags_t *const restrict style, float *const restrict size);
+return_t txtCursorAdvance(txtCursor *const restrict cursor, const float advanceX, const float advanceY, const float boxWidth);
 
 #endif

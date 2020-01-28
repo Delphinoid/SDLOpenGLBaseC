@@ -88,7 +88,7 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 								return -1;
 							}
 							printf("Error loading object \"%s\": Skeleton \"%s\" at line %u does not exist.\n", fullPath, &loadPath[0], currentLine);
-							base->skl = &sklDefault;
+							base->skl = &g_sklDefault;
 						}else{
 							base->skl = tempSkl;
 						}
@@ -288,7 +288,7 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 					// Use the default model if no model was loaded.
 					if(rndr.mdl == NULL){
 						printf("Error loading object \"%s\": Model \"%s\" at line %u does not exist.\n", fullPath, &loadPath[0], currentLine);
-						rndr.mdl = &mdlDefault;
+						rndr.mdl = &g_mdlDefault;
 					}
 
 					if(texPathLength > 0){
@@ -338,18 +338,18 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 						// Use the default texture wrapper if no texture wrapper was loaded.
 						if(rndr.tw == NULL){
 							printf("Error loading object \"%s\": Texture wrapper \"%s\" at line %u does not exist.\n", fullPath, &loadPath[0], currentLine);
-							rndr.tw = &twDefault;
+							rndr.tw = &g_twDefault;
 						}
 
 					}else{
 						printf("Error loading object \"%s\": Could not parse texture wrapper for renderable at line %u.\n", fullPath, currentLine);
-						rndr.tw = &twDefault;
+						rndr.tw = &g_twDefault;
 					}
 
 				}else{
 					printf("Error loading object \"%s\": Could not parse model for renderable at line %u.\n", fullPath, currentLine);
-					rndr.mdl = &mdlDefault;
-					rndr.tw = &twDefault;
+					rndr.mdl = &g_mdlDefault;
+					rndr.tw = &g_twDefault;
 				}
 
 				// Add the renderable.
@@ -376,7 +376,7 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 	// If no skeleton was loaded, load the default one.
 	if(base->skl == NULL){
 		//printf("Error loading object: No skeleton was loaded.\n");
-		base->skl = &sklDefault;
+		base->skl = &g_sklDefault;
 	}
 
 	// If no renderables were loaded, load the default one.
@@ -388,8 +388,8 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 			objBaseDelete(base);
 			return -1;
 		}
-		base->renderables->mdl = &mdlDefault;
-		base->renderables->tw = &twDefault;
+		base->renderables->mdl = &g_mdlDefault;
+		base->renderables->tw = &g_twDefault;
 	}
 
 	// Generate a name based off the file path.

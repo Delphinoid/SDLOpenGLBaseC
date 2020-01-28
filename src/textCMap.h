@@ -4,9 +4,6 @@
 #include "memoryShared.h"
 #include <stdint.h>
 
-// Maximum value for an unsigned 32-bit integer.
-#define TEXT_CMAP_INVALID_CODEUNIT_ID 4294967295
-
 // Standard missing glyph ID.
 #define TEXT_CMAP_MISSING_GLYPH_ID 0
 

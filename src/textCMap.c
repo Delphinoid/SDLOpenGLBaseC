@@ -30,7 +30,7 @@ uint32_t txtCMapIndexFormat0(const txtCMap *const cmap, const txtCodeUnit_t code
 		return TEXT_CMAP_MISSING_GLYPH_ID;
 	}
 	// See textCMap.h for an explanation.
-	return ((txtCMap0 *)cmap)->glyphIdArray[code._8];
+	return (uint32_t)((txtCMap0 *)cmap)->glyphIdArray[code._8];
 }
 
 uint32_t txtCMapIndexFormat2(const txtCMap *const cmap, const txtCodeUnit_t code){

@@ -346,7 +346,7 @@ int main(int argc, char **argv){
 	gEl.data.window.offsets[6].x = 0.f; gEl.data.window.offsets[6].y = 2.f/5.f; gEl.data.window.offsets[6].w = 1.f; gEl.data.window.offsets[6].h = 1.f/5.f;
 	gEl.data.window.offsets[7].x = 0.f; gEl.data.window.offsets[7].y = 3.f/5.f; gEl.data.window.offsets[7].w = 1.f; gEl.data.window.offsets[7].h = 1.f/5.f;
 
-	particleBase a; particleBaseInit(&a); a.rndr.mdl = &mdlSprite; a.rndr.tw = &twDefault;
+	particleBase a; particleBaseInit(&a); a.rndr.mdl = &g_mdlSprite; a.rndr.tw = &g_twDefault;
 	particleSystemBase b; particleSystemBaseInit(&b); b.properties = a;
 	b.initializers = memAllocate(sizeof(particleInitializer));
 	b.initializers->func = &particleInitializerSphereRandom;

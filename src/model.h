@@ -33,9 +33,9 @@ typedef struct model {
 
 } model;
 
-extern model mdlDefault;
-extern model mdlSprite;
-extern model mdlBillboard;
+extern model g_mdlDefault;
+extern model g_mdlSprite;
+extern model g_mdlBillboard;
 
 void mdlInit(model *const restrict mdl);
 return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, const char *const restrict filePath);

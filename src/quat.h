@@ -118,6 +118,11 @@ void quatSlerpP1(quat *const restrict q1, const quat *const restrict q2, const f
 void quatSlerpP2(const quat *const restrict q1, quat *const restrict q2, const float t);
 void quatSlerpPR(const quat *const restrict q1, const quat *const restrict q2, const float t, quat *const restrict r);
 
+quat quatSlerpFast(const quat q1, const quat q2, const float t);
+void quatSlerpFastP1(quat *const restrict q1, const quat *const restrict q2, const float t);
+void quatSlerpFastP2(const quat *const restrict q1, quat *const restrict q2, const float t);
+void quatSlerpFastPR(const quat *const restrict q1, const quat *const restrict q2, const float t, quat *const restrict r);
+
 quat quatDifferentiate(const quat q, const vec3 w);
 void quatDifferentiateP(quat *const restrict q, const vec3 *const restrict w);
 void quatDifferentiatePR(const quat *const restrict q, const vec3 *const restrict w, quat *const restrict r);

@@ -8,8 +8,8 @@
 #define RESOURCE_DEFAULT_RENDERABLE_NUM 4096
 
 // Forward declarations for inlining.
-extern memorySLink __RenderableBaseResourceArray;  // Contains renderable.
-extern memorySLink __RenderableResourceArray;      // Contains rndrInstances.
+extern memorySLink __g_RenderableBaseResourceArray;  // Contains renderable.
+extern memorySLink __g_RenderableResourceArray;      // Contains rndrInstances.
 
 typedef struct renderableBase renderableBase;
 typedef struct renderable renderable;

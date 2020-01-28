@@ -9,7 +9,7 @@
 #define RESOURCE_DEFAULT_MODEL_SIZE sizeof(model)
 #define RESOURCE_MODEL_BLOCK_SIZE memPoolBlockSize(sizeof(model))
 
-memoryPool __ModelResourceArray;  // Contains models.
+memoryPool __g_ModelResourceArray;  // Contains models.
 
 return_t moduleModelResourcesInit(){
 	void *memory;
@@ -24,7 +24,7 @@ return_t moduleModelResourcesInit(){
 			RESOURCE_DEFAULT_MODEL_NUM
 		)
 	);
-	if(memPoolCreate(&__ModelResourceArray, memory, RESOURCE_DEFAULT_MODEL_SIZE, RESOURCE_DEFAULT_MODEL_NUM) == NULL){
+	if(memPoolCreate(&__g_ModelResourceArray, memory, RESOURCE_DEFAULT_MODEL_SIZE, RESOURCE_DEFAULT_MODEL_NUM) == NULL){
 		return -1;
 	}
 	return 1;
@@ -32,31 +32,31 @@ return_t moduleModelResourcesInit(){
 void moduleModelResourcesReset(){
 	memoryRegion *region;
 	moduleModelClear();
-	region = __ModelResourceArray.region->next;
+	region = __g_ModelResourceArray.region->next;
 	while(region != NULL){
 		memoryRegion *next = memAllocatorNext(region);
 		memFree(region->start);
 		region = next;
 	}
-	__ModelResourceArray.region->next = NULL;
+	__g_ModelResourceArray.region->next = NULL;
 }
 void moduleModelResourcesDelete(){
 	memoryRegion *region;
 	moduleModelClear();
-	region = __ModelResourceArray.region;
+	region = __g_ModelResourceArray.region;
 	while(region != NULL){
 		memoryRegion *next = memAllocatorNext(region);
 		memFree(region->start);
 		region = next;
 	}
-	mdlDelete(&mdlDefault);
-	mdlDelete(&mdlSprite);
-	mdlDelete(&mdlBillboard);
+	mdlDelete(&g_mdlDefault);
+	mdlDelete(&g_mdlSprite);
+	mdlDelete(&g_mdlBillboard);
 	sprDeleteStateBuffer();
 }
 
 __HINT_INLINE__ model *moduleModelAllocateStatic(){
-	return memPoolAllocate(&__ModelResourceArray);
+	return memPoolAllocate(&__g_ModelResourceArray);
 }
 __HINT_INLINE__ model *moduleModelAllocate(){
 	model *r = moduleModelAllocateStatic();
@@ -69,7 +69,7 @@ __HINT_INLINE__ model *moduleModelAllocate(){
 				RESOURCE_DEFAULT_MODEL_NUM
 			)
 		);
-		if(memPoolExtend(&__ModelResourceArray, memory, RESOURCE_DEFAULT_MODEL_SIZE, RESOURCE_DEFAULT_MODEL_NUM)){
+		if(memPoolExtend(&__g_ModelResourceArray, memory, RESOURCE_DEFAULT_MODEL_SIZE, RESOURCE_DEFAULT_MODEL_NUM)){
 			r = moduleModelAllocateStatic();
 		}
 	}
@@ -77,31 +77,31 @@ __HINT_INLINE__ model *moduleModelAllocate(){
 }
 __HINT_INLINE__ void moduleModelFree(model *const restrict resource){
 	mdlDelete(resource);
-	memPoolFree(&__ModelResourceArray, (void *)resource);
+	memPoolFree(&__g_ModelResourceArray, (void *)resource);
 }
 model *moduleModelFind(const char *const restrict name){
 
-	if(strcmp(name, mdlDefault.name) == 0){
-		return &mdlDefault;
-	}else if(strcmp(name, mdlSprite.name) == 0){
-		return &mdlSprite;
+	if(strcmp(name, g_mdlDefault.name) == 0){
+		return &g_mdlDefault;
+	}else if(strcmp(name, g_mdlSprite.name) == 0){
+		return &g_mdlSprite;
 	}
 
-	MEMORY_POOL_LOOP_BEGIN(__ModelResourceArray, i, model *);
+	MEMORY_POOL_LOOP_BEGIN(__g_ModelResourceArray, i, model *);
 
 		// Compare the resources' names.
 		if(strcmp(name, i->name) == 0){
 			return i;
 		}
 
-	MEMORY_POOL_LOOP_END(__ModelResourceArray, i, return NULL;);
+	MEMORY_POOL_LOOP_END(__g_ModelResourceArray, i, return NULL;);
 
 	return NULL;
 
 }
 void moduleModelClear(){
 
-	MEMORY_POOL_LOOP_BEGIN(__ModelResourceArray, i, model *);
+	MEMORY_POOL_LOOP_BEGIN(__g_ModelResourceArray, i, model *);
 
 		moduleModelFree(i);
 		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
@@ -110,6 +110,6 @@ void moduleModelClear(){
 
 		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
 
-	MEMORY_POOL_LOOP_END(__ModelResourceArray, i, return;);
+	MEMORY_POOL_LOOP_END(__g_ModelResourceArray, i, return;);
 
 }

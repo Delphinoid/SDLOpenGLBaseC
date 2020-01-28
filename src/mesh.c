@@ -5,14 +5,14 @@
 #include <stdio.h>
 
 // Default meshes.
-mesh meshDefault = {
+mesh g_meshDefault = {
 	.vertexNum = 0,
 	.indexNum = 0,
 	.vaoID = 0,
 	.vboID = 0,
 	.iboID = 0
 };
-mesh meshBillboard = {
+mesh g_meshBillboard = {
 	.vertexNum = 0,
 	.indexNum = 0,
 	.vaoID = 0,
@@ -273,7 +273,7 @@ return_t meshDefaultInit(){
 	indices[34] = 21;
 	indices[35] = 23;
 
-	if(meshGenerateBuffers(&meshDefault, 24, vertices, 36, indices) <= 0){
+	if(meshGenerateBuffers(&g_meshDefault, 24, vertices, 36, indices) <= 0){
 		return 0;
 	}
 
@@ -354,7 +354,7 @@ return_t meshBillboardInit(){
 	indices[4] = 3;
 	indices[5] = 1;
 
-	if(meshGenerateBuffers(&meshBillboard, 4, vertices, 6, indices) <= 0){
+	if(meshGenerateBuffers(&g_meshBillboard, 4, vertices, 6, indices) <= 0){
 		return 0;
 	}
 

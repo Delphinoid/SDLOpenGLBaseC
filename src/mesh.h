@@ -23,9 +23,9 @@ typedef struct {
 	vertexIndex_t indexNum;
 } mesh;
 
-extern mesh meshDefault;
-extern mesh meshSprite;
-extern mesh meshBillboard;
+extern mesh g_meshDefault;
+extern mesh g_meshSprite;
+extern mesh g_meshBillboard;
 
 return_t meshDefaultInit();
 return_t meshBillboardInit();

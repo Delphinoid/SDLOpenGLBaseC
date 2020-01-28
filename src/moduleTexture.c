@@ -8,7 +8,7 @@
 #define RESOURCE_DEFAULT_TEXTURE_SIZE sizeof(texture)
 #define RESOURCE_TEXTURE_BLOCK_SIZE memPoolBlockSize(sizeof(texture))
 
-memoryPool __TextureResourceArray;  // Contains textures.
+memoryPool __g_TextureResourceArray;  // Contains textures.
 
 return_t moduleTextureResourcesInit(){
 	void *memory;
@@ -22,7 +22,7 @@ return_t moduleTextureResourcesInit(){
 			RESOURCE_DEFAULT_TEXTURE_NUM
 		)
 	);
-	if(memPoolCreate(&__TextureResourceArray, memory, RESOURCE_DEFAULT_TEXTURE_SIZE, RESOURCE_DEFAULT_TEXTURE_NUM) == NULL){
+	if(memPoolCreate(&__g_TextureResourceArray, memory, RESOURCE_DEFAULT_TEXTURE_SIZE, RESOURCE_DEFAULT_TEXTURE_NUM) == NULL){
 		return -1;
 	}
 	return 1;
@@ -30,31 +30,31 @@ return_t moduleTextureResourcesInit(){
 void moduleTextureResourcesReset(){
 	memoryRegion *region;
 	moduleTextureClear();
-	region = __TextureResourceArray.region->next;
+	region = __g_TextureResourceArray.region->next;
 	while(region != NULL){
 		memoryRegion *next = memAllocatorNext(region);
 		memFree(region->start);
 		region = next;
 	}
-	__TextureResourceArray.region->next = NULL;
+	__g_TextureResourceArray.region->next = NULL;
 }
 void moduleTextureResourcesDelete(){
 	memoryRegion *region;
 	moduleTextureClear();
-	region = __TextureResourceArray.region;
+	region = __g_TextureResourceArray.region;
 	while(region != NULL){
 		memoryRegion *next = memAllocatorNext(region);
 		memFree(region->start);
 		region = next;
 	}
-	tDelete(&tDefault);
+	tDelete(&g_tDefault);
 }
 
 __HINT_INLINE__ texture *moduleTextureAllocateStatic(){
-	return memPoolAllocate(&__TextureResourceArray);
+	return memPoolAllocate(&__g_TextureResourceArray);
 }
 __HINT_INLINE__ texture *moduleTextureAllocate(){
-	texture *r = memPoolAllocate(&__TextureResourceArray);
+	texture *r = memPoolAllocate(&__g_TextureResourceArray);
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
@@ -64,37 +64,37 @@ __HINT_INLINE__ texture *moduleTextureAllocate(){
 				RESOURCE_DEFAULT_TEXTURE_NUM
 			)
 		);
-		if(memPoolExtend(&__TextureResourceArray, memory, RESOURCE_DEFAULT_TEXTURE_SIZE, RESOURCE_DEFAULT_TEXTURE_NUM)){
-			r = memPoolAllocate(&__TextureResourceArray);
+		if(memPoolExtend(&__g_TextureResourceArray, memory, RESOURCE_DEFAULT_TEXTURE_SIZE, RESOURCE_DEFAULT_TEXTURE_NUM)){
+			r = memPoolAllocate(&__g_TextureResourceArray);
 		}
 	}
 	return r;
 }
 __HINT_INLINE__ void moduleTextureFree(texture *const restrict resource){
 	tDelete(resource);
-	memPoolFree(&__TextureResourceArray, (void *)resource);
+	memPoolFree(&__g_TextureResourceArray, (void *)resource);
 }
 texture *moduleTextureFind(const char *const restrict name){
 
-	if(strcmp(name, tDefault.name) == 0){
-		return &tDefault;
+	if(strcmp(name, g_tDefault.name) == 0){
+		return &g_tDefault;
 	}
 
-	MEMORY_POOL_LOOP_BEGIN(__TextureResourceArray, i, texture *);
+	MEMORY_POOL_LOOP_BEGIN(__g_TextureResourceArray, i, texture *);
 
 		// Compare the resources' names.
 		if(strcmp(name, i->name) == 0){
 			return i;
 		}
 
-	MEMORY_POOL_LOOP_END(__TextureResourceArray, i, return NULL;);
+	MEMORY_POOL_LOOP_END(__g_TextureResourceArray, i, return NULL;);
 
 	return NULL;
 
 }
 void moduleTextureClear(){
 
-	MEMORY_POOL_LOOP_BEGIN(__TextureResourceArray, i, texture *);
+	MEMORY_POOL_LOOP_BEGIN(__g_TextureResourceArray, i, texture *);
 
 		moduleTextureFree(i);
 		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
@@ -103,6 +103,6 @@ void moduleTextureClear(){
 
 		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
 
-	MEMORY_POOL_LOOP_END(__TextureResourceArray, i, return;);
+	MEMORY_POOL_LOOP_END(__g_TextureResourceArray, i, return;);
 
 }

@@ -7,7 +7,7 @@
 #define RESOURCE_DEFAULT_CAMERA_NUM 3
 
 // Forward declaration for inlining.
-extern memoryPool __CameraResourceArray;  // Contains cameras.
+extern memoryPool __g_CameraResourceArray;  // Contains cameras.
 
 typedef struct camera camera;
 

@@ -8,7 +8,7 @@
 #define RESOURCE_TEXTURE_CONSTANTS 1
 
 // Forward declaration for inlining.
-extern memoryPool __TextureResourceArray;  // Contains textures.
+extern memoryPool __g_TextureResourceArray;  // Contains textures.
 
 typedef struct texture texture;
 

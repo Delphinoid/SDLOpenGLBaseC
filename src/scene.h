@@ -39,7 +39,7 @@ typedef struct scnZone {
 
 	/**
 	*** Eventually, the object pool should
-	*** replace __ObjectResourceArray.
+	*** replace __g_ObjectResourceArray.
 	*** Or just use an SLink, depending on
 	*** performance.
 	**/
@@ -69,7 +69,7 @@ typedef struct scene {
 
 	/**
 	*** Eventually, the object pool should
-	*** replace __ObjectResourceArray.
+	*** replace __g_ObjectResourceArray.
 	*** Or just use an SLink, depending on
 	*** performance.
 	**/

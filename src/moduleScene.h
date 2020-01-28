@@ -9,8 +9,8 @@
 #define RESOURCE_DEFAULT_SCENE_NUM 2
 
 // Forward declarations for inlining.
-extern memoryPool  __SceneResourceArray;      // Contains scenes.
-extern memorySLink __SceneZoneResourceArray;  // Contains zones.
+extern memoryPool  __g_SceneResourceArray;      // Contains scenes.
+extern memorySLink __g_SceneZoneResourceArray;  // Contains zones.
 
 typedef struct scene scene;
 typedef struct scnZone scnZone;

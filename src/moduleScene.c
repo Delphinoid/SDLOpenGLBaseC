@@ -7,7 +7,7 @@
 
 #define RESOURCE_DEFAULT_SCENE_SIZE sizeof(scene)
 
-memoryPool __SceneResourceArray;  // Contains scenes.
+memoryPool __g_SceneResourceArray;  // Contains scenes.
 
 return_t moduleSceneResourcesInit(){
 	void *const memory = memAllocate(
@@ -17,7 +17,7 @@ return_t moduleSceneResourcesInit(){
 			RESOURCE_DEFAULT_SCENE_NUM
 		)
 	);
-	if(memPoolCreate(&__SceneResourceArray, memory, RESOURCE_DEFAULT_SCENE_SIZE, RESOURCE_DEFAULT_SCENE_NUM) == NULL){
+	if(memPoolCreate(&__g_SceneResourceArray, memory, RESOURCE_DEFAULT_SCENE_SIZE, RESOURCE_DEFAULT_SCENE_NUM) == NULL){
 		return -1;
 	}
 	return 1;
@@ -25,18 +25,18 @@ return_t moduleSceneResourcesInit(){
 void moduleSceneResourcesReset(){
 	memoryRegion *region;
 	moduleSceneClear();
-	region = __SceneResourceArray.region->next;
+	region = __g_SceneResourceArray.region->next;
 	while(region != NULL){
 		memoryRegion *next = memAllocatorNext(region);
 		memFree(region->start);
 		region = next;
 	}
-	__SceneResourceArray.region->next = NULL;
+	__g_SceneResourceArray.region->next = NULL;
 }
 void moduleSceneResourcesDelete(){
 	memoryRegion *region;
 	moduleSceneClear();
-	region = __SceneResourceArray.region;
+	region = __g_SceneResourceArray.region;
 	while(region != NULL){
 		memoryRegion *next = memAllocatorNext(region);
 		memFree(region->start);
@@ -45,7 +45,7 @@ void moduleSceneResourcesDelete(){
 }
 
 __HINT_INLINE__ scene *moduleSceneAllocateStatic(){
-	return memPoolAllocate(&__SceneResourceArray);
+	return memPoolAllocate(&__g_SceneResourceArray);
 }
 __HINT_INLINE__ scene *moduleSceneAllocate(){
 	scene *r = moduleSceneAllocateStatic();
@@ -58,7 +58,7 @@ __HINT_INLINE__ scene *moduleSceneAllocate(){
 				RESOURCE_DEFAULT_SCENE_NUM
 			)
 		);
-		if(memPoolExtend(&__SceneResourceArray, memory, RESOURCE_DEFAULT_SCENE_SIZE, RESOURCE_DEFAULT_SCENE_NUM)){
+		if(memPoolExtend(&__g_SceneResourceArray, memory, RESOURCE_DEFAULT_SCENE_SIZE, RESOURCE_DEFAULT_SCENE_NUM)){
 			r = moduleSceneAllocateStatic();
 		}
 	}
@@ -66,11 +66,11 @@ __HINT_INLINE__ scene *moduleSceneAllocate(){
 }
 __HINT_INLINE__ void moduleSceneFree(scene *const restrict resource){
 	scnDelete(resource);
-	memPoolFree(&__SceneResourceArray, (void *)resource);
+	memPoolFree(&__g_SceneResourceArray, (void *)resource);
 }
 void moduleSceneClear(){
 
-	MEMORY_POOL_LOOP_BEGIN(__SceneResourceArray, i, scene *);
+	MEMORY_POOL_LOOP_BEGIN(__g_SceneResourceArray, i, scene *);
 
 		moduleSceneFree(i);
 		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
@@ -79,7 +79,7 @@ void moduleSceneClear(){
 
 		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
 
-	MEMORY_POOL_LOOP_END(__SceneResourceArray, i, return;);
+	MEMORY_POOL_LOOP_END(__g_SceneResourceArray, i, return;);
 
 }
 
@@ -89,7 +89,7 @@ void moduleSceneQueryIslands(const float frequency){
 void moduleSceneQueryIslands(){
 #endif
 
-	MEMORY_POOL_LOOP_BEGIN(__SceneResourceArray, i, scene *);
+	MEMORY_POOL_LOOP_BEGIN(__g_SceneResourceArray, i, scene *);
 
 		#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 		physIslandQuery(&i->island, frequency);
@@ -97,16 +97,16 @@ void moduleSceneQueryIslands(){
 		physIslandQuery(&i->island);
 		#endif
 
-	MEMORY_POOL_LOOP_END(__SceneResourceArray, i, return;);
+	MEMORY_POOL_LOOP_END(__g_SceneResourceArray, i, return;);
 
 }
 
 void moduleSceneTick(const float elapsedTime/**, const float dt**/){
 
-	MEMORY_POOL_LOOP_BEGIN(__SceneResourceArray, i, scene *);
+	MEMORY_POOL_LOOP_BEGIN(__g_SceneResourceArray, i, scene *);
 
 		scnTick(i, elapsedTime/**, dt**/);
 
-	MEMORY_POOL_LOOP_END(__SceneResourceArray, i, return;);
+	MEMORY_POOL_LOOP_END(__g_SceneResourceArray, i, return;);
 
 }

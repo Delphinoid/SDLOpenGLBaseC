@@ -241,21 +241,42 @@ __HINT_INLINE__ void vec3VDivNP(vec3 *const restrict v, const float x, const flo
 	v->y /= y;
 	v->z /= z;
 }
+__HINT_INLINE__ void vec3VDivNPR(const vec3 *const restrict v, const float x, const float y, const float z, vec3 *const restrict r){
+	r->x = v->x / x;
+	r->y = v->y / y;
+	r->z = v->z / z;
+}
 __HINT_INLINE__ void vec3VDivSP(vec3 *const restrict v, const float s){
 	const float invS = 1.f / s;
 	v->x *= invS;
 	v->y *= invS;
 	v->z *= invS;
 }
+__HINT_INLINE__ void vec3VDivSPR(const vec3 *const restrict v, const float s, vec3 *const restrict r){
+	const float invS = 1.f / s;
+	r->x = v->x * invS;
+	r->y = v->y * invS;
+	r->z = v->z * invS;
+}
 __HINT_INLINE__ void vec3NDivVP(const float x, const float y, const float z, vec3 *const restrict v){
 	v->x = x / v->x;
 	v->y = y / v->y;
 	v->z = z / v->z;
 }
+__HINT_INLINE__ void vec3NDivVPR(const float x, const float y, const float z, const vec3 *const restrict v, vec3 *const restrict r){
+	r->x = x / v->x;
+	r->y = y / v->y;
+	r->z = z / v->z;
+}
 __HINT_INLINE__ void vec3SDivVP(const float s, vec3 *const restrict v){
 	v->x = s / v->x;
 	v->y = s / v->y;
 	v->z = s / v->z;
+}
+__HINT_INLINE__ void vec3SDivVPR(const float s, const vec3 *const restrict v, vec3 *const restrict r){
+	r->x = s / v->x;
+	r->y = s / v->y;
+	r->z = s / v->z;
 }
 
 __HINT_INLINE__ vec3 vec3Min(const vec3 v1, const vec3 v2){

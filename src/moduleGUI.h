@@ -7,7 +7,7 @@
 #define RESOURCE_DEFAULT_GUI_ELEMENT_NUM 100
 
 // Forward declaration for inlining.
-extern memorySLink __GUIElementResourceArray;  // Contains guiElements.
+extern memorySLink __g_GUIElementResourceArray;  // Contains guiElements.
 
 typedef struct guiElement guiElement;
 

@@ -16,8 +16,8 @@
 #define TEXTURE_WRAPPER_ANIMATION_FRAME_START_CAPACITY 1  // 128
 
 // Default texture wrapper.
-static twFrame twfDefault = {
-	.image = &tDefault,
+static twFrame g_twfDefault = {
+	.image = &g_tDefault,
 	.subframe = {
 		.x = 0.f,
 		.y = 0.f,
@@ -25,18 +25,18 @@ static twFrame twfDefault = {
 		.h = 1.f,
 	}
 };
-static twAnim twaDefault = {
+static twAnim g_twaDefault = {
 	.animData = {
 		.desiredLoops = -1,
 		.frameNum = 1,
 		.frameDelays = (float *)"\0\0\0\0"
 	},
-	.frames = &twfDefault
+	.frames = &g_twfDefault
 };
-textureWrapper twDefault = {
+textureWrapper g_twDefault = {
 	.name = "default",
 	.animationNum = 1,
-	.animations = &twaDefault
+	.animations = &g_twaDefault
 };
 
 /** Remove printf()s **/
@@ -124,7 +124,7 @@ static return_t twAddAnim(textureWrapper *const restrict tw, const twAnim *const
 	return 1;
 }
 static void twDefragment(textureWrapper *const restrict tw){
-	if(tw->animations != &twaDefault){
+	if(tw->animations != &g_twaDefault){
 		twAnim *a; const twAnim *aLast;
 		tw->animations = memReallocate(tw->animations, tw->animationNum*sizeof(twAnim ));
 		a = tw->animations; aLast = &a[tw->animationNum];
@@ -237,7 +237,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 									return -1;
 								}
 								printf("Error loading texture wrapper \"%s\": Image \"%s\" at line %u does not exist.\n", fullPath, &texPath[0], currentLine);
-								tempFrame.image = &tDefault;
+								tempFrame.image = &g_tDefault;
 							}else{
 								tempFrame.image = tempTex;
 							}
@@ -303,7 +303,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 									return -1;
 								}
 								printf("Error loading texture wrapper \"%s\": Image \"%s\" at line %u does not exist.\n", fullPath, &texPath[0], currentLine);
-								tempFrame.image = &tDefault;
+								tempFrame.image = &g_tDefault;
 							}else{
 								tempFrame.image = tempTex;
 							}
@@ -396,7 +396,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 									return -1;
 								}
 								printf("Error loading texture wrapper \"%s\": Image \"%s\" at line %u does not exist.\n", fullPath, &texPath[0], currentLine);
-								tempFrame.image = &tDefault;
+								tempFrame.image = &g_tDefault;
 							}else{
 								tempFrame.image = tempTex;
 							}
@@ -520,7 +520,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 			// Otherwise build the default animation.
 			memFree(tw->animations);
 			tw->animationNum = 1;
-			tw->animations = &twaDefault;
+			tw->animations = &g_twaDefault;
 		}
 	}
 
@@ -553,7 +553,7 @@ return_t twLoad(textureWrapper *const restrict tw, const char *const restrict pr
 }
 
 void twDelete(textureWrapper *const restrict tw){
-	if(tw->animations != NULL && tw->animations != &twaDefault){
+	if(tw->animations != NULL && tw->animations != &g_twaDefault){
 		twAnim *a = tw->animations;
 		const twAnim *const aLast = &a[tw->animationNum];
 		for(; a < aLast; ++a){
@@ -561,7 +561,7 @@ void twDelete(textureWrapper *const restrict tw){
 		}
 		memFree(tw->animations);
 	}
-	if(tw->name != NULL && tw->name != twDefault.name){
+	if(tw->name != NULL && tw->name != g_twDefault.name){
 		memFree(tw->name);
 	}
 }

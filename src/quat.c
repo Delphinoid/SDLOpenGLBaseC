@@ -9,6 +9,28 @@
 // Try 1/2 radians if spherical lerp results are bad: 0.99996192306417128873735516482698
 #define QUAT_LERP_THRESHOLD 0.99984769515639123915701155881391  // cos(RADIAN_RATIO)
 
+// These constants are used by David Eberly's slerp function.
+static const float u[8] = {
+    1.f/(1.f * 3.f),
+    1.f/(2.f * 5.f),
+    1.f/(3.f * 7.f),
+    1.f/(4.f * 9.f),
+    1.f/(5.f * 11.f),
+    1.f/(6.f * 13.f),
+    1.f/(7.f * 15.f),
+    1.90110745351730037f/(8.f * 17.f)
+};
+static const float v[8] = {
+    1.f/3.f,
+    2.f/5.f,
+    3.f/7.f,
+    4.f/9.f,
+    5.f/11.f,
+    6.f/13.f,
+    7.f/15.f,
+    1.90110745351730037f*(8.f/17.f)
+};
+
 __HINT_INLINE__ quat quatNew(const float w, const float x, const float y, const float z){
 	const quat r = {.w = w, .v.x = x, .v.y = y, .v.z = z};
 	return r;
@@ -312,23 +334,39 @@ __HINT_INLINE__ void quatConjugateP(quat *const restrict q){
 	q->v.z = -q->v.z;
 }
 __HINT_INLINE__ void quatConjugateFastP(quat *const restrict q){
+	// WARNING: This is technically incorrect, and may
+	// result in singularities during interpolation.
 	q->w = -q->w;
 }
 __HINT_INLINE__ void quatConjugatePR(const quat *const restrict q, quat *const restrict r){
-	quatSet(r, q->w, -q->v.x, -q->v.y, -q->v.z);
+	r->w = q->w;
+	r->v.x = -q->v.x;
+	r->v.y = -q->v.y;
+	r->v.z = -q->v.z;
 }
 __HINT_INLINE__ void quatConjugateFastPR(const quat *const restrict q, quat *const restrict r){
-	quatSet(r, -q->w, q->v.x, q->v.y, q->v.z);
+	// WARNING: This is technically incorrect, and may
+	// result in singularities during interpolation.
+	r->w = -q->w;
+	r->v.x = q->v.x;
+	r->v.y = q->v.y;
+	r->v.z = q->v.z;
 }
 
 __HINT_INLINE__ quat quatNegate(const quat q){
-	return quatNew(-q.w, q.v.x, q.v.y, q.v.z);
+	return quatNew(-q.w, -q.v.x, -q.v.y, -q.v.z);
 }
 __HINT_INLINE__ void quatNegateP(quat *const restrict q){
 	q->w = -q->w;
+	q->v.x = -q->v.x;
+	q->v.y = -q->v.y;
+	q->v.z = -q->v.z;
 }
 __HINT_INLINE__ void quatNegatePR(const quat *const restrict q, quat *const restrict r){
-	quatSet(r, -q->w, q->v.x, q->v.y, q->v.z);
+	r->w = -q->w;
+	r->v.x = -q->v.x;
+	r->v.y = -q->v.y;
+	r->v.z = -q->v.z;
 }
 
 __HINT_INLINE__ quat quatInvert(const quat q){
@@ -598,15 +636,24 @@ __HINT_INLINE__ void quatLerpPR(const quat *const restrict q1, const quat *const
 	r->v.z = floatLerp(q1->v.z, q2->v.z, t);
 }
 
-__HINT_INLINE__ quat quatSlerp(const quat q1, const quat q2, const float t){
+quat quatSlerp(const quat q1, const quat q2, const float t){
 
 	// Cosine of the angle between the two quaternions.
-	const float cosTheta = quatDot(q1, q2);
-	const float cosThetaAbs = fabsf(cosTheta);
+	float cosTheta = quatDot(q1, q2);
+	quat q2Corrected;
 
-	if(cosThetaAbs > QUAT_LERP_THRESHOLD){
+	// If q1 and q2 are > 90 degrees apart (cosTheta < 0),
+	// negate q2 so it doesn't go the long way around.
+	if(cosTheta < 0.f){
+        cosTheta = -cosTheta;
+        q2Corrected = quatNegate(q2);
+    }else{
+		q2Corrected = q2;
+    }
+
+	if(cosTheta > QUAT_LERP_THRESHOLD){
 		// If the angle is small enough, we can just use linear interpolation.
-		return quatNormalizeFast(quatLerp(q1, q2, t));
+		return quatNormalizeFast(quatLerp(q1, q2Corrected, t));
 	}else{
 
 		// sin(x)^2 + cos(x)^2 = 1
@@ -615,42 +662,41 @@ __HINT_INLINE__ quat quatSlerp(const quat q1, const quat q2, const float t){
 		//
 		// Calculating the reciprocal of sin(x) allows us to do
 		// multiplications instead of divisions below, as the
-		// following holds true:
+		// following holds:
 		//
 		// x * (1 / y) = x / y
 
-		const float theta = acosf(cosThetaAbs);
-		const float sinThetaInv = rsqrt(1.f - cosThetaAbs * cosThetaAbs);
+		const float theta = acosf(cosTheta);
+		const float sinThetaInv = rsqrt(1.f - cosTheta * cosTheta);
 		const float sinThetaInvT = sinf(theta * (1.f - t)) * sinThetaInv;
-
-		// If q1 and q2 are > 90 degrees apart (cosTheta < 0), negate
-		// sinThetaT so it doesn't go the long way around.
-		float sinThetaT;
-		if(cosTheta >= 0.f){
-			sinThetaT = sinf(theta * t) * sinThetaInv;
-		}else{
-			sinThetaT = -(sinf(theta * t) * sinThetaInv);
-		}
+		const float sinThetaT = sinf(theta * t) * sinThetaInv;
 
 		return quatNormalizeFast(quatNew(
-			q1.w   * sinThetaInvT + q2.w   * sinThetaT,
-			q1.v.x * sinThetaInvT + q2.v.x * sinThetaT,
-			q1.v.y * sinThetaInvT + q2.v.y * sinThetaT,
-			q1.v.z * sinThetaInvT + q2.v.z * sinThetaT
+			q1.w   * sinThetaInvT + q2Corrected.w   * sinThetaT,
+			q1.v.x * sinThetaInvT + q2Corrected.v.x * sinThetaT,
+			q1.v.y * sinThetaInvT + q2Corrected.v.y * sinThetaT,
+			q1.v.z * sinThetaInvT + q2Corrected.v.z * sinThetaT
 		));
 
 	}
 
 }
-__HINT_INLINE__ void quatSlerpP1(quat *const restrict q1, const quat *const restrict q2, const float t){
+void quatSlerpP1(quat *const restrict q1, const quat *const restrict q2, const float t){
 
 	// Cosine of the angle between the two quaternions.
-	const float cosTheta = quatDotP(q1, q2);
-	const float cosThetaAbs = fabsf(cosTheta);
+	float cosTheta = quatDotP(q1, q2);
+	quat q2Corrected = *q2;
 
-	if(cosThetaAbs > QUAT_LERP_THRESHOLD){
+	// If q1 and q2 are > 90 degrees apart (cosTheta < 0),
+	// negate q2 so it doesn't go the long way around.
+	if(cosTheta < 0.f){
+        cosTheta = -cosTheta;
+        quatNegateP(&q2Corrected);
+    }
+
+	if(cosTheta > QUAT_LERP_THRESHOLD){
 		// If the angle is small enough, we can just use linear interpolation.
-		quatLerpP1(q1, q2, t);
+		quatLerpP1(q1, &q2Corrected, t);
 	}else{
 
 		// sin(x)^2 + cos(x)^2 = 1
@@ -659,40 +705,38 @@ __HINT_INLINE__ void quatSlerpP1(quat *const restrict q1, const quat *const rest
 		//
 		// Calculating the reciprocal of sin(x) allows us to do
 		// multiplications instead of divisions below, as the
-		// following holds true:
+		// following holds:
 		//
 		// x * (1 / y) = x / y
 
-		const float theta = acosf(cosThetaAbs);
-		const float sinThetaInv = rsqrt(1.f - cosThetaAbs * cosThetaAbs);
+		const float theta = acosf(cosTheta);
+		const float sinThetaInv = rsqrt(1.f - cosTheta * cosTheta);
 		const float sinThetaInvT = sinf(theta * (1.f - t)) * sinThetaInv;
+		const float sinThetaT = sinf(theta * t) * sinThetaInv;
 
-		// If q1 and q2 are > 90 degrees apart (cosTheta < 0), negate
-		// sinThetaT so it doesn't go the long way around.
-		float sinThetaT;
-		if(cosTheta >= 0.f){
-			sinThetaT = sinf(theta * t) * sinThetaInv;
-		}else{
-			sinThetaT = -(sinf(theta * t) * sinThetaInv);
-		}
-
-		q1->w   = q1->w   * sinThetaInvT + q2->w   * sinThetaT;
-		q1->v.x = q1->v.x * sinThetaInvT + q2->v.x * sinThetaT;
-		q1->v.y = q1->v.y * sinThetaInvT + q2->v.y * sinThetaT;
-		q1->v.z = q1->v.z * sinThetaInvT + q2->v.z * sinThetaT;
+		q1->w   = q1->w   * sinThetaInvT + q2Corrected.w   * sinThetaT;
+		q1->v.x = q1->v.x * sinThetaInvT + q2Corrected.v.x * sinThetaT;
+		q1->v.y = q1->v.y * sinThetaInvT + q2Corrected.v.y * sinThetaT;
+		q1->v.z = q1->v.z * sinThetaInvT + q2Corrected.v.z * sinThetaT;
 
 	}
 
 	quatNormalizeFastP(q1);
 
 }
-__HINT_INLINE__ void quatSlerpP2(const quat *const restrict q1, quat *const restrict q2, const float t){
+void quatSlerpP2(const quat *const restrict q1, quat *const restrict q2, const float t){
 
 	// Cosine of the angle between the two quaternions.
-	const float cosTheta = quatDotP(q1, q2);
-	const float cosThetaAbs = fabsf(cosTheta);
+	float cosTheta = quatDotP(q1, q2);
 
-	if(cosThetaAbs > QUAT_LERP_THRESHOLD){
+	// If q1 and q2 are > 90 degrees apart (cosTheta < 0),
+	// negate q2 so it doesn't go the long way around.
+	if(cosTheta < 0.f){
+        cosTheta = -cosTheta;
+        quatNegateP(q2);
+    }
+
+	if(cosTheta > QUAT_LERP_THRESHOLD){
 		// If the angle is small enough, we can just use linear interpolation.
 		quatLerpP2(q1, q2, t);
 	}else{
@@ -703,22 +747,14 @@ __HINT_INLINE__ void quatSlerpP2(const quat *const restrict q1, quat *const rest
 		//
 		// Calculating the reciprocal of sin(x) allows us to do
 		// multiplications instead of divisions below, as the
-		// following holds true:
+		// following holds:
 		//
 		// x * (1 / y) = x / y
 
-		const float theta = acosf(cosThetaAbs);
-		const float sinThetaInv = rsqrt(1.f - cosThetaAbs * cosThetaAbs);
+		const float theta = acosf(cosTheta);
+		const float sinThetaInv = rsqrt(1.f - cosTheta * cosTheta);
 		const float sinThetaInvT = sinf(theta * (1.f - t)) * sinThetaInv;
-
-		// If q1 and q2 are > 90 degrees apart (cosTheta < 0), negate
-		// sinThetaT so it doesn't go the long way around.
-		float sinThetaT;
-		if(cosTheta >= 0.f){
-			sinThetaT = sinf(theta * t) * sinThetaInv;
-		}else{
-			sinThetaT = -(sinf(theta * t) * sinThetaInv);
-		}
+		const float sinThetaT = sinf(theta * t) * sinThetaInv;
 
 		q2->w   = q1->w   * sinThetaInvT + q2->w   * sinThetaT;
 		q2->v.x = q1->v.x * sinThetaInvT + q2->v.x * sinThetaT;
@@ -730,13 +766,22 @@ __HINT_INLINE__ void quatSlerpP2(const quat *const restrict q1, quat *const rest
 	quatNormalizeFastP(q2);
 
 }
-__HINT_INLINE__ void quatSlerpPR(const quat *const restrict q1, const quat *const restrict q2, const float t, quat *const restrict r){
+void quatSlerpPR(const quat *const restrict q1, const quat *const restrict q2, const float t, quat *const restrict r){
 
 	// Cosine of the angle between the two quaternions.
-	const float cosTheta = quatDotP(q1, q2);
-	const float cosThetaAbs = fabsf(cosTheta);
+	float cosTheta = quatDotP(q1, q2);
+	quat q2Corrected;
 
-	if(cosThetaAbs > QUAT_LERP_THRESHOLD){
+	// If q1 and q2 are > 90 degrees apart (cosTheta < 0),
+	// negate q2 so it doesn't go the long way around.
+	if(cosTheta < 0.f){
+        cosTheta = -cosTheta;
+        quatNegatePR(q2, &q2Corrected);
+    }else{
+    	q2Corrected = *q2;
+    }
+
+	if(cosTheta > QUAT_LERP_THRESHOLD){
 		// If the angle is small enough, we can just use linear interpolation.
 		quatLerpPR(q1, q2, t, r);
 	}else{
@@ -747,29 +792,234 @@ __HINT_INLINE__ void quatSlerpPR(const quat *const restrict q1, const quat *cons
 		//
 		// Calculating the reciprocal of sin(x) allows us to do
 		// multiplications instead of divisions below, as the
-		// following holds true:
+		// following holds:
 		//
 		// x * (1 / y) = x / y
 
-		const float theta = acosf(cosThetaAbs);
-		const float sinThetaInv = rsqrt(1.f - cosThetaAbs * cosThetaAbs);
+		const float theta = acosf(cosTheta);
+		const float sinThetaInv = rsqrt(1.f - cosTheta * cosTheta);
 		const float sinThetaInvT = sinf(theta * (1.f - t)) * sinThetaInv;
+		const float sinThetaT = sinf(theta * t) * sinThetaInv;
 
-		// If q1 and q2 are > 90 degrees apart (cosTheta < 0), negate
-		// sinThetaT so it doesn't go the long way around.
-		float sinThetaT;
-		if(cosTheta >= 0.f){
-			sinThetaT = sinf(theta * t) * sinThetaInv;
-		}else{
-			sinThetaT = -(sinf(theta * t) * sinThetaInv);
-		}
-
-		r->w   = q1->w   * sinThetaInvT + q2->w   * sinThetaT;
-		r->v.x = q1->v.x * sinThetaInvT + q2->v.x * sinThetaT;
-		r->v.y = q1->v.y * sinThetaInvT + q2->v.y * sinThetaT;
-		r->v.z = q1->v.z * sinThetaInvT + q2->v.z * sinThetaT;
+		r->w   = q1->w   * sinThetaInvT + q2Corrected.w   * sinThetaT;
+		r->v.x = q1->v.x * sinThetaInvT + q2Corrected.v.x * sinThetaT;
+		r->v.y = q1->v.y * sinThetaInvT + q2Corrected.v.y * sinThetaT;
+		r->v.z = q1->v.z * sinThetaInvT + q2Corrected.v.z * sinThetaT;
 
 	}
+
+	quatNormalizeFastP(r);
+
+}
+
+quat quatSlerpFast(const quat q1, const quat q2, const float t){
+
+	// Fast quaternion slerp function as described in David Eberly's
+	// 2011 paper, "A Fast and Accurate Algorithm for Computing SLERP".
+	// Uses only additions and multiplications, with no transcendental
+	// (trigonometric) function calls or branching.
+
+	float x = quatDot(q1, q2);
+	const float sign = (x >= 0.f ? 1.f : (x = -x, -1.f));
+
+	const float xm1 = x - 1.f;
+	const float d = 1.f - t;
+	const float sqrD = d * d;
+	const float sqrT = t * t;
+
+	const float bD[8] = {
+		(u[0] * sqrD - v[0]) * xm1,
+		(u[1] * sqrD - v[1]) * xm1,
+		(u[2] * sqrD - v[2]) * xm1,
+		(u[3] * sqrD - v[3]) * xm1,
+		(u[4] * sqrD - v[4]) * xm1,
+		(u[5] * sqrD - v[5]) * xm1,
+		(u[6] * sqrD - v[6]) * xm1,
+		(u[7] * sqrD - v[7]) * xm1
+	};
+	const float bT[8] = {
+		(u[0] * sqrT - v[0]) * xm1,
+		(u[1] * sqrT - v[1]) * xm1,
+		(u[2] * sqrT - v[2]) * xm1,
+		(u[3] * sqrT - v[3]) * xm1,
+		(u[4] * sqrT - v[4]) * xm1,
+		(u[5] * sqrT - v[5]) * xm1,
+		(u[6] * sqrT - v[6]) * xm1,
+		(u[7] * sqrT - v[7]) * xm1
+	};
+
+	const float cD = d * (
+		1.0 + bD[0] * (1.0 + bD[1] * (1.0 + bD[2] * (1.0 + bD[3] * (
+		1.0 + bD[4] * (1.0 + bD[5] * (1.0 + bD[6] * (1.0 + bD[7])))))))
+	);
+	const float cT = sign * t * (
+		1.0 + bT[0] * (1.0 + bT[1] * (1.0 + bT[2] * (1.0 + bT[3] * (
+		1.0 + bT[4] * (1.0 + bT[5] * (1.0 + bT[6] * (1.0 + bT[7])))))))
+	);
+
+	return quatNormalizeFast(quatNew(
+		q1.w   * cD + q2.w   * cT,
+		q1.v.x * cD + q2.v.x * cT,
+		q1.v.y * cD + q2.v.y * cT,
+		q1.v.z * cD + q2.v.z * cT
+	));
+
+}
+void quatSlerpFastP1(quat *const restrict q1, const quat *const restrict q2, const float t){
+
+	// Fast quaternion slerp function as described in David Eberly's
+	// 2011 paper, "A Fast and Accurate Algorithm for Computing SLERP".
+	// Uses only additions and multiplications, with no transcendental
+	// (trigonometric) function calls or branching.
+
+	float x = quatDotP(q1, q2);
+	const float sign = (x >= 0.f ? 1.f : (x = -x, -1.f));
+
+	const float xm1 = x - 1.f;
+	const float d = 1.f - t;
+	const float sqrD = d * d;
+	const float sqrT = t * t;
+
+	const float bD[8] = {
+		(u[0] * sqrD - v[0]) * xm1,
+		(u[1] * sqrD - v[1]) * xm1,
+		(u[2] * sqrD - v[2]) * xm1,
+		(u[3] * sqrD - v[3]) * xm1,
+		(u[4] * sqrD - v[4]) * xm1,
+		(u[5] * sqrD - v[5]) * xm1,
+		(u[6] * sqrD - v[6]) * xm1,
+		(u[7] * sqrD - v[7]) * xm1
+	};
+	const float bT[8] = {
+		(u[0] * sqrT - v[0]) * xm1,
+		(u[1] * sqrT - v[1]) * xm1,
+		(u[2] * sqrT - v[2]) * xm1,
+		(u[3] * sqrT - v[3]) * xm1,
+		(u[4] * sqrT - v[4]) * xm1,
+		(u[5] * sqrT - v[5]) * xm1,
+		(u[6] * sqrT - v[6]) * xm1,
+		(u[7] * sqrT - v[7]) * xm1
+	};
+
+	const float cD = d * (
+		1.0 + bD[0] * (1.0 + bD[1] * (1.0 + bD[2] * (1.0 + bD[3] * (
+		1.0 + bD[4] * (1.0 + bD[5] * (1.0 + bD[6] * (1.0 + bD[7])))))))
+	);
+	const float cT = sign * t * (
+		1.0 + bT[0] * (1.0 + bT[1] * (1.0 + bT[2] * (1.0 + bT[3] * (
+		1.0 + bT[4] * (1.0 + bT[5] * (1.0 + bT[6] * (1.0 + bT[7])))))))
+	);
+
+	q1->w   = q1->w   * cD + q2->w   * cT;
+	q1->v.x = q1->v.x * cD + q2->v.x * cT;
+	q1->v.y = q1->v.y * cD + q2->v.y * cT;
+	q1->v.z = q1->v.z * cD + q2->v.z * cT;
+
+	quatNormalizeFastP(q1);
+
+}
+void quatSlerpFastP2(const quat *const restrict q1, quat *const restrict q2, const float t){
+
+	// Fast quaternion slerp function as described in David Eberly's
+	// 2011 paper, "A Fast and Accurate Algorithm for Computing SLERP".
+	// Uses only additions and multiplications, with no transcendental
+	// (trigonometric) function calls or branching.
+
+	float x = quatDotP(q1, q2);
+	const float sign = (x >= 0.f ? 1.f : (x = -x, -1.f));
+
+	const float xm1 = x - 1.f;
+	const float d = 1.f - t;
+	const float sqrD = d * d;
+	const float sqrT = t * t;
+
+	const float bD[8] = {
+		(u[0] * sqrD - v[0]) * xm1,
+		(u[1] * sqrD - v[1]) * xm1,
+		(u[2] * sqrD - v[2]) * xm1,
+		(u[3] * sqrD - v[3]) * xm1,
+		(u[4] * sqrD - v[4]) * xm1,
+		(u[5] * sqrD - v[5]) * xm1,
+		(u[6] * sqrD - v[6]) * xm1,
+		(u[7] * sqrD - v[7]) * xm1
+	};
+	const float bT[8] = {
+		(u[0] * sqrT - v[0]) * xm1,
+		(u[1] * sqrT - v[1]) * xm1,
+		(u[2] * sqrT - v[2]) * xm1,
+		(u[3] * sqrT - v[3]) * xm1,
+		(u[4] * sqrT - v[4]) * xm1,
+		(u[5] * sqrT - v[5]) * xm1,
+		(u[6] * sqrT - v[6]) * xm1,
+		(u[7] * sqrT - v[7]) * xm1
+	};
+
+	const float cD = d * (
+		1.0 + bD[0] * (1.0 + bD[1] * (1.0 + bD[2] * (1.0 + bD[3] * (
+		1.0 + bD[4] * (1.0 + bD[5] * (1.0 + bD[6] * (1.0 + bD[7])))))))
+	);
+	const float cT = sign * t * (
+		1.0 + bT[0] * (1.0 + bT[1] * (1.0 + bT[2] * (1.0 + bT[3] * (
+		1.0 + bT[4] * (1.0 + bT[5] * (1.0 + bT[6] * (1.0 + bT[7])))))))
+	);
+
+	q2->w   = q1->w   * cD + q2->w   * cT;
+	q2->v.x = q1->v.x * cD + q2->v.x * cT;
+	q2->v.y = q1->v.y * cD + q2->v.y * cT;
+	q2->v.z = q1->v.z * cD + q2->v.z * cT;
+
+	quatNormalizeFastP(q2);
+
+}
+void quatSlerpFastPR(const quat *const restrict q1, const quat *const restrict q2, const float t, quat *const restrict r){
+
+	// Fast quaternion slerp function as described in David Eberly's
+	// 2011 paper, "A Fast and Accurate Algorithm for Computing SLERP".
+	// Uses only additions and multiplications, with no transcendental
+	// (trigonometric) function calls or branching.
+
+	float x = quatDotP(q1, q2);
+	const float sign = (x >= 0.f ? 1.f : (x = -x, -1.f));
+
+	const float xm1 = x - 1.f;
+	const float d = 1.f - t;
+	const float sqrD = d * d;
+	const float sqrT = t * t;
+
+	const float bD[8] = {
+		(u[0] * sqrD - v[0]) * xm1,
+		(u[1] * sqrD - v[1]) * xm1,
+		(u[2] * sqrD - v[2]) * xm1,
+		(u[3] * sqrD - v[3]) * xm1,
+		(u[4] * sqrD - v[4]) * xm1,
+		(u[5] * sqrD - v[5]) * xm1,
+		(u[6] * sqrD - v[6]) * xm1,
+		(u[7] * sqrD - v[7]) * xm1
+	};
+	const float bT[8] = {
+		(u[0] * sqrT - v[0]) * xm1,
+		(u[1] * sqrT - v[1]) * xm1,
+		(u[2] * sqrT - v[2]) * xm1,
+		(u[3] * sqrT - v[3]) * xm1,
+		(u[4] * sqrT - v[4]) * xm1,
+		(u[5] * sqrT - v[5]) * xm1,
+		(u[6] * sqrT - v[6]) * xm1,
+		(u[7] * sqrT - v[7]) * xm1
+	};
+
+	const float cD = d * (
+		1.0 + bD[0] * (1.0 + bD[1] * (1.0 + bD[2] * (1.0 + bD[3] * (
+		1.0 + bD[4] * (1.0 + bD[5] * (1.0 + bD[6] * (1.0 + bD[7])))))))
+	);
+	const float cT = sign * t * (
+		1.0 + bT[0] * (1.0 + bT[1] * (1.0 + bT[2] * (1.0 + bT[3] * (
+		1.0 + bT[4] * (1.0 + bT[5] * (1.0 + bT[6] * (1.0 + bT[7])))))))
+	);
+
+	r->w   = q1->w   * cD + q2->w   * cT;
+	r->v.x = q1->v.x * cD + q2->v.x * cT;
+	r->v.y = q1->v.y * cD + q2->v.y * cT;
+	r->v.z = q1->v.z * cD + q2->v.z * cT;
 
 	quatNormalizeFastP(r);
 
@@ -817,11 +1067,11 @@ __HINT_INLINE__ void quatIntegratePR(const quat *const restrict q, const vec3 *c
 }
 
 __HINT_INLINE__ quat quatRotate(const quat q1, const quat q2, const float t){
-	return quatSlerp(q1, quatQMultQ(q1, q2), t);
+	return quatSlerpFast(q1, quatQMultQ(q1, q2), t);
 }
 __HINT_INLINE__ void quatRotatePR(const quat *const restrict q1, const quat *const restrict q2, const float t, quat *const restrict r){
 	quat temp;
 	quatQMultQPR(q1, q2, &temp);
 	// *r = temp;
-	quatSlerpPR(q1, &temp, t, r);
+	quatSlerpFastPR(q1, &temp, t, r);
 }

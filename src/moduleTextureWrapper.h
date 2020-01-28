@@ -8,7 +8,7 @@
 #define RESOURCE_TEXTURE_WRAPPER_CONSTANTS 1
 
 // Forward declaration for inlining.
-extern memoryPool __TextureWrapperResourceArray;  // Contains textureWrappers.
+extern memoryPool __g_TextureWrapperResourceArray;  // Contains textureWrappers.
 
 typedef struct textureWrapper textureWrapper;
 

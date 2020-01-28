@@ -898,10 +898,6 @@ return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **ver
 		       "Path: %s\n", filePath);
 		return 0;
 	}
-int i;FILE *kool = fopen("/home/danny/Documents/blah3.txt", "w");
-		for(i = 0; i < *indexNum; i+=3){
-			fprintf(kool,"%u %u %u\n", (*indices)[i], (*indices)[i+1], (*indices)[i+2]);
-		}
 
 	return 1;
 }

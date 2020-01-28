@@ -15,8 +15,8 @@ return_t mdlWavefrontObjLoad(const char *const restrict filePath, vertexIndex_t 
 return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndex_t *indexNum, vertexIndex_t **indices, skeleton *const skl);
 
 // Default models.
-model mdlDefault = {
-	.skl = &sklDefault,
+model g_mdlDefault = {
+	.skl = &g_sklDefault,
 	.lodNum = 0,
 	.lods = NULL,
 	.buffers.vertexNum = 0,
@@ -26,7 +26,7 @@ model mdlDefault = {
 	.buffers.iboID = 0,
 	.name = "default"
 };
-model mdlSprite = {
+model g_mdlSprite = {
 	.skl = NULL,
 	.lodNum = 0,
 	.lods = NULL,
@@ -37,8 +37,8 @@ model mdlSprite = {
 	.buffers.iboID = 0,
 	.name = "sprite"
 };
-model mdlBillboard = {
-	.skl = &sklDefault,
+model g_mdlBillboard = {
+	.skl = &g_sklDefault,
 	.lodNum = 0,
 	.lods = NULL,
 	.buffers.vertexNum = 0,
@@ -113,7 +113,7 @@ return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, 
 
 	if(mdl->skl == NULL){if(sklPath[0] == '\0'){
 		// Use the default skeleton.
-        mdl->skl = &sklDefault;
+        mdl->skl = &g_sklDefault;
 	}else{
 		/** Check if the skeleton already exists. If not, load it. **/
 		skeleton *const tempSkl = moduleSkeletonAllocate();
@@ -127,7 +127,7 @@ return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, 
 					mdlDelete(mdl);
 					return -1;
 				}
-				mdl->skl = &sklDefault;
+				mdl->skl = &g_sklDefault;
 			}else{
 				mdl->skl = tempSkl;
 			}
@@ -168,13 +168,13 @@ return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, 
 }
 
 void mdlDefaultInit(){
-	mdlDefault.buffers = meshDefault;
+	g_mdlDefault.buffers = g_meshDefault;
 }
 void mdlSpriteInit(){
-	mdlSprite.buffers = meshSprite;
+	g_mdlSprite.buffers = g_meshSprite;
 }
 void mdlBillboardInit(){
-	mdlBillboard.buffers = meshBillboard;
+	g_mdlBillboard.buffers = g_meshBillboard;
 }
 
 __FORCE_INLINE__ void mdlFindCurrentLOD(const model *const restrict mdl, vertexIndex_t *const restrict indexNum, const void **const restrict offset, const float distance, size_t bias){
@@ -227,7 +227,7 @@ __FORCE_INLINE__ void mdlFindCurrentLOD(const model *const restrict mdl, vertexI
 }
 
 void mdlDelete(model *const restrict mdl){
-	if(mdl->name != NULL && mdl->name != mdlDefault.name && mdl->name != mdlSprite.name && mdl->name != mdlBillboard.name){
+	if(mdl->name != NULL && mdl->name != g_mdlDefault.name && mdl->name != g_mdlSprite.name && mdl->name != g_mdlBillboard.name){
 		memFree(mdl->name);
 	}
 	if(mdl->lods != NULL){

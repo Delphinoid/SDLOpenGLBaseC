@@ -4,7 +4,7 @@
 #include "mesh.h"
 
 // Sprite state buffer ID. Required for batch rendering sprites.
-extern GLuint sprStateBufferID;
+extern GLuint g_sprStateBufferID;
 
 // Sprites are just meshes that store vertices in a separate format.
 return_t sprGenerateStateBuffer();

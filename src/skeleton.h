@@ -99,7 +99,7 @@ typedef struct sklInstance {
 	const skeleton *skl;
 } sklInstance;
 
-extern skeleton sklDefault;
+extern skeleton g_sklDefault;
 
 void sklInit(skeleton *const restrict skl);
 return_t sklLoad(skeleton *const restrict skl, const char *const restrict prgPath, const char *const restrict filePath);

@@ -12,10 +12,10 @@
 #define RESOURCE_SKELETON_CONSTANTS 1
 
 // Forward declarations for inlining.
-extern memoryPool  __SkeletonResourceArray;                   // Contains skeletons.
-extern memoryPool  __SkeletonAnimationResourceArray;          // Contains sklAnims.
-extern memorySLink __SkeletonAnimationFragmentResourceArray;  // Contains sklAnimFragments.
-extern memorySLink __SkeletonAnimationInstanceResourceArray;  // Contains sklAnimInstances.
+extern memoryPool  __g_SkeletonResourceArray;                   // Contains skeletons.
+extern memoryPool  __g_SkeletonAnimationResourceArray;          // Contains sklAnims.
+extern memorySLink __g_SkeletonAnimationFragmentResourceArray;  // Contains sklAnimFragments.
+extern memorySLink __g_SkeletonAnimationInstanceResourceArray;  // Contains sklAnimInstances.
 
 typedef struct skeleton skeleton;
 typedef struct sklAnim sklAnim;

@@ -53,9 +53,13 @@ void vec3VDivVP1(vec3 *const restrict v1, const vec3 *const restrict v2);
 void vec3VDivVP2(const vec3 *const restrict v1, vec3 *const restrict v2);
 void vec3VDivVPR(const vec3 *const restrict v1, const vec3 *const restrict v2, vec3 *const restrict r);
 void vec3VDivNP(vec3 *const restrict v, const float x, const float y, const float z);
+void vec3VDivNPR(const vec3 *const restrict v, const float x, const float y, const float z, vec3 *const restrict r);
 void vec3VDivSP(vec3 *const restrict v, const float s);
+void vec3VDivSPR(const vec3 *const restrict v, const float s, vec3 *const restrict r);
 void vec3NDivVP(const float x, const float y, const float z, vec3 *const restrict v);
+void vec3NDivVPR(const float x, const float y, const float z, const vec3 *const restrict v, vec3 *const restrict r);
 void vec3SDivVP(const float s, vec3 *const restrict v);
+void vec3SDivVPR(const float s, const vec3 *const restrict v, vec3 *const restrict r);
 
 vec3 vec3Min(const vec3 v1, const vec3 v2);
 void vec3MinP(const vec3 *const restrict v1, const vec3 *const restrict v2, vec3 *const restrict r);

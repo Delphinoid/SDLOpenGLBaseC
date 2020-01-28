@@ -25,35 +25,6 @@ mat4 boneMatrix(const bone b){
 	return transform;
 }
 
-bone boneNegate(const bone b){
-	const bone r = {
-		.position = vec3Negate(b.position),
-		.orientation = quatNegate(b.orientation),
-		.scale = vec3SDivV(1.f, b.scale)
-	};
-	return r;
-}
-void boneNegateP(bone *const restrict b){
-	b->position.x = -b->position.x;
-	b->position.y = -b->position.y;
-	b->position.z = -b->position.z;
-	b->orientation.w = -b->orientation.w;
-	b->orientation.v = b->orientation.v;
-	b->scale.x = 1.f/b->scale.x;
-	b->scale.y = 1.f/b->scale.y;
-	b->scale.z = 1.f/b->scale.z;
-}
-void boneNegatePR(const bone *const restrict b, bone *const restrict r){
-	r->position.x = -b->position.x;
-	r->position.y = -b->position.y;
-	r->position.z = -b->position.z;
-	r->orientation.w = -b->orientation.w;
-	r->orientation.v = b->orientation.v;
-	r->scale.x = 1.f/b->scale.x;
-	r->scale.y = 1.f/b->scale.y;
-	r->scale.z = 1.f/b->scale.z;
-}
-
 bone boneInvert(const bone b){
 	bone r;
 	r.orientation = quatConjugate(b.orientation);
@@ -74,6 +45,31 @@ void boneInvertPR(const bone *const restrict b, bone *const restrict r){
 	r->scale.x = 1.f/b->scale.x;
 	r->scale.y = 1.f/b->scale.y;
 	r->scale.z = 1.f/b->scale.z;
+}
+
+bone boneInvertFast(const bone b){
+	// WARNING: This is technically incorrect, and may
+	// result in singularities during interpolation.
+	const bone r = {
+		.position = vec3Negate(b.position),
+		.orientation = quatConjugateFast(b.orientation),
+		.scale = vec3SDivV(1.f, b.scale)
+	};
+	return r;
+}
+void boneInvertFastP(bone *const restrict b){
+	// WARNING: This is technically incorrect, and may
+	// result in singularities during interpolation.
+	vec3NegateP(&b->position);
+	quatConjugateFastP(&b->orientation);
+	vec3SDivVP(1.f, &b->scale);
+}
+void boneInvertFastPR(const bone *const restrict b, bone *const restrict r){
+	// WARNING: This is technically incorrect, and may
+	// result in singularities during interpolation.
+	vec3NegatePR(&b->position, &r->position);
+	quatConjugateFastPR(&b->orientation, &r->orientation);
+	vec3SDivVPR(1.f, &b->scale, &r->scale);
 }
 
 bone boneInterpolate(const bone b1, const bone b2, const float t){
@@ -97,7 +93,7 @@ bone boneInterpolate(const bone b1, const bone b2, const float t){
 			.position = vec3Lerp(b1.position, b2.position, t),
 
 			// SLERP between the start orientation and end orientation.
-			.orientation = quatSlerp(b1.orientation, b2.orientation, t),
+			.orientation = quatSlerpFast(b1.orientation, b2.orientation, t),
 
 			// LERP once more for the scale.
 			.scale = vec3Lerp(b1.scale, b2.scale, t)
@@ -123,7 +119,7 @@ void boneInterpolateP1(bone *const restrict b1, const bone *const restrict b2, c
 		vec3LerpP1(&b1->position, &b2->position, t);
 
 		// SLERP between the start orientation and end orientation.
-		quatSlerpP1(&b1->orientation, &b2->orientation, t);
+		quatSlerpFastP1(&b1->orientation, &b2->orientation, t);
 
 		// LERP once more for the scale.
 		vec3LerpP1(&b1->scale, &b2->scale, t);
@@ -145,7 +141,7 @@ void boneInterpolateP2(const bone *const restrict b1, bone *const restrict b2, c
 		vec3LerpP2(&b1->position, &b2->position, t);
 
 		// SLERP between the start orientation and end orientation.
-		quatSlerpP2(&b1->orientation, &b2->orientation, t);
+		quatSlerpFastP2(&b1->orientation, &b2->orientation, t);
 
 		// LERP once more for the scale.
 		vec3LerpP2(&b1->scale, &b2->scale, t);
@@ -172,7 +168,7 @@ void boneInterpolatePR(const bone *const restrict b1, const bone *const restrict
 		vec3LerpPR(&b1->position, &b2->position, t, &r->position);
 
 		// SLERP between the start orientation and end orientation.
-		quatSlerpPR(&b1->orientation, &b2->orientation, t, &r->orientation);
+		quatSlerpFastPR(&b1->orientation, &b2->orientation, t, &r->orientation);
 
 		// LERP once more for the scale.
 		vec3LerpPR(&b1->scale, &b2->scale, t, &r->scale);

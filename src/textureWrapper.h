@@ -36,7 +36,7 @@ typedef struct {
 	animationInstance animator;
 } twInstance;
 
-extern textureWrapper twDefault;
+extern textureWrapper g_twDefault;
 
 /** twLoad() and twiAnimate() may need some tidying up. **/
 void twInit(textureWrapper *const restrict tw);

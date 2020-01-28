@@ -1,6 +1,8 @@
 #ifndef GUI_H
 #define GUI_H
 
+#include "guiWindow.h"
+#include "guiText.h"
 #include "renderable.h"
 #include "text.h"
 #include "bone.h"
@@ -20,25 +22,6 @@
 typedef struct object object;
 typedef struct graphicsManager graphicsManager;
 
-typedef struct {
-	// Border element UV offsets for rendering.
-	/// Move this to guiWindowBase.
-	rectangle offsets[8];
-	// Texture wrappers for the window body and border.
-	twInstance body;
-	twInstance border;
-	flags_t flags;
-} guiWindow;
-
-typedef struct {
-	// Text buffer.
-	///txtBuffer buffer;
-	// Text box boundaries.
-	rectangle bounds;
-	flags_t flags;
-} guiText;
-
-typedef struct guiElement guiElement;
 typedef struct guiElement {
 
 	// Parent pointer and a linked list of children.
@@ -49,7 +32,7 @@ typedef struct guiElement {
 	union {
 		renderable rndr;
 		guiWindow window;
-		///guiText text;
+		guiText text;
 		object *obj;  ///void *obj;
 	} data;
 	bone root;

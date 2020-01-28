@@ -21,7 +21,7 @@
 #define SKELETON_ANIM_FRAGMENT_START_CAPACITY 1
 
 // Default skeleton.
-static sklNode sklNodeDefault = {
+static sklNode g_sklNodeDefault = {
 	.name = "root",
 	.parent = 0,
 	.defaultState = {
@@ -30,10 +30,10 @@ static sklNode sklNodeDefault = {
 		.scale = {.x = 1.f, .y = 1.f, .z = 1.f}
 	}
 };
-skeleton sklDefault = {
+skeleton g_sklDefault = {
 	.name = "default",
 	.boneNum = 1,
-	.bones = &sklNodeDefault
+	.bones = &g_sklNodeDefault
 };
 
 static void sklDefragment(skeleton *const restrict skl){
@@ -234,10 +234,10 @@ boneIndex_t sklFindBone(const skeleton *const restrict skl, const boneIndex_t id
 	return (boneIndex_t)-1;
 }
 void sklDelete(skeleton *const restrict skl){
-	if(skl->name != NULL && skl->name != sklDefault.name){
+	if(skl->name != NULL && skl->name != g_sklDefault.name){
 		memFree(skl->name);
 	}
-	if(skl->bones != NULL && skl->bones != &sklNodeDefault){
+	if(skl->bones != NULL && skl->bones != &g_sklNodeDefault){
 		sklNode *n = skl->bones;
 		const sklNode *const nLast = &n[skl->boneNum];
 		for(; n < nLast; ++n){

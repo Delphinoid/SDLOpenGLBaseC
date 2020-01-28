@@ -174,7 +174,7 @@ return_t iQuatUpdate(interpQuat *const restrict iQuat, const float interpT){
 		}
 		iQuat->render = iQuat->value;
 	}else{
-		iQuat->render = quatSlerp(iQuat->previous, iQuat->value, interpT);
+		iQuat->render = quatSlerpFast(iQuat->previous, iQuat->value, interpT);
 	}
 	return 1;
 }
@@ -186,7 +186,7 @@ void iQuatInterpolate(const interpQuat *const restrict iQuat, const float interp
 	   iQuat->previous.v.z == iQuat->value.v.z){
 		*r = iQuat->value;
 	}else{
-		quatSlerpR(&iQuat->previous,
+		quatSlerpFastR(&iQuat->previous,
 		           &iQuat->value,
 		           interpT, r);
 	}

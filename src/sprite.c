@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
-GLuint sprStateBufferID = 0;
+GLuint g_sprStateBufferID = 0;
 
 typedef struct {
 	vec3 position;
@@ -15,7 +15,7 @@ typedef struct {
 } sprVertex;
 
 // Default sprite.
-mesh meshSprite = {
+mesh g_meshSprite = {
 	.vertexNum = 0,
 	.indexNum = 0,
 	.vaoID = 0,
@@ -28,8 +28,8 @@ return_t sprGenerateStateBuffer(){
 	GLenum glError;
 
 	// Create and bind the sprite state buffer object.
-	glGenBuffers(1, &sprStateBufferID);
-	glBindBuffer(GL_ARRAY_BUFFER, sprStateBufferID);
+	glGenBuffers(1, &g_sprStateBufferID);
+	glBindBuffer(GL_ARRAY_BUFFER, g_sprStateBufferID);
 	// Use buffer orphaning and write to the buffer before rendering.
 	glBufferData(GL_ARRAY_BUFFER, SPRITE_STATE_BUFFER_SIZE*sizeof(spriteState), NULL, GL_STREAM_DRAW);
 
@@ -120,7 +120,7 @@ return_t sprGenerateBuffers(mesh *const restrict spr, const vertexIndex_t vertex
 
 			sprVertexAttributes();
 
-			glBindBuffer(GL_ARRAY_BUFFER, sprStateBufferID);
+			glBindBuffer(GL_ARRAY_BUFFER, g_sprStateBufferID);
 			sprStateAttributes();
 
 			// Check for errors.
@@ -179,7 +179,7 @@ return_t sprDefaultInit(){
 	indices[4] = 3;
 	indices[5] = 1;
 
-	if(sprGenerateBuffers(&meshSprite, 4, (const vertex *const restrict)vertices, 6, indices) <= 0){
+	if(sprGenerateBuffers(&g_meshSprite, 4, (const vertex *const restrict)vertices, 6, indices) <= 0){
 		return 0;
 	}
 
@@ -188,7 +188,7 @@ return_t sprDefaultInit(){
 }
 
 void sprDeleteStateBuffer(){
-	if(sprStateBufferID != 0){
-		glDeleteBuffers(1, &sprStateBufferID);
+	if(g_sprStateBufferID != 0){
+		glDeleteBuffers(1, &g_sprStateBufferID);
 	}
 }
