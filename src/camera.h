@@ -42,8 +42,8 @@ void camResetInterpolation(camera *const restrict cam);
 
 void camCalculateUp(camera *const restrict cam);
 void camUpdateViewMatrix(camera *const restrict cam, const float interpT);
-void camUpdateProjectionMatrix(camera *const restrict cam, const float windowWidth, const float windowHeight, const float interpT);
-void camUpdateViewProjectionMatrix(camera *const restrict cam, const unsigned int windowModified, const float windowWidth, const float windowHeight, const float interpT);
+void camUpdateProjectionMatrix(camera *const restrict cam, const float viewportWidth, const float viewportHeight, const float interpT);
+void camUpdateViewProjectionMatrix(camera *const restrict cam, const unsigned int viewportModified, const float viewportWidth, const float viewportHeight, const float interpT);
 
 float camDistance(const camera *const restrict cam, const vec3 target);
 

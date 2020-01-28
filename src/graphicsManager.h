@@ -32,7 +32,7 @@ typedef struct graphicsManager {
 	float windowAspectRatioY;
 	unsigned int windowWidth;
 	unsigned int windowHeight;
-	unsigned int windowStretchToFit;
+	unsigned int windowViewportMode;
 	unsigned int windowModified;
 
 } graphicsManager;
@@ -41,7 +41,7 @@ return_t gfxMngrInit(graphicsManager *const restrict gfxMngr, const char *const 
 unsigned int gfxMngrWindowChanged(graphicsManager *const restrict gfxMngr);
 void gfxMngrUpdateWindow(graphicsManager *const restrict gfxMngr);
 int gfxMngrSetWindowMode(graphicsManager *const restrict gfxMngr, const Uint32 mode);
-void gfxMngrSetWindowFill(graphicsManager *const restrict gfxMngr, const unsigned int fill);
+void gfxMngrSetWindowFill(graphicsManager *const restrict gfxMngr, const unsigned int viewportMode);
 void gfxMngrSetViewportAspectRatio(graphicsManager *const restrict gfxMngr, const float x, const float y);
 void gfxMngrSetViewportAspectX(graphicsManager *const restrict gfxMngr, const float x);
 void gfxMngrSetViewportAspectY(graphicsManager *const restrict gfxMngr, const float y);

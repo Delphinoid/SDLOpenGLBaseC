@@ -33,36 +33,36 @@ void camUpdateViewMatrix(camera *const restrict cam, const float interpT){
 	// Rotate the camera.
 	cam->viewMatrix = mat4MMultM(mat4RotationMatrix(cam->orientation.render), cam->viewMatrix);
 }
-void camUpdateProjectionMatrix(camera *const restrict cam, const float windowWidth, const float windowHeight, const float interpT){
+void camUpdateProjectionMatrix(camera *const restrict cam, const float viewportWidth, const float viewportHeight, const float interpT){
 	if(flagsAreSet(cam->flags, CAM_PROJECTION_FRUSTUM)){
 		// CAM_PROJECTION_FRUSTUM is set, the camera is using a frustum projection matrix
-		cam->projectionMatrix = mat4Perspective(cam->fovy.render*RADIAN_RATIO, windowWidth / windowHeight, 0.1f/cam->fovy.render, 1000.f);
+		cam->projectionMatrix = mat4Perspective(cam->fovy.render*RADIAN_RATIO, viewportWidth / viewportHeight, 0.1f/cam->fovy.render, 1000.f);
 	}else if(flagsAreSet(cam->flags, CAM_PROJECTION_ORTHOGRAPHIC)){
 		// CAM_PROJECTION_ORTHOGRAPHIC is set, the camera is using an orthographic projection matrix
-		cam->projectionMatrix = mat4Ortho(0.f, windowWidth / (windowWidth < windowHeight ? windowWidth : windowHeight),
-										  0.f, windowHeight / (windowWidth < windowHeight ? windowWidth : windowHeight),
+		cam->projectionMatrix = mat4Ortho(0.f, viewportWidth / (viewportWidth < viewportHeight ? viewportWidth : viewportHeight),
+										  0.f, viewportHeight / (viewportWidth < viewportHeight ? viewportWidth : viewportHeight),
 										  -1000.f, 1000.f);
 	}else if(flagsAreSet(cam->flags, CAM_PROJECTION_OVERLAY)){
 		// OpenGL coordinates have the center at 0 with the sides
 		// at -1 and 1, resulting in a total window size of 2x2.
-		cam->projectionMatrix = mat4ScaleMatrix(2.f/windowWidth, 2.f/windowHeight, 0.f);
+		cam->projectionMatrix = mat4ScaleMatrix(2.f/viewportWidth, 2.f/viewportHeight, 0.f);
 	}else{
 		cam->projectionMatrix = mat4Identity();
 	}
 }
-void camUpdateViewProjectionMatrix(camera *const restrict cam, const unsigned int windowModified, const float windowWidth, const float windowHeight, const float interpT){
+void camUpdateViewProjectionMatrix(camera *const restrict cam, const unsigned int viewportModified, const float viewportWidth, const float viewportHeight, const float interpT){
 
 	// Only generate a new view matrix if the camera viewport has changed in any way.
 	const int viewUpdate = iVec3Update(&cam->position, interpT) | iVec3Update(&cam->target, interpT) |
 	                       iQuatUpdate(&cam->orientation, interpT) | iVec3Update(&cam->up, interpT);
 	// If the FOV or window size changed, update the camera projection matrices as well.
-	const int projectionUpdate = (flagsAreSet(cam->flags, CAM_PROJECTION_FRUSTUM) && iFloatUpdate(&cam->fovy, interpT)) || windowModified;
+	const int projectionUpdate = (flagsAreSet(cam->flags, CAM_PROJECTION_FRUSTUM) && iFloatUpdate(&cam->fovy, interpT)) || viewportModified;
 
 	if(viewUpdate){
 		camUpdateViewMatrix(cam, interpT);
 	}
 	if(projectionUpdate){
-		camUpdateProjectionMatrix(cam, windowWidth, windowHeight, interpT);
+		camUpdateProjectionMatrix(cam, viewportWidth, viewportHeight, interpT);
 	}
 	if(viewUpdate || projectionUpdate){
 		//cam->viewProjectionMatrix = mat4MMultM(cam->viewMatrix, cam->projectionMatrix);

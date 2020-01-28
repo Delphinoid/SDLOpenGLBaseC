@@ -27,4 +27,4 @@ List of potential modifications and ideas:
 * Organize source files into folders. Eventually.
 * Phase out SDL?
 
-Download the bin folder if you want to give it a go.
+Download the bin folder if you would like to give it a go.

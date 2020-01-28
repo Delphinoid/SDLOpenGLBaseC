@@ -8,8 +8,6 @@
 #include "bone.h"
 #include "vec2.h"
 
-#define GUI_WINDOW_STRETCH_BODY 0x01
-
 #define GUI_TEXT_WORD_WRAP 0x01
 
 // If no type is defined, defaults to renderable.

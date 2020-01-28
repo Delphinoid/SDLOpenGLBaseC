@@ -105,7 +105,7 @@ return_t gfxMngrInit(graphicsManager *const restrict gfxMngr, const char *const 
 	gfxMngr->windowAspectRatioY = GFX_DEFAULT_WINDOW_ASPECT_RATIO_Y;
 	gfxMngr->windowWidth = GFX_DEFAULT_WINDOW_WIDTH;
 	gfxMngr->windowHeight = GFX_DEFAULT_WINDOW_HEIGHT;
-	gfxMngr->windowStretchToFit = 0;
+	gfxMngr->windowViewportMode = GFX_DEFAULT_VIEWPORT_MODE;
 	gfxMngr->windowModified = 2;
 
 	r = gfxMngrInitSDL(gfxMngr);
@@ -133,11 +133,26 @@ unsigned int gfxMngrWindowChanged(graphicsManager *const restrict gfxMngr){
 }
 
 void gfxMngrUpdateViewport(graphicsManager *const restrict gfxMngr){
-	if(gfxMngr->windowStretchToFit){
+	if(gfxMngr->windowViewportMode == GFX_WINDOW_VIEWPORT_MODE_FILL){
 		gfxMngr->viewport.x = 0;
 		gfxMngr->viewport.y = 0;
 		gfxMngr->viewport.width = gfxMngr->windowWidth;
 		gfxMngr->viewport.height = gfxMngr->windowHeight;
+	}else if(gfxMngr->windowViewportMode == GFX_WINDOW_VIEWPORT_MODE_STRETCH){
+		float tempWidth  = gfxMngr->windowWidth  / gfxMngr->windowAspectRatioX;
+		float tempHeight = gfxMngr->windowHeight / gfxMngr->windowAspectRatioY;
+		if(tempWidth > tempHeight){
+			gfxMngr->viewport.width  = (unsigned int)tempHeight * gfxMngr->windowAspectRatioX;
+			gfxMngr->viewport.height = gfxMngr->windowHeight;
+		}else if(tempWidth < tempHeight){
+			gfxMngr->viewport.width  = gfxMngr->windowWidth;
+			gfxMngr->viewport.height = (unsigned int)tempWidth * gfxMngr->windowAspectRatioY;
+		}else{
+			gfxMngr->viewport.width  = gfxMngr->windowWidth;
+			gfxMngr->viewport.height = gfxMngr->windowHeight;
+		}
+		gfxMngr->viewport.x = 0;
+		gfxMngr->viewport.y = 0;
 	}else{
 		float tempWidth  = gfxMngr->windowWidth  / gfxMngr->windowAspectRatioX;
 		float tempHeight = gfxMngr->windowHeight / gfxMngr->windowAspectRatioY;
@@ -151,7 +166,7 @@ void gfxMngrUpdateViewport(graphicsManager *const restrict gfxMngr){
 			gfxMngr->viewport.width  = gfxMngr->windowWidth;
 			gfxMngr->viewport.height = gfxMngr->windowHeight;
 		}
-		gfxMngr->viewport.x = (gfxMngr->windowWidth - gfxMngr->viewport.width)  >> 1;
+		gfxMngr->viewport.x = (gfxMngr->windowWidth  - gfxMngr->viewport.width)  >> 1;
 		gfxMngr->viewport.y = (gfxMngr->windowHeight - gfxMngr->viewport.height) >> 1;
 	}
 	gfxViewReset(&gfxMngr->viewLast);
@@ -182,8 +197,8 @@ int gfxMngrSetWindowMode(graphicsManager *const restrict gfxMngr, const Uint32 m
 	return r;
 }
 
-void gfxMngrSetWindowFill(graphicsManager *const restrict gfxMngr, const unsigned int fill){
-	gfxMngr->windowStretchToFit = fill;
+void gfxMngrSetWindowFill(graphicsManager *const restrict gfxMngr, const unsigned int viewportMode){
+	gfxMngr->windowViewportMode = viewportMode;
 	gfxMngr->windowModified = 2;
 }
 
@@ -221,11 +236,21 @@ void gfxMngrSetViewportHeight(graphicsManager *const restrict gfxMngr, const uns
 
 __FORCE_INLINE__ void gfxMngrSwitchView(graphicsManager *const restrict gfxMngr, const gfxView *const restrict view){
     if(memcmp(view, &gfxMngr->viewLast, sizeof(gfxView))){
+    	unsigned int width;
+		unsigned int height;
+		// This conditional sucks. Beats modifying the camera's view though.
+		if(gfxMngr->windowViewportMode == GFX_WINDOW_VIEWPORT_MODE_STRETCH){
+			width = gfxMngr->windowWidth;
+			height = gfxMngr->windowHeight;
+		}else{
+			width = gfxMngr->viewport.width;
+			height = gfxMngr->viewport.height;
+		}
 		glViewport(
-			gfxMngr->viewport.x + (int)(view->x * gfxMngr->viewport.width),
-			gfxMngr->viewport.y + (int)(view->y * gfxMngr->viewport.height),
-			(unsigned int)view->width * gfxMngr->viewport.width,
-			(unsigned int)view->height * gfxMngr->viewport.height
+			(GLint)(gfxMngr->viewport.x + (int)(view->x * gfxMngr->viewport.width)),
+			(GLint)(gfxMngr->viewport.y + (int)(view->y * gfxMngr->viewport.height)),
+			(GLsizei)(view->width * width),
+			(GLsizei)(view->height * height)
 		);
 		gfxMngr->viewLast = *view;
     }

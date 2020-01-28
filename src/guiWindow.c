@@ -114,7 +114,7 @@ void guiElementRenderWindow(const guiElement *const restrict element, graphicsMa
 	// Texture fragment.
 	state->frame.x = frameBorder->subframe.x + offsets->x;
 	state->frame.y = frameBorder->subframe.y + offsets->y;
-	state->frame.w = flagsAreSet(window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.w * offsets->w : -2.f*transform.scale.y*inverseWidth;
+	state->frame.w = flagsAreSet(window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.w * offsets->w : 2.f*transform.scale.y*inverseWidth;
 	state->frame.h = frameBorder->subframe.h * offsets->h;
 
 	// Draw the top side.
@@ -130,7 +130,7 @@ void guiElementRenderWindow(const guiElement *const restrict element, graphicsMa
 	// Texture fragment.
 	state->frame.x = frameBorder->subframe.x + offsets->x;
 	state->frame.y = frameBorder->subframe.y + offsets->y;
-	state->frame.w = flagsAreSet(window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.w * offsets->w : -2.f*transform.scale.x*inverseWidth;
+	state->frame.w = flagsAreSet(window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.w * offsets->w : 2.f*transform.scale.x*inverseWidth;
 	state->frame.h = frameBorder->subframe.h * offsets->h;
 
 	// Draw the left side.
@@ -146,7 +146,7 @@ void guiElementRenderWindow(const guiElement *const restrict element, graphicsMa
 	// Texture fragment.
 	state->frame.x = flagsAreSet(window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.x + offsets->x : frameBorder->subframe.x + offsets->x + 2.f*transform.scale.y*inverseWidth;
 	state->frame.y = frameBorder->subframe.y + offsets->y;
-	state->frame.w = flagsAreSet(window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.w * offsets->w : 2.f*transform.scale.y*inverseWidth;
+	state->frame.w = flagsAreSet(window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.w * offsets->w : -2.f*transform.scale.y*inverseWidth;
 	state->frame.h = frameBorder->subframe.h * offsets->h;
 
 	// Draw the bottom side.
@@ -162,7 +162,7 @@ void guiElementRenderWindow(const guiElement *const restrict element, graphicsMa
 	// Texture fragment.
 	state->frame.x = flagsAreSet(window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.x + offsets->x : frameBorder->subframe.x + offsets->x + 2.f*transform.scale.x*inverseWidth;
 	state->frame.y = frameBorder->subframe.y + offsets->y;
-	state->frame.w = flagsAreSet(window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.w * offsets->w : 2.f*transform.scale.x*inverseWidth;
+	state->frame.w = flagsAreSet(window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.w * offsets->w : -2.f*transform.scale.x*inverseWidth;
 	state->frame.h = frameBorder->subframe.h * offsets->h;
 
 	// Upload the state data to the shader and render the model.

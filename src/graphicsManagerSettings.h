@@ -38,18 +38,19 @@
 	#define GFX_DEFAULT_CHUNKSIZE 2048
 #endif
 
-#ifndef GFX_WINDOW_MODE_WINDOWED
-	#define GFX_WINDOW_MODE_WINDOWED   0
-#endif
-#ifndef GFX_WINDOW_MODE_FULLSCREEN
-	#define GFX_WINDOW_MODE_FULLSCREEN SDL_WINDOW_FULLSCREEN
-#endif
+#define GFX_WINDOW_MODE_WINDOWED 0
+#define GFX_WINDOW_MODE_FULLSCREEN SDL_WINDOW_FULLSCREEN
 
-#ifndef GFX_WINDOW_FILL_WINDOWBOX
-	#define GFX_WINDOW_FILL_WINDOWBOX 0
-#endif
-#ifndef GFX_WINDOW_FILL_STRETCH
-	#define GFX_WINDOW_FILL_STRETCH   1
+// Note: it's a good idea to use either windowbox or
+// stretch mode. Fill has a tendency to affect the fov,
+// which may not be intended and gives users with higher
+// resolutions significant advantages in some cases.
+#define GFX_WINDOW_VIEWPORT_MODE_WINDOWBOX 0
+#define GFX_WINDOW_VIEWPORT_MODE_STRETCH   1
+#define GFX_WINDOW_VIEWPORT_MODE_FILL      2
+
+#ifndef GFX_DEFAULT_VIEWPORT_MODE
+	#define GFX_DEFAULT_VIEWPORT_MODE GFX_WINDOW_VIEWPORT_MODE_WINDOWBOX
 #endif
 
 #endif
