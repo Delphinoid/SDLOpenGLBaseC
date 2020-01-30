@@ -4,7 +4,8 @@
 #include "textureWrapper.h"
 #include "flags.h"
 
-#define GUI_WINDOW_STRETCH_BODY 0x01
+#define GUI_WINDOW_STRETCH_BORDER 0x01
+#define GUI_WINDOW_STRETCH_BODY   0x02
 
 typedef struct guiElement guiElement;
 typedef struct camera camera;

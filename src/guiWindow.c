@@ -23,8 +23,8 @@ void guiElementRenderWindow(const guiElement *const restrict element, graphicsMa
 		.scale = root.scale
 	};
 
-	const float inverseWidth = 1.f/frameBorder->image->width;
-	const float inverseHeight = 1.f/frameBody->image->height;
+	const float inverseWidthX = transform.scale.x/frameBorder->image->width;
+	const float inverseWidthY = transform.scale.y/frameBorder->image->width;
 
 	vec2 size;
 	spriteState *state = &gfxMngr->shdrData.spriteTransformState[0];
@@ -114,7 +114,7 @@ void guiElementRenderWindow(const guiElement *const restrict element, graphicsMa
 	// Texture fragment.
 	state->frame.x = frameBorder->subframe.x + offsets->x;
 	state->frame.y = frameBorder->subframe.y + offsets->y;
-	state->frame.w = flagsAreSet(window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.w * offsets->w : 2.f*transform.scale.y*inverseWidth;
+	state->frame.w = flagsAreSet(window.flags, GUI_WINDOW_STRETCH_BORDER) ? frameBorder->subframe.w * offsets->w : inverseWidthY;
 	state->frame.h = frameBorder->subframe.h * offsets->h;
 
 	// Draw the top side.
@@ -130,7 +130,7 @@ void guiElementRenderWindow(const guiElement *const restrict element, graphicsMa
 	// Texture fragment.
 	state->frame.x = frameBorder->subframe.x + offsets->x;
 	state->frame.y = frameBorder->subframe.y + offsets->y;
-	state->frame.w = flagsAreSet(window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.w * offsets->w : 2.f*transform.scale.x*inverseWidth;
+	state->frame.w = flagsAreSet(window.flags, GUI_WINDOW_STRETCH_BORDER) ? frameBorder->subframe.w * offsets->w : inverseWidthX;
 	state->frame.h = frameBorder->subframe.h * offsets->h;
 
 	// Draw the left side.
@@ -139,14 +139,14 @@ void guiElementRenderWindow(const guiElement *const restrict element, graphicsMa
 	size.x = offsets->h * frameBorder->image->height;
 	// Transformation matrix.
 	// Consists of a scale, a rotation and a translation.
-	state->transformation.m[0][0] = 0.f;               state->transformation.m[1][0] = -size.x; state->transformation.m[2][0] = 0.f; state->transformation.m[3][0] = transform.position.x - 0.5f * (transform.scale.x + size.x);
-	state->transformation.m[0][1] = transform.scale.y; state->transformation.m[1][1] = 0.f;     state->transformation.m[2][1] = 0.f; state->transformation.m[3][1] = transform.position.y;
-	state->transformation.m[0][2] = 0.f;               state->transformation.m[1][2] = 0.f;     state->transformation.m[2][2] = 1.f; state->transformation.m[3][2] = transform.position.z;
-	state->transformation.m[0][3] = 0.f;               state->transformation.m[1][3] = 0.f;     state->transformation.m[2][3] = 0.f; state->transformation.m[3][3] = 1.f;
+	state->transformation.m[0][0] = 0.f;                state->transformation.m[1][0] = size.x; state->transformation.m[2][0] = 0.f; state->transformation.m[3][0] = transform.position.x - 0.5f * (transform.scale.x + size.x);
+	state->transformation.m[0][1] = -transform.scale.y; state->transformation.m[1][1] = 0.f;    state->transformation.m[2][1] = 0.f; state->transformation.m[3][1] = transform.position.y;
+	state->transformation.m[0][2] = 0.f;                state->transformation.m[1][2] = 0.f;    state->transformation.m[2][2] = 1.f; state->transformation.m[3][2] = transform.position.z;
+	state->transformation.m[0][3] = 0.f;                state->transformation.m[1][3] = 0.f;    state->transformation.m[2][3] = 0.f; state->transformation.m[3][3] = 1.f;
 	// Texture fragment.
-	state->frame.x = flagsAreSet(window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.x + offsets->x : frameBorder->subframe.x + offsets->x + 2.f*transform.scale.y*inverseWidth;
+	state->frame.x = frameBorder->subframe.x + offsets->x;
 	state->frame.y = frameBorder->subframe.y + offsets->y;
-	state->frame.w = flagsAreSet(window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.w * offsets->w : -2.f*transform.scale.y*inverseWidth;
+	state->frame.w = flagsAreSet(window.flags, GUI_WINDOW_STRETCH_BORDER) ? frameBorder->subframe.w * offsets->w : inverseWidthY;
 	state->frame.h = frameBorder->subframe.h * offsets->h;
 
 	// Draw the bottom side.
@@ -155,14 +155,14 @@ void guiElementRenderWindow(const guiElement *const restrict element, graphicsMa
 	size.x = offsets->h * frameBorder->image->height;
 	// Transformation matrix.
 	// Consists of a scale, a rotation and a translation.
-	state->transformation.m[0][0] = -transform.scale.x; state->transformation.m[1][0] = 0.f;     state->transformation.m[2][0] = 0.f; state->transformation.m[3][0] = transform.position.x;
-	state->transformation.m[0][1] = 0.f;                state->transformation.m[1][1] = -size.x; state->transformation.m[2][1] = 0.f; state->transformation.m[3][1] = transform.position.y - 0.5f * (transform.scale.y + size.x);
-	state->transformation.m[0][2] = 0.f;                state->transformation.m[1][2] = 0.f;     state->transformation.m[2][2] = 1.f; state->transformation.m[3][2] = transform.position.z;
-	state->transformation.m[0][3] = 0.f;                state->transformation.m[1][3] = 0.f;     state->transformation.m[2][3] = 0.f; state->transformation.m[3][3] = 1.f;
+	state->transformation.m[0][0] = transform.scale.x; state->transformation.m[1][0] = 0.f;    state->transformation.m[2][0] = 0.f; state->transformation.m[3][0] = transform.position.x;
+	state->transformation.m[0][1] = 0.f;               state->transformation.m[1][1] = size.x; state->transformation.m[2][1] = 0.f; state->transformation.m[3][1] = transform.position.y - 0.5f * (transform.scale.y + size.x);
+	state->transformation.m[0][2] = 0.f;               state->transformation.m[1][2] = 0.f;    state->transformation.m[2][2] = 1.f; state->transformation.m[3][2] = transform.position.z;
+	state->transformation.m[0][3] = 0.f;               state->transformation.m[1][3] = 0.f;    state->transformation.m[2][3] = 0.f; state->transformation.m[3][3] = 1.f;
 	// Texture fragment.
-	state->frame.x = flagsAreSet(window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.x + offsets->x : frameBorder->subframe.x + offsets->x + 2.f*transform.scale.x*inverseWidth;
+	state->frame.x = frameBorder->subframe.x + offsets->x;
 	state->frame.y = frameBorder->subframe.y + offsets->y;
-	state->frame.w = flagsAreSet(window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBorder->subframe.w * offsets->w : -2.f*transform.scale.x*inverseWidth;
+	state->frame.w = flagsAreSet(window.flags, GUI_WINDOW_STRETCH_BORDER) ? frameBorder->subframe.w * offsets->w : inverseWidthX;
 	state->frame.h = frameBorder->subframe.h * offsets->h;
 
 	// Upload the state data to the shader and render the model.
@@ -178,8 +178,13 @@ void guiElementRenderWindow(const guiElement *const restrict element, graphicsMa
 	// Texture fragment.
 	state->frame.x = frameBody->subframe.x;
 	state->frame.y = frameBody->subframe.y;
-	state->frame.w = flagsAreSet(window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBody->subframe.w : transform.scale.x/frameBody->image->width;
-	state->frame.h = flagsAreSet(window.flags, GUI_WINDOW_STRETCH_BODY) ? frameBody->subframe.h : transform.scale.y*inverseHeight;
+	if(flagsAreSet(window.flags, GUI_WINDOW_STRETCH_BODY)){
+		state->frame.w = frameBody->subframe.w;
+		state->frame.h = frameBody->subframe.h;
+	}else{
+		state->frame.w = transform.scale.x/frameBody->image->width;
+		state->frame.h = transform.scale.y/frameBody->image->height;
+	}
 	// Bind the texture.
 	gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, frameBody->image->diffuseID);
 	// Upload the state data to the shader and render the model.

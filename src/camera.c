@@ -45,7 +45,10 @@ void camUpdateProjectionMatrix(camera *const restrict cam, const float viewportW
 	}else if(flagsAreSet(cam->flags, CAM_PROJECTION_OVERLAY)){
 		// OpenGL coordinates have the center at 0 with the sides
 		// at -1 and 1, resulting in a total window size of 2x2.
-		cam->projectionMatrix = mat4ScaleMatrix(2.f/viewportWidth, 2.f/viewportHeight, 0.f);
+		// We also need to take into account GL pixel coordinates
+		// being in the center of the pixel.
+		cam->projectionMatrix = mat4Ortho(-viewportWidth*0.5f + 0.5f, viewportWidth*0.5f - 0.5f, -viewportHeight*0.5f + 0.5f, viewportHeight*0.5f - 0.5f, 0.f, 1.f);
+		//cam->projectionMatrix = mat4ScaleMatrix(2.f/viewportWidth, 2.f/viewportHeight, 0.f);
 	}else{
 		cam->projectionMatrix = mat4Identity();
 	}
