@@ -192,7 +192,7 @@ return_t mdlWavefrontObjLoad(const char *const __RESTRICT__ filePath, vertexInde
 					pathBegin = 9;
 					pathLength = lineLength-pathBegin;
 				}
-				strncpy(sklPath, line+pathBegin, pathLength);
+				memcpy(sklPath, line+pathBegin, pathLength);
 				sklPath[pathLength] = '\0';
 
 			// Sprite

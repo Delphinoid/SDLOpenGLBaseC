@@ -102,7 +102,7 @@ __HINT_INLINE__ void fileParseResourcePath(char *const __RESTRICT__ resPath, siz
 		pathLength = length-pathBegin;
 	}
 
-	strncpy(resPath, line+pathBegin, pathLength);
+	memcpy(resPath, line+pathBegin, pathLength);
 	resPath[pathLength] = '\0';
 
 	fileProcessPath(resPath);

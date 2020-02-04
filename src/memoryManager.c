@@ -1,9 +1,4 @@
 #include "memoryManager.h"
-#include "memoryStack.h"
-#include "memoryList.h"
-#include "memoryPool.h"
-#include "memorySLink.h"
-#include "memoryDLink.h"
 #include "memoryTree.h"
 
 #ifdef MEMORY_MANAGER_USE_LOCAL_DEFINITION

@@ -245,7 +245,7 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 					}
 
 					// Load the model.
-					strncpy(&loadPath[0], line+mdlPathBegin, mdlPathLength);
+					memcpy(&loadPath[0], line+mdlPathBegin, mdlPathLength);
 					loadPath[mdlPathLength] = '\0';
 
 					delimiter = loadPath;
@@ -295,7 +295,7 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 						textureWrapper *tempTw = NULL;
 
 						// Load the texture wrapper.
-						strncpy(&loadPath[0], line+texPathBegin, texPathLength);
+						memcpy(&loadPath[0], line+texPathBegin, texPathLength);
 						loadPath[texPathLength] = '\0';
 
 						delimiter = loadPath;

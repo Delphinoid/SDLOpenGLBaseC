@@ -88,7 +88,7 @@ return_t mdlLoad(model *const __RESTRICT__ mdl, const char *const __RESTRICT__ p
 		skeleton *const tempSkl = moduleSkeletonAllocate();
 		r = mdlSMDLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, tempSkl);
 		tempSkl->name = memAllocate(8*sizeof(char));
-		strncpy(tempSkl->name, "SMDTest", 7);
+		memcpy(tempSkl->name, "SMDTest", 7);
 		tempSkl->name[7] = '\0';
 		mdl->skl = tempSkl;
 		sprite = 0;

@@ -375,7 +375,7 @@ return_t sklaLoad(sklAnim *const __RESTRICT__ skla, const char *const __RESTRICT
 						fclose(sklaInfo);
 						return -1;
 					}
-					strncpy(skla->bones[skla->boneNum], line+5, lineLength-5);
+					memcpy(skla->bones[skla->boneNum], line+5, lineLength-5);
 					skla->bones[skla->boneNum][lineLength-5] = '\0';
 					++skla->boneNum;
 					currentCommand = 0;

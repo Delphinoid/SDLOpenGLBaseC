@@ -1,5 +1,4 @@
 #include "memoryStack.h"
-#include "qualifiers.h"
 
 void memStackInit(memoryStack *const __RESTRICT__ stack){
 	stack->free = NULL;
