@@ -1,9 +1,8 @@
 #include "collider.h"
 #include "memoryManager.h"
-#include "inline.h"
 #include <string.h>
 
-void cInit(collider *const restrict c, const colliderType_t type){
+void cInit(collider *const __RESTRICT__ c, const colliderType_t type){
 	c->type = type;
 	c->flags = 0;
 }
@@ -191,7 +190,7 @@ __FORCE_INLINE__ cAABB cTransform(collider *const instance, const vec3 instanceC
 }
 
 
-void cDelete(collider *const restrict c){
+void cDelete(collider *const __RESTRICT__ c){
 	// Handle deletions for base and instance colliders.
 	if(flagsAreSet(c->flags, COLLIDER_INSTANCE)){
 		if(c->type == COLLIDER_TYPE_MESH){

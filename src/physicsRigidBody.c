@@ -6,7 +6,6 @@
 #include "skeleton.h"
 #include "memoryManager.h"
 #include "helpersFileIO.h"
-#include "inline.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -17,7 +16,7 @@
 
 /** Use Parallel Axis Theorem for loading colliders. **/
 
-void physRigidBodyBaseInit(physRigidBodyBase *const restrict local){
+void physRigidBodyBaseInit(physRigidBodyBase *const __RESTRICT__ local){
 	local->id = (physicsBodyIndex_t)-1;
 	local->flags = PHYSICS_BODY_ASLEEP;
 	local->hull = NULL;
@@ -33,7 +32,7 @@ void physRigidBodyBaseInit(physRigidBodyBase *const restrict local){
 	#endif
 }
 
-__FORCE_INLINE__ static void physRigidBodyBaseAddCollider(physRigidBodyBase *const restrict local, physCollider *const c, const float **const vertexMassArray){
+__FORCE_INLINE__ static void physRigidBodyBaseAddCollider(physRigidBodyBase *const __RESTRICT__ local, physCollider *const c, const float **const vertexMassArray){
 
 	// Adds a single collider to the body.
 
@@ -98,7 +97,7 @@ __FORCE_INLINE__ static void physRigidBodyBaseAddCollider(physRigidBodyBase *con
 
 }
 
-__FORCE_INLINE__ static void physRigidBodyBaseGenerateProperties(physRigidBodyBase *const restrict local, const float **const vertexMassArray){
+__FORCE_INLINE__ static void physRigidBodyBaseGenerateProperties(physRigidBodyBase *const __RESTRICT__ local, const float **const vertexMassArray){
 
 	// Calculates the rigid body's total mass, inverse mass,
 	// centroid and inertia tensor, as well as the mass
@@ -202,7 +201,7 @@ __FORCE_INLINE__ static void physRigidBodyBaseGenerateProperties(physRigidBodyBa
 }
 
 /** TEMPORARY **/
-static return_t physColliderResizeToFit(physCollider *const restrict local){
+static return_t physColliderResizeToFit(physCollider *const __RESTRICT__ local){
 
 	if(local->c.type == COLLIDER_TYPE_MESH){
 
@@ -266,7 +265,7 @@ static return_t physColliderResizeToFit(physCollider *const restrict local){
 
 }
 
-return_t physRigidBodyBaseLoad(physRigidBodyBase **const restrict bodies, const skeleton *const restrict skl, const char *const restrict prgPath, const char *const restrict filePath){
+return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, const skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath){
 
 	// Loads a series of rigid bodies.
 	//
@@ -278,7 +277,7 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const restrict bodies, const 
 	char fullPath[FILE_MAX_PATH_LENGTH];
 	const size_t fileLength = strlen(filePath);
 
-	FILE *restrict rbInfo;
+	FILE *__RESTRICT__ rbInfo;
 
 	fileGenerateFullPath(fullPath, prgPath, strlen(prgPath), PHYSICS_RESOURCE_DIRECTORY_STRING, PHYSICS_RESOURCE_DIRECTORY_LENGTH, filePath, fileLength);
 	rbInfo = fopen(fullPath, "r");
@@ -1014,11 +1013,11 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const restrict bodies, const 
 
 }
 
-void physRigidBodyBaseDelete(physRigidBodyBase *const restrict local){
+void physRigidBodyBaseDelete(physRigidBodyBase *const __RESTRICT__ local){
 	modulePhysicsColliderFreeArray(&local->hull);
 }
 
-void physRigidBodyInit(physRigidBody *const restrict body){
+void physRigidBodyInit(physRigidBody *const __RESTRICT__ body){
 	body->flags = PHYSICS_BODY_ASLEEP;
 	body->base = NULL;
 	body->hull = NULL;
@@ -1029,7 +1028,7 @@ void physRigidBodyInit(physRigidBody *const restrict body){
 	vec3ZeroP(&body->netTorque);
 }
 
-return_t physRigidBodyInstantiate(physRigidBody *const restrict body, physRigidBodyBase *const restrict local){
+return_t physRigidBodyInstantiate(physRigidBody *const __RESTRICT__ body, physRigidBodyBase *const __RESTRICT__ local){
 
 	physCollider *cBody = NULL;
 	physCollider *cLocal = local->hull;
@@ -1062,64 +1061,64 @@ return_t physRigidBodyInstantiate(physRigidBody *const restrict body, physRigidB
 
 }
 
-__FORCE_INLINE__ void physRigidBodySetUninitialized(physRigidBody *const restrict body){
+__FORCE_INLINE__ void physRigidBodySetUninitialized(physRigidBody *const __RESTRICT__ body){
 	flagsSet(body->flags, PHYSICS_BODY_UNINITIALIZED);
 }
-__FORCE_INLINE__ void physRigidBodySetInitialized(physRigidBody *const restrict body){
+__FORCE_INLINE__ void physRigidBodySetInitialized(physRigidBody *const __RESTRICT__ body){
 	flagsUnset(body->flags, PHYSICS_BODY_UNINITIALIZED);
 	flagsSet(body->flags, PHYSICS_BODY_INITIALIZED);
 }
-__FORCE_INLINE__ void physRigidBodySetInitializedFull(physRigidBody *const restrict body){
+__FORCE_INLINE__ void physRigidBodySetInitializedFull(physRigidBody *const __RESTRICT__ body){
 	flagsUnset(body->flags, PHYSICS_BODY_UNINITIALIZED);
 }
-__FORCE_INLINE__ void physRigidBodySetAsleep(physRigidBody *const restrict body){
+__FORCE_INLINE__ void physRigidBodySetAsleep(physRigidBody *const __RESTRICT__ body){
 	body->flags &= PHYSICS_BODY_ASLEEP;
 }
-__FORCE_INLINE__ void physRigidBodySetAwake(physRigidBody *const restrict body, const flags_t flags){
+__FORCE_INLINE__ void physRigidBodySetAwake(physRigidBody *const __RESTRICT__ body, const flags_t flags){
 	body->flags = flags;
 }
 
-__FORCE_INLINE__ void physRigidBodySimulateCollisions(physRigidBody *const restrict body){
+__FORCE_INLINE__ void physRigidBodySimulateCollisions(physRigidBody *const __RESTRICT__ body){
 	flagsSet(body->flags, PHYSICS_BODY_COLLIDE | PHYSICS_BODY_COLLISION_MODIFIED);
 }
-__FORCE_INLINE__ void physRigidBodySimulateLinear(physRigidBody *const restrict body){
+__FORCE_INLINE__ void physRigidBodySimulateLinear(physRigidBody *const __RESTRICT__ body){
 	flagsSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR);
 }
-__FORCE_INLINE__ void physRigidBodySimulateAngular(physRigidBody *const restrict body){
+__FORCE_INLINE__ void physRigidBodySimulateAngular(physRigidBody *const __RESTRICT__ body){
 	flagsSet(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR);
 }
 
-__FORCE_INLINE__ void physRigidBodyIgnoreCollisions(physRigidBody *const restrict body){
+__FORCE_INLINE__ void physRigidBodyIgnoreCollisions(physRigidBody *const __RESTRICT__ body){
 	flagsUnset(body->flags, PHYSICS_BODY_COLLIDE);
 	flagsSet(body->flags, PHYSICS_BODY_COLLISION_MODIFIED);
 }
-__FORCE_INLINE__ void physRigidBodyIgnoreLinear(physRigidBody *const restrict body){
+__FORCE_INLINE__ void physRigidBodyIgnoreLinear(physRigidBody *const __RESTRICT__ body){
 	flagsUnset(body->flags, PHYSICS_BODY_SIMULATE_LINEAR);
 }
-__FORCE_INLINE__ void physRigidBodyIgnoreAngular(physRigidBody *const restrict body){
+__FORCE_INLINE__ void physRigidBodyIgnoreAngular(physRigidBody *const __RESTRICT__ body){
 	flagsUnset(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR);
 }
 
-__FORCE_INLINE__ return_t physRigidBodyIsUninitialized(const physRigidBody *const restrict body){
+__FORCE_INLINE__ return_t physRigidBodyIsUninitialized(const physRigidBody *const __RESTRICT__ body){
 	return flagsAreSet(body->flags, PHYSICS_BODY_UNINITIALIZED);
 }
 
-__FORCE_INLINE__ return_t physRigidBodyIsSimulated(const physRigidBody *const restrict body){
+__FORCE_INLINE__ return_t physRigidBodyIsSimulated(const physRigidBody *const __RESTRICT__ body){
 	return flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE);
 }
 
-__FORCE_INLINE__ return_t physRigidBodyIsCollidable(const physRigidBody *const restrict body){
+__FORCE_INLINE__ return_t physRigidBodyIsCollidable(const physRigidBody *const __RESTRICT__ body){
 	return flagsAreSet(body->flags, PHYSICS_BODY_COLLIDE);
 }
-__FORCE_INLINE__ return_t physRigidBodyIsAsleep(physRigidBody *const restrict body){
+__FORCE_INLINE__ return_t physRigidBodyIsAsleep(physRigidBody *const __RESTRICT__ body){
 	return body->flags;
 }
 
-__FORCE_INLINE__ return_t physRigidBodyWasInitialized(const physRigidBody *const restrict body){
+__FORCE_INLINE__ return_t physRigidBodyWasInitialized(const physRigidBody *const __RESTRICT__ body){
 	return flagsAreSet(body->flags, PHYSICS_BODY_INITIALIZED);
 }
 
-__FORCE_INLINE__ return_t physRigidBodyUpdateColliders(physRigidBody *const restrict body, physIsland *const restrict island){
+__FORCE_INLINE__ return_t physRigidBodyUpdateColliders(physRigidBody *const __RESTRICT__ body, physIsland *const __RESTRICT__ island){
 
 	// Transform the vertices of each body into global space.
 	// If the body is set to not collide, remove the colliders
@@ -1156,18 +1155,18 @@ __FORCE_INLINE__ return_t physRigidBodyUpdateColliders(physRigidBody *const rest
 
 }
 
-__HINT_INLINE__ void physRigidBodyApplyLinearForce(physRigidBody *const restrict body, const vec3 F){
+__HINT_INLINE__ void physRigidBodyApplyLinearForce(physRigidBody *const __RESTRICT__ body, const vec3 F){
 	// Apply a linear force.
 	body->netForce = vec3VAddV(body->netForce, F);
 }
 
-__HINT_INLINE__ void physRigidBodyApplyAngularForce(physRigidBody *const restrict body, const vec3 F, const vec3 r){
+__HINT_INLINE__ void physRigidBodyApplyAngularForce(physRigidBody *const __RESTRICT__ body, const vec3 F, const vec3 r){
 	// Apply an angular force in global space.
 	// T = r x F
 	body->netTorque = vec3VAddV(body->netTorque, vec3Cross(vec3VSubV(r, body->centroidGlobal), F));
 }
 
-__HINT_INLINE__ void physRigidBodyApplyForce(physRigidBody *const restrict body, const vec3 F, const vec3 r){
+__HINT_INLINE__ void physRigidBodyApplyForce(physRigidBody *const __RESTRICT__ body, const vec3 F, const vec3 r){
 
 	// Accumulate the net force and torque.
 	// r is where the force F is applied, in global space.
@@ -1180,7 +1179,7 @@ __HINT_INLINE__ void physRigidBodyApplyForce(physRigidBody *const restrict body,
 
 }
 
-__HINT_INLINE__ void physRigidBodyApplyVelocityImpulse(physRigidBody *const restrict body, const vec3 x, const vec3 J){
+__HINT_INLINE__ void physRigidBodyApplyVelocityImpulse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J){
 
 	// Applies an impulse J at point x in global space.
 
@@ -1194,7 +1193,7 @@ __HINT_INLINE__ void physRigidBodyApplyVelocityImpulse(physRigidBody *const rest
 	///}
 
 }
-__HINT_INLINE__ void physRigidBodyApplyVelocityImpulseInverse(physRigidBody *const restrict body, const vec3 x, const vec3 J){
+__HINT_INLINE__ void physRigidBodyApplyVelocityImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J){
 
 	// Applies an impulse -J at point x in global space.
 
@@ -1209,7 +1208,7 @@ __HINT_INLINE__ void physRigidBodyApplyVelocityImpulseInverse(physRigidBody *con
 
 }
 
-__HINT_INLINE__ void physRigidBodyApplyVelocityImpulseAngular(physRigidBody *const restrict body, const vec3 x, const vec3 J, const vec3 a){
+__HINT_INLINE__ void physRigidBodyApplyVelocityImpulseAngular(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J, const vec3 a){
 
 	// Applies an impulse J at point x in global space.
 
@@ -1223,7 +1222,7 @@ __HINT_INLINE__ void physRigidBodyApplyVelocityImpulseAngular(physRigidBody *con
 	///}
 
 }
-__HINT_INLINE__ void physRigidBodyApplyVelocityImpulseAngularInverse(physRigidBody *const restrict body, const vec3 x, const vec3 J, const vec3 a){
+__HINT_INLINE__ void physRigidBodyApplyVelocityImpulseAngularInverse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J, const vec3 a){
 
 	// Applies an impulse -J at point x in global space.
 
@@ -1238,7 +1237,7 @@ __HINT_INLINE__ void physRigidBodyApplyVelocityImpulseAngularInverse(physRigidBo
 
 }
 
-__HINT_INLINE__ void physRigidBodyApplyConfigurationImpulse(physRigidBody *const restrict body, const vec3 x, const vec3 J){
+__HINT_INLINE__ void physRigidBodyApplyConfigurationImpulse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J){
 
 	// Applies an impulse J at point x in global space.
 
@@ -1276,7 +1275,7 @@ __HINT_INLINE__ void physRigidBodyApplyConfigurationImpulse(physRigidBody *const
 	///}
 
 }
-__HINT_INLINE__ void physRigidBodyApplyConfigurationImpulseInverse(physRigidBody *const restrict body, const vec3 x, const vec3 J){
+__HINT_INLINE__ void physRigidBodyApplyConfigurationImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J){
 
 	// Applies an impulse -J at point x in global space.
 
@@ -1315,7 +1314,7 @@ __HINT_INLINE__ void physRigidBodyApplyConfigurationImpulseInverse(physRigidBody
 
 }
 
-__FORCE_INLINE__ void physRigidBodyCentroidFromPosition(physRigidBody *const restrict body){
+__FORCE_INLINE__ void physRigidBodyCentroidFromPosition(physRigidBody *const __RESTRICT__ body){
 	body->centroidGlobal = vec3VAddV(
 		vec3VMultV(
 			quatRotateVec3FastApproximate(
@@ -1328,7 +1327,7 @@ __FORCE_INLINE__ void physRigidBodyCentroidFromPosition(physRigidBody *const res
 	);
 }
 
-__FORCE_INLINE__ void physRigidBodyPositionFromCentroid(physRigidBody *const restrict body){
+__FORCE_INLINE__ void physRigidBodyPositionFromCentroid(physRigidBody *const __RESTRICT__ body){
 	body->configuration.position = vec3VAddV(
 		vec3VMultV(
 			quatRotateVec3FastApproximate(
@@ -1384,7 +1383,7 @@ __FORCE_INLINE__ static mat3 physRigidBodyScaleInertia(mat3 I, const vec3 scale)
 
 }
 #else
-void physRigidBodyScale(physRigidBody *const restrict body, const vec3 scale){
+void physRigidBodyScale(physRigidBody *const __RESTRICT__ body, const vec3 scale){
 
 	mat3 I = body->inverseInertiaTensorLocal;
 
@@ -1432,7 +1431,7 @@ void physRigidBodyScale(physRigidBody *const restrict body, const vec3 scale){
 	}
 
 }
-void physRigidBodySetScale(physRigidBody *const restrict body, const vec3 scale){
+void physRigidBodySetScale(physRigidBody *const __RESTRICT__ body, const vec3 scale){
 
 	mat3 I = body->inverseInertiaTensorLocal;
 
@@ -1484,7 +1483,7 @@ void physRigidBodySetScale(physRigidBody *const restrict body, const vec3 scale)
 }
 #endif
 
-__FORCE_INLINE__ void physRigidBodyGenerateGlobalInertia(physRigidBody *const restrict body){
+__FORCE_INLINE__ void physRigidBodyGenerateGlobalInertia(physRigidBody *const __RESTRICT__ body){
 
 	// Generate 3x3 matrices for the orientation and the inverse orientation.
 	const mat3 orientationMatrix = mat3Quaternion(body->configuration.orientation);
@@ -1505,19 +1504,19 @@ __FORCE_INLINE__ void physRigidBodyGenerateGlobalInertia(physRigidBody *const re
 
 }
 
-__FORCE_INLINE__ void physRigidBodyUpdateConfiguration(physRigidBody *const restrict body){
+__FORCE_INLINE__ void physRigidBodyUpdateConfiguration(physRigidBody *const __RESTRICT__ body){
 	if(flagsAreSet(body->flags, PHYSICS_BODY_TRANSFORMED)){
 		physRigidBodyPositionFromCentroid(body);
 	}
 }
 
-__FORCE_INLINE__ void physRigidBodyResetAccumulators(physRigidBody *const restrict body){
+__FORCE_INLINE__ void physRigidBodyResetAccumulators(physRigidBody *const __RESTRICT__ body){
 	// Reset force and torque accumulators.
 	vec3ZeroP(&body->netForce);
 	vec3ZeroP(&body->netTorque);
 }
 
-void physRigidBodyIntegrateVelocity(physRigidBody *const restrict body, const float dt){
+void physRigidBodyIntegrateVelocity(physRigidBody *const __RESTRICT__ body, const float dt){
 
 	///if(body->inverseMass > 0.f){
 
@@ -1565,7 +1564,7 @@ void physRigidBodyIntegrateVelocity(physRigidBody *const restrict body, const fl
 
 }
 
-void physRigidBodyIntegrateConfiguration(physRigidBody *const restrict body, const float dt){
+void physRigidBodyIntegrateConfiguration(physRigidBody *const __RESTRICT__ body, const float dt){
 
 	///if(body->inverseMass > 0.f){
 
@@ -1595,7 +1594,7 @@ void physRigidBodyIntegrateConfiguration(physRigidBody *const restrict body, con
 
 }
 
-__FORCE_INLINE__ void physRigidBodyIntegrateSymplecticEuler(physRigidBody *const restrict body, const float dt){
+__FORCE_INLINE__ void physRigidBodyIntegrateSymplecticEuler(physRigidBody *const __RESTRICT__ body, const float dt){
 
 	// Integrate the body's velocities.
 	physRigidBodyIntegrateVelocity(body, dt);
@@ -1606,7 +1605,7 @@ __FORCE_INLINE__ void physRigidBodyIntegrateSymplecticEuler(physRigidBody *const
 
 }
 
-__FORCE_INLINE__ void physRigidBodyIntegrateLeapfrog(physRigidBody *const restrict body, const float dt){
+__FORCE_INLINE__ void physRigidBodyIntegrateLeapfrog(physRigidBody *const __RESTRICT__ body, const float dt){
 
 	// "Kick".
 	physRigidBodyIntegrateVelocity(body, dt*0.5f);
@@ -1620,7 +1619,7 @@ __FORCE_INLINE__ void physRigidBodyIntegrateLeapfrog(physRigidBody *const restri
 
 }
 
-__FORCE_INLINE__ void physRigidBodyIntegrateLeapfrogTest(physRigidBody *const restrict body, const float dt){
+__FORCE_INLINE__ void physRigidBodyIntegrateLeapfrogTest(physRigidBody *const __RESTRICT__ body, const float dt){
 
 	if(physRigidBodyWasInitialized(body)){
 
@@ -1704,7 +1703,7 @@ return_t physRigidBodyPermitCollision(const physRigidBody *const body1, const ph
 
 }
 
-void physRigidBodyAddCollider(physRigidBody *const restrict body, physCollider *const c, const float **const vertexMassArray){
+void physRigidBodyAddCollider(physRigidBody *const __RESTRICT__ body, physCollider *const c, const float **const vertexMassArray){
 
 	// Adds a single collider to the body.
 
@@ -1768,6 +1767,6 @@ void physRigidBodyAddCollider(physRigidBody *const restrict body, physCollider *
 
 }
 
-void physRigidBodyDelete(physRigidBody *const restrict body){
+void physRigidBodyDelete(physRigidBody *const __RESTRICT__ body){
 	modulePhysicsColliderFreeArray(&body->hull);
 }

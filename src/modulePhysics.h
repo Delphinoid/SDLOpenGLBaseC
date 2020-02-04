@@ -39,51 +39,51 @@ return_t modulePhysicsResourcesInit();
 void modulePhysicsResourcesReset();
 void modulePhysicsResourcesDelete();
 
-physRigidBodyBase *modulePhysicsRigidBodyBaseAppendStatic(physRigidBodyBase **const restrict array);
-physRigidBodyBase *modulePhysicsRigidBodyBaseAppend(physRigidBodyBase **const restrict array);
-physRigidBodyBase *modulePhysicsRigidBodyBaseInsertAfterStatic(physRigidBodyBase **const restrict array, physRigidBodyBase *const restrict resource);
-physRigidBodyBase *modulePhysicsRigidBodyBaseInsertAfter(physRigidBodyBase **const restrict array, physRigidBodyBase *const restrict resource);
-physRigidBodyBase *modulePhysicsRigidBodyBaseNext(const physRigidBodyBase *const restrict i);
-void modulePhysicsRigidBodyBaseFree(physRigidBodyBase **const restrict array, physRigidBodyBase *const restrict resource, const physRigidBodyBase *const restrict previous);
-void modulePhysicsRigidBodyBaseFreeArray(physRigidBodyBase **const restrict array);
+physRigidBodyBase *modulePhysicsRigidBodyBaseAppendStatic(physRigidBodyBase **const __RESTRICT__ array);
+physRigidBodyBase *modulePhysicsRigidBodyBaseAppend(physRigidBodyBase **const __RESTRICT__ array);
+physRigidBodyBase *modulePhysicsRigidBodyBaseInsertAfterStatic(physRigidBodyBase **const __RESTRICT__ array, physRigidBodyBase *const __RESTRICT__ resource);
+physRigidBodyBase *modulePhysicsRigidBodyBaseInsertAfter(physRigidBodyBase **const __RESTRICT__ array, physRigidBodyBase *const __RESTRICT__ resource);
+physRigidBodyBase *modulePhysicsRigidBodyBaseNext(const physRigidBodyBase *const __RESTRICT__ i);
+void modulePhysicsRigidBodyBaseFree(physRigidBodyBase **const __RESTRICT__ array, physRigidBodyBase *const __RESTRICT__ resource, const physRigidBodyBase *const __RESTRICT__ previous);
+void modulePhysicsRigidBodyBaseFreeArray(physRigidBodyBase **const __RESTRICT__ array);
 void modulePhysicsRigidBodyBaseClear();
 
-physRigidBody *modulePhysicsRigidBodyAppendStatic(physRigidBody **const restrict array);
-physRigidBody *modulePhysicsRigidBodyAppend(physRigidBody **const restrict array);
-physRigidBody *modulePhysicsRigidBodyInsertAfterStatic(physRigidBody **const restrict array, physRigidBody *const restrict resource);
-physRigidBody *modulePhysicsRigidBodyInsertAfter(physRigidBody **const restrict array, physRigidBody *const restrict resource);
-physRigidBody *modulePhysicsRigidBodyNext(const physRigidBody *const restrict i);
-void modulePhysicsRigidBodyFree(physRigidBody **const restrict array, physRigidBody *const restrict resource, const physRigidBody *const restrict previous);
-void modulePhysicsRigidBodyFreeArray(physRigidBody **const restrict array);
+physRigidBody *modulePhysicsRigidBodyAppendStatic(physRigidBody **const __RESTRICT__ array);
+physRigidBody *modulePhysicsRigidBodyAppend(physRigidBody **const __RESTRICT__ array);
+physRigidBody *modulePhysicsRigidBodyInsertAfterStatic(physRigidBody **const __RESTRICT__ array, physRigidBody *const __RESTRICT__ resource);
+physRigidBody *modulePhysicsRigidBodyInsertAfter(physRigidBody **const __RESTRICT__ array, physRigidBody *const __RESTRICT__ resource);
+physRigidBody *modulePhysicsRigidBodyNext(const physRigidBody *const __RESTRICT__ i);
+void modulePhysicsRigidBodyFree(physRigidBody **const __RESTRICT__ array, physRigidBody *const __RESTRICT__ resource, const physRigidBody *const __RESTRICT__ previous);
+void modulePhysicsRigidBodyFreeArray(physRigidBody **const __RESTRICT__ array);
 void modulePhysicsRigidBodyClear();
 
-physCollider *modulePhysicsColliderAppendStatic(physCollider **const restrict array);
-physCollider *modulePhysicsColliderAppend(physCollider **const restrict array);
-physCollider *modulePhysicsColliderInsertAfterStatic(physCollider **const restrict array, physCollider *const restrict resource);
-physCollider *modulePhysicsColliderInsertAfter(physCollider **const restrict array, physCollider *const restrict resource);
-physCollider *modulePhysicsColliderNext(const physCollider *const restrict i);
-void modulePhysicsColliderFree(physCollider **const restrict array, physCollider *const restrict resource, const physCollider *const restrict previous);
-void modulePhysicsColliderFreeArray(physCollider **const restrict array);
+physCollider *modulePhysicsColliderAppendStatic(physCollider **const __RESTRICT__ array);
+physCollider *modulePhysicsColliderAppend(physCollider **const __RESTRICT__ array);
+physCollider *modulePhysicsColliderInsertAfterStatic(physCollider **const __RESTRICT__ array, physCollider *const __RESTRICT__ resource);
+physCollider *modulePhysicsColliderInsertAfter(physCollider **const __RESTRICT__ array, physCollider *const __RESTRICT__ resource);
+physCollider *modulePhysicsColliderNext(const physCollider *const __RESTRICT__ i);
+void modulePhysicsColliderFree(physCollider **const __RESTRICT__ array, physCollider *const __RESTRICT__ resource, const physCollider *const __RESTRICT__ previous);
+void modulePhysicsColliderFreeArray(physCollider **const __RESTRICT__ array);
 void modulePhysicsColliderClear();
 
 physJoint *modulePhysicsJointAllocateStatic();
 physJoint *modulePhysicsJointAllocate();
-void modulePhysicsJointFree(physJoint *const restrict resource);
+void modulePhysicsJointFree(physJoint *const __RESTRICT__ resource);
 void modulePhysicsJointClear();
 
 physContactPair *modulePhysicsContactPairAllocateStatic();
 physContactPair *modulePhysicsContactPairAllocate();
-void modulePhysicsContactPairFree(physContactPair *const restrict resource);
+void modulePhysicsContactPairFree(physContactPair *const __RESTRICT__ resource);
 void modulePhysicsContactPairClear();
 
 physSeparationPair *modulePhysicsSeparationPairAllocateStatic();
 physSeparationPair *modulePhysicsSeparationPairAllocate();
-void modulePhysicsSeparationPairFree(physSeparationPair *const restrict resource);
+void modulePhysicsSeparationPairFree(physSeparationPair *const __RESTRICT__ resource);
 void modulePhysicsSeparationPairClear();
 
 aabbNode *modulePhysicsAABBNodeAllocateStatic();
 aabbNode *modulePhysicsAABBNodeAllocate();
-void modulePhysicsAABBNodeFree(aabbNode *const restrict resource);
+void modulePhysicsAABBNodeFree(aabbNode *const __RESTRICT__ resource);
 void modulePhysicsAABBNodeClear();
 
 void modulePhysicsSolveConstraints(const float dt);

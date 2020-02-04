@@ -1,7 +1,6 @@
 #include "graphicsManager.h"
 #include "graphicsManagerSettings.h"
 #include "sprite.h"
-#include "inline.h"
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
 #include <string.h>
@@ -9,7 +8,7 @@
 
 /** Tidy loading code, put variable declarations in blocks. **/
 
-__FORCE_INLINE__ static return_t gfxMngrInitSDL(graphicsManager *const restrict gfxMngr){
+__FORCE_INLINE__ static return_t gfxMngrInitSDL(graphicsManager *const __RESTRICT__ gfxMngr){
 
 	// Initialize SDL.
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0){
@@ -48,7 +47,7 @@ __FORCE_INLINE__ static return_t gfxMngrInitSDL(graphicsManager *const restrict 
 
 }
 
-__FORCE_INLINE__ static return_t gfxMngrInitOGL(graphicsManager *const restrict gfxMngr){
+__FORCE_INLINE__ static return_t gfxMngrInitOGL(graphicsManager *const __RESTRICT__ gfxMngr){
 
 	GLenum glError;
 	GLenum glewError;
@@ -84,7 +83,7 @@ __FORCE_INLINE__ static return_t gfxMngrInitOGL(graphicsManager *const restrict 
 
 }
 
-__FORCE_INLINE__ static return_t gfxMngrLoadShaders(graphicsManager *const restrict gfxMngr, const char *const restrict prgPath){
+__FORCE_INLINE__ static return_t gfxMngrLoadShaders(graphicsManager *const __RESTRICT__ gfxMngr, const char *const __RESTRICT__ prgPath){
 	return_t r;
 	if(
 		(r = shdrPrgLoad(&gfxMngr->shdrPrgSpr.id, prgPath, "s_vertex_sprite.gls", "s_fragment.gls")) <= 0 ||
@@ -97,7 +96,7 @@ __FORCE_INLINE__ static return_t gfxMngrLoadShaders(graphicsManager *const restr
 	return 1;
 }
 
-return_t gfxMngrInit(graphicsManager *const restrict gfxMngr, const char *const restrict prgPath){
+return_t gfxMngrInit(graphicsManager *const __RESTRICT__ gfxMngr, const char *const __RESTRICT__ prgPath){
 
 	return_t r;
 
@@ -121,7 +120,7 @@ return_t gfxMngrInit(graphicsManager *const restrict gfxMngr, const char *const 
 
 }
 
-unsigned int gfxMngrWindowChanged(graphicsManager *const restrict gfxMngr){
+unsigned int gfxMngrWindowChanged(graphicsManager *const __RESTRICT__ gfxMngr){
 	int windowWidth, windowHeight;
 	SDL_GetWindowSize(gfxMngr->window, &windowWidth, &windowHeight);
 	if((int)gfxMngr->windowWidth != windowWidth || (int)gfxMngr->windowHeight != windowHeight){
@@ -132,7 +131,7 @@ unsigned int gfxMngrWindowChanged(graphicsManager *const restrict gfxMngr){
 	return gfxMngr->windowModified;
 }
 
-void gfxMngrUpdateViewport(graphicsManager *const restrict gfxMngr){
+void gfxMngrUpdateViewport(graphicsManager *const __RESTRICT__ gfxMngr){
 	if(gfxMngr->windowViewportMode == GFX_WINDOW_VIEWPORT_MODE_FILL){
 		gfxMngr->viewport.x = 0;
 		gfxMngr->viewport.y = 0;
@@ -172,7 +171,7 @@ void gfxMngrUpdateViewport(graphicsManager *const restrict gfxMngr){
 	gfxViewReset(&gfxMngr->viewLast);
 }
 
-void gfxMngrUpdateWindow(graphicsManager *const restrict gfxMngr){
+void gfxMngrUpdateWindow(graphicsManager *const __RESTRICT__ gfxMngr){
 	if(gfxMngrWindowChanged(gfxMngr) == 2){
 		gfxMngrUpdateViewport(gfxMngr);
 		gfxMngr->windowModified = 1;
@@ -181,7 +180,7 @@ void gfxMngrUpdateWindow(graphicsManager *const restrict gfxMngr){
 	}
 }
 
-int gfxMngrSetWindowMode(graphicsManager *const restrict gfxMngr, const Uint32 mode){
+int gfxMngrSetWindowMode(graphicsManager *const __RESTRICT__ gfxMngr, const Uint32 mode){
 	int r;
 	if(mode == SDL_WINDOW_FULLSCREEN){
 		SDL_DisplayMode displayMode;
@@ -197,44 +196,44 @@ int gfxMngrSetWindowMode(graphicsManager *const restrict gfxMngr, const Uint32 m
 	return r;
 }
 
-void gfxMngrSetWindowFill(graphicsManager *const restrict gfxMngr, const unsigned int viewportMode){
+void gfxMngrSetWindowFill(graphicsManager *const __RESTRICT__ gfxMngr, const unsigned int viewportMode){
 	gfxMngr->windowViewportMode = viewportMode;
 	gfxMngr->windowModified = 2;
 }
 
-void gfxMngrSetViewportAspectRatio(graphicsManager *const restrict gfxMngr, const float x, const float y){
+void gfxMngrSetViewportAspectRatio(graphicsManager *const __RESTRICT__ gfxMngr, const float x, const float y){
 	gfxMngr->windowAspectRatioX = x;
 	gfxMngr->windowAspectRatioY = y;
 	gfxMngr->windowModified = 2;
 }
 
-void gfxMngrSetViewportAspectX(graphicsManager *const restrict gfxMngr, const float x){
+void gfxMngrSetViewportAspectX(graphicsManager *const __RESTRICT__ gfxMngr, const float x){
 	gfxMngr->windowAspectRatioX = x;
 	gfxMngr->windowModified = 2;
 }
 
-void gfxMngrSetViewportAspectY(graphicsManager *const restrict gfxMngr, const float y){
+void gfxMngrSetViewportAspectY(graphicsManager *const __RESTRICT__ gfxMngr, const float y){
 	gfxMngr->windowAspectRatioY = y;
 	gfxMngr->windowModified = 2;
 }
 
-void gfxMngrSetViewportSize(graphicsManager *const restrict gfxMngr, const unsigned int width, const unsigned int height){
+void gfxMngrSetViewportSize(graphicsManager *const __RESTRICT__ gfxMngr, const unsigned int width, const unsigned int height){
 	gfxMngr->viewport.width = width;
 	gfxMngr->viewport.height = height;
 	gfxMngr->windowModified = 2;
 }
 
-void gfxMngrSetViewportWidth(graphicsManager *const restrict gfxMngr, const unsigned int width){
+void gfxMngrSetViewportWidth(graphicsManager *const __RESTRICT__ gfxMngr, const unsigned int width){
 	gfxMngr->viewport.width = width;
 	gfxMngr->windowModified = 2;
 }
 
-void gfxMngrSetViewportHeight(graphicsManager *const restrict gfxMngr, const unsigned int height){
+void gfxMngrSetViewportHeight(graphicsManager *const __RESTRICT__ gfxMngr, const unsigned int height){
 	gfxMngr->viewport.height = height;
 	gfxMngr->windowModified = 2;
 }
 
-__FORCE_INLINE__ void gfxMngrSwitchView(graphicsManager *const restrict gfxMngr, const gfxView *const restrict view){
+__FORCE_INLINE__ void gfxMngrSwitchView(graphicsManager *const __RESTRICT__ gfxMngr, const gfxView *const __RESTRICT__ view){
     if(memcmp(view, &gfxMngr->viewLast, sizeof(gfxView))){
     	unsigned int width;
 		unsigned int height;
@@ -256,7 +255,7 @@ __FORCE_INLINE__ void gfxMngrSwitchView(graphicsManager *const restrict gfxMngr,
     }
 }
 
-__FORCE_INLINE__ void gfxMngrBindTexture(graphicsManager *const restrict gfxMngr, const GLenum texture, const GLuint textureID){
+__FORCE_INLINE__ void gfxMngrBindTexture(graphicsManager *const __RESTRICT__ gfxMngr, const GLenum texture, const GLuint textureID){
 	glActiveTexture(texture);
 	if(textureID != gfxMngr->shdrData.lastTexID){
 		gfxMngr->shdrData.lastTexID = textureID;
@@ -264,7 +263,7 @@ __FORCE_INLINE__ void gfxMngrBindTexture(graphicsManager *const restrict gfxMngr
 	}
 }
 
-void gfxMngrDestroyProgram(graphicsManager *const restrict gfxMngr){
+void gfxMngrDestroyProgram(graphicsManager *const __RESTRICT__ gfxMngr){
 
 	shdrPrgDelete(&gfxMngr->shdrPrgObj);
 	shdrPrgDelete(&gfxMngr->shdrPrgSpr);

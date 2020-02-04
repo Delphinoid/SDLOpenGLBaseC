@@ -16,7 +16,7 @@
 // Composite bytes must end with 1 as the most significant bit, preceded by a 0.
 #define txtInvalidByteUTF8(c) ((c & TEXT_UTF8_CHARACTER_MULTIBYTE_MASK) != TEXT_UTF8_CHARACTER_MULTIBYTE_VALUE)
 
-return_t txtStreamNextCharacter(const txtStream *const restrict stream, const byte_t **i){
+return_t txtStreamNextCharacter(const txtStream *const __RESTRICT__ stream, const byte_t **i){
 	// Returns 0 at the end of the stream.
 	if(*i >= stream->back){
 		*i = stream->front;
@@ -29,7 +29,7 @@ return_t txtStreamNextCharacter(const txtStream *const restrict stream, const by
 	return 1;
 }
 
-uint32_t txtStreamParseCharacter(const txtStream *const restrict stream, const byte_t **i, txtFormat *const restrict format){
+uint32_t txtStreamParseCharacter(const txtStream *const __RESTRICT__ stream, const byte_t **i, txtFormat *const __RESTRICT__ format){
 
 	// Parse the first byte.
 	txtCodeUnit_t code = {.byte = {._1 = **i, ._2 = 0, ._3 = 0, ._4 = 0}};
@@ -87,7 +87,7 @@ uint32_t txtStreamParseCharacter(const txtStream *const restrict stream, const b
 
 }
 
-return_t txtCursorAdvance(txtCursor *const restrict cursor, const float advanceX, const float advanceY, const float boxWidth){
+return_t txtCursorAdvance(txtCursor *const __RESTRICT__ cursor, const float advanceX, const float advanceY, const float boxWidth){
 	// When using SDF fonts, make sure advanceX and advanceY
 	// are correctly scaled by the size of the font.
 	// Return value 1 indicates that the next glyph will be

@@ -55,20 +55,20 @@ typedef struct {
 #define memListBlockNext(list, i)     (void *)((byte_t *)i + (list).block)
 #define memListBlockPrevious(list, i) (void *)((byte_t *)i - (list).block)
 
-void memListInit(memoryList *const restrict list);
-void *memListCreate(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length);
-void *memListCreateInit(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
-void *memListAllocate(memoryList *const restrict list);
-void memListFree(memoryList *const restrict list, void *const block);
+void memListInit(memoryList *const __RESTRICT__ list);
+void *memListCreate(memoryList *const __RESTRICT__ list, void *const start, const size_t bytes, const size_t length);
+void *memListCreateInit(memoryList *const __RESTRICT__ list, void *const start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block));
+void *memListAllocate(memoryList *const __RESTRICT__ list);
+void memListFree(memoryList *const __RESTRICT__ list, void *const block);
 void *memListSetupMemory(void *start, const size_t bytes, const size_t length);
-void *memListSetupMemoryInit(void *start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
-void *memListIndex(memoryList *const restrict list, const size_t i);
-void *memListIndexRegion(memoryList *const restrict list, const size_t i, memoryRegion **const container);
-void memListClear(memoryList *const restrict list);
-void memListClearInit(memoryList *const restrict list, void (*func)(void *const restrict block));
-void *memListExtend(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length);
-void *memListExtendInit(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
-void memListDelete(memoryList *const restrict list);
+void *memListSetupMemoryInit(void *start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block));
+void *memListIndex(memoryList *const __RESTRICT__ list, const size_t i);
+void *memListIndexRegion(memoryList *const __RESTRICT__ list, const size_t i, memoryRegion **const container);
+void memListClear(memoryList *const __RESTRICT__ list);
+void memListClearInit(memoryList *const __RESTRICT__ list, void (*func)(void *const __RESTRICT__ block));
+void *memListExtend(memoryList *const __RESTRICT__ list, void *const start, const size_t bytes, const size_t length);
+void *memListExtendInit(memoryList *const __RESTRICT__ list, void *const start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block));
+void memListDelete(memoryList *const __RESTRICT__ list);
 
 #define MEMORY_LIST_LOOP_BEGIN(allocator, n, type)           \
 	{                                                        \

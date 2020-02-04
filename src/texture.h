@@ -4,6 +4,7 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include "return.h"
+#include "qualifiers.h"
 
 #define TEXTURE_FILTER_MODE_ANY       0
 #define TEXTURE_FILTER_MODE_NEAREST   1
@@ -51,9 +52,9 @@ typedef struct texture {
 
 extern texture g_tDefault;
 
-void tInit(texture *const restrict tex);
-return_t tLoad(texture *const restrict tex, const char *const restrict prgPath, const char *const restrict filePath);
+void tInit(texture *const __RESTRICT__ tex);
+return_t tLoad(texture *const __RESTRICT__ tex, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath);
 return_t tDefaultInit();
-void tDelete(texture *const restrict tex);
+void tDelete(texture *const __RESTRICT__ tex);
 
 #endif

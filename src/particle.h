@@ -44,15 +44,15 @@ typedef struct particle {
 
 } particle;
 
-void particleBaseInit(particleBase *const restrict base);
-void particleInit(particle *const restrict p);
+void particleBaseInit(particleBase *const __RESTRICT__ base);
+void particleInit(particle *const __RESTRICT__ p);
 
 /** TEMPORARY **/
-void particleTick(particle *const restrict p, const float elapsedTime);
+void particleTick(particle *const __RESTRICT__ p, const float elapsedTime);
 #ifdef PARTICLE_ALLOW_INTERPOLATION
-bone particleState(particle *const restrict p, const float interpT);
+bone particleState(particle *const __RESTRICT__ p, const float interpT);
 #endif
 
-void particleDelete(particle *const restrict p);
+void particleDelete(particle *const __RESTRICT__ p);
 
 #endif

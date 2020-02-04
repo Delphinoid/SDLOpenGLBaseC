@@ -2,7 +2,6 @@
 #include "moduleSettings.h"
 #include "camera.h"
 #include "memoryManager.h"
-#include "inline.h"
 #include <string.h>
 
 #define RESOURCE_DEFAULT_CAMERA_SIZE sizeof(camera)
@@ -73,7 +72,7 @@ void moduleCameraPrepare(){
 	MEMORY_POOL_LOOP_END(__g_CameraResourceArray, i, return;);
 
 }
-__HINT_INLINE__ void moduleCameraFree(camera *const restrict resource){
+__HINT_INLINE__ void moduleCameraFree(camera *const __RESTRICT__ resource){
 	camDelete(resource);
 	memPoolFree(&__g_CameraResourceArray, (void *)resource);
 }

@@ -85,7 +85,7 @@ static void sprStateAttributes(){
 	glVertexAttribDivisor(6, 1);
 }
 
-return_t sprGenerateBuffers(mesh *const restrict spr, const vertexIndex_t vertexNum, const vertex *const restrict vertices, const vertexIndex_t indexNum, const vertexIndex_t *const restrict indices){
+return_t sprGenerateBuffers(mesh *const __RESTRICT__ spr, const vertexIndex_t vertexNum, const vertex *const __RESTRICT__ vertices, const vertexIndex_t indexNum, const vertexIndex_t *const __RESTRICT__ indices){
 
 	if(vertexNum > 0){
 		if(indexNum > 0){
@@ -179,7 +179,7 @@ return_t sprDefaultInit(){
 	indices[4] = 3;
 	indices[5] = 1;
 
-	if(sprGenerateBuffers(&g_meshSprite, 4, (const vertex *const restrict)vertices, 6, indices) <= 0){
+	if(sprGenerateBuffers(&g_meshSprite, 4, (const vertex *const __RESTRICT__)vertices, 6, indices) <= 0){
 		return 0;
 	}
 

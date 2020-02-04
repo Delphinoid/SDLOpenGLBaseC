@@ -1,5 +1,5 @@
 #include "sleep.h"
-#include "inline.h"
+#include "qualifiers.h"
 
 #ifdef _WIN32
 

@@ -2,7 +2,6 @@
 #include "memoryManager.h"
 #include "moduleSkeleton.h"
 #include "constantsMath.h"
-#include "inline.h"
 #include "helpersFileIO.h"
 #include "helpersMisc.h"
 #include <stdlib.h>
@@ -36,7 +35,7 @@ skeleton g_sklDefault = {
 	.bones = &g_sklNodeDefault
 };
 
-static void sklDefragment(skeleton *const restrict skl){
+static void sklDefragment(skeleton *const __RESTRICT__ skl){
 	frameIndex_t i;
 	skl->bones = memReallocate(skl->bones, skl->boneNum*sizeof(sklNode));
 	for(i = 0; i < skl->boneNum; ++i){
@@ -48,7 +47,7 @@ static void sklDefragment(skeleton *const restrict skl){
 	}
 }
 
-static return_t sklResizeToFit(skeleton *const restrict skl){
+static return_t sklResizeToFit(skeleton *const __RESTRICT__ skl){
 	/**bone *const tempBuffer = memReallocate(skl->bones, skl->boneNum*sizeof(sklNode));
 	if(tempBuffer == NULL){
 		// Memory allocation failure. **
@@ -64,12 +63,12 @@ static return_t sklResizeToFit(skeleton *const restrict skl){
 	sklDefragment(skl);
 	return 1;
 }
-void sklInit(skeleton *const restrict skl){
+void sklInit(skeleton *const __RESTRICT__ skl){
 	skl->name = NULL;
 	skl->boneNum = 0;
 	skl->bones = NULL;
 }
-return_t sklLoad(skeleton *const restrict skl, const char *const restrict prgPath, const char *const restrict filePath){
+return_t sklLoad(skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath){
 
 	char fullPath[FILE_MAX_PATH_LENGTH];
 	size_t fileLength = strlen(filePath);
@@ -196,7 +195,7 @@ return_t sklLoad(skeleton *const restrict skl, const char *const restrict prgPat
 	return 1;
 
 }
-boneIndex_t sklFindBone(const skeleton *const restrict skl, const boneIndex_t id, const char *const restrict name){
+boneIndex_t sklFindBone(const skeleton *const __RESTRICT__ skl, const boneIndex_t id, const char *const __RESTRICT__ name){
 	/** boneIndex_t i;
 	for(i = 0; i < skl->boneNum; ++i){
 		if(skl->bones[i].name != NULL && strcmp(skl->bones[i].name, name) == 0){
@@ -233,7 +232,7 @@ boneIndex_t sklFindBone(const skeleton *const restrict skl, const boneIndex_t id
 	}
 	return (boneIndex_t)-1;
 }
-void sklDelete(skeleton *const restrict skl){
+void sklDelete(skeleton *const __RESTRICT__ skl){
 	if(skl->name != NULL && skl->name != g_sklDefault.name){
 		memFree(skl->name);
 	}
@@ -249,7 +248,7 @@ void sklDelete(skeleton *const restrict skl){
 	}
 }
 
-void sklaInit(sklAnim *const restrict skla){
+void sklaInit(sklAnim *const __RESTRICT__ skla){
 	skla->name = NULL;
 	//skla->additive = 0;
 	animDataInit(&skla->animData);
@@ -257,7 +256,7 @@ void sklaInit(sklAnim *const restrict skla){
 	skla->bones = NULL;
 	skla->frames = NULL;
 }
-static void sklaDefragment(sklAnim *const restrict skla){
+static void sklaDefragment(sklAnim *const __RESTRICT__ skla){
 	frameIndex_t i;
 	skla->bones = memReallocate(skla->bones, skla->boneNum*sizeof(char *));
 	skla->frames = memReallocate(skla->frames, skla->animData.frameNum*sizeof(bone *));
@@ -269,7 +268,7 @@ static void sklaDefragment(sklAnim *const restrict skla){
 		skla->frames[i] = memReallocate(skla->frames[i], skla->boneNum*sizeof(bone));
 	}
 }
-static return_t sklaResizeToFit(sklAnim *const restrict skla, const size_t boneCapacity, const size_t frameCapacity){
+static return_t sklaResizeToFit(sklAnim *const __RESTRICT__ skla, const size_t boneCapacity, const size_t frameCapacity){
 	/**if(skla->boneNum != boneCapacity){
 		skla->bones = memReallocate(skla->bones, skla->boneNum*sizeof(bone *));
 		if(skla->bones == NULL){
@@ -301,7 +300,7 @@ static return_t sklaResizeToFit(sklAnim *const restrict skla, const size_t boneC
 	sklaDefragment(skla);
 	return 1;
 }
-return_t sklaLoad(sklAnim *const restrict skla, const char *const restrict prgPath, const char *const restrict filePath){
+return_t sklaLoad(sklAnim *const __RESTRICT__ skla, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath){
 
 	boneIndex_t boneCapacity = SKELETON_ANIM_BONE_START_CAPACITY;
 	frameIndex_t frameCapacity = SKELETON_ANIM_FRAME_START_CAPACITY;
@@ -785,7 +784,7 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, co
 
 	return 1;
 }
-boneIndex_t sklaFindBone(const sklAnim *const restrict skla, const boneIndex_t id, const char *const restrict name){
+boneIndex_t sklaFindBone(const sklAnim *const __RESTRICT__ skla, const boneIndex_t id, const char *const __RESTRICT__ name){
 	//skli->animations[i].animFrags[j].animBoneLookup[boneID] != (boneIndex_t)-1;
 	/*boneIndex_t i;
 	for(i = 0; i < skla->boneNum; ++i){
@@ -823,7 +822,7 @@ boneIndex_t sklaFindBone(const sklAnim *const restrict skla, const boneIndex_t i
 	}
 	return (boneIndex_t)-1;
 }
-void sklaDelete(sklAnim *const restrict skla){
+void sklaDelete(sklAnim *const __RESTRICT__ skla){
 	if(skla->name != NULL){
 		memFree(skla->name);
 	}
@@ -850,7 +849,7 @@ void sklaDelete(sklAnim *const restrict skla){
 	animDataDelete(&skla->animData);
 }
 
-static return_t sklafInit(sklAnimFragment *const restrict sklaf, sklAnim *const restrict anim, const skeleton *const restrict skl, const float intensity, const frameIndex_t frame){
+static return_t sklafInit(sklAnimFragment *const __RESTRICT__ sklaf, sklAnim *const __RESTRICT__ anim, const skeleton *const __RESTRICT__ skl, const float intensity, const frameIndex_t frame){
 
 	// Initialize animBoneLookup.
 	/**uint_least8_t i;
@@ -891,12 +890,12 @@ static return_t sklafInit(sklAnimFragment *const restrict sklaf, sklAnim *const 
 	}*
 }**/
 
-void sklaiInit(sklAnimInstance *const restrict sklai, const flags_t flags){
+void sklaiInit(sklAnimInstance *const __RESTRICT__ sklai, const flags_t flags){
 	sklai->flags = flags;
 	sklai->timeMod = 1.f;
 	sklai->fragments = NULL;
 }
-static __FORCE_INLINE__ void sklaiTick(sklAnimInstance *const restrict sklai, const float elapsedTime, const float interpT){
+static __FORCE_INLINE__ void sklaiTick(sklAnimInstance *const __RESTRICT__ sklai, const float elapsedTime, const float interpT){
 
 	const float elapsedTimeMod = elapsedTime * sklai->timeMod;
 
@@ -1052,10 +1051,10 @@ void sklaiGenerateAnimState(sklAnimInstance *sklai, bone *skeletonState, const b
 	}
 
 }**/
-__FORCE_INLINE__ void sklaiSetType(sklAnimInstance *const restrict sklai, const flags_t additive){
+__FORCE_INLINE__ void sklaiSetType(sklAnimInstance *const __RESTRICT__ sklai, const flags_t additive){
 	sklai->flags = additive;
 }
-return_t sklaiChange(sklAnimInstance *const restrict sklai, const skeleton *const restrict skl, sklAnim *const restrict anim, const float intensity, const frameIndex_t frame, const float blendTime){
+return_t sklaiChange(sklAnimInstance *const __RESTRICT__ sklai, const skeleton *const __RESTRICT__ skl, sklAnim *const __RESTRICT__ anim, const float intensity, const frameIndex_t frame, const float blendTime){
 
 	sklAnimFragment *newFragment;
 
@@ -1093,19 +1092,19 @@ return_t sklaiChange(sklAnimInstance *const restrict sklai, const skeleton *cons
 	return sklafInit(newFragment, anim, skl, intensity, frame);
 
 }
-void sklaiClearAnimation(sklAnimInstance *const restrict sklai){
+void sklaiClearAnimation(sklAnimInstance *const __RESTRICT__ sklai){
 	if(sklai->fragments != NULL){
 		moduleSkeletonAnimationFragmentFreeArray(&sklai->fragments);
 	}
 	sklaiInit(sklai, SKELETON_ANIM_INSTANCE_ADDITIVE);
 }
-void sklaiDelete(sklAnimInstance *const restrict sklai){
+void sklaiDelete(sklAnimInstance *const __RESTRICT__ sklai){
 	if(sklai->fragments != NULL){
 		moduleSkeletonAnimationFragmentFreeArray(&sklai->fragments);
 	}
 }
 
-return_t skliInit(sklInstance *const restrict skli, const skeleton *const restrict skl, const animIndex_t animationCapacity){
+return_t skliInit(sklInstance *const __RESTRICT__ skli, const skeleton *const __RESTRICT__ skl, const animIndex_t animationCapacity){
 	if(animationCapacity > 0){
 		animIndex_t i = 0;
 		while(i < animationCapacity){
@@ -1128,7 +1127,7 @@ return_t skliInit(sklInstance *const restrict skli, const skeleton *const restri
 	skli->timeMod = 1.f;
 	return 1;
 }
-return_t skliLoad(sklInstance *const restrict skli, const char *const restrict prgPath, const char *const restrict filePath){
+return_t skliLoad(sklInstance *const __RESTRICT__ skli, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath){
 
 	/** stateNum is temporary. **/
 
@@ -1241,18 +1240,18 @@ return_t skliLoad(sklInstance *const restrict skli, const char *const restrict p
 	return 1;
 
 }
-__FORCE_INLINE__ sklAnimInstance *skliAnimationNew(sklInstance *const restrict skli, const flags_t flags){
+__FORCE_INLINE__ sklAnimInstance *skliAnimationNew(sklInstance *const __RESTRICT__ skli, const flags_t flags){
 	sklAnimInstance *const r = moduleSkeletonAnimationInstanceAppend(&skli->animations);
 	if(r != NULL){
 		sklaiInit(r, flags);
 	}
 	return r;
 }
-__FORCE_INLINE__ void skliAnimationDelete(sklInstance *const restrict skli, sklAnimInstance *const restrict anim, sklAnimInstance *const restrict previous){
+__FORCE_INLINE__ void skliAnimationDelete(sklInstance *const __RESTRICT__ skli, sklAnimInstance *const __RESTRICT__ anim, sklAnimInstance *const __RESTRICT__ previous){
 	sklaiDelete(anim);
 	moduleSkeletonAnimationInstanceFree(&skli->animations, anim, previous);
 }
-__FORCE_INLINE__ void skliTick(sklInstance *const restrict skli, const float elapsedTime, const float interpT){
+__FORCE_INLINE__ void skliTick(sklInstance *const __RESTRICT__ skli, const float elapsedTime, const float interpT){
 	const float elapsedTimeMod = elapsedTime * skli->timeMod;
 	sklAnimInstance *anim = skli->animations;
 	while(anim != NULL){
@@ -1260,7 +1259,7 @@ __FORCE_INLINE__ void skliTick(sklInstance *const restrict skli, const float ela
 		anim = moduleSkeletonAnimationInstanceNext(anim);
 	}
 }
-void skliGenerateBoneState(const sklInstance *const restrict skli, const boneIndex_t id, const char *const restrict name, bone *const restrict state){
+void skliGenerateBoneState(const sklInstance *const __RESTRICT__ skli, const boneIndex_t id, const char *const __RESTRICT__ name, bone *const __RESTRICT__ state){
 
 	bone baseState = *state;
 	bone animationState;
@@ -1323,13 +1322,13 @@ void skliGenerateBoneState(const sklInstance *const restrict skli, const boneInd
 	}
 
 }
-void skliAddAnimation(sklInstance *const restrict skli, const sklAnim *const restrict skla, const frameIndex_t frame){
+void skliAddAnimation(sklInstance *const __RESTRICT__ skli, const sklAnim *const __RESTRICT__ skla, const frameIndex_t frame){
 	//
 }
-void skliChangeSkeleton(sklInstance *const restrict skli, const skeleton *const restrict skl){
+void skliChangeSkeleton(sklInstance *const __RESTRICT__ skli, const skeleton *const __RESTRICT__ skl){
 	/** Re-calculate bone lookups for all animation fragments. **/
 }
-void skliGenerateDefaultState(const skeleton *const restrict skl, mat4 *const restrict state, const boneIndex_t boneID){
+void skliGenerateDefaultState(const skeleton *const __RESTRICT__ skl, mat4 *const __RESTRICT__ state, const boneIndex_t boneID){
 
 	// NOTE: The generated matrix will be in row-major
 	//       order, where as OpenGL accepts column-major
@@ -1354,7 +1353,7 @@ void skliGenerateDefaultState(const skeleton *const restrict skl, mat4 *const re
 	                          skl->bones[boneID].defaultState.scale.z);
 
 }
-void skliGenerateBoneStateFromLocal(const bone *const restrict skeletonState, const skeleton *const restrict oskl, const skeleton *const restrict mskl, mat4 *const restrict state, const boneIndex_t boneID){
+void skliGenerateBoneStateFromLocal(const bone *const __RESTRICT__ skeletonState, const skeleton *const __RESTRICT__ oskl, const skeleton *const __RESTRICT__ mskl, mat4 *const __RESTRICT__ state, const boneIndex_t boneID){
 
 	// NOTE: The generated matrix will be in row-major
 	//       order, where as OpenGL accepts column-major
@@ -1413,7 +1412,7 @@ void skliGenerateBoneStateFromLocal(const bone *const restrict skeletonState, co
 	}
 
 }
-void skliGenerateBoneStateFromGlobal(const bone *const restrict skeletonState, const skeleton *const restrict oskl, const skeleton *const restrict mskl, mat4 *const restrict state, const boneIndex_t boneID){
+void skliGenerateBoneStateFromGlobal(const bone *const __RESTRICT__ skeletonState, const skeleton *const __RESTRICT__ oskl, const skeleton *const __RESTRICT__ mskl, mat4 *const __RESTRICT__ state, const boneIndex_t boneID){
 
 	// NOTE: The generated matrix will be in row-major
 	//       order, where as OpenGL accepts column-major
@@ -1436,7 +1435,7 @@ void skliGenerateBoneStateFromGlobal(const bone *const restrict skeletonState, c
 
 
 }
-void skliDelete(sklInstance *const restrict skli){
+void skliDelete(sklInstance *const __RESTRICT__ skli){
 	if(skli->animations != NULL){
 		moduleSkeletonAnimationInstanceFreeArray(&skli->animations);
 	}

@@ -3,7 +3,6 @@
 #include "texture.h"
 #include "memoryManager.h"
 #include "helpersFileIO.h"
-#include "inline.h"
 #include <SDL2/SDL_image.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -31,7 +30,7 @@ texture g_tDefault = {
 
 /** Maybe remove printf()s? **/
 
-void tInit(texture *const restrict tex){
+void tInit(texture *const __RESTRICT__ tex){
 	tex->diffuseID = 0;
 	tex->normalID = 0;
 	tex->specularID = 0;
@@ -96,7 +95,7 @@ static void tInitParameters(uint_least8_t filtering, const uint_least8_t mips){
 
 }
 
-static SDL_Surface *tLoadImage(const char *const restrict path){
+static SDL_Surface *tLoadImage(const char *const __RESTRICT__ path){
 	return IMG_Load(path);
 }
 
@@ -107,7 +106,7 @@ static GLuint tCreate(){
 	return id;
 }
 
-return_t tLoad(texture *const restrict tex, const char *const restrict prgPath, const char *const restrict filePath){
+return_t tLoad(texture *const __RESTRICT__ tex, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath){
 
 	GLenum glError;
 	SDL_Surface *image = NULL;
@@ -145,7 +144,7 @@ return_t tLoad(texture *const restrict tex, const char *const restrict prgPath, 
 					char imgPath[FILE_MAX_PATH_LENGTH];
 					char resPath[FILE_MAX_PATH_LENGTH];
 					size_t resLength;
-					fileParseResourcePath(&resPath[0], &resLength, line, lineLength, 6);
+					fileParseResourcePath(&resPath[0], &resLength, line+6, lineLength);
 					fileGenerateFullPath(&imgPath[0], prgPath, strlen(prgPath), IMAGE_RESOURCE_DIRECTORY_STRING, IMAGE_RESOURCE_DIRECTORY_LENGTH, &resPath[0], resLength);
 					image = tLoadImage(&imgPath[0]);
 					if(image == NULL){
@@ -368,7 +367,7 @@ return_t tDefaultInit(){
 
 }
 
-void tDelete(texture *const restrict tex){
+void tDelete(texture *const __RESTRICT__ tex){
 	if(tex->diffuseID != 0){
 		glDeleteTextures(1, &tex->diffuseID);
 		tex->diffuseID = 0;

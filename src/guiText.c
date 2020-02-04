@@ -3,7 +3,7 @@
 #include "sprite.h"
 #include "mesh.h"
 
-void guiElementRenderText(const guiElement *const restrict element, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const float interpT){
+void guiElementRenderText(const guiElement *const __RESTRICT__ element, graphicsManager *const __RESTRICT__ gfxMngr, const camera *const __RESTRICT__ cam, const float distance, const float interpT){
 
 	const guiText text = element->data.text;
 	const bone root = element->root;
@@ -11,6 +11,7 @@ void guiElementRenderText(const guiElement *const restrict element, graphicsMana
 
 	txtFormat format = {.font = 0, .size = 0, .style = 0};
 	txtFont font = *text.stream.typeface->styles;
+	const texture *atlas = NULL;
 
 	txtCursor cursor = {.x = 0.f, .y = 0.f};
 	float advanceY = 0.f;
@@ -24,7 +25,6 @@ void guiElementRenderText(const guiElement *const restrict element, graphicsMana
 	mat4 transform = rootTransform;
 
 	// Initialize rendering state.
-	gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, font.atlas->diffuseID);
 	glBindVertexArray(g_meshSprite.vaoID);
 
 	// Loop through every character in the stream.
@@ -45,7 +45,7 @@ void guiElementRenderText(const guiElement *const restrict element, graphicsMana
 				// Handle updated formatting.
 				if(flagsAreSet(format.style, TEXT_FORMAT_FONT_UPDATED)){
 					font = text.stream.typeface->styles[format.font];
-					gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, font.atlas->diffuseID);
+					gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, atlas->diffuseID);
 				}
 				if(flagsAreSet(format.style, TEXT_FORMAT_SIZE_UPDATED)){
 					transform = mat4Scale(rootTransform, format.size, format.size, format.size);
@@ -83,34 +83,33 @@ void guiElementRenderText(const guiElement *const restrict element, graphicsMana
 
 			// Obtain the glyph for this code unit.
 			const txtGlyph glyph = font.glyphs[txtCMapIndex(font.cmap, code)];
-			const float advanceX = glyph.advanceX;
 
-			if(font.height > advanceY){
-				// Make advanceY the maximum height of
-				// every font on the current line.
-				advanceY = font.height;
+			// If the state buffer is full or the atlas must change, render.
+			if(bufferSize >= SPRITE_STATE_BUFFER_SIZE || atlas != glyph.atlas){
+				if(bufferSize != 0){
+					state = &gfxMngr->shdrData.spriteTransformState[0];
+					// Upload the state data to the shader.
+					glBindBuffer(GL_ARRAY_BUFFER, g_sprStateBufferID);
+					glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize*sizeof(spriteState), state);
+					// Render.
+					glDrawElementsInstanced(GL_TRIANGLES, g_meshSprite.indexNum, GL_UNSIGNED_INT, NULL, bufferSize);
+					bufferSize = 0;
+				}
+				// Bind the atlas texture for the following glyphs.
+				atlas = glyph.atlas;
+				gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, atlas->diffuseID);
 			}
 
 			// Generate glyph transform and add it to the state buffer.
 			/// Temporary transformation. There must be a better way.
 			state->transformation = mat4Translate(transform, cursor.x + glyph.kerningX, cursor.y + glyph.kerningY, 0.f);
 			state->frame = glyph.frame;
+			++state;
 
-			// If the state buffer is full, render.
-			if(++bufferSize >= SPRITE_STATE_BUFFER_SIZE){
-				state = &gfxMngr->shdrData.spriteTransformState[0];
-				// Upload the state data to the shader.
-				glBindBuffer(GL_ARRAY_BUFFER, g_sprStateBufferID);
-				glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize*sizeof(spriteState), state);
-				// Render.
-				glDrawElementsInstanced(GL_TRIANGLES, g_meshSprite.indexNum, GL_UNSIGNED_INT, NULL, bufferSize);
-				bufferSize = 0;
-			}else{
-				++state;
-			}
-
-			if(txtCursorAdvance(&cursor, advanceX*format.size, advanceY*format.size, text.bounds.w)){
+			if(txtCursorAdvance(&cursor, glyph.advanceX*format.size, advanceY*format.size, text.bounds.w) || font.height > advanceY){
 				// Reset font.height after the new line.
+				// Also make sure that advanceY is the maximum
+				// height of every font on the current line.
 				advanceY = font.height;
 			}
 

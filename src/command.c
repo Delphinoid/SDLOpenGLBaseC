@@ -2,13 +2,13 @@
 #include "memoryManager.h"
 #include <string.h>
 
-static void cmdTrieInit(cmdTrieNode *const restrict node, const char c){
+static void cmdTrieInit(cmdTrieNode *const __RESTRICT__ node, const char c){
 	node->value = c;
 	node->childNum = 0;
 	node->children = NULL;
 	node->cmd = NULL;
 }
-static size_t cmdTrieNext(cmdTrieNode **const restrict node, const char c){
+static size_t cmdTrieNext(cmdTrieNode **const __RESTRICT__ node, const char c){
 	// Gets the next node when finding a command.
 	// Loop through node's children until we find a child
 	// that matches c.
@@ -25,7 +25,7 @@ static size_t cmdTrieNext(cmdTrieNode **const restrict node, const char c){
 	return (size_t)-1;
 }
 
-static return_t cmdTrieAddNode(cmdTrieNode **const restrict node, const char c){
+static return_t cmdTrieAddNode(cmdTrieNode **const __RESTRICT__ node, const char c){
 	// Same as trieNext(), but creates a new node when necessary.
 	cmdNodeIndex_t index = 0;
 	while(index < (*node)->childNum){
@@ -68,7 +68,7 @@ static return_t cmdTrieAddNode(cmdTrieNode **const restrict node, const char c){
 	*node = &(*node)->children[index];
 	return 1;
 }
-static return_t cmdTrieRemoveChild(cmdTrieNode *const restrict node, const cmdNodeIndex_t index){
+static return_t cmdTrieRemoveChild(cmdTrieNode *const __RESTRICT__ node, const cmdNodeIndex_t index){
 	// Removes a child from a node.
 	// Assumes the child is empty.
 	if(node->childNum == 1){
@@ -115,11 +115,11 @@ static return_t cmdValid(const char *const name, const command cmd){
 	}
 	return check != name;
 }
-static return_t cmdParse(char *const restrict str){
+static return_t cmdParse(char *const __RESTRICT__ str){
 	return 0;
 }
 
-void cmdInit(cmdSystem *const restrict root){
+void cmdInit(cmdSystem *const __RESTRICT__ root){
 	/**
 	*** Value is set to DEL instead of NUL so that passing an empty
 	*** string into cmdFind() doesn't have unexpected results.
@@ -129,13 +129,13 @@ void cmdInit(cmdSystem *const restrict root){
 	root->children = NULL;
 	root->cmd = NULL;
 }
-return_t cmdAdd(cmdSystem *const node, const char *restrict name, const int (*func)(const cmdVariables *const restrict cmdv, const cmdInput *const restrict cmdi)){
+return_t cmdAdd(cmdSystem *const node, const char *__RESTRICT__ name, const int (*func)(const cmdVariables *const __RESTRICT__ cmdv, const cmdInput *const __RESTRICT__ cmdi)){
 	// Check if the command is valid before adding it.
 	if(cmdValid(name, func)){
 		// Go through each character in name, adding
 		// a node when we don't have a match.
 		while(*name != '\0'){
-			if(cmdTrieAddNode((cmdTrieNode **const restrict)&node, *name) < 0){
+			if(cmdTrieAddNode((cmdTrieNode **const __RESTRICT__)&node, *name) < 0){
 				/** Memory allocation failure. **/
 				return -1;
 			}
@@ -151,14 +151,14 @@ return_t cmdAdd(cmdSystem *const node, const char *restrict name, const int (*fu
 	}
 	return 0;
 }
-return_t cmdRemove(cmdSystem *const node, const char *restrict name){
+return_t cmdRemove(cmdSystem *const node, const char *__RESTRICT__ name){
 	// Remove the command and all unused nodes.
 	cmdTrieNode *last = node;
 	cmdNodeIndex_t lastChildIndex = 0;
 	cmdNodeIndex_t childIndex = 0;
 	// Find the last node used by multiple commands.
 	// We may remove every node after this.
-	while(*name != '\0' && (childIndex = cmdTrieNext((cmdTrieNode **const restrict)&node, *name)) != (size_t)-1){
+	while(*name != '\0' && (childIndex = cmdTrieNext((cmdTrieNode **const __RESTRICT__)&node, *name)) != (size_t)-1){
 		if(node->childNum != 1){
 			last = node;
 			lastChildIndex = childIndex;
@@ -179,9 +179,9 @@ return_t cmdRemove(cmdSystem *const node, const char *restrict name){
 	}
 	return 0;
 }
-return_t cmdFind(cmdSystem *const node, const char *restrict name, command *const cmd){
+return_t cmdFind(cmdSystem *const node, const char *__RESTRICT__ name, command *const cmd){
 	/** Any non-null-terminated input name has unexpected results. **/
-	while(cmdTrieNext((cmdTrieNode **const restrict)&node, *name) != (size_t)-1){
+	while(cmdTrieNext((cmdTrieNode **const __RESTRICT__)&node, *name) != (size_t)-1){
 		++name;
 	}
 	// If we reached the end of the command's name, we've found it.

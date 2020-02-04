@@ -2,7 +2,6 @@
 #include "moduleSettings.h"
 #include "scene.h"
 #include "memoryManager.h"
-#include "inline.h"
 #include <string.h>
 
 #define RESOURCE_DEFAULT_SCENE_SIZE sizeof(scene)
@@ -64,7 +63,7 @@ __HINT_INLINE__ scene *moduleSceneAllocate(){
 	}
 	return r;
 }
-__HINT_INLINE__ void moduleSceneFree(scene *const restrict resource){
+__HINT_INLINE__ void moduleSceneFree(scene *const __RESTRICT__ resource){
 	scnDelete(resource);
 	memPoolFree(&__g_SceneResourceArray, (void *)resource);
 }

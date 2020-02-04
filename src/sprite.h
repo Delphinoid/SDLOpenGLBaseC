@@ -10,7 +10,7 @@ extern GLuint g_sprStateBufferID;
 return_t sprGenerateStateBuffer();
 return_t sprDefaultInit();
 void sprPackVertexBuffer(const vertexIndex_t vertexNum, vertex *vertices);
-return_t sprGenerateBuffers(mesh *const restrict spr, const vertexIndex_t vertexNum, const vertex *const restrict vertices, const vertexIndex_t indexNum, const vertexIndex_t *const restrict indices);
+return_t sprGenerateBuffers(mesh *const __RESTRICT__ spr, const vertexIndex_t vertexNum, const vertex *const __RESTRICT__ vertices, const vertexIndex_t indexNum, const vertexIndex_t *const __RESTRICT__ indices);
 void sprDeleteStateBuffer();
 
 #endif

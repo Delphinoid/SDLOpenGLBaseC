@@ -107,22 +107,22 @@ typedef struct {
 #define memSLinkBlockStatus(block)  memSLinkDataGetActiveMasked(block)
 #define memSLinkBlockNext(array, i) (void *)((byte_t *)i + (array).block)
 
-void memSLinkInit(memorySLink *const restrict array);
-void *memSLinkCreate(memorySLink *const restrict array, void *const start, const size_t bytes, const size_t length);
-void *memSLinkCreateInit(memorySLink *const restrict array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
-void *memSLinkAllocate(memorySLink *const restrict array);
-void *memSLinkPrepend(memorySLink *const restrict array, void **const start);
-void *memSLinkAppend(memorySLink *const restrict array, void **const start);
-void *memSLinkInsertBefore(memorySLink *const restrict array, void **const start, void *const element, const void *const previous);
-void *memSLinkInsertAfter(memorySLink *const restrict array, void **const start, void *const element);
-void memSLinkFree(memorySLink *const restrict array, void **const start, void *const element, const void *const previous);
+void memSLinkInit(memorySLink *const __RESTRICT__ array);
+void *memSLinkCreate(memorySLink *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length);
+void *memSLinkCreateInit(memorySLink *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block));
+void *memSLinkAllocate(memorySLink *const __RESTRICT__ array);
+void *memSLinkPrepend(memorySLink *const __RESTRICT__ array, void **const start);
+void *memSLinkAppend(memorySLink *const __RESTRICT__ array, void **const start);
+void *memSLinkInsertBefore(memorySLink *const __RESTRICT__ array, void **const start, void *const element, const void *const previous);
+void *memSLinkInsertAfter(memorySLink *const __RESTRICT__ array, void **const start, void *const element);
+void memSLinkFree(memorySLink *const __RESTRICT__ array, void **const start, void *const element, const void *const previous);
 void *memSLinkSetupMemory(void *start, const size_t bytes, const size_t length);
-void *memSLinkSetupMemoryInit(void *start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
-void memSLinkClear(memorySLink *const restrict array);
-void memSLinkClearInit(memorySLink *const restrict array, void (*func)(void *const restrict block));
-void *memSLinkExtend(memorySLink *const restrict array, void *const start, const size_t bytes, const size_t length);
-void *memSLinkExtendInit(memorySLink *const restrict array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
-void memSLinkDelete(memorySLink *const restrict array);
+void *memSLinkSetupMemoryInit(void *start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block));
+void memSLinkClear(memorySLink *const __RESTRICT__ array);
+void memSLinkClearInit(memorySLink *const __RESTRICT__ array, void (*func)(void *const __RESTRICT__ block));
+void *memSLinkExtend(memorySLink *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length);
+void *memSLinkExtendInit(memorySLink *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block));
+void memSLinkDelete(memorySLink *const __RESTRICT__ array);
 
 #define MEMORY_SLINK_LOOP_BEGIN(allocator, n, type)                      \
 	{                                                                    \

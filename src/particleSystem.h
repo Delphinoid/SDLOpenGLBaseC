@@ -71,15 +71,15 @@ typedef struct particleSystem {
 
 } particleSystem;
 
-void particleSystemBaseInit(particleSystemBase *const restrict base);
-void particleSystemInit(particleSystem *const restrict system);
+void particleSystemBaseInit(particleSystemBase *const __RESTRICT__ base);
+void particleSystemInit(particleSystem *const __RESTRICT__ system);
 
-void particleSystemInstantiate(particleSystem *const restrict system, const particleSystemBase *const base);
+void particleSystemInstantiate(particleSystem *const __RESTRICT__ system, const particleSystemBase *const base);
 
-return_t particleSystemTick(particleSystem *const restrict system, const float elapsedTime);
-void particleSystemRender(const particleSystem *const restrict system, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const float interpT);
+return_t particleSystemTick(particleSystem *const __RESTRICT__ system, const float elapsedTime);
+void particleSystemRender(const particleSystem *const __RESTRICT__ system, graphicsManager *const __RESTRICT__ gfxMngr, const camera *const __RESTRICT__ cam, const float distance, const float interpT);
 
-void particleSystemBaseDelete(particleSystemBase *const restrict base);
-void particleSystemDelete(particleSystem *const restrict system);
+void particleSystemBaseDelete(particleSystemBase *const __RESTRICT__ base);
+void particleSystemDelete(particleSystem *const __RESTRICT__ system);
 
 #endif

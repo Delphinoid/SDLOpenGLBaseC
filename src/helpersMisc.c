@@ -30,7 +30,7 @@
 	return 0;
 }*/
 
-return_t pushDynamicArray(void **vector, const void *const restrict element, const size_t bytes, size_t *const restrict size, size_t *const restrict capacity){
+return_t pushDynamicArray(void **vector, const void *const __RESTRICT__ element, const size_t bytes, size_t *const __RESTRICT__ size, size_t *const __RESTRICT__ capacity){
 	// Push an element into a dynamic array.
 	if(*size == *capacity){
 		void *tempBuffer;
@@ -51,7 +51,7 @@ return_t pushDynamicArray(void **vector, const void *const restrict element, con
 	return 1;
 }
 
-size_t ltostr(long n, char *const restrict s){
+size_t ltostr(long n, char *const __RESTRICT__ s){
 	// Converts a long to a C-string.
 	size_t l;  // Length of the ouput (discluding null terminator).
 	if(n == 0){
@@ -87,7 +87,7 @@ size_t ltostr(long n, char *const restrict s){
 }
 
 /** TEMPORARY **/
-void getDelimitedString(char *const restrict line, const size_t lineLength, const char *restrict delims, char **const restrict strStart, size_t *const restrict strLength){
+void getDelimitedString(char *const __RESTRICT__ line, const size_t lineLength, const char *__RESTRICT__ delims, char **const __RESTRICT__ strStart, size_t *const __RESTRICT__ strLength){
 	// Temporary function by 8426THMY.
 	char *tempStart = NULL;
 	//Find the beginning of the string!

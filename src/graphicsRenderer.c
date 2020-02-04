@@ -6,7 +6,6 @@
 /** Shouldn't need to include object.h. Use gfxRenderStructure. **/
 #include "object.h"
 /** Shouldn't need to include object.h. Use gfxRenderStructure. **/
-#include "inline.h"
 
 typedef struct {
 
@@ -25,30 +24,30 @@ typedef struct {
 } gfxRenderer;
 
 
-static __FORCE_INLINE__ void gfxRenderQueueInit(gfxRenderQueue *const restrict queue){
+static __FORCE_INLINE__ void gfxRenderQueueInit(gfxRenderQueue *const __RESTRICT__ queue){
 	queue->elementNum = 0;
 	queue->elements = 0;
 }
 
 /** This should be done by the scene using a spatial partitioning system. **/
-static __FORCE_INLINE__ void gfxRenderQueueDepthSort(gfxRenderQueue *const restrict queue){
+static __FORCE_INLINE__ void gfxRenderQueueDepthSort(gfxRenderQueue *const __RESTRICT__ queue){
 
 	//
 
 }
-static __FORCE_INLINE__ void gfxRenderQueueDepthSortReverse(gfxRenderQueue *const restrict queue){
+static __FORCE_INLINE__ void gfxRenderQueueDepthSortReverse(gfxRenderQueue *const __RESTRICT__ queue){
 
 	//
 
 }
 
-static __FORCE_INLINE__ void gfxRendererInit(gfxRenderer *const restrict renderer, const float interpT){
+static __FORCE_INLINE__ void gfxRendererInit(gfxRenderer *const __RESTRICT__ renderer, const float interpT){
 	gfxRenderQueueInit(&renderer->qOpaque);
 	gfxRenderQueueInit(&renderer->qTranslucent);
 	renderer->interpT = interpT;
 }
 
-static __FORCE_INLINE__ return_t gfxRendererInitQueues(gfxRenderer *const restrict renderer, const size_t elementNum){
+static __FORCE_INLINE__ return_t gfxRendererInitQueues(gfxRenderer *const __RESTRICT__ renderer, const size_t elementNum){
 
 	gfxRenderElement *const array = memAllocate(elementNum * sizeof(gfxRenderElement));
 
@@ -70,7 +69,7 @@ static __FORCE_INLINE__ return_t gfxRendererInitQueues(gfxRenderer *const restri
 }
 
 /** UNUSED **/
-static __FORCE_INLINE__ void gfxRendererGenerateQueuesArray(gfxRenderer *const restrict renderer, const size_t objectNum, const object **const restrict objects){
+static __FORCE_INLINE__ void gfxRendererGenerateQueuesArray(gfxRenderer *const __RESTRICT__ renderer, const size_t objectNum, const object **const __RESTRICT__ objects){
 
 	// Generates opaque and translucent render
 	// queues from a regular array of objects.
@@ -110,7 +109,7 @@ static __FORCE_INLINE__ void gfxRendererGenerateQueuesArray(gfxRenderer *const r
 
 }
 
-static __FORCE_INLINE__ void gfxRendererGenerateQueuesList(gfxRenderer *const restrict renderer, const size_t objectNum, memoryPool objects){
+static __FORCE_INLINE__ void gfxRendererGenerateQueuesList(gfxRenderer *const __RESTRICT__ renderer, const size_t objectNum, memoryPool objects){
 
 	// Generates opaque and translucent render
 	// queues from a memoryPool.
@@ -161,11 +160,11 @@ static __FORCE_INLINE__ void gfxRendererGenerateQueuesList(gfxRenderer *const re
 
 }
 
-static __FORCE_INLINE__ void gfxRendererDelete(const gfxRenderer *const restrict renderer){
+static __FORCE_INLINE__ void gfxRendererDelete(const gfxRenderer *const __RESTRICT__ renderer){
 	memFree(renderer->qOpaque.elements);
 }
 
-static __FORCE_INLINE__ void gfxRendererDrawElement(gfxRenderElement *const restrict element, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float interpT){
+static __FORCE_INLINE__ void gfxRendererDrawElement(gfxRenderElement *const __RESTRICT__ element, graphicsManager *const __RESTRICT__ gfxMngr, const camera *const __RESTRICT__ cam, const float interpT){
 	switch(element->type){
 		case GFX_RNDR_ELEMENT_TYPE_OBJECT:
 			/** REMOVE THIS LINE EVENTUALLY **/
@@ -175,7 +174,7 @@ static __FORCE_INLINE__ void gfxRendererDrawElement(gfxRenderElement *const rest
 	}
 }
 
-return_t gfxRendererDrawScene(graphicsManager *const restrict gfxMngr, camera *const restrict cam, const scene *const restrict scn, const float interpT){
+return_t gfxRendererDrawScene(graphicsManager *const __RESTRICT__ gfxMngr, camera *const __RESTRICT__ cam, const scene *const __RESTRICT__ scn, const float interpT){
 
 	size_t i;
 	gfxRenderElement *queue;

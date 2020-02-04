@@ -1,14 +1,14 @@
 #include "billboard.h"
 #include "camera.h"
 
-void billboardInit(billboard *const restrict data){
+void billboardInit(billboard *const __RESTRICT__ data){
 	data->flags = BILLBOARD_DISABLED;
 	data->axis = NULL;
 	data->target = NULL;
 	data->scale = 1.f/BILLBOARD_SCALE_CALIBRATION_DISTANCE;
 }
 
-mat4 billboardState(const billboard data, const camera *const restrict cam, const vec3 centroid, mat4 configuration){
+mat4 billboardState(const billboard data, const camera *const __RESTRICT__ cam, const vec3 centroid, mat4 configuration){
 
 	// Generates a billboard transformation matrix.
 	// If no flags are set, returns the identity matrix.

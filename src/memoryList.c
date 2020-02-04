@@ -1,12 +1,12 @@
 #include "memoryList.h"
 
-void memListInit(memoryList *const restrict list){
+void memListInit(memoryList *const __RESTRICT__ list){
 	list->block = 0;
 	list->free = NULL;
 	list->region = NULL;
 }
 
-void *memListCreate(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length){
+void *memListCreate(memoryList *const __RESTRICT__ list, void *const start, const size_t bytes, const size_t length){
 
 	// Initialize a memory list with "length"-many
 	// elements of "bytes" size.
@@ -28,7 +28,7 @@ void *memListCreate(memoryList *const restrict list, void *const start, const si
 
 }
 
-void *memListCreateInit(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
+void *memListCreateInit(memoryList *const __RESTRICT__ list, void *const start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block)){
 
 	// Initialize a memory list with "length"-many
 	// elements of "bytes" size.
@@ -50,7 +50,7 @@ void *memListCreateInit(memoryList *const restrict list, void *const start, cons
 
 }
 
-void *memListAllocate(memoryList *const restrict list){
+void *memListAllocate(memoryList *const __RESTRICT__ list){
 
 	// Retrieves a new block of memory from the list
 	// and updates the "free" pointer.
@@ -64,7 +64,7 @@ void *memListAllocate(memoryList *const restrict list){
 
 }
 
-void memListFree(memoryList *const restrict list, void *const block){
+void memListFree(memoryList *const __RESTRICT__ list, void *const block){
 
 	// Frees a block of memory from the list.
 
@@ -100,7 +100,7 @@ void *memListSetupMemory(void *start, const size_t bytes, const size_t length){
 
 }
 
-void *memListSetupMemoryInit(void *start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
+void *memListSetupMemoryInit(void *start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block)){
 
 	const size_t blockSize = memListBlockSize(bytes);
 	byte_t *block;
@@ -129,7 +129,7 @@ void *memListSetupMemoryInit(void *start, const size_t bytes, const size_t lengt
 
 }
 
-void *memListIndex(memoryList *const restrict list, const size_t i){
+void *memListIndex(memoryList *const __RESTRICT__ list, const size_t i){
 
 	// Finds the element at index i.
 
@@ -155,7 +155,7 @@ void *memListIndex(memoryList *const restrict list, const size_t i){
 
 }
 
-void *memListIndexRegion(memoryList *const restrict list, const size_t i, memoryRegion **const container){
+void *memListIndexRegion(memoryList *const __RESTRICT__ list, const size_t i, memoryRegion **const container){
 
 	// Finds the element at index i.
 
@@ -182,7 +182,7 @@ void *memListIndexRegion(memoryList *const restrict list, const size_t i, memory
 
 }
 
-void memListClear(memoryList *const restrict list){
+void memListClear(memoryList *const __RESTRICT__ list){
 
 	byte_t *block = memListAlignStartData(list->region->start);
 	byte_t *next = block + list->block;
@@ -202,7 +202,7 @@ void memListClear(memoryList *const restrict list){
 
 }
 
-void memListClearInit(memoryList *const restrict list, void (*func)(void *const restrict block)){
+void memListClearInit(memoryList *const __RESTRICT__ list, void (*func)(void *const __RESTRICT__ block)){
 
 	byte_t *block = memListAlignStartData(list->region->start);
 	byte_t *next = block + list->block;
@@ -224,7 +224,7 @@ void memListClearInit(memoryList *const restrict list, void (*func)(void *const 
 
 }
 
-void *memListExtend(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length){
+void *memListExtend(memoryList *const __RESTRICT__ list, void *const start, const size_t bytes, const size_t length){
 
 	// Extends the memory allocator.
 	// Its logical function is similar to a
@@ -246,7 +246,7 @@ void *memListExtend(memoryList *const restrict list, void *const start, const si
 
 }
 
-void *memListExtendInit(memoryList *const restrict list, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
+void *memListExtendInit(memoryList *const __RESTRICT__ list, void *const start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block)){
 
 	// Extends the memory allocator.
 	// Its logical function is similar to a
@@ -268,6 +268,6 @@ void *memListExtendInit(memoryList *const restrict list, void *const start, cons
 
 }
 
-void memListDelete(memoryList *const restrict list){
+void memListDelete(memoryList *const __RESTRICT__ list){
 	memRegionFree(list->region);
 }

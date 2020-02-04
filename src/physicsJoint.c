@@ -1,10 +1,9 @@
 #include "physicsJoint.h"
 #include "physicsRigidBody.h"
 #include "memoryQLink.h"
-#include "inline.h"
 #include <stddef.h>
 
-void physJointInit(physJoint *const restrict joint, const flags_t flags, const physJointType_t type){
+void physJointInit(physJoint *const __RESTRICT__ joint, const flags_t flags, const physJointType_t type){
 	joint->type = type;
 	joint->flags = flags;
 	joint->bodyA = NULL;
@@ -18,9 +17,9 @@ void physJointInit(physJoint *const restrict joint, const flags_t flags, const p
 #define physJointSpherePresolveConstraints    NULL
 
 void (* const physJointPresolveConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM])(
-	physJoint *const restrict joint,
-	physRigidBody *const restrict bodyA,
-	physRigidBody *const restrict bodyB,
+	physJoint *const __RESTRICT__ joint,
+	physRigidBody *const __RESTRICT__ bodyA,
+	physRigidBody *const __RESTRICT__ bodyB,
 	const float dt
 ) = {
 	physJointFixedPresolveConstraints,
@@ -29,7 +28,7 @@ void (* const physJointPresolveConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM])(
 	physJointRevolutePresolveConstraints,
 	physJointSpherePresolveConstraints
 };
-__FORCE_INLINE__ void physJointPresolveConstraints(physJoint *const restrict joint, const float dt){
+__FORCE_INLINE__ void physJointPresolveConstraints(physJoint *const __RESTRICT__ joint, const float dt){
 
 	physJointPresolveConstraintsJumpTable[joint->type](joint, joint->bodyA, joint->bodyB, dt);
 
@@ -42,9 +41,9 @@ __FORCE_INLINE__ void physJointPresolveConstraints(physJoint *const restrict joi
 #define physJointSphereSolveVelocityConstraints    NULL
 
 void (* const physJointSolveVelocityConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM])(
-	physJoint *const restrict joint,
-	physRigidBody *const restrict bodyA,
-	physRigidBody *const restrict bodyB
+	physJoint *const __RESTRICT__ joint,
+	physRigidBody *const __RESTRICT__ bodyA,
+	physRigidBody *const __RESTRICT__ bodyB
 ) = {
 	physJointFixedSolveVelocityConstraints,
 	physJointDistanceSolveVelocityConstraints,
@@ -52,7 +51,7 @@ void (* const physJointSolveVelocityConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM]
 	physJointRevoluteSolveVelocityConstraints,
 	physJointSphereSolveVelocityConstraints
 };
-__FORCE_INLINE__ void physJointSolveVelocityConstraints(physJoint *const restrict joint){
+__FORCE_INLINE__ void physJointSolveVelocityConstraints(physJoint *const __RESTRICT__ joint){
 
 	physJointSolveVelocityConstraintsJumpTable[joint->type](joint, joint->bodyA, joint->bodyB);
 
@@ -67,9 +66,9 @@ __FORCE_INLINE__ void physJointSolveVelocityConstraints(physJoint *const restric
 #define physJointSphereSolveConfigurationConstraints    NULL
 
 return_t (* const physJointSolveConfigurationConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM])(
-	physJoint *const restrict joint,
-	physRigidBody *const restrict bodyA,
-	physRigidBody *const restrict bodyB
+	physJoint *const __RESTRICT__ joint,
+	physRigidBody *const __RESTRICT__ bodyA,
+	physRigidBody *const __RESTRICT__ bodyB
 ) = {
 	physJointFixedSolveConfigurationConstraints,
 	physJointDistanceSolveConfigurationConstraints,
@@ -77,7 +76,7 @@ return_t (* const physJointSolveConfigurationConstraintsJumpTable[PHYSICS_JOINT_
 	physJointRevoluteSolveConfigurationConstraints,
 	physJointSphereSolveConfigurationConstraints
 };
-__FORCE_INLINE__ return_t physJointSolveConfigurationConstraints(physJoint *const restrict joint){
+__FORCE_INLINE__ return_t physJointSolveConfigurationConstraints(physJoint *const __RESTRICT__ joint){
 
 	return physJointSolveConfigurationConstraintsJumpTable[joint->type](joint, joint->bodyA, joint->bodyB);
 

@@ -87,20 +87,20 @@ typedef struct {
 #define memPoolBlockNext(pool, i)     (void *)((byte_t *)i + (pool).block)
 #define memPoolBlockPrevious(pool, i) (void *)((byte_t *)i - (pool).block)
 
-void memPoolInit(memoryPool *const restrict pool);
-void *memPoolCreate(memoryPool *const restrict pool, void *start, const size_t bytes, const size_t length);
-void *memPoolCreateInit(memoryPool *const restrict pool, void *start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
-void *memPoolAllocate(memoryPool *const restrict pool);
-void memPoolFree(memoryPool *const restrict pool, void *const block);
+void memPoolInit(memoryPool *const __RESTRICT__ pool);
+void *memPoolCreate(memoryPool *const __RESTRICT__ pool, void *start, const size_t bytes, const size_t length);
+void *memPoolCreateInit(memoryPool *const __RESTRICT__ pool, void *start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block));
+void *memPoolAllocate(memoryPool *const __RESTRICT__ pool);
+void memPoolFree(memoryPool *const __RESTRICT__ pool, void *const block);
 void *memPoolSetupMemory(void *start, const size_t bytes, const size_t length);
-void *memPoolSetupMemoryInit(void *start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
-void *memPoolIndex(memoryPool *const restrict pool, const size_t i);
-void *memPoolIndexRegion(memoryPool *const restrict pool, const size_t i, memoryRegion **const container);
-void memPoolClear(memoryPool *const restrict pool);
-void memPoolClearInit(memoryPool *const restrict pool, void (*func)(void *const restrict block));
-void *memPoolExtend(memoryPool *const restrict pool, void *const start, const size_t bytes, const size_t length);
-void *memPoolExtendInit(memoryPool *const restrict pool, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
-void memPoolDelete(memoryPool *const restrict pool);
+void *memPoolSetupMemoryInit(void *start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block));
+void *memPoolIndex(memoryPool *const __RESTRICT__ pool, const size_t i);
+void *memPoolIndexRegion(memoryPool *const __RESTRICT__ pool, const size_t i, memoryRegion **const container);
+void memPoolClear(memoryPool *const __RESTRICT__ pool);
+void memPoolClearInit(memoryPool *const __RESTRICT__ pool, void (*func)(void *const __RESTRICT__ block));
+void *memPoolExtend(memoryPool *const __RESTRICT__ pool, void *const start, const size_t bytes, const size_t length);
+void *memPoolExtendInit(memoryPool *const __RESTRICT__ pool, void *const start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block));
+void memPoolDelete(memoryPool *const __RESTRICT__ pool);
 
 #define MEMORY_POOL_LOOP_BEGIN(allocator, n, type)                 \
 	{                                                              \

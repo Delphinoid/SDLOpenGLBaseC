@@ -44,6 +44,8 @@ typedef struct {
 } txtCursor;
 
 typedef struct {
+	// Pointer to the atlas containing the glyph.
+	const texture *atlas;
 	// The Unicode code unit for the glyph.
 	txtCodeUnit_t code;
 	// Area in the font atlas.
@@ -59,7 +61,9 @@ typedef struct {
 } txtGlyph;
 
 typedef struct {
-	const texture *atlas;
+	// Array of textures associated with the font.
+	// Stored here for cleanup purposes. Probably unnecessary.
+	const texture *atlases;
 	// Array of glyphs.
 	// The first glyph should be the missing / invalid glyph.
 	const txtGlyph *glyphs;
@@ -95,9 +99,9 @@ typedef struct {
 	const txtTypeface *typeface;
 } txtStream;
 
-return_t txtStreamNextCharacter(const txtStream *const restrict stream, const byte_t **i);
-uint32_t txtStreamParseCharacter(const txtStream *const restrict stream, const byte_t **i, txtFormat *const restrict format);
+return_t txtStreamNextCharacter(const txtStream *const __RESTRICT__ stream, const byte_t **i);
+uint32_t txtStreamParseCharacter(const txtStream *const __RESTRICT__ stream, const byte_t **i, txtFormat *const __RESTRICT__ format);
 
-return_t txtCursorAdvance(txtCursor *const restrict cursor, const float advanceX, const float advanceY, const float boxWidth);
+return_t txtCursorAdvance(txtCursor *const __RESTRICT__ cursor, const float advanceX, const float advanceY, const float boxWidth);
 
 #endif

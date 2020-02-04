@@ -305,7 +305,7 @@ int main(int argc, char **argv){
 	camera *camGUI = moduleCameraAllocate();
 	camInit(camGUI);
 	camGUI->position.value = vec3New(0.f, 0.f, 0.f);
-	flagsSet(camGUI->flags, CAM_PROJECTION_OVERLAY);
+	flagsSet(camGUI->flags, CAM_PROJECTION_FIXED_SIZE);
 
 	physJoint *joint = modulePhysicsJointAllocate();
 	physJointInit(joint, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_DISTANCE);
@@ -337,13 +337,13 @@ int main(int argc, char **argv){
 	//rndrStateInit(&gEl.data.panel.rndr.state);
 	twiInit(&gEl.data.window.body, moduleTextureWrapperFind("gui"FILE_PATH_DELIMITER_STRING"body.tdw"));
 	twiInit(&gEl.data.window.border, moduleTextureWrapperFind("gui"FILE_PATH_DELIMITER_STRING"border.tdw"));
-	gEl.data.window.offsets[0].x = 3.f/4.f; gEl.data.window.offsets[0].y = 0.f; gEl.data.window.offsets[0].w = 1.f/4.f; gEl.data.window.offsets[0].h = 1.f/5.f;
-	gEl.data.window.offsets[1].x = 0.f; gEl.data.window.offsets[1].y = 0.f; gEl.data.window.offsets[1].w = 1.f/4.f; gEl.data.window.offsets[1].h = 1.f/5.f;
-	gEl.data.window.offsets[2].x = 1.f/4.f; gEl.data.window.offsets[2].y = 0.f; gEl.data.window.offsets[2].w = 1.f/4.f; gEl.data.window.offsets[2].h = 1.f/5.f;
-	gEl.data.window.offsets[3].x = 2.f/4.f; gEl.data.window.offsets[3].y = 0.f; gEl.data.window.offsets[3].w = 1.f/4.f; gEl.data.window.offsets[3].h = 1.f/5.f;
-	gEl.data.window.offsets[4].x = 0.f; gEl.data.window.offsets[4].y = 4.f/5.f; gEl.data.window.offsets[4].w = 1.f; gEl.data.window.offsets[4].h = 1.f/5.f;
-	gEl.data.window.offsets[5].x = 0.f; gEl.data.window.offsets[5].y = 1.f/5.f; gEl.data.window.offsets[5].w = 1.f; gEl.data.window.offsets[5].h = 1.f/5.f;
-	gEl.data.window.offsets[6].x = 0.f; gEl.data.window.offsets[6].y = 2.f/5.f; gEl.data.window.offsets[6].w = 1.f; gEl.data.window.offsets[6].h = 1.f/5.f;
+	gEl.data.window.offsets[0].x = 3.f/4.f; gEl.data.window.offsets[0].y = 4.f/5.f; gEl.data.window.offsets[0].w = 1.f/4.f; gEl.data.window.offsets[0].h = 1.f/5.f;
+	gEl.data.window.offsets[1].x = 0.f; gEl.data.window.offsets[1].y = 4.f/5.f; gEl.data.window.offsets[1].w = 1.f/4.f; gEl.data.window.offsets[1].h = 1.f/5.f;
+	gEl.data.window.offsets[2].x = 1.f/4.f; gEl.data.window.offsets[2].y = 4.f/5.f; gEl.data.window.offsets[2].w = 1.f/4.f; gEl.data.window.offsets[2].h = 1.f/5.f;
+	gEl.data.window.offsets[3].x = 2.f/4.f; gEl.data.window.offsets[3].y = 4.f/5.f; gEl.data.window.offsets[3].w = 1.f/4.f; gEl.data.window.offsets[3].h = 1.f/5.f;
+	gEl.data.window.offsets[4].x = 0.f; gEl.data.window.offsets[4].y = 2.f/5.f; gEl.data.window.offsets[4].w = 1.f; gEl.data.window.offsets[4].h = 1.f/5.f;
+	gEl.data.window.offsets[5].x = 0.f; gEl.data.window.offsets[5].y = 0.f; gEl.data.window.offsets[5].w = 1.f; gEl.data.window.offsets[5].h = 1.f/5.f;
+	gEl.data.window.offsets[6].x = 0.f; gEl.data.window.offsets[6].y = 1.f/5.f; gEl.data.window.offsets[6].w = 1.f; gEl.data.window.offsets[6].h = 1.f/5.f;
 	gEl.data.window.offsets[7].x = 0.f; gEl.data.window.offsets[7].y = 3.f/5.f; gEl.data.window.offsets[7].w = 1.f; gEl.data.window.offsets[7].h = 1.f/5.f;
 
 	particleBase a; particleBaseInit(&a); a.rndr.mdl = &g_mdlSprite; a.rndr.tw = &g_twDefault;

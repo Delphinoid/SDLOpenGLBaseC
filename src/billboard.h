@@ -29,7 +29,7 @@ typedef struct {
 	float scale;   // Scale option calibration distance. Should be between 0 and 1.
 } billboard;
 
-void billboardInit(billboard *const restrict data);
-mat4 billboardState(const billboard data, const camera *const restrict cam, const vec3 centroid, mat4 configuration);
+void billboardInit(billboard *const __RESTRICT__ data);
+mat4 billboardState(const billboard data, const camera *const __RESTRICT__ cam, const vec3 centroid, mat4 configuration);
 
 #endif

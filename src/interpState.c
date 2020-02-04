@@ -2,15 +2,15 @@
 #include <string.h>
 
 // INTERPOLATED FLOAT FUNCTIONS
-void iFloatInit(interpFloat *const restrict iFloat, const float s){
+void iFloatInit(interpFloat *const __RESTRICT__ iFloat, const float s){
 	iFloat->previous = s;
 	iFloat->value = s;
 	iFloat->render = s;
 }
-void iFloatResetInterp(interpFloat *const restrict iFloat){
+void iFloatResetInterp(interpFloat *const __RESTRICT__ iFloat){
 	iFloat->previous = iFloat->value;
 }
-return_t iFloatUpdate(interpFloat *const restrict iFloat, const float interpT){
+return_t iFloatUpdate(interpFloat *const __RESTRICT__ iFloat, const float interpT){
 	if(interpT <= 0.f){
 		// If the value hasn't changed, there's nothing to interpolate.
 		if(iFloat->render == iFloat->previous){
@@ -29,7 +29,7 @@ return_t iFloatUpdate(interpFloat *const restrict iFloat, const float interpT){
 	return 1;
 }
 /**
-void iFloatInterpolate(const interpFloat *const restrict iFloat, const float interpT, float *const restrict r){
+void iFloatInterpolate(const interpFloat *const __RESTRICT__ iFloat, const float interpT, float *const __RESTRICT__ r){
 	if(iFloat->previous == iFloat->value){
 		*r = iFloat->value;
 	}else{
@@ -43,15 +43,15 @@ void iFloatInterpolate(const interpFloat *const restrict iFloat, const float int
 
 
 // INTERPOLATED SIZE_T FUNCTIONS
-void iSizeTInit(interpSizeT *const restrict iSizeT, const size_t s){
+void iSizeTInit(interpSizeT *const __RESTRICT__ iSizeT, const size_t s){
 	iSizeT->previous = s;
 	iSizeT->value = s;
 	iSizeT->render = s;
 }
-void iSizeTResetInterp(interpSizeT *const restrict iSizeT){
+void iSizeTResetInterp(interpSizeT *const __RESTRICT__ iSizeT){
 	iSizeT->previous = iSizeT->value;
 }
-return_t iSizeTUpdate(interpSizeT *const restrict iSizeT, const float interpT){
+return_t iSizeTUpdate(interpSizeT *const __RESTRICT__ iSizeT, const float interpT){
 	if(interpT <= 0.f){
 		// If the value hasn't changed, there's nothing to interpolate.
 		if(iSizeT->render == iSizeT->previous){
@@ -73,7 +73,7 @@ return_t iSizeTUpdate(interpSizeT *const restrict iSizeT, const float interpT){
 	return 1;
 }
 /**
-void iSizeTInterpolate(const interpSizeT *const restrict iSizeT, const float interpT, size_t *const restrict r){
+void iSizeTInterpolate(const interpSizeT *const __RESTRICT__ iSizeT, const float interpT, size_t *const __RESTRICT__ r){
 	if(iSizeT->previous == iSizeT->value){
 		*r = iSizeT->value;
 	}
@@ -90,15 +90,15 @@ void iSizeTInterpolate(const interpSizeT *const restrict iSizeT, const float int
 
 
 // INTERPOLATED 3D VECTOR FUNCTIONS
-void iVec3Init(interpVec3 *const restrict iVec3, const float x, const float y, const float z){
+void iVec3Init(interpVec3 *const __RESTRICT__ iVec3, const float x, const float y, const float z){
 	iVec3->previous = vec3New(x, y, z);
 	iVec3->value    = vec3New(x, y, z);
 	iVec3->render   = vec3New(x, y, z);
 }
-void iVec3ResetInterp(interpVec3 *const restrict iVec3){
+void iVec3ResetInterp(interpVec3 *const __RESTRICT__ iVec3){
 	iVec3->previous = iVec3->value;
 }
-return_t iVec3Update(interpVec3 *const restrict iVec3, const float interpT){
+return_t iVec3Update(interpVec3 *const __RESTRICT__ iVec3, const float interpT){
 	if(interpT <= 0.f){
 		// If the value hasn't changed, there's nothing to interpolate.
 		if(iVec3->render.x == iVec3->previous.x &&
@@ -124,7 +124,7 @@ return_t iVec3Update(interpVec3 *const restrict iVec3, const float interpT){
 	return 1;
 }
 /**
-void iVec3Interpolate(const interpVec3 *const restrict iVec3, const float interpT, vec3 *const restrict r){
+void iVec3Interpolate(const interpVec3 *const __RESTRICT__ iVec3, const float interpT, vec3 *const __RESTRICT__ r){
 	if(iVec3->previous.x == iVec3->value.x &&
 	   iVec3->previous.y == iVec3->value.y &&
 	   iVec3->previous.z == iVec3->value.z){
@@ -142,15 +142,15 @@ void iVec3Interpolate(const interpVec3 *const restrict iVec3, const float interp
 
 
 // INTERPOLATED QUATERNION FUNCTIONS
-void iQuatInit(interpQuat *const restrict iQuat){
+void iQuatInit(interpQuat *const __RESTRICT__ iQuat){
 	iQuat->previous = quatIdentity();
 	iQuat->value = quatIdentity();
 	iQuat->render = quatIdentity();
 }
-void iQuatResetInterp(interpQuat *const restrict iQuat){
+void iQuatResetInterp(interpQuat *const __RESTRICT__ iQuat){
 	iQuat->previous = iQuat->value;
 }
-return_t iQuatUpdate(interpQuat *const restrict iQuat, const float interpT){
+return_t iQuatUpdate(interpQuat *const __RESTRICT__ iQuat, const float interpT){
 	if(interpT <= 0.f){
 		// If the value hasn't changed, there's nothing to interpolate.
 		if(iQuat->render.w   == iQuat->previous.w   &&
@@ -179,7 +179,7 @@ return_t iQuatUpdate(interpQuat *const restrict iQuat, const float interpT){
 	return 1;
 }
 /**
-void iQuatInterpolate(const interpQuat *const restrict iQuat, const float interpT, quat *const restrict r){
+void iQuatInterpolate(const interpQuat *const __RESTRICT__ iQuat, const float interpT, quat *const __RESTRICT__ r){
 	if(iQuat->previous.w   == iQuat->value.w   &&
 	   iQuat->previous.v.x == iQuat->value.v.x &&
 	   iQuat->previous.v.y == iQuat->value.v.y &&

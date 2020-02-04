@@ -2,6 +2,7 @@
 #define RENDERABLESTATE_H
 
 #include "flags.h"
+#include "qualifiers.h"
 
 #define RENDERABLE_STATE_ALPHA_BLEND  0x00
 #define RENDERABLE_STATE_ALPHA_DITHER 0x01
@@ -17,7 +18,7 @@ typedef struct {
 
 } renderableState;
 
-void rndrStateInit(renderableState *const restrict state);
-float rndrStateAlpha(const renderableState *const restrict state, const float interpT);
+void rndrStateInit(renderableState *const __RESTRICT__ state);
+float rndrStateAlpha(const renderableState *const __RESTRICT__ state, const float interpT);
 
 #endif

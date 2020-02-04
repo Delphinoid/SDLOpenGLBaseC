@@ -3,21 +3,20 @@
 #include "skeletonShared.h"
 #include "helpersFileIO.h"
 #include "helpersMisc.h"
-#include "inline.h"
 #include <string.h>
 #include <stdio.h>
 
 #define SHADER_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Shaders"FILE_PATH_DELIMITER_STRING
 #define SHADER_RESOURCE_DIRECTORY_LENGTH 18
 
-void shdrDataInit(shaderData *const restrict shdrData){
+void shdrDataInit(shaderData *const __RESTRICT__ shdrData){
 	shdrData->lastTexID = 0;
 	shdrData->identityMatrix = mat4Identity();
 	shdrData->biasMIP = SHADER_DEFAULT_BIAS_MIP;
 	shdrData->biasLOD = SHADER_DEFAULT_BIAS_LOD;
 }
 
-static __FORCE_INLINE__ return_t shdrLoad(GLuint *const restrict id, GLenum type, const char *const restrict prgPath, const char *const restrict filePath){
+static __FORCE_INLINE__ return_t shdrLoad(GLuint *const __RESTRICT__ id, GLenum type, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath){
 
 	char fullPath[FILE_MAX_PATH_LENGTH];
 	const size_t fileLength = strlen(filePath);
@@ -76,7 +75,7 @@ static __FORCE_INLINE__ return_t shdrLoad(GLuint *const restrict id, GLenum type
 
 }
 
-return_t shdrPrgLoad(GLuint *const restrict id, const char *const restrict prgPath, const char *const restrict vertexPath, const char *const restrict fragmentPath){
+return_t shdrPrgLoad(GLuint *const __RESTRICT__ id, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ vertexPath, const char *const __RESTRICT__ fragmentPath){
 
 	// Generate shaders.
 	return_t r;
@@ -104,7 +103,7 @@ return_t shdrPrgLoad(GLuint *const restrict id, const char *const restrict prgPa
 
 }
 
-return_t shdrPrgObjLink(shaderProgramObject *const restrict shdrPrg){
+return_t shdrPrgObjLink(shaderProgramObject *const __RESTRICT__ shdrPrg){
 
 	GLenum glError;
 	boneIndex_t i;
@@ -165,7 +164,7 @@ return_t shdrPrgObjLink(shaderProgramObject *const restrict shdrPrg){
 
 }
 
-return_t shdrPrgSprLink(shaderProgramSprite *const restrict shdrPrg){
+return_t shdrPrgSprLink(shaderProgramSprite *const __RESTRICT__ shdrPrg){
 
 	GLenum glError;
 
@@ -191,6 +190,6 @@ return_t shdrPrgSprLink(shaderProgramSprite *const restrict shdrPrg){
 
 }
 
-__FORCE_INLINE__ void shdrPrgDelete(const void *const restrict shdrPrg){
-	glDeleteProgram(*((const GLuint *const restrict)shdrPrg));
+__FORCE_INLINE__ void shdrPrgDelete(const void *const __RESTRICT__ shdrPrg){
+	glDeleteProgram(*((const GLuint *const __RESTRICT__)shdrPrg));
 }

@@ -65,13 +65,13 @@ typedef struct {
 
 } physJointDistance;
 
-void physJointDistanceInit(physJointDistance *const restrict joint, const vec3 anchorA, const vec3 anchorB, const float distance, const float frequency, const float damping);
-void physJointDistancePresolveConstraints(physJoint *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, const float dt);
-void physJointDistanceSolveVelocityConstraints(physJoint *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB);
+void physJointDistanceInit(physJointDistance *const __RESTRICT__ joint, const vec3 anchorA, const vec3 anchorB, const float distance, const float frequency, const float damping);
+void physJointDistancePresolveConstraints(physJoint *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, const float dt);
+void physJointDistanceSolveVelocityConstraints(physJoint *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB);
 #ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-return_t physJointDistanceSolveConfigurationConstraints(physJoint *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB);
+return_t physJointDistanceSolveConfigurationConstraints(physJoint *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB);
 #endif
-void physJointDistanceSetFrequency(physJointDistance *const restrict joint, const float frequency);
-void physJointDistanceSetDamping(physJointDistance *const restrict joint, const float damping);
+void physJointDistanceSetFrequency(physJointDistance *const __RESTRICT__ joint, const float frequency);
+void physJointDistanceSetDamping(physJointDistance *const __RESTRICT__ joint, const float damping);
 
 #endif

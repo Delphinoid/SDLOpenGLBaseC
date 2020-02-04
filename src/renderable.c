@@ -3,37 +3,36 @@
 #include "texture.h"
 #include "model.h"
 #include "skeleton.h"
-#include "inline.h"
 
-void rndrBaseInit(renderableBase *const restrict rndr){
+void rndrBaseInit(renderableBase *const __RESTRICT__ rndr){
 	rndr->mdl = NULL;
 	rndr->tw = NULL;
 }
 
-void rndrInit(renderable *const restrict rndr){
+void rndrInit(renderable *const __RESTRICT__ rndr){
 	rndr->mdl = NULL;
 	twiInit(&rndr->twi, NULL);
 	rndrStateInit(&rndr->state);
 	billboardInit(&rndr->billboardData);
 }
 
-void rndrInstantiate(renderable *const restrict rndr, const renderableBase *const base){
+void rndrInstantiate(renderable *const __RESTRICT__ rndr, const renderableBase *const base){
 	rndr->mdl = base->mdl;
 	twiInit(&rndr->twi, base->tw);
 	rndrStateInit(&rndr->state);
 	billboardInit(&rndr->billboardData);
 }
 
-__FORCE_INLINE__ void rndrTick(renderable *const restrict rndr, const float elapsedTime){
+__FORCE_INLINE__ void rndrTick(renderable *const __RESTRICT__ rndr, const float elapsedTime){
 	twiTick(&rndr->twi, elapsedTime);
 	rndr->state.alphaPrevious = rndr->state.alphaCurrent;
 	rndr->state.alphaCurrent = rndr->state.alpha;
 }
 
-void rndrRender(const renderable *const restrict rndr, const skeleton *const restrict skl, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const vec3 centroid, const float interpT){
+void rndrRender(const renderable *const __RESTRICT__ rndr, const skeleton *const __RESTRICT__ skl, graphicsManager *const __RESTRICT__ gfxMngr, const camera *const __RESTRICT__ cam, const float distance, const vec3 centroid, const float interpT){
 
 	// Get texture information for rendering and feed it to the shader.
-	const twFrame *const restrict frame = twiState(&rndr->twi, interpT);
+	const twFrame *const __RESTRICT__ frame = twiState(&rndr->twi, interpT);
 	// Bind the texture (if needed).
 	gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, frame->image->diffuseID);
 	// Feed the texture coordinates to the shader.

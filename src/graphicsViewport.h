@@ -1,6 +1,8 @@
 #ifndef GRAPHICSVIEWPORT_H
 #define GRAPHICSVIEWPORT_H
 
+#include "qualifiers.h"
+
 typedef struct {
 	int x;
 	int y;
@@ -15,8 +17,8 @@ typedef struct {
 	float height;
 } gfxView;
 
-void gfxViewInit(gfxView *const restrict v);
-void gfxViewReset(gfxView *const restrict v);
-void gfxViewSet(gfxView *const restrict v, const float x, const float y, const float width, const float height);
+void gfxViewInit(gfxView *const __RESTRICT__ v);
+void gfxViewReset(gfxView *const __RESTRICT__ v);
+void gfxViewSet(gfxView *const __RESTRICT__ v, const float x, const float y, const float width, const float height);
 
 #endif

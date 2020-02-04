@@ -2,7 +2,6 @@
 #include "moduleSettings.h"
 #include "object.h"
 #include "memoryManager.h"
-#include "inline.h"
 #include <string.h>
 
 #define RESOURCE_DEFAULT_OBJECT_BASE_SIZE sizeof(objectBase)
@@ -91,11 +90,11 @@ __HINT_INLINE__ objectBase *moduleObjectBaseAllocate(){
 	}
 	return r;
 }
-__HINT_INLINE__ void moduleObjectBaseFree(objectBase *const restrict resource){
+__HINT_INLINE__ void moduleObjectBaseFree(objectBase *const __RESTRICT__ resource){
 	objBaseDelete(resource);
 	memPoolFree(&__g_ObjectBaseResourceArray, (void *)resource);
 }
-objectBase *moduleObjectBaseFind(const char *const restrict name){
+objectBase *moduleObjectBaseFind(const char *const __RESTRICT__ name){
 
 	MEMORY_POOL_LOOP_BEGIN(__g_ObjectBaseResourceArray, i, objectBase *);
 
@@ -147,7 +146,7 @@ __HINT_INLINE__ object *moduleObjectAllocate(){
 __HINT_INLINE__ object *moduleObjectIndex(const size_t i){
 	return memPoolIndex(&__g_ObjectResourceArray, i);
 }
-__HINT_INLINE__ void moduleObjectFree(object *const restrict resource){
+__HINT_INLINE__ void moduleObjectFree(object *const __RESTRICT__ resource){
 	objDelete(resource);
 	memPoolFree(&__g_ObjectResourceArray, (void *)resource);
 }

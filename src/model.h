@@ -37,12 +37,12 @@ extern model g_mdlDefault;
 extern model g_mdlSprite;
 extern model g_mdlBillboard;
 
-void mdlInit(model *const restrict mdl);
-return_t mdlLoad(model *const restrict mdl, const char *const restrict prgPath, const char *const restrict filePath);
+void mdlInit(model *const __RESTRICT__ mdl);
+return_t mdlLoad(model *const __RESTRICT__ mdl, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath);
 void mdlDefaultInit();
 void mdlSpriteInit();
 void mdlBillboardInit();
-void mdlFindCurrentLOD(const model *const restrict mdl, vertexIndex_t *const restrict indexNum, const void **const restrict offset, const float distance, size_t bias);
-void mdlDelete(model *const restrict mdl);
+void mdlFindCurrentLOD(const model *const __RESTRICT__ mdl, vertexIndex_t *const __RESTRICT__ indexNum, const void **const __RESTRICT__ offset, const float distance, size_t bias);
+void mdlDelete(model *const __RESTRICT__ mdl);
 
 #endif

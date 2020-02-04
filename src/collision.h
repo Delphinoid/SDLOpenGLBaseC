@@ -69,18 +69,18 @@ typedef union cSeparation {
 
 // Forward declarations for inlining.
 extern return_t (* const cCollisionJumpTable[COLLIDER_TYPE_NUM][COLLIDER_TYPE_NUM])(
-	const void *const restrict,
-	const void *const restrict,
-	void *const restrict,
-	cContact *const restrict
+	const void *const __RESTRICT__,
+	const void *const __RESTRICT__,
+	void *const __RESTRICT__,
+	cContact *const __RESTRICT__
 );
 extern return_t (* const cSeparationJumpTable[COLLIDER_TYPE_NUM][COLLIDER_TYPE_NUM])(
-	const void *const restrict,
-	const void *const restrict,
-	const void *const restrict
+	const void *const __RESTRICT__,
+	const void *const __RESTRICT__,
+	const void *const __RESTRICT__
 );
 
-return_t cCheckCollision(const collider *const restrict c1, const collider *const restrict c2, cSeparation *const restrict sc, cContact *const restrict cm);
-return_t cCheckSeparation(const collider *const restrict c1, const collider *const restrict c2, const cSeparation *const restrict sc);
+return_t cCheckCollision(const collider *const __RESTRICT__ c1, const collider *const __RESTRICT__ c2, cSeparation *const __RESTRICT__ sc, cContact *const __RESTRICT__ cm);
+return_t cCheckSeparation(const collider *const __RESTRICT__ c1, const collider *const __RESTRICT__ c2, const cSeparation *const __RESTRICT__ sc);
 
 #endif

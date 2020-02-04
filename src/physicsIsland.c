@@ -3,13 +3,12 @@
 #include "physicsCollider.h"
 #include "physicsRigidBody.h"
 #include "modulePhysics.h"
-#include "inline.h"
 
-void physIslandInit(physIsland *const restrict island){
+void physIslandInit(physIsland *const __RESTRICT__ island){
 	aabbTreeInit(&island->tree);
 }
 
-__FORCE_INLINE__ return_t physIslandUpdateCollider(physIsland *const restrict island, physCollider *const restrict c){
+__FORCE_INLINE__ return_t physIslandUpdateCollider(physIsland *const __RESTRICT__ island, physCollider *const __RESTRICT__ c){
 	if(c->node == NULL){
 		// Insert a collider into the island.
 		if(aabbTreeInsert(&island->tree, &c->node, (void *)c, &c->aabb, &modulePhysicsAABBNodeAllocate) < 0){
@@ -29,16 +28,16 @@ __FORCE_INLINE__ return_t physIslandUpdateCollider(physIsland *const restrict is
 	return 1;
 }
 
-__FORCE_INLINE__ void physIslandRemoveCollider(physIsland *const restrict island, physCollider *const restrict c){
+__FORCE_INLINE__ void physIslandRemoveCollider(physIsland *const __RESTRICT__ island, physCollider *const __RESTRICT__ c){
 	if(c->node != NULL){
 		aabbTreeRemove(&island->tree, c->node, &modulePhysicsAABBNodeFree);
 	}
 }
 
 #ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-__FORCE_INLINE__ return_t physIslandQuery(const physIsland *const restrict island, const float frequency){
+__FORCE_INLINE__ return_t physIslandQuery(const physIsland *const __RESTRICT__ island, const float frequency){
 #else
-__FORCE_INLINE__ return_t physIslandQuery(const physIsland *const restrict island){
+__FORCE_INLINE__ return_t physIslandQuery(const physIsland *const __RESTRICT__ island){
 #endif
 
 	// Maintain contact and separation pairs for each collider.
@@ -66,6 +65,6 @@ __FORCE_INLINE__ return_t physIslandQuery(const physIsland *const restrict islan
 
 }
 
-void physIslandDelete(physIsland *const restrict island){
+void physIslandDelete(physIsland *const __RESTRICT__ island){
 	aabbTreeTraverse(&island->tree, &modulePhysicsAABBNodeFree);
 }

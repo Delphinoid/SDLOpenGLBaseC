@@ -24,13 +24,13 @@ typedef struct {
 #define memStackBlockSize(bytes) bytes
 #define memStackAllocationSize(start, bytes, length) ((length > 0 ? memStackBlockSize(bytes) * length : bytes) + sizeof(memoryRegion))
 
-void memStackInit(memoryStack *const restrict stack);
-void *memStackCreate(memoryStack *const restrict stack, void *const start, const size_t bytes, const size_t length);
-void *memStackPush(memoryStack *const restrict stack, const size_t bytes);
-void memStackPop(memoryStack *const restrict stack, const size_t bytes);
-//void memStackShrink(memoryStack *const restrict stack, const size_t bytes);
-void memStackClear(memoryStack *const restrict stack);
-void *memStackExtend(memoryStack *const restrict stack, void *const start, const size_t bytes, const size_t length);
-void memStackDelete(memoryStack *const restrict stack);
+void memStackInit(memoryStack *const __RESTRICT__ stack);
+void *memStackCreate(memoryStack *const __RESTRICT__ stack, void *const start, const size_t bytes, const size_t length);
+void *memStackPush(memoryStack *const __RESTRICT__ stack, const size_t bytes);
+void memStackPop(memoryStack *const __RESTRICT__ stack, const size_t bytes);
+//void memStackShrink(memoryStack *const __RESTRICT__ stack, const size_t bytes);
+void memStackClear(memoryStack *const __RESTRICT__ stack);
+void *memStackExtend(memoryStack *const __RESTRICT__ stack, void *const start, const size_t bytes, const size_t length);
+void memStackDelete(memoryStack *const __RESTRICT__ stack);
 
 #endif

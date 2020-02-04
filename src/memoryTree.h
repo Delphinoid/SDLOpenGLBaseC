@@ -231,19 +231,19 @@ typedef struct {
 #define memTreeBlockNext(tree, i)     (void *)((byte_t *)i + memTreeDataGetCurrent(i));
 #define memTreeBlockPrevious(tree, i) (void *)((byte_t *)i - memTreeDataGetCurrent(i));
 
-void memTreeInit(memoryTree *const restrict tree);
-void *memTreeCreate(memoryTree *const restrict tree, void *const start, const size_t bytes, const size_t length);
-void *memTreeAllocate(memoryTree *const restrict tree, const size_t bytes);
-void memTreeFree(memoryTree *const restrict tree, void *const restrict block);
-void *memTreeReallocate(memoryTree *const restrict tree, void *const block, const size_t bytes);
+void memTreeInit(memoryTree *const __RESTRICT__ tree);
+void *memTreeCreate(memoryTree *const __RESTRICT__ tree, void *const start, const size_t bytes, const size_t length);
+void *memTreeAllocate(memoryTree *const __RESTRICT__ tree, const size_t bytes);
+void memTreeFree(memoryTree *const __RESTRICT__ tree, void *const __RESTRICT__ block);
+void *memTreeReallocate(memoryTree *const __RESTRICT__ tree, void *const block, const size_t bytes);
 void *memTreeSetupMemory(void *start, const size_t bytes, const size_t length);
-void memTreeClear(memoryTree *const restrict tree);
-void *memTreeExtend(memoryTree *const restrict tree, void *const start, const size_t bytes, const size_t length);
-void memTreeDelete(memoryTree *const restrict tree);
+void memTreeClear(memoryTree *const __RESTRICT__ tree);
+void *memTreeExtend(memoryTree *const __RESTRICT__ tree, void *const start, const size_t bytes, const size_t length);
+void memTreeDelete(memoryTree *const __RESTRICT__ tree);
 
 #ifdef MEMORY_DEBUG
-void memTreePrintFreeBlocks(memoryTree *const restrict tree, const unsigned int recursions);
-void memTreePrintAllBlocks(memoryTree *const restrict tree);
+void memTreePrintFreeBlocks(memoryTree *const __RESTRICT__ tree, const unsigned int recursions);
+void memTreePrintAllBlocks(memoryTree *const __RESTRICT__ tree);
 #endif
 
 #endif

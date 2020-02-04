@@ -21,22 +21,22 @@ return_t moduleRenderableResourcesInit();
 void moduleRenderableResourcesReset();
 void moduleRenderableResourcesDelete();
 
-renderableBase *moduleRenderableBaseAppendStatic(renderableBase **const restrict array);
-renderableBase *moduleRenderableBaseAppend(renderableBase **const restrict array);
-renderableBase *moduleRenderableBaseInsertAfterStatic(renderableBase **const restrict array, renderableBase *const restrict resource);
-renderableBase *moduleRenderableBaseInsertAfter(renderableBase **const restrict array, renderableBase *const restrict resource);
-renderableBase *moduleRenderableBaseNext(const renderableBase *const restrict i);
-void moduleRenderableBaseFree(renderableBase **const restrict array, renderableBase *const restrict resource, const renderableBase *const restrict previous);
-void moduleRenderableBaseFreeArray(renderableBase **const restrict array);
+renderableBase *moduleRenderableBaseAppendStatic(renderableBase **const __RESTRICT__ array);
+renderableBase *moduleRenderableBaseAppend(renderableBase **const __RESTRICT__ array);
+renderableBase *moduleRenderableBaseInsertAfterStatic(renderableBase **const __RESTRICT__ array, renderableBase *const __RESTRICT__ resource);
+renderableBase *moduleRenderableBaseInsertAfter(renderableBase **const __RESTRICT__ array, renderableBase *const __RESTRICT__ resource);
+renderableBase *moduleRenderableBaseNext(const renderableBase *const __RESTRICT__ i);
+void moduleRenderableBaseFree(renderableBase **const __RESTRICT__ array, renderableBase *const __RESTRICT__ resource, const renderableBase *const __RESTRICT__ previous);
+void moduleRenderableBaseFreeArray(renderableBase **const __RESTRICT__ array);
 void moduleRenderableBaseClear();
 
-renderable *moduleRenderableAppendStatic(renderable **const restrict array);
-renderable *moduleRenderableAppend(renderable **const restrict array);
-renderable *moduleRenderableInsertAfterStatic(renderable **const restrict array, renderable *const restrict resource);
-renderable *moduleRenderableInsertAfter(renderable **const restrict array, renderable *const restrict resource);
-renderable *moduleRenderableNext(const renderable *const restrict i);
-void moduleRenderableFree(renderable **const restrict array, renderable *resource, const renderable *const restrict previous);
-void moduleRenderableFreeArray(renderable **const restrict array);
+renderable *moduleRenderableAppendStatic(renderable **const __RESTRICT__ array);
+renderable *moduleRenderableAppend(renderable **const __RESTRICT__ array);
+renderable *moduleRenderableInsertAfterStatic(renderable **const __RESTRICT__ array, renderable *const __RESTRICT__ resource);
+renderable *moduleRenderableInsertAfter(renderable **const __RESTRICT__ array, renderable *const __RESTRICT__ resource);
+renderable *moduleRenderableNext(const renderable *const __RESTRICT__ i);
+void moduleRenderableFree(renderable **const __RESTRICT__ array, renderable *resource, const renderable *const __RESTRICT__ previous);
+void moduleRenderableFreeArray(renderable **const __RESTRICT__ array);
 void moduleRenderableClear();
 
 #endif

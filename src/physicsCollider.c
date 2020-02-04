@@ -5,11 +5,10 @@
 #include "modulePhysics.h"
 #include "memoryManager.h"
 #include "mat3.h"
-#include "inline.h"
 
 #define PHYSICS_COLLIDER_DEFAULT_VERTEX_MASS 1
 
-void physColliderInit(physCollider *const restrict c, const colliderType_t type, void *const restrict body){
+void physColliderInit(physCollider *const __RESTRICT__ c, const colliderType_t type, void *const __RESTRICT__ body){
 	cInit(&c->c, type);
 	c->density = 0.f;
 	c->friction = 1.f;
@@ -22,7 +21,7 @@ void physColliderInit(physCollider *const restrict c, const colliderType_t type,
 	c->base = NULL;
 }
 
-void physColliderInstantiate(physCollider *const restrict instance, physCollider *const restrict local, void *const restrict body){
+void physColliderInstantiate(physCollider *const __RESTRICT__ instance, physCollider *const __RESTRICT__ local, void *const __RESTRICT__ body){
 	cInstantiate(&instance->c, &local->c);
 	instance->density = local->density;
 	instance->friction = local->friction;
@@ -43,7 +42,7 @@ return_t physColliderPermitCollision(const physCollider *const c1, const physCol
 }
 
 
-void physColliderGenerateMassMesh(void *const restrict local, float *const restrict mass, float *const restrict inverseMass, vec3 *const restrict centroid, const float **const vertexMassArray){
+void physColliderGenerateMassMesh(void *const __RESTRICT__ local, float *const __RESTRICT__ mass, float *const __RESTRICT__ inverseMass, vec3 *const __RESTRICT__ centroid, const float **const vertexMassArray){
 
 	cMesh *const cLocal = local;
 
@@ -92,7 +91,7 @@ void physColliderGenerateMassMesh(void *const restrict local, float *const restr
 
 }
 
-void physColliderGenerateMassComposite(void *const restrict local, float *const restrict mass, float *const restrict inverseMass, vec3 *const restrict centroid, const float **const vertexMassArray){
+void physColliderGenerateMassComposite(void *const __RESTRICT__ local, float *const __RESTRICT__ mass, float *const __RESTRICT__ inverseMass, vec3 *const __RESTRICT__ centroid, const float **const vertexMassArray){
 
 	cComposite *const cLocal = local;
 
@@ -141,10 +140,10 @@ void physColliderGenerateMassComposite(void *const restrict local, float *const 
 #define physColliderGenerateMassPoint   NULL
 
 void (* const physColliderGenerateMassJumpTable[COLLIDER_TYPE_NUM])(
-	void *const restrict local,
-	float *const restrict mass,
-	float *const restrict inverseMass,
-	vec3 *const restrict centroid,
+	void *const __RESTRICT__ local,
+	float *const __RESTRICT__ mass,
+	float *const __RESTRICT__ inverseMass,
+	vec3 *const __RESTRICT__ centroid,
 	const float **const vertexMassArray
 ) = {
 	physColliderGenerateMassMesh,
@@ -154,7 +153,7 @@ void (* const physColliderGenerateMassJumpTable[COLLIDER_TYPE_NUM])(
 	physColliderGenerateMassPoint,
 	physColliderGenerateMassComposite
 };
-__FORCE_INLINE__ void physColliderGenerateMass(collider *const restrict local, float *const restrict mass, float *const restrict inverseMass, vec3 *const restrict centroid, const float **const vertexMassArray){
+__FORCE_INLINE__ void physColliderGenerateMass(collider *const __RESTRICT__ local, float *const __RESTRICT__ mass, float *const __RESTRICT__ inverseMass, vec3 *const __RESTRICT__ centroid, const float **const vertexMassArray){
 
 	// Calculates the collider's center of mass
 	// and default AABB. Returns the total mass.
@@ -163,7 +162,7 @@ __FORCE_INLINE__ void physColliderGenerateMass(collider *const restrict local, f
 }
 
 
-void physColliderGenerateMomentMesh(void *const restrict local, mat3 *const restrict inertiaTensor, vec3 *const restrict centroid, const float **const vertexMassArray){
+void physColliderGenerateMomentMesh(void *const __RESTRICT__ local, mat3 *const __RESTRICT__ inertiaTensor, vec3 *const __RESTRICT__ centroid, const float **const vertexMassArray){
 
 	cMesh *const cLocal = local;
 
@@ -208,7 +207,7 @@ void physColliderGenerateMomentMesh(void *const restrict local, mat3 *const rest
 
 }
 
-void physColliderGenerateMomentComposite(void *const restrict local, mat3 *const restrict inertiaTensor, vec3 *const restrict centroid, const float **const vertexMassArray){
+void physColliderGenerateMomentComposite(void *const __RESTRICT__ local, mat3 *const __RESTRICT__ inertiaTensor, vec3 *const __RESTRICT__ centroid, const float **const vertexMassArray){
 
 	cComposite *const cLocal = local;
 
@@ -254,9 +253,9 @@ void physColliderGenerateMomentComposite(void *const restrict local, mat3 *const
 #define physColliderGenerateMomentPoint   NULL
 
 void (* const physColliderGenerateMomentJumpTable[COLLIDER_TYPE_NUM])(
-	void *const restrict local,
-	mat3 *const restrict inertiaTensor,
-	vec3 *const restrict centroid,
+	void *const __RESTRICT__ local,
+	mat3 *const __RESTRICT__ inertiaTensor,
+	vec3 *const __RESTRICT__ centroid,
 	const float **const vertexMassArray
 ) = {
 	physColliderGenerateMomentMesh,
@@ -266,7 +265,7 @@ void (* const physColliderGenerateMomentJumpTable[COLLIDER_TYPE_NUM])(
 	physColliderGenerateMomentPoint,
 	physColliderGenerateMomentComposite
 };
-__FORCE_INLINE__ void physColliderGenerateMoment(collider *const restrict local, mat3 *const restrict inertiaTensor, vec3 *const restrict centroid, const float **const vertexMassArray){
+__FORCE_INLINE__ void physColliderGenerateMoment(collider *const __RESTRICT__ local, mat3 *const __RESTRICT__ inertiaTensor, vec3 *const __RESTRICT__ centroid, const float **const vertexMassArray){
 
 	// Calculates the collider's moment of inertia tensor.
 	physColliderGenerateMomentJumpTable[local->type](&local->data, inertiaTensor, centroid, vertexMassArray);
@@ -280,7 +279,7 @@ cAABB cTransformSphere(void *const instance, const vec3 instanceCentroid, const 
 cAABB cTransformAABB(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale);
 cAABB cTransformPoint(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale);
 
-return_t physColliderTransformMesh(physCollider *const restrict c, physIsland *const restrict island){
+return_t physColliderTransformMesh(physCollider *const __RESTRICT__ c, physIsland *const __RESTRICT__ island){
 	const physRigidBody *const body = c->body;
 	if(flagsAreSet(body->flags, PHYSICS_BODY_TRANSFORMED | PHYSICS_BODY_COLLISION_MODIFIED)){
 		c->aabb = cTransformMesh(&c->c.data, body->centroidGlobal, &c->base->data, body->centroidLocal, body->configuration.position, body->configuration.orientation, body->configuration.scale);
@@ -297,8 +296,8 @@ return_t physColliderTransformMesh(physCollider *const restrict c, physIsland *c
 #define physColliderTransformComposite NULL
 
 return_t (* const physColliderTransformJumpTable[COLLIDER_TYPE_NUM])(
-	physCollider *const restrict c,
-	physIsland *const restrict island
+	physCollider *const __RESTRICT__ c,
+	physIsland *const __RESTRICT__ island
 ) = {
 	physColliderTransformMesh,
 	physColliderTransformCapsule,
@@ -307,7 +306,7 @@ return_t (* const physColliderTransformJumpTable[COLLIDER_TYPE_NUM])(
 	physColliderTransformPoint,
 	physColliderTransformComposite
 };
-__FORCE_INLINE__ return_t physColliderTransform(physCollider *const restrict c, physIsland *const restrict island){
+__FORCE_INLINE__ return_t physColliderTransform(physCollider *const __RESTRICT__ c, physIsland *const __RESTRICT__ island){
 
 	// Transforms a physics collider, updating its AABB in the AABB tree.
 	return physColliderTransformJumpTable[c->c.type](c, island);
@@ -426,7 +425,7 @@ void physColliderUpdateSeparations(physCollider *const c){
 
 }
 
-void physColliderDelete(physCollider *const restrict c){
+void physColliderDelete(physCollider *const __RESTRICT__ c){
 	if(c->base != NULL && flagsAreUnset(c->c.flags, COLLIDER_INSTANCE)){
 		// If the collider is not part of physRigidBodyBase, free its local collider.
 		cDelete(c->base);

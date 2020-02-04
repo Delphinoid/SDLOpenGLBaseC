@@ -24,7 +24,7 @@ void moduleSceneResourcesDelete();
 
 scene *moduleSceneAllocateStatic();
 scene *moduleSceneAllocate();
-void moduleSceneFree(scene *const restrict resource);
+void moduleSceneFree(scene *const __RESTRICT__ resource);
 void moduleSceneClear();
 
 #ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL

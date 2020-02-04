@@ -1,12 +1,12 @@
 #include "memorySLink.h"
 
-void memSLinkInit(memorySLink *const restrict array){
+void memSLinkInit(memorySLink *const __RESTRICT__ array){
 	array->block = 0;
 	array->free = NULL;
 	array->region = NULL;
 }
 
-void *memSLinkCreate(memorySLink *const restrict array, void *const start, const size_t bytes, const size_t length){
+void *memSLinkCreate(memorySLink *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length){
 
 	// Initialize an array allocator with "length"-many
 	// elements of "bytes" size.
@@ -28,7 +28,7 @@ void *memSLinkCreate(memorySLink *const restrict array, void *const start, const
 
 }
 
-void *memSLinkCreateInit(memorySLink *const restrict array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
+void *memSLinkCreateInit(memorySLink *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block)){
 
 	// Initialize an array allocator with "length"-many
 	// elements of "bytes" size.
@@ -50,7 +50,7 @@ void *memSLinkCreateInit(memorySLink *const restrict array, void *const start, c
 
 }
 
-void *memSLinkAllocate(memorySLink *const restrict array){
+void *memSLinkAllocate(memorySLink *const __RESTRICT__ array){
 
 	// Retrieves a new block of memory from the array
 	// allocator and updates the "free" pointer.
@@ -65,7 +65,7 @@ void *memSLinkAllocate(memorySLink *const restrict array){
 
 }
 
-void *memSLinkPrepend(memorySLink *const restrict array, void **const start){
+void *memSLinkPrepend(memorySLink *const __RESTRICT__ array, void **const start){
 
 	// Prepends a new block to the array.
 
@@ -81,7 +81,7 @@ void *memSLinkPrepend(memorySLink *const restrict array, void **const start){
 
 }
 
-void *memSLinkAppend(memorySLink *const restrict array, void **const start){
+void *memSLinkAppend(memorySLink *const __RESTRICT__ array, void **const start){
 
 	// Appends a new block to the array.
 
@@ -101,7 +101,7 @@ void *memSLinkAppend(memorySLink *const restrict array, void **const start){
 
 }
 
-void *memSLinkInsertBefore(memorySLink *const restrict array, void **const start, void *const element, const void *const previous){
+void *memSLinkInsertBefore(memorySLink *const __RESTRICT__ array, void **const start, void *const element, const void *const previous){
 
 	// Inserts a new item before the specified element.
 
@@ -121,7 +121,7 @@ void *memSLinkInsertBefore(memorySLink *const restrict array, void **const start
 
 }
 
-void *memSLinkInsertAfter(memorySLink *const restrict array, void **const start, void *const element){
+void *memSLinkInsertAfter(memorySLink *const __RESTRICT__ array, void **const start, void *const element){
 
 	// Inserts a new item after the specified element.
 
@@ -143,7 +143,7 @@ void *memSLinkInsertAfter(memorySLink *const restrict array, void **const start,
 
 }
 
-void memSLinkFree(memorySLink *const restrict array, void **const start, void *const element, const void *const previous){
+void memSLinkFree(memorySLink *const __RESTRICT__ array, void **const start, void *const element, const void *const previous){
 
 	// Removes an element from an array
 	// and frees the block.
@@ -187,7 +187,7 @@ void *memSLinkSetupMemory(void *start, const size_t bytes, const size_t length){
 
 }
 
-void *memSLinkSetupMemoryInit(void *start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
+void *memSLinkSetupMemoryInit(void *start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block)){
 
 	const size_t blockSize = memSLinkBlockSize(bytes);
 	byte_t *block;
@@ -216,7 +216,7 @@ void *memSLinkSetupMemoryInit(void *start, const size_t bytes, const size_t leng
 
 }
 
-void memSLinkClear(memorySLink *const restrict array){
+void memSLinkClear(memorySLink *const __RESTRICT__ array){
 
 	byte_t *block = memSLinkAlignStartData(array->region->start);
 	byte_t *next = block + array->block;
@@ -236,7 +236,7 @@ void memSLinkClear(memorySLink *const restrict array){
 
 }
 
-void memSLinkClearInit(memorySLink *const restrict array, void (*func)(void *const restrict block)){
+void memSLinkClearInit(memorySLink *const __RESTRICT__ array, void (*func)(void *const __RESTRICT__ block)){
 
 	byte_t *block = memSLinkAlignStartData(array->region->start);
 	byte_t *next = block + array->block;
@@ -258,7 +258,7 @@ void memSLinkClearInit(memorySLink *const restrict array, void (*func)(void *con
 
 }
 
-void *memSLinkExtend(memorySLink *const restrict array, void *const start, const size_t bytes, const size_t length){
+void *memSLinkExtend(memorySLink *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length){
 
 	// Extends the memory allocator.
 	// Its logical function is similar to a
@@ -280,7 +280,7 @@ void *memSLinkExtend(memorySLink *const restrict array, void *const start, const
 
 }
 
-void *memSLinkExtendInit(memorySLink *const restrict array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
+void *memSLinkExtendInit(memorySLink *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block)){
 
 	// Extends the memory allocator.
 	// Its logical function is similar to a
@@ -302,6 +302,6 @@ void *memSLinkExtendInit(memorySLink *const restrict array, void *const start, c
 
 }
 
-void memSLinkDelete(memorySLink *const restrict array){
+void memSLinkDelete(memorySLink *const __RESTRICT__ array){
 	memRegionFree(array->region);
 }

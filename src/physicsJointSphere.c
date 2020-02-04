@@ -1,7 +1,6 @@
 #include "physicsJoint.h"
 #include "physicsRigidBody.h"
 #include "physicsConstraint.h"
-#include "inline.h"
 #include <math.h>
 #include <string.h>
 
@@ -92,7 +91,7 @@
 //
 // ----------------------------------------------------------------------
 
-void physJointSphereInit(physJointSphere *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, const vec3 anchorA, const vec3 anchorB, const flags_t coneLimitState, const vec3 coneAxis, const float coneAngle){
+void physJointSphereInit(physJointSphere *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, const vec3 anchorA, const vec3 anchorB, const flags_t coneLimitState, const vec3 coneAxis, const float coneAngle){
 
 	mat3 rotation;
 
@@ -128,7 +127,7 @@ void physJointSphereInit(physJointSphere *const restrict joint, physRigidBody *c
 }
 
 #ifdef PHYSICS_CONSTRAINT_WARM_START
-static __FORCE_INLINE__ void physJointSphereWarmStart(physJointSphere *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB){
+static __FORCE_INLINE__ void physJointSphereWarmStart(physJointSphere *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB){
 
 	// Apply the accumulated linear impulse.
 	physRigidBodyApplyVelocityImpulseInverse(bodyA, joint->rA, joint->linearImpulseAccumulator);
@@ -180,7 +179,7 @@ static __FORCE_INLINE__ mat3 physJointSphereLinearEffectiveMass(const vec3 point
 
 }
 
-static __FORCE_INLINE__ void physJointSpherePersist(physJointSphere *const restrict joint, const physRigidBody *const restrict bodyA, const physRigidBody *const restrict bodyB){
+static __FORCE_INLINE__ void physJointSpherePersist(physJointSphere *const __RESTRICT__ joint, const physRigidBody *const __RESTRICT__ bodyA, const physRigidBody *const __RESTRICT__ bodyB){
 
 	// Transform the anchor points.
 	joint->rA = quatRotateVec3FastApproximate(
@@ -258,7 +257,7 @@ static __FORCE_INLINE__ void physJointSpherePersist(physJointSphere *const restr
 
 }
 
-void physJointSpherePresolveConstraints(physJoint *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, const float dt){
+void physJointSpherePresolveConstraints(physJoint *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, const float dt){
 
 	// Initialize the constraints.
 	physJointSpherePersist((physJointSphere *)joint, bodyA, bodyB);
@@ -268,7 +267,7 @@ void physJointSpherePresolveConstraints(physJoint *const restrict joint, physRig
 
 }
 
-void physJointSphereSolveVelocityConstraints(physJoint *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB){
+void physJointSphereSolveVelocityConstraints(physJoint *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB){
 
 	// Calculate the linear impulse.
 	vec3 impulse = mat3Solve(
@@ -327,7 +326,7 @@ void physJointSphereSolveVelocityConstraints(physJoint *const restrict joint, ph
 }
 
 #ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-return_t physJointSphereSolveConfigurationConstraints(physJoint *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB){
+return_t physJointSphereSolveConfigurationConstraints(physJoint *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB){
 
 	float constraintLinear;
 	float constraintLimit = 0.f;

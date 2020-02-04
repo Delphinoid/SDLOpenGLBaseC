@@ -2,7 +2,6 @@
 #include "moduleSettings.h"
 #include "renderable.h"
 #include "memoryManager.h"
-#include "inline.h"
 
 #define RESOURCE_DEFAULT_RENDERABLE_BASE_SIZE sizeof(renderableBase)
 #define RESOURCE_DEFAULT_RENDERABLE_SIZE sizeof(renderable)
@@ -70,10 +69,10 @@ void moduleRenderableResourcesDelete(){
 	}
 }
 
-__HINT_INLINE__ renderableBase *moduleRenderableBaseAppendStatic(renderableBase **const restrict array){
+__HINT_INLINE__ renderableBase *moduleRenderableBaseAppendStatic(renderableBase **const __RESTRICT__ array){
 	return memSLinkAppend(&__g_RenderableBaseResourceArray, (void **)array);
 }
-__HINT_INLINE__ renderableBase *moduleRenderableBaseAppend(renderableBase **const restrict array){
+__HINT_INLINE__ renderableBase *moduleRenderableBaseAppend(renderableBase **const __RESTRICT__ array){
 	renderableBase *r = moduleRenderableBaseAppendStatic(array);
 	if(r == NULL){
 		// Attempt to extend the allocator.
@@ -90,10 +89,10 @@ __HINT_INLINE__ renderableBase *moduleRenderableBaseAppend(renderableBase **cons
 	}
 	return r;
 }
-__HINT_INLINE__ renderableBase *moduleRenderableBaseInsertAfterStatic(renderableBase **const restrict array, renderableBase *const restrict resource){
+__HINT_INLINE__ renderableBase *moduleRenderableBaseInsertAfterStatic(renderableBase **const __RESTRICT__ array, renderableBase *const __RESTRICT__ resource){
 	return memSLinkInsertAfter(&__g_RenderableBaseResourceArray, (void **)array, (void *)resource);
 }
-__HINT_INLINE__ renderableBase *moduleRenderableBaseInsertAfter(renderableBase **const restrict array, renderableBase *const restrict resource){
+__HINT_INLINE__ renderableBase *moduleRenderableBaseInsertAfter(renderableBase **const __RESTRICT__ array, renderableBase *const __RESTRICT__ resource){
 	renderableBase *r = moduleRenderableBaseInsertAfterStatic(array, resource);
 	if(r == NULL){
 		// Attempt to extend the allocator.
@@ -110,13 +109,13 @@ __HINT_INLINE__ renderableBase *moduleRenderableBaseInsertAfter(renderableBase *
 	}
 	return r;
 }
-__HINT_INLINE__ renderableBase *moduleRenderableBaseNext(const renderableBase *const restrict i){
+__HINT_INLINE__ renderableBase *moduleRenderableBaseNext(const renderableBase *const __RESTRICT__ i){
 	return (renderableBase *)memSLinkDataGetNext(i);
 }
-__HINT_INLINE__ void moduleRenderableBaseFree(renderableBase **const restrict array, renderableBase *const restrict resource, const renderableBase *const restrict previous){
+__HINT_INLINE__ void moduleRenderableBaseFree(renderableBase **const __RESTRICT__ array, renderableBase *const __RESTRICT__ resource, const renderableBase *const __RESTRICT__ previous){
 	memSLinkFree(&__g_RenderableBaseResourceArray, (void **)array, (void *)resource, (const void *)previous);
 }
-void moduleRenderableBaseFreeArray(renderableBase **const restrict array){
+void moduleRenderableBaseFreeArray(renderableBase **const __RESTRICT__ array){
 	renderableBase *resource = *array;
 	while(resource != NULL){
 		moduleRenderableBaseFree(array, resource, NULL);
@@ -138,10 +137,10 @@ void moduleRenderableBaseClear(){
 
 }
 
-__HINT_INLINE__ renderable *moduleRenderableAppendStatic(renderable **const restrict array){
+__HINT_INLINE__ renderable *moduleRenderableAppendStatic(renderable **const __RESTRICT__ array){
 	return memSLinkAppend(&__g_RenderableResourceArray, (void **)array);
 }
-__HINT_INLINE__ renderable *moduleRenderableAppend(renderable **const restrict array){
+__HINT_INLINE__ renderable *moduleRenderableAppend(renderable **const __RESTRICT__ array){
 	renderable *r = moduleRenderableAppendStatic(array);
 	if(r == NULL){
 		// Attempt to extend the allocator.
@@ -158,10 +157,10 @@ __HINT_INLINE__ renderable *moduleRenderableAppend(renderable **const restrict a
 	}
 	return r;
 }
-__HINT_INLINE__ renderable *moduleRenderableInsertAfterStatic(renderable **const restrict array, renderable *const restrict resource){
+__HINT_INLINE__ renderable *moduleRenderableInsertAfterStatic(renderable **const __RESTRICT__ array, renderable *const __RESTRICT__ resource){
 	return memSLinkInsertAfter(&__g_RenderableResourceArray, (void **)array, (void *)resource);
 }
-__HINT_INLINE__ renderable *moduleRenderableInsertAfter(renderable **const restrict array, renderable *const restrict resource){
+__HINT_INLINE__ renderable *moduleRenderableInsertAfter(renderable **const __RESTRICT__ array, renderable *const __RESTRICT__ resource){
 	renderable *r = moduleRenderableInsertAfterStatic(array, resource);
 	if(r == NULL){
 		// Attempt to extend the allocator.
@@ -178,13 +177,13 @@ __HINT_INLINE__ renderable *moduleRenderableInsertAfter(renderable **const restr
 	}
 	return r;
 }
-__HINT_INLINE__ renderable *moduleRenderableNext(const renderable *const restrict i){
+__HINT_INLINE__ renderable *moduleRenderableNext(const renderable *const __RESTRICT__ i){
 	return (renderable *)memSLinkDataGetNext(i);
 }
-__HINT_INLINE__ void moduleRenderableFree(renderable **const restrict array, renderable *const restrict resource, const renderable *const restrict previous){
+__HINT_INLINE__ void moduleRenderableFree(renderable **const __RESTRICT__ array, renderable *const __RESTRICT__ resource, const renderable *const __RESTRICT__ previous){
 	memSLinkFree(&__g_RenderableResourceArray, (void **)array, (void *)resource, (const void *)previous);
 }
-void moduleRenderableFreeArray(renderable **const restrict array){
+void moduleRenderableFreeArray(renderable **const __RESTRICT__ array){
 	renderable *resource = *array;
 	while(resource != NULL){
 		moduleRenderableFree(array, resource, NULL);

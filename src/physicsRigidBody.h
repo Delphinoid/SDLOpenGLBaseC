@@ -112,74 +112,74 @@ typedef struct physRigidBody {
 } physRigidBody;
 
 // Physics rigid body functions.
-void physRigidBodyBaseInit(physRigidBodyBase *const restrict local);
-void physRigidBodyBaseGenerateMassProperties(physRigidBodyBase *const restrict local, const float **const vertexMassArray);
-return_t physRigidBodyBaseLoad(physRigidBodyBase **const restrict bodies, const skeleton *const restrict skl, const char *const restrict prgPath, const char *const restrict filePath);
-void physRigidBodyBaseDelete(physRigidBodyBase *const restrict local);
+void physRigidBodyBaseInit(physRigidBodyBase *const __RESTRICT__ local);
+void physRigidBodyBaseGenerateMassProperties(physRigidBodyBase *const __RESTRICT__ local, const float **const vertexMassArray);
+return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, const skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath);
+void physRigidBodyBaseDelete(physRigidBodyBase *const __RESTRICT__ local);
 
 // Physics rigid body instance functions.
-void physRigidBodyInit(physRigidBody *const restrict body);
-return_t physRigidBodyInstantiate(physRigidBody *const restrict body, physRigidBodyBase *const restrict local);
+void physRigidBodyInit(physRigidBody *const __RESTRICT__ body);
+return_t physRigidBodyInstantiate(physRigidBody *const __RESTRICT__ body, physRigidBodyBase *const __RESTRICT__ local);
 
-void physRigidBodySetUninitialized(physRigidBody *const restrict body);
-void physRigidBodySetInitialized(physRigidBody *const restrict body);
-void physRigidBodySetInitializedFull(physRigidBody *const restrict body);
-void physRigidBodySetAsleep(physRigidBody *const restrict body);
-void physRigidBodySetAwake(physRigidBody *const restrict body, const flags_t flags);
+void physRigidBodySetUninitialized(physRigidBody *const __RESTRICT__ body);
+void physRigidBodySetInitialized(physRigidBody *const __RESTRICT__ body);
+void physRigidBodySetInitializedFull(physRigidBody *const __RESTRICT__ body);
+void physRigidBodySetAsleep(physRigidBody *const __RESTRICT__ body);
+void physRigidBodySetAwake(physRigidBody *const __RESTRICT__ body, const flags_t flags);
 
-void physRigidBodySimulateCollisions(physRigidBody *const restrict body);
-void physRigidBodySimulateLinear(physRigidBody *const restrict body);
-void physRigidBodySimulateAngular(physRigidBody *const restrict body);
+void physRigidBodySimulateCollisions(physRigidBody *const __RESTRICT__ body);
+void physRigidBodySimulateLinear(physRigidBody *const __RESTRICT__ body);
+void physRigidBodySimulateAngular(physRigidBody *const __RESTRICT__ body);
 
-void physRigidBodyIgnoreCollisions(physRigidBody *const restrict body);
-void physRigidBodyIgnoreLinear(physRigidBody *const restrict body);
-void physRigidBodyIgnoreAngular(physRigidBody *const restrict body);
+void physRigidBodyIgnoreCollisions(physRigidBody *const __RESTRICT__ body);
+void physRigidBodyIgnoreLinear(physRigidBody *const __RESTRICT__ body);
+void physRigidBodyIgnoreAngular(physRigidBody *const __RESTRICT__ body);
 
-return_t physRigidBodyIsUninitialized(const physRigidBody *const restrict body);
-return_t physRigidBodyIsSimulated(const physRigidBody *const restrict body);
-return_t physRigidBodyIsCollidable(const physRigidBody *const restrict body);
-return_t physRigidBodyIsAsleep(physRigidBody *const restrict body);
-return_t physRigidBodyWasInitialized(const physRigidBody *const restrict body);
+return_t physRigidBodyIsUninitialized(const physRigidBody *const __RESTRICT__ body);
+return_t physRigidBodyIsSimulated(const physRigidBody *const __RESTRICT__ body);
+return_t physRigidBodyIsCollidable(const physRigidBody *const __RESTRICT__ body);
+return_t physRigidBodyIsAsleep(physRigidBody *const __RESTRICT__ body);
+return_t physRigidBodyWasInitialized(const physRigidBody *const __RESTRICT__ body);
 
-return_t physRigidBodyUpdateColliders(physRigidBody *const restrict body, physIsland *const restrict island);
+return_t physRigidBodyUpdateColliders(physRigidBody *const __RESTRICT__ body, physIsland *const __RESTRICT__ island);
 
-void physRigidBodyApplyLinearForce(physRigidBody *const restrict body, const vec3 F);
-void physRigidBodyApplyAngularForceGlobal(physRigidBody *const restrict body, const vec3 F, const vec3 r);
-void physRigidBodyApplyForceGlobal(physRigidBody *const restrict body, const vec3 F, const vec3 r);
+void physRigidBodyApplyLinearForce(physRigidBody *const __RESTRICT__ body, const vec3 F);
+void physRigidBodyApplyAngularForceGlobal(physRigidBody *const __RESTRICT__ body, const vec3 F, const vec3 r);
+void physRigidBodyApplyForceGlobal(physRigidBody *const __RESTRICT__ body, const vec3 F, const vec3 r);
 
-void physRigidBodyApplyVelocityImpulse(physRigidBody *const restrict body, const vec3 x, const vec3 J);
-void physRigidBodyApplyVelocityImpulseInverse(physRigidBody *const restrict body, const vec3 x, const vec3 J);
+void physRigidBodyApplyVelocityImpulse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J);
+void physRigidBodyApplyVelocityImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J);
 
-void physRigidBodyApplyVelocityImpulseAngular(physRigidBody *const restrict body, const vec3 x, const vec3 J, const vec3 a);
-void physRigidBodyApplyVelocityImpulseAngularInverse(physRigidBody *const restrict body, const vec3 x, const vec3 J, const vec3 a);
+void physRigidBodyApplyVelocityImpulseAngular(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J, const vec3 a);
+void physRigidBodyApplyVelocityImpulseAngularInverse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J, const vec3 a);
 
-void physRigidBodyApplyConfigurationImpulse(physRigidBody *const restrict body, const vec3 x, const vec3 J);
-void physRigidBodyApplyConfigurationImpulseInverse(physRigidBody *const restrict body, const vec3 x, const vec3 J);
+void physRigidBodyApplyConfigurationImpulse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J);
+void physRigidBodyApplyConfigurationImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J);
 
 #ifndef PHYSICS_BODY_SCALE_INERTIA_TENSORS
-void physRigidBodyScale(physRigidBody *const restrict body, const vec3 scale);
-void physRigidBodySetScale(physRigidBody *const restrict body, const vec3 scale);
+void physRigidBodyScale(physRigidBody *const __RESTRICT__ body, const vec3 scale);
+void physRigidBodySetScale(physRigidBody *const __RESTRICT__ body, const vec3 scale);
 #endif
 
-void physRigidBodyCentroidFromPosition(physRigidBody *const restrict body);
-void physRigidBodyPositionFromCentroid(physRigidBody *const restrict body);
-void physRigidBodyGenerateGlobalInertia(physRigidBody *const restrict body);
+void physRigidBodyCentroidFromPosition(physRigidBody *const __RESTRICT__ body);
+void physRigidBodyPositionFromCentroid(physRigidBody *const __RESTRICT__ body);
+void physRigidBodyGenerateGlobalInertia(physRigidBody *const __RESTRICT__ body);
 
-void physRigidBodyUpdateConfiguration(physRigidBody *const restrict body);
+void physRigidBodyUpdateConfiguration(physRigidBody *const __RESTRICT__ body);
 
-void physRigidBodyResetAccumulators(physRigidBody *const restrict body);
-void physRigidBodyIntegrateVelocity(physRigidBody *const restrict body, const float dt);
-void physRigidBodyIntegrateConfiguration(physRigidBody *const restrict body, const float dt);
+void physRigidBodyResetAccumulators(physRigidBody *const __RESTRICT__ body);
+void physRigidBodyIntegrateVelocity(physRigidBody *const __RESTRICT__ body, const float dt);
+void physRigidBodyIntegrateConfiguration(physRigidBody *const __RESTRICT__ body, const float dt);
 
-void physRigidBodyIntegrateSymplecticEuler(physRigidBody *const restrict body, const float dt);
-void physRigidBodyIntegrateLeapfrog(physRigidBody *const restrict body, const float dt);
-void physRigidBodyIntegrateLeapfrogTest(physRigidBody *const restrict body, const float dt);
+void physRigidBodyIntegrateSymplecticEuler(physRigidBody *const __RESTRICT__ body, const float dt);
+void physRigidBodyIntegrateLeapfrog(physRigidBody *const __RESTRICT__ body, const float dt);
+void physRigidBodyIntegrateLeapfrogTest(physRigidBody *const __RESTRICT__ body, const float dt);
 
-return_t physRigidBodyPermitCollision(const physRigidBody *const restrict body1, const physRigidBody *const restrict body2);
+return_t physRigidBodyPermitCollision(const physRigidBody *const __RESTRICT__ body1, const physRigidBody *const __RESTRICT__ body2);
 
-void physRigidBodyAddCollider(physRigidBody *const restrict body, physCollider *const c, const float **const vertexMassArray);
+void physRigidBodyAddCollider(physRigidBody *const __RESTRICT__ body, physCollider *const c, const float **const vertexMassArray);
 return_t physRigidBodyAddJoint(physRigidBody *const body, physJoint *const joint);
 
-void physRigidBodyDelete(physRigidBody *const restrict body);
+void physRigidBodyDelete(physRigidBody *const __RESTRICT__ body);
 
 #endif

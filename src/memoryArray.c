@@ -1,12 +1,12 @@
 #include "memoryArray.h"
 
-void memArrayInit(memoryArray *const restrict array){
+void memArrayInit(memoryArray *const __RESTRICT__ array){
 	array->block = 0;
 	array->size = 0;
 	array->region = NULL;
 }
 
-void *memArrayCreate(memoryArray *const restrict array, void *const start, const size_t bytes, const size_t length){
+void *memArrayCreate(memoryArray *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length){
 
 	// Initialize a memory array with "length"-many
 	// elements of "bytes" size.
@@ -27,7 +27,7 @@ void *memArrayCreate(memoryArray *const restrict array, void *const start, const
 
 }
 
-void *memArrayPush(memoryArray *const restrict array){
+void *memArrayPush(memoryArray *const __RESTRICT__ array){
 	void *const r = memArrayIndex(array, array->size);
 	if(r){
 		++array->size;
@@ -35,7 +35,7 @@ void *memArrayPush(memoryArray *const restrict array){
 	return r;
 }
 
-void *memArrayPushFast(memoryArray *const restrict array, void **const block, memoryRegion **const container){
+void *memArrayPushFast(memoryArray *const __RESTRICT__ array, void **const block, memoryRegion **const container){
 	void *const r = *block;
 	if(r){
 		*block = memArrayBlockNext(*array, r);
@@ -52,11 +52,11 @@ void *memArrayPushFast(memoryArray *const restrict array, void **const block, me
 	return r;
 }
 
-void memArrayPop(memoryArray *const restrict array){
+void memArrayPop(memoryArray *const __RESTRICT__ array){
 	--array->size;
 }
 
-void *memArrayIndex(memoryArray *const restrict array, const size_t i){
+void *memArrayIndex(memoryArray *const __RESTRICT__ array, const size_t i){
 
 	// Finds the element at index i.
 
@@ -82,7 +82,7 @@ void *memArrayIndex(memoryArray *const restrict array, const size_t i){
 
 }
 
-void *memArrayIndexRegion(memoryArray *const restrict array, const size_t i, memoryRegion **const container){
+void *memArrayIndexRegion(memoryArray *const __RESTRICT__ array, const size_t i, memoryRegion **const container){
 
 	// Finds the element at index i.
 
@@ -109,11 +109,11 @@ void *memArrayIndexRegion(memoryArray *const restrict array, const size_t i, mem
 
 }
 
-void memArrayClear(memoryArray *const restrict array){
+void memArrayClear(memoryArray *const __RESTRICT__ array){
 	array->size = 0;
 }
 
-void *memArrayExtend(memoryArray *const restrict array, void *const start, const size_t bytes, const size_t length){
+void *memArrayExtend(memoryArray *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length){
 
 	// Extends the memory allocator.
 	// Its logical function is similar to a
@@ -132,6 +132,6 @@ void *memArrayExtend(memoryArray *const restrict array, void *const start, const
 
 }
 
-void memArrayDelete(memoryArray *const restrict array){
+void memArrayDelete(memoryArray *const __RESTRICT__ array){
 	memRegionFree(array->region);
 }

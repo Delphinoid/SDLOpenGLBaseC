@@ -1,5 +1,4 @@
 #include "mat3.h"
-#include "inline.h"
 #include <string.h>
 
 __HINT_INLINE__ mat3 mat3Identity(){
@@ -8,7 +7,7 @@ __HINT_INLINE__ mat3 mat3Identity(){
 	                      {0.f, 0.f, 1.f}}};
 	return r;
 }
-__HINT_INLINE__ void mat3IdentityP(mat3 *const restrict m){
+__HINT_INLINE__ void mat3IdentityP(mat3 *const __RESTRICT__ m){
 	m->m[0][0] = 1.f; m->m[0][1] = 0.f; m->m[0][2] = 0.f;
 	m->m[1][0] = 0.f; m->m[1][1] = 1.f; m->m[1][2] = 0.f;
 	m->m[2][0] = 0.f; m->m[2][1] = 0.f; m->m[2][2] = 1.f;
@@ -19,7 +18,7 @@ __HINT_INLINE__ mat3 mat3Zero(){
 	                      {0.f, 0.f, 0.f}}};
 	return r;
 }
-__HINT_INLINE__ void mat3ZeroP(mat3 *const restrict m){
+__HINT_INLINE__ void mat3ZeroP(mat3 *const __RESTRICT__ m){
 	memset(m->m, 0, sizeof(mat3));
 }
 
@@ -29,7 +28,7 @@ __HINT_INLINE__ mat3 mat3DiagonalV(const vec3 v){
 	                      {0.f, 0.f, v.z}}};
 	return r;
 }
-__HINT_INLINE__ void mat3DiagonalVP(mat3 *const restrict m, const vec3 *const restrict v){
+__HINT_INLINE__ void mat3DiagonalVP(mat3 *const __RESTRICT__ m, const vec3 *const __RESTRICT__ v){
 	memset(m->m, 0, sizeof(mat3));
 	m->m[0][0] = v->x;
 	m->m[1][1] = v->y;
@@ -41,7 +40,7 @@ __HINT_INLINE__ mat3 mat3DiagonalS(const float s){
 	                      {0.f, 0.f, s}}};
 	return r;
 }
-__HINT_INLINE__ void mat3DiagonalSP(mat3 *const restrict m, const float s){
+__HINT_INLINE__ void mat3DiagonalSP(mat3 *const __RESTRICT__ m, const float s){
 	memset(m->m, 0, sizeof(mat3));
 	m->m[0][0] = s;
 	m->m[1][1] = s;
@@ -53,7 +52,7 @@ __HINT_INLINE__ mat3 mat3DiagonalN(const float x, const float y, const float z){
 	                      {0.f, 0.f, z}}};
 	return r;
 }
-__HINT_INLINE__ void mat3DiagonalNP(mat3 *const restrict m, const float x, const float y, const float z){
+__HINT_INLINE__ void mat3DiagonalNP(mat3 *const __RESTRICT__ m, const float x, const float y, const float z){
 	memset(m->m, 0, sizeof(mat3));
 	m->m[0][0] = x;
 	m->m[1][1] = y;
@@ -66,7 +65,7 @@ __HINT_INLINE__ mat3 mat3SkewSymmetric(const vec3 v){
 	                      {-v.y, v.x,  0.f}}};
 	return r;
 }
-__HINT_INLINE__ void mat3SkewSymmetricP(mat3 *const restrict m, const vec3 *const restrict v){
+__HINT_INLINE__ void mat3SkewSymmetricP(mat3 *const __RESTRICT__ m, const vec3 *const __RESTRICT__ v){
 	memset(m->m, 0, sizeof(mat3));
 	m->m[0][1] = -v->z;
 	m->m[0][2] = v->y;
@@ -90,7 +89,7 @@ __HINT_INLINE__ mat3 mat3MMultM(const mat3 m1, const mat3 m2){
 	return r;
 
 }
-__HINT_INLINE__ void mat3MMultMP1(mat3 *const restrict m1, const mat3 *const restrict m2){
+__HINT_INLINE__ void mat3MMultMP1(mat3 *const __RESTRICT__ m1, const mat3 *const __RESTRICT__ m2){
 
 	const mat3 r = {.m = {{m1->m[0][0]*m2->m[0][0] + m1->m[1][0]*m2->m[0][1] + m1->m[2][0]*m2->m[0][2],
 	                       m1->m[0][1]*m2->m[0][0] + m1->m[1][1]*m2->m[0][1] + m1->m[2][1]*m2->m[0][2],
@@ -104,7 +103,7 @@ __HINT_INLINE__ void mat3MMultMP1(mat3 *const restrict m1, const mat3 *const res
 	*m1 = r;
 
 }
-__HINT_INLINE__ void mat3MMultMP2(const mat3 *const restrict m1, mat3 *const restrict m2){
+__HINT_INLINE__ void mat3MMultMP2(const mat3 *const __RESTRICT__ m1, mat3 *const __RESTRICT__ m2){
 
 	const mat3 r = {.m = {{m1->m[0][0]*m2->m[0][0] + m1->m[1][0]*m2->m[0][1] + m1->m[2][0]*m2->m[0][2],
 	                       m1->m[0][1]*m2->m[0][0] + m1->m[1][1]*m2->m[0][1] + m1->m[2][1]*m2->m[0][2],
@@ -118,7 +117,7 @@ __HINT_INLINE__ void mat3MMultMP2(const mat3 *const restrict m1, mat3 *const res
 	*m2 = r;
 
 }
-__HINT_INLINE__ void mat3MMultMPR(const mat3 *const restrict m1, const mat3 *const restrict m2, mat3 *const restrict r){
+__HINT_INLINE__ void mat3MMultMPR(const mat3 *const __RESTRICT__ m1, const mat3 *const __RESTRICT__ m2, mat3 *const __RESTRICT__ r){
 
 	r->m[0][0] = m1->m[0][0]*m2->m[0][0] + m1->m[1][0]*m2->m[0][1] + m1->m[2][0]*m2->m[0][2];
 	r->m[0][1] = m1->m[0][1]*m2->m[0][0] + m1->m[1][1]*m2->m[0][1] + m1->m[2][1]*m2->m[0][2];
@@ -139,13 +138,13 @@ __HINT_INLINE__ vec3 mat3VMultMBra(const vec3 v, const mat3 m){
 	                .z = v.x * m.m[2][0] + v.y * m.m[2][1] + v.z * m.m[2][2]};
 	return r;
 }
-__HINT_INLINE__ void mat3VMultMBraP(vec3 *const restrict v, const mat3 *const restrict m){
+__HINT_INLINE__ void mat3VMultMBraP(vec3 *const __RESTRICT__ v, const mat3 *const __RESTRICT__ m){
 	const vec3 r = {.x = v->x * m->m[0][0] + v->y * m->m[0][1] + v->z * m->m[0][2],
 	                .y = v->x * m->m[1][0] + v->y * m->m[1][1] + v->z * m->m[1][2],
 	                .z = v->x * m->m[2][0] + v->y * m->m[2][1] + v->z * m->m[2][2]};
 	*v = r;
 }
-__HINT_INLINE__ void mat3VMultMBraPR(const vec3 *const restrict v, const mat3 *const restrict m, vec3 *const restrict r){
+__HINT_INLINE__ void mat3VMultMBraPR(const vec3 *const __RESTRICT__ v, const mat3 *const __RESTRICT__ m, vec3 *const __RESTRICT__ r){
 	r->x = v->x * m->m[0][0] + v->y * m->m[0][1] + v->z * m->m[0][2];
 	r->y = v->x * m->m[1][0] + v->y * m->m[1][1] + v->z * m->m[1][2];
 	r->z = v->x * m->m[2][0] + v->y * m->m[2][1] + v->z * m->m[2][2];
@@ -156,13 +155,13 @@ __HINT_INLINE__ vec3 mat3MMultVKet(const mat3 m, const vec3 v){
 	                .z = v.x * m.m[0][2] + v.y * m.m[1][2] + v.z * m.m[2][2]};
 	return r;
 }
-__HINT_INLINE__ void mat3MMultVKetP(const mat3 *const restrict m, vec3 *const restrict v){
+__HINT_INLINE__ void mat3MMultVKetP(const mat3 *const __RESTRICT__ m, vec3 *const __RESTRICT__ v){
 	const vec3 r = {.x = v->x * m->m[0][0] + v->y * m->m[1][0] + v->z * m->m[2][0],
 	                .y = v->x * m->m[0][1] + v->y * m->m[1][1] + v->z * m->m[2][1],
 	                .z = v->x * m->m[0][2] + v->y * m->m[1][2] + v->z * m->m[2][2]};
 	*v = r;
 }
-__HINT_INLINE__ void mat3MMultVKetPR(const mat3 *const restrict m, const vec3 *const restrict v, vec3 *const restrict r){
+__HINT_INLINE__ void mat3MMultVKetPR(const mat3 *const __RESTRICT__ m, const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r){
 	r->x = v->x * m->m[0][0] + v->y * m->m[1][0] + v->z * m->m[2][0];
 	r->y = v->x * m->m[0][2] + v->y * m->m[1][1] + v->z * m->m[2][1];
 	r->z = v->x * m->m[0][2] + v->y * m->m[1][2] + v->z * m->m[2][2];
@@ -175,12 +174,12 @@ __HINT_INLINE__ mat3 mat3MAddM(const mat3 m1, const mat3 m2){
 	r.m[2][0] = m1.m[2][0] + m2.m[2][0]; r.m[2][1] = m1.m[2][1] + m2.m[2][1]; r.m[2][2] = m1.m[2][2] + m2.m[2][2];
 	return r;
 }
-__HINT_INLINE__ void mat3MAddMP(mat3 *const restrict m1, const mat3 *const restrict m2){
+__HINT_INLINE__ void mat3MAddMP(mat3 *const __RESTRICT__ m1, const mat3 *const __RESTRICT__ m2){
 	m1->m[0][0] += m2->m[0][0]; m1->m[0][1] += m2->m[0][1]; m1->m[0][2] += m2->m[0][2];
 	m1->m[1][0] += m2->m[1][0]; m1->m[1][1] += m2->m[1][1]; m1->m[1][2] += m2->m[1][2];
 	m1->m[2][0] += m2->m[2][0]; m1->m[2][1] += m2->m[2][1]; m1->m[2][2] += m2->m[2][2];
 }
-__HINT_INLINE__ void mat3MAddMPR(const mat3 *const restrict m1, const mat3 *const restrict m2, mat3 *const restrict r){
+__HINT_INLINE__ void mat3MAddMPR(const mat3 *const __RESTRICT__ m1, const mat3 *const __RESTRICT__ m2, mat3 *const __RESTRICT__ r){
 	r->m[0][0] = m1->m[0][0] + m2->m[0][0]; r->m[0][1] = m1->m[0][1] + m2->m[0][1]; r->m[0][2] = m1->m[0][2] + m2->m[0][2];
 	r->m[1][0] = m1->m[1][0] + m2->m[1][0]; r->m[1][1] = m1->m[1][1] + m2->m[1][1]; r->m[1][2] = m1->m[1][2] + m2->m[1][2];
 	r->m[2][0] = m1->m[2][0] + m2->m[2][0]; r->m[2][1] = m1->m[2][1] + m2->m[2][1]; r->m[2][2] = m1->m[2][2] + m2->m[2][2];
@@ -191,7 +190,7 @@ __HINT_INLINE__ float mat3Determinant(const mat3 m){
 	       m.m[0][1] * (m.m[1][0]*m.m[2][2] - m.m[1][2]*m.m[2][0]) +
 	       m.m[0][2] * (m.m[1][0]*m.m[2][1] - m.m[1][1]*m.m[2][0]);
 }
-__HINT_INLINE__ float mat3DeterminantP(const mat3 *const restrict m){
+__HINT_INLINE__ float mat3DeterminantP(const mat3 *const __RESTRICT__ m){
 	return m->m[0][0] * (m->m[1][1]*m->m[2][2] - m->m[1][2]*m->m[2][1]) -
 	       m->m[0][1] * (m->m[1][0]*m->m[2][2] - m->m[1][2]*m->m[2][0]) +
 	       m->m[0][2] * (m->m[1][0]*m->m[2][1] - m->m[1][1]*m->m[2][0]);
@@ -203,7 +202,7 @@ __HINT_INLINE__ mat3 mat3Transpose(const mat3 m){
 	                      {m.m[0][2], m.m[1][2], m.m[2][2]}}};
 	return r;
 }
-__HINT_INLINE__ void mat3TransposeP(mat3 *const restrict m){
+__HINT_INLINE__ void mat3TransposeP(mat3 *const __RESTRICT__ m){
 	float swap = m->m[1][0];
 	m->m[1][0] = m->m[0][1];
 	m->m[0][1] = swap;
@@ -215,7 +214,7 @@ __HINT_INLINE__ void mat3TransposeP(mat3 *const restrict m){
 	m->m[1][2] = swap;
 }
 
-__HINT_INLINE__ void mat3TransposePR(const mat3 *const restrict m, mat3 *const restrict r){
+__HINT_INLINE__ void mat3TransposePR(const mat3 *const __RESTRICT__ m, mat3 *const __RESTRICT__ r){
 	r->m[0][0] = m->m[0][0]; r->m[0][1] = m->m[1][0]; r->m[0][2] = m->m[2][0];
 	r->m[1][0] = m->m[0][1]; r->m[1][1] = m->m[1][1]; r->m[1][2] = m->m[2][1];
 	r->m[2][0] = m->m[0][2]; r->m[2][1] = m->m[1][2]; r->m[2][2] = m->m[2][2];
@@ -250,7 +249,7 @@ mat3 mat3Invert(const mat3 m){
 	return mat3Zero();
 
 }
-return_t mat3InvertR(const mat3 m, mat3 *const restrict r){
+return_t mat3InvertR(const mat3 m, mat3 *const __RESTRICT__ r){
 
 	const float f0 = m.m[1][1] * m.m[2][2] - m.m[2][1] * m.m[1][2];
 	const float f1 = m.m[1][2] * m.m[2][0] - m.m[1][0] * m.m[2][2];
@@ -282,7 +281,7 @@ return_t mat3InvertR(const mat3 m, mat3 *const restrict r){
 	return 0;
 
 }
-__HINT_INLINE__ return_t mat3InvertP(mat3 *const restrict m){
+__HINT_INLINE__ return_t mat3InvertP(mat3 *const __RESTRICT__ m){
 
 	const float f0 = m->m[1][1] * m->m[2][2] - m->m[2][1] * m->m[1][2];
 	const float f1 = m->m[1][2] * m->m[2][0] - m->m[1][0] * m->m[2][2];
@@ -313,7 +312,7 @@ __HINT_INLINE__ return_t mat3InvertP(mat3 *const restrict m){
 	return 0;
 
 }
-__HINT_INLINE__ return_t mat3InvertPR(const mat3 *const restrict m, mat3 *const restrict r){
+__HINT_INLINE__ return_t mat3InvertPR(const mat3 *const __RESTRICT__ m, mat3 *const __RESTRICT__ r){
 
 	const float f0 = m->m[1][1] * m->m[2][2] - m->m[2][1] * m->m[1][2];
 	const float f1 = m->m[1][2] * m->m[2][0] - m->m[1][0] * m->m[2][2];
@@ -386,7 +385,7 @@ __HINT_INLINE__ vec3 mat3Solve(const mat3 A, const vec3 b){
 
 }
 
-__HINT_INLINE__ return_t mat3SolveR(const mat3 A, const vec3 b, vec3 *const restrict r){
+__HINT_INLINE__ return_t mat3SolveR(const mat3 A, const vec3 b, vec3 *const __RESTRICT__ r){
 
 	// Solves Ax = b using Cramer's rule.
 	// Cramer's rule states that
@@ -427,7 +426,7 @@ __HINT_INLINE__ return_t mat3SolveR(const mat3 A, const vec3 b, vec3 *const rest
 
 }
 
-__HINT_INLINE__ return_t mat3SolvePR(const mat3 *const restrict A, const vec3 *const restrict b, vec3 *const restrict r){
+__HINT_INLINE__ return_t mat3SolvePR(const mat3 *const __RESTRICT__ A, const vec3 *const __RESTRICT__ b, vec3 *const __RESTRICT__ r){
 
 	// Solves Ax = b using Cramer's rule.
 	// Cramer's rule states that
@@ -486,7 +485,7 @@ __HINT_INLINE__ mat3 mat3Quaternion(const quat q){
 	                      {x2z+w2y,     y2z-w2x,     1.f-x2x-y2y}}};
 	return r;
 }
-__HINT_INLINE__ void mat3QuaternionP(mat3 *const restrict m, const quat *const restrict q){
+__HINT_INLINE__ void mat3QuaternionP(mat3 *const __RESTRICT__ m, const quat *const __RESTRICT__ q){
 	const float x2 = q->v.x+q->v.x;
 	const float y2 = q->v.y+q->v.y;
 	const float z2 = q->v.z+q->v.z;

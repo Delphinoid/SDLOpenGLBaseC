@@ -54,9 +54,9 @@ typedef struct guiElement {
 
 } guiElement;
 
-void guiElementTick(guiElement *const restrict element, const float elapsedTime);
-guiElement *guiElementAddChild(guiElement *const restrict element);
-void guiElementRender(const guiElement *const restrict element, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const float interpT);
+void guiElementTick(guiElement *const __RESTRICT__ element, const float elapsedTime);
+guiElement *guiElementAddChild(guiElement *const __RESTRICT__ element);
+void guiElementRender(const guiElement *const __RESTRICT__ element, graphicsManager *const __RESTRICT__ gfxMngr, const camera *const __RESTRICT__ cam, const float distance, const float interpT);
 void guiElementDelete(guiElement *element);
 
 #endif

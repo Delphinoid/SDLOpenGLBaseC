@@ -47,11 +47,11 @@ typedef struct {
 
 } physJointSphere;
 
-void physJointSphereInit(physJointSphere *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, const vec3 anchorA, const vec3 anchorB, const flags_t coneLimitState, const vec3 coneAxis, const float coneAngle);
-void physJointSpherePresolveConstraints(physJoint *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, const float dt);
-void physJointSphereSolveVelocityConstraints(physJoint *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB);
+void physJointSphereInit(physJointSphere *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, const vec3 anchorA, const vec3 anchorB, const flags_t coneLimitState, const vec3 coneAxis, const float coneAngle);
+void physJointSpherePresolveConstraints(physJoint *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, const float dt);
+void physJointSphereSolveVelocityConstraints(physJoint *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB);
 #ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-return_t physJointSphereSolveConfigurationConstraints(physJoint *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB);
+return_t physJointSphereSolveConfigurationConstraints(physJoint *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB);
 #endif
 
 #endif

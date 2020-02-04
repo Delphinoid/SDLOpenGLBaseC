@@ -21,7 +21,7 @@ void moduleCameraResourcesDelete();
 camera *moduleCameraAllocateStatic();
 camera *moduleCameraAllocate();
 void moduleCameraPrepare();
-void moduleCameraFree(camera *const restrict resource);
+void moduleCameraFree(camera *const __RESTRICT__ resource);
 void moduleCameraClear();
 
 #endif

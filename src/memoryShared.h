@@ -2,6 +2,7 @@
 #define MEMORYSHARED_H
 
 #include "memorySettings.h"
+#include "qualifiers.h"
 #include <stddef.h>
 
 // Use 8 byte alignment for improved
@@ -21,8 +22,8 @@ typedef byte_t padding_t;
 
 #ifndef MEMORY_ALLOCATOR_USE_MALLOC
 void *memHeapLowLevelAllocate(const size_t bytes);
-void *memHeapLowLevelReallocate(void *const restrict block, const size_t bytes);
-int memHeapLowLevelFree(void *const restrict block);
+void *memHeapLowLevelReallocate(void *const __RESTRICT__ block, const size_t bytes);
+int memHeapLowLevelFree(void *const __RESTRICT__ block);
 #else
 #define memHeapLowLevelAllocate(bytes) malloc(bytes)
 #define memHeapLowLevelReallocate(block, bytes) realloc(bytes)

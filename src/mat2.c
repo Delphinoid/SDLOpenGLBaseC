@@ -1,5 +1,4 @@
 #include "mat2.h"
-#include "inline.h"
 #include <string.h>
 
 __HINT_INLINE__ mat2 mat2Identity(){
@@ -7,7 +6,7 @@ __HINT_INLINE__ mat2 mat2Identity(){
 	                      {0.f, 1.f}}};
 	return r;
 }
-__HINT_INLINE__ void mat2IdentityP(mat2 *const restrict m){
+__HINT_INLINE__ void mat2IdentityP(mat2 *const __RESTRICT__ m){
 	m->m[0][0] = 1.f; m->m[0][1] = 0.f;
 	m->m[1][0] = 0.f; m->m[1][1] = 1.f;
 }
@@ -16,7 +15,7 @@ __HINT_INLINE__ mat2 mat2Zero(){
 	                      {0.f, 0.f}}};
 	return r;
 }
-__HINT_INLINE__ void mat2ZeroP(mat2 *const restrict m){
+__HINT_INLINE__ void mat2ZeroP(mat2 *const __RESTRICT__ m){
 	memset(m->m, 0, sizeof(mat2));
 }
 
@@ -25,7 +24,7 @@ __HINT_INLINE__ mat2 mat2DiagonalV(const vec2 v){
 	                      {0.f, v.y}}};
 	return r;
 }
-__HINT_INLINE__ void mat2DiagonalVP(mat2 *const restrict m, const vec2 *const restrict v){
+__HINT_INLINE__ void mat2DiagonalVP(mat2 *const __RESTRICT__ m, const vec2 *const __RESTRICT__ v){
 	memset(m->m, 0, sizeof(mat2));
 	m->m[0][0] = v->x;
 	m->m[1][1] = v->y;
@@ -35,7 +34,7 @@ __HINT_INLINE__ mat2 mat2DiagonalS(const float s){
 	                      {0.f, s}}};
 	return r;
 }
-__HINT_INLINE__ void mat2DiagonalSP(mat2 *const restrict m, const float s){
+__HINT_INLINE__ void mat2DiagonalSP(mat2 *const __RESTRICT__ m, const float s){
 	memset(m->m, 0, sizeof(mat2));
 	m->m[0][0] = s;
 	m->m[1][1] = s;
@@ -45,7 +44,7 @@ __HINT_INLINE__ mat2 mat2DiagonalN(const float x, const float y){
 	                      {0.f, y}}};
 	return r;
 }
-__HINT_INLINE__ void mat2DiagonalNP(mat2 *const restrict m, const float x, const float y){
+__HINT_INLINE__ void mat2DiagonalNP(mat2 *const __RESTRICT__ m, const float x, const float y){
 	memset(m->m, 0, sizeof(mat2));
 	m->m[0][0] = x;
 	m->m[1][1] = y;
@@ -56,7 +55,7 @@ __HINT_INLINE__ mat2 mat2SkewSymmetric(const float s){
 	                      {s, 0.f}}};
 	return r;
 }
-__HINT_INLINE__ void mat2SkewSymmetricP(mat2 *const restrict m, const float s){
+__HINT_INLINE__ void mat2SkewSymmetricP(mat2 *const __RESTRICT__ m, const float s){
 	memset(m->m, 0, sizeof(mat2));
 	m->m[0][1] = -s;
 	m->m[1][0] = s;
@@ -71,7 +70,7 @@ __HINT_INLINE__ mat2 mat2MMultM(const mat2 m1, const mat2 m2){
 	return r;
 
 }
-__HINT_INLINE__ void mat2MMultMP1(mat2 *const restrict m1, const mat2 *const restrict m2){
+__HINT_INLINE__ void mat2MMultMP1(mat2 *const __RESTRICT__ m1, const mat2 *const __RESTRICT__ m2){
 
 	const mat2 r = {.m = {{m1->m[0][0]*m2->m[0][0] + m1->m[1][0]*m2->m[0][1],
 	                       m1->m[0][1]*m2->m[0][0] + m1->m[1][1]*m2->m[0][1]},
@@ -80,7 +79,7 @@ __HINT_INLINE__ void mat2MMultMP1(mat2 *const restrict m1, const mat2 *const res
 	*m1 = r;
 
 }
-__HINT_INLINE__ void mat2MMultMP2(const mat2 *const restrict m1, mat2 *const restrict m2){
+__HINT_INLINE__ void mat2MMultMP2(const mat2 *const __RESTRICT__ m1, mat2 *const __RESTRICT__ m2){
 
 	const mat2 r = {.m = {{m1->m[0][0]*m2->m[0][0] + m1->m[1][0]*m2->m[0][1],
 	                       m1->m[0][1]*m2->m[0][0] + m1->m[1][1]*m2->m[0][1]},
@@ -89,7 +88,7 @@ __HINT_INLINE__ void mat2MMultMP2(const mat2 *const restrict m1, mat2 *const res
 	*m2 = r;
 
 }
-__HINT_INLINE__ void mat2MMultMPR(const mat2 *const restrict m1, const mat2 *const restrict m2, mat2 *const restrict r){
+__HINT_INLINE__ void mat2MMultMPR(const mat2 *const __RESTRICT__ m1, const mat2 *const __RESTRICT__ m2, mat2 *const __RESTRICT__ r){
 
 	r->m[0][0] = m1->m[0][0]*m2->m[0][0] + m1->m[1][0]*m2->m[0][1];
 	r->m[0][1] = m1->m[0][1]*m2->m[0][0] + m1->m[1][1]*m2->m[0][1];
@@ -102,12 +101,12 @@ __HINT_INLINE__ vec2 mat2VMultMBra(const vec2 v, const mat2 m){
 	                .y = v.x * m.m[1][0] + v.y * m.m[1][1]};
 	return r;
 }
-__HINT_INLINE__ void mat2VMultMBraP(vec2 *const restrict v, const mat2 *const restrict m){
+__HINT_INLINE__ void mat2VMultMBraP(vec2 *const __RESTRICT__ v, const mat2 *const __RESTRICT__ m){
 	const vec2 r = {.x = v->x * m->m[0][0] + v->y * m->m[0][1],
 	                .y = v->x * m->m[1][0] + v->y * m->m[1][1]};
 	*v = r;
 }
-__HINT_INLINE__ void mat2VMultMBraPR(const vec2 *const restrict v, const mat2 *const restrict m, vec2 *const restrict r){
+__HINT_INLINE__ void mat2VMultMBraPR(const vec2 *const __RESTRICT__ v, const mat2 *const __RESTRICT__ m, vec2 *const __RESTRICT__ r){
 	r->x = v->x * m->m[0][0] + v->y * m->m[0][1];
 	r->y = v->x * m->m[1][0] + v->y * m->m[1][1];
 }
@@ -116,12 +115,12 @@ __HINT_INLINE__ vec2 mat2MMultVKet(const mat2 m, const vec2 v){
 	                .y = v.x * m.m[0][1] + v.y * m.m[1][1]};
 	return r;
 }
-__HINT_INLINE__ void mat2MMultVKetP(const mat2 *const restrict m, vec2 *const restrict v){
+__HINT_INLINE__ void mat2MMultVKetP(const mat2 *const __RESTRICT__ m, vec2 *const __RESTRICT__ v){
 	const vec2 r = {.x = v->x * m->m[0][0] + v->y * m->m[1][0],
 	                .y = v->x * m->m[0][1] + v->y * m->m[1][1]};
 	*v = r;
 }
-__HINT_INLINE__ void mat2MMultVKetPR(const mat2 *const restrict m, const vec2 *const restrict v, vec2 *const restrict r){
+__HINT_INLINE__ void mat2MMultVKetPR(const mat2 *const __RESTRICT__ m, const vec2 *const __RESTRICT__ v, vec2 *const __RESTRICT__ r){
 	r->x = v->x * m->m[0][0] + v->y * m->m[1][0];
 	r->y = v->x * m->m[0][1] + v->y * m->m[1][1];
 }
@@ -133,11 +132,11 @@ __HINT_INLINE__ mat2 mat2MAddM(const mat2 m1, const mat2 m2){
 	                       m1.m[1][1] + m2.m[1][1]}}};
 	return r;
 }
-__HINT_INLINE__ void mat2MAddMP(mat2 *const restrict m1, const mat2 *const restrict m2){
+__HINT_INLINE__ void mat2MAddMP(mat2 *const __RESTRICT__ m1, const mat2 *const __RESTRICT__ m2){
 	m1->m[0][0] += m2->m[0][0]; m1->m[0][1] += m2->m[0][1];
 	m1->m[1][0] += m2->m[1][0]; m1->m[1][1] += m2->m[1][1];
 }
-__HINT_INLINE__ void mat2MAddMPR(const mat2 *const restrict m1, const mat2 *const restrict m2, mat2 *const restrict r){
+__HINT_INLINE__ void mat2MAddMPR(const mat2 *const __RESTRICT__ m1, const mat2 *const __RESTRICT__ m2, mat2 *const __RESTRICT__ r){
 	r->m[0][0] = m1->m[0][0] + m2->m[0][0]; r->m[0][1] = m1->m[0][1] + m2->m[0][1];
 	r->m[1][0] = m1->m[1][0] + m2->m[1][0]; r->m[1][1] = m1->m[1][1] + m2->m[1][1];
 }
@@ -145,7 +144,7 @@ __HINT_INLINE__ void mat2MAddMPR(const mat2 *const restrict m1, const mat2 *cons
 __HINT_INLINE__ float mat2Determinant(const mat2 m){
 	return m.m[0][0] * m.m[1][1] - m.m[1][0] * m.m[0][1];
 }
-__HINT_INLINE__ float mat2DeterminantP(const mat2 *const restrict m){
+__HINT_INLINE__ float mat2DeterminantP(const mat2 *const __RESTRICT__ m){
 	return m->m[0][0] * m->m[1][1] - m->m[1][0] * m->m[0][1];
 }
 
@@ -154,13 +153,13 @@ __HINT_INLINE__ mat2 mat2Transpose(const mat2 m){
 	                      {m.m[0][1], m.m[1][1]}}};
 	return r;
 }
-__HINT_INLINE__ void mat2TransposeP(mat2 *const restrict m){
+__HINT_INLINE__ void mat2TransposeP(mat2 *const __RESTRICT__ m){
 	const float swap = m->m[1][0];
 	m->m[1][0] = m->m[0][1];
 	m->m[0][1] = swap;
 }
 
-__HINT_INLINE__ void mat2TransposePR(const mat2 *const restrict m, mat2 *const restrict r){
+__HINT_INLINE__ void mat2TransposePR(const mat2 *const __RESTRICT__ m, mat2 *const __RESTRICT__ r){
 	r->m[0][0] = m->m[0][0]; r->m[0][1] = m->m[1][0];
 	r->m[1][0] = m->m[0][1]; r->m[1][1] = m->m[1][1];
 }
@@ -178,7 +177,7 @@ __HINT_INLINE__ mat2 mat2Invert(const mat2 m){
 	}
 	return mat2Zero();
 }
-__HINT_INLINE__ return_t mat2InvertR(const mat2 m, mat2 *const restrict r){
+__HINT_INLINE__ return_t mat2InvertR(const mat2 m, mat2 *const __RESTRICT__ r){
 	float invDet = mat2Determinant(m);
 	if(invDet != 0.f){
 		mat2 t;
@@ -192,7 +191,7 @@ __HINT_INLINE__ return_t mat2InvertR(const mat2 m, mat2 *const restrict r){
 	}
 	return 0;
 }
-__HINT_INLINE__ return_t mat2InvertP(mat2 *const restrict m){
+__HINT_INLINE__ return_t mat2InvertP(mat2 *const __RESTRICT__ m){
 	float invDet = mat2DeterminantP(m);
 	if(invDet != 0.f){
 		const float temp = m->m[0][0];
@@ -205,7 +204,7 @@ __HINT_INLINE__ return_t mat2InvertP(mat2 *const restrict m){
 	}
 	return 0;
 }
-__HINT_INLINE__ return_t mat2InvertPR(const mat2 *const restrict m, mat2 *const restrict r){
+__HINT_INLINE__ return_t mat2InvertPR(const mat2 *const __RESTRICT__ m, mat2 *const __RESTRICT__ r){
 	float invDet = mat2DeterminantP(m);
 	if(invDet != 0.f){
 		invDet = 1.f / invDet;
@@ -254,7 +253,7 @@ __HINT_INLINE__ vec2 mat2Solve(const mat2 A, const vec2 b){
 
 }
 
-__HINT_INLINE__ return_t mat2SolveR(const mat2 A, const vec2 b, vec2 *const restrict r){
+__HINT_INLINE__ return_t mat2SolveR(const mat2 A, const vec2 b, vec2 *const __RESTRICT__ r){
 
 	// Solves Ax = b using Cramer's rule.
 	// Cramer's rule states that
@@ -290,7 +289,7 @@ __HINT_INLINE__ return_t mat2SolveR(const mat2 A, const vec2 b, vec2 *const rest
 
 }
 
-__HINT_INLINE__ return_t mat2SolvePR(const mat2 *const restrict A, const vec2 *const restrict b, vec2 *const restrict r){
+__HINT_INLINE__ return_t mat2SolvePR(const mat2 *const __RESTRICT__ A, const vec2 *const __RESTRICT__ b, vec2 *const __RESTRICT__ r){
 
 	// Solves Ax = b using Cramer's rule.
 	// Cramer's rule states that

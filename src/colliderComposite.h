@@ -21,9 +21,9 @@ typedef struct {
 	cCompositeIndex_t colliderNum;
 } cComposite;
 
-void cCompositeInit(cComposite *const restrict c);
-return_t cCompositeInstantiate(cComposite *const restrict instance, const cComposite *const restrict local);
-void cCompositeDeleteBase(cComposite *const restrict c);
-void cCompositeDelete(cComposite *const restrict c);
+void cCompositeInit(cComposite *const __RESTRICT__ c);
+return_t cCompositeInstantiate(cComposite *const __RESTRICT__ instance, const cComposite *const __RESTRICT__ local);
+void cCompositeDeleteBase(cComposite *const __RESTRICT__ c);
+void cCompositeDelete(cComposite *const __RESTRICT__ c);
 
 #endif

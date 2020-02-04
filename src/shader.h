@@ -61,10 +61,10 @@ typedef struct {
 
 } shaderData;
 
-void shdrDataInit(shaderData *const restrict shdrData);
-return_t shdrPrgLoad(GLuint *const restrict id, const char *const restrict prgPath, const char *const restrict vertexPath, const char *const restrict fragmentPath);
-return_t shdrPrgObjLink(shaderProgramObject *const restrict shdrPrg);
-return_t shdrPrgSprLink(shaderProgramSprite *const restrict shdrPrg);
-void shdrPrgDelete(const void *const restrict shdrPrg);
+void shdrDataInit(shaderData *const __RESTRICT__ shdrData);
+return_t shdrPrgLoad(GLuint *const __RESTRICT__ id, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ vertexPath, const char *const __RESTRICT__ fragmentPath);
+return_t shdrPrgObjLink(shaderProgramObject *const __RESTRICT__ shdrPrg);
+return_t shdrPrgSprLink(shaderProgramSprite *const __RESTRICT__ shdrPrg);
+void shdrPrgDelete(const void *const __RESTRICT__ shdrPrg);
 
 #endif

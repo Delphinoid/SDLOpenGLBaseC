@@ -39,19 +39,19 @@ typedef struct {
 extern textureWrapper g_twDefault;
 
 /** twLoad() and twiAnimate() may need some tidying up. **/
-void twInit(textureWrapper *const restrict tw);
-return_t twLoad(textureWrapper *const restrict tw, const char *const restrict prgPath, const char *const restrict filePath);
-const twFrame *twState(const textureWrapper *const restrict tw, const animationInstance *const restrict animator, const animIndex_t currentAnim, const float interpT);
-void twDelete(textureWrapper *const restrict tw);
+void twInit(textureWrapper *const __RESTRICT__ tw);
+return_t twLoad(textureWrapper *const __RESTRICT__ tw, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath);
+const twFrame *twState(const textureWrapper *const __RESTRICT__ tw, const animationInstance *const __RESTRICT__ animator, const animIndex_t currentAnim, const float interpT);
+void twDelete(textureWrapper *const __RESTRICT__ tw);
 
-void twiInit(twInstance *const restrict twi, const textureWrapper *const tw);
-void twiTick(twInstance *const restrict twi, const float elapsedTime);
-GLuint twiTextureWidth(const twInstance *const restrict twi);
-GLuint twiTextureHeight(const twInstance *const restrict twi);
-const texture *twiTexture(const twInstance *const restrict twi);
-float twiFrameWidth(const twInstance *const restrict twi);
-float twiFrameHeight(const twInstance *const restrict twi);
-const twFrame *twiState(const twInstance *const restrict twi, const float interpT);
-return_t twiTranslucent(const twInstance *const restrict twi);
+void twiInit(twInstance *const __RESTRICT__ twi, const textureWrapper *const tw);
+void twiTick(twInstance *const __RESTRICT__ twi, const float elapsedTime);
+GLuint twiTextureWidth(const twInstance *const __RESTRICT__ twi);
+GLuint twiTextureHeight(const twInstance *const __RESTRICT__ twi);
+const texture *twiTexture(const twInstance *const __RESTRICT__ twi);
+float twiFrameWidth(const twInstance *const __RESTRICT__ twi);
+float twiFrameHeight(const twInstance *const __RESTRICT__ twi);
+const twFrame *twiState(const twInstance *const __RESTRICT__ twi, const float interpT);
+return_t twiTranslucent(const twInstance *const __RESTRICT__ twi);
 
 #endif

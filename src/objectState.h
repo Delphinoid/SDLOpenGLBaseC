@@ -13,7 +13,7 @@ typedef struct objectState {
 	objectState *previous;   // Previous state.
 } objectState;
 
-return_t objStateAllocate(objectState ***oldestStatePrevious, const sklInstance *const restrict skeletonData);
+return_t objStateAllocate(objectState ***oldestStatePrevious, const sklInstance *const __RESTRICT__ skeletonData);
 void objStateCopyBone(objectState *state, const boneIndex_t i);
 
 #endif

@@ -2,7 +2,6 @@
 #include "moduleSettings.h"
 #include "texture.h"
 #include "memoryManager.h"
-#include "inline.h"
 #include <string.h>
 
 #define RESOURCE_DEFAULT_TEXTURE_SIZE sizeof(texture)
@@ -70,11 +69,11 @@ __HINT_INLINE__ texture *moduleTextureAllocate(){
 	}
 	return r;
 }
-__HINT_INLINE__ void moduleTextureFree(texture *const restrict resource){
+__HINT_INLINE__ void moduleTextureFree(texture *const __RESTRICT__ resource){
 	tDelete(resource);
 	memPoolFree(&__g_TextureResourceArray, (void *)resource);
 }
-texture *moduleTextureFind(const char *const restrict name){
+texture *moduleTextureFind(const char *const __RESTRICT__ name){
 
 	if(strcmp(name, g_tDefault.name) == 0){
 		return &g_tDefault;

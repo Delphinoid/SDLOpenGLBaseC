@@ -3,14 +3,14 @@
 
 /** These animation functions are particularly bad, redo them later maybe? **/
 
-void animInstInit(animationInstance *const restrict animInst){
+void animInstInit(animationInstance *const __RESTRICT__ animInst){
 	animInst->currentLoops = 0;
 	animInst->currentFrame = 0;
 	animInst->nextFrame = 0;
 	animInst->prevElapsedTime = 0.f;
 	animInst->totalElapsedTime = 0.f;
 }
-void animDataInit(animationData *const restrict animData){
+void animDataInit(animationData *const __RESTRICT__ animData){
 	animData->desiredLoops = -1;
 	animData->frameNum = 0;
 	animData->frameDelays = NULL;
@@ -21,7 +21,7 @@ void animDataDelete(animationData *animData){
 	}
 }
 
-void animTick(animationInstance *const restrict animInst, const animationData *const restrict animData, const float elapsedTime){
+void animTick(animationInstance *const __RESTRICT__ animInst, const animationData *const __RESTRICT__ animData, const float elapsedTime){
 
 	if(animData->frameNum > 1){
 
@@ -143,13 +143,13 @@ void animTick(animationInstance *const restrict animInst, const animationData *c
 
 }
 
-void animState(const animationInstance *const restrict animInst, const animationData *const restrict animData, const float interpT,
-               frameIndex_t *const restrict startFrame, frameIndex_t *const restrict endFrame, float *const restrict animInterpT){
+void animState(const animationInstance *const __RESTRICT__ animInst, const animationData *const __RESTRICT__ animData, const float interpT,
+               frameIndex_t *const __RESTRICT__ startFrame, frameIndex_t *const __RESTRICT__ endFrame, float *const __RESTRICT__ animInterpT){
 
 	// Calculates the start frame, the end frame and the progress through the two based on the provided data.
 
 	const float animLength = animData->frameDelays[animData->frameNum-1];
-	const float *restrict currentDelay;
+	const float *__RESTRICT__ currentDelay;
 
 	*startFrame = 0;
 

@@ -48,30 +48,30 @@ typedef struct physCollider {
 
 // Forward declarations for inlining.
 extern void (* const physColliderGenerateMassJumpTable[COLLIDER_TYPE_NUM])(
-	void *const restrict local,
-	float *const restrict mass,
-	float *const restrict inverseMass,
-	vec3 *const restrict centroid,
-	const float **const restrict vertexMassArray
+	void *const __RESTRICT__ local,
+	float *const __RESTRICT__ mass,
+	float *const __RESTRICT__ inverseMass,
+	vec3 *const __RESTRICT__ centroid,
+	const float **const __RESTRICT__ vertexMassArray
 );
 extern void (* const physColliderGenerateMomentJumpTable[COLLIDER_TYPE_NUM])(
-	void *const restrict local,
-	mat3 *const restrict inertiaTensor,
-	vec3 *const restrict centroid,
-	const float **const restrict vertexMassArray
+	void *const __RESTRICT__ local,
+	mat3 *const __RESTRICT__ inertiaTensor,
+	vec3 *const __RESTRICT__ centroid,
+	const float **const __RESTRICT__ vertexMassArray
 );
 extern return_t (* const physColliderTransformJumpTable[COLLIDER_TYPE_NUM])(
-	physCollider *const restrict c,
-	physIsland *const restrict island
+	physCollider *const __RESTRICT__ c,
+	physIsland *const __RESTRICT__ island
 );
 
-void physColliderInit(physCollider *const restrict c, const colliderType_t type, void *const restrict body);
-void physColliderInstantiate(physCollider *const restrict instance, physCollider *const restrict local, void *const restrict body);
-return_t physColliderPermitCollision(const physCollider *const restrict c1, const physCollider *const restrict c2);
+void physColliderInit(physCollider *const __RESTRICT__ c, const colliderType_t type, void *const __RESTRICT__ body);
+void physColliderInstantiate(physCollider *const __RESTRICT__ instance, physCollider *const __RESTRICT__ local, void *const __RESTRICT__ body);
+return_t physColliderPermitCollision(const physCollider *const __RESTRICT__ c1, const physCollider *const __RESTRICT__ c2);
 
-void physColliderGenerateMass(collider *const restrict local, float *const restrict mass, float *const restrict inverseMass, vec3 *const restrict centroid, const float **const vertexMassArray);
-void physColliderGenerateMoment(collider *const restrict local, mat3 *const restrict inertiaTensor, vec3 *const restrict centroid, const float **const vertexMassArray);
-return_t physColliderTransform(physCollider *const restrict c, physIsland *const restrict island);
+void physColliderGenerateMass(collider *const __RESTRICT__ local, float *const __RESTRICT__ mass, float *const __RESTRICT__ inverseMass, vec3 *const __RESTRICT__ centroid, const float **const vertexMassArray);
+void physColliderGenerateMoment(collider *const __RESTRICT__ local, mat3 *const __RESTRICT__ inertiaTensor, vec3 *const __RESTRICT__ centroid, const float **const vertexMassArray);
+return_t physColliderTransform(physCollider *const __RESTRICT__ c, physIsland *const __RESTRICT__ island);
 
 physContactPair *physColliderFindContact(const physCollider *const c1, const physCollider *const c2, physContactPair **const previous, physContactPair **const next);
 physSeparationPair *physColliderFindSeparation(const physCollider *const c1, const physCollider *const c2, physSeparationPair **const previous, physSeparationPair **const next);
@@ -83,6 +83,6 @@ void physColliderUpdateContacts(physCollider *const c);
 #endif
 void physColliderUpdateSeparations(physCollider *const c);
 
-void physColliderDelete(physCollider *const restrict c);
+void physColliderDelete(physCollider *const __RESTRICT__ c);
 
 #endif

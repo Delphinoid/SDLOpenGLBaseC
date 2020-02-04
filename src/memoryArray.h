@@ -39,16 +39,16 @@ typedef struct {
 #define memArrayBlockNext(array, i)     (void *)((byte_t *)i + (array).block)
 #define memArrayBlockPrevious(array, i) (void *)((byte_t *)i - (array).block)
 
-void memArrayInit(memoryArray *const restrict array);
-void *memArrayCreate(memoryArray *const restrict array, void *const start, const size_t bytes, const size_t length);
-void *memArrayPush(memoryArray *const restrict array);
-void *memArrayPushFast(memoryArray *const restrict array, void **const block, memoryRegion **const container);
-void memArrayPop(memoryArray *const restrict array);
-void *memArrayIndex(memoryArray *const restrict array, const size_t i);
-void *memArrayIndexRegion(memoryArray *const restrict array, const size_t i, memoryRegion **const container);
-void memArrayClear(memoryArray *const restrict array);
-void *memArrayExtend(memoryArray *const restrict array, void *const start, const size_t bytes, const size_t length);
-void memArrayDelete(memoryArray *const restrict array);
+void memArrayInit(memoryArray *const __RESTRICT__ array);
+void *memArrayCreate(memoryArray *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length);
+void *memArrayPush(memoryArray *const __RESTRICT__ array);
+void *memArrayPushFast(memoryArray *const __RESTRICT__ array, void **const block, memoryRegion **const container);
+void memArrayPop(memoryArray *const __RESTRICT__ array);
+void *memArrayIndex(memoryArray *const __RESTRICT__ array, const size_t i);
+void *memArrayIndexRegion(memoryArray *const __RESTRICT__ array, const size_t i, memoryRegion **const container);
+void memArrayClear(memoryArray *const __RESTRICT__ array);
+void *memArrayExtend(memoryArray *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length);
+void memArrayDelete(memoryArray *const __RESTRICT__ array);
 
 #define MEMORY_ARRAY_LOOP_BEGIN(allocator, n, type)                           \
 	{                                                                         \

@@ -1,12 +1,12 @@
 #include "collision.h"
 #include "memoryManager.h"
 
-void cCompositeInit(cComposite *const restrict c){
+void cCompositeInit(cComposite *const __RESTRICT__ c){
 	c->colliders = NULL;
 	c->colliderNum = 0;
 }
 
-return_t cCompositeInstantiate(cComposite *const restrict instance, const cComposite *const restrict local){
+return_t cCompositeInstantiate(cComposite *const __RESTRICT__ instance, const cComposite *const __RESTRICT__ local){
 
 	const size_t bufferSize = sizeof(collider)*local->colliderNum;
 	collider *tempBuffer = memAllocate(bufferSize);
@@ -39,7 +39,7 @@ return_t cCompositeInstantiate(cComposite *const restrict instance, const cCompo
 
 }
 
-void cCompositeDeleteBase(cComposite *const restrict c){
+void cCompositeDeleteBase(cComposite *const __RESTRICT__ c){
 	if(c->colliders != NULL){
 		// Delete every collider that composes
 		// the composite collider.
@@ -52,7 +52,7 @@ void cCompositeDeleteBase(cComposite *const restrict c){
 	}
 }
 
-void cCompositeDelete(cComposite *const restrict c){
+void cCompositeDelete(cComposite *const __RESTRICT__ c){
 	if(c->colliders != NULL){
 		// Delete every collider that composes
 		// the composite collider.

@@ -18,13 +18,13 @@ return_t moduleGUIResourcesInit();
 void moduleGUIResourcesReset();
 void moduleGUIResourcesDelete();
 
-guiElement *moduleGUIElementAppendStatic(guiElement **const restrict array);
-guiElement *moduleGUIElementAppend(guiElement **const restrict array);
-guiElement *moduleGUIElementInsertAfterStatic(guiElement **const restrict array, guiElement *const restrict resource);
-guiElement *moduleGUIElementInsertAfter(guiElement **const restrict array, guiElement *const restrict resource);
-guiElement *moduleGUIElementNext(const guiElement *const restrict i);
-void moduleGUIElementFree(guiElement **const restrict array, guiElement *const restrict resource, const guiElement *const restrict previous);
-void moduleGUIElementFreeArray(guiElement **const restrict array);
+guiElement *moduleGUIElementAppendStatic(guiElement **const __RESTRICT__ array);
+guiElement *moduleGUIElementAppend(guiElement **const __RESTRICT__ array);
+guiElement *moduleGUIElementInsertAfterStatic(guiElement **const __RESTRICT__ array, guiElement *const __RESTRICT__ resource);
+guiElement *moduleGUIElementInsertAfter(guiElement **const __RESTRICT__ array, guiElement *const __RESTRICT__ resource);
+guiElement *moduleGUIElementNext(const guiElement *const __RESTRICT__ i);
+void moduleGUIElementFree(guiElement **const __RESTRICT__ array, guiElement *const __RESTRICT__ resource, const guiElement *const __RESTRICT__ previous);
+void moduleGUIElementFreeArray(guiElement **const __RESTRICT__ array);
 void moduleGUIElementClear();
 
 #endif

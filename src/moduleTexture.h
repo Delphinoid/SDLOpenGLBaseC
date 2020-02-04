@@ -21,8 +21,8 @@ void moduleTextureResourcesDelete();
 
 texture *moduleTextureAllocateStatic();
 texture *moduleTextureAllocate();
-void moduleTextureFree(texture *const restrict resource);
-texture *moduleTextureFind(const char *const restrict name);
+void moduleTextureFree(texture *const __RESTRICT__ resource);
+texture *moduleTextureFind(const char *const __RESTRICT__ name);
 void moduleTextureClear();
 
 #endif

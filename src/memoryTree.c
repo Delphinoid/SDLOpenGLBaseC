@@ -1,13 +1,13 @@
 #include "memoryTree.h"
-#include "inline.h"
+#include "qualifiers.h"
 #include <string.h>
 
-void memTreeInit(memoryTree *const restrict tree){
+void memTreeInit(memoryTree *const __RESTRICT__ tree){
 	tree->root = NULL;
 	tree->region = NULL;
 }
 
-void *memTreeCreate(memoryTree *const restrict tree, void *const start, const size_t bytes, const size_t length){
+void *memTreeCreate(memoryTree *const __RESTRICT__ tree, void *const start, const size_t bytes, const size_t length){
 
 	// Initialize a general purpose memory allocator.
 	//
@@ -29,7 +29,7 @@ void *memTreeCreate(memoryTree *const restrict tree, void *const start, const si
 
 }
 
-static __FORCE_INLINE__ void memTreeRotateLeft(memoryTree *const restrict tree, byte_t *const node){
+static __FORCE_INLINE__ void memTreeRotateLeft(memoryTree *const __RESTRICT__ tree, byte_t *const node){
 
 	// Rotate the red-black tree to the left.
 
@@ -60,7 +60,7 @@ static __FORCE_INLINE__ void memTreeRotateLeft(memoryTree *const restrict tree, 
 
 }
 
-static __FORCE_INLINE__ void memTreeRotateRight(memoryTree *const restrict tree, byte_t *const node){
+static __FORCE_INLINE__ void memTreeRotateRight(memoryTree *const __RESTRICT__ tree, byte_t *const node){
 
 	// Rotate the red-black tree to the right.
 
@@ -91,7 +91,7 @@ static __FORCE_INLINE__ void memTreeRotateRight(memoryTree *const restrict tree,
 
 }
 
-static __FORCE_INLINE__ void memTreeRepairTree(memoryTree *const restrict tree, byte_t *node, byte_t *parent){
+static __FORCE_INLINE__ void memTreeRepairTree(memoryTree *const __RESTRICT__ tree, byte_t *node, byte_t *parent){
 
 	// Fix any violations of the red-black
 	// tree's rules, starting at "node".
@@ -194,7 +194,7 @@ static __FORCE_INLINE__ void memTreeRepairTree(memoryTree *const restrict tree, 
 
 }
 
-static __FORCE_INLINE__ void memTreeInsert(memoryTree *const restrict tree, void *const block, const size_t bytes){
+static __FORCE_INLINE__ void memTreeInsert(memoryTree *const __RESTRICT__ tree, void *const block, const size_t bytes){
 
 	// Add a free block to the red-black tree.
 
@@ -248,7 +248,7 @@ static __FORCE_INLINE__ void memTreeInsert(memoryTree *const restrict tree, void
 
 }
 
-static __FORCE_INLINE__ void memTreeRemove(memoryTree *const restrict tree, void *const block){
+static __FORCE_INLINE__ void memTreeRemove(memoryTree *const __RESTRICT__ tree, void *const block){
 
 	// Remove a free block from the red-black tree.
 
@@ -444,7 +444,7 @@ static __FORCE_INLINE__ void memTreeRemove(memoryTree *const restrict tree, void
 
 }
 
-void *memTreeAllocate(memoryTree *const restrict tree, const size_t bytes){
+void *memTreeAllocate(memoryTree *const __RESTRICT__ tree, const size_t bytes){
 
 	// Retrieves a new block of memory from the general
 	// purpose allocator and updates the "next" pointer.
@@ -596,7 +596,7 @@ void *memTreeAllocate(memoryTree *const restrict tree, const size_t bytes){
 
 }
 
-void memTreeFree(memoryTree *const restrict tree, void *const restrict block){
+void memTreeFree(memoryTree *const __RESTRICT__ tree, void *const __RESTRICT__ block){
 
 	// Frees a block of memory from the general
 	// purpose allocator.
@@ -656,7 +656,7 @@ void memTreeFree(memoryTree *const restrict tree, void *const restrict block){
 
 }
 
-void *memTreeReallocate(memoryTree *const restrict tree, void *const block, const size_t bytes){
+void *memTreeReallocate(memoryTree *const __RESTRICT__ tree, void *const block, const size_t bytes){
 
 	// Reallocates a block of memory. Can potentially
 	// be called to try and "defragment" a particular
@@ -803,7 +803,7 @@ void *memTreeSetupMemory(void *const start, const size_t bytes, const size_t len
 	return block;
 }
 
-void memTreeClear(memoryTree *const restrict tree){
+void memTreeClear(memoryTree *const __RESTRICT__ tree){
 	byte_t *block;
 	tree->root = memTreeAlignStartData(tree->region->start);
 	block = memTreeNodeGetBlock(tree->root);
@@ -814,7 +814,7 @@ void memTreeClear(memoryTree *const restrict tree){
 	memTreeNodeGetParent(tree->root) = NULL;
 }
 
-void *memTreeExtend(memoryTree *const restrict tree, void *const start, const size_t bytes, const size_t length){
+void *memTreeExtend(memoryTree *const __RESTRICT__ tree, void *const start, const size_t bytes, const size_t length){
 
 	// Extends the memory allocator.
 	// Its logical function is similar to a
@@ -838,7 +838,7 @@ void *memTreeExtend(memoryTree *const restrict tree, void *const start, const si
 
 }
 
-void memTreeDelete(memoryTree *const restrict tree){
+void memTreeDelete(memoryTree *const __RESTRICT__ tree){
 	memRegionFree(tree->region);
 }
 
@@ -846,7 +846,7 @@ void memTreeDelete(memoryTree *const restrict tree){
 
 #include <stdio.h>
 
-void memTreePrintFreeBlocks(memoryTree *const restrict tree, const unsigned int recursions){
+void memTreePrintFreeBlocks(memoryTree *const __RESTRICT__ tree, const unsigned int recursions){
 
 	// Inorder tree traversal where
 	// each node's size is printed.
@@ -914,7 +914,7 @@ void memTreePrintFreeBlocks(memoryTree *const restrict tree, const unsigned int 
 
 }
 
-void memTreePrintAllBlocks(memoryTree *const restrict tree){
+void memTreePrintAllBlocks(memoryTree *const __RESTRICT__ tree){
 
 	size_t regionNum = 0;
 	const memoryRegion *region = tree->region;

@@ -1,13 +1,12 @@
 #include "aabbTree.h"
-#include "inline.h"
 
-void aabbTreeInit(aabbTree *const restrict tree){
+void aabbTreeInit(aabbTree *const __RESTRICT__ tree){
 	tree->root = NULL;
 	tree->leaves = NULL;
 }
 
 /** UNUSED **/
-static __FORCE_INLINE__ aabbNode *aabbTreeBalanceNode(aabbTree *const restrict tree, aabbNode *const node){
+static __FORCE_INLINE__ aabbNode *aabbTreeBalanceNode(aabbTree *const __RESTRICT__ tree, aabbNode *const node){
 
 	// Rotate the tree to the left or right to
 	// restore balance to the specified node.
@@ -132,7 +131,7 @@ static __FORCE_INLINE__ aabbNode *aabbTreeBalanceNode(aabbTree *const restrict t
 
 }
 
-static __FORCE_INLINE__ void aabbTreeBalanceHierarchy(aabbTree *const restrict tree, aabbNode *node){
+static __FORCE_INLINE__ void aabbTreeBalanceHierarchy(aabbTree *const __RESTRICT__ tree, aabbNode *node){
 
 	// Iteratively restore balance to the tree
 	// by looping through and balancing the
@@ -154,7 +153,7 @@ static __FORCE_INLINE__ void aabbTreeBalanceHierarchy(aabbTree *const restrict t
 
 }
 
-static __FORCE_INLINE__ void aabbTreeInsertLeaf(aabbTree *const restrict tree, aabbNode *const node, aabbNode *const parent){
+static __FORCE_INLINE__ void aabbTreeInsertLeaf(aabbTree *const __RESTRICT__ tree, aabbNode *const node, aabbNode *const parent){
 
 	// Insert a leaf node into the tree.
 
@@ -237,7 +236,7 @@ static __FORCE_INLINE__ void aabbTreeInsertLeaf(aabbTree *const restrict tree, a
 
 }
 
-static __FORCE_INLINE__ void aabbTreeRemoveLeaf(aabbTree *const restrict tree, const aabbNode *const node){
+static __FORCE_INLINE__ void aabbTreeRemoveLeaf(aabbTree *const __RESTRICT__ tree, const aabbNode *const node){
 
 	// Remove a leaf node from the tree.
 
@@ -268,7 +267,7 @@ static __FORCE_INLINE__ void aabbTreeRemoveLeaf(aabbTree *const restrict tree, c
 
 }
 
-return_t aabbTreeInsert(aabbTree *const restrict tree, aabbNode **node, void *const restrict value, const cAABB *const restrict aabb, aabbNode *(*const allocator)()){
+return_t aabbTreeInsert(aabbTree *const __RESTRICT__ tree, aabbNode **node, void *const __RESTRICT__ value, const cAABB *const __RESTRICT__ aabb, aabbNode *(*const allocator)()){
 
 	// Insert a user-specified value into the tree.
 	// Takes in a pointer to an allocator.
@@ -310,7 +309,7 @@ return_t aabbTreeInsert(aabbTree *const restrict tree, aabbNode **node, void *co
 
 }
 
-void aabbTreeRemove(aabbTree *const restrict tree, aabbNode *const node, void (*const deallocator)(aabbNode *const restrict)){
+void aabbTreeRemove(aabbTree *const __RESTRICT__ tree, aabbNode *const node, void (*const deallocator)(aabbNode *const __RESTRICT__)){
 
 	// Remove a user-specified value from the tree.
 	// Takes in a pointer to an deallocator.
@@ -331,7 +330,7 @@ void aabbTreeRemove(aabbTree *const restrict tree, aabbNode *const node, void (*
 
 }
 
-void aabbTreeUpdate(aabbTree *const restrict tree, aabbNode *const node){
+void aabbTreeUpdate(aabbTree *const __RESTRICT__ tree, aabbNode *const node){
 
 	// Update a node in an AABB tree.
 	// Tries to re-use nodes in order to do as few
@@ -343,7 +342,7 @@ void aabbTreeUpdate(aabbTree *const restrict tree, aabbNode *const node){
 
 }
 
-__HINT_INLINE__ return_t aabbTreeQueryNodeStack(const aabbTree *const restrict tree, aabbNode *const node, return_t (*const func)(aabbNode *const, aabbNode *const)){
+__HINT_INLINE__ return_t aabbTreeQueryNodeStack(const aabbTree *const __RESTRICT__ tree, aabbNode *const node, return_t (*const func)(aabbNode *const, aabbNode *const)){
 
 	// Runs "func()" on each potential leaf that could collide with node.
 
@@ -375,7 +374,7 @@ __HINT_INLINE__ return_t aabbTreeQueryNodeStack(const aabbTree *const restrict t
 
 }
 
-__HINT_INLINE__ return_t aabbTreeQueryNode(const aabbTree *const restrict tree, aabbNode *const node, return_t (*const func)(aabbNode *const, aabbNode *const)){
+__HINT_INLINE__ return_t aabbTreeQueryNode(const aabbTree *const __RESTRICT__ tree, aabbNode *const node, return_t (*const func)(aabbNode *const, aabbNode *const)){
 
 	// Runs "func()" on each potential leaf that could collide with node.
 
@@ -446,7 +445,7 @@ __HINT_INLINE__ return_t aabbTreeQueryNode(const aabbTree *const restrict tree, 
 
 }
 
-return_t aabbTreeQueryStack(const aabbTree *const restrict tree, return_t (*const func)(aabbNode *const, aabbNode *const)){
+return_t aabbTreeQueryStack(const aabbTree *const __RESTRICT__ tree, return_t (*const func)(aabbNode *const, aabbNode *const)){
 
 	// Queries every leaf node in the tree.
 
@@ -463,7 +462,7 @@ return_t aabbTreeQueryStack(const aabbTree *const restrict tree, return_t (*cons
 
 }
 
-return_t aabbTreeQuery(const aabbTree *const restrict tree, return_t (*const func)(aabbNode *const, aabbNode *const)){
+return_t aabbTreeQuery(const aabbTree *const __RESTRICT__ tree, return_t (*const func)(aabbNode *const, aabbNode *const)){
 	// Queries every leaf node in the tree.
 	aabbNode *node = tree->leaves;
 	while(node != NULL){
@@ -477,7 +476,7 @@ return_t aabbTreeQuery(const aabbTree *const restrict tree, return_t (*const fun
 	return 1;
 }
 
-void aabbTreeTraverse(aabbTree *const restrict tree, void (*const func)(aabbNode *const restrict)){
+void aabbTreeTraverse(aabbTree *const __RESTRICT__ tree, void (*const func)(aabbNode *const __RESTRICT__)){
 
 	// Postorder tree traversal where
 	// "func()" is run on each node.

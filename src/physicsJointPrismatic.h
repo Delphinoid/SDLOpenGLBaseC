@@ -14,11 +14,11 @@ typedef struct {
 
 } physJointPrismatic;
 
-void physJointPrismaticInit(physJointPrismatic *const restrict joint);
-void physJointPrismaticPresolveConstraints(physJoint *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, const float dt);
-void physJointPrismaticSolveVelocityConstraints(physJoint *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB);
+void physJointPrismaticInit(physJointPrismatic *const __RESTRICT__ joint);
+void physJointPrismaticPresolveConstraints(physJoint *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, const float dt);
+void physJointPrismaticSolveVelocityConstraints(physJoint *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB);
 #ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-return_t physJointPrismaticSolveConfigurationConstraints(physJoint *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB);
+return_t physJointPrismaticSolveConfigurationConstraints(physJoint *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB);
 #endif
 
 #endif

@@ -21,8 +21,8 @@ void moduleTextureWrapperResourcesDelete();
 
 textureWrapper *moduleTextureWrapperAllocateStatic();
 textureWrapper *moduleTextureWrapperAllocate();
-void moduleTextureWrapperFree(textureWrapper *const restrict resource);
-textureWrapper *moduleTextureWrapperFind(const char *const restrict name);
+void moduleTextureWrapperFree(textureWrapper *const __RESTRICT__ resource);
+textureWrapper *moduleTextureWrapperFind(const char *const __RESTRICT__ name);
 void moduleTextureWrapperClear();
 
 #endif

@@ -10,50 +10,50 @@ typedef struct {
 	vec3 scale;
 } bone;
 
-void boneInit(bone *const restrict b);
+void boneInit(bone *const __RESTRICT__ b);
 bone boneIdentity();
 mat4 boneMatrix(const bone b);
 
 bone boneInvert(const bone b);
-void boneInvertP(bone *const restrict b);
-void boneInvertPR(const bone *const restrict b, bone *const restrict r);
+void boneInvertP(bone *const __RESTRICT__ b);
+void boneInvertPR(const bone *const __RESTRICT__ b, bone *const __RESTRICT__ r);
 
 bone boneInvertFast(const bone b);
-void boneInvertFastP(bone *const restrict b);
-void boneInvertFastPR(const bone *const restrict b, bone *const restrict r);
+void boneInvertFastP(bone *const __RESTRICT__ b);
+void boneInvertFastPR(const bone *const __RESTRICT__ b, bone *const __RESTRICT__ r);
 
 bone boneInterpolate(const bone b1, const bone b2, const float t);
-void boneInterpolateP1(bone *const restrict b1, const bone *const restrict b2, const float t);
-void boneInterpolateP2(const bone *const restrict b1, bone *const restrict b2, const float t);
-void boneInterpolatePR(const bone *const restrict b1, const bone *const restrict b2, const float t, bone *const restrict r);
+void boneInterpolateP1(bone *const __RESTRICT__ b1, const bone *const __RESTRICT__ b2, const float t);
+void boneInterpolateP2(const bone *const __RESTRICT__ b1, bone *const __RESTRICT__ b2, const float t);
+void boneInterpolatePR(const bone *const __RESTRICT__ b1, const bone *const __RESTRICT__ b2, const float t, bone *const __RESTRICT__ r);
 
 vec3 boneTransformAppendPosition1(const bone b1, const bone b2);
 vec3 boneTransformAppendPosition2(const bone b1, const bone b2);
-void boneTransformAppendPositionP1(bone *const restrict b1, const bone *const restrict b2);
-void boneTransformAppendPositionP2(const bone *const restrict b1, bone *const restrict b2);
-void boneTransformAppendPositionPR(const bone *const restrict b1, const bone *const restrict b2, bone *const restrict r);
+void boneTransformAppendPositionP1(bone *const __RESTRICT__ b1, const bone *const __RESTRICT__ b2);
+void boneTransformAppendPositionP2(const bone *const __RESTRICT__ b1, bone *const __RESTRICT__ b2);
+void boneTransformAppendPositionPR(const bone *const __RESTRICT__ b1, const bone *const __RESTRICT__ b2, bone *const __RESTRICT__ r);
 
 vec3 boneTransformAppendPositionVec(const bone b, const float x, const float y, const float z);
-void boneTransformAppendPositionVecP(bone *const restrict b, const float x, const float y, const float z);
-void boneTransformAppendPositionVecPR(const bone *const restrict b, const float x, const float y, const float z, vec3 *const restrict r);
+void boneTransformAppendPositionVecP(bone *const __RESTRICT__ b, const float x, const float y, const float z);
+void boneTransformAppendPositionVecPR(const bone *const __RESTRICT__ b, const float x, const float y, const float z, vec3 *const __RESTRICT__ r);
 
 quat boneTransformAppendOrientation(const bone b1, const bone b2);
-void boneTransformAppendOrientationP1(bone *const restrict b1, const bone *const restrict b2);
-void boneTransformAppendOrientationP2(const bone *const restrict b1, bone *const restrict b2);
-void boneTransformAppendOrientationPR(const bone *const restrict b1, const bone *const restrict b2, bone *const restrict r);
+void boneTransformAppendOrientationP1(bone *const __RESTRICT__ b1, const bone *const __RESTRICT__ b2);
+void boneTransformAppendOrientationP2(const bone *const __RESTRICT__ b1, bone *const __RESTRICT__ b2);
+void boneTransformAppendOrientationPR(const bone *const __RESTRICT__ b1, const bone *const __RESTRICT__ b2, bone *const __RESTRICT__ r);
 
 vec3 boneTransformAppendScale(const bone b1, const bone b2);
-void boneTransformAppendScaleP(bone *const restrict b1, const bone *const restrict b2);
-void boneTransformAppendScalePR(const bone *const restrict b1, const bone *const restrict b2, bone *const restrict r);
+void boneTransformAppendScaleP(bone *const __RESTRICT__ b1, const bone *const __RESTRICT__ b2);
+void boneTransformAppendScalePR(const bone *const __RESTRICT__ b1, const bone *const __RESTRICT__ b2, bone *const __RESTRICT__ r);
 
 bone boneTransformAppend(const bone b1, const bone b2);
-void boneTransformAppendP1(bone *const restrict b1, const bone *const restrict b2);
-void boneTransformAppendP2(const bone *const restrict b1, bone *const restrict b2);
-void boneTransformAppendPR(const bone *const restrict b1, const bone *const restrict b2, bone *const restrict r);
+void boneTransformAppendP1(bone *const __RESTRICT__ b1, const bone *const __RESTRICT__ b2);
+void boneTransformAppendP2(const bone *const __RESTRICT__ b1, bone *const __RESTRICT__ b2);
+void boneTransformAppendPR(const bone *const __RESTRICT__ b1, const bone *const __RESTRICT__ b2, bone *const __RESTRICT__ r);
 
 bone boneTransformCombine(const bone b1, const bone b2);
-void boneTransformCombineP1(bone *const restrict b1, const bone *const restrict b2);
-void boneTransformCombineP2(const bone *const restrict b1, bone *const restrict b2);
-void boneTransformCombinePR(const bone *const restrict b1, const bone *const restrict b2, bone *const restrict r);
+void boneTransformCombineP1(bone *const __RESTRICT__ b1, const bone *const __RESTRICT__ b2);
+void boneTransformCombineP2(const bone *const __RESTRICT__ b1, bone *const __RESTRICT__ b2);
+void boneTransformCombinePR(const bone *const __RESTRICT__ b1, const bone *const __RESTRICT__ b2, bone *const __RESTRICT__ r);
 
 #endif

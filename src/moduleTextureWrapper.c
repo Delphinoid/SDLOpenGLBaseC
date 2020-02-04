@@ -2,7 +2,6 @@
 #include "moduleSettings.h"
 #include "textureWrapper.h"
 #include "memoryManager.h"
-#include "inline.h"
 #include <string.h>
 
 #define RESOURCE_DEFAULT_TEXTURE_WRAPPER_SIZE sizeof(textureWrapper)
@@ -66,11 +65,11 @@ __HINT_INLINE__ textureWrapper *moduleTextureWrapperAllocate(){
 	}
 	return r;
 }
-__HINT_INLINE__ void moduleTextureWrapperFree(textureWrapper *const restrict resource){
+__HINT_INLINE__ void moduleTextureWrapperFree(textureWrapper *const __RESTRICT__ resource){
 	twDelete(resource);
 	memPoolFree(&__g_TextureWrapperResourceArray, (void *)resource);
 }
-textureWrapper *moduleTextureWrapperFind(const char *const restrict name){
+textureWrapper *moduleTextureWrapperFind(const char *const __RESTRICT__ name){
 
 	if(strcmp(name, g_twDefault.name) == 0){
 		return &g_twDefault;

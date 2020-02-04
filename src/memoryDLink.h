@@ -106,22 +106,22 @@ typedef struct {
 #define memDLinkBlockNext(array, i)     (void *)((byte_t *)i + (array).block)
 #define memDLinkBlockPrevious(array, i) (void *)((byte_t *)i - (array).block)
 
-void memDLinkInit(memoryDLink *const restrict array);
-void *memDLinkCreate(memoryDLink *const restrict array, void *const start, const size_t bytes, const size_t length);
-void *memDLinkCreateInit(memoryDLink *const restrict array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
-void *memDLinkAllocate(memoryDLink *const restrict array);
-void *memDLinkPrepend(memoryDLink *const restrict array, void **const start);
-void *memDLinkAppend(memoryDLink *const restrict array, void **const start);
-void *memDLinkInsertBefore(memoryDLink *const restrict array, void **const start, void *const element);
-void *memDLinkInsertAfter(memoryDLink *const restrict array, void **const start, void *const element);
-void memDLinkFree(memoryDLink *const restrict array, void **const start, void *const element);
+void memDLinkInit(memoryDLink *const __RESTRICT__ array);
+void *memDLinkCreate(memoryDLink *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length);
+void *memDLinkCreateInit(memoryDLink *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block));
+void *memDLinkAllocate(memoryDLink *const __RESTRICT__ array);
+void *memDLinkPrepend(memoryDLink *const __RESTRICT__ array, void **const start);
+void *memDLinkAppend(memoryDLink *const __RESTRICT__ array, void **const start);
+void *memDLinkInsertBefore(memoryDLink *const __RESTRICT__ array, void **const start, void *const element);
+void *memDLinkInsertAfter(memoryDLink *const __RESTRICT__ array, void **const start, void *const element);
+void memDLinkFree(memoryDLink *const __RESTRICT__ array, void **const start, void *const element);
 void *memDLinkSetupMemory(void *start, const size_t bytes, const size_t length);
-void *memDLinkSetupMemoryInit(void *start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
-void memDLinkClear(memoryDLink *const restrict array);
-void memDLinkClearInit(memoryDLink *const restrict array, void (*func)(void *const restrict block));
-void *memDLinkExtend(memoryDLink *const restrict array, void *const start, const size_t bytes, const size_t length);
-void *memDLinkExtendInit(memoryDLink *const restrict array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
-void memDLinkDelete(memoryDLink *const restrict array);
+void *memDLinkSetupMemoryInit(void *start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block));
+void memDLinkClear(memoryDLink *const __RESTRICT__ array);
+void memDLinkClearInit(memoryDLink *const __RESTRICT__ array, void (*func)(void *const __RESTRICT__ block));
+void *memDLinkExtend(memoryDLink *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length);
+void *memDLinkExtendInit(memoryDLink *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block));
+void memDLinkDelete(memoryDLink *const __RESTRICT__ array);
 
 #define MEMORY_DLINK_LOOP_BEGIN(allocator, n, type)                      \
 	{                                                                    \

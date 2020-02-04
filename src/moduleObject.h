@@ -25,14 +25,14 @@ void moduleObjectResourcesDelete();
 
 objectBase *moduleObjectBaseAllocateStatic();
 objectBase *moduleObjectBaseAllocate();
-void moduleObjectBaseFree(objectBase *const restrict resource);
-objectBase *moduleObjectBaseFind(const char *const restrict name);
+void moduleObjectBaseFree(objectBase *const __RESTRICT__ resource);
+objectBase *moduleObjectBaseFind(const char *const __RESTRICT__ name);
 void moduleObjectBaseClear();
 
 object *moduleObjectAllocateStatic();
 object *moduleObjectAllocate();
 object *moduleObjectIndex(const size_t i);
-void moduleObjectFree(object *const restrict resource);
+void moduleObjectFree(object *const __RESTRICT__ resource);
 void moduleObjectClear();
 
 #endif

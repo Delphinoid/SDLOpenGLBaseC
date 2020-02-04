@@ -1,12 +1,12 @@
 #include "memoryQLink.h"
 
-void memQLinkInit(memoryQLink *const restrict array){
+void memQLinkInit(memoryQLink *const __RESTRICT__ array){
 	array->block = 0;
 	array->free = NULL;
 	array->region = NULL;
 }
 
-void *memQLinkCreate(memoryQLink *const restrict array, void *const start, const size_t bytes, const size_t length){
+void *memQLinkCreate(memoryQLink *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length){
 
 	// Initialize an array allocator with "length"-many
 	// elements of "bytes" size.
@@ -28,7 +28,7 @@ void *memQLinkCreate(memoryQLink *const restrict array, void *const start, const
 
 }
 
-void *memQLinkCreateInit(memoryQLink *const restrict array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
+void *memQLinkCreateInit(memoryQLink *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block)){
 
 	// Initialize an array allocator with "length"-many
 	// elements of "bytes" size.
@@ -50,7 +50,7 @@ void *memQLinkCreateInit(memoryQLink *const restrict array, void *const start, c
 
 }
 
-void *memQLinkAllocate(memoryQLink *const restrict array){
+void *memQLinkAllocate(memoryQLink *const __RESTRICT__ array){
 
 	// Retrieves a new block of memory from the array
 	// allocator and updates the "free" pointer.
@@ -68,7 +68,7 @@ void *memQLinkAllocate(memoryQLink *const restrict array){
 
 }
 
-void *memQLinkAllocateSorted(memoryQLink *const restrict array, void **const startA, void **const startB, void *const prevA, void *const nextA, void *const prevB, void *const nextB, unsigned int swapA, unsigned int swapB){
+void *memQLinkAllocateSorted(memoryQLink *const __RESTRICT__ array, void **const startA, void **const startB, void *const prevA, void *const nextA, void *const prevB, void *const nextB, unsigned int swapA, unsigned int swapB){
 
 	byte_t *const r = array->free;
 	if(r){
@@ -115,7 +115,7 @@ void *memQLinkAllocateSorted(memoryQLink *const restrict array, void **const sta
 
 }
 
-void memQLinkFree(memoryQLink *const restrict array, void *const element){
+void memQLinkFree(memoryQLink *const __RESTRICT__ array, void *const element){
 
 	// Removes an element from an array
 	// and frees the block.
@@ -125,7 +125,7 @@ void memQLinkFree(memoryQLink *const restrict array, void *const element){
 
 }
 
-void memQLinkFreeSorted(memoryQLink *const restrict array, void **const startA, void **const startB, void *const element){
+void memQLinkFreeSorted(memoryQLink *const __RESTRICT__ array, void **const startA, void **const startB, void *const element){
 
 	// Removes an element from a sorted
 	// array and frees the block.
@@ -198,7 +198,7 @@ void *memQLinkSetupMemory(void *start, const size_t bytes, const size_t length){
 
 }
 
-void *memQLinkSetupMemoryInit(void *start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
+void *memQLinkSetupMemoryInit(void *start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block)){
 
 	const size_t blockSize = memQLinkBlockSize(bytes);
 	byte_t *block;
@@ -227,7 +227,7 @@ void *memQLinkSetupMemoryInit(void *start, const size_t bytes, const size_t leng
 
 }
 
-void memQLinkClear(memoryQLink *const restrict array){
+void memQLinkClear(memoryQLink *const __RESTRICT__ array){
 
 	byte_t *block = memQLinkAlignStartData(array->region->start);
 	byte_t *next = block + array->block;
@@ -247,7 +247,7 @@ void memQLinkClear(memoryQLink *const restrict array){
 
 }
 
-void memQLinkClearInit(memoryQLink *const restrict array, void (*func)(void *const restrict block)){
+void memQLinkClearInit(memoryQLink *const __RESTRICT__ array, void (*func)(void *const __RESTRICT__ block)){
 
 	byte_t *block = memQLinkAlignStartData(array->region->start);
 	byte_t *next = block + array->block;
@@ -269,7 +269,7 @@ void memQLinkClearInit(memoryQLink *const restrict array, void (*func)(void *con
 
 }
 
-void *memQLinkExtend(memoryQLink *const restrict array, void *const start, const size_t bytes, const size_t length){
+void *memQLinkExtend(memoryQLink *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length){
 
 	// Extends the memory allocator.
 	// Its logical function is similar to a
@@ -291,7 +291,7 @@ void *memQLinkExtend(memoryQLink *const restrict array, void *const start, const
 
 }
 
-void *memQLinkExtendInit(memoryQLink *const restrict array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block)){
+void *memQLinkExtendInit(memoryQLink *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block)){
 
 	// Extends the memory allocator.
 	// Its logical function is similar to a
@@ -313,6 +313,6 @@ void *memQLinkExtendInit(memoryQLink *const restrict array, void *const start, c
 
 }
 
-void memQLinkDelete(memoryQLink *const restrict array){
+void memQLinkDelete(memoryQLink *const __RESTRICT__ array){
 	memRegionFree(array->region);
 }

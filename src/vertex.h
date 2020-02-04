@@ -15,7 +15,7 @@ typedef struct vertex {
 	float bWeights[VERTEX_MAX_BONES];
 } vertex;
 
-void vertInit(vertex *const restrict v);
-void vertTransform(vertex *const restrict v, const vec3 position, const quat orientation, const vec3 scale);
+void vertInit(vertex *const __RESTRICT__ v);
+void vertTransform(vertex *const __RESTRICT__ v, const vec3 position, const quat orientation, const vec3 scale);
 
 #endif

@@ -1,5 +1,5 @@
 #include "memoryShared.h"
-#include "inline.h"
+#include "qualifiers.h"
 
 #ifdef _WIN32
 	#define WIN32_LEAN_AND_MEAN
@@ -18,7 +18,7 @@ void *memHeapLowLevelAllocate(const size_t bytes){
 #endif
 }
 
-void *memHeapLowLevelReallocate(void *const restrict block, const size_t bytes){
+void *memHeapLowLevelReallocate(void *const __RESTRICT__ block, const size_t bytes){
 #ifdef _WIN32
 	return HeapReAlloc(GetProcessHeap(), 0x01, block, bytes);
 #else
@@ -29,7 +29,7 @@ void *memHeapLowLevelReallocate(void *const restrict block, const size_t bytes){
 #endif
 }
 
-int memHeapLowLevelFree(void *const restrict block){
+int memHeapLowLevelFree(void *const __RESTRICT__ block){
 #ifdef _WIN32
 	return HeapFree(GetProcessHeap(), 0x01, block);
 #else

@@ -1,9 +1,8 @@
 #include "objectState.h"
 #include "memoryManager.h"
 #include "skeleton.h"
-#include "inline.h"
 
-__FORCE_INLINE__ return_t objStateAllocate(objectState ***oldestStatePrevious, const sklInstance *const restrict skeletonData){
+__FORCE_INLINE__ return_t objStateAllocate(objectState ***oldestStatePrevious, const sklInstance *const __RESTRICT__ skeletonData){
 	objectState *const state = memAllocate(sizeof(objectState) + skeletonData->skl->boneNum * sizeof(bone));
 	if(state != NULL){
 		state->configuration = (bone *)((byte_t *)state + sizeof(objectState));

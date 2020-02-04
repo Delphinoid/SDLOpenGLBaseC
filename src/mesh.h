@@ -4,6 +4,7 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include "return.h"
+#include "qualifiers.h"
 
 typedef GLsizei vertexIndex_t;
 
@@ -29,7 +30,7 @@ extern mesh g_meshBillboard;
 
 return_t meshDefaultInit();
 return_t meshBillboardInit();
-return_t meshGenerateBuffers(mesh *const restrict m, const vertexIndex_t vertexNum, const vertex *const restrict vertices, const vertexIndex_t indexNum, const vertexIndex_t *const restrict indices);
-void meshDelete(mesh *const restrict m);
+return_t meshGenerateBuffers(mesh *const __RESTRICT__ m, const vertexIndex_t vertexNum, const vertex *const __RESTRICT__ vertices, const vertexIndex_t indexNum, const vertexIndex_t *const __RESTRICT__ indices);
+void meshDelete(mesh *const __RESTRICT__ m);
 
 #endif

@@ -2,7 +2,6 @@
 #include "moduleSettings.h"
 #include "gui.h"
 #include "memoryManager.h"
-#include "inline.h"
 #include <string.h>
 
 #define RESOURCE_DEFAULT_GUI_ELEMENT_SIZE sizeof(guiElement)
@@ -44,10 +43,10 @@ void moduleGUIResourcesDelete(){
 	}
 }
 
-__HINT_INLINE__ guiElement *moduleGUIElementAppendStatic(guiElement **const restrict array){
+__HINT_INLINE__ guiElement *moduleGUIElementAppendStatic(guiElement **const __RESTRICT__ array){
 	return memSLinkAppend(&__g_GUIElementResourceArray, (void **)array);
 }
-__HINT_INLINE__ guiElement *moduleGUIElementAppend(guiElement **const restrict array){
+__HINT_INLINE__ guiElement *moduleGUIElementAppend(guiElement **const __RESTRICT__ array){
 	guiElement *r = moduleGUIElementAppendStatic(array);
 	if(r == NULL){
 		// Attempt to extend the allocator.
@@ -64,10 +63,10 @@ __HINT_INLINE__ guiElement *moduleGUIElementAppend(guiElement **const restrict a
 	}
 	return r;
 }
-__HINT_INLINE__ guiElement *moduleGUIElementInsertAfterStatic(guiElement **const restrict array, guiElement *const restrict resource){
+__HINT_INLINE__ guiElement *moduleGUIElementInsertAfterStatic(guiElement **const __RESTRICT__ array, guiElement *const __RESTRICT__ resource){
 	return memSLinkInsertAfter(&__g_GUIElementResourceArray, (void **)array, (void *)resource);
 }
-__HINT_INLINE__ guiElement *moduleGUIElementInsertAfter(guiElement **const restrict array, guiElement *const restrict resource){
+__HINT_INLINE__ guiElement *moduleGUIElementInsertAfter(guiElement **const __RESTRICT__ array, guiElement *const __RESTRICT__ resource){
 	guiElement *r = moduleGUIElementInsertAfterStatic(array, resource);
 	if(r == NULL){
 		// Attempt to extend the allocator.
@@ -84,14 +83,14 @@ __HINT_INLINE__ guiElement *moduleGUIElementInsertAfter(guiElement **const restr
 	}
 	return r;
 }
-__HINT_INLINE__ guiElement *moduleGUIElementNext(const guiElement *const restrict i){
+__HINT_INLINE__ guiElement *moduleGUIElementNext(const guiElement *const __RESTRICT__ i){
 	return (guiElement *)memSLinkDataGetNext(i);
 }
-__HINT_INLINE__ void moduleGUIElementFree(guiElement **const restrict array, guiElement *const restrict resource, const guiElement *const restrict previous){
+__HINT_INLINE__ void moduleGUIElementFree(guiElement **const __RESTRICT__ array, guiElement *const __RESTRICT__ resource, const guiElement *const __RESTRICT__ previous){
 	guiElementDelete(resource);
 	memSLinkFree(&__g_GUIElementResourceArray, (void **)array, (void *)resource, (const void *)previous);
 }
-void moduleGUIElementFreeArray(guiElement **const restrict array){
+void moduleGUIElementFreeArray(guiElement **const __RESTRICT__ array){
 	guiElement *resource = *array;
 	while(resource != NULL){
 		moduleGUIElementFree(array, resource, NULL);

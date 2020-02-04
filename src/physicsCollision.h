@@ -174,14 +174,14 @@ typedef struct physSeparationPair {
 } physSeparationPair;
 
 #ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-void physContactPresolveConstraints(physContact *const restrict contact, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float frequency);
+void physContactPresolveConstraints(physContact *const __RESTRICT__ contact, physCollider *const __RESTRICT__ colliderA, physCollider *const __RESTRICT__ colliderB, const float frequency);
 #else
-void physContactPresolveConstraints(physContact *const restrict contact, physCollider *const restrict colliderA, physCollider *const restrict colliderB);
+void physContactPresolveConstraints(physContact *const __RESTRICT__ contact, physCollider *const __RESTRICT__ colliderA, physCollider *const __RESTRICT__ colliderB);
 #endif
-void physContactReset(physContact *const restrict contact);
+void physContactReset(physContact *const __RESTRICT__ contact);
 
-void physContactPairRefresh(physContactPair *const restrict pair);
-void physSeparationPairRefresh(physSeparationPair *const restrict pair);
+void physContactPairRefresh(physContactPair *const __RESTRICT__ pair);
+void physSeparationPairRefresh(physSeparationPair *const __RESTRICT__ pair);
 
 void physContactPairInit(physContactPair *const pair, physCollider *const c1, physCollider *const c2, physContactPair *previous, physContactPair *next);
 void physSeparationPairInit(physSeparationPair *const pair, physCollider *const c1, physCollider *const c2, physSeparationPair *previous, physSeparationPair *next);
@@ -190,9 +190,9 @@ void physSeparationPairDelete(physSeparationPair *const pair);
 
 return_t physCollisionQuery(aabbNode *const n1, aabbNode *const n2);
 
-void physContactSolveVelocityConstraints(physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB);
+void physContactSolveVelocityConstraints(physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB);
 #ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-float physContactSolveConfigurationConstraints(physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, float error);
+float physContactSolveConfigurationConstraints(physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, float error);
 #endif
 
 #endif

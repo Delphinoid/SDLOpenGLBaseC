@@ -111,20 +111,20 @@ typedef struct {
 #define memQLinkBlockNext(array, i)     (void *)((byte_t *)i + (array).block)
 #define memQLinkBlockPrevious(array, i) (void *)((byte_t *)i - (array).block)
 
-void memQLinkInit(memoryQLink *const restrict array);
-void *memQLinkCreate(memoryQLink *const restrict array, void *const start, const size_t bytes, const size_t length);
-void *memQLinkCreateInit(memoryQLink *const restrict array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
-void *memQLinkAllocate(memoryQLink *const restrict array);
-void *memQLinkAllocateSorted(memoryQLink *const restrict array, void **const startA, void **const startB, void *const prevA, void *const nextA, void *const prevB, void *const nextB, unsigned int swapA, unsigned int swapB);
-void memQLinkFree(memoryQLink *const restrict array, void *const element);
-void memQLinkFreeSorted(memoryQLink *const restrict array, void **const startA, void **const startB, void *const element);
+void memQLinkInit(memoryQLink *const __RESTRICT__ array);
+void *memQLinkCreate(memoryQLink *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length);
+void *memQLinkCreateInit(memoryQLink *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block));
+void *memQLinkAllocate(memoryQLink *const __RESTRICT__ array);
+void *memQLinkAllocateSorted(memoryQLink *const __RESTRICT__ array, void **const startA, void **const startB, void *const prevA, void *const nextA, void *const prevB, void *const nextB, unsigned int swapA, unsigned int swapB);
+void memQLinkFree(memoryQLink *const __RESTRICT__ array, void *const element);
+void memQLinkFreeSorted(memoryQLink *const __RESTRICT__ array, void **const startA, void **const startB, void *const element);
 void *memQLinkSetupMemory(void *start, const size_t bytes, const size_t length);
-void *memQLinkSetupMemoryInit(void *start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
-void memQLinkClear(memoryQLink *const restrict array);
-void memQLinkClearInit(memoryQLink *const restrict array, void (*func)(void *const restrict block));
-void *memQLinkExtend(memoryQLink *const restrict array, void *const start, const size_t bytes, const size_t length);
-void *memQLinkExtendInit(memoryQLink *const restrict array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const restrict block));
-void memQLinkDelete(memoryQLink *const restrict array);
+void *memQLinkSetupMemoryInit(void *start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block));
+void memQLinkClear(memoryQLink *const __RESTRICT__ array);
+void memQLinkClearInit(memoryQLink *const __RESTRICT__ array, void (*func)(void *const __RESTRICT__ block));
+void *memQLinkExtend(memoryQLink *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length);
+void *memQLinkExtendInit(memoryQLink *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block));
+void memQLinkDelete(memoryQLink *const __RESTRICT__ array);
 
 #define MEMORY_QLINK_LOOP_BEGIN(allocator, n, type)                      \
 	{                                                                    \

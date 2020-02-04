@@ -10,8 +10,7 @@
 #define CAM_INACTIVE                0x00
 #define CAM_PROJECTION_FRUSTUM      0x01
 #define CAM_PROJECTION_ORTHOGRAPHIC 0x02
-#define CAM_PROJECTION_OVERLAY      0x04
-#define CAM_PROJECTION_IDENTITY     0x08
+#define CAM_PROJECTION_FIXED_SIZE   0x04
 
 typedef struct camera {
 
@@ -37,17 +36,17 @@ typedef struct camera {
 
 } camera;
 
-void camInit(camera *const restrict cam);
-void camResetInterpolation(camera *const restrict cam);
+void camInit(camera *const __RESTRICT__ cam);
+void camResetInterpolation(camera *const __RESTRICT__ cam);
 
-void camCalculateUp(camera *const restrict cam);
-void camUpdateViewMatrix(camera *const restrict cam, const float interpT);
-void camUpdateProjectionMatrix(camera *const restrict cam, const float viewportWidth, const float viewportHeight, const float interpT);
-void camUpdateViewProjectionMatrix(camera *const restrict cam, const unsigned int viewportModified, const float viewportWidth, const float viewportHeight, const float interpT);
+void camCalculateUp(camera *const __RESTRICT__ cam);
+void camUpdateViewMatrix(camera *const __RESTRICT__ cam, const float interpT);
+void camUpdateProjectionMatrix(camera *const __RESTRICT__ cam, const float viewportWidth, const float viewportHeight, const float interpT);
+void camUpdateViewProjectionMatrix(camera *const __RESTRICT__ cam, const unsigned int viewportModified, const float viewportWidth, const float viewportHeight, const float interpT);
 
-float camDistance(const camera *const restrict cam, const vec3 target);
+float camDistance(const camera *const __RESTRICT__ cam, const vec3 target);
 
-void camDelete(camera *const restrict cam);
+void camDelete(camera *const __RESTRICT__ cam);
 
 /**void camMoveX(camera *cam, const float x);
 void camMoveY(camera *cam, const float y);

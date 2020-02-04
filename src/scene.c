@@ -1,9 +1,8 @@
 #include "scene.h"
 #include "object.h"
 #include "memoryManager.h"
-#include "inline.h"
 
-return_t scnInit(scene *const restrict scn, size_t objectNum, size_t bodyNum){
+return_t scnInit(scene *const __RESTRICT__ scn, size_t objectNum, size_t bodyNum){
 
 	scn->objectNum = 0;
 	memPoolInit(&scn->objects);
@@ -27,7 +26,7 @@ return_t scnInit(scene *const restrict scn, size_t objectNum, size_t bodyNum){
 
 }
 
-__FORCE_INLINE__ object **scnAllocate(scene *const restrict scn){
+__FORCE_INLINE__ object **scnAllocate(scene *const __RESTRICT__ scn){
 	/** scn->objectNum is not correct here. We want fixed-size regions. **/
 	object **r = memPoolAllocate(&scn->objects);
 	if(r == NULL){
@@ -45,11 +44,11 @@ __FORCE_INLINE__ object **scnAllocate(scene *const restrict scn){
 	return r;
 }
 
-__FORCE_INLINE__ void scnFree(scene *const restrict scn, object **const restrict obj){
+__FORCE_INLINE__ void scnFree(scene *const __RESTRICT__ scn, object **const __RESTRICT__ obj){
 	memPoolFree(&scn->objects, (void *)obj);
 }
 #include "moduleObject.h"
-return_t scnTick(scene *const restrict scn, const float elapsedTime/**, const float dt**/){
+return_t scnTick(scene *const __RESTRICT__ scn, const float elapsedTime/**, const float dt**/){
 
 	// Update each object in the scene.
 	MEMORY_POOL_LOOP_BEGIN(scn->objects, i, object **);
@@ -63,7 +62,7 @@ return_t scnTick(scene *const restrict scn, const float elapsedTime/**, const fl
 
 }
 
-void scnReset(scene *const restrict scn){
+void scnReset(scene *const __RESTRICT__ scn){
 	// Free each of the scene's memory regions.
 	memoryRegion *region = scn->objects.region->next;
 	while(region != NULL){
@@ -75,7 +74,7 @@ void scnReset(scene *const restrict scn){
 	physIslandDelete(&scn->island);
 }
 
-void scnDelete(scene *const restrict scn){
+void scnDelete(scene *const __RESTRICT__ scn){
 	// Free each of the scene's memory regions.
 	memoryRegion *region = scn->objects.region;
 	while(region != NULL){

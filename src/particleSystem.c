@@ -8,13 +8,12 @@
 #include "sprite.h"
 #include "texture.h"
 #include "model.h"
-#include "inline.h"
 #include <stdio.h>
 
 /****/
 #include "memoryManager.h"
 
-void particleSystemBaseInit(particleSystemBase *const restrict base){
+void particleSystemBaseInit(particleSystemBase *const __RESTRICT__ base){
 	particleBaseInit(&base->properties);
 	base->particleMax = SPRITE_STATE_BUFFER_SIZE;
 	base->initializers = NULL;
@@ -30,7 +29,7 @@ void particleSystemBaseInit(particleSystemBase *const restrict base){
 	base->childNum = 0;
 }
 
-void particleSystemInit(particleSystem *const restrict system){
+void particleSystemInit(particleSystem *const __RESTRICT__ system){
 	system->particles = NULL;
 	system->particleNum = 0;
 	boneInit(&system->configuration);
@@ -39,7 +38,7 @@ void particleSystemInit(particleSystem *const restrict system){
 	system->base = NULL;
 }
 
-__FORCE_INLINE__ static void particleSystemParticleInitialize(const particleSystem *const restrict system, particle *const p){
+__FORCE_INLINE__ static void particleSystemParticleInitialize(const particleSystem *const __RESTRICT__ system, particle *const p){
 	particleInitializer *i = system->base->initializers;
 	const particleInitializer *const iLast = system->base->initializerLast;
 	for(; i < iLast; ++i){
@@ -49,7 +48,7 @@ __FORCE_INLINE__ static void particleSystemParticleInitialize(const particleSyst
 	/** Apply system configuration? **/
 }
 
-__FORCE_INLINE__ static void particleSystemParticleOperate(const particleSystemBase *const restrict base, particle *const p, const float elapsedTime){
+__FORCE_INLINE__ static void particleSystemParticleOperate(const particleSystemBase *const __RESTRICT__ base, particle *const p, const float elapsedTime){
 	particleOperator *o = base->operators;
 	const particleOperator *const oLast = base->operatorLast;
 	for(; o < oLast; ++o){
@@ -57,7 +56,7 @@ __FORCE_INLINE__ static void particleSystemParticleOperate(const particleSystemB
 	}
 }
 
-__FORCE_INLINE__ static void particleSystemParticleConstrain(const particleSystemBase *const restrict base, particle *const p, const float elapsedTime){
+__FORCE_INLINE__ static void particleSystemParticleConstrain(const particleSystemBase *const __RESTRICT__ base, particle *const p, const float elapsedTime){
 	particleConstraint *c = base->constraints;
 	const particleConstraint *const cLast = base->constraintLast;
 	for(; c < cLast; ++c){
@@ -65,7 +64,7 @@ __FORCE_INLINE__ static void particleSystemParticleConstrain(const particleSyste
 	}
 }
 
-__FORCE_INLINE__ static void particleSystemParticleSpawn(particleSystem *const restrict system, const size_t particleNum){
+__FORCE_INLINE__ static void particleSystemParticleSpawn(particleSystem *const __RESTRICT__ system, const size_t particleNum){
 	particle *p = &system->particles[system->particleNum];
 	const particle *const pLast = &p[particleNum];
 	for(; p < pLast; ++p){
@@ -75,7 +74,7 @@ __FORCE_INLINE__ static void particleSystemParticleSpawn(particleSystem *const r
 }
 
 /** TEMPORARY PARTICLE EFFECT **/
-void particleSystemInstantiate(particleSystem *const restrict system, const particleSystemBase *const base){
+void particleSystemInstantiate(particleSystem *const __RESTRICT__ system, const particleSystemBase *const base){
 
 	particleSystemInit(system);
 	system->base = base;
@@ -131,7 +130,7 @@ void particleSystemInstantiate(particleSystem *const restrict system, const part
 
 }
 
-__FORCE_INLINE__ static void particleSystemEmittersTick(particleSystem *const restrict system, const float elapsedTime){
+__FORCE_INLINE__ static void particleSystemEmittersTick(particleSystem *const __RESTRICT__ system, const float elapsedTime){
 
 	size_t remaining = system->base->particleMax - system->particleNum;
 
@@ -161,7 +160,7 @@ __FORCE_INLINE__ static void particleSystemEmittersTick(particleSystem *const re
 
 }
 
-__FORCE_INLINE__ static void particleSystemParticlesTick(particleSystem *const restrict system, const float elapsedTime){
+__FORCE_INLINE__ static void particleSystemParticlesTick(particleSystem *const __RESTRICT__ system, const float elapsedTime){
 
 	const particleSystemBase *base = system->base;
 	particle *p = system->particles;
@@ -180,7 +179,7 @@ __FORCE_INLINE__ static void particleSystemParticlesTick(particleSystem *const r
 
 }
 
-return_t particleSystemTick(particleSystem *const restrict system, const float elapsedTime){
+return_t particleSystemTick(particleSystem *const __RESTRICT__ system, const float elapsedTime){
 
 	system->lifetime -= elapsedTime;
 
@@ -207,7 +206,7 @@ return_t particleSystemTick(particleSystem *const restrict system, const float e
 
 }
 
-void particleSystemRender(const particleSystem *const restrict system, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const float interpT){
+void particleSystemRender(const particleSystem *const __RESTRICT__ system, graphicsManager *const __RESTRICT__ gfxMngr, const camera *const __RESTRICT__ cam, const float distance, const float interpT){
 
 	const renderableBase *const rndr = &system->base->properties.rndr;
 	vertexIndex_t indexNum;
@@ -240,7 +239,7 @@ void particleSystemRender(const particleSystem *const restrict system, graphicsM
 
 }
 
-void particleSystemBaseDelete(particleSystemBase *const restrict base){
+void particleSystemBaseDelete(particleSystemBase *const __RESTRICT__ base){
 	/** memFree() IS TEMPORARY HERE **/
 	if(base->initializers != NULL){
 		memFree(base->initializers);
@@ -259,7 +258,7 @@ void particleSystemBaseDelete(particleSystemBase *const restrict base){
 	}
 }
 
-void particleSystemDelete(particleSystem *const restrict system){
+void particleSystemDelete(particleSystem *const __RESTRICT__ system){
 	/** memFree() IS TEMPORARY HERE **/
 	if(system->emitters != NULL){
 		memFree(system->emitters);

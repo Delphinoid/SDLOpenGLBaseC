@@ -1,7 +1,6 @@
 #include "physicsJoint.h"
 #include "physicsRigidBody.h"
 #include "physicsConstraint.h"
-#include "inline.h"
 #include <math.h>
 
 // ----------------------------------------------------------------------
@@ -79,7 +78,7 @@
 //
 // ----------------------------------------------------------------------
 
-void physJointDistanceInit(physJointDistance *const restrict joint, const vec3 anchorA, const vec3 anchorB, const float distance, const float frequency, const float damping){
+void physJointDistanceInit(physJointDistance *const __RESTRICT__ joint, const vec3 anchorA, const vec3 anchorB, const float distance, const float frequency, const float damping){
 	joint->distance = distance;
 	joint->angularFrequency = 2.f * M_PI * frequency;
 	joint->damping = 2.f * joint->angularFrequency * damping;
@@ -93,7 +92,7 @@ void physJointDistanceInit(physJointDistance *const restrict joint, const vec3 a
 }
 
 #ifdef PHYSICS_CONSTRAINT_WARM_START
-static __FORCE_INLINE__ void physJointDistanceWarmStart(physJointDistance *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB){
+static __FORCE_INLINE__ void physJointDistanceWarmStart(physJointDistance *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB){
 
 	const vec3 impulse = vec3VMultS(joint->rAB, joint->impulseAccumulator);
 
@@ -117,7 +116,7 @@ static __FORCE_INLINE__ float physJointDistanceEffectiveMass(const vec3 pointA, 
 
 }
 
-static __FORCE_INLINE__ void physJointDistanceGenerateBias(physJointDistance *const restrict joint, const physRigidBody *const restrict bodyA, const physRigidBody *const restrict bodyB, const float dt){
+static __FORCE_INLINE__ void physJointDistanceGenerateBias(physJointDistance *const __RESTRICT__ joint, const physRigidBody *const __RESTRICT__ bodyA, const physRigidBody *const __RESTRICT__ bodyB, const float dt){
 
 	// Only use soft constraints if the angular frequency is greater than 0.
 	if(joint->angularFrequency <= 0.f){
@@ -150,7 +149,7 @@ static __FORCE_INLINE__ void physJointDistanceGenerateBias(physJointDistance *co
 
 }
 
-static __FORCE_INLINE__ void physJointDistancePersist(physJointDistance *const restrict joint, const physRigidBody *const restrict bodyA, const physRigidBody *const restrict bodyB){
+static __FORCE_INLINE__ void physJointDistancePersist(physJointDistance *const __RESTRICT__ joint, const physRigidBody *const __RESTRICT__ bodyA, const physRigidBody *const __RESTRICT__ bodyB){
 
 	float distance;
 
@@ -207,7 +206,7 @@ static __FORCE_INLINE__ void physJointDistancePersist(physJointDistance *const r
 
 }
 
-void physJointDistancePresolveConstraints(physJoint *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, const float dt){
+void physJointDistancePresolveConstraints(physJoint *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, const float dt){
 
 	// Initialize the constraints.
 	physJointDistancePersist((physJointDistance *)joint, bodyA, bodyB);
@@ -218,7 +217,7 @@ void physJointDistancePresolveConstraints(physJoint *const restrict joint, physR
 
 }
 
-void physJointDistanceSolveVelocityConstraints(physJoint *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB){
+void physJointDistanceSolveVelocityConstraints(physJoint *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB){
 
 	float lambda;
 	vec3 impulse;
@@ -260,7 +259,7 @@ void physJointDistanceSolveVelocityConstraints(physJoint *const restrict joint, 
 }
 
 #ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-return_t physJointDistanceSolveConfigurationConstraints(physJoint *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB){
+return_t physJointDistanceSolveConfigurationConstraints(physJoint *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB){
 
 	// Only apply positional corrections if
 	// soft constraints are not being used.
@@ -338,12 +337,12 @@ return_t physJointDistanceSolveConfigurationConstraints(physJoint *const restric
 }
 #endif
 
-void physJointDistanceSetFrequency(physJointDistance *const restrict joint, const float frequency){
+void physJointDistanceSetFrequency(physJointDistance *const __RESTRICT__ joint, const float frequency){
 	joint->damping /= joint->angularFrequency;
 	joint->angularFrequency = 2.f * M_PI * frequency;
 	joint->damping *= joint->angularFrequency;
 }
 
-void physJointDistanceSetDamping(physJointDistance *const restrict joint, const float damping){
+void physJointDistanceSetDamping(physJointDistance *const __RESTRICT__ joint, const float damping){
 	joint->damping = 2.f * joint->angularFrequency * damping;
 }

@@ -1,6 +1,7 @@
 #ifndef ANIMATION_H
 #define ANIMATION_H
 
+#include "qualifiers.h"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -28,11 +29,11 @@ typedef struct {
 } animationInstance;
 
 /** The two functions below are REALLY bad, redo them later. **/
-void animInstInit(animationInstance *const restrict animInst);
-void animDataInit(animationData *const restrict animData);
-void animDataDelete(animationData *const restrict animData);
-void animTick(animationInstance *const restrict animInst, const animationData *const restrict animData, const float elapsedTime);
-void animState(const animationInstance *const restrict animInst, const animationData *const restrict animData, const float interpT,
-               frameIndex_t *const restrict startFrame, frameIndex_t *const restrict endFrame, float *const restrict animInterpT);
+void animInstInit(animationInstance *const __RESTRICT__ animInst);
+void animDataInit(animationData *const __RESTRICT__ animData);
+void animDataDelete(animationData *const __RESTRICT__ animData);
+void animTick(animationInstance *const __RESTRICT__ animInst, const animationData *const __RESTRICT__ animData, const float elapsedTime);
+void animState(const animationInstance *const __RESTRICT__ animInst, const animationData *const __RESTRICT__ animData, const float interpT,
+               frameIndex_t *const __RESTRICT__ startFrame, frameIndex_t *const __RESTRICT__ endFrame, float *const __RESTRICT__ animInterpT);
 
 #endif

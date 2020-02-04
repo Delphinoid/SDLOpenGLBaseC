@@ -3,7 +3,6 @@
 #include "model.h"
 #include "sprite.h"
 #include "memoryManager.h"
-#include "inline.h"
 #include <string.h>
 
 #define RESOURCE_DEFAULT_MODEL_SIZE sizeof(model)
@@ -75,11 +74,11 @@ __HINT_INLINE__ model *moduleModelAllocate(){
 	}
 	return r;
 }
-__HINT_INLINE__ void moduleModelFree(model *const restrict resource){
+__HINT_INLINE__ void moduleModelFree(model *const __RESTRICT__ resource){
 	mdlDelete(resource);
 	memPoolFree(&__g_ModelResourceArray, (void *)resource);
 }
-model *moduleModelFind(const char *const restrict name){
+model *moduleModelFind(const char *const __RESTRICT__ name){
 
 	if(strcmp(name, g_mdlDefault.name) == 0){
 		return &g_mdlDefault;

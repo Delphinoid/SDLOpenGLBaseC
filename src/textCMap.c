@@ -1,5 +1,4 @@
 #include "textCMap.h"
-#include "inline.h"
 
 // Take the remainder of x modulo 65,536.
 #define txtCMapMod16(x) ((x) & 0x0000FFFF)

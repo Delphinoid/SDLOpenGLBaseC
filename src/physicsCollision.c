@@ -4,7 +4,6 @@
 #include "modulePhysics.h"
 #include "physicsConstraint.h"
 #include "aabbTree.h"
-#include "inline.h"
 #include <string.h>
 #include <math.h>
 
@@ -119,7 +118,7 @@ static __FORCE_INLINE__ float physContactCalculateFriction(const float f1, const
 	#endif
 }
 
-static __FORCE_INLINE__ void physContactInit(physContact *const restrict contact, const cContact *const restrict manifold, const physRigidBody *const restrict bodyA, const physRigidBody *const restrict bodyB, const physCollider *const restrict colliderA, const physCollider *const restrict colliderB){
+static __FORCE_INLINE__ void physContactInit(physContact *const __RESTRICT__ contact, const cContact *const __RESTRICT__ manifold, const physRigidBody *const __RESTRICT__ bodyA, const physRigidBody *const __RESTRICT__ bodyB, const physCollider *const __RESTRICT__ colliderA, const physCollider *const __RESTRICT__ colliderB){
 
 	// Sets the incident and reference bodies
 	// and reset the impulse accumulators.
@@ -205,7 +204,7 @@ static __FORCE_INLINE__ void physContactInit(physContact *const restrict contact
 }
 
 #ifdef PHYSICS_CONSTRAINT_WARM_START
-static __FORCE_INLINE__ void physContactPointWarmStart(physContactPoint *const restrict point, const physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB){
+static __FORCE_INLINE__ void physContactPointWarmStart(physContactPoint *const __RESTRICT__ point, const physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB){
 
 	// Warm-start the persistent contact point.
 
@@ -227,7 +226,7 @@ static __FORCE_INLINE__ void physContactPointWarmStart(physContactPoint *const r
 }
 #endif
 
-static __FORCE_INLINE__ void physContactPersist(physContact *const restrict contact, const cContact *const restrict manifold, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, const physCollider *const restrict colliderA, const physCollider *const restrict colliderB){
+static __FORCE_INLINE__ void physContactPersist(physContact *const __RESTRICT__ contact, const cContact *const __RESTRICT__ manifold, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, const physCollider *const __RESTRICT__ colliderA, const physCollider *const __RESTRICT__ colliderB){
 
 	// Copies the accumulators for persisting contacts
 	// and resets non-persisting accumulators.
@@ -377,7 +376,7 @@ static __FORCE_INLINE__ float physContactEffectiveMass(const vec3 normalA, const
 
 }
 
-static __FORCE_INLINE__ void physContactPointGenerateInverseEffectiveMass(physContactPoint *const restrict point, const physContact *const restrict contact, const physRigidBody *const restrict bodyA, const physRigidBody *const restrict bodyB, const float inverseMassTotal){
+static __FORCE_INLINE__ void physContactPointGenerateInverseEffectiveMass(physContactPoint *const __RESTRICT__ point, const physContact *const __RESTRICT__ contact, const physRigidBody *const __RESTRICT__ bodyA, const physRigidBody *const __RESTRICT__ bodyB, const float inverseMassTotal){
 
 	// Calculate the inverse effective mass for the normal constraint.
 
@@ -407,9 +406,9 @@ static __FORCE_INLINE__ void physContactPointGenerateInverseEffectiveMass(physCo
 }
 
 #ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *const restrict point, const physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float frequency){
+static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *const __RESTRICT__ point, const physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, physCollider *const __RESTRICT__ colliderA, physCollider *const __RESTRICT__ colliderB, const float frequency){
 #else
-static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *const restrict point, const physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, physCollider *const restrict colliderA, physCollider *const restrict colliderB){
+static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *const __RESTRICT__ point, const physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, physCollider *const __RESTRICT__ colliderA, physCollider *const __RESTRICT__ colliderB){
 #endif
 
 	// Generate the constraint bias. Used in the
@@ -453,9 +452,9 @@ static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *cons
 }
 
 #ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-__FORCE_INLINE__ void physContactPresolveConstraints(physContact *const restrict contact, physCollider *const restrict colliderA, physCollider *const restrict colliderB, const float frequency){
+__FORCE_INLINE__ void physContactPresolveConstraints(physContact *const __RESTRICT__ contact, physCollider *const __RESTRICT__ colliderA, physCollider *const __RESTRICT__ colliderB, const float frequency){
 #else
-__FORCE_INLINE__ void physContactPresolveConstraints(physContact *const restrict contact, physCollider *const restrict colliderA, physCollider *const restrict colliderB){
+__FORCE_INLINE__ void physContactPresolveConstraints(physContact *const __RESTRICT__ contact, physCollider *const __RESTRICT__ colliderA, physCollider *const __RESTRICT__ colliderB){
 #endif
 
 	// Builds a physContact from a cContact.
@@ -490,7 +489,7 @@ __FORCE_INLINE__ void physContactPresolveConstraints(physContact *const restrict
 
 }
 
-__FORCE_INLINE__ void physContactReset(physContact *const restrict contact){
+__FORCE_INLINE__ void physContactReset(physContact *const __RESTRICT__ contact){
 
 	physContactPoint *pPoint = &contact->contacts[0];
 	const physContactPoint *const pPointLast = &pPoint[contact->contactNum];
@@ -511,10 +510,10 @@ __FORCE_INLINE__ void physContactReset(physContact *const restrict contact){
 }
 
 
-__FORCE_INLINE__ void physContactPairRefresh(physContactPair *const restrict pair){
+__FORCE_INLINE__ void physContactPairRefresh(physContactPair *const __RESTRICT__ pair){
 	pair->inactive = 0;
 }
-__FORCE_INLINE__ void physSeparationPairRefresh(physSeparationPair *const restrict pair){
+__FORCE_INLINE__ void physSeparationPairRefresh(physSeparationPair *const __RESTRICT__ pair){
 	pair->inactive = 0;
 }
 
@@ -785,7 +784,7 @@ return_t physCollisionQuery(aabbNode *const n1, aabbNode *const n2){
 }
 
 #ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
-static __FORCE_INLINE__ void physContactPointSolveVelocityTangents(physContactPoint *const restrict point, physContact *const restrict contact, physRigidBody *const bodyA, physRigidBody *const bodyB){
+static __FORCE_INLINE__ void physContactPointSolveVelocityTangents(physContactPoint *const __RESTRICT__ point, physContact *const __RESTRICT__ contact, physRigidBody *const bodyA, physRigidBody *const bodyB){
 
 	// Solves the tangent impulses.
 
@@ -850,7 +849,7 @@ static __FORCE_INLINE__ void physContactPointSolveVelocityTangents(physContactPo
 }
 #endif
 
-static __FORCE_INLINE__ void physContactPointSolveVelocity(physContactPoint *const restrict point, physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB){
+static __FORCE_INLINE__ void physContactPointSolveVelocity(physContactPoint *const __RESTRICT__ point, physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB){
 
 	// Solves the normal impulse.
 
@@ -896,7 +895,7 @@ static __FORCE_INLINE__ void physContactPointSolveVelocity(physContactPoint *con
 
 }
 
-void physContactSolveVelocityConstraints(physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB){
+void physContactSolveVelocityConstraints(physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB){
 
 	// Solves a contact's velocity constraints.
 
@@ -928,7 +927,7 @@ void physContactSolveVelocityConstraints(physContact *const restrict contact, ph
 }
 
 #ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-static __FORCE_INLINE__ float physContactPointSolveConfigurationNormal(physContactPoint *const restrict point, physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB){
+static __FORCE_INLINE__ float physContactPointSolveConfigurationNormal(physContactPoint *const __RESTRICT__ point, physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB){
 
 	// Solves the normal constraint.
 
@@ -984,7 +983,7 @@ static __FORCE_INLINE__ float physContactPointSolveConfigurationNormal(physConta
 
 }
 
-float physContactSolveConfigurationConstraints(physContact *const restrict contact, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB, float error){
+float physContactSolveConfigurationConstraints(physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, float error){
 
 	// Solves a contact's position and orientation constraints.
 

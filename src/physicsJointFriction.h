@@ -40,9 +40,9 @@ typedef struct {
 } physJointFriction;
 
 #ifdef PHYSICS_CONSTRAINT_WARM_START
-void physJointFrictionWarmStart(const physJointFriction *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB);
+void physJointFrictionWarmStart(const physJointFriction *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB);
 #endif
-void physJointFrictionGenerateInverseEffectiveMass(physJointFriction *const restrict joint, const physRigidBody *const restrict bodyA, const physRigidBody *const restrict bodyB, const float inverseMassTotal);
-void physJointFrictionSolveVelocityConstraints(physJointFriction *const restrict joint, physRigidBody *const bodyA, physRigidBody *const bodyB, const float normalImpulseTotal);
+void physJointFrictionGenerateInverseEffectiveMass(physJointFriction *const __RESTRICT__ joint, const physRigidBody *const __RESTRICT__ bodyA, const physRigidBody *const __RESTRICT__ bodyB, const float inverseMassTotal);
+void physJointFrictionSolveVelocityConstraints(physJointFriction *const __RESTRICT__ joint, physRigidBody *const bodyA, physRigidBody *const bodyB, const float normalImpulseTotal);
 
 #endif

@@ -80,13 +80,13 @@ typedef struct cContactPoint cMeshContactPoint;
 typedef struct cContact      cMeshContact;
 typedef struct cSeparation   cMeshSeparation;
 
-void cMeshInit(cMesh *const restrict c);
-return_t cMeshInstantiate(cMesh *const restrict instance, const cMesh *const restrict local);
-void cMeshCentroidFromPosition(cMesh *const restrict c, const cMesh *const restrict l, const vec3 position, const quat orientation, const vec3 scale);
-return_t cMeshCollisionSAT(const cMesh *const restrict c1, const cMesh *const restrict c2, cMeshSeparation *const restrict sc, cMeshContact *const restrict cm);
-return_t cMeshSeparationSAT(const cMesh *const restrict c1, const cMesh *const restrict c2, const cMeshSeparation *const restrict sc);
-return_t cMeshCollisionGJK(const cMesh *const restrict c1, const cMesh *const restrict c2, cMeshContact *const restrict cm);
-void cMeshDeleteBase(cMesh *const restrict c);
-void cMeshDelete(cMesh *const restrict c);
+void cMeshInit(cMesh *const __RESTRICT__ c);
+return_t cMeshInstantiate(cMesh *const __RESTRICT__ instance, const cMesh *const __RESTRICT__ local);
+void cMeshCentroidFromPosition(cMesh *const __RESTRICT__ c, const cMesh *const __RESTRICT__ l, const vec3 position, const quat orientation, const vec3 scale);
+return_t cMeshCollisionSAT(const cMesh *const __RESTRICT__ c1, const cMesh *const __RESTRICT__ c2, cMeshSeparation *const __RESTRICT__ sc, cMeshContact *const __RESTRICT__ cm);
+return_t cMeshSeparationSAT(const cMesh *const __RESTRICT__ c1, const cMesh *const __RESTRICT__ c2, const cMeshSeparation *const __RESTRICT__ sc);
+return_t cMeshCollisionGJK(const cMesh *const __RESTRICT__ c1, const cMesh *const __RESTRICT__ c2, cMeshContact *const __RESTRICT__ cm);
+void cMeshDeleteBase(cMesh *const __RESTRICT__ c);
+void cMeshDelete(cMesh *const __RESTRICT__ c);
 
 #endif

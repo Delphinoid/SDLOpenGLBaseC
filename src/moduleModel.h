@@ -23,8 +23,8 @@ void moduleModelResourcesDelete();
 
 model *moduleModelAllocateStatic();
 model *moduleModelAllocate();
-void moduleModelFree(model *const restrict resource);
-model *moduleModelFind(const char *const restrict name);
+void moduleModelFree(model *const __RESTRICT__ resource);
+model *moduleModelFind(const char *const __RESTRICT__ name);
 void moduleModelClear();
 
 #endif

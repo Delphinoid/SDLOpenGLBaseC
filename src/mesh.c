@@ -38,7 +38,7 @@ static void meshVertexAttributes(){
 	glEnableVertexAttribArray(4);
 }
 
-return_t meshGenerateBuffers(mesh *const restrict m, const vertexIndex_t vertexNum, const vertex *const restrict vertices, const vertexIndex_t indexNum, const vertexIndex_t *const restrict indices){
+return_t meshGenerateBuffers(mesh *const __RESTRICT__ m, const vertexIndex_t vertexNum, const vertex *const __RESTRICT__ vertices, const vertexIndex_t indexNum, const vertexIndex_t *const __RESTRICT__ indices){
 
 	if(vertexNum > 0){
 		if(indexNum > 0){
@@ -362,7 +362,7 @@ return_t meshBillboardInit(){
 
 }
 
-void meshDelete(mesh *const restrict m){
+void meshDelete(mesh *const __RESTRICT__ m){
 	if(m->vaoID != 0){
 		glDeleteBuffers(1, &m->vaoID);
 	}

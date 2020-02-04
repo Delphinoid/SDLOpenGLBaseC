@@ -9,7 +9,6 @@
 #include "helpersMath.h"
 #include "helpersFileIO.h"
 #include "vertex.h"
-#include "inline.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -24,7 +23,7 @@
 #define OBJECT_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Objects"FILE_PATH_DELIMITER_STRING
 #define OBJECT_RESOURCE_DIRECTORY_LENGTH 18
 
-void objBaseInit(objectBase *const restrict base){
+void objBaseInit(objectBase *const __RESTRICT__ base){
 	base->name = NULL;
 	base->skl = NULL;
 	base->animationAllocate = 0;
@@ -36,12 +35,12 @@ void objBaseInit(objectBase *const restrict base){
 	base->stateMax = 0;
 }
 
-return_t objBaseLoad(objectBase *const restrict base, const char *const restrict prgPath, const char *const restrict filePath){
+return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath){
 
 	char fullPath[FILE_MAX_PATH_LENGTH];
 	const size_t fileLength = strlen(filePath);
 
-	FILE *restrict objInfo;
+	FILE *__RESTRICT__ objInfo;
 
 	objBaseInit(base);
 
@@ -66,7 +65,7 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 			if(lineLength >= 10 && strncmp(line, "skeleton ", 9) == 0){
 
 				skeleton *tempSkl;
-				fileParseResourcePath(&loadPath[0], NULL, line, lineLength, 9);
+				fileParseResourcePath(&loadPath[0], NULL, line+9, lineLength);
 
 				// Check if the skeleton has already been loaded.
 				tempSkl = moduleSkeletonFind(&loadPath[0]);
@@ -106,7 +105,7 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 				if(base->skl != NULL){
 
 					return_t r;
-					fileParseResourcePath(&loadPath[0], NULL, line, lineLength, 16);
+					fileParseResourcePath(&loadPath[0], NULL, line+16, lineLength);
 
 					// Load the rigid body from a file.
 					r = physRigidBodyBaseLoad(&base->skeletonBodies, base->skl, prgPath, loadPath);
@@ -140,7 +139,7 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 			}else if(lineLength >= 11 && strncmp(line, "animation ", 10) == 0){
 
 				sklAnim *tempSkla;
-				fileParseResourcePath(&loadPath[0], NULL, line, lineLength, 10);
+				fileParseResourcePath(&loadPath[0], NULL, line+10, lineLength);
 
 				// Check if the animation has already been loaded.
 				tempSkla = moduleSkeletonAnimationFind(&loadPath[0]);
@@ -404,7 +403,7 @@ return_t objBaseLoad(objectBase *const restrict base, const char *const restrict
 
 }
 
-void objBaseDelete(objectBase *const restrict base){
+void objBaseDelete(objectBase *const __RESTRICT__ base){
 	if(base->name != NULL){
 		memFree(base->name);
 	}
@@ -429,7 +428,7 @@ void objBaseDelete(objectBase *const restrict base){
 	}
 }
 
-return_t objInit(object *const restrict obj){
+return_t objInit(object *const __RESTRICT__ obj){
 	obj->base = NULL;
 	obj->configuration = NULL;
 	obj->stateMax = 0;
@@ -443,7 +442,7 @@ return_t objInit(object *const restrict obj){
 	return skliInit(&obj->skeletonData, NULL, 0);
 }
 
-void objDelete(object *const restrict obj){
+void objDelete(object *const __RESTRICT__ obj){
 	objectState *state = obj->state.previous;
 	if(obj->configuration != NULL){
 		memFree(obj->configuration);
@@ -470,7 +469,7 @@ void objDelete(object *const restrict obj){
 	skliDelete(&obj->skeletonData);
 }
 
-return_t objInstantiate(object *const restrict obj, const objectBase *const restrict base){
+return_t objInstantiate(object *const __RESTRICT__ obj, const objectBase *const __RESTRICT__ base){
 
 	renderableBase *j;
 
@@ -590,7 +589,7 @@ return_t objInstantiate(object *const restrict obj, const objectBase *const rest
 
 }
 
-return_t objNewRenderable(object *const restrict obj, model *const restrict mdl, textureWrapper *const restrict tw){
+return_t objNewRenderable(object *const __RESTRICT__ obj, model *const __RESTRICT__ mdl, textureWrapper *const __RESTRICT__ tw){
 	// Allocate room for a new renderable and initialize it.
 	renderable *const rndr = moduleRenderableAppend(&obj->renderables);
 	if(rndr == NULL){
@@ -602,7 +601,7 @@ return_t objNewRenderable(object *const restrict obj, model *const restrict mdl,
 	return 1;
 }
 
-return_t objNewRenderableFromBase(object *const restrict obj, const renderableBase *const restrict rndr){
+return_t objNewRenderableFromBase(object *const __RESTRICT__ obj, const renderableBase *const __RESTRICT__ rndr){
 	// Allocate room for a new renderable and initialize it.
 	renderable *const rndrNew = moduleRenderableAppend(&obj->renderables);
 	if(rndrNew == NULL){
@@ -613,7 +612,7 @@ return_t objNewRenderableFromBase(object *const restrict obj, const renderableBa
 	return 1;
 }
 
-return_t objNewRenderableFromInstance(object *const restrict obj, const renderable *rndr){
+return_t objNewRenderableFromInstance(object *const __RESTRICT__ obj, const renderable *rndr){
 	// Allocate room for a new renderable and initialize it.
 	renderable *const rndrNew = moduleRenderableAppend(&obj->renderables);
 	if(rndrNew == NULL){
@@ -625,7 +624,7 @@ return_t objNewRenderableFromInstance(object *const restrict obj, const renderab
 	return 1;
 }
 
-return_t objInitSkeleton(object *const restrict obj, const skeleton *const restrict skl){
+return_t objInitSkeleton(object *const __RESTRICT__ obj, const skeleton *const __RESTRICT__ skl){
 	bone *tempBuffer = memAllocate(3 * skl->boneNum * sizeof(bone));
 	const bone *const bLast = &tempBuffer[skl->boneNum];
 	if(tempBuffer == NULL){
@@ -667,7 +666,7 @@ return_t objInitSkeleton(object *const restrict obj, const skeleton *const restr
 	return 1;
 }**/
 
-physRigidBody *objBoneGetPhysicsBody(const object *const restrict obj, const boneIndex_t boneID){
+physRigidBody *objBoneGetPhysicsBody(const object *const __RESTRICT__ obj, const boneIndex_t boneID){
 
 	// Finds the body attached to the
 	// specified bone, if one exists.
@@ -693,7 +692,7 @@ physRigidBody *objBoneGetPhysicsBody(const object *const restrict obj, const bon
 
 }
 
-/**void objBoneScale(const object *const restrict obj, const boneIndex_t boneID, const vec3 scale){
+/**void objBoneScale(const object *const __RESTRICT__ obj, const boneIndex_t boneID, const vec3 scale){
 
 	physRigidBody *const body = objBoneGetPhysicsBody(obj, boneID);
 	if(body != NULL){
@@ -721,7 +720,7 @@ physRigidBody *objBoneGetPhysicsBody(const object *const restrict obj, const bon
 
 }**/
 
-sklAnim *objGetAnimation(const object *const restrict obj, const animIndex_t id){
+sklAnim *objGetAnimation(const object *const __RESTRICT__ obj, const animIndex_t id){
 	if(obj->base != NULL){
 		if(obj->base->animationNum > id){
 			return obj->base->animations[id];
@@ -730,7 +729,7 @@ sklAnim *objGetAnimation(const object *const restrict obj, const animIndex_t id)
 	return NULL;
 }
 
-sklAnim *objFindAnimation(const object *const restrict obj, const char *const restrict name){
+sklAnim *objFindAnimation(const object *const __RESTRICT__ obj, const char *const __RESTRICT__ name){
 	if(obj->base != NULL){
 		sklAnim **anim = obj->base->animations;
 		sklAnim **const animLast = &anim[obj->base->animationNum];
@@ -780,7 +779,7 @@ void objAddAngularVelocity(object *obj, const size_t boneID, const float angle, 
 	physRigidBodyAddAngularVelocity(&obj->skeletonBodies[boneID], angle, x, y, z);
 }**/
 
-return_t objTick(object *const restrict obj, physIsland *const restrict island, const float elapsedTime){
+return_t objTick(object *const __RESTRICT__ obj, physIsland *const __RESTRICT__ island, const float elapsedTime){
 
 	boneIndex_t i;
 	renderable *j;
@@ -905,11 +904,11 @@ return_t objTick(object *const restrict obj, physIsland *const restrict island, 
 
 }
 
-void objBoneLastState(object *const restrict obj, const float dt){
+void objBoneLastState(object *const __RESTRICT__ obj, const float dt){
 	//
 }
 
-void objGenerateSprite(const object *const restrict obj, const renderable *const restrict rndr, const float interpT, const float *const restrict texFrag, vertex *const restrict vertices){
+void objGenerateSprite(const object *const __RESTRICT__ obj, const renderable *const __RESTRICT__ rndr, const float interpT, const float *const __RESTRICT__ texFrag, vertex *const __RESTRICT__ vertices){
 
 	// Generate the base sprite.
 	const float left   = -0.5f;
@@ -997,7 +996,7 @@ void objGenerateSprite(const object *const restrict obj, const renderable *const
 
 }
 
-gfxRenderGroup_t objRenderGroup(const object *const restrict obj, const float interpT){
+gfxRenderGroup_t objRenderGroup(const object *const __RESTRICT__ obj, const float interpT){
 
 	// Check if the object will have
 	// any translucent renderables.
@@ -1040,7 +1039,7 @@ gfxRenderGroup_t objRenderGroup(const object *const restrict obj, const float in
 
 }
 
-void objRender(const object *const restrict obj, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const float interpT){
+void objRender(const object *const __RESTRICT__ obj, graphicsManager *const __RESTRICT__ gfxMngr, const camera *const __RESTRICT__ cam, const float distance, const float interpT){
 
 	const renderable *currentRndr = obj->renderables;
 

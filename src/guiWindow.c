@@ -2,13 +2,13 @@
 #include "gui.h"
 #include "sprite.h"
 
-void guiElementRenderWindow(const guiElement *const restrict element, graphicsManager *const restrict gfxMngr, const camera *const restrict cam, const float distance, const float interpT){
+void guiElementRenderWindow(const guiElement *const __RESTRICT__ element, graphicsManager *const __RESTRICT__ gfxMngr, const camera *const __RESTRICT__ cam, const float distance, const float interpT){
 
 	const guiWindow window = element->data.window;
 	const bone root = element->root;
 
-	const twFrame *const restrict frameBody = twiState(&window.body, interpT);
-	const twFrame *const restrict frameBorder = twiState(&window.border, interpT);
+	const twFrame *const __RESTRICT__ frameBody = twiState(&window.body, interpT);
+	const twFrame *const __RESTRICT__ frameBorder = twiState(&window.border, interpT);
 
 	const rectangle *offsets = &window.offsets[0];
 	// Transformed root location.

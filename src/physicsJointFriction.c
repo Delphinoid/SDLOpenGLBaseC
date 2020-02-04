@@ -1,6 +1,5 @@
 #include "physicsJointFriction.h"
 #include "physicsRigidBody.h"
-#include "inline.h"
 
 // ----------------------------------------------------------------------
 //
@@ -107,7 +106,7 @@
 // ----------------------------------------------------------------------
 
 #ifdef PHYSICS_CONSTRAINT_WARM_START
-__FORCE_INLINE__ void physJointFrictionWarmStart(const physJointFriction *const restrict joint, physRigidBody *const restrict bodyA, physRigidBody *const restrict bodyB){
+__FORCE_INLINE__ void physJointFrictionWarmStart(const physJointFriction *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB){
 
 	// Warm-start the persistent friction constraints.
 
@@ -123,7 +122,7 @@ __FORCE_INLINE__ void physJointFrictionWarmStart(const physJointFriction *const 
 }
 #endif
 
-__FORCE_INLINE__ void physJointFrictionGenerateInverseEffectiveMass(physJointFriction *const restrict joint, const physRigidBody *const restrict bodyA, const physRigidBody *const restrict bodyB, const float inverseMassTotal){
+__FORCE_INLINE__ void physJointFrictionGenerateInverseEffectiveMass(physJointFriction *const __RESTRICT__ joint, const physRigidBody *const __RESTRICT__ bodyA, const physRigidBody *const __RESTRICT__ bodyB, const float inverseMassTotal){
 
 	// Tangential effective mass:
 	//                [mA^-1 + mB^-1 + (IA^-1 * (rA X t1) . (rA X t1)) + (IB^-1 * (rB X t1) . (rB X t1)),                 (IA^-1 * (rA X t1) . (rA X t2)) + (IB^-1 * (rB X t1) . (rB X t2))]
@@ -162,7 +161,7 @@ __FORCE_INLINE__ void physJointFrictionGenerateInverseEffectiveMass(physJointFri
 
 }
 
-__FORCE_INLINE__ void physJointFrictionSolveVelocityConstraints(physJointFriction *const restrict joint, physRigidBody *const bodyA, physRigidBody *const bodyB, const float normalImpulseTotal){
+__FORCE_INLINE__ void physJointFrictionSolveVelocityConstraints(physJointFriction *const __RESTRICT__ joint, physRigidBody *const bodyA, physRigidBody *const bodyB, const float normalImpulseTotal){
 
 	// Solves the friction constraint impulses.
 

@@ -53,31 +53,31 @@ typedef struct physJoint {
 } physJoint;
 
 extern void (* const physJointPresolveConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM])(
-	physJoint *const restrict joint,
-	physRigidBody *const restrict bodyA,
-	physRigidBody *const restrict bodyB,
+	physJoint *const __RESTRICT__ joint,
+	physRigidBody *const __RESTRICT__ bodyA,
+	physRigidBody *const __RESTRICT__ bodyB,
 	const float dt
 );
 extern void (* const physJointSolveVelocityConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM])(
-	physJoint *const restrict joint,
-	physRigidBody *const restrict bodyA,
-	physRigidBody *const restrict bodyB
+	physJoint *const __RESTRICT__ joint,
+	physRigidBody *const __RESTRICT__ bodyA,
+	physRigidBody *const __RESTRICT__ bodyB
 );
 #ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 extern return_t (* const physJointSolveConfigurationConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM])(
-	physJoint *const restrict joint,
-	physRigidBody *const restrict bodyA,
-	physRigidBody *const restrict bodyB
+	physJoint *const __RESTRICT__ joint,
+	physRigidBody *const __RESTRICT__ bodyA,
+	physRigidBody *const __RESTRICT__ bodyB
 );
 #endif
 
-void physJointInit(physJoint *const restrict joint, const flags_t flags, const physJointType_t type);
-void physJointPresolveConstraints(physJoint *const restrict joint, const float dt);
-void physJointSolveVelocityConstraints(physJoint *const restrict joint);
+void physJointInit(physJoint *const __RESTRICT__ joint, const flags_t flags, const physJointType_t type);
+void physJointPresolveConstraints(physJoint *const __RESTRICT__ joint, const float dt);
+void physJointSolveVelocityConstraints(physJoint *const __RESTRICT__ joint);
 #ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-return_t physJointSolveConfigurationConstraints(physJoint *const restrict joint);
+return_t physJointSolveConfigurationConstraints(physJoint *const __RESTRICT__ joint);
 #endif
 void physJointAdd(physJoint *const joint, physRigidBody *bodyA, physRigidBody *bodyB);
-void physJointDelete(physJoint *const restrict joint);
+void physJointDelete(physJoint *const __RESTRICT__ joint);
 
 #endif
