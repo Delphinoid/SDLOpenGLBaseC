@@ -9,11 +9,11 @@
 #include <string.h>
 #include <math.h>
 
-#define IMAGE_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Images"FILE_PATH_DELIMITER_STRING
-#define IMAGE_RESOURCE_DIRECTORY_LENGTH 17
+#define IMAGE_RESOURCE_DIRECTORY_STRING FILE_PATH_RESOURCE_DIRECTORY_SHARED"Resources"FILE_PATH_DELIMITER_STRING"Images"FILE_PATH_DELIMITER_STRING
+#define IMAGE_RESOURCE_DIRECTORY_LENGTH 19
 
-#define TEXTURE_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Textures"FILE_PATH_DELIMITER_STRING
-#define TEXTURE_RESOURCE_DIRECTORY_LENGTH 19
+#define TEXTURE_RESOURCE_DIRECTORY_STRING FILE_PATH_RESOURCE_DIRECTORY_SHARED"Resources"FILE_PATH_DELIMITER_STRING"Textures"FILE_PATH_DELIMITER_STRING
+#define TEXTURE_RESOURCE_DIRECTORY_LENGTH 21
 
 // Default texture.
 texture g_tDefault = {
@@ -106,7 +106,7 @@ static GLuint tCreate(){
 	return id;
 }
 
-return_t tLoad(texture *const __RESTRICT__ tex, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath){
+return_t tLoad(texture *const __RESTRICT__ tex, const char *const __RESTRICT__ filePath, const size_t filePathLength){
 
 	GLenum glError;
 	SDL_Surface *image = NULL;
@@ -117,13 +117,12 @@ return_t tLoad(texture *const __RESTRICT__ tex, const char *const __RESTRICT__ p
 	long int generate = 0;
 
 	char fullPath[FILE_MAX_PATH_LENGTH];
-	const size_t fileLength = strlen(filePath);
 
 	FILE *texInfo;
 
 	tInit(tex);
 
-	fileGenerateFullPath(fullPath, prgPath, strlen(prgPath), TEXTURE_RESOURCE_DIRECTORY_STRING, TEXTURE_RESOURCE_DIRECTORY_LENGTH, filePath, fileLength);
+	fileGenerateFullPath(fullPath, TEXTURE_RESOURCE_DIRECTORY_STRING, TEXTURE_RESOURCE_DIRECTORY_LENGTH, filePath, filePathLength);
 	texInfo = fopen(fullPath, "r");
 
 	if(texInfo != NULL){
@@ -143,10 +142,9 @@ return_t tLoad(texture *const __RESTRICT__ tex, const char *const __RESTRICT__ p
 				if(image == NULL){
 					char imgPath[FILE_MAX_PATH_LENGTH];
 					char resPath[FILE_MAX_PATH_LENGTH];
-					size_t resLength;
-					fileParseResourcePath(&resPath[0], &resLength, line+6, lineLength);
-					fileGenerateFullPath(&imgPath[0], prgPath, strlen(prgPath), IMAGE_RESOURCE_DIRECTORY_STRING, IMAGE_RESOURCE_DIRECTORY_LENGTH, &resPath[0], resLength);
-					image = tLoadImage(&imgPath[0]);
+					const size_t resPathLength = fileParseResourcePath(resPath, line+6, lineLength);
+					fileGenerateFullPath(imgPath, IMAGE_RESOURCE_DIRECTORY_STRING, IMAGE_RESOURCE_DIRECTORY_LENGTH, resPath, resPathLength);
+					image = tLoadImage(imgPath);
 					if(image == NULL){
 						printf("Error generating SDL_Surface for texture \"%s\": %s\n", imgPath, SDL_GetError());
 					}
@@ -206,10 +204,10 @@ return_t tLoad(texture *const __RESTRICT__ tex, const char *const __RESTRICT__ p
 	}else{
 
 		// Try and load a single image instead of a texture file.
-		fileGenerateFullPath(fullPath, prgPath, strlen(prgPath), IMAGE_RESOURCE_DIRECTORY_STRING, IMAGE_RESOURCE_DIRECTORY_LENGTH, filePath, fileLength);
+		fileGenerateFullPath(fullPath, IMAGE_RESOURCE_DIRECTORY_STRING, IMAGE_RESOURCE_DIRECTORY_LENGTH, filePath, filePathLength);
 		texInfo = fopen(fullPath, "r");
 		if(texInfo != NULL){
-			image = tLoadImage(&fullPath[0]);
+			image = tLoadImage(fullPath);
 			if(image == NULL){
 				printf("Error generating SDL_Surface for texture \"%s\": %s\n", fullPath, SDL_GetError());
 			}
@@ -317,7 +315,7 @@ return_t tLoad(texture *const __RESTRICT__ tex, const char *const __RESTRICT__ p
 	tInitParameters(tex->filtering, tex->mips);
 
 	// Generate a name based off the file path.
-	tex->name = fileGenerateResourceName(filePath, fileLength);
+	tex->name = fileGenerateResourceName(filePath, filePathLength);
 	if(tex->name == NULL){
 		/** Memory allocation failure. **/
 		tDelete(tex);

@@ -22,7 +22,7 @@ void moduleTextureWrapperResourcesDelete();
 textureWrapper *moduleTextureWrapperAllocateStatic();
 textureWrapper *moduleTextureWrapperAllocate();
 void moduleTextureWrapperFree(textureWrapper *const __RESTRICT__ resource);
-textureWrapper *moduleTextureWrapperFind(const char *const __RESTRICT__ name);
+textureWrapper *moduleTextureWrapperFind(const char *const __RESTRICT__ name, const size_t nameLength);
 void moduleTextureWrapperClear();
 
 #endif

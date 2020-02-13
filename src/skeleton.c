@@ -3,16 +3,18 @@
 #include "moduleSkeleton.h"
 #include "constantsMath.h"
 #include "helpersFileIO.h"
+/** TEMPORARY **/
 #include "helpersMisc.h"
+/** TEMPORARY **/
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
-#define SKELETON_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Skeletons"FILE_PATH_DELIMITER_STRING
-#define SKELETON_RESOURCE_DIRECTORY_LENGTH 20
+#define SKELETON_RESOURCE_DIRECTORY_STRING FILE_PATH_RESOURCE_DIRECTORY_SHARED"Resources"FILE_PATH_DELIMITER_STRING"Skeletons"FILE_PATH_DELIMITER_STRING
+#define SKELETON_RESOURCE_DIRECTORY_LENGTH 22
 
-#define SKELETON_ANIMATION_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Skeletons"FILE_PATH_DELIMITER_STRING"Animations"FILE_PATH_DELIMITER_STRING
-#define SKELETON_ANIMATION_RESOURCE_DIRECTORY_LENGTH 31
+#define SKELETON_ANIMATION_RESOURCE_DIRECTORY_STRING FILE_PATH_RESOURCE_DIRECTORY_SHARED"Resources"FILE_PATH_DELIMITER_STRING"Skeletons"FILE_PATH_DELIMITER_STRING"Animations"FILE_PATH_DELIMITER_STRING
+#define SKELETON_ANIMATION_RESOURCE_DIRECTORY_LENGTH 33
 
 #define SKELETON_ANIM_BONE_START_CAPACITY 1
 #define SKELETON_ANIM_FRAME_START_CAPACITY 1
@@ -68,16 +70,15 @@ void sklInit(skeleton *const __RESTRICT__ skl){
 	skl->boneNum = 0;
 	skl->bones = NULL;
 }
-return_t sklLoad(skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath){
+return_t sklLoad(skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ filePath, const size_t filePathLength){
 
 	char fullPath[FILE_MAX_PATH_LENGTH];
-	size_t fileLength = strlen(filePath);
 
 	FILE *sklInfo;
 
 	sklInit(skl);
 
-	fileGenerateFullPath(fullPath, prgPath, strlen(prgPath), SKELETON_RESOURCE_DIRECTORY_STRING, SKELETON_RESOURCE_DIRECTORY_LENGTH, filePath, fileLength);
+	fileGenerateFullPath(fullPath, SKELETON_RESOURCE_DIRECTORY_STRING, SKELETON_RESOURCE_DIRECTORY_LENGTH, filePath, filePathLength);
 	sklInfo = fopen(fullPath, "r");
 
 	if(sklInfo != NULL){
@@ -185,7 +186,7 @@ return_t sklLoad(skeleton *const __RESTRICT__ skl, const char *const __RESTRICT_
 	}
 
 	// Generate a name based off the file path.
-	skl->name = fileGenerateResourceName(filePath, fileLength);
+	skl->name = fileGenerateResourceName(filePath, filePathLength);
 	if(skl->name == NULL){
 		/** Memory allocation failure. **/
 		sklDelete(skl);
@@ -300,19 +301,18 @@ static return_t sklaResizeToFit(sklAnim *const __RESTRICT__ skla, const size_t b
 	sklaDefragment(skla);
 	return 1;
 }
-return_t sklaLoad(sklAnim *const __RESTRICT__ skla, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath){
+return_t sklaLoad(sklAnim *const __RESTRICT__ skla, const char *const __RESTRICT__ filePath, const size_t filePathLength){
 
 	boneIndex_t boneCapacity = SKELETON_ANIM_BONE_START_CAPACITY;
 	frameIndex_t frameCapacity = SKELETON_ANIM_FRAME_START_CAPACITY;
 
 	char fullPath[FILE_MAX_PATH_LENGTH];
-	const size_t fileLength = strlen(filePath);
 
 	FILE *sklaInfo;
 
 	sklaInit(skla);
 
-	fileGenerateFullPath(fullPath, prgPath, strlen(prgPath), SKELETON_ANIMATION_RESOURCE_DIRECTORY_STRING, SKELETON_ANIMATION_RESOURCE_DIRECTORY_LENGTH, filePath, fileLength);
+	fileGenerateFullPath(fullPath, SKELETON_ANIMATION_RESOURCE_DIRECTORY_STRING, SKELETON_ANIMATION_RESOURCE_DIRECTORY_LENGTH, filePath, filePathLength);
 	sklaInfo = fopen(fullPath, "r");
 
 	if(sklaInfo != NULL){
@@ -534,7 +534,7 @@ return_t sklaLoad(sklAnim *const __RESTRICT__ skla, const char *const __RESTRICT
 	}
 
 	// Generate a name based off the file path.
-	skla->name = fileGenerateResourceName(filePath, fileLength);
+	skla->name = fileGenerateResourceName(filePath, filePathLength);
 	if(skla->name == NULL){
 		/** Memory allocation failure. **/
 		sklaDelete(skla);
@@ -545,22 +545,19 @@ return_t sklaLoad(sklAnim *const __RESTRICT__ skla, const char *const __RESTRICT
 
 }
 /** TEMPORARY **/
-return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, const char *filePath, const int invert){
+return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *const __RESTRICT__ filePath, const size_t filePathLength, const int invert){
 	// Temporary function by 8426THMY.
 	//Create and initialize the animation!
 	sklaInit(skla);
 
 	//Find the full path for the model!
-	size_t pathLen = strlen(prgPath);
-	size_t fileLen = strlen(filePath);
-	char *fullPath = memAllocate((pathLen+fileLen+1)*sizeof(char));
+	char *fullPath = memAllocate((filePathLength+1)*sizeof(char));
 	if(fullPath == NULL){
 		/** Memory allocation failure. **/
 		return -1;
 	}
-	memcpy(fullPath, prgPath, pathLen);
-	memcpy(fullPath+pathLen, filePath, fileLen);
-	fullPath[pathLen+fileLen] = '\0';
+	memcpy(fullPath, filePath, filePathLength);
+	fullPath[filePathLength] = '\0';
 
 	//Load the textureGroup!
 	FILE *skeleAnimFile = fopen(fullPath, "r");
@@ -766,15 +763,14 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *prgPath, co
 		memFree(fullPath);
 
 
-		size_t fileLen = strlen(filePath);
-		skla->name = memAllocate((fileLen+1)*sizeof(char));
+		skla->name = memAllocate((filePathLength+1)*sizeof(char));
 		if(skla->name == NULL){
 			/** Memory allocation failure. **/
 			sklaDelete(skla);
 			return -1;
 		}
-		memcpy(skla->name, filePath, fileLen);
-		skla->name[fileLen] = '\0';
+		memcpy(skla->name, filePath, filePathLength);
+		skla->name[filePathLength] = '\0';
 	}else{
 		printf("Unable to open skeletal animation file!\n"
 		       "Path: %s\n", fullPath);

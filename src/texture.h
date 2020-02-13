@@ -53,7 +53,7 @@ typedef struct texture {
 extern texture g_tDefault;
 
 void tInit(texture *const __RESTRICT__ tex);
-return_t tLoad(texture *const __RESTRICT__ tex, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath);
+return_t tLoad(texture *const __RESTRICT__ tex, const char *const __RESTRICT__ filePath, const size_t filePathLength);
 return_t tDefaultInit();
 void tDelete(texture *const __RESTRICT__ tex);
 

@@ -26,7 +26,7 @@ void moduleObjectResourcesDelete();
 objectBase *moduleObjectBaseAllocateStatic();
 objectBase *moduleObjectBaseAllocate();
 void moduleObjectBaseFree(objectBase *const __RESTRICT__ resource);
-objectBase *moduleObjectBaseFind(const char *const __RESTRICT__ name);
+objectBase *moduleObjectBaseFind(const char *const __RESTRICT__ name, const size_t nameLength);
 void moduleObjectBaseClear();
 
 object *moduleObjectAllocateStatic();

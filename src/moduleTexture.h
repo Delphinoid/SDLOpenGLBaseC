@@ -22,7 +22,7 @@ void moduleTextureResourcesDelete();
 texture *moduleTextureAllocateStatic();
 texture *moduleTextureAllocate();
 void moduleTextureFree(texture *const __RESTRICT__ resource);
-texture *moduleTextureFind(const char *const __RESTRICT__ name);
+texture *moduleTextureFind(const char *const __RESTRICT__ name, const size_t nameLength);
 void moduleTextureClear();
 
 #endif

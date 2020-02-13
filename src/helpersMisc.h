@@ -12,5 +12,7 @@ size_t ltostr(long n, char *s);
 
 /** TEMPORARY **/
 void getDelimitedString(char *const __RESTRICT__ line, const size_t lineLength, const char *__RESTRICT__ delims, char **const __RESTRICT__ strStart, size_t *const __RESTRICT__ strLength);
+char *stringDelimited(char *str, const size_t strLength, const char delim, size_t *outLength);
+/** TEMPORARY **/
 
 #endif

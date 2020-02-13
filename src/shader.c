@@ -6,8 +6,8 @@
 #include <string.h>
 #include <stdio.h>
 
-#define SHADER_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Shaders"FILE_PATH_DELIMITER_STRING
-#define SHADER_RESOURCE_DIRECTORY_LENGTH 18
+#define SHADER_RESOURCE_DIRECTORY_STRING FILE_PATH_RESOURCE_DIRECTORY_SHARED"Resources"FILE_PATH_DELIMITER_STRING"Shaders"FILE_PATH_DELIMITER_STRING
+#define SHADER_RESOURCE_DIRECTORY_LENGTH 20
 
 void shdrDataInit(shaderData *const __RESTRICT__ shdrData){
 	shdrData->lastTexID = 0;
@@ -16,10 +16,9 @@ void shdrDataInit(shaderData *const __RESTRICT__ shdrData){
 	shdrData->biasLOD = SHADER_DEFAULT_BIAS_LOD;
 }
 
-static __FORCE_INLINE__ return_t shdrLoad(GLuint *const __RESTRICT__ id, GLenum type, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath){
+static __FORCE_INLINE__ return_t shdrLoad(GLuint *const __RESTRICT__ id, GLenum type, const char *const __RESTRICT__ filePath, const size_t filePathLength){
 
 	char fullPath[FILE_MAX_PATH_LENGTH];
-	const size_t fileLength = strlen(filePath);
 
 	FILE *shdrInfo;
 	long shdrSize;
@@ -27,7 +26,7 @@ static __FORCE_INLINE__ return_t shdrLoad(GLuint *const __RESTRICT__ id, GLenum 
 
 	GLint compiled = GL_FALSE;
 
-	fileGenerateFullPath(fullPath, prgPath, strlen(prgPath), SHADER_RESOURCE_DIRECTORY_STRING, SHADER_RESOURCE_DIRECTORY_LENGTH, filePath, fileLength);
+	fileGenerateFullPath(fullPath, SHADER_RESOURCE_DIRECTORY_STRING, SHADER_RESOURCE_DIRECTORY_LENGTH, filePath, filePathLength);
 
 	// Load the shader.
 	shdrInfo = fopen(fullPath, "rb");
@@ -75,14 +74,14 @@ static __FORCE_INLINE__ return_t shdrLoad(GLuint *const __RESTRICT__ id, GLenum 
 
 }
 
-return_t shdrPrgLoad(GLuint *const __RESTRICT__ id, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ vertexPath, const char *const __RESTRICT__ fragmentPath){
+return_t shdrPrgLoad(GLuint *const __RESTRICT__ id, const char *const __RESTRICT__ vertexPath, const size_t vertexPathLength, const char *const __RESTRICT__ fragmentPath, const size_t fragmentPathLength){
 
 	// Generate shaders.
 	return_t r;
 	GLuint vertexShaderID, fragmentShaderID;
 	if(
-		(r = shdrLoad(&vertexShaderID, GL_VERTEX_SHADER, prgPath, vertexPath)) <= 0 ||
-		(r = shdrLoad(&fragmentShaderID, GL_FRAGMENT_SHADER, prgPath, fragmentPath)) <= 0
+		(r = shdrLoad(&vertexShaderID, GL_VERTEX_SHADER, vertexPath, vertexPathLength)) <= 0 ||
+		(r = shdrLoad(&fragmentShaderID, GL_FRAGMENT_SHADER, fragmentPath, fragmentPathLength)) <= 0
 	){
 		return r;
 	}
@@ -121,7 +120,7 @@ return_t shdrPrgObjLink(shaderProgramObject *const __RESTRICT__ shdrPrg){
 	for(i = 0; i < SKELETON_MAX_BONE_NUM; ++i){
 
 		char num[LTOSTR_MAX_LENGTH];
-		const size_t numLen = ltostr(i, &num[0]);
+		const size_t numLen = ltostr(i, num);
 		char uniformString[11+LTOSTR_MAX_LENGTH];  // LTOSTR_MAX_LENGTH includes NULL terminator.
 
 		memcpy(&uniformString[0], "boneArray[", 10*sizeof(char));
@@ -136,7 +135,7 @@ return_t shdrPrgObjLink(shaderProgramObject *const __RESTRICT__ shdrPrg){
 	for(i = 0; i < SHADER_TEXTURE_SAMPLER_NUM; ++i){
 
 		char num[LTOSTR_MAX_LENGTH];
-		const size_t numLen = ltostr(i, &num[0]);
+		const size_t numLen = ltostr(i, num);
 		char uniformString[17+LTOSTR_MAX_LENGTH];  // LTOSTR_MAX_LENGTH includes NULL terminator.
 
 		memcpy(&uniformString[0], "textureFragment[", 16);

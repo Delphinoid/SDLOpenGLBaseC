@@ -32,13 +32,13 @@ void moduleSkeletonResourcesDelete();
 skeleton *moduleSkeletonAllocateStatic();
 skeleton *moduleSkeletonAllocate();
 void moduleSkeletonFree(skeleton *const __RESTRICT__ resource);
-skeleton *moduleSkeletonFind(const char *const __RESTRICT__ name);
+skeleton *moduleSkeletonFind(const char *const __RESTRICT__ name, const size_t nameLength);
 void moduleSkeletonClear();
 
 sklAnim *moduleSkeletonAnimationAllocateStatic();
 sklAnim *moduleSkeletonAnimationAllocate();
 void moduleSkeletonAnimationFree(sklAnim *const __RESTRICT__ resource);
-sklAnim *moduleSkeletonAnimationFind(const char *const __RESTRICT__ name);
+sklAnim *moduleSkeletonAnimationFind(const char *const __RESTRICT__ name, const size_t nameLength);
 void moduleSkeletonAnimationClear();
 
 sklAnimInstance *moduleSkeletonAnimationInstanceAppendStatic(sklAnimInstance **const __RESTRICT__ array);

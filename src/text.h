@@ -45,9 +45,7 @@ typedef struct {
 
 typedef struct {
 	// Pointer to the atlas containing the glyph.
-	const texture *atlas;
-	// The Unicode code unit for the glyph.
-	txtCodeUnit_t code;
+	texture *atlas;
 	// Area in the font atlas.
 	rectangle frame;
 	// Kerning for the glyph.  This may be
@@ -61,30 +59,27 @@ typedef struct {
 } txtGlyph;
 
 typedef struct {
-	// Array of textures associated with the font.
-	// Stored here for cleanup purposes. Probably unnecessary.
-	const texture *atlases;
 	// Array of glyphs.
 	// The first glyph should be the missing / invalid glyph.
-	const txtGlyph *glyphs;
+	txtGlyph *glyphs;
 	// Maps code units to glyphs.
 	// Check the format to know what to cast it to.
-	const txtCMap *cmap;
+	txtCMap *cmap;
+	// Total number of glyphs.
+	size_t glyphNum;
 	// Line height. That is, how much to
 	// advance the cursor by on each new line.
 	// The maximum height value of each font
 	// in a line is taken to be advanceY.
 	float height;
+	// Name of the font.
+	char *name;
 	// BMP or SDF.
 	flags_t type;
 } txtFont;
 
 typedef struct {
-	txtFont *styles;
-} txtTypeface;
-
-typedef struct {
-	size_t font;
+	txtFont font;
 	float size;
 	flags_t style;
 } txtFormat;
@@ -96,12 +91,14 @@ typedef struct {
 	byte_t *front;
 	byte_t *back;
 	// Typeface information.
-	const txtTypeface *typeface;
+	const txtFont *font;
 } txtStream;
+
+txtGlyph *txtGlyphArrayLoad(const char *const __RESTRICT__ glyphPath, const size_t glyphPathLength, texture *const *const atlas, const size_t atlasSize);
+return_t txtFontLoad(txtFont *const __RESTRICT__ font, const flags_t type, const char *const __RESTRICT__ name, const size_t nameLength, const char *const __RESTRICT__ texPath0, const size_t texPathLength0, const char *const __RESTRICT__ texPath1, const size_t texPathLength1, const char *const __RESTRICT__ glyphPath, const size_t glyphPathLength, const char *const __RESTRICT__ cmapPath, const size_t cmapPathLength);
+void txtFontDelete(txtFont *const __RESTRICT__ font);
 
 return_t txtStreamNextCharacter(const txtStream *const __RESTRICT__ stream, const byte_t **i);
 uint32_t txtStreamParseCharacter(const txtStream *const __RESTRICT__ stream, const byte_t **i, txtFormat *const __RESTRICT__ format);
-
-return_t txtCursorAdvance(txtCursor *const __RESTRICT__ cursor, const float advanceX, const float advanceY, const float boxWidth);
 
 #endif

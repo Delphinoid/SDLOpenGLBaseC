@@ -8,8 +8,8 @@
 #include <string.h>
 #include <stdio.h>
 
-#define TEXTURE_WRAPPER_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Wrappers"FILE_PATH_DELIMITER_STRING
-#define TEXTURE_WRAPPER_RESOURCE_DIRECTORY_LENGTH 19
+#define TEXTURE_WRAPPER_RESOURCE_DIRECTORY_STRING FILE_PATH_RESOURCE_DIRECTORY_SHARED"Resources"FILE_PATH_DELIMITER_STRING"Wrappers"FILE_PATH_DELIMITER_STRING
+#define TEXTURE_WRAPPER_RESOURCE_DIRECTORY_LENGTH 21
 
 #define TEXTURE_WRAPPER_ANIMATION_START_CAPACITY       1  // 128
 #define TEXTURE_WRAPPER_ANIMATION_FRAME_START_CAPACITY 1  // 128
@@ -154,20 +154,19 @@ void twInit(textureWrapper *const __RESTRICT__ tw){
 	tw->animations = NULL;
 }
 
-return_t twLoad(textureWrapper *const __RESTRICT__ tw, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath){
+return_t twLoad(textureWrapper *const __RESTRICT__ tw, const char *const __RESTRICT__ filePath, const size_t filePathLength){
 
 	twAnim tempAnim;
 	frameIndex_t frameCapacity = 0;
 	animIndex_t animationCapacity = TEXTURE_WRAPPER_ANIMATION_START_CAPACITY;
 
 	char fullPath[FILE_MAX_PATH_LENGTH];
-	const size_t fileLength = strlen(filePath);
 
 	FILE *texInfo;
 
 	twInit(tw);
 
-	fileGenerateFullPath(fullPath, prgPath, strlen(prgPath), TEXTURE_WRAPPER_RESOURCE_DIRECTORY_STRING, TEXTURE_WRAPPER_RESOURCE_DIRECTORY_LENGTH, filePath, fileLength);
+	fileGenerateFullPath(fullPath, TEXTURE_WRAPPER_RESOURCE_DIRECTORY_STRING, TEXTURE_WRAPPER_RESOURCE_DIRECTORY_LENGTH, filePath, filePathLength);
 	texInfo = fopen(fullPath, "r");
 
 	if(texInfo != NULL){
@@ -213,10 +212,10 @@ return_t twLoad(textureWrapper *const __RESTRICT__ tw, const char *const __RESTR
 
 					// Create a new texture frame.
 					tempFrame.image = NULL;
-					fileParseResourcePath(&texPath[0], &pathLength, token+1, lineLength);
+					pathLength = fileParseResourcePath(texPath, token+1, lineLength);
 
 					// Check if the texture has already been loaded.
-					tempTex = moduleTextureFind(&texPath[0]);
+					tempTex = moduleTextureFind(texPath, pathLength);
 					if(tempTex != NULL){
 						tempFrame.image = tempTex;
 
@@ -224,7 +223,7 @@ return_t twLoad(textureWrapper *const __RESTRICT__ tw, const char *const __RESTR
 					}else{
 						tempTex = moduleTextureAllocate();
 						if(tempTex != NULL){
-							const return_t r = tLoad(tempTex, prgPath, &texPath[0]);
+							const return_t r = tLoad(tempTex, texPath, pathLength);
 							if(r < 1){
 								// The load failed. Clean up.
 								moduleTextureFree(tempTex);
@@ -235,7 +234,7 @@ return_t twLoad(textureWrapper *const __RESTRICT__ tw, const char *const __RESTR
 									fclose(texInfo);
 									return -1;
 								}
-								printf("Error loading texture wrapper \"%s\": Image \"%s\" at line %u does not exist.\n", fullPath, &texPath[0], currentLine);
+								printf("Error loading texture wrapper \"%s\": Image \"%s\" at line %u does not exist.\n", fullPath, texPath, currentLine);
 								tempFrame.image = &g_tDefault;
 							}else{
 								tempFrame.image = tempTex;
@@ -279,10 +278,10 @@ return_t twLoad(textureWrapper *const __RESTRICT__ tw, const char *const __RESTR
 
 					// Create a new texture frame.
 					tempFrame.image = NULL;
-					fileParseResourcePath(&texPath[0], &pathLength, token+1, lineLength);
+					pathLength = fileParseResourcePath(texPath, token+1, lineLength);
 
 					// Check if the texture has already been loaded.
-					tempTex = moduleTextureFind(&texPath[0]);
+					tempTex = moduleTextureFind(texPath, pathLength);
 					if(tempTex != NULL){
 						tempFrame.image = tempTex;
 
@@ -290,7 +289,7 @@ return_t twLoad(textureWrapper *const __RESTRICT__ tw, const char *const __RESTR
 					}else{
 						tempTex = moduleTextureAllocate();
 						if(tempTex != NULL){
-							const return_t r = tLoad(tempTex, prgPath, &texPath[0]);
+							const return_t r = tLoad(tempTex, texPath, pathLength);
 							if(r < 1){
 								// The load failed. Clean up.
 								moduleTextureFree(tempTex);
@@ -301,7 +300,7 @@ return_t twLoad(textureWrapper *const __RESTRICT__ tw, const char *const __RESTR
 									fclose(texInfo);
 									return -1;
 								}
-								printf("Error loading texture wrapper \"%s\": Image \"%s\" at line %u does not exist.\n", fullPath, &texPath[0], currentLine);
+								printf("Error loading texture wrapper \"%s\": Image \"%s\" at line %u does not exist.\n", fullPath, texPath, currentLine);
 								tempFrame.image = &g_tDefault;
 							}else{
 								tempFrame.image = tempTex;
@@ -372,10 +371,10 @@ return_t twLoad(textureWrapper *const __RESTRICT__ tw, const char *const __RESTR
 
 					// Create a new texture frame.
 					tempFrame.image = NULL;
-					fileParseResourcePath(&texPath[0], &pathLength, token+1, lineLength);
+					pathLength = fileParseResourcePath(texPath, token+1, lineLength);
 
 					// Check if the texture has already been loaded.
-					tempTex = moduleTextureFind(&texPath[0]);
+					tempTex = moduleTextureFind(texPath, pathLength);
 					if(tempTex != NULL){
 						tempFrame.image = tempTex;
 
@@ -383,7 +382,7 @@ return_t twLoad(textureWrapper *const __RESTRICT__ tw, const char *const __RESTR
 					}else{
 						tempTex = moduleTextureAllocate();
 						if(tempTex != NULL){
-							const return_t r = tLoad(tempTex, prgPath, &texPath[0]);
+							const return_t r = tLoad(tempTex, texPath, pathLength);
 							if(r < 1){
 								// The load failed. Clean up.
 								moduleTextureFree(tempTex);
@@ -394,7 +393,7 @@ return_t twLoad(textureWrapper *const __RESTRICT__ tw, const char *const __RESTR
 									fclose(texInfo);
 									return -1;
 								}
-								printf("Error loading texture wrapper \"%s\": Image \"%s\" at line %u does not exist.\n", fullPath, &texPath[0], currentLine);
+								printf("Error loading texture wrapper \"%s\": Image \"%s\" at line %u does not exist.\n", fullPath, texPath, currentLine);
 								tempFrame.image = &g_tDefault;
 							}else{
 								tempFrame.image = tempTex;
@@ -540,7 +539,7 @@ return_t twLoad(textureWrapper *const __RESTRICT__ tw, const char *const __RESTR
 	}
 
 	// Generate a name based off the file path.
-	tw->name = fileGenerateResourceName(filePath, fileLength);
+	tw->name = fileGenerateResourceName(filePath, filePathLength);
 	if(tw->name == NULL){
 		/** Memory allocation failure. **/
 		twDelete(tw);

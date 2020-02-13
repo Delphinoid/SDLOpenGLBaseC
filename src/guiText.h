@@ -11,7 +11,8 @@ typedef struct {
 	// Text stream.
 	txtStream stream;
 	// Text box boundaries.
-	rectangle bounds;
+	float width;
+	float height;
 	// How far down the text has scrolled.
 	float scroll;
 	flags_t flags;

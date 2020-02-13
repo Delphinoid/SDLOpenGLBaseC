@@ -11,8 +11,8 @@
 #include <stdio.h>
 #include <math.h>
 
-#define PHYSICS_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Skeletons"FILE_PATH_DELIMITER_STRING"Physics"FILE_PATH_DELIMITER_STRING
-#define PHYSICS_RESOURCE_DIRECTORY_LENGTH 28
+#define PHYSICS_RESOURCE_DIRECTORY_STRING FILE_PATH_RESOURCE_DIRECTORY_SHARED"Resources"FILE_PATH_DELIMITER_STRING"Skeletons"FILE_PATH_DELIMITER_STRING"Physics"FILE_PATH_DELIMITER_STRING
+#define PHYSICS_RESOURCE_DIRECTORY_LENGTH 30
 
 /** Use Parallel Axis Theorem for loading colliders. **/
 
@@ -265,7 +265,7 @@ static return_t physColliderResizeToFit(physCollider *const __RESTRICT__ local){
 
 }
 
-return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, const skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath){
+return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, const skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ filePath, const size_t filePathLength){
 
 	// Loads a series of rigid bodies.
 	//
@@ -275,11 +275,10 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, co
 	return_t success = 0;
 
 	char fullPath[FILE_MAX_PATH_LENGTH];
-	const size_t fileLength = strlen(filePath);
 
 	FILE *__RESTRICT__ rbInfo;
 
-	fileGenerateFullPath(fullPath, prgPath, strlen(prgPath), PHYSICS_RESOURCE_DIRECTORY_STRING, PHYSICS_RESOURCE_DIRECTORY_LENGTH, filePath, fileLength);
+	fileGenerateFullPath(fullPath, PHYSICS_RESOURCE_DIRECTORY_STRING, PHYSICS_RESOURCE_DIRECTORY_LENGTH, filePath, filePathLength);
 	rbInfo = fopen(fullPath, "r");
 
 	if(rbInfo != NULL){
@@ -337,7 +336,7 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, co
 								while(*end != '"'){
 									--end;
 								}
-								if(end != &line[0]){
+								if(end != line){
 									++line;
 									lineLength = end-line;
 								}

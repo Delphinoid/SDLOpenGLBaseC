@@ -46,23 +46,17 @@
 /** Remember to do regular searches for these important comments when possible. **/
 int main(int argc, char **argv){
 
-	char prgPath[FILE_MAX_PATH_LENGTH];
 	graphicsManager gfxMngr;
 
-	// Removes program name (everything after the last backslash) from the path.
-	{
-		const size_t length = strrchr(argv[0], FILE_PATH_DELIMITER_CHAR) + 1 - argv[0];
-		strncpy(&prgPath[0], argv[0], length);
-		prgPath[length] = '\0';
-		/** prgPath can be replaced with ".\\", but it may present some problems when running directly from Code::Blocks. **/
-	}
+	// Change the current working directory for file loading.
+	fileChangeDirectory(argv[0], NULL);
 
 	// Initialize the memory manager.
 	if(memMngrInit(MEMORY_MANAGER_DEFAULT_VIRTUAL_HEAP_SIZE, 1) < 0){
 		return 1;
 	}
 	// Initialize the graphics subsystem.
-	if(!gfxMngrInit(&gfxMngr, prgPath)){
+	if(!gfxMngrInit(&gfxMngr)){
 		return 1;
 	}
 
@@ -111,70 +105,70 @@ int main(int argc, char **argv){
 
 	// Textures.
 	texture *tempTex = moduleTextureAllocate();
-	//tLoad(tempTex, prgPath, "Luna"FILE_PATH_DELIMITER_STRING"Luna.tdt");
+	//tLoad(tempTex, "Luna"FILE_PATH_DELIMITER_STRING"Luna.tdt");
 	//tempTex = moduleTextureAllocate();
-	//tLoad(tempTex, prgPath, "Misc"FILE_PATH_DELIMITER_STRING"ntrance.tdt");
+	//tLoad(tempTex, "Misc"FILE_PATH_DELIMITER_STRING"ntrance.tdt");
 	//tempTex = moduleTextureAllocate();
-	//tLoad(tempTex, prgPath, "Misc"FILE_PATH_DELIMITER_STRING"ntrance.tdt");
+	//tLoad(tempTex, "Misc"FILE_PATH_DELIMITER_STRING"ntrance.tdt");
 	//tempTex = moduleTextureAllocate();
-	tLoad(tempTex, prgPath, "Misc"FILE_PATH_DELIMITER_STRING"Kobold.tdt");
+	tLoad(tempTex, "Misc"FILE_PATH_DELIMITER_STRING"Kobold.tdt", 15);
 	/*texture *tempTex;
 	resMngrPushResource(&resMngr, &memMngr, RESOURCE_TEXTURE, (byte_t **)&tempTex);
 	tDefault(tempTex, &memMngr);
 	resMngrPushResource(&resMngr, &memMngr, RESOURCE_TEXTURE, (byte_t **)&tempTex);
-	tLoad(tempTex, &memMngr, prgPath, "Resources"FILE_PATH_DELIMITER_STRING"Images"FILE_PATH_DELIMITER_STRING"Luna"FILE_PATH_DELIMITER_STRING"Luna1.png");
+	tLoad(tempTex, &memMngr, "Resources"FILE_PATH_DELIMITER_STRING"Images"FILE_PATH_DELIMITER_STRING"Luna"FILE_PATH_DELIMITER_STRING"Luna1.png");
 	resMngrPushResource(&resMngr, &memMngr, RESOURCE_TEXTURE, (byte_t **)&tempTex);
-	tLoad(tempTex, &memMngr, prgPath, "Resources"FILE_PATH_DELIMITER_STRING"Images"FILE_PATH_DELIMITER_STRING"Luna"FILE_PATH_DELIMITER_STRING"Luna2.png");
+	tLoad(tempTex, &memMngr, "Resources"FILE_PATH_DELIMITER_STRING"Images"FILE_PATH_DELIMITER_STRING"Luna"FILE_PATH_DELIMITER_STRING"Luna2.png");
 	resMngrPushResource(&resMngr, &memMngr, RESOURCE_TEXTURE, (byte_t **)&tempTex);
-	tLoad(tempTex, &memMngr, prgPath, "Resources"FILE_PATH_DELIMITER_STRING"Images"FILE_PATH_DELIMITER_STRING"Misc"FILE_PATH_DELIMITER_STRING"ntrance.png");*/
+	tLoad(tempTex, &memMngr, "Resources"FILE_PATH_DELIMITER_STRING"Images"FILE_PATH_DELIMITER_STRING"Misc"FILE_PATH_DELIMITER_STRING"ntrance.png");*/
 
 	// Skeletons.
 	skeleton *tempSkl = moduleSkeletonAllocate();
-	sklLoad(tempSkl, prgPath, "CubeTestSkeleton2.tds");
+	sklLoad(tempSkl, "CubeTestSkeleton2.tds", 21);
 
 	// Texture Wrappers.
 	textureWrapper *tempTexWrap = moduleTextureWrapperAllocate();
-	twLoad(tempTexWrap, prgPath, "Animated"FILE_PATH_DELIMITER_STRING"LunaSpr2.tdw");
+	twLoad(tempTexWrap, "Animated"FILE_PATH_DELIMITER_STRING"LunaSpr2.tdw", 21);
 	tempTexWrap = moduleTextureWrapperAllocate();
-	twLoad(tempTexWrap, prgPath, "Static"FILE_PATH_DELIMITER_STRING"ntrance2.tdw");
+	twLoad(tempTexWrap, "Static"FILE_PATH_DELIMITER_STRING"ntrance2.tdw", 19);
 	tempTexWrap = moduleTextureWrapperAllocate();
-	twLoad(tempTexWrap, prgPath, "Static"FILE_PATH_DELIMITER_STRING"KoboldStatic.tdw");
+	twLoad(tempTexWrap, "Static"FILE_PATH_DELIMITER_STRING"KoboldStatic.tdw", 23);
 	tempTexWrap = moduleTextureWrapperAllocate();
-	twLoad(tempTexWrap, prgPath, "gui"FILE_PATH_DELIMITER_STRING"body.tdw");
+	twLoad(tempTexWrap, "gui"FILE_PATH_DELIMITER_STRING"body.tdw", 12);
 	tempTexWrap = moduleTextureWrapperAllocate();
-	twLoad(tempTexWrap, prgPath, "gui"FILE_PATH_DELIMITER_STRING"border.tdw");
+	twLoad(tempTexWrap, "gui"FILE_PATH_DELIMITER_STRING"border.tdw", 14);
 	/*textureWrapper tempTexWrap;
 	twDefault(&tempTexWrap, &resMngr, &memMngr);
 	cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));
-	//twLoad(&tempTexWrap, prgPath, "Animated"FILE_PATH_DELIMITER_STRING"LunaSpr2.tdt", &allTextures);
+	//twLoad(&tempTexWrap, "Animated"FILE_PATH_DELIMITER_STRING"LunaSpr2.tdt", &allTextures);
 	//cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));
-	twLoad(&tempTexWrap, &resMngr, &memMngr, prgPath, "Static"FILE_PATH_DELIMITER_STRING"ntrance2.tdt");
+	twLoad(&tempTexWrap, &resMngr, &memMngr, "Static"FILE_PATH_DELIMITER_STRING"ntrance2.tdt");
 	cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));*/
 
 	// Models.
 	model *tempMdl = moduleModelAllocate();
-	mdlLoad(tempMdl, prgPath, "CubeAnimated.obj");
-	//mdlLoad(&tempMdl, prgPath, "ntrance.obj", &allSkeletons);
+	mdlLoad(tempMdl, "CubeAnimated.obj", 16);
+	//mdlLoad(&tempMdl, "ntrance.obj", &allSkeletons);
 	//cvPush(&allModels, (void *)&tempMdl, sizeof(tempMdl));
 
 	// Objects.
 	objectBase *tempObj = moduleObjectBaseAllocate();
-	objBaseLoad(tempObj, prgPath, "CubeTest.tdo");
+	objBaseLoad(tempObj, "CubeTest.tdo", 12);
 	tempObj->stateMax = 1;
 	tempObj = moduleObjectBaseAllocate();
-	objBaseLoad(tempObj, prgPath, "Wall.tdo");
+	objBaseLoad(tempObj, "Wall.tdo", 8);
 	tempObj = moduleObjectBaseAllocate();
-	objBaseLoad(tempObj, prgPath, "CubeTest2.tdo");
+	objBaseLoad(tempObj, "CubeTest2.tdo", 13);
 	tempObj->stateMax = 1;
 	tempObj = moduleObjectBaseAllocate();
-	objBaseLoad(tempObj, prgPath, "Kobold.tdo");
-	//objLoad(&tempObj, prgPath, "ntrance.tdo");
+	objBaseLoad(tempObj, "Kobold.tdo", 10);
+	//objLoad(&tempObj, "ntrance.tdo");
 	//cvPush(&allObjects, (void *)&tempObj, sizeof(tempObj));
 
 	// Object Instances.
 	object *tempObji2, *tempObji3, *tempObji4;
 	object *tempObji = moduleObjectAllocate();
-	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest.tdo"));
+	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest.tdo", 12));
 	//sklaiChange(skliAnimationNew(&tempObji->skeletonData), tempObji->skeletonData.skl, tempObji->base->animations[0], 0, 0.f);
 	//objInitSkeleton(objGetState(&gameStateManager, tempID, 0), (skeleton *)cvGet(&allSkeletons, 1));
 	//objNewRenderable(objGetState(&gameStateManager, tempID, 0), (model *)cvGet(&allModels, 1), (textureWrapper *)cvGet(&allTexWrappers, 1));
@@ -196,7 +190,7 @@ int main(int argc, char **argv){
 	//tempObji->configuration[0].orientation = quatNew(-0.537948, 0.455196, 0.453047, -0.541063);
 	//
 	tempObji = moduleObjectAllocate();
-	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest2.tdo"));
+	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest2.tdo", 13));
 	//objInstantiate(objGetState(&gameStateManager, tempID, 0), (object *)cvGet(&allObjects, 0));
 	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
 	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
@@ -211,7 +205,7 @@ int main(int argc, char **argv){
 	//tempObji->configuration[0].scale.y = 0.25f;
 	//
 	tempObji = moduleObjectAllocate();
-	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest.tdo"));
+	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest.tdo", 12));
 	//objInstantiate(objGetState(&gameStateManager, tempID, 0), (object *)cvGet(&allObjects, 0));
 	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
 	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
@@ -229,7 +223,7 @@ int main(int argc, char **argv){
 	tempObji2 = tempObji;
 	//
 	tempObji = moduleObjectAllocate();
-	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest.tdo"));
+	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest.tdo", 12));
 	//objInstantiate(objGetState(&gameStateManager, tempID, 0), (object *)cvGet(&allObjects, 0));
 	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
 	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
@@ -242,7 +236,7 @@ int main(int argc, char **argv){
 	tempObji->skeletonBodies->hull->restitution = 0.f;
 	//
 	tempObji = moduleObjectAllocate();
-	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest.tdo"));
+	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest.tdo", 12));
 	//objInstantiate(objGetState(&gameStateManager, tempID, 0), (object *)cvGet(&allObjects, 0));
 	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
 	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
@@ -253,7 +247,7 @@ int main(int argc, char **argv){
 	tempObji->skeletonBodies->hull->restitution = 0.f;
 	//
 	tempObji = moduleObjectAllocate();
-	objInstantiate(tempObji, moduleObjectBaseFind("Wall.tdo"));
+	objInstantiate(tempObji, moduleObjectBaseFind("Wall.tdo", 8));
 	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
 	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 1);
 	//objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
@@ -266,7 +260,7 @@ int main(int argc, char **argv){
 	tempObji->configuration[0].scale.z = 100.f;
 	//
 	tempObji = moduleObjectAllocate();
-	objInstantiate(tempObji, moduleObjectBaseFind("Kobold.tdo"));
+	objInstantiate(tempObji, moduleObjectBaseFind("Kobold.tdo", 10));
 	tempObji->configuration[0].orientation = quatNewEuler(0.f, 0.f*RADIAN_RATIO, 0.f);
 	tempObji->configuration[0].position.x = 6.f;
 	tempObji->configuration[0].position.y = -2.9f;
@@ -318,10 +312,8 @@ int main(int argc, char **argv){
 
 	physJointDistanceInit(&joint->data.distance, vec3Zero(), vec3Zero(), 4.f, 0.f, 0.f);
 
-	guiElement gEl;
+	guiElement gEl, gTxt;
 	boneInit(&gEl.root);
-	gEl.root.scale.x = 0.f;
-	gEl.root.scale.y = 0.f;
 	/*vec2ZeroP(&gEl.data.panel.configuration[0]);
 	vec2ZeroP(&gEl.data.panel.configuration[1]);
 	vec2ZeroP(&gEl.data.panel.configuration[2]);
@@ -335,8 +327,8 @@ int main(int argc, char **argv){
 	gEl.flags = GUI_ELEMENT_TYPE_WINDOW;
 	//guiPanelInit(&gEl, areas);
 	//rndrStateInit(&gEl.data.panel.rndr.state);
-	twiInit(&gEl.data.window.body, moduleTextureWrapperFind("gui"FILE_PATH_DELIMITER_STRING"body.tdw"));
-	twiInit(&gEl.data.window.border, moduleTextureWrapperFind("gui"FILE_PATH_DELIMITER_STRING"border.tdw"));
+	twiInit(&gEl.data.window.body, moduleTextureWrapperFind("gui"FILE_PATH_DELIMITER_STRING"body.tdw", 12));
+	twiInit(&gEl.data.window.border, moduleTextureWrapperFind("gui"FILE_PATH_DELIMITER_STRING"border.tdw", 14));
 	gEl.data.window.offsets[0].x = 3.f/4.f; gEl.data.window.offsets[0].y = 4.f/5.f; gEl.data.window.offsets[0].w = 1.f/4.f; gEl.data.window.offsets[0].h = 1.f/5.f;
 	gEl.data.window.offsets[1].x = 0.f; gEl.data.window.offsets[1].y = 4.f/5.f; gEl.data.window.offsets[1].w = 1.f/4.f; gEl.data.window.offsets[1].h = 1.f/5.f;
 	gEl.data.window.offsets[2].x = 1.f/4.f; gEl.data.window.offsets[2].y = 4.f/5.f; gEl.data.window.offsets[2].w = 1.f/4.f; gEl.data.window.offsets[2].h = 1.f/5.f;
@@ -345,6 +337,28 @@ int main(int argc, char **argv){
 	gEl.data.window.offsets[5].x = 0.f; gEl.data.window.offsets[5].y = 0.f; gEl.data.window.offsets[5].w = 1.f; gEl.data.window.offsets[5].h = 1.f/5.f;
 	gEl.data.window.offsets[6].x = 0.f; gEl.data.window.offsets[6].y = 1.f/5.f; gEl.data.window.offsets[6].w = 1.f; gEl.data.window.offsets[6].h = 1.f/5.f;
 	gEl.data.window.offsets[7].x = 0.f; gEl.data.window.offsets[7].y = 3.f/5.f; gEl.data.window.offsets[7].w = 1.f; gEl.data.window.offsets[7].h = 1.f/5.f;
+
+	txtFont testFont;
+	boneInit(&gTxt.root);
+	gTxt.flags = GUI_ELEMENT_TYPE_TEXT;
+	gTxt.root.position.x = -((float)(gfxMngr.windowWidth>>1));
+	gTxt.root.position.y = (float)(gfxMngr.windowHeight>>1);
+	gTxt.data.text.width = (float)(gfxMngr.windowWidth>>1);
+	gTxt.data.text.height = (float)(gfxMngr.windowHeight>>1);
+	gTxt.data.text.stream.font = &testFont;
+	gTxt.data.text.stream.front = memAllocate(44*sizeof(char));
+	gTxt.data.text.stream.back = &gTxt.data.text.stream.front[44];
+	gTxt.data.text.stream.offset = gTxt.data.text.stream.front;
+	memcpy(gTxt.data.text.stream.front, "The quick brown fox jumps over the lazy dog.", 44*sizeof(char));
+	txtFontLoad(
+		&testFont, TEXT_FONT_TYPE_SDF,
+		"IBM_BIOS", 8,
+		"fonts"FILE_PATH_DELIMITER_STRING"IBM_BIOS"FILE_PATH_DELIMITER_STRING"PxPlusIBMBIOS.0.png", 34,
+		"fonts"FILE_PATH_DELIMITER_STRING"IBM_BIOS"FILE_PATH_DELIMITER_STRING"PxPlusIBMBIOS.1.png", 34,
+		FILE_PATH_RESOURCE_DIRECTORY_SHARED"Resources"FILE_PATH_DELIMITER_STRING"Fonts"FILE_PATH_DELIMITER_STRING"IBM_BIOS"FILE_PATH_DELIMITER_STRING"PxPlus_IBM_BIOS-msdf-temp.csv", 38+18,
+		FILE_PATH_RESOURCE_DIRECTORY_SHARED"Resources"FILE_PATH_DELIMITER_STRING"Fonts"FILE_PATH_DELIMITER_STRING"IBM_BIOS"FILE_PATH_DELIMITER_STRING"PxPlus_IBM_BIOS.ttf", 28+18
+	);
+
 
 	particleBase a; particleBaseInit(&a); a.rndr.mdl = &g_mdlSprite; a.rndr.tw = &g_twDefault;
 	particleSystemBase b; particleSystemBaseInit(&b); b.properties = a;
@@ -550,6 +564,7 @@ int main(int argc, char **argv){
 
 			///
 			guiElementTick(&gEl, tickrateTimeMod);
+			guiElementTick(&gTxt, tickrateTimeMod);
 			particleSystemTick(&c, tickratioTimeMod);
 			///
 			// Update scenes.
@@ -601,6 +616,7 @@ int main(int argc, char **argv){
 			// Feed the camera's view-projection matrix into the shader.
 			glUniformMatrix4fv(gfxMngr.shdrPrgSpr.vpMatrixID, 1, GL_FALSE, &camGUI->viewProjectionMatrix.m[0][0]);
 			guiElementRender(&gEl, &gfxMngr, camGUI, 0.f, interpT);
+			guiElementRender(&gTxt, &gfxMngr, camGUI, 0.f, interpT);
 
 			// Switch to the camera's view.
 			gfxMngrSwitchView(&gfxMngr, &camMain->view);
@@ -637,6 +653,8 @@ int main(int argc, char **argv){
     }
 
     /****/
+	memFree(gTxt.data.text.stream.front);
+    txtFontDelete(&testFont);
 	particleSystemBaseDelete(&b);
 	particleSystemDelete(&c);
     /****/

@@ -69,16 +69,16 @@ __HINT_INLINE__ void moduleTextureWrapperFree(textureWrapper *const __RESTRICT__
 	twDelete(resource);
 	memPoolFree(&__g_TextureWrapperResourceArray, (void *)resource);
 }
-textureWrapper *moduleTextureWrapperFind(const char *const __RESTRICT__ name){
+textureWrapper *moduleTextureWrapperFind(const char *const __RESTRICT__ name, const size_t nameLength){
 
-	if(strcmp(name, g_twDefault.name) == 0){
+	if(strncmp(name, g_twDefault.name, nameLength) == 0){
 		return &g_twDefault;
 	}
 
 	MEMORY_POOL_LOOP_BEGIN(__g_TextureWrapperResourceArray, i, textureWrapper *);
 
 		// Compare the resources' names.
-		if(strcmp(name, i->name) == 0){
+		if(strncmp(name, i->name, nameLength) == 0){
 			return i;
 		}
 

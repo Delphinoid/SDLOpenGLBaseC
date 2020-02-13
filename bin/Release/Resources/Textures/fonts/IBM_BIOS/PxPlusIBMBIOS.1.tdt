@@ -1,0 +1,3 @@
+image "fonts\IBM_BIOS\PxPlusIBMBIOS.1.png"
+filter NEAREST
+mip none

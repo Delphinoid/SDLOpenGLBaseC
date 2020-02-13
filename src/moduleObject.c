@@ -94,12 +94,12 @@ __HINT_INLINE__ void moduleObjectBaseFree(objectBase *const __RESTRICT__ resourc
 	objBaseDelete(resource);
 	memPoolFree(&__g_ObjectBaseResourceArray, (void *)resource);
 }
-objectBase *moduleObjectBaseFind(const char *const __RESTRICT__ name){
+objectBase *moduleObjectBaseFind(const char *const __RESTRICT__ name, const size_t nameLength){
 
 	MEMORY_POOL_LOOP_BEGIN(__g_ObjectBaseResourceArray, i, objectBase *);
 
 		// Compare the resources' names.
-		if(strcmp(name, i->name) == 0){
+		if(strncmp(name, i->name, nameLength) == 0){
 			return i;
 		}
 

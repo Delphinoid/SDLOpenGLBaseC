@@ -78,18 +78,18 @@ __HINT_INLINE__ void moduleModelFree(model *const __RESTRICT__ resource){
 	mdlDelete(resource);
 	memPoolFree(&__g_ModelResourceArray, (void *)resource);
 }
-model *moduleModelFind(const char *const __RESTRICT__ name){
+model *moduleModelFind(const char *const __RESTRICT__ name, const size_t nameLength){
 
-	if(strcmp(name, g_mdlDefault.name) == 0){
+	if(strncmp(name, g_mdlDefault.name, nameLength) == 0){
 		return &g_mdlDefault;
-	}else if(strcmp(name, g_mdlSprite.name) == 0){
+	}else if(strncmp(name, g_mdlSprite.name, nameLength) == 0){
 		return &g_mdlSprite;
 	}
 
 	MEMORY_POOL_LOOP_BEGIN(__g_ModelResourceArray, i, model *);
 
 		// Compare the resources' names.
-		if(strcmp(name, i->name) == 0){
+		if(strncmp(name, i->name, nameLength) == 0){
 			return i;
 		}
 

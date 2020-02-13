@@ -233,14 +233,14 @@ static __FORCE_INLINE__ void physContactPersist(physContact *const __RESTRICT__ 
 	//
 	// Also generates a global normal and tangents.
 
-	const cContactPoint *cPoint = &manifold->contacts[0];
-	physContactPoint *pcPoint = &contact->contacts[0];
+	const cContactPoint *cPoint = manifold->contacts;
+	physContactPoint *pcPoint = contact->contacts;
 	const cContactPoint *const cPointLast = &cPoint[manifold->contactNum];
 	const physContactPoint *const pPointLast = &pcPoint[contact->contactNum];
 
 	// Keep track of the contacts we're updating.
 	unsigned int persistent[COLLISION_MANIFOLD_MAX_CONTACT_POINTS];
-	unsigned int *flag = &persistent[0];
+	unsigned int *flag = persistent;
 
 	const float pReciprocal = 1.f/manifold->contactNum;
 

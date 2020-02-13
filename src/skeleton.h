@@ -102,15 +102,15 @@ typedef struct sklInstance {
 extern skeleton g_sklDefault;
 
 void sklInit(skeleton *const __RESTRICT__ skl);
-return_t sklLoad(skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath);
+return_t sklLoad(skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ filePath, const size_t filePathLength);
 /** If we're sticking with fixed bone lookups, change the return value to void. **/
 //return_t sklGenerateLookup(const skeleton *skl1, const skeleton *skl2, uint_least8_t *lookup);
 boneIndex_t sklFindBone(const skeleton *const __RESTRICT__ skl, const boneIndex_t id, const char *const __RESTRICT__ name);
 void sklDelete(skeleton *const __RESTRICT__ skl);
 
 void sklaInit(sklAnim *const __RESTRICT__ skla);
-return_t sklaLoad(sklAnim *const __RESTRICT__ skla, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath);
-return_t sklaLoadSMD(sklAnim *const __RESTRICT__ skla, const skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath, const int invert);
+return_t sklaLoad(sklAnim *const __RESTRICT__ skla, const char *const __RESTRICT__ filePath, const size_t filePathLength);
+return_t sklaLoadSMD(sklAnim *const __RESTRICT__ skla, const skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ filePath, const size_t filePathLength, const int invert);
 boneIndex_t sklaFindBone(const sklAnim *const __RESTRICT__ skla, const boneIndex_t id, const char *const __RESTRICT__ name);
 void sklaDelete(sklAnim *const __RESTRICT__ skla);
 

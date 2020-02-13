@@ -5,6 +5,7 @@
 #include "bone.h"
 #include "mat3.h"
 #include "flags.h"
+#include <stddef.h>
 
 // physRigidBody defines a physical rigid body.
 //
@@ -114,7 +115,7 @@ typedef struct physRigidBody {
 // Physics rigid body functions.
 void physRigidBodyBaseInit(physRigidBodyBase *const __RESTRICT__ local);
 void physRigidBodyBaseGenerateMassProperties(physRigidBodyBase *const __RESTRICT__ local, const float **const vertexMassArray);
-return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, const skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath);
+return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, const skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ filePath, const size_t filePathLength);
 void physRigidBodyBaseDelete(physRigidBodyBase *const __RESTRICT__ local);
 
 // Physics rigid body instance functions.

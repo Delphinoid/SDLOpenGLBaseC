@@ -2,6 +2,21 @@
 #include "memoryManager.h"
 #include <string.h>
 
+return_t fileChangeDirectory(char *const program, size_t *const length){
+	// Removes program name (everything after the last backslash) from the path.
+	return_t r;
+	char *const delim = strrchr(program, FILE_PATH_DELIMITER_CHAR) + 1;
+	const char old = *delim;
+	*delim = '\0';
+	if(length != NULL){
+		*length = delim-program;
+	}
+	// Change the working directory.
+	r = chdir(program);
+	*delim = old;
+	return r;
+}
+
 return_t fileParseNextLine(FILE *const __RESTRICT__ file, char *const __RESTRICT__ buffer, size_t bufferSize, char **const line, size_t *const __RESTRICT__ lineLength){
 
 	if(fgets(buffer, bufferSize, file)){
@@ -53,23 +68,23 @@ return_t fileParseNextLine(FILE *const __RESTRICT__ file, char *const __RESTRICT
 
 }
 
-__HINT_INLINE__ void fileGenerateFullPath(char *const __RESTRICT__ fullPath,
-                                          const char *const __RESTRICT__ prgPath, const size_t prgLength,
-                                          const char *const __RESTRICT__ resPath, const size_t resLength,
-                                          const char *const __RESTRICT__ filePath, const size_t fileLength){
+__HINT_INLINE__ size_t fileGenerateFullPath(
+	char *const __RESTRICT__ fullPath,
+	const char *const __RESTRICT__ resPath, const size_t resPathLength,
+	const char *const __RESTRICT__ filePath, const size_t filePathLength
+){
 
 	char *path = fullPath;
 
-	memcpy(path, prgPath, prgLength);
-	path += prgLength;
+	memcpy(path, resPath, resPathLength);
+	path += resPathLength;
 
-	memcpy(path, resPath, resLength);
-	path += resLength;
-
-	memcpy(path, filePath, fileLength);
-	path += fileLength;
+	memcpy(path, filePath, filePathLength);
+	path += filePathLength;
 
 	*path = '\0';
+
+	return (size_t)(path - fullPath);
 
 }
 
@@ -83,7 +98,7 @@ __FORCE_INLINE__ void fileProcessPath(char *path){
 	}
 }
 
-__HINT_INLINE__ void fileParseResourcePath(char *const __RESTRICT__ resPath, size_t *const __RESTRICT__ resLength, const char *const __RESTRICT__ line, const size_t length){
+__HINT_INLINE__ size_t fileParseResourcePath(char *const __RESTRICT__ resPath, const char *const __RESTRICT__ line, const size_t lineLength){
 
 	size_t pathBegin;
 	size_t pathLength;
@@ -99,7 +114,7 @@ __HINT_INLINE__ void fileParseResourcePath(char *const __RESTRICT__ resPath, siz
 		pathLength = secondQuote-firstQuote;
 	}else{
 		pathBegin = 0;
-		pathLength = length-pathBegin;
+		pathLength = lineLength-pathBegin;
 	}
 
 	memcpy(resPath, line+pathBegin, pathLength);
@@ -107,9 +122,7 @@ __HINT_INLINE__ void fileParseResourcePath(char *const __RESTRICT__ resPath, siz
 
 	fileProcessPath(resPath);
 
-	if(resLength != NULL){
-		*resLength = pathLength;
-	}
+	return pathLength;
 
 }
 

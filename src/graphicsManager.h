@@ -37,7 +37,7 @@ typedef struct graphicsManager {
 
 } graphicsManager;
 
-return_t gfxMngrInit(graphicsManager *const __RESTRICT__ gfxMngr, const char *const __RESTRICT__ prgPath);
+return_t gfxMngrInit(graphicsManager *const __RESTRICT__ gfxMngr);
 unsigned int gfxMngrWindowChanged(graphicsManager *const __RESTRICT__ gfxMngr);
 void gfxMngrUpdateWindow(graphicsManager *const __RESTRICT__ gfxMngr);
 int gfxMngrSetWindowMode(graphicsManager *const __RESTRICT__ gfxMngr, const Uint32 mode);

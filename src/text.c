@@ -1,4 +1,13 @@
 #include "text.h"
+#include "memoryManager.h"
+#include "moduleTexture.h"
+#include "helpersFileIO.h"
+/** TEMPORARY **/
+#include "helpersMisc.h"
+/** TEMPORARY **/
+
+#define TEXT_RESOURCE_DIRECTORY_STRING FILE_PATH_RESOURCE_DIRECTORY_SHARED"Resources"FILE_PATH_DELIMITER_STRING"Fonts"FILE_PATH_DELIMITER_STRING
+#define TEXT_RESOURCE_DIRECTORY_LENGTH 18
 
 // Whether or not the first byte of a character
 // is less than these values determines how many
@@ -87,18 +96,186 @@ uint32_t txtStreamParseCharacter(const txtStream *const __RESTRICT__ stream, con
 
 }
 
-return_t txtCursorAdvance(txtCursor *const __RESTRICT__ cursor, const float advanceX, const float advanceY, const float boxWidth){
-	// When using SDF fonts, make sure advanceX and advanceY
-	// are correctly scaled by the size of the font.
-	// Return value 1 indicates that the next glyph will be
-	// on a new line and to adjust advanceY.
-	if(advanceX > 0){
-		cursor->x += advanceX;
-		if(cursor->x > boxWidth){
-			cursor->x = 0;
-			cursor->y += advanceY;
-			return 1;
+return_t txtFontLoad(
+	txtFont *const __RESTRICT__ font, const flags_t type,
+	const char *const __RESTRICT__ name, const size_t nameLength,
+	const char *const __RESTRICT__ texPath0, const size_t texPathLength0,
+	const char *const __RESTRICT__ texPath1, const size_t texPathLength1,
+	const char *const __RESTRICT__ glyphPath, const size_t glyphPathLength,
+	const char *const __RESTRICT__ cmapPath, const size_t cmapPathLength
+){
+
+	// Load the font's graphics.
+	texture **const t = memAllocate(sizeof(texture*)<<1);
+	t[0] = moduleTextureAllocate(); t[1] = moduleTextureAllocate();
+	tLoad(t[0], texPath0, texPathLength0);
+	tLoad(t[1], texPath1, texPathLength1);
+	// Load the font's glyph offset information.
+	font->glyphs = txtGlyphArrayLoad(glyphPath, glyphPathLength, t, 1);
+	// Allocate memory for the font's character map and load it.
+	font->cmap = txtCMapLoad(cmapPath, cmapPathLength);
+	memFree(t);
+
+	font->type = type;
+	font->height = 48.f;
+	font->name = memAllocate(nameLength*sizeof(char));
+	memcpy(font->name, name, nameLength);
+	font->name[nameLength] = '\0';
+
+	return 1;
+
+}
+
+txtGlyph *txtGlyphArrayLoad(const char *const __RESTRICT__ glyphPath, const size_t glyphPathLength, texture *const *const atlas, const size_t atlasSize){
+	// Temporary function by 8426THMY.
+	txtGlyph *glyphs = NULL;
+
+	// Load the glyph offsets!
+	FILE *glyphFile = fopen(glyphPath, "r");
+	if(glyphFile != NULL){
+		const float invAtlasSize[2] = {1.f/atlas[0]->width, 1.f/atlas[0]->height};
+
+		char *endPos = NULL;
+
+		size_t lastIndex = (size_t)-1;
+
+		char lineBuffer[FILE_MAX_LINE_LENGTH];
+		char *line;
+		size_t lineLength;
+
+		while(fileParseNextLine(glyphFile, lineBuffer, sizeof(lineBuffer), &line, &lineLength)){
+			// If we haven't read the character count, try and read it!
+			if(lastIndex == (size_t)-1){
+				lastIndex = strtoul(line, &endPos, 10);
+				// If we didn't read a number, return numGlyphs to the invalid value.
+				if(endPos == line){
+					lastIndex = (size_t)-1;
+
+				// Otherwise, allocate memory for our glyphs!
+				}else{
+					glyphs = memAllocate(sizeof(*glyphs) * (lastIndex + 1));
+				}
+			}else if(line[0] != '\0'){
+				size_t tokenLength;
+				char *token = line;
+
+				// Load the glyph data from the file!
+				const size_t char_id = (token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtoul(token, NULL, 10));
+				const size_t char_index = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtoul(token, NULL, 10));
+				const uint32_t char_char = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', 1234);
+				const float char_width = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtof(token, NULL));
+				const float char_height = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtof(token, NULL));
+				const float char_xoffset = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtof(token, NULL));
+				const float char_yoffset = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtof(token, NULL));
+				const float char_xadvance = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtof(token, NULL));
+				const byte_t char_chnl = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtoul(token, NULL, 10));
+				const float char_x = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtof(token, NULL));
+				const float char_y = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtof(token, NULL));
+				const byte_t char_page = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtoul(token, NULL, 10));
+				const uint32_t info_charset = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', 1234);
+
+				const txtGlyph newGlyph = {
+					.atlas = atlas[char_page],
+
+					.frame.x = char_x * invAtlasSize[0],
+					.frame.y = char_y * invAtlasSize[1],
+					.frame.w = char_width * invAtlasSize[0],
+					.frame.h = char_height * invAtlasSize[1],
+
+					.kerningX = char_xoffset,
+					.kerningY = char_yoffset,
+					.advanceX = char_xadvance
+				};
+				// Add the new glyph to its correct position in our array of glyphs!
+				glyphs[char_index] = newGlyph;
+			}
+		}
+
+		fclose(glyphFile);
+	}else{
+		printf(
+			"Unable to open glyph offsets file!\n"
+			"Path: %s\n",
+			glyphPath
+		);
+	}
+
+
+	return(glyphs);
+	#if 0
+	textGlyph *glyphs = NULL;
+
+	// Load the glyph offsets!
+	FILE *glyphFile = fopen(glyphPath, "r");
+	if(glyphFile != NULL){
+		char *endPos = NULL;
+
+		size_t numGlyphs = invalidValue(numGlyphs);
+
+		char lineBuffer[FILE_MAX_LINE_LENGTH];
+		char *line;
+		size_t lineLength;
+
+		while((line = fileReadLine(glyphFile, &lineBuffer[0], &lineLength)) != NULL){
+			// If we haven't read the character count, try and read it!
+			if(valueIsInvalid(numGlyphs)){
+				numGlyphs = strtoul(line, &endPos, 10);
+				// If we didn't read a number, return numGlyphs to the invalid value.
+				if(endPos == line){
+					numGlyphs = invalidValue(numGlyphs);
+				}
+			}else{
+				const size_t curID = strtoul(line, &endPos, 10);
+				// If we could load the character identifier,
+				// we can try and load the rest of the glyph.
+				// Otherwise, the line was probably empty.
+				if(endPos != line){
+					const textGlyph curGlyph = {
+						.uvOffsets = {
+							.x = strtof(endPos + 1, &endPos),
+							.y = strtof(endPos + 1, &endPos),
+							.w = strtof(endPos + 1, &endPos),
+							.h = strtof(endPos + 1, &endPos)
+						},
+
+						.kerningX = strtof(endPos + 1, &endPos),
+						.kerningY = strtof(endPos + 1, &endPos),
+						.advanceX = strtof(endPos + 1, NULL)
+					};
+					printf(
+						PRINTF_SIZE_T": (%f, %f, %f, %f), (%f, %f), %f\n",
+						curID,
+						curGlyph.uvOffsets.x, curGlyph.uvOffsets.y,
+						curGlyph.uvOffsets.w, curGlyph.uvOffsets.h,
+						curGlyph.kerningX, curGlyph.kerningX,
+						curGlyph.advanceX
+					);
+				}
+			}
+		}
+	}else{
+		printf(
+			"Unable to open glyph offsets file!\n"
+			"Path: %s\n",
+			glyphPath
+		);
+	}
+
+
+	return(glyphs);
+	#endif
+}
+
+void txtFontDelete(txtFont *const __RESTRICT__ font){
+	txtGlyph *g = font->glyphs;
+	const txtGlyph *const gLast = &g[font->glyphNum];
+	while(g < gLast){
+		if(memPoolBlockStatus(g) == MEMORY_POOL_BLOCK_ACTIVE){
+			moduleTextureFree(g->atlas);
 		}
 	}
-	return 0;
+	/** Change these when moduleText is introduced. **/
+	memFree(font->name);
+	memFree(font->cmap);
+	memFree(font->glyphs);
 }

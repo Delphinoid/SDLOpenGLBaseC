@@ -83,12 +83,12 @@ __FORCE_INLINE__ static return_t gfxMngrInitOGL(graphicsManager *const __RESTRIC
 
 }
 
-__FORCE_INLINE__ static return_t gfxMngrLoadShaders(graphicsManager *const __RESTRICT__ gfxMngr, const char *const __RESTRICT__ prgPath){
+__FORCE_INLINE__ static return_t gfxMngrLoadShaders(graphicsManager *const __RESTRICT__ gfxMngr){
 	return_t r;
 	if(
-		(r = shdrPrgLoad(&gfxMngr->shdrPrgSpr.id, prgPath, "s_vertex_sprite.gls", "s_fragment.gls")) <= 0 ||
+		(r = shdrPrgLoad(&gfxMngr->shdrPrgSpr.id, "s_vertex_sprite.gls", 19, "s_fragment.gls", 14)) <= 0 ||
 		(r = shdrPrgSprLink(&gfxMngr->shdrPrgSpr)) <= 0 ||
-		(r = shdrPrgLoad(&gfxMngr->shdrPrgObj.id, prgPath, "s_vertex.gls", "s_fragment.gls")) <= 0 ||
+		(r = shdrPrgLoad(&gfxMngr->shdrPrgObj.id, "s_vertex.gls", 12, "s_fragment.gls", 14)) <= 0 ||
 		(r = shdrPrgObjLink(&gfxMngr->shdrPrgObj)) <= 0
 	){
 		return r;
@@ -96,7 +96,7 @@ __FORCE_INLINE__ static return_t gfxMngrLoadShaders(graphicsManager *const __RES
 	return 1;
 }
 
-return_t gfxMngrInit(graphicsManager *const __RESTRICT__ gfxMngr, const char *const __RESTRICT__ prgPath){
+return_t gfxMngrInit(graphicsManager *const __RESTRICT__ gfxMngr){
 
 	return_t r;
 
@@ -116,7 +116,7 @@ return_t gfxMngrInit(graphicsManager *const __RESTRICT__ gfxMngr, const char *co
 		return r;
 	}
 	shdrDataInit(&gfxMngr->shdrData);
-	return gfxMngrLoadShaders(gfxMngr, prgPath);
+	return gfxMngrLoadShaders(gfxMngr);
 
 }
 

@@ -7,10 +7,10 @@
 #include "helpersFileIO.h"
 #include <string.h>
 
-#define MODEL_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Models"FILE_PATH_DELIMITER_STRING
-#define MODEL_RESOURCE_DIRECTORY_LENGTH 17
+#define MODEL_RESOURCE_DIRECTORY_STRING FILE_PATH_RESOURCE_DIRECTORY_SHARED"Resources"FILE_PATH_DELIMITER_STRING"Models"FILE_PATH_DELIMITER_STRING
+#define MODEL_RESOURCE_DIRECTORY_LENGTH 19
 
-return_t mdlWavefrontObjLoad(const char *const __RESTRICT__ filePath, vertexIndex_t *const vertexNum, vertex **const vertices, vertexIndex_t *const __RESTRICT__ indexNum, vertexIndex_t **const indices, size_t *const __RESTRICT__ lodNum, mdlLOD **const lods, int *const __RESTRICT__ sprite, char *const __RESTRICT__ sklPath);
+return_t mdlWavefrontObjLoad(const char *const __RESTRICT__ filePath, vertexIndex_t *const vertexNum, vertex **const vertices, vertexIndex_t *const __RESTRICT__ indexNum, vertexIndex_t **const indices, size_t *const __RESTRICT__ lodNum, mdlLOD **const lods, int *const __RESTRICT__ sprite, char *const __RESTRICT__ sklPath, size_t *const __RESTRICT__ sklPathLength);
 return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndex_t *indexNum, vertexIndex_t **indices, skeleton *const skl);
 
 // Default models.
@@ -60,7 +60,7 @@ void mdlInit(model *const __RESTRICT__ mdl){
 	mdl->skl = NULL;
 }
 
-return_t mdlLoad(model *const __RESTRICT__ mdl, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath){
+return_t mdlLoad(model *const __RESTRICT__ mdl, const char *const __RESTRICT__ filePath, const size_t filePathLength){
 
 	/** Create a proper model file that loads a specified mesh, a name and a skeleton. **/
 	return_t r;
@@ -75,15 +75,14 @@ return_t mdlLoad(model *const __RESTRICT__ mdl, const char *const __RESTRICT__ p
 
 	char fullPath[FILE_MAX_PATH_LENGTH];
 	char sklPath[FILE_MAX_PATH_LENGTH];
-	const size_t fileLength = strlen(filePath);
+	size_t sklPathLength = 0;
 
-	sklPath[0] = '\0';
-	fileGenerateFullPath(fullPath, prgPath, strlen(prgPath), MODEL_RESOURCE_DIRECTORY_STRING, MODEL_RESOURCE_DIRECTORY_LENGTH, filePath, fileLength);
+	fileGenerateFullPath(fullPath, MODEL_RESOURCE_DIRECTORY_STRING, MODEL_RESOURCE_DIRECTORY_LENGTH, filePath, filePathLength);
 
 	mdlInit(mdl);
 
-	if(filePath[fileLength-1] != 'd'){
-		r = mdlWavefrontObjLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, &lodNum, &lods, &sprite, &sklPath[0]);
+	if(filePath[filePathLength-1] != 'd'){
+		r = mdlWavefrontObjLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, &lodNum, &lods, &sprite, sklPath, &sklPathLength);
 	}else{
 		skeleton *const tempSkl = moduleSkeletonAllocate();
 		r = mdlSMDLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, tempSkl);
@@ -110,14 +109,14 @@ return_t mdlLoad(model *const __RESTRICT__ mdl, const char *const __RESTRICT__ p
 	memFree(vertices);
 	memFree(indices);
 
-	if(mdl->skl == NULL){if(sklPath[0] == '\0'){
+	if(mdl->skl == NULL){if(sklPathLength == 0){
 		// Use the default skeleton.
-        mdl->skl = &g_sklDefault;
+		mdl->skl = &g_sklDefault;
 	}else{
 		/** Check if the skeleton already exists. If not, load it. **/
 		skeleton *const tempSkl = moduleSkeletonAllocate();
 		if(tempSkl != NULL){
-			const return_t r2 = sklLoad(tempSkl, prgPath, &sklPath[0]);
+			const return_t r2 = sklLoad(tempSkl, sklPath, sklPathLength);
 			if(r2 < 1){
 				// The load failed. Clean up.
 				moduleSkeletonFree(tempSkl);
@@ -151,7 +150,7 @@ return_t mdlLoad(model *const __RESTRICT__ mdl, const char *const __RESTRICT__ p
 		}
 
 		// Generate a name based off the file path.
-		mdl->name = fileGenerateResourceName(filePath, fileLength);
+		mdl->name = fileGenerateResourceName(filePath, filePathLength);
 		if(mdl->name == NULL){
 			/** Memory allocation failure. **/
 			mdlDelete(mdl);

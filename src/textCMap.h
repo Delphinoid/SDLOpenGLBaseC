@@ -9,7 +9,7 @@
 
 // Currently only formats 0, 2 and 4 are supported,
 // as we only really use the basic multilingual plane.
-#define TEXT_CMAP_FORMAT_NUM 3
+#define TEXT_CMAP_FORMAT_NUM 14
 
 // Format code unit limits.
 // Format 0 deals with 8-bit code units, formats
@@ -42,8 +42,6 @@ typedef struct {
 	// We also use a linear map for formats rather
 	// than powers of 2 for the jump table.
 	uint16_t format;
-	uint16_t length;
-	uint16_t language;
 } txtCMap;
 
 typedef struct {
@@ -245,6 +243,7 @@ extern uint32_t (* const txtCMapIndexJumpTable[TEXT_CMAP_FORMAT_NUM])(
 	const txtCodeUnit_t code
 );
 
+txtCMap *txtCMapLoad(const char *const __RESTRICT__ cmapPath, const size_t cmapPathLength);
 uint32_t txtCMapIndex(const txtCMap *const cmap, const txtCodeUnit_t code);
 
 #endif

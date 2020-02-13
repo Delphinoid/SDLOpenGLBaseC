@@ -119,3 +119,34 @@ void getDelimitedString(char *const __RESTRICT__ line, const size_t lineLength, 
 		*strLength = lineLength;
 	}
 }
+
+/** TEMPORARY **/
+char *stringDelimited(char *str, const size_t strLength, const char delim, size_t *outLength){
+    // Find the beginning of the string!
+    char *tokStart = strchr(str, delim);
+
+    // If we were able to find a starting
+    // delimiter, try and find a closing one!
+    if(tokStart != NULL){
+        const char *tokEnd;
+
+        ++tokStart;
+        tokEnd = strchr(tokStart, delim);
+
+        // If we can't find a closing delimiter, just
+        // use everything up until the first one.
+        if(tokEnd == NULL){
+            *outLength = tokStart - 1 - str;
+            return(str);
+        }
+
+        // Get the string between our delimiters!
+        *outLength = tokEnd - tokStart;
+        return(tokStart);
+    }
+
+    // If we couldn't find a starting
+    // delimiter, use the entire string.
+    *outLength = strLength;
+    return(str);
+}

@@ -3,7 +3,9 @@
 #include "vertex.h"
 #include "memoryManager.h"
 #include "helpersFileIO.h"
+/** TEMPORARY **/
 #include "helpersMisc.h"
+/** TEMPORARY **/
 #include <stdlib.h>
 #include <string.h>
 
@@ -43,7 +45,7 @@
 		memFree(tempBoneWeights); \
 	}
 
-return_t mdlWavefrontObjLoad(const char *const __RESTRICT__ filePath, vertexIndex_t *const __RESTRICT__ vertexNum, vertex **const vertices, vertexIndex_t *const __RESTRICT__ indexNum, vertexIndex_t **const indices, size_t *const __RESTRICT__ lodNum, mdlLOD **const lods, int *const __RESTRICT__ sprite, char *const __RESTRICT__ sklPath){
+return_t mdlWavefrontObjLoad(const char *const __RESTRICT__ filePath, vertexIndex_t *const __RESTRICT__ vertexNum, vertex **const vertices, vertexIndex_t *const __RESTRICT__ indexNum, vertexIndex_t **const indices, size_t *const __RESTRICT__ lodNum, mdlLOD **const lods, int *const __RESTRICT__ sprite, char *const __RESTRICT__ sklPath, size_t *const __RESTRICT__ sklPathLength){
 
 	FILE *const __RESTRICT__ mdlInfo = fopen(filePath, "r");
 
@@ -176,7 +178,7 @@ return_t mdlWavefrontObjLoad(const char *const __RESTRICT__ filePath, vertexInde
 		while(fileParseNextLine(mdlInfo, lineFeed, sizeof(lineFeed), &line, &lineLength)){
 
 			// Skeleton
-			if(sklPath != NULL && sklPath[0] == '\0' && lineLength > 9 && strncmp(line, "skeleton ", 9) == 0){
+			if(sklPath != NULL && *sklPathLength == 0 && lineLength > 9 && strncmp(line, "skeleton ", 9) == 0){
 				size_t pathBegin;
 				size_t pathLength;
 				const char *firstQuote = strchr(line+9, '"');
@@ -193,7 +195,7 @@ return_t mdlWavefrontObjLoad(const char *const __RESTRICT__ filePath, vertexInde
 					pathLength = lineLength-pathBegin;
 				}
 				memcpy(sklPath, line+pathBegin, pathLength);
-				sklPath[pathLength] = '\0';
+				*sklPathLength = pathLength;
 
 			// Sprite
 			}else if(lineLength >= 6 && strncmp(line, "sprite ", 7) == 0){

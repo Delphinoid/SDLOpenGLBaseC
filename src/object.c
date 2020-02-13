@@ -20,8 +20,8 @@
 #include "moduleRenderable.h"
 #include "modulePhysics.h"
 
-#define OBJECT_RESOURCE_DIRECTORY_STRING "Resources"FILE_PATH_DELIMITER_STRING"Objects"FILE_PATH_DELIMITER_STRING
-#define OBJECT_RESOURCE_DIRECTORY_LENGTH 18
+#define OBJECT_RESOURCE_DIRECTORY_STRING FILE_PATH_RESOURCE_DIRECTORY_SHARED"Resources"FILE_PATH_DELIMITER_STRING"Objects"FILE_PATH_DELIMITER_STRING
+#define OBJECT_RESOURCE_DIRECTORY_LENGTH 20
 
 void objBaseInit(objectBase *const __RESTRICT__ base){
 	base->name = NULL;
@@ -35,16 +35,15 @@ void objBaseInit(objectBase *const __RESTRICT__ base){
 	base->stateMax = 0;
 }
 
-return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath){
+return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RESTRICT__ filePath, const size_t filePathLength){
 
 	char fullPath[FILE_MAX_PATH_LENGTH];
-	const size_t fileLength = strlen(filePath);
 
 	FILE *__RESTRICT__ objInfo;
 
 	objBaseInit(base);
 
-	fileGenerateFullPath(fullPath, prgPath, strlen(prgPath), OBJECT_RESOURCE_DIRECTORY_STRING, OBJECT_RESOURCE_DIRECTORY_LENGTH, filePath, fileLength);
+	fileGenerateFullPath(fullPath, OBJECT_RESOURCE_DIRECTORY_STRING, OBJECT_RESOURCE_DIRECTORY_LENGTH, filePath, filePathLength);
 	objInfo = fopen(fullPath, "r");
 
 	if(objInfo != NULL){
@@ -56,6 +55,7 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 		fileLine_t currentLine = 0;  // Current file line being read.
 
 		char loadPath[FILE_MAX_PATH_LENGTH];
+		size_t loadPathLength;
 
 		while(fileParseNextLine(objInfo, lineFeed, sizeof(lineFeed), &line, &lineLength)){
 
@@ -65,10 +65,10 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 			if(lineLength >= 10 && strncmp(line, "skeleton ", 9) == 0){
 
 				skeleton *tempSkl;
-				fileParseResourcePath(&loadPath[0], NULL, line+9, lineLength);
+				loadPathLength = fileParseResourcePath(loadPath, line+9, lineLength-9);
 
 				// Check if the skeleton has already been loaded.
-				tempSkl = moduleSkeletonFind(&loadPath[0]);
+				tempSkl = moduleSkeletonFind(loadPath, loadPathLength);
 				if(tempSkl != NULL){
 					base->skl = tempSkl;
 
@@ -76,7 +76,7 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 				}else{
 					tempSkl = moduleSkeletonAllocate();
 					if(tempSkl != NULL){
-						const return_t r = sklLoad(tempSkl, prgPath, &loadPath[0]);
+						const return_t r = sklLoad(tempSkl, loadPath, loadPathLength);
 						if(r < 1){
 							// The load failed. Clean up.
 							moduleSkeletonFree(tempSkl);
@@ -86,7 +86,7 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 								fclose(objInfo);
 								return -1;
 							}
-							printf("Error loading object \"%s\": Skeleton \"%s\" at line %u does not exist.\n", fullPath, &loadPath[0], currentLine);
+							printf("Error loading object \"%s\": Skeleton \"%s\" at line %u does not exist.\n", fullPath, loadPath, currentLine);
 							base->skl = &g_sklDefault;
 						}else{
 							base->skl = tempSkl;
@@ -105,10 +105,10 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 				if(base->skl != NULL){
 
 					return_t r;
-					fileParseResourcePath(&loadPath[0], NULL, line+16, lineLength);
+					loadPathLength = fileParseResourcePath(loadPath, line+16, lineLength-16);
 
 					// Load the rigid body from a file.
-					r = physRigidBodyBaseLoad(&base->skeletonBodies, base->skl, prgPath, loadPath);
+					r = physRigidBodyBaseLoad(&base->skeletonBodies, base->skl, loadPath, loadPathLength);
 
 					if(r < 0){
 						/** Memory allocation failure. **/
@@ -139,16 +139,16 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 			}else if(lineLength >= 11 && strncmp(line, "animation ", 10) == 0){
 
 				sklAnim *tempSkla;
-				fileParseResourcePath(&loadPath[0], NULL, line+10, lineLength);
+				loadPathLength = fileParseResourcePath(loadPath, line+10, lineLength-10);
 
 				// Check if the animation has already been loaded.
-				tempSkla = moduleSkeletonAnimationFind(&loadPath[0]);
+				tempSkla = moduleSkeletonAnimationFind(loadPath, loadPathLength);
 
 				// If the animation path is surrounded by quotes, try and load it.
 				if(tempSkla == NULL){
 					tempSkla = moduleSkeletonAnimationAllocate();
 					if(tempSkla != NULL){
-						const return_t r = sklaLoad(tempSkla, prgPath, &loadPath[0]);
+						const return_t r = sklaLoad(tempSkla, loadPath, loadPathLength);
 						if(r < 1){
 							// The load failed. Clean up.
 							moduleSkeletonAnimationFree(tempSkla);
@@ -182,7 +182,7 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 					++base->animationNum;
 
 				}else{
-					printf("Error loading object \"%s\": Skeletal animation \"%s\" at line %u does not exist.\n", fullPath, &loadPath[0], currentLine);
+					printf("Error loading object \"%s\": Skeletal animation \"%s\" at line %u does not exist.\n", fullPath, loadPath, currentLine);
 				}
 
 
@@ -245,10 +245,7 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 					}
 
 					// Load the model.
-					memcpy(&loadPath[0], line+mdlPathBegin, mdlPathLength);
-					loadPath[mdlPathLength] = '\0';
-
-					delimiter = loadPath;
+					delimiter = line+mdlPathBegin;
 					while(*delimiter != '\0'){
 						if(*delimiter == FILE_PATH_DELIMITER_CHAR_UNUSED){
 							*delimiter = FILE_PATH_DELIMITER_CHAR;
@@ -257,7 +254,7 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 					}
 
 					// Check if the model has already been loaded.
-					tempMdl = moduleModelFind(&loadPath[0]);
+					tempMdl = moduleModelFind(line+mdlPathBegin, mdlPathLength);
 					if(tempMdl != NULL){
 						rndr.mdl = tempMdl;
 
@@ -265,7 +262,7 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 					}else{
 						tempMdl = moduleModelAllocate();
 						if(tempMdl != NULL){
-							const return_t r = mdlLoad(tempMdl, prgPath, &loadPath[0]);
+							const return_t r = mdlLoad(tempMdl, line+mdlPathBegin, mdlPathLength);
 							if(r <= 0){
 								moduleModelFree(tempMdl);
 								if(r < 0){
@@ -286,7 +283,8 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 					}
 					// Use the default model if no model was loaded.
 					if(rndr.mdl == NULL){
-						printf("Error loading object \"%s\": Model \"%s\" at line %u does not exist.\n", fullPath, &loadPath[0], currentLine);
+						line[mdlPathBegin+mdlPathLength] = '\0';
+						printf("Error loading object \"%s\": Model \"%s\" at line %u does not exist.\n", fullPath, line+mdlPathBegin, currentLine);
 						rndr.mdl = &g_mdlDefault;
 					}
 
@@ -295,10 +293,7 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 						textureWrapper *tempTw = NULL;
 
 						// Load the texture wrapper.
-						memcpy(&loadPath[0], line+texPathBegin, texPathLength);
-						loadPath[texPathLength] = '\0';
-
-						delimiter = loadPath;
+						delimiter = line+texPathBegin;
 						while(*delimiter != '\0'){
 							if(*delimiter == FILE_PATH_DELIMITER_CHAR_UNUSED){
 								*delimiter = FILE_PATH_DELIMITER_CHAR;
@@ -307,7 +302,7 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 						}
 
 						// Check if the texture wrapper has already been loaded.
-						tempTw = moduleTextureWrapperFind(&loadPath[0]);
+						tempTw = moduleTextureWrapperFind(line+texPathBegin, texPathLength);
 						if(tempTw != NULL){
 							rndr.tw = tempTw;
 
@@ -315,7 +310,7 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 						}else{
 							tempTw = moduleTextureWrapperAllocate();
 							if(tempTw != NULL){
-								const return_t r = twLoad(tempTw, prgPath, &loadPath[0]);
+								const return_t r = twLoad(tempTw, line+texPathBegin, texPathLength);
 								if(r <= 0){
 									moduleTextureWrapperFree(tempTw);
 									if(r < 0){
@@ -336,7 +331,8 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 						}
 						// Use the default texture wrapper if no texture wrapper was loaded.
 						if(rndr.tw == NULL){
-							printf("Error loading object \"%s\": Texture wrapper \"%s\" at line %u does not exist.\n", fullPath, &loadPath[0], currentLine);
+							line[texPathBegin+texPathLength] = '\0';
+							printf("Error loading object \"%s\": Texture wrapper \"%s\" at line %u does not exist.\n", fullPath, line+texPathBegin, currentLine);
 							rndr.tw = &g_twDefault;
 						}
 
@@ -392,7 +388,7 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 	}
 
 	// Generate a name based off the file path.
-	base->name = fileGenerateResourceName(filePath, fileLength);
+	base->name = fileGenerateResourceName(filePath, filePathLength);
 	if(base->name == NULL){
 		/** Memory allocation failure. **/
 		objBaseDelete(base);

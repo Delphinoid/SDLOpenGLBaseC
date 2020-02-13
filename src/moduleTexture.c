@@ -73,16 +73,16 @@ __HINT_INLINE__ void moduleTextureFree(texture *const __RESTRICT__ resource){
 	tDelete(resource);
 	memPoolFree(&__g_TextureResourceArray, (void *)resource);
 }
-texture *moduleTextureFind(const char *const __RESTRICT__ name){
+texture *moduleTextureFind(const char *const __RESTRICT__ name, const size_t nameLength){
 
-	if(strcmp(name, g_tDefault.name) == 0){
+	if(strncmp(name, g_tDefault.name, nameLength) == 0){
 		return &g_tDefault;
 	}
 
 	MEMORY_POOL_LOOP_BEGIN(__g_TextureResourceArray, i, texture *);
 
 		// Compare the resources' names.
-		if(strcmp(name, i->name) == 0){
+		if(strncmp(name, i->name, nameLength) == 0){
 			return i;
 		}
 

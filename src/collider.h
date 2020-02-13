@@ -34,7 +34,8 @@ typedef struct collider {
 		cComposite composite;
 	} data;
 	colliderType_t type;
-	flags_t flags;  // Fits in for free next to colliderType_t.
+	// Fits in for free next to colliderType_t.
+	flags_t flags;
 } collider;
 
 // Forward declarations for inlining.

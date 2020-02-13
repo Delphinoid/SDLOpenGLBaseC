@@ -150,16 +150,16 @@ __HINT_INLINE__ void moduleSkeletonFree(skeleton *const __RESTRICT__ resource){
 	sklDelete(resource);
 	memPoolFree(&__g_SkeletonResourceArray, (void *)resource);
 }
-skeleton *moduleSkeletonFind(const char *const __RESTRICT__ name){
+skeleton *moduleSkeletonFind(const char *const __RESTRICT__ name, const size_t nameLength){
 
-	if(strcmp(name, g_sklDefault.name) == 0){
+	if(strncmp(name, g_sklDefault.name, nameLength) == 0){
 		return &g_sklDefault;
 	}
 
 	MEMORY_POOL_LOOP_BEGIN(__g_SkeletonResourceArray, i, skeleton *);
 
 		// Compare the resources' names.
-		if(strcmp(name, i->name) == 0){
+		if(strncmp(name, i->name, nameLength) == 0){
 			return i;
 		}
 
@@ -207,12 +207,12 @@ __HINT_INLINE__ void moduleSkeletonAnimationFree(sklAnim *const __RESTRICT__ res
 	sklaDelete(resource);
 	memPoolFree(&__g_SkeletonAnimationResourceArray, (void *)resource);
 }
-sklAnim *moduleSkeletonAnimationFind(const char *const __RESTRICT__ name){
+sklAnim *moduleSkeletonAnimationFind(const char *const __RESTRICT__ name, const size_t nameLength){
 
 	MEMORY_POOL_LOOP_BEGIN(__g_SkeletonAnimationResourceArray, i, sklAnim *);
 
 		// Compare the resources' names.
-		if(strcmp(name, i->name) == 0){
+		if(strncmp(name, i->name, nameLength) == 0){
 			return i;
 		}
 

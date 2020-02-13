@@ -78,7 +78,7 @@ typedef struct object {
 } object;
 
 void objBaseInit(objectBase *const restrict base);
-return_t objBaseLoad(objectBase *const restrict base, const char *const restrict prgPath, const char *const restrict filePath);
+return_t objBaseLoad(objectBase *const restrict base, const char *const __RESTRICT__ filePath, const size_t filePathLength);
 void objBaseDelete(objectBase *const restrict base);
 
 return_t objInit(object *const restrict obj);

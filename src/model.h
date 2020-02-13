@@ -38,7 +38,7 @@ extern model g_mdlSprite;
 extern model g_mdlBillboard;
 
 void mdlInit(model *const __RESTRICT__ mdl);
-return_t mdlLoad(model *const __RESTRICT__ mdl, const char *const __RESTRICT__ prgPath, const char *const __RESTRICT__ filePath);
+return_t mdlLoad(model *const __RESTRICT__ mdl, const char *const __RESTRICT__ filePath, const size_t filePathLength);
 void mdlDefaultInit();
 void mdlSpriteInit();
 void mdlBillboardInit();
