@@ -22,8 +22,19 @@ uniform vec4 sdfBackground;
 
 out vec4 colour;
 
-float median(const float a, const float b, const float c){
-	return max(min(a, b), min(max(a, b), c));
+float median(float a, float b, float c){
+    if(a > b){
+        float t = a;
+        a = b;
+        b = t;
+    }
+    if(b > c){
+        b = c;
+    }
+    if(a > b){
+        b = a;
+    }
+    return(b);
 }
 
 void main(){

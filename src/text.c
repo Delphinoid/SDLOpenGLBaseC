@@ -4,6 +4,7 @@
 #include "helpersFileIO.h"
 /** TEMPORARY **/
 #include "helpersMisc.h"
+#include <stdlib.h>
 #include <string.h>
 /** TEMPORARY **/
 
@@ -164,14 +165,14 @@ txtGlyph *txtGlyphArrayLoad(const char *const __RESTRICT__ glyphPath, const size
 				const size_t char_id = (token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtoul(token, NULL, 10));
 				const size_t char_index = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtoul(token, NULL, 10));
 				const uint32_t char_char = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', 1234);
-				const float char_width = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtol(token, NULL));
-				const float char_height = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtol(token, NULL));
-				const float char_xoffset = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtol(token, NULL));
-				const float char_yoffset = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtol(token, NULL));
-				const float char_xadvance = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtol(token, NULL));
+				const float char_width = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtof(token, NULL));
+				const float char_height = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtof(token, NULL));
+				const float char_xoffset = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtof(token, NULL));
+				const float char_yoffset = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtof(token, NULL));
+				const float char_xadvance = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtof(token, NULL));
 				const byte_t char_chnl = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtoul(token, NULL, 10));
-				const float char_x = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtol(token, NULL));
-				const float char_y = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtol(token, NULL));
+				const float char_x = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtof(token, NULL));
+				const float char_y = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtof(token, NULL));
 				const byte_t char_page = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', strtoul(token, NULL, 10));
 				const uint32_t info_charset = (token += tokenLength + 1, token = stringDelimited(token, lineLength, '"', &tokenLength), token[tokenLength] = '\0', 1234);
 
@@ -187,11 +188,7 @@ txtGlyph *txtGlyphArrayLoad(const char *const __RESTRICT__ glyphPath, const size
 					.kerningY = char_yoffset,
 					.advanceX = char_xadvance
 				};
-				printf("%lu %lu %u %f %f %f %f %f %u %f %f %u %u\n",
-					(unsigned long)char_id, (unsigned long)char_index, char_char, char_width,
-					char_height, char_xoffset, char_yoffset, char_xadvance, char_chnl, char_x,
-					char_y, char_page, info_charset
-				);
+
 				// Add the new glyph to its correct position in our array of glyphs!
 				glyphs[char_index] = newGlyph;
 			}
