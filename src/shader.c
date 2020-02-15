@@ -173,10 +173,16 @@ return_t shdrPrgSprLink(shaderProgramSprite *const __RESTRICT__ shdrPrg){
 	shdrPrg->vpMatrixID = glGetUniformLocation(shdrPrg->id, "vpMatrix");
 	shdrPrg->alphaID = glGetUniformLocation(shdrPrg->id, "alpha");
 	shdrPrg->mipID = glGetUniformLocation(shdrPrg->id, "mip");
+	shdrPrg->sdfTypeID = glGetUniformLocation(shdrPrg->id, "sdfType");
+	shdrPrg->sdfColourID = glGetUniformLocation(shdrPrg->id, "sdfColour");
+	shdrPrg->sdfBackgroundID = glGetUniformLocation(shdrPrg->id, "sdfBackground");
 	shdrPrg->textureSamplerID = glGetUniformLocation(shdrPrg->id, "textureSampler");
 
 	glUniform1f(shdrPrg->alphaID, 1.f);
 	glUniform1f(shdrPrg->mipID, SHADER_DEFAULT_BIAS_MIP);
+	glUniform1ui(shdrPrg->sdfTypeID, SHADER_SDF_MODE_DISABLED);
+	glUniform4f(shdrPrg->sdfColourID, 0.f, 0.f, 0.f, 1.f);
+	glUniform4f(shdrPrg->sdfBackgroundID, 0.f, 0.f, 0.f, 0.f);
 	glUniform1i(shdrPrg->textureSamplerID, 0);
 
 	glError = glGetError();

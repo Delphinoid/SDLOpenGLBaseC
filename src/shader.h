@@ -36,6 +36,9 @@ typedef struct {
 	GLuint vpMatrixID;
 	GLuint alphaID;
 	GLuint mipID;
+	GLuint sdfTypeID;
+	GLuint sdfColourID;
+	GLuint sdfBackgroundID;
 
 	// Texture sampler.
 	GLuint textureSamplerID;

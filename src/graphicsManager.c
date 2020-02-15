@@ -86,7 +86,7 @@ __FORCE_INLINE__ static return_t gfxMngrInitOGL(graphicsManager *const __RESTRIC
 __FORCE_INLINE__ static return_t gfxMngrLoadShaders(graphicsManager *const __RESTRICT__ gfxMngr){
 	return_t r;
 	if(
-		(r = shdrPrgLoad(&gfxMngr->shdrPrgSpr.id, "s_vertex_sprite.gls", 19, "s_fragment.gls", 14)) <= 0 ||
+		(r = shdrPrgLoad(&gfxMngr->shdrPrgSpr.id, "s_vertex_sprite.gls", 19, "s_fragment_sprite.gls", 21)) <= 0 ||
 		(r = shdrPrgSprLink(&gfxMngr->shdrPrgSpr)) <= 0 ||
 		(r = shdrPrgLoad(&gfxMngr->shdrPrgObj.id, "s_vertex.gls", 12, "s_fragment.gls", 14)) <= 0 ||
 		(r = shdrPrgObjLink(&gfxMngr->shdrPrgObj)) <= 0

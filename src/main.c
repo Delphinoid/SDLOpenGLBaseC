@@ -345,13 +345,17 @@ int main(int argc, char **argv){
 	gTxt.root.position.y = (float)(gfxMngr.windowHeight>>1);
 	gTxt.data.text.width = (float)(gfxMngr.windowWidth>>1);
 	gTxt.data.text.height = (float)(gfxMngr.windowHeight>>1);
-	gTxt.data.text.stream.font = &testFont;
+	gTxt.data.text.stream.format.font = &testFont;
+	gTxt.data.text.stream.format.size = 1.f;
+	gTxt.data.text.stream.format.colour = vec4New(1.f, 1.f, 1.f, 1.f);
+	gTxt.data.text.stream.format.background = vec4New(1.f, 1.f, 1.f, 0.f);
+	gTxt.data.text.stream.format.style = 0;
 	gTxt.data.text.stream.front = memAllocate(44*sizeof(char));
 	gTxt.data.text.stream.back = &gTxt.data.text.stream.front[44];
 	gTxt.data.text.stream.offset = gTxt.data.text.stream.front;
 	memcpy(gTxt.data.text.stream.front, "The quick brown fox jumps over the lazy dog.", 44*sizeof(char));
 	txtFontLoad(
-		&testFont, TEXT_FONT_TYPE_SDF,
+		&testFont, TEXT_FONT_TYPE_MSDF,
 		"IBM_BIOS", 8,
 		"fonts"FILE_PATH_DELIMITER_STRING"IBM_BIOS"FILE_PATH_DELIMITER_STRING"PxPlusIBMBIOS.0.png", 34,
 		"fonts"FILE_PATH_DELIMITER_STRING"IBM_BIOS"FILE_PATH_DELIMITER_STRING"PxPlusIBMBIOS.1.png", 34,
@@ -617,6 +621,7 @@ int main(int argc, char **argv){
 			glUniformMatrix4fv(gfxMngr.shdrPrgSpr.vpMatrixID, 1, GL_FALSE, &camGUI->viewProjectionMatrix.m[0][0]);
 			guiElementRender(&gEl, &gfxMngr, camGUI, 0.f, interpT);
 			guiElementRender(&gTxt, &gfxMngr, camGUI, 0.f, interpT);
+			glUniform1ui(gfxMngr.shdrPrgSpr.sdfTypeID, 0);
 
 			// Switch to the camera's view.
 			gfxMngrSwitchView(&gfxMngr, &camMain->view);

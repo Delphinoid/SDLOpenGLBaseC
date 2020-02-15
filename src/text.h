@@ -4,6 +4,7 @@
 #include "textCMap.h"
 #include "texture.h"
 #include "rectangle.h"
+#include "vec4.h"
 #include "flags.h"
 
 // Text strings can invoke the following commands, which
@@ -29,8 +30,9 @@
 #define TEXT_UTF8_INVALID_CODEUNIT ((uint32_t)-1)
 
 // Font types.
-#define TEXT_FONT_TYPE_BMP 0x00
-#define TEXT_FONT_TYPE_SDF 0x01
+#define TEXT_FONT_TYPE_BMP  0x00
+#define TEXT_FONT_TYPE_SDF  0x01
+#define TEXT_FONT_TYPE_MSDF 0x02
 
 // Format flags.
 #define TEXT_FORMAT_FONT_UPDATED  0x01
@@ -79,8 +81,10 @@ typedef struct {
 } txtFont;
 
 typedef struct {
-	txtFont font;
+	const txtFont *font;
 	float size;
+	vec4 colour;
+	vec4 background;
 	flags_t style;
 } txtFormat;
 
@@ -90,8 +94,8 @@ typedef struct {
 	// Stream beginning and end.
 	byte_t *front;
 	byte_t *back;
-	// Typeface information.
-	const txtFont *font;
+	// Default formatting.
+	txtFormat format;
 } txtStream;
 
 txtGlyph *txtGlyphArrayLoad(const char *const __RESTRICT__ glyphPath, const size_t glyphPathLength, texture *const *const atlas, const size_t atlasSize);

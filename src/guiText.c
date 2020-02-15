@@ -9,7 +9,8 @@ void guiElementRenderText(const guiElement *const __RESTRICT__ element, graphics
 	const bone root = element->root;
 	const mat4 rootTransform = boneMatrix(root);
 
-	txtFormat format = {.font = *text.stream.font, .size = 1.f, .style = 0};
+	txtFormat format = text.stream.format;
+	txtFont font = *format.font;
 	const texture *atlas = NULL;
 
 	txtCursor cursor = {.x = 0.f, .y = 0.f};
@@ -21,10 +22,13 @@ void guiElementRenderText(const guiElement *const __RESTRICT__ element, graphics
 	const byte_t *currentCharacter = text.stream.offset;
 
 	// Scaled root transform.
-	mat4 transform = rootTransform;
+	mat4 transform = mat4Scale(rootTransform, format.size, format.size, format.size);
 
 	// Initialize rendering state.
 	glBindVertexArray(g_meshSprite.vaoID);
+	glUniform1ui(gfxMngr->shdrPrgSpr.sdfTypeID, font.type);
+	glUniform4fv(gfxMngr->shdrPrgSpr.sdfColourID, 1, &format.colour);
+	glUniform4fv(gfxMngr->shdrPrgSpr.sdfBackgroundID, 1, &format.background);
 
 	// Loop through every character in the stream.
 	do {
@@ -41,6 +45,20 @@ void guiElementRenderText(const guiElement *const __RESTRICT__ element, graphics
 			// mean that the formatting was updated.
 			if(flagsAreSet(format.style, TEXT_FORMAT_UPDATED)){
 
+				// If the state buffer is not empty, render.
+				// We must do this to avoid formatting changes
+				// affecting past characters.
+				/// Check if we actually need to do this.
+				if(bufferSize > 0){
+					state = &gfxMngr->shdrData.spriteTransformState[0];
+					// Upload the state data to the shader.
+					glBindBuffer(GL_ARRAY_BUFFER, g_sprStateBufferID);
+					glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize*sizeof(spriteState), state);
+					// Render.
+					glDrawElementsInstanced(GL_TRIANGLES, g_meshSprite.indexNum, GL_UNSIGNED_INT, NULL, bufferSize);
+					bufferSize = 0;
+				}
+
 				// Handle updated formatting.
 				if(flagsAreSet(format.style, TEXT_FORMAT_FONT_UPDATED)){
 					///font = text.stream.typeface->styles[format.font];
@@ -54,19 +72,6 @@ void guiElementRenderText(const guiElement *const __RESTRICT__ element, graphics
 				}
 				flagsUnset(format.style, TEXT_FORMAT_FONT_UPDATED);
 
-				// If the state buffer is not empty, render.
-				// We must do this to avoid formatting changes
-				// affecting past characters.
-				if(bufferSize > 0){
-					state = &gfxMngr->shdrData.spriteTransformState[0];
-					// Upload the state data to the shader.
-					glBindBuffer(GL_ARRAY_BUFFER, g_sprStateBufferID);
-					glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize*sizeof(spriteState), state);
-					// Render.
-					glDrawElementsInstanced(GL_TRIANGLES, g_meshSprite.indexNum, GL_UNSIGNED_INT, NULL, bufferSize);
-					bufferSize = 0;
-				}
-
 			}
 
 			continue;
@@ -76,14 +81,16 @@ void guiElementRenderText(const guiElement *const __RESTRICT__ element, graphics
 			// New line.
 			cursor.x = 0.f;
 			cursor.y += advanceY*format.size;
-			advanceY = format.font.height;
+			advanceY = font.height;
 
 		}else{
 
 			// Obtain the glyph for this code unit.
-			const txtGlyph glyph = format.font.glyphs[txtCMapIndex(format.font.cmap, code)];
-			float translateX = cursor.x + glyph.frame.w*glyph.atlas->width*0.5f + glyph.kerningX;
-			float translateY = -glyph.frame.h*glyph.atlas->height*0.5f - glyph.kerningY;
+			const txtGlyph glyph = font.glyphs[txtCMapIndex(font.cmap, code)];
+			const float glyphWidth = glyph.frame.w*glyph.atlas->width;
+			const float glyphHeight = glyph.frame.h*glyph.atlas->height;
+			float glyphX = cursor.x + glyphWidth*0.5f + glyph.kerningX;
+			float glyphY = -glyphHeight*0.5f - glyph.kerningY;
 
 			// If the state buffer is full or the atlas must change, render.
 			if(bufferSize >= SPRITE_STATE_BUFFER_SIZE || atlas != glyph.atlas){
@@ -102,31 +109,31 @@ void guiElementRenderText(const guiElement *const __RESTRICT__ element, graphics
 			}
 
 			// Adjust advanceY.
-			if(format.font.height > advanceY){
+			if(font.height > advanceY){
 				// Reset font.height after the new line.
 				// Also make sure that advanceY is the maximum
 				// height of every font on the current line.
-				advanceY = format.font.height;
+				advanceY = font.height;
 			}
 
 			// Check if the glyph will fit.
-			if((translateX + glyph.frame.w*glyph.atlas->width*0.5f)*format.size*root.scale.x > text.width){
+			if((cursor.x + glyphWidth + glyph.kerningX)*format.size*root.scale.x > text.width){
 				// New line.
-				translateX -= cursor.x;
+				glyphX -= cursor.x;
 				cursor.x = 0.f;
-				cursor.y += advanceY*format.size;
-				advanceY = format.font.height;
+				cursor.y += advanceY;
+				advanceY = font.height;
 			}
-			translateY -= cursor.y;
+			glyphY -= cursor.y;
 
 			// Generate glyph transform and add it to the state buffer.
 			/// Temporary transformation. There must be a better way.
-			state->transformation = mat4Translate(transform, translateX, translateY, 0.f);
-			state->transformation = mat4Scale(state->transformation, glyph.frame.w*glyph.atlas->width*format.size, glyph.frame.h*glyph.atlas->height*format.size, 1.f);
+			state->transformation = mat4Translate(transform, glyphX, glyphY, 0.f);
+			state->transformation = mat4Scale(state->transformation, glyphWidth, glyphHeight, 1.f);
 			state->frame = glyph.frame;
 			++state; ++bufferSize;
 
-			cursor.x += glyph.advanceX*format.size;
+			cursor.x += glyph.advanceX;
 
 		}
 

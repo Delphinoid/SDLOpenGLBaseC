@@ -238,7 +238,7 @@ __HINT_INLINE__ vec2 mat2Solve(const mat2 A, const vec2 b){
 		invDetA = 1.f / invDetA;
 
 		memcpy(A_b.m[0], &b, sizeof(vec2));
-		memcpy(A_b.m[1], A.m[1], sizeof(vec2)+sizeof(vec2));
+		memcpy(A_b.m[1], A.m[1], sizeof(vec2));
 		r.x = mat2Determinant(A_b) * invDetA;
 
 		memcpy(A_b.m[0], A.m[0], sizeof(vec2));
@@ -274,7 +274,7 @@ __HINT_INLINE__ return_t mat2SolveR(const mat2 A, const vec2 b, vec2 *const __RE
 		invDetA = 1.f / invDetA;
 
 		memcpy(A_b.m[0], &b, sizeof(vec2));
-		memcpy(A_b.m[1], A.m[1], sizeof(vec2)+sizeof(vec2));
+		memcpy(A_b.m[1], A.m[1], sizeof(vec2));
 		r->x = mat2Determinant(A_b) * invDetA;
 
 		memcpy(A_b.m[0], A.m[0], sizeof(vec2));
@@ -310,7 +310,7 @@ __HINT_INLINE__ return_t mat2SolvePR(const mat2 *const __RESTRICT__ A, const vec
 		invDetA = 1.f / invDetA;
 
 		memcpy(A_b.m[0], b, sizeof(vec2));
-		memcpy(A_b.m[1], A->m[1], sizeof(vec2)+sizeof(vec2));
+		memcpy(A_b.m[1], A->m[1], sizeof(vec2));
 		r->x = mat2DeterminantP(&A_b) * invDetA;
 
 		memcpy(A_b.m[0], A->m[0], sizeof(vec2));

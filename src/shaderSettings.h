@@ -11,4 +11,8 @@
 	#define SHADER_DEFAULT_BIAS_LOD 0
 #endif
 
+#define SHADER_SDF_MODE_DISABLED 0x00
+#define SHADER_SDF_MODE_SDF      0x01
+#define SHADER_SDF_MODE_MSDF     0x01
+
 #endif
