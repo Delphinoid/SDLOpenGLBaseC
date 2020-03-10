@@ -27,8 +27,8 @@ void guiElementRenderText(const guiElement *const __RESTRICT__ element, graphics
 	// Initialize rendering state.
 	glBindVertexArray(g_meshSprite.vaoID);
 	glUniform1ui(gfxMngr->shdrPrgSpr.sdfTypeID, font.type);
-	glUniform4fv(gfxMngr->shdrPrgSpr.sdfColourID, 1, &format.colour);
-	glUniform4fv(gfxMngr->shdrPrgSpr.sdfBackgroundID, 1, &format.background);
+	glUniform4fv(gfxMngr->shdrPrgSpr.sdfColourID, 1, (GLfloat *)&format.colour);
+	glUniform4fv(gfxMngr->shdrPrgSpr.sdfBackgroundID, 1, (GLfloat *)&format.background);
 
 	// Loop through every character in the stream.
 	do {

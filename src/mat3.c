@@ -348,10 +348,10 @@ __HINT_INLINE__ vec3 mat3Solve(const mat3 A, const vec3 b){
 
 	// Solves Ax = b using Cramer's rule.
 	// Cramer's rule states that
-	//     b.x = det(A_x) / det(A)
-	//     b.y = det(A_y) / det(A)
-	//     b.z = det(A_z) / det(A)
-	// for matrices A_x, A_y, A_z that are
+	//     x_1 = det(A_1) / det(A)
+	//     x_2 = det(A_2) / det(A)
+	//     x_3 = det(A_3) / det(A)
+	// for matrices A_1, A_2, A_3 that are
 	// the matrix A with the first, second
 	// and third columns replaced with the
 	// solution vector b.
@@ -389,10 +389,10 @@ __HINT_INLINE__ return_t mat3SolveR(const mat3 A, const vec3 b, vec3 *const __RE
 
 	// Solves Ax = b using Cramer's rule.
 	// Cramer's rule states that
-	//     b.x = det(A_x) / det(A)
-	//     b.y = det(A_y) / det(A)
-	//     b.z = det(A_z) / det(A)
-	// for matrices A_x, A_y, A_z that are
+	//     x_1 = det(A_1) / det(A)
+	//     x_2 = det(A_2) / det(A)
+	//     x_3 = det(A_3) / det(A)
+	// for matrices A_1, A_2, A_3 that are
 	// the matrix A with the first, second
 	// and third columns replaced with the
 	// solution vector b.
@@ -430,10 +430,10 @@ __HINT_INLINE__ return_t mat3SolvePR(const mat3 *const __RESTRICT__ A, const vec
 
 	// Solves Ax = b using Cramer's rule.
 	// Cramer's rule states that
-	//     b.x = det(A_x) / det(A)
-	//     b.y = det(A_y) / det(A)
-	//     b.z = det(A_z) / det(A)
-	// for matrices A_x, A_y, A_z that are
+	//     x_1 = det(A_1) / det(A)
+	//     x_2 = det(A_2) / det(A)
+	//     x_3 = det(A_3) / det(A)
+	// for matrices A_1, A_2, A_3 that are
 	// the matrix A with the first, second
 	// and third columns replaced with the
 	// solution vector b.

@@ -221,9 +221,9 @@ __HINT_INLINE__ vec2 mat2Solve(const mat2 A, const vec2 b){
 
 	// Solves Ax = b using Cramer's rule.
 	// Cramer's rule states that
-	//     b.x = det(A_x) / det(A)
-	//     b.y = det(A_y) / det(A)
-	// for matrices A_x, A_y that are the
+	//     x_1 = det(A_1) / det(A)
+	//     x_2 = det(A_2) / det(A)
+	// for matrices A_1, A_2 that are the
 	// matrix A with the first and second
 	// columns replaced with the solution
 	// vector b.
@@ -257,9 +257,9 @@ __HINT_INLINE__ return_t mat2SolveR(const mat2 A, const vec2 b, vec2 *const __RE
 
 	// Solves Ax = b using Cramer's rule.
 	// Cramer's rule states that
-	//     b.x = det(A_x) / det(A)
-	//     b.y = det(A_y) / det(A)
-	// for matrices A_x, A_y that are the
+	//     x_1 = det(A_1) / det(A)
+	//     x_2 = det(A_2) / det(A)
+	// for matrices A_1, A_2 that are the
 	// matrix A with the first and second
 	// columns replaced with the solution
 	// vector b.
@@ -293,9 +293,9 @@ __HINT_INLINE__ return_t mat2SolvePR(const mat2 *const __RESTRICT__ A, const vec
 
 	// Solves Ax = b using Cramer's rule.
 	// Cramer's rule states that
-	//     b.x = det(A_x) / det(A)
-	//     b.y = det(A_y) / det(A)
-	// for matrices A_x, A_y that are the
+	//     x_1 = det(A_1) / det(A)
+	//     x_2 = det(A_2) / det(A)
+	// for matrices A_1, A_2 that are the
 	// matrix A with the first and second
 	// columns replaced with the solution
 	// vector b.
