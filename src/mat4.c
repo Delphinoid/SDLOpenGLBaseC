@@ -364,10 +364,13 @@ __HINT_INLINE__ return_t mat4InvertPR(const mat4 *const __RESTRICT__ m, mat4 *co
 }
 
 __HINT_INLINE__ mat4 mat4Frustum(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar){
-	const mat4 r = {.m = {{(zNear+zNear)/(right-left), 0.f,                        0.f,                                0.f},
-	                      {0.f,                        (zNear+zNear)/(top-bottom), 0.f,                                0.f},
-	                      {(right+left)/(right-left),  (top+bottom)/(top-bottom),  -(zFar+zNear)/(zFar-zNear),         -1.f},
-	                      {0.f,                        0.f,                        -((zFar+zFar)*zNear)/(zFar-zNear),  0.f}}};
+	const float invRightSubLeft = 1.f/(right-left);
+	const float invTopSubBottom = 1.f/(top-bottom);
+	const float invFarSubNear = 1.f/(zFar-zNear);
+	const mat4 r = {.m = {{(zNear+zNear)*invRightSubLeft, 0.f,                           0.f,                              0.f},
+	                      {0.f,                           (zNear+zNear)*invTopSubBottom, 0.f,                              0.f},
+	                      {(right+left)*invRightSubLeft,  (top+bottom)*invTopSubBottom,  -(zFar+zNear)*invFarSubNear,      -1.f},
+	                      {0.f,                           0.f,                           -(zFar+zFar)*zNear*invFarSubNear, 0.f}}};
 	return r;
 }
 __HINT_INLINE__ void mat4FrustumP(mat4 *const __RESTRICT__ m, const float left, const float right, const float bottom, const float top, const float zNear, const float zFar){
