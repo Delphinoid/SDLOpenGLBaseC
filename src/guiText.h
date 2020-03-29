@@ -18,6 +18,7 @@ typedef struct {
 	flags_t flags;
 } guiText;
 
-void guiElementRenderText(const guiElement *const __RESTRICT__ element, graphicsManager *const __RESTRICT__ gfxMngr, const camera *const __RESTRICT__ cam, const float distance, const float interpT);
+void guiTickText(guiElement *const element, const float elapsedTime);
+void guiRenderText(const guiElement *const element, graphicsManager *const gfxMngr, const camera *const cam, const float distance, const float interpT);
 
 #endif

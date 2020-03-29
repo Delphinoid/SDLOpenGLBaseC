@@ -18,6 +18,8 @@ return_t moduleGUIResourcesInit();
 void moduleGUIResourcesReset();
 void moduleGUIResourcesDelete();
 
+guiElement *moduleGUIElementPrependStatic(guiElement **const __RESTRICT__ array);
+guiElement *moduleGUIElementPrepend(guiElement **const __RESTRICT__ array);
 guiElement *moduleGUIElementAppendStatic(guiElement **const __RESTRICT__ array);
 guiElement *moduleGUIElementAppend(guiElement **const __RESTRICT__ array);
 guiElement *moduleGUIElementInsertAfterStatic(guiElement **const __RESTRICT__ array, guiElement *const __RESTRICT__ resource);

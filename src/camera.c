@@ -41,13 +41,13 @@ void camUpdateProjectionMatrix(camera *const __RESTRICT__ cam, const float viewp
 		// CAM_PROJECTION_ORTHOGRAPHIC is set, the camera is using an orthographic projection matrix
 		cam->projectionMatrix = mat4Ortho(0.f, viewportWidth / (viewportWidth < viewportHeight ? viewportWidth : viewportHeight),
 										  0.f, viewportHeight / (viewportWidth < viewportHeight ? viewportWidth : viewportHeight),
-										  -1000.f, 1000.f);
+										  1000.f, -1000.f);
 	}else if(flagsAreSet(cam->flags, CAM_PROJECTION_FIXED_SIZE)){
 		// OpenGL coordinates have the center at 0 with the sides
 		// at -1 and 1, resulting in a total window size of 2x2.
 		// We also need to take into account GL pixel coordinates
 		// being in the center of the pixel.
-		cam->projectionMatrix = mat4Ortho(-viewportWidth*0.5f + 0.5f, viewportWidth*0.5f - 0.5f, -viewportHeight*0.5f + 0.5f, viewportHeight*0.5f - 0.5f, 0.f, 1.f);
+		cam->projectionMatrix = mat4Ortho(-viewportWidth*0.5f + 0.5f, viewportWidth*0.5f - 0.5f, -viewportHeight*0.5f + 0.5f, viewportHeight*0.5f - 0.5f, 1000.f, -1000.f);
 	}else{
 		cam->projectionMatrix = mat4Identity();
 	}

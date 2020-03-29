@@ -3,10 +3,14 @@
 #include "sprite.h"
 #include "mesh.h"
 
-void guiElementRenderText(const guiElement *const __RESTRICT__ element, graphicsManager *const __RESTRICT__ gfxMngr, const camera *const __RESTRICT__ cam, const float distance, const float interpT){
+void guiTickText(guiElement *const element, const float elapsedTime){
+	//
+}
+
+void guiRenderText(const guiElement *const element, graphicsManager *const gfxMngr, const camera *const cam, const float distance, const float interpT){
 
 	const guiText text = element->data.text;
-	const bone root = element->root;
+	const bone root = (element->parent == NULL ? element->root : boneTransformAppend(element->parent->root, element->root));
 	const mat4 rootTransform = boneMatrix(root);
 
 	txtFormat format = text.stream.format;
@@ -146,6 +150,11 @@ void guiElementRenderText(const guiElement *const __RESTRICT__ element, graphics
 		glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize*sizeof(spriteState), &gfxMngr->shdrData.spriteTransformState[0]);
 		// Render.
 		glDrawElementsInstanced(GL_TRIANGLES, g_meshSprite.indexNum, GL_UNSIGNED_INT, NULL, bufferSize);
+	}
+
+	// Reset the SDF type flag so future non-text rendering isn't messed up.
+	if(font.type != 0){
+		glUniform1ui(gfxMngr->shdrPrgSpr.sdfTypeID, 0);
 	}
 
 }

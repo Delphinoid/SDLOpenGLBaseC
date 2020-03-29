@@ -312,8 +312,8 @@ int main(int argc, char **argv){
 
 	physJointDistanceInit(&joint->data.distance, vec3Zero(), vec3Zero(), 4.f, 0.f, 0.f);
 
-	guiElement gEl, gTxt;
-	boneInit(&gEl.root);
+	guiElement gui, *gEl, *gTxt;
+	guiInit(&gui, GUI_ELEMENT_TYPE_CONTROLLER);
 	/*vec2ZeroP(&gEl.data.panel.configuration[0]);
 	vec2ZeroP(&gEl.data.panel.configuration[1]);
 	vec2ZeroP(&gEl.data.panel.configuration[2]);
@@ -324,36 +324,38 @@ int main(int argc, char **argv){
 		{.x = 0.f, .y = 2.f/3.f, .w = 1.f/3.f, .h = 1.f/3.f},
 		{.x = 2.f/3.f, .y = 2.f/3.f, .w = 1.f/3.f, .h = 1.f/3.f}
 	};*/
-	gEl.flags = GUI_ELEMENT_TYPE_WINDOW;
+	gEl = guiNewChild(&gui);
+	guiInit(gEl, GUI_ELEMENT_TYPE_WINDOW);
+	gEl->root.position.z = -1.f;
 	//guiPanelInit(&gEl, areas);
 	//rndrStateInit(&gEl.data.panel.rndr.state);
-	twiInit(&gEl.data.window.body, moduleTextureWrapperFind("gui"FILE_PATH_DELIMITER_STRING"body.tdw", 12));
-	twiInit(&gEl.data.window.border, moduleTextureWrapperFind("gui"FILE_PATH_DELIMITER_STRING"border.tdw", 14));
-	gEl.data.window.offsets[0].x = 3.f/4.f; gEl.data.window.offsets[0].y = 4.f/5.f; gEl.data.window.offsets[0].w = 1.f/4.f; gEl.data.window.offsets[0].h = 1.f/5.f;
-	gEl.data.window.offsets[1].x = 0.f; gEl.data.window.offsets[1].y = 4.f/5.f; gEl.data.window.offsets[1].w = 1.f/4.f; gEl.data.window.offsets[1].h = 1.f/5.f;
-	gEl.data.window.offsets[2].x = 1.f/4.f; gEl.data.window.offsets[2].y = 4.f/5.f; gEl.data.window.offsets[2].w = 1.f/4.f; gEl.data.window.offsets[2].h = 1.f/5.f;
-	gEl.data.window.offsets[3].x = 2.f/4.f; gEl.data.window.offsets[3].y = 4.f/5.f; gEl.data.window.offsets[3].w = 1.f/4.f; gEl.data.window.offsets[3].h = 1.f/5.f;
-	gEl.data.window.offsets[4].x = 0.f; gEl.data.window.offsets[4].y = 2.f/5.f; gEl.data.window.offsets[4].w = 1.f; gEl.data.window.offsets[4].h = 1.f/5.f;
-	gEl.data.window.offsets[5].x = 0.f; gEl.data.window.offsets[5].y = 0.f; gEl.data.window.offsets[5].w = 1.f; gEl.data.window.offsets[5].h = 1.f/5.f;
-	gEl.data.window.offsets[6].x = 0.f; gEl.data.window.offsets[6].y = 1.f/5.f; gEl.data.window.offsets[6].w = 1.f; gEl.data.window.offsets[6].h = 1.f/5.f;
-	gEl.data.window.offsets[7].x = 0.f; gEl.data.window.offsets[7].y = 3.f/5.f; gEl.data.window.offsets[7].w = 1.f; gEl.data.window.offsets[7].h = 1.f/5.f;
+	twiInit(&gEl->data.window.body, moduleTextureWrapperFind("gui"FILE_PATH_DELIMITER_STRING"body.tdw", 12));
+	twiInit(&gEl->data.window.border, moduleTextureWrapperFind("gui"FILE_PATH_DELIMITER_STRING"border.tdw", 14));
+	gEl->data.window.offsets[0].x = 3.f/4.f; gEl->data.window.offsets[0].y = 4.f/5.f; gEl->data.window.offsets[0].w = 1.f/4.f; gEl->data.window.offsets[0].h = 1.f/5.f;
+	gEl->data.window.offsets[1].x = 0.f; gEl->data.window.offsets[1].y = 4.f/5.f; gEl->data.window.offsets[1].w = 1.f/4.f; gEl->data.window.offsets[1].h = 1.f/5.f;
+	gEl->data.window.offsets[2].x = 1.f/4.f; gEl->data.window.offsets[2].y = 4.f/5.f; gEl->data.window.offsets[2].w = 1.f/4.f; gEl->data.window.offsets[2].h = 1.f/5.f;
+	gEl->data.window.offsets[3].x = 2.f/4.f; gEl->data.window.offsets[3].y = 4.f/5.f; gEl->data.window.offsets[3].w = 1.f/4.f; gEl->data.window.offsets[3].h = 1.f/5.f;
+	gEl->data.window.offsets[4].x = 0.f; gEl->data.window.offsets[4].y = 2.f/5.f; gEl->data.window.offsets[4].w = 1.f; gEl->data.window.offsets[4].h = 1.f/5.f;
+	gEl->data.window.offsets[5].x = 0.f; gEl->data.window.offsets[5].y = 0.f; gEl->data.window.offsets[5].w = 1.f; gEl->data.window.offsets[5].h = 1.f/5.f;
+	gEl->data.window.offsets[6].x = 0.f; gEl->data.window.offsets[6].y = 1.f/5.f; gEl->data.window.offsets[6].w = 1.f; gEl->data.window.offsets[6].h = 1.f/5.f;
+	gEl->data.window.offsets[7].x = 0.f; gEl->data.window.offsets[7].y = 3.f/5.f; gEl->data.window.offsets[7].w = 1.f; gEl->data.window.offsets[7].h = 1.f/5.f;
 
 	txtFont testFont;
-	boneInit(&gTxt.root);
-	gTxt.flags = GUI_ELEMENT_TYPE_TEXT;
-	gTxt.root.position.x = -((float)(gfxMngr.windowWidth>>1));
-	gTxt.root.position.y = (float)(gfxMngr.windowHeight>>1);
-	gTxt.data.text.width = (float)(gfxMngr.windowWidth>>1);
-	gTxt.data.text.height = (float)(gfxMngr.windowHeight>>1);
-	gTxt.data.text.stream.format.font = &testFont;
-	gTxt.data.text.stream.format.size = 1.f;
-	gTxt.data.text.stream.format.colour = vec4New(1.f, 1.f, 1.f, 1.f);
-	gTxt.data.text.stream.format.background = vec4New(1.f, 1.f, 1.f, 0.f);
-	gTxt.data.text.stream.format.style = 0;
-	gTxt.data.text.stream.front = memAllocate(44*sizeof(char));
-	gTxt.data.text.stream.back = &gTxt.data.text.stream.front[44];
-	gTxt.data.text.stream.offset = gTxt.data.text.stream.front;
-	memcpy(gTxt.data.text.stream.front, "The quick brown fox jumps over the lazy dog.", 44*sizeof(char));
+	gTxt = guiNewChild(&gui);
+	guiInit(gTxt, GUI_ELEMENT_TYPE_TEXT);
+	gTxt->root.position.x = -((float)(gfxMngr.windowWidth>>1));
+	gTxt->root.position.y = (float)(gfxMngr.windowHeight>>1);
+	gTxt->data.text.width = (float)(gfxMngr.windowWidth>>1);
+	gTxt->data.text.height = (float)(gfxMngr.windowHeight>>1);
+	gTxt->data.text.stream.format.font = &testFont;
+	gTxt->data.text.stream.format.size = 1.f;
+	gTxt->data.text.stream.format.colour = vec4New(1.f, 1.f, 1.f, 1.f);
+	gTxt->data.text.stream.format.background = vec4New(1.f, 1.f, 1.f, 0.f);
+	gTxt->data.text.stream.format.style = 0;
+	gTxt->data.text.stream.front = memAllocate(44*sizeof(char));
+	gTxt->data.text.stream.back = &gTxt->data.text.stream.front[44];
+	gTxt->data.text.stream.offset = gTxt->data.text.stream.front;
+	memcpy(gTxt->data.text.stream.front, "The quick brown fox jumps over the lazy dog.", 44*sizeof(char));
 	txtFontLoad(
 		&testFont, TEXT_FONT_TYPE_MSDF,
 		"IBM_BIOS", 8,
@@ -513,10 +515,10 @@ int main(int argc, char **argv){
 				}else if(tempObji2->skeletonBodies->linearVelocity.z < -9.f){
 					tempObji2->skeletonBodies->linearVelocity.z = -9.f;
 				}
-				--gEl.root.scale.y;
+				--gEl->root.scale.y;
 			}
 			if(DOWN){
-				++gEl.root.scale.y;
+				++gEl->root.scale.y;
 				//tempObji2->skeletonBodies->flags |= (0x04);
 				//moduleObjectIndex(0)->renderables[0].alpha = 0.f;
 				//globalTimeMod = -1.f;
@@ -548,10 +550,10 @@ int main(int argc, char **argv){
 				}else if(tempObji2->skeletonBodies->linearVelocity.x < -9.f){
 					tempObji2->skeletonBodies->linearVelocity.x = -9.f;
 				}
-				--gEl.root.scale.x;
+				--gEl->root.scale.x;
 			}
 			if(RIGHT){
-				++gEl.root.scale.x;
+				++gEl->root.scale.x;
 				//const quat changeRotation =
 				//quatNewEuler(&changeRotation, 0.f, 90.f*RADIAN_RATIO, 0.f);
 				//quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, tickratioTimeMod, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
@@ -567,8 +569,7 @@ int main(int argc, char **argv){
 			}///camMain->target.value = tempObji2->configuration[0].position;
 
 			///
-			guiElementTick(&gEl, tickrateTimeMod);
-			guiElementTick(&gTxt, tickrateTimeMod);
+			guiTick(&gui, tickrateTimeMod);
 			particleSystemTick(&c, tickratioTimeMod);
 			///
 			// Update scenes.
@@ -607,6 +608,12 @@ int main(int argc, char **argv){
 			///
 			glUseProgram(gfxMngr.shdrPrgSpr.id);
 
+			// Switch to the camera's view.
+			gfxMngrSwitchView(&gfxMngr, &camMain->view);
+			// Feed the camera's view-projection matrix into the shader.
+			glUniformMatrix4fv(gfxMngr.shdrPrgSpr.vpMatrixID, 1, GL_FALSE, &camMain->viewProjectionMatrix.m[0][0]);
+			particleSystemRender(&c, &gfxMngr, camMain, 0.f, interpT);
+
 			// Update the camera's VP matrix.
 			camUpdateViewProjectionMatrix(
 				camGUI,
@@ -619,15 +626,7 @@ int main(int argc, char **argv){
 			gfxMngrSwitchView(&gfxMngr, &camGUI->view);
 			// Feed the camera's view-projection matrix into the shader.
 			glUniformMatrix4fv(gfxMngr.shdrPrgSpr.vpMatrixID, 1, GL_FALSE, &camGUI->viewProjectionMatrix.m[0][0]);
-			guiElementRender(&gEl, &gfxMngr, camGUI, 0.f, interpT);
-			guiElementRender(&gTxt, &gfxMngr, camGUI, 0.f, interpT);
-			glUniform1ui(gfxMngr.shdrPrgSpr.sdfTypeID, 0);
-
-			// Switch to the camera's view.
-			gfxMngrSwitchView(&gfxMngr, &camMain->view);
-			// Feed the camera's view-projection matrix into the shader.
-			glUniformMatrix4fv(gfxMngr.shdrPrgSpr.vpMatrixID, 1, GL_FALSE, &camMain->viewProjectionMatrix.m[0][0]);
-			particleSystemRender(&c, &gfxMngr, camMain, 0.f, interpT);
+			guiRender(&gui, &gfxMngr, camGUI, 0.f, interpT);
 
 			glUseProgram(gfxMngr.shdrPrgObj.id);
 			///
@@ -658,7 +657,7 @@ int main(int argc, char **argv){
     }
 
     /****/
-	memFree(gTxt.data.text.stream.front);
+	memFree(gTxt->data.text.stream.front);
     txtFontDelete(&testFont);
 	particleSystemBaseDelete(&b);
 	particleSystemDelete(&c);

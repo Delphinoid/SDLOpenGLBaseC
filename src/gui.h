@@ -10,12 +10,12 @@
 
 #define GUI_TEXT_WORD_WRAP 0x01
 
-// If no type is defined, defaults to renderable.
-#define GUI_ELEMENT_TYPE_TEXT       0x00
-#define GUI_ELEMENT_TYPE_WINDOW     0x01
-#define GUI_ELEMENT_TYPE_RENDERABLE 0x02
-#define GUI_ELEMENT_TYPE_OBJECT     0x03
-#define GUI_ELEMENT_TYPE_MASK       0x03
+// If no type is defined, defaults to controller.
+#define GUI_ELEMENT_TYPE_CONTROLLER 0x00
+#define GUI_ELEMENT_TYPE_TEXT       0x01
+#define GUI_ELEMENT_TYPE_WINDOW     0x02
+#define GUI_ELEMENT_TYPE_RENDERABLE 0x03
+#define GUI_ELEMENT_TYPE_OBJECT     0x04
 
 typedef struct object object;
 typedef struct graphicsManager graphicsManager;
@@ -50,13 +50,14 @@ typedef struct guiElement {
 	void (*keyboardDown)(guiElement *const element, const int key);
 	void (*keyboardRelease)(guiElement *const element, const int key);**/
 
-	flags_t flags;
+	flags_t type;
 
 } guiElement;
 
-void guiElementTick(guiElement *const __RESTRICT__ element, const float elapsedTime);
-guiElement *guiElementAddChild(guiElement *const __RESTRICT__ element);
-void guiElementRender(const guiElement *const __RESTRICT__ element, graphicsManager *const __RESTRICT__ gfxMngr, const camera *const __RESTRICT__ cam, const float distance, const float interpT);
-void guiElementDelete(guiElement *element);
+void guiInit(guiElement *const __RESTRICT__ element, const flags_t type);
+guiElement *guiNewChild(guiElement *const element);
+void guiTick(guiElement *const element, const float elapsedTime);
+void guiRender(const guiElement *const element, graphicsManager *const gfxMngr, const camera *const cam, const float distance, const float interpT);
+void guiDelete(guiElement *element);
 
 #endif

@@ -2,17 +2,26 @@
 #include "gui.h"
 #include "sprite.h"
 
-void guiElementRenderWindow(const guiElement *const __RESTRICT__ element, graphicsManager *const __RESTRICT__ gfxMngr, const camera *const __RESTRICT__ cam, const float distance, const float interpT){
+void guiTickWindow(guiElement *const element, const float elapsedTime){
+	twiTick(&element->data.window.body, elapsedTime);
+	twiTick(&element->data.window.border, elapsedTime);
+}
+
+void guiRenderWindow(const guiElement *const element, graphicsManager *const gfxMngr, const camera *const cam, const float distance, const float interpT){
 
 	const guiWindow window = element->data.window;
 	const bone root = element->root;
 
-	const twFrame *const __RESTRICT__ frameBody = twiState(&window.body, interpT);
-	const twFrame *const __RESTRICT__ frameBorder = twiState(&window.border, interpT);
+	const twFrame *const frameBody = twiState(&window.body, interpT);
+	const twFrame *const frameBorder = twiState(&window.border, interpT);
 
 	const rectangle *offsets = &window.offsets[0];
+	vec2 size;
+
 	// Transformed root location.
-	const bone transform = {
+	float inverseWidthX;
+	float inverseWidthY;
+	bone transform = {
 		.position = {
 			// Move the origin to the top left corner.
 			.x = root.position.x + root.scale.x*0.5f + offsets->w * frameBorder->image->width,
@@ -22,11 +31,13 @@ void guiElementRenderWindow(const guiElement *const __RESTRICT__ element, graphi
 		.orientation = root.orientation,
 		.scale = root.scale
 	};
+	if(element->parent != NULL){
+		// Append to parent position.
+		transform = boneTransformAppend(element->parent->root, transform);
+	}
+	inverseWidthX = transform.scale.x/frameBorder->image->width;
+	inverseWidthY = transform.scale.y/frameBorder->image->width;
 
-	const float inverseWidthX = transform.scale.x/frameBorder->image->width;
-	const float inverseWidthY = transform.scale.y/frameBorder->image->width;
-
-	vec2 size;
 	spriteState *state = &gfxMngr->shdrData.spriteTransformState[0];
 
 	// Bind the texture.

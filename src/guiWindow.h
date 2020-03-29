@@ -21,6 +21,7 @@ typedef struct {
 	flags_t flags;
 } guiWindow;
 
-void guiElementRenderWindow(const guiElement *const __RESTRICT__ element, graphicsManager *const __RESTRICT__ gfxMngr, const camera *const __RESTRICT__ cam, const float distance, const float interpT);
+void guiTickWindow(guiElement *const element, const float elapsedTime);
+void guiRenderWindow(const guiElement *const element, graphicsManager *const gfxMngr, const camera *const cam, const float distance, const float interpT);
 
 #endif

@@ -385,7 +385,7 @@ __HINT_INLINE__ mat4 mat4Ortho(const float left, const float right, const float 
 	const float invFarSubNear = 1.f/(zFar-zNear);
 	const mat4 r = {.m = {{2.f*invRightSubLeft,           0.f,                           0.f,                         0.f},
 	                      {0.f,                           2.f*invTopSubBottom,           0.f,                         0.f},
-	                      {0.f,                           0.f,                           -2.f*invFarSubNear,          0.f},
+	                      {0.f,                           0.f,                           2.f*invFarSubNear,           0.f},
 	                      {-(right+left)*invRightSubLeft, -(top+bottom)*invTopSubBottom, -(zFar+zNear)*invFarSubNear, 1.f}}};
 	return r;
 }
@@ -395,7 +395,7 @@ __HINT_INLINE__ void mat4OrthoP(mat4 *const __RESTRICT__ m, const float left, co
 	const float invFarSubNear = 1.f/(zFar-zNear);
 	m->m[0][0] = 2.f*invRightSubLeft;           m->m[0][1] = 0.f;                           m->m[0][2] = 0.f;                         m->m[0][3] = 0.f;
 	m->m[1][0] = 0.f;                           m->m[1][1] = 2.f*invTopSubBottom;           m->m[1][2] = 0.f;                         m->m[1][3] = 0.f;
-	m->m[2][0] = 0.f;                           m->m[2][1] = 0.f;                           m->m[2][2] = -2.f*invFarSubNear;          m->m[2][3] = 0.f;
+	m->m[2][0] = 0.f;                           m->m[2][1] = 0.f;                           m->m[2][2] = 2.f*invFarSubNear;           m->m[2][3] = 0.f;
 	m->m[3][0] = -(right+left)*invRightSubLeft; m->m[3][1] = -(top+bottom)*invTopSubBottom; m->m[3][2] = -(zFar+zNear)*invFarSubNear; m->m[3][3] = 1.f;
 }
 __HINT_INLINE__ mat4 mat4Perspective(const float fovy, const float aspectRatio, const float zNear, const float zFar){
