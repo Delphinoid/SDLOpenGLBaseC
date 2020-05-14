@@ -3,18 +3,23 @@
 #include "sprite.h"
 #include "mesh.h"
 
-void guiTickText(guiElement *const element, const float elapsedTime){
+void guiTextTick(guiElement *const element, const float elapsedTime){
 	//
 }
 
-void guiRenderText(const guiElement *const element, graphicsManager *const gfxMngr, const camera *const cam, const float distance, const float interpT){
+/**static void guiRenderTextNextLine(){
+
+
+
+}**/
+
+void guiTextRender(const guiElement *const element, graphicsManager *const gfxMngr, const camera *const cam, const float distance, const float interpT){
 
 	const guiText text = element->data.text;
 	const bone root = (element->parent == NULL ? element->root : boneTransformAppend(element->parent->root, element->root));
 	const mat4 rootTransform = boneMatrix(root);
 
-	txtFormat format = text.stream.format;
-	txtFont font = *format.font;
+	txtFont font = *text.format.font;
 	const texture *atlas = NULL;
 
 	txtCursor cursor = {.x = 0.f, .y = 0.f};
@@ -26,28 +31,33 @@ void guiRenderText(const guiElement *const element, graphicsManager *const gfxMn
 	const byte_t *currentCharacter = text.stream.offset;
 
 	// Scaled root transform.
-	mat4 transform = mat4Scale(rootTransform, format.size, format.size, format.size);
+	mat4 transform = mat4Scale(rootTransform, text.format.size, text.format.size, text.format.size);
 
 	// Initialize rendering state.
 	glBindVertexArray(g_meshSprite.vaoID);
 	glUniform1ui(gfxMngr->shdrPrgSpr.sdfTypeID, font.type);
-	glUniform4fv(gfxMngr->shdrPrgSpr.sdfColourID, 1, (GLfloat *)&format.colour);
-	glUniform4fv(gfxMngr->shdrPrgSpr.sdfBackgroundID, 1, (GLfloat *)&format.background);
+	glUniform4fv(gfxMngr->shdrPrgSpr.sdfColourID, 1, (GLfloat *)&text.format.colour);
+	glUniform4fv(gfxMngr->shdrPrgSpr.sdfBackgroundID, 1, (GLfloat *)&text.format.background);
 
 	// Loop through every character in the stream.
 	do {
 
-		const txtCodeUnit_t code = {._32 = txtStreamParseCharacter(&text.stream, &currentCharacter, &format)};
-		if(code._32 == 0){
+		const txtCodeUnit_t code = {._32 = txtStreamParseCharacter(&text.stream, &currentCharacter)};
+
+		if(code._32 == '\0'){
 			// End of stream.
 			break;
-		}
-
-		if(code._32 == TEXT_UTF8_INVALID_CODEUNIT){
+		}else if(code._32 == '\n'){
+			// New line.
+			cursor.x = 0.f;
+			cursor.y += advanceY*text.format.size;
+			advanceY = font.height;
+		/**
+		}else if(code._32 == TEXT_UTF8_INVALID_CODEUNIT){
 
 			// Invalid UTF-8 code unit. This could
 			// mean that the formatting was updated.
-			if(flagsAreSet(format.style, TEXT_FORMAT_UPDATED)){
+			if(flagsAreSet(text.format.style, TEXT_FORMAT_UPDATED)){
 
 				// If the state buffer is not empty, render.
 				// We must do this to avoid formatting changes
@@ -64,29 +74,23 @@ void guiRenderText(const guiElement *const element, graphicsManager *const gfxMn
 				}
 
 				// Handle updated formatting.
-				if(flagsAreSet(format.style, TEXT_FORMAT_FONT_UPDATED)){
-					///font = text.stream.typeface->styles[format.font];
+				if(flagsAreSet(text.format.style, TEXT_FORMAT_FONT_UPDATED)){
+					///font = text.stream.typeface->styles[text.format.font];
 					///gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, atlas->diffuseID);
 				}
-				if(flagsAreSet(format.style, TEXT_FORMAT_SIZE_UPDATED)){
-					transform = mat4Scale(rootTransform, format.size, format.size, format.size);
+				if(flagsAreSet(text.format.style, TEXT_FORMAT_SIZE_UPDATED)){
+					transform = mat4Scale(rootTransform, text.format.size, text.format.size, text.format.size);
 				}
-				if(flagsAreSet(format.style, TEXT_FORMAT_STYLE_UPDATED)){
+				if(flagsAreSet(text.format.style, TEXT_FORMAT_STYLE_UPDATED)){
 					/// Send SDF style changes to the shader.
 				}
-				flagsUnset(format.style, TEXT_FORMAT_FONT_UPDATED);
+				flagsUnset(text.format.style, TEXT_FORMAT_FONT_UPDATED);
 
 			}
 
+
 			continue;
-
-		}else if(code._32 == '\n'){
-
-			// New line.
-			cursor.x = 0.f;
-			cursor.y += advanceY*format.size;
-			advanceY = font.height;
-
+		**/
 		}else{
 
 			// Obtain the glyph for this code unit.
@@ -112,6 +116,7 @@ void guiRenderText(const guiElement *const element, graphicsManager *const gfxMn
 				gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, atlas->diffuseID);
 			}
 
+			/** Maybe support vertical text rendering? **/
 			// Adjust advanceY.
 			if(font.height > advanceY){
 				// Reset font.height after the new line.
@@ -121,7 +126,7 @@ void guiRenderText(const guiElement *const element, graphicsManager *const gfxMn
 			}
 
 			// Check if the glyph will fit.
-			if((cursor.x + glyphWidth + glyph.kerningX)*format.size*root.scale.x > text.width){
+			if((cursor.x + glyphWidth + glyph.kerningX)*text.format.size*root.scale.x > text.width){
 				// New line.
 				glyphX -= cursor.x;
 				cursor.x = 0.f;

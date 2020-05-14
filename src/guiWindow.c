@@ -2,12 +2,12 @@
 #include "gui.h"
 #include "sprite.h"
 
-void guiTickWindow(guiElement *const element, const float elapsedTime){
+void guiWindowTick(guiElement *const element, const float elapsedTime){
 	twiTick(&element->data.window.body, elapsedTime);
 	twiTick(&element->data.window.border, elapsedTime);
 }
 
-void guiRenderWindow(const guiElement *const element, graphicsManager *const gfxMngr, const camera *const cam, const float distance, const float interpT){
+void guiWindowRender(const guiElement *const element, graphicsManager *const gfxMngr, const camera *const cam, const float distance, const float interpT){
 
 	const guiWindow window = element->data.window;
 	const bone root = element->root;

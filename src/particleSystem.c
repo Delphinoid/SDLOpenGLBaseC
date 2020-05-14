@@ -196,6 +196,8 @@ return_t particleSystemTick(particleSystem *const __RESTRICT__ system, const flo
 		particleSystemEmittersTick(system, elapsedTime);
 		particleSystemParticlesTick(system, elapsedTime);
 
+		// Recursively update the particle systems.
+		/// Try to make this function iterative?
 		for(; c < cLast; ++c){
 			particleSystemTick(c, elapsedTime);
 		}
@@ -206,7 +208,7 @@ return_t particleSystemTick(particleSystem *const __RESTRICT__ system, const flo
 
 }
 
-void particleSystemRender(const particleSystem *const __RESTRICT__ system, graphicsManager *const __RESTRICT__ gfxMngr, const camera *const __RESTRICT__ cam, const float distance, const float interpT){
+__FORCE_INLINE__ static void particleSystemParticlesRender(const particleSystem *const __RESTRICT__ system, graphicsManager *const __RESTRICT__ gfxMngr, const camera *const __RESTRICT__ cam, const float distance, const float interpT){
 
 	const renderableBase *const rndr = &system->base->properties.rndr;
 	vertexIndex_t indexNum;
@@ -235,6 +237,21 @@ void particleSystemRender(const particleSystem *const __RESTRICT__ system, graph
 	mdlFindCurrentLOD(rndr->mdl, &indexNum, &offset, distance, gfxMngr->shdrData.biasLOD);
 	if(indexNum){
 		glDrawElementsInstanced(GL_TRIANGLES, indexNum, GL_UNSIGNED_INT, offset, system->particleNum);
+	}
+
+}
+
+void particleSystemRender(const particleSystem *const __RESTRICT__ system, graphicsManager *const __RESTRICT__ gfxMngr, const camera *const __RESTRICT__ cam, const float distance, const float interpT){
+
+	particleSystem *c = system->children;
+	const particleSystem *const cLast = &c[system->base->childNum];
+
+	particleSystemParticlesRender(system, gfxMngr, cam, distance, interpT);
+
+	// Recursively render the particle systems.
+	/// Try to make this function iterative?
+	for(; c < cLast; ++c){
+		particleSystemRender(c, gfxMngr, cam, distance, interpT);
 	}
 
 }

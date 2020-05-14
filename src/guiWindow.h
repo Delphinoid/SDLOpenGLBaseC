@@ -13,7 +13,7 @@ typedef struct graphicsManager graphicsManager;
 
 typedef struct {
 	// Border element UV offsets for rendering.
-	/// Move this to guiWindowBase.
+	/// Move this to guiWindowBase?
 	rectangle offsets[8];
 	// Texture wrappers for the window body and border.
 	twInstance body;
@@ -21,7 +21,7 @@ typedef struct {
 	flags_t flags;
 } guiWindow;
 
-void guiTickWindow(guiElement *const element, const float elapsedTime);
-void guiRenderWindow(const guiElement *const element, graphicsManager *const gfxMngr, const camera *const cam, const float distance, const float interpT);
+void guiWindowTick(guiElement *const element, const float elapsedTime);
+void guiWindowRender(const guiElement *const element, graphicsManager *const gfxMngr, const camera *const cam, const float distance, const float interpT);
 
 #endif

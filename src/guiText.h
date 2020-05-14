@@ -10,15 +10,13 @@ typedef struct graphicsManager graphicsManager;
 typedef struct {
 	// Text stream.
 	txtStream stream;
-	// Text box boundaries.
+	txtFormat format;
+	// Text box dimensions on the screen.
 	float width;
 	float height;
-	// How far down the text has scrolled.
-	float scroll;
-	flags_t flags;
 } guiText;
 
-void guiTickText(guiElement *const element, const float elapsedTime);
-void guiRenderText(const guiElement *const element, graphicsManager *const gfxMngr, const camera *const cam, const float distance, const float interpT);
+void guiTextTick(guiElement *const element, const float elapsedTime);
+void guiTextRender(const guiElement *const element, graphicsManager *const gfxMngr, const camera *const cam, const float distance, const float interpT);
 
 #endif

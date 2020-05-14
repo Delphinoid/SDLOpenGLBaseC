@@ -13,57 +13,60 @@ guiElement *guiNewChild(guiElement *const element){
 	return child;
 }
 
-static void guiTickController(guiElement *const element, const float elapsedTime){
+/** Remove this and use a temporary recursive solution for guiTransforms, probably. **/
+static void guiControllerTick(guiElement *const element, const float elapsedTime){
 
 	// Controllers generally have nothing to render.
 	// Instead, they handle the rendering of other elements.
-	guiElement *current = element->children;
+	guiElement *current = element;
 	guiElement *next;
 
-	if(current != NULL){
-		for(;;){
+	for(;;){
 
-			// Find the "leftmost" child.
-			while(current->children != NULL){
-				current = current->children;
-			}
-
+		// Go down to the deepest child, rendering each
+		// one on the way.  This is so that certain
+		// operations such as masking are respected.
+		while(current->children != NULL){
+			current = current->children;
 			guiTick(current, elapsedTime);
-
-			// Get the next child. Go to the parent if necessary.
-			while((next = (guiElement *)memSLinkDataGetNext(current)) == NULL){
-				if(current->parent == element){
-					return;
-				}
-				current = current->parent;
-				guiTick(current, elapsedTime);
-			}
-			current = next;
-
 		}
+
+		// Get the next child. Go to the parent if necessary.
+		while((next = (guiElement *)memSLinkDataGetNext(current)) == NULL){
+			if(current->parent == element){
+				// We're back where we started, at the controller.
+				return;
+			}
+			current = current->parent;
+		}
+		current = next;
+
 	}
 
 }
 
 /** The lines below should eventually be removed. **/
-#define guiTickRenderable NULL
-#define guiTickObject     NULL
+#define guiTransformTick  NULL
+#define guiRenderableTick NULL
+#define guiObjectTick     NULL
 
 void (* const guiTickJumpTable[4])(
 	guiElement *const element, const float elapsedTime
 ) = {
-	guiTickController,
-	guiTickText,
-	guiTickWindow,
-	guiTickRenderable,
-	guiTickObject
+	guiControllerTick,
+	guiTextTick,
+	guiWindowTick,
+	guiTransformTick,
+	guiRenderableTick,
+	guiObjectTick
 };
 
 __FORCE_INLINE__ void guiTick(guiElement *const element, const float elapsedTime){
 	guiTickJumpTable[element->type](element, elapsedTime);
 }
 
-static void guiRenderController(const guiElement *const element, graphicsManager *const gfxMngr, const camera *const cam, const float distance, const float interpT){
+/** Remove this and use a temporary recursive solution for guiTransforms, probably. **/
+static void guiControllerRender(const guiElement *const element, graphicsManager *const gfxMngr, const camera *const cam, const float distance, const float interpT){
 
 	// Controllers generally have nothing to render.
 	// Instead, they handle the rendering of other elements.
@@ -96,17 +99,19 @@ static void guiRenderController(const guiElement *const element, graphicsManager
 }
 
 /** The lines below should eventually be removed. **/
-#define guiRenderRenderable NULL
-#define guiRenderObject     NULL
+#define guiTransformRender  NULL
+#define guiRenderableRender NULL
+#define guiObjectRender     NULL
 
 void (* const guiRenderJumpTable[4])(
 	const guiElement *const element, graphicsManager *const gfxMngr, const camera *const cam, const float distance, const float interpT
 ) = {
-	guiRenderController,
-	guiRenderText,
-	guiRenderWindow,
-	guiRenderRenderable,
-	guiRenderObject
+	guiControllerRender,
+	guiTextRender,
+	guiWindowRender,
+	guiTransformRender,
+	guiRenderableRender,
+	guiObjectRender
 };
 __FORCE_INLINE__ void guiRender(const guiElement *const element, graphicsManager *const gfxMngr, const camera *const cam, const float distance, const float interpT){
 	guiRenderJumpTable[element->type](element, gfxMngr, cam, distance, interpT);

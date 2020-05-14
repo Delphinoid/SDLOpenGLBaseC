@@ -92,9 +92,12 @@ return_t objNewRenderable(object *const restrict obj, model *const mdl, textureW
 return_t objNewRenderableFromBase(object *const restrict obj, const renderableBase *const rndr);
 return_t objNewRenderableFromInstance(object *const restrict obj, const renderable *const rndr);
 return_t objInitSkeleton(object *const restrict obj, const skeleton *const skl);
-///return_t objInitPhysics(object *obj);
 
 physRigidBody *objBoneGetPhysicsBody(const object *const restrict obj, const boneIndex_t boneID);
+
+void objPhysicsPrepare(object *const __RESTRICT__ obj);
+void objPhysicsBodySimulate(object *const __RESTRICT__ obj, const boneIndex_t boneID);
+void objPhysicsBodySuspend(object *const __RESTRICT__ obj, const boneIndex_t boneID);
 ///void objBoneSetPhysicsFlags(object *obj, const boneIndex_t boneID, const flags_t flags);
 
 sklAnim *objGetAnimation(const object *const restrict obj, const animIndex_t id);

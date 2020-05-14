@@ -357,6 +357,10 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 				}
 				*rndrNew = rndr;
 
+				if(base->skl == NULL){
+					base->skl = rndr.mdl->skl;
+				}
+
 			}
 
 		}
@@ -688,6 +692,75 @@ physRigidBody *objBoneGetPhysicsBody(const object *const __RESTRICT__ obj, const
 
 }
 
+void objPhysicsPrepare(object *const __RESTRICT__ obj){
+
+	// Prepare all physics bodies.
+	boneIndex_t i;
+	sklNode *sklBone = obj->skeletonData.skl->bones;
+	bone *configuration = obj->configuration;
+	physRigidBody *body = obj->skeletonBodies;
+
+	// Update the object's skeleton.
+	for(i = 0; i < obj->skeletonData.skl->boneNum; ++i, ++sklBone, ++configuration){
+
+		if(body != NULL && body->base->id == i && physRigidBodyIsSimulated(body)){
+
+			const unsigned int isRoot = (i == sklBone->parent) || (sklBone->parent >= obj->skeletonData.skl->boneNum);
+
+			// Apply configuration and the skeleton's bind transform.
+			body->configuration = boneTransformAppend(*configuration, sklBone->defaultState);
+
+			// Generate a new animated bone state.
+			skliGenerateBoneState(&obj->skeletonData, i, sklBone->name, &body->configuration);
+
+			// Apply the parent's transformations to each bone.
+			if(!isRoot){
+				body->configuration = boneTransformAppend(obj->state.configuration[sklBone->parent], body->configuration);
+			}
+
+			// Initialize the body's moment of inertia and centroid.
+			physRigidBodyCentroidFromPosition(body);
+
+		}
+
+	}
+
+}
+
+void objPhysicsBodySimulate(object *const __RESTRICT__ obj, const boneIndex_t boneID){
+
+	physRigidBody *body = objBoneGetPhysicsBody(obj, boneID);
+
+	if(body != NULL){
+
+		const sklNode sklBone = obj->skeletonData.skl->bones[boneID];
+		const unsigned int isRoot = (boneID == sklBone.parent) || (sklBone.parent >= obj->skeletonData.skl->boneNum);
+
+		// Apply configuration and the skeleton's bind transform.
+		body->configuration = boneTransformAppend(obj->configuration[boneID], sklBone.defaultState);
+
+		// Generate a new animated bone state.
+		skliGenerateBoneState(&obj->skeletonData, boneID, sklBone.name, &body->configuration);
+
+		// Apply the parent's transformations to each bone.
+		if(!isRoot){
+			body->configuration = boneTransformAppend(obj->state.configuration[sklBone.parent], body->configuration);
+		}
+
+		// Initialize the body's moment of inertia and centroid.
+		physRigidBodyCentroidFromPosition(body);
+
+	}
+
+}
+
+void objPhysicsBodySuspend(object *const __RESTRICT__ obj, const boneIndex_t boneID){
+	physRigidBody *body = objBoneGetPhysicsBody(obj, boneID);
+	if(body != NULL){
+		flagsUnset(body->flags, PHYSICS_BODY_SIMULATE);
+	}
+}
+
 /**void objBoneScale(const object *const __RESTRICT__ obj, const boneIndex_t boneID, const vec3 scale){
 
 	physRigidBody *const body = objBoneGetPhysicsBody(obj, boneID);
@@ -798,8 +871,6 @@ return_t objTick(object *const __RESTRICT__ obj, physIsland *const __RESTRICT__ 
 	// Update the object's skeleton.
 	for(i = 0; i < obj->skeletonData.skl->boneNum; ++i, ++sklBone, ++sklState, ++configuration){
 
-		const unsigned int isRoot = (i == sklBone->parent) || (sklBone->parent >= obj->skeletonData.skl->boneNum);
-
 		// Update the previous states.
 		objStateCopyBone(&obj->state, i);
 
@@ -810,21 +881,6 @@ return_t objTick(object *const __RESTRICT__ obj, physIsland *const __RESTRICT__ 
 			/** TEMPORARILY ADD GRAVITY. **/
 			const vec3 gravity = {.x = 0.f, .y = -9.80665f * body->mass, .z = 0.f};
 			physRigidBodyApplyLinearForce(body, gravity);
-
-			if(physRigidBodyIsUninitialized(body)){
-
-				// Generate a new animated bone state.
-				// This will later be copied into sklState.
-				body->configuration = *configuration;
-				skliGenerateBoneState(&obj->skeletonData, i, sklBone->name, &body->configuration);
-
-				// Initialize the body's moment of inertia and centroid.
-				physRigidBodyCentroidFromPosition(body);
-
-				// Remove the body's "uninitialized" flag.
-				physRigidBodySetInitializedFull(body);
-
-			}
 
 			// Update the position from the centroid.
 			physRigidBodyUpdateConfiguration(body);
@@ -840,12 +896,13 @@ return_t objTick(object *const __RESTRICT__ obj, physIsland *const __RESTRICT__ 
 				/** Memory allocation failure. **/
 				return -1;
 			}
-
 			body = modulePhysicsRigidBodyNext(body);
 
 		}else{
 
 			// Apply animation transformations.
+
+			const unsigned int isRoot = (i == sklBone->parent) || (sklBone->parent >= obj->skeletonData.skl->boneNum);
 
 			/** Should configurations be optional? **/
 
@@ -872,9 +929,6 @@ return_t objTick(object *const __RESTRICT__ obj, physIsland *const __RESTRICT__ 
 
 				// Initialize the body's moment of inertia and centroid.
 				physRigidBodyCentroidFromPosition(body);
-
-				// Set the body's "uninitialized" flag.
-				physRigidBodySetUninitialized(body);
 
 				// Update the body's colliders.
 				if(physRigidBodyUpdateColliders(body, island) < 0){

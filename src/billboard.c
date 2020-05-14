@@ -1,5 +1,8 @@
 #include "billboard.h"
 #include "camera.h"
+#include "constantsMath.h"
+
+#define BILLBOARD_ANIMATION_ANGLE (2.f*M_PI / ((float)BILLBOARD_ANIMATION_ANGLE_GRANULARITY))
 
 void billboardInit(billboard *const __RESTRICT__ data){
 	data->flags = BILLBOARD_DISABLED;

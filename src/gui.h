@@ -1,8 +1,9 @@
 #ifndef GUI_H
 #define GUI_H
 
-#include "guiWindow.h"
 #include "guiText.h"
+#include "guiWindow.h"
+#include "guiContainer.h"
 #include "renderable.h"
 #include "text.h"
 #include "bone.h"
@@ -14,8 +15,9 @@
 #define GUI_ELEMENT_TYPE_CONTROLLER 0x00
 #define GUI_ELEMENT_TYPE_TEXT       0x01
 #define GUI_ELEMENT_TYPE_WINDOW     0x02
-#define GUI_ELEMENT_TYPE_RENDERABLE 0x03
-#define GUI_ELEMENT_TYPE_OBJECT     0x04
+#define GUI_ELEMENT_TYPE_CONTAINER  0x03
+#define GUI_ELEMENT_TYPE_RENDERABLE 0x04
+#define GUI_ELEMENT_TYPE_OBJECT     0x05
 
 typedef struct object object;
 typedef struct graphicsManager graphicsManager;
@@ -28,10 +30,11 @@ typedef struct guiElement {
 
 	// Render variables.
 	union {
-		renderable rndr;
-		guiWindow window;
 		guiText text;
-		object *obj;  ///void *obj;
+		guiWindow window;
+		guiContainer container;
+		renderable rndr;
+		object *obj;  /// Replace with struct containing void pointer and function pointers?
 	} data;
 	bone root;
 

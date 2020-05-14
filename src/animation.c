@@ -39,12 +39,12 @@ void animTick(animationInstance *const __RESTRICT__ animInst, const animationDat
 				if(animInst->totalElapsedTime > animationLength){
 					// Iteratively reset totalElapsedTime so it is once again within the bounds of 0 and animationLength.
 					do {
-						/**
-						*** At some point I added the two lines below, which
-						*** are quite obviously wrong and end up causing the
-						*** current and next frame variables to overflow very
-						*** quickly. Why???
-						**/
+						///
+						/// At some point I added the two lines below, which
+						/// are quite obviously wrong and end up causing the
+						/// current and next frame variables to overflow very
+						/// quickly. Why???
+						///
 						///animInst->currentFrame -= animData->frameNum;
 						///animInst->nextFrame = animInst->currentFrame;
 						animInst->totalElapsedTime -= animationLength;
@@ -86,7 +86,7 @@ void animTick(animationInstance *const __RESTRICT__ animInst, const animationDat
 					uint_least8_t prevLoops = animInst->currentLoops;
 					// Iteratively reset totalElapsedTime so it is once again within the bounds of 0 and animationLength.
 					do {
-						/** Same as the comment above. **/
+						/// Same as the comment above. ///
 						///animInst->currentFrame += animData->frameNum;
 						///animInst->nextFrame = animInst->currentFrame;
 						animInst->totalElapsedTime += animationLength;

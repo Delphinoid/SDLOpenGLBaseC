@@ -7,6 +7,10 @@
 #include "mat4.h"
 #include "flags.h"
 
+#ifndef CAM_Z_THRESHOLD
+	#define CAM_Z_THRESHOLD 1000.f
+#endif
+
 #define CAM_INACTIVE                0x00
 #define CAM_PROJECTION_FRUSTUM      0x01
 #define CAM_PROJECTION_ORTHOGRAPHIC 0x02

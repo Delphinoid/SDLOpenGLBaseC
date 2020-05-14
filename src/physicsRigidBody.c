@@ -1519,12 +1519,12 @@ void physRigidBodyIntegrateVelocity(physRigidBody *const __RESTRICT__ body, cons
 
 	///if(body->inverseMass > 0.f){
 
-		const float modifier = body->inverseMass * dt;
+		///const float modifier = body->inverseMass * dt;
 
 		// Integrate linear velocity.
 		if(flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR)){
 			// Apply damping.
-			body->linearVelocity = vec3VMultS(vec3VAddV(body->linearVelocity, vec3VMultS(body->netForce, modifier)),  1.f / (1.f + dt * body->linearDamping));
+			body->linearVelocity = vec3VMultS(vec3VAddV(body->linearVelocity, vec3VMultS(body->netForce, body->inverseMass*dt)),  1.f / (1.f + dt * body->linearDamping));
 		}else{
 			vec3ZeroP(&body->linearVelocity);
 		}

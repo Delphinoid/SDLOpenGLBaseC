@@ -983,7 +983,7 @@ static __FORCE_INLINE__ float physContactPointSolveConfigurationNormal(physConta
 
 }
 
-float physContactSolveConfigurationConstraints(physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, float error){
+float physContactSolveConfigurationConstraints(physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, float separation){
 
 	// Solves a contact's position and orientation constraints.
 
@@ -992,11 +992,11 @@ float physContactSolveConfigurationConstraints(physContact *const __RESTRICT__ c
 
 	// Solve each contact point.
 	for(; point < pLast; ++point){
-		const float separation = physContactPointSolveConfigurationNormal(point, contact, bodyA, bodyB);
-		error = (error > separation ? separation : error);
+		const float newSeparation = physContactPointSolveConfigurationNormal(point, contact, bodyA, bodyB);
+		separation = (separation > newSeparation ? newSeparation : separation);
 	}
 
-	return error;
+	return separation;
 
 }
 #endif

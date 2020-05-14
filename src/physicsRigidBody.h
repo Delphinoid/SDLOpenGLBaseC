@@ -32,7 +32,7 @@
 #define PHYSICS_BODY_TRANSLATED         0x20  // The body was translated this frame.
 #define PHYSICS_BODY_ROTATED            0x40  // The body was rotated this frame.
 #define PHYSICS_BODY_TRANSFORMED        0x60  // The body was transformed this frame.
-#define PHYSICS_BODY_INITIALIZED        0x80  // The body was initialized on this frame.
+#define PHYSICS_BODY_INITIALIZED        0x80  // The body was initialized on this frame. Currently unused.
 
 #ifndef PHYSICS_BODY_DEFAULT_STATE
 	#define PHYSICS_BODY_DEFAULT_STATE PHYSICS_BODY_UNINITIALIZED | PHYSICS_BODY_SIMULATE | PHYSICS_BODY_COLLIDE | PHYSICS_BODY_COLLISION_MODIFIED

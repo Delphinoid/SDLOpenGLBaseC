@@ -36,18 +36,18 @@ void camUpdateViewMatrix(camera *const __RESTRICT__ cam, const float interpT){
 void camUpdateProjectionMatrix(camera *const __RESTRICT__ cam, const float viewportWidth, const float viewportHeight, const float interpT){
 	if(flagsAreSet(cam->flags, CAM_PROJECTION_FRUSTUM)){
 		// CAM_PROJECTION_FRUSTUM is set, the camera is using a frustum projection matrix
-		cam->projectionMatrix = mat4Perspective(cam->fovy.render*RADIAN_RATIO, viewportWidth / viewportHeight, 0.1f/cam->fovy.render, 1000.f);
+		cam->projectionMatrix = mat4Perspective(cam->fovy.render*RADIAN_RATIO, viewportWidth / viewportHeight, 0.1f/cam->fovy.render, CAM_Z_THRESHOLD);
 	}else if(flagsAreSet(cam->flags, CAM_PROJECTION_ORTHOGRAPHIC)){
 		// CAM_PROJECTION_ORTHOGRAPHIC is set, the camera is using an orthographic projection matrix
 		cam->projectionMatrix = mat4Ortho(0.f, viewportWidth / (viewportWidth < viewportHeight ? viewportWidth : viewportHeight),
 										  0.f, viewportHeight / (viewportWidth < viewportHeight ? viewportWidth : viewportHeight),
-										  1000.f, -1000.f);
+										  CAM_Z_THRESHOLD, -CAM_Z_THRESHOLD);
 	}else if(flagsAreSet(cam->flags, CAM_PROJECTION_FIXED_SIZE)){
 		// OpenGL coordinates have the center at 0 with the sides
 		// at -1 and 1, resulting in a total window size of 2x2.
 		// We also need to take into account GL pixel coordinates
 		// being in the center of the pixel.
-		cam->projectionMatrix = mat4Ortho(-viewportWidth*0.5f + 0.5f, viewportWidth*0.5f - 0.5f, -viewportHeight*0.5f + 0.5f, viewportHeight*0.5f - 0.5f, 1000.f, -1000.f);
+		cam->projectionMatrix = mat4Ortho(-viewportWidth*0.5f + 0.5f, viewportWidth*0.5f - 0.5f, -viewportHeight*0.5f + 0.5f, viewportHeight*0.5f - 0.5f, CAM_Z_THRESHOLD, -CAM_Z_THRESHOLD);
 	}else{
 		cam->projectionMatrix = mat4Identity();
 	}

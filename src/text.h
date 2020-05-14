@@ -40,6 +40,11 @@
 #define TEXT_FORMAT_STYLE_UPDATED 0x04
 #define TEXT_FORMAT_UPDATED       0x07
 
+// Wraps words to the next line. Width and length
+// properties can be used for adjusting the kerning.
+// Uses oidashi kinsoku shori for Japanese text.
+#define TEXT_LINE_AUTOMATIC_LINE_BREAKS 0x01
+
 typedef struct {
 	float x;
 	float y;
@@ -94,15 +99,24 @@ typedef struct {
 	// Stream beginning and end.
 	byte_t *front;
 	byte_t *back;
-	// Default formatting.
-	txtFormat format;
 } txtStream;
+
+/**typedef struct {
+	const txtStream *stream;
+	const byte_t *start;
+	const byte_t *end;
+	unsigned int length;
+	float width;
+} txtLine;**/
 
 txtGlyph *txtGlyphArrayLoad(const char *const __RESTRICT__ glyphPath, const size_t glyphPathLength, texture *const *const atlas, const size_t atlasSize);
 return_t txtFontLoad(txtFont *const __RESTRICT__ font, const flags_t type, const char *const __RESTRICT__ name, const size_t nameLength, const char *const __RESTRICT__ texPath0, const size_t texPathLength0, const char *const __RESTRICT__ texPath1, const size_t texPathLength1, const char *const __RESTRICT__ glyphPath, const size_t glyphPathLength, const char *const __RESTRICT__ cmapPath, const size_t cmapPathLength);
 void txtFontDelete(txtFont *const __RESTRICT__ font);
 
 return_t txtStreamNextCharacter(const txtStream *const __RESTRICT__ stream, const byte_t **i);
-uint32_t txtStreamParseCharacter(const txtStream *const __RESTRICT__ stream, const byte_t **i, txtFormat *const __RESTRICT__ format);
+uint32_t txtStreamParseCharacter(const txtStream *const __RESTRICT__ stream, const byte_t **i);
+
+///void txtLinePrepare(txtLine *const __RESTRICT__ line, const txtStream *const stream, const txtFont *const font);
+///void txtLineParseNext(txtLine *const __RESTRICT__ line, const txtFormat format, const float maxWidth, const flags_t style);
 
 #endif

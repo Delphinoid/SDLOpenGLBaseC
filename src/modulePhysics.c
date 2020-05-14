@@ -638,7 +638,7 @@ void modulePhysicsSolveConstraints(const float dt){
 	while(i > 0){
 
 		return_t solved = 1;
-		float error = 0.f;
+		float separation = 0.f;
 
 		// Solve joint configuration constraints.
 		MEMORY_QLINK_LOOP_BEGIN(__g_PhysicsJointResourceArray, joint, physJoint *);
@@ -651,13 +651,13 @@ void modulePhysicsSolveConstraints(const float dt){
 		// Solve contact configuration constraints.
 		MEMORY_QLINK_LOOP_BEGIN(__g_PhysicsContactPairResourceArray, contact, physContactPair *);
 
-			error = physContactSolveConfigurationConstraints(&contact->data, contact->colliderA->body, contact->colliderB->body, error);
+			separation = physContactSolveConfigurationConstraints(&contact->data, contact->colliderA->body, contact->colliderB->body, separation);
 
 		MEMORY_QLINK_LOOP_END(__g_PhysicsContactPairResourceArray, contact, goto PHYSICS_CONTACT_CONFIGURATION_SOLVER_NEXT_ITERATION;);
 
 		PHYSICS_CONTACT_CONFIGURATION_SOLVER_NEXT_ITERATION:
 		// Exit if the errors are small.
-		if(solved && error >= PHYSICS_CONTACT_ERROR_THRESHOLD){
+		if(solved && separation >= PHYSICS_CONTACT_ERROR_THRESHOLD){
 			return;
 		}else{
 			--i;

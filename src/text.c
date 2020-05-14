@@ -40,12 +40,10 @@ return_t txtStreamNextCharacter(const txtStream *const __RESTRICT__ stream, cons
 	return 1;
 }
 
-uint32_t txtStreamParseCharacter(const txtStream *const __RESTRICT__ stream, const byte_t **i, txtFormat *const __RESTRICT__ format){
+uint32_t txtStreamParseCharacter(const txtStream *const __RESTRICT__ stream, const byte_t **i){
 
 	// Parse the first byte.
 	txtCodeUnit_t code = {.byte = {._1 = **i, ._2 = 0, ._3 = 0, ._4 = 0}};
-
-	/// Check for formatting commands.
 
 	if(code.byte._1 >= TEXT_UTF8_CHARACTER_1_BYTE_LIMIT){
 
@@ -97,6 +95,53 @@ uint32_t txtStreamParseCharacter(const txtStream *const __RESTRICT__ stream, con
 	return code._32;
 
 }
+
+/**void txtLinePrepare(txtLine *const __RESTRICT__ line, const txtStream *const stream, const txtFont *const font){
+	line->stream = stream;
+	line->start = NULL;
+	line->end = stream->offset;
+	line->width = 0.f;
+}
+
+void txtLineParseNext(txtLine *const __RESTRICT__ line, const txtFormat format, const float maxWidth, const flags_t style){
+
+	txtCodeUnit_t code;
+	txtGlyph glyph;
+	float glyphWidth;
+
+	// Start reading from the end of the last line.
+	line->start = line->end;
+	line->width = 0.f;
+
+	do {
+
+		// Parse the next character.
+		code._32 = txtStreamParseCharacter(line->stream, &line->end);
+		if(code._32 == '\0' || code._32 == '\n'){
+			// End of line.
+			break;
+		}
+
+		/// This should handle formatting as well... yuck.
+
+		// Load the glyph for the character.
+		/// This should probably be cached.
+		glyph = format.font.glyphs[txtCMapIndex(format.font.cmap, code)];
+		glyphWidth = glyph.frame.w*glyph.atlas->width;
+
+		++line->length;
+		line->width += glyphWidth;
+
+	} while(line->width < maxWidth && txtStreamNextCharacter(line->stream, &line->end));
+
+	/// Take out the last character.
+
+	if(flagsAreSet(style, TEXT_LINE_AUTOMATIC_LINE_BREAKS)){
+		// Handle word wrapping, or use oidashi.
+
+	}
+
+}**/
 
 return_t txtFontLoad(
 	txtFont *const __RESTRICT__ font, const flags_t type,

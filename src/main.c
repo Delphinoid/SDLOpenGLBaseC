@@ -184,6 +184,7 @@ int main(int argc, char **argv){
 	///skliLoad(&tempObji->skeletonData, NULL, NULL);
 	//tempObji->configuration[0].position.x = 1.5f;
 	tempObji->configuration[0].position.y = -1.9f;
+	objPhysicsPrepare(tempObji);
 	tempObji->skeletonBodies->hull->restitution = 0.f;
 	tempObji3 = tempObji;
 	//tempObji->configuration[0].position = vec3New(6.032421, -1.907336, -6.143989);
@@ -198,6 +199,7 @@ int main(int argc, char **argv){
 	//objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
 	//objInitPhysics(objGetState(&gameStateManager, tempID, 0));
 	tempObji->configuration[0].position.y = 4.f-1.9f;//-0.65f;
+	objPhysicsPrepare(tempObji);
 	tempObji->skeletonBodies->hull->restitution = 0.f;
 	//physRigidBodyIgnoreLinear(tempObji->skeletonBodies);
 	tempObji4 = tempObji;
@@ -213,6 +215,7 @@ int main(int argc, char **argv){
 	//objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
 	//objInitPhysics(objGetState(&gameStateManager, tempID, 0));
 	tempObji->configuration[0].position.y = 10.f;
+	objPhysicsPrepare(tempObji);
 	//tempObji->configuration[0].position = vec3New(6.013734, -1.933293, -6.431198);
 	//tempObji->configuration[0].orientation = quatNew(1.000000, 0.000000, 0.000000, 0.000000);
 	tempObji->skeletonBodies->hull->friction = 0.75f;
@@ -232,6 +235,7 @@ int main(int argc, char **argv){
 	//objInitPhysics(objGetState(&gameStateManager, tempID, 0));
 	tempObji->configuration[0].position.x = 11.f;
 	tempObji->configuration[0].position.y = 28.f;
+	objPhysicsPrepare(tempObji);
 	//tempObji->skeletonBodies->hull->restitution = 1.f;
 	tempObji->skeletonBodies->hull->restitution = 0.f;
 	//
@@ -244,6 +248,7 @@ int main(int argc, char **argv){
 	//objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
 	//objInitPhysics(objGetState(&gameStateManager, tempID, 0));
 	tempObji->configuration[0].position.y = 6.f;
+	objPhysicsPrepare(tempObji);
 	tempObji->skeletonBodies->hull->restitution = 0.f;
 	//
 	tempObji = moduleObjectAllocate();
@@ -258,6 +263,7 @@ int main(int argc, char **argv){
 	tempObji->configuration[0].scale.x = 100.f;
 	tempObji->configuration[0].scale.y = 0.1f;
 	tempObji->configuration[0].scale.z = 100.f;
+	objPhysicsPrepare(tempObji);
 	//
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("Kobold.tdo", 10));
@@ -347,11 +353,11 @@ int main(int argc, char **argv){
 	gTxt->root.position.y = (float)(gfxMngr.windowHeight>>1);
 	gTxt->data.text.width = (float)(gfxMngr.windowWidth>>1);
 	gTxt->data.text.height = (float)(gfxMngr.windowHeight>>1);
-	gTxt->data.text.stream.format.font = &testFont;
-	gTxt->data.text.stream.format.size = 1.f;
-	gTxt->data.text.stream.format.colour = vec4New(1.f, 1.f, 1.f, 1.f);
-	gTxt->data.text.stream.format.background = vec4New(1.f, 1.f, 1.f, 0.f);
-	gTxt->data.text.stream.format.style = 0;
+	gTxt->data.text.format.font = &testFont;
+	gTxt->data.text.format.size = 1.f;
+	gTxt->data.text.format.colour = vec4New(1.f, 1.f, 1.f, 1.f);
+	gTxt->data.text.format.background = vec4New(1.f, 1.f, 1.f, 0.f);
+	gTxt->data.text.format.style = 0;
 	gTxt->data.text.stream.front = memAllocate(44*sizeof(char));
 	gTxt->data.text.stream.back = &gTxt->data.text.stream.front[44];
 	gTxt->data.text.stream.offset = gTxt->data.text.stream.front;
