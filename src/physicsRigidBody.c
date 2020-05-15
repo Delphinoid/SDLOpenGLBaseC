@@ -1378,106 +1378,101 @@ __FORCE_INLINE__ static mat3 physRigidBodyScaleInertia(mat3 I, const vec3 scale)
 	I.m[2][0] *= xz;
 	I.m[2][1] *= yz;
 
+	// Inertia tensors are symmetric and positive definite --> invertible.
 	return mat3Invert(I);
 
 }
 #else
 void physRigidBodyScale(physRigidBody *const __RESTRICT__ body, const vec3 scale){
 
-	mat3 I = body->inverseInertiaTensorLocal;
+	// Inertia tensors are symmetric and positive definite --> invertible.
+	mat3 I = mat3Invert(body->inverseInertiaTensorLocal);
 
-	if(mat3InvertR(I, &I)){
+	const float xy = scale.x * scale.y;
+	const float xz = scale.x * scale.z;
+	const float yz = scale.y * scale.z;
 
-		const float xy = scale.x * scale.y;
-		const float xz = scale.x * scale.z;
-		const float yz = scale.y * scale.z;
+	float sqrZ = (I.m[0][0] + I.m[1][1] - I.m[2][2]) * 0.5f;
+	const float sqrY = (I.m[0][0] - sqrZ) * scale.y * scale.y;
+	const float sqrX = (I.m[1][1] - sqrZ) * scale.x * scale.x;
+	sqrZ *= scale.z * scale.z;
 
-		float sqrZ = (I.m[0][0] + I.m[1][1] - I.m[2][2]) * 0.5f;
-		const float sqrY = (I.m[0][0] - sqrZ) * scale.y * scale.y;
-		const float sqrX = (I.m[1][1] - sqrZ) * scale.x * scale.x;
-		sqrZ *= scale.z * scale.z;
+	// I[0][0] = J[0] = y^2 + z^2
+	// I[1][1] = J[1] = x^2 + z^2
+	// I[2][2] = J[2] = x^2 + y^2
+	//
+	// Therefore:
+	// x^2 = (J[1] - J[0] + J[2])/2
+	// y^2 = (J[0] - J[1] + J[2])/2
+	// z^2 = (J[0] - J[2] + J[1])/2
+	//
+	// To scale, multiply by the scale coefficient squared.
+	I.m[0][0] = sqrY + sqrZ;
+	I.m[1][1] = sqrX + sqrZ;
+	I.m[2][2] = sqrX + sqrY;
 
-		// I[0][0] = J[0] = y^2 + z^2
-		// I[1][1] = J[1] = x^2 + z^2
-		// I[2][2] = J[2] = x^2 + y^2
-		//
-		// Therefore:
-		// x^2 = (J[1] - J[0] + J[2])/2
-		// y^2 = (J[0] - J[1] + J[2])/2
-		// z^2 = (J[0] - J[2] + J[1])/2
-		//
-		// To scale, multiply by the scale coefficient squared.
-		I.m[0][0] = sqrY + sqrZ;
-		I.m[1][1] = sqrX + sqrZ;
-		I.m[2][2] = sqrX + sqrY;
+	// I[0][1] = I[1][0] = J[3] -= x * y;
+	// I[0][2] = I[2][0] = J[4] -= x * z;
+	// I[1][2] = I[2][1] = J[5] -= y * z;
+	//
+	// To scale, just multiply each element by the
+	// product of the two scale coefficients.
+	I.m[0][1] *= xy;
+	I.m[0][2] *= xz;
+	I.m[1][2] *= yz;
+	I.m[1][0] *= xy;
+	I.m[2][0] *= xz;
+	I.m[2][1] *= yz;
 
-		// I[0][1] = I[1][0] = J[3] -= x * y;
-		// I[0][2] = I[2][0] = J[4] -= x * z;
-		// I[1][2] = I[2][1] = J[5] -= y * z;
-		//
-		// To scale, just multiply each element by the
-		// product of the two scale coefficients.
-		I.m[0][1] *= xy;
-		I.m[0][2] *= xz;
-		I.m[1][2] *= yz;
-		I.m[1][0] *= xy;
-		I.m[2][0] *= xz;
-		I.m[2][1] *= yz;
-
-		body->inverseInertiaTensorLocal = mat3Invert(I);
-		body->configuration.scale = vec3VMultV(body->configuration.scale, scale);
-
-	}
+	body->inverseInertiaTensorLocal = mat3Invert(I);
+	body->configuration.scale = vec3VMultV(body->configuration.scale, scale);
 
 }
 void physRigidBodySetScale(physRigidBody *const __RESTRICT__ body, const vec3 scale){
 
-	mat3 I = body->inverseInertiaTensorLocal;
+	// Inertia tensors are symmetric and positive definite --> invertible.
+	mat3 I = mat3Invert(body->inverseInertiaTensorLocal);
 
-	if(mat3InvertR(I, &I)){
+	const vec3 scaleRelative = vec3VDivV(scale, body->configuration.scale);
 
-		const vec3 scaleRelative = vec3VDivV(scale, body->configuration.scale);
+	const float xy = scaleRelative.x * scaleRelative.y;
+	const float xz = scaleRelative.x * scaleRelative.z;
+	const float yz = scaleRelative.y * scaleRelative.z;
 
-		const float xy = scaleRelative.x * scaleRelative.y;
-		const float xz = scaleRelative.x * scaleRelative.z;
-		const float yz = scaleRelative.y * scaleRelative.z;
+	float sqrZ = (I.m[0][0] + I.m[1][1] - I.m[2][2]) * 0.5f;
+	const float sqrY = (I.m[0][0] - sqrZ) * scaleRelative.y * scaleRelative.y;
+	const float sqrX = (I.m[1][1] - sqrZ) * scaleRelative.x * scaleRelative.x;
+	sqrZ *= scaleRelative.z * scaleRelative.z;
 
-		float sqrZ = (I.m[0][0] + I.m[1][1] - I.m[2][2]) * 0.5f;
-		const float sqrY = (I.m[0][0] - sqrZ) * scaleRelative.y * scaleRelative.y;
-		const float sqrX = (I.m[1][1] - sqrZ) * scaleRelative.x * scaleRelative.x;
-		sqrZ *= scaleRelative.z * scaleRelative.z;
+	// I[0][0] = J[0] = y^2 + z^2
+	// I[1][1] = J[1] = x^2 + z^2
+	// I[2][2] = J[2] = x^2 + y^2
+	//
+	// Therefore:
+	// x^2 = (J[1] - J[0] + J[2])/2
+	// y^2 = (J[0] - J[1] + J[2])/2
+	// z^2 = (J[0] - J[2] + J[1])/2
+	//
+	// To scale, multiply by the scale coefficient squared.
+	I.m[0][0] = sqrY + sqrZ;
+	I.m[1][1] = sqrX + sqrZ;
+	I.m[2][2] = sqrX + sqrY;
 
-		// I[0][0] = J[0] = y^2 + z^2
-		// I[1][1] = J[1] = x^2 + z^2
-		// I[2][2] = J[2] = x^2 + y^2
-		//
-		// Therefore:
-		// x^2 = (J[1] - J[0] + J[2])/2
-		// y^2 = (J[0] - J[1] + J[2])/2
-		// z^2 = (J[0] - J[2] + J[1])/2
-		//
-		// To scale, multiply by the scale coefficient squared.
-		I.m[0][0] = sqrY + sqrZ;
-		I.m[1][1] = sqrX + sqrZ;
-		I.m[2][2] = sqrX + sqrY;
+	// I[0][1] = I[1][0] = J[3] -= x * y;
+	// I[0][2] = I[2][0] = J[4] -= x * z;
+	// I[1][2] = I[2][1] = J[5] -= y * z;
+	//
+	// To scale, just multiply each element by the
+	// product of the two scale coefficients.
+	I.m[0][1] *= xy;
+	I.m[0][2] *= xz;
+	I.m[1][2] *= yz;
+	I.m[1][0] *= xy;
+	I.m[2][0] *= xz;
+	I.m[2][1] *= yz;
 
-		// I[0][1] = I[1][0] = J[3] -= x * y;
-		// I[0][2] = I[2][0] = J[4] -= x * z;
-		// I[1][2] = I[2][1] = J[5] -= y * z;
-		//
-		// To scale, just multiply each element by the
-		// product of the two scale coefficients.
-		I.m[0][1] *= xy;
-		I.m[0][2] *= xz;
-		I.m[1][2] *= yz;
-		I.m[1][0] *= xy;
-		I.m[2][0] *= xz;
-		I.m[2][1] *= yz;
-
-		body->inverseInertiaTensorLocal = mat3Invert(I);
-		body->configuration.scale = scale;
-
-	}
+	body->inverseInertiaTensorLocal = mat3Invert(I);
+	body->configuration.scale = scale;
 
 }
 #endif

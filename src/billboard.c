@@ -1,11 +1,11 @@
 #include "billboard.h"
 #include "camera.h"
+#include "helpersMath.h"
 #include "constantsMath.h"
-
-#define BILLBOARD_ANIMATION_ANGLE (2.f*M_PI / ((float)BILLBOARD_ANIMATION_ANGLE_GRANULARITY))
 
 void billboardInit(billboard *const __RESTRICT__ data){
 	data->flags = BILLBOARD_DISABLED;
+	data->sectors = 0;
 	data->axis = NULL;
 	data->target = NULL;
 	data->scale = 1.f/BILLBOARD_SCALE_CALIBRATION_DISTANCE;
@@ -107,5 +107,64 @@ mat4 billboardState(const billboard data, const camera *const __RESTRICT__ cam, 
 	}
 
 	return configuration;
+
+}
+
+unsigned int billboardLenticular(const billboard data, const camera *const __RESTRICT__ cam, mat4 configuration){
+
+	if(data.sectors > 1){
+
+		unsigned int frame = 0;
+
+		const float sectorHalf = M_PI / (float)data.sectors;
+		const float sector = 2*sectorHalf;
+
+		// Normalize the billboard's basis vectors.
+		const vec3 billboardUp = vec3NormalizeFast(*((vec3 *)&configuration.m[1][0]));
+		const vec3 billboardBackward = vec3Negate(vec3NormalizeFast(*((vec3 *)&configuration.m[2][0])));
+
+		// Project the camera's forward vector onto the plane with normal
+		// given by the specified configuration's up basis vector and
+		// parallel vector given by the specified configuration's forward
+		// basis vector.
+		//
+		// We do this because we can't guarantee that objects will always
+		// be axis-aligned.
+		const vec3 projection = vec3NormalizeFast(
+				pointPlaneProject(
+					billboardUp, billboardBackward,
+					vec3VSubV(cam->position.render, cam->target.render)
+				)
+		);
+
+		// Use the dot and triple products to obtain the signed angle.
+		float angle = atan2f(
+			vec3Triple(billboardUp, billboardBackward, projection),
+			vec3Dot(billboardBackward, projection)
+		);
+
+		// Put the angle into the range [0, 2pi].
+		if(angle < 0.f){
+			// Exit instantly for "forward" facing angles.
+			if(angle >= -sectorHalf){
+				return 0;
+			}
+			angle += 2*M_PI;
+		}else if(angle <= sectorHalf){
+			// Exit instantly for "forward" facing angles.
+			return 0;
+		}
+
+		// Find out which circular sector the angle lies within.
+		while(angle > sectorHalf){
+			angle -= sector;
+			++frame;
+		}
+
+		return frame;
+
+	}
+
+	return 0;
 
 }

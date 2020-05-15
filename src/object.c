@@ -1092,18 +1092,8 @@ gfxRenderGroup_t objRenderGroup(const object *const __RESTRICT__ obj, const floa
 void objRender(const object *const __RESTRICT__ obj, graphicsManager *const __RESTRICT__ gfxMngr, const camera *const __RESTRICT__ cam, const float distance, const float interpT){
 
 	const renderable *currentRndr = obj->renderables;
-
-	mat4 *transformCurrent = gfxMngr->shdrData.skeletonTransformState;
-	const bone *bCurrent = obj->state.configuration;
-	const bone *bPrevious = (obj->state.previous == NULL ? bCurrent : obj->state.previous->configuration);
-
 	boneIndex_t boneNum = obj->skeletonData.skl->boneNum;
-	sklNode *nLayout = obj->skeletonData.skl->bones;
-	bone *bAccumulator = gfxMngr->shdrData.skeletonBindAccumulator;
-
 	vec3 centroid = {.x = 0.f, .y = 0.f, .z = 0.f};
-
-	boneIndex_t i;
 
 	// Generate a transformation matrix for each bone. Steps:
 	//     1. Accumulate inverse bind offsets for the bone and each predecessor.
@@ -1122,25 +1112,48 @@ void objRender(const object *const __RESTRICT__ obj, graphicsManager *const __RE
 	// updates we must transform them into global space based on their bind
 	// positions, and then transform them back before passing their transforms
 	// to the shader.
-	for(i = 0; i < boneNum; ++bCurrent, ++bPrevious, ++transformCurrent, ++nLayout, ++bAccumulator, ++i){
+	if(boneNum > 0){
 
-		// Interpolate between bone states.
-		const bone state = boneInterpolate(*bPrevious, *bCurrent, interpT);
+		boneIndex_t i = boneNum;
 
-		// If the bone has a parent, add its inverse bind position,
-		// otherwise just use the current bone's inverse bind position.
-		if(nLayout->parent != i){
-			*bAccumulator = boneTransformAppend(boneInvert(nLayout->defaultState), gfxMngr->shdrData.skeletonBindAccumulator[nLayout->parent]);
-		}else{
-			*bAccumulator = boneInvert(nLayout->defaultState);
-			centroid = state.position;
-		}
+		mat4 *transformCurrent = gfxMngr->shdrData.skeletonTransformState;
+		const bone *bCurrent = obj->state.configuration;
+		const bone *bPrevious = (obj->state.previous == NULL ? bCurrent : obj->state.previous->configuration);
+
+		sklNode *nLayout = obj->skeletonData.skl->bones;
+		bone *bAccumulator = gfxMngr->shdrData.skeletonBindAccumulator;
+
+		bone state;
+
+		// Handle the root separately.
+		state = boneInterpolate(*bPrevious, *bCurrent, interpT);
+		*bAccumulator = boneInvert(nLayout->defaultState);
+		centroid = state.position;
 
 		// Add the inverse bind offsets to the bone state and
 		// convert it to a transformation matrix for the shader.
 		*transformCurrent = boneMatrix(
 			boneTransformAppend(state, *bAccumulator)
 		);
+
+		// Handle the rest of the bones.
+		while(i > 0){
+
+			++bCurrent, ++bPrevious, ++transformCurrent, ++nLayout, ++bAccumulator, --i;
+
+			// Interpolate between bone states.
+			state = boneInterpolate(*bPrevious, *bCurrent, interpT);
+
+			// Add the parent's inverse bind position.
+			*bAccumulator = boneTransformAppend(boneInvert(nLayout->defaultState), gfxMngr->shdrData.skeletonBindAccumulator[nLayout->parent]);
+
+			// Add the inverse bind offsets to the bone state and
+			// convert it to a transformation matrix for the shader.
+			*transformCurrent = boneMatrix(
+				boneTransformAppend(state, *bAccumulator)
+			);
+
+		}
 
 	}
 

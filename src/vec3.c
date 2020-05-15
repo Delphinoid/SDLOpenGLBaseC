@@ -404,6 +404,14 @@ __HINT_INLINE__ void vec3CrossPR(const vec3 *const __RESTRICT__ v1, const vec3 *
 	r->y = v1->z * v2->x - v1->x * v2->z;
 	r->z = v1->x * v2->y - v1->y * v2->x;
 }
+__HINT_INLINE__ float vec3Triple(const vec3 v1, const vec3 v2, const vec3 v3){
+	return vec3Dot(v1, vec3Cross(v2, v3));
+}
+__HINT_INLINE__ float vec3TripleP(const vec3 *const __RESTRICT__ v1, const vec3 *const __RESTRICT__ v2, const vec3 *const __RESTRICT__ v3){
+	vec3 cross;
+	vec3CrossPR(v2, v3, &cross);
+	return vec3DotP(v1, &cross);
+}
 
 __HINT_INLINE__ vec3 vec3Perpendicular(const vec3 v){
 	if(fabsf(v.x) >= 0.5773502691896257){  // sqrtf(1.f / 3.f), 0x3F13CD3A

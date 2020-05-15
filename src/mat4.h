@@ -1,6 +1,7 @@
 #ifndef MAT4_H
 #define MAT4_H
 
+#include "vec3.h"
 #include "vec4.h"
 #include "quat.h"
 #include "return.h"
@@ -41,10 +42,22 @@ vec4 mat4MMultVKet(const mat4 m, const vec4 v);
 void mat4MMultVKetP(const mat4 *const __RESTRICT__ m, vec4 *const __RESTRICT__ v);
 void mat4MMultVKetPR(const mat4 *const __RESTRICT__ m, const vec4 *const __RESTRICT__ v, vec4 *const __RESTRICT__ r);
 
+vec3 mat4V3MultMBra(const vec3 v, const mat4 m);
+void mat4V3MultMBraP(vec3 *const __RESTRICT__ v, const mat4 *const __RESTRICT__ m);
+void mat4V3MultMBraPR(const vec3 *const __RESTRICT__ v, const mat4 *const __RESTRICT__ m, vec3 *const __RESTRICT__ r);
+vec3 mat4MMultV3Ket(const mat4 m, const vec3 v);
+void mat4MMultV3KetP(const mat4 *const __RESTRICT__ m, vec3 *const __RESTRICT__ v);
+void mat4MMultV3KetPR(const mat4 *const __RESTRICT__ m, const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r);
+
 vec4 mat4NMultMBra(const float x, const float y, const float z, const float w, const mat4 m);
 void mat4NMultMBraPR(const float x, const float y, const float z, const float w, const mat4 *const __RESTRICT__ m, vec4 *const __RESTRICT__ r);
 vec4 mat4MMultNKet(const mat4 m, const float x, const float y, const float z, const float w);
 void mat4MMultNKetPR(const mat4 *const __RESTRICT__ m, const float x, const float y, const float z, const float w, vec4 *const __RESTRICT__ r);
+
+vec3 mat4N3MultMBra(const float x, const float y, const float z, const mat4 m);
+void mat4N3MultMBraPR(const float x, const float y, const float z, const mat4 *const __RESTRICT__ m, vec3 *const __RESTRICT__ r);
+vec3 mat4MMultN3Ket(const mat4 m, const float x, const float y, const float z);
+void mat4MMultN3KetPR(const mat4 *const __RESTRICT__ m, const float x, const float y, const float z, vec3 *const __RESTRICT__ r);
 
 mat4 mat4MAddM(const mat4 m1, const mat4 m2);
 void mat4MAddMP(mat4 *const __RESTRICT__ m1, const mat4 *const __RESTRICT__ m2);

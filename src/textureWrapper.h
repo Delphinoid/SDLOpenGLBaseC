@@ -52,6 +52,7 @@ const texture *twiTexture(const twInstance *const __RESTRICT__ twi);
 float twiFrameWidth(const twInstance *const __RESTRICT__ twi);
 float twiFrameHeight(const twInstance *const __RESTRICT__ twi);
 const twFrame *twiState(const twInstance *const __RESTRICT__ twi, const float interpT);
+const twFrame *twiStateOffset(const twInstance *const __RESTRICT__ twi, const unsigned int offset, const float interpT);
 return_t twiTranslucent(const twInstance *const __RESTRICT__ twi);
 
 #endif

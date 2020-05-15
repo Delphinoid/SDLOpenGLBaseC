@@ -650,6 +650,30 @@ const twFrame *twiState(const twInstance *const __RESTRICT__ twi, const float in
 
 }
 
+const twFrame *twiStateOffset(const twInstance *const __RESTRICT__ twi, const unsigned int offset, const float interpT){
+
+	// Make sure the current animation and frame are valid (within proper bounds)
+	//if(
+	//	twi->currentAnim < twi->tw->animationNum &&
+	//	twi->animator.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum
+	//){
+
+		frameIndex_t frame;
+		animState(&twi->animator, &twAnimation(twi->tw, twi->currentAnim+offset)->animData, interpT, &frame, NULL, NULL);
+		return &twi->tw->animations[twi->currentAnim].frames[frame];
+
+	//}else{
+
+	//	*x = 0.f;
+	//	*y = 0.f;
+	//	*w = 0.f;
+	//	*h = 0.f;
+	//	*frameTexID = 0;
+
+	//}
+
+}
+
 const twFrame *twState(const textureWrapper *const __RESTRICT__ tw, const animationInstance *const __RESTRICT__ animator, const animIndex_t currentAnim, const float interpT){
 	frameIndex_t frame;
 	animState(animator, &twAnimation(tw, currentAnim)->animData, interpT, &frame, NULL, NULL);

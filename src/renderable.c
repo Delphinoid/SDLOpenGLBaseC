@@ -32,7 +32,10 @@ __FORCE_INLINE__ void rndrTick(renderable *const __RESTRICT__ rndr, const float 
 void rndrRender(const renderable *const __RESTRICT__ rndr, const skeleton *const __RESTRICT__ skl, graphicsManager *const __RESTRICT__ gfxMngr, const camera *const __RESTRICT__ cam, const float distance, const vec3 centroid, const float interpT){
 
 	// Get texture information for rendering and feed it to the shader.
-	const twFrame *const __RESTRICT__ frame = twiState(&rndr->twi, interpT);
+	// Add an offset to the current animation for lenticular billboards.
+	const twFrame *const frame = twiStateOffset(
+		&rndr->twi, billboardLenticular(rndr->billboardData, cam, *gfxMngr->shdrData.skeletonTransformState), interpT
+	);
 	// Bind the texture (if needed).
 	gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, frame->image->diffuseID);
 	// Feed the texture coordinates to the shader.
