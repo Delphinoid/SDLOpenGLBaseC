@@ -282,7 +282,11 @@ cAABB cTransformPoint(void *const instance, const vec3 instanceCentroid, const v
 return_t physColliderTransformMesh(physCollider *const __RESTRICT__ c, physIsland *const __RESTRICT__ island){
 	const physRigidBody *const body = c->body;
 	if(flagsAreSet(body->flags, PHYSICS_BODY_TRANSFORMED | PHYSICS_BODY_COLLISION_MODIFIED)){
+		#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
 		c->aabb = cTransformMesh(&c->c.data, body->centroidGlobal, &c->base->data, body->centroidLocal, body->configuration.position, body->configuration.orientation, body->configuration.scale);
+		#else
+		c->aabb = cTransformMesh(&c->c.data, body->centroidGlobal, &c->base->data, body->base->centroid, body->configuration.position, body->configuration.orientation, body->configuration.scale);
+		#endif
 		return physIslandUpdateCollider(island, c);
 	}
 	return 1;

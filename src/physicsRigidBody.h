@@ -54,11 +54,7 @@ typedef struct physRigidBodyBase {
 	float linearDamping;        // The body's linear damping ratio.
 	float angularDamping;       // The body's angular damping ratio.
 	vec3 centroid;              // The body's center of mass.
-	#ifdef PHYSICS_BODY_SCALE_INERTIA_TENSORS
-	mat3 inertiaTensor;         // The body's local inertia tensor.
-	#else
 	mat3 inverseInertiaTensor;  // The inverse of the body's local inertia tensor.
-	#endif
 
 	// The bone the body is associated with.
 	physicsBodyIndex_t id;
@@ -80,12 +76,14 @@ typedef struct physRigidBody {
 	float inverseMass;                // The reciprocal of the body's mass.
 	float linearDamping;              // The body's linear damping ratio.
 	float angularDamping;             // The body's angular damping ratio.
-	vec3 centroidLocal;               // The body's local center of mass.
 	vec3 centroidGlobal;              // The body's global center of mass.
+	#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
+	vec3 centroidLocal;               // The body's local center of mass.
 	#ifdef PHYSICS_BODY_SCALE_INERTIA_TENSORS
 	mat3 inertiaTensorLocal;          // The body's local inertia tensor.
 	#else
 	mat3 inverseInertiaTensorLocal;   // The inverse of the body's local inertia tensor.
+	#endif
 	#endif
 	mat3 inverseInertiaTensorGlobal;  // The inverse of the body's global inertia tensor.
 
@@ -157,7 +155,7 @@ void physRigidBodyApplyVelocityImpulseAngularInverse(physRigidBody *const __REST
 void physRigidBodyApplyConfigurationImpulse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J);
 void physRigidBodyApplyConfigurationImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J);
 
-#ifndef PHYSICS_BODY_SCALE_INERTIA_TENSORS
+#if defined(PHYSICS_BODY_STORE_LOCAL_TENSORS) && defined(PHYSICS_BODY_SCALE_INERTIA_TENSORS)
 void physRigidBodyScale(physRigidBody *const __RESTRICT__ body, const vec3 scale);
 void physRigidBodySetScale(physRigidBody *const __RESTRICT__ body, const vec3 scale);
 #endif
@@ -178,7 +176,9 @@ void physRigidBodyIntegrateLeapfrogTest(physRigidBody *const __RESTRICT__ body, 
 
 return_t physRigidBodyPermitCollision(const physRigidBody *const __RESTRICT__ body1, const physRigidBody *const __RESTRICT__ body2);
 
+#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
 void physRigidBodyAddCollider(physRigidBody *const __RESTRICT__ body, physCollider *const c, const float **const vertexMassArray);
+#endif
 return_t physRigidBodyAddJoint(physRigidBody *const body, physJoint *const joint);
 
 void physRigidBodyDelete(physRigidBody *const __RESTRICT__ body);

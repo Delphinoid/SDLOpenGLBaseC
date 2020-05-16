@@ -25,11 +25,7 @@ void physRigidBodyBaseInit(physRigidBodyBase *const __RESTRICT__ local){
 	local->linearDamping = 0.f;
 	local->angularDamping = 0.f;
 	vec3ZeroP(&local->centroid);
-	#ifdef PHYSICS_BODY_SCALE_INERTIA_TENSORS
-	mat3Identity(&local->inertiaTensor);
-	#else
 	mat3Identity(&local->inverseInertiaTensor);
-	#endif
 }
 
 __FORCE_INLINE__ static void physRigidBodyBaseAddCollider(physRigidBodyBase *const __RESTRICT__ local, physCollider *const c, const float **const vertexMassArray){
@@ -64,17 +60,6 @@ __FORCE_INLINE__ static void physRigidBodyBaseAddCollider(physRigidBodyBase *con
 		inertiaTensor.m[2][2] += differenceWeightedSquared.x + differenceWeightedSquared.y;
 
 		// Add the collider's contribution to the body's inertia tensor.
-		#ifdef PHYSICS_BODY_SCALE_INERTIA_TENSORS
-		local->inertiaTensor.m[0][0] += inertiaTensor.m[0][0];
-		local->inertiaTensor.m[0][1] += inertiaTensor.m[0][1];
-		local->inertiaTensor.m[1][0] += inertiaTensor.m[0][1];
-		local->inertiaTensor.m[0][2] += inertiaTensor.m[0][2];
-		local->inertiaTensor.m[2][0] += inertiaTensor.m[0][2];
-		local->inertiaTensor.m[1][1] += inertiaTensor.m[1][1];
-		local->inertiaTensor.m[1][2] += inertiaTensor.m[1][2];
-		local->inertiaTensor.m[2][1] += inertiaTensor.m[1][2];
-		local->inertiaTensor.m[2][2] += inertiaTensor.m[2][2];
-		#else
 		local->inverseInertiaTensor = mat3Invert(local->inverseInertiaTensor);
 		local->inverseInertiaTensor.m[0][0] += inertiaTensor.m[0][0];
 		local->inverseInertiaTensor.m[0][1] += inertiaTensor.m[0][1];
@@ -86,7 +71,6 @@ __FORCE_INLINE__ static void physRigidBodyBaseAddCollider(physRigidBodyBase *con
 		local->inverseInertiaTensor.m[2][1] += inertiaTensor.m[1][2];
 		local->inverseInertiaTensor.m[2][2] += inertiaTensor.m[2][2];
 		local->inverseInertiaTensor = mat3Invert(local->inverseInertiaTensor);
-		#endif
 
 		// Calculate the new, weighted centroid.
 		local->inverseMass = 1.f / (local->mass + mass);
@@ -161,18 +145,6 @@ __FORCE_INLINE__ static void physRigidBodyBaseGenerateProperties(physRigidBodyBa
 
 		}
 
-		#ifdef PHYSICS_BODY_SCALE_INERTIA_TENSORS
-		local->inertiaTensor.m[0][0] = inertiaTensor[0];
-		local->inertiaTensor.m[1][1] = inertiaTensor[1];
-		local->inertiaTensor.m[2][2] = inertiaTensor[2];
-		local->inertiaTensor.m[0][1] = inertiaTensor[3];
-		local->inertiaTensor.m[0][2] = inertiaTensor[4];
-		local->inertiaTensor.m[1][2] = inertiaTensor[5];
-		// No point calculating the same numbers twice.
-		local->inertiaTensor.m[1][0] = inertiaTensor[3];
-		local->inertiaTensor.m[2][0] = inertiaTensor[4];
-		local->inertiaTensor.m[2][1] = inertiaTensor[5];
-		#else
 		local->inverseInertiaTensor.m[0][0] = inertiaTensor[0];
 		local->inverseInertiaTensor.m[1][1] = inertiaTensor[1];
 		local->inverseInertiaTensor.m[2][2] = inertiaTensor[2];
@@ -184,15 +156,10 @@ __FORCE_INLINE__ static void physRigidBodyBaseGenerateProperties(physRigidBodyBa
 		local->inverseInertiaTensor.m[2][0] = inertiaTensor[4];
 		local->inverseInertiaTensor.m[2][1] = inertiaTensor[5];
 		local->inverseInertiaTensor = mat3Invert(local->inverseInertiaTensor);
-		#endif
 
 	}else{
 		local->inverseMass = 0.f;
-		#ifdef PHYSICS_BODY_SCALE_INERTIA_TENSORS
-		mat3ZeroP(&local->inertiaTensor);
-		#else
 		mat3ZeroP(&local->inverseInertiaTensor);
-		#endif
 	}
 
 	local->mass = tempMass;
@@ -1046,11 +1013,13 @@ return_t physRigidBodyInstantiate(physRigidBody *const __RESTRICT__ body, physRi
 	body->inverseMass = local->inverseMass;
 	body->linearDamping = local->linearDamping;
 	body->angularDamping = local->angularDamping;
+	#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
 	body->centroidLocal = local->centroid;
 	#ifdef PHYSICS_BODY_SCALE_INERTIA_TENSORS
-	body->inertiaTensorLocal = local->inertiaTensor;
+	body->inertiaTensorLocal = mat3Invert(local->inverseInertiaTensor);
 	#else
 	body->inverseInertiaTensorLocal = local->inverseInertiaTensor;
+	#endif
 	#endif
 
 	body->base = local;
@@ -1318,7 +1287,11 @@ __FORCE_INLINE__ void physRigidBodyCentroidFromPosition(physRigidBody *const __R
 		vec3VMultV(
 			quatRotateVec3FastApproximate(
 				body->configuration.orientation,
+				#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
 				body->centroidLocal
+				#else
+				body->base->centroid
+				#endif
 			),
 			body->configuration.scale
 		),
@@ -1331,7 +1304,11 @@ __FORCE_INLINE__ void physRigidBodyPositionFromCentroid(physRigidBody *const __R
 		vec3VMultV(
 			quatRotateVec3FastApproximate(
 				body->configuration.orientation,
+				#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
 				vec3Negate(body->centroidLocal)
+				#else
+				vec3Negate(body->base->centroid)
+				#endif
 			),
 			body->configuration.scale
 		),
@@ -1339,6 +1316,7 @@ __FORCE_INLINE__ void physRigidBodyPositionFromCentroid(physRigidBody *const __R
 	);
 }
 
+#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
 #ifdef PHYSICS_BODY_SCALE_INERTIA_TENSORS
 __FORCE_INLINE__ static mat3 physRigidBodyScaleInertia(mat3 I, const vec3 scale){
 
@@ -1359,7 +1337,7 @@ __FORCE_INLINE__ static mat3 physRigidBodyScaleInertia(mat3 I, const vec3 scale)
 	// x^2 = (J[1] - J[0] + J[2])/2
 	// y^2 = (J[0] - J[1] + J[2])/2
 	// z^2 = (J[0] - J[2] + J[1])/2
-	/
+	//
 	// To scale, multiply by the scale coefficient squared.
 	I.m[0][0] = sqrY + sqrZ;
 	I.m[1][1] = sqrX + sqrZ;
@@ -1476,6 +1454,7 @@ void physRigidBodySetScale(physRigidBody *const __RESTRICT__ body, const vec3 sc
 
 }
 #endif
+#endif
 
 __FORCE_INLINE__ void physRigidBodyGenerateGlobalInertia(physRigidBody *const __RESTRICT__ body){
 
@@ -1487,10 +1466,14 @@ __FORCE_INLINE__ void physRigidBodyGenerateGlobalInertia(physRigidBody *const __
 	body->inverseInertiaTensorGlobal = mat3MMultM(
 		inverseOrientationMatrix,
 		mat3MMultM(
+			#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
 			#ifdef PHYSICS_BODY_SCALE_INERTIA_TENSORS
 			physRigidBodyScaleInertia(body->inertiaTensorLocal, body->configuration.scale),
 			#else
 			body->inverseInertiaTensorLocal,
+			#endif
+			#else
+			body->base->inverseInertiaTensor,
 			#endif
 			orientationMatrix
 		)
@@ -1697,6 +1680,7 @@ return_t physRigidBodyPermitCollision(const physRigidBody *const body1, const ph
 
 }
 
+#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
 void physRigidBodyAddCollider(physRigidBody *const __RESTRICT__ body, physCollider *const c, const float **const vertexMassArray){
 
 	// Adds a single collider to the body.
@@ -1760,6 +1744,7 @@ void physRigidBodyAddCollider(physRigidBody *const __RESTRICT__ body, physCollid
 	}
 
 }
+#endif
 
 void physRigidBodyDelete(physRigidBody *const __RESTRICT__ body){
 	modulePhysicsColliderFreeArray(&body->hull);

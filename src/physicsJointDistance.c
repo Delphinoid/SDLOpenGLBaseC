@@ -158,14 +158,22 @@ static __FORCE_INLINE__ void physJointDistancePersist(physJointDistance *const _
 		bodyA->configuration.orientation,
 		vec3VMultV(
 			bodyA->configuration.scale,
+			#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
 			vec3VSubV(((physJointDistance *)joint)->anchorA, bodyA->centroidLocal)
+			#else
+			vec3VSubV(((physJointDistance *)joint)->anchorA, bodyA->base->centroid)
+			#endif
 		)
 	);
 	joint->rB = quatRotateVec3FastApproximate(
 		bodyB->configuration.orientation,
 		vec3VMultV(
 			bodyB->configuration.scale,
+			#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
 			vec3VSubV(((physJointDistance *)joint)->anchorB, bodyB->centroidLocal)
+			#else
+			vec3VSubV(((physJointDistance *)joint)->anchorB, bodyB->base->centroid)
+			#endif
 		)
 	);
 
@@ -270,14 +278,22 @@ return_t physJointDistanceSolveConfigurationConstraints(physJoint *const __RESTR
 			bodyA->configuration.orientation,
 			vec3VMultV(
 				bodyA->configuration.scale,
+				#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
 				vec3VSubV(((physJointDistance *)joint)->anchorA, bodyA->centroidLocal)
+				#else
+				vec3VSubV(((physJointDistance *)joint)->anchorA, bodyA->base->centroid)
+				#endif
 			)
 		);
 		const vec3 rB = quatRotateVec3FastApproximate(
 			bodyB->configuration.orientation,
 			vec3VMultV(
 				bodyB->configuration.scale,
+				#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
 				vec3VSubV(((physJointDistance *)joint)->anchorB, bodyB->centroidLocal)
+				#else
+				vec3VSubV(((physJointDistance *)joint)->anchorB, bodyB->base->centroid)
+				#endif
 			)
 		);
 
