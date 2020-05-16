@@ -581,12 +581,14 @@ int main(int argc, char **argv){
 			// Update scenes.
 			moduleSceneTick(tickrateTimeMod);
 
+			/**
 			// Query physics islands.
 			#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 			moduleSceneQueryIslands(tickratioTimeModFrequency);
 			#else
 			moduleSceneQueryIslands();
 			#endif
+			**/
 
 			// Solve physics constraints.
 			modulePhysicsSolveConstraints(tickratioTimeMod);

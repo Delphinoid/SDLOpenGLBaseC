@@ -890,12 +890,15 @@ return_t objTick(object *const __RESTRICT__ obj, physIsland *const __RESTRICT__ 
 			*configuration = body->configuration;
 			*sklState = *configuration;
 
+			/** Move this out eventually. **/
 			// Add the body to the physics island
 			// and update all of its colliders.
 			if(physRigidBodyUpdateColliders(body, island) < 0){
 				/** Memory allocation failure. **/
 				return -1;
 			}
+
+			// Get the next body.
 			body = modulePhysicsRigidBodyNext(body);
 
 		}else{
@@ -930,11 +933,15 @@ return_t objTick(object *const __RESTRICT__ obj, physIsland *const __RESTRICT__ 
 				// Initialize the body's moment of inertia and centroid.
 				physRigidBodyCentroidFromPosition(body);
 
-				// Update the body's colliders.
+				/** Move this out eventually. **/
+				// Add the body to the physics island
+				// and update all of its colliders.
 				if(physRigidBodyUpdateColliders(body, island) < 0){
 					/** Memory allocation failure. **/
 					return -1;
 				}
+
+				// Get the next body.
 				body = modulePhysicsRigidBodyNext(body);
 
 			}
