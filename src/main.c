@@ -359,7 +359,7 @@ int main(int argc, char **argv){
 	gTxt->data.text.format.background = vec4New(1.f, 1.f, 1.f, 0.f);
 	gTxt->data.text.format.style = 0;
 	gTxt->data.text.stream.front = memAllocate(44*sizeof(char));
-	gTxt->data.text.stream.back = &gTxt->data.text.stream.front[44];
+	gTxt->data.text.stream.back = &gTxt->data.text.stream.front[43];
 	gTxt->data.text.stream.offset = gTxt->data.text.stream.front;
 	memcpy(gTxt->data.text.stream.front, "The quick brown fox jumps over the lazy dog.", 44*sizeof(char));
 	txtFontLoad(
@@ -581,14 +581,15 @@ int main(int argc, char **argv){
 			// Update scenes.
 			moduleSceneTick(tickrateTimeMod);
 
-			/**
-			// Query physics islands.
+			// Presolve physics constraints.
+			modulePhysicsPresolveConstraints(tickratioTimeMod);
+
+			// Query physics islands and presolve contact constraints.
 			#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 			moduleSceneQueryIslands(tickratioTimeModFrequency);
 			#else
 			moduleSceneQueryIslands();
 			#endif
-			**/
 
 			// Solve physics constraints.
 			modulePhysicsSolveConstraints(tickratioTimeMod);
@@ -673,6 +674,7 @@ int main(int argc, char **argv){
 
 	moduleCameraResourcesDelete();
 	moduleSceneResourcesDelete();
+	moduleGUIResourcesDelete();
 	moduleObjectResourcesDelete();
 	modulePhysicsResourcesDelete();
 	moduleRenderableResourcesDelete();

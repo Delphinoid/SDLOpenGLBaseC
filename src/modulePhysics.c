@@ -567,14 +567,11 @@ void modulePhysicsAABBNodeClear(){
 
 }
 
-#include "moduleScene.h"
-void modulePhysicsSolveConstraints(const float dt){
+/** This should be moved to physIsland. **/
+void modulePhysicsPresolveConstraints(const float dt){
 
-
-	// Solves all active constraints
-	// for all systems being simulated.
-
-	size_t i;
+	// Presolves all active constraints (asides from contact constraints,
+	// which are handled by islands) for all systems being simulated.
 
 	// Integrate velocities.
 	MEMORY_SLINK_LOOP_BEGIN(__g_PhysicsRigidBodyResourceArray, body, physRigidBody *);
@@ -583,28 +580,26 @@ void modulePhysicsSolveConstraints(const float dt){
 		physRigidBodyIntegrateVelocity(body, dt);
 		physRigidBodyResetAccumulators(body);
 
-	MEMORY_SLINK_LOOP_END(__g_PhysicsRigidBodyResourceArray, body, goto PHYSICS_EXIT_VELOCITY_PRESOLVER;);
-	PHYSICS_EXIT_VELOCITY_PRESOLVER:
+	MEMORY_SLINK_LOOP_END(__g_PhysicsRigidBodyResourceArray, body, goto PHYSICS_JOINT_PRESOLVER;);
 
 	// Presolve joint constraints.
+	PHYSICS_JOINT_PRESOLVER:
 	MEMORY_QLINK_LOOP_BEGIN(__g_PhysicsJointResourceArray, joint, physJoint *);
 
 		physJointPresolveConstraints(joint, dt);
 
-	MEMORY_QLINK_LOOP_END(__g_PhysicsJointResourceArray, joint, goto PHYSICS_EXIT_JOINT_PRESOLVER;);
-	PHYSICS_EXIT_JOINT_PRESOLVER:
+	MEMORY_QLINK_LOOP_END(__g_PhysicsJointResourceArray, joint, return;);
 
-	/** Redo this eventually. **/
-	// Query physics islands and presolve contact constraints.
-	#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-	moduleSceneQueryIslands(1.f/dt);
-	#else
-	moduleSceneQueryIslands();
-	#endif
+}
 
+/** This should be moved to physIsland. **/
+void modulePhysicsSolveConstraints(const float dt){
+
+	// Solves all active constraints
+	// for all systems being simulated.
 
 	// Iteratively solve joint and contact velocity constraints.
-	i = PHYSICS_VELOCITY_SOLVER_ITERATIONS;
+	size_t i = PHYSICS_VELOCITY_SOLVER_ITERATIONS;
 	while(i > 0){
 
 		// Solve joint velocity constraints.

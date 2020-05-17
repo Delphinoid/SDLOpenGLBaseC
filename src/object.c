@@ -481,7 +481,7 @@ return_t objInstantiate(object *const __RESTRICT__ obj, const objectBase *const 
 	if(base->skl->boneNum != 0){
 
 		// Allocate memory for the object instance.
-		obj->configuration = memAllocate(3 * base->skl->boneNum * sizeof(bone));
+		obj->configuration = memAllocate(2 * base->skl->boneNum * sizeof(bone));
 		if(obj->configuration == NULL){
 			/** Memory allocation failure. **/
 			skliDelete(&obj->skeletonData);
@@ -705,6 +705,7 @@ void objPhysicsPrepare(object *const __RESTRICT__ obj){
 
 		if(body != NULL && body->base->id == i && physRigidBodyIsSimulated(body)){
 
+			/** Split the root into a separate case. **/
 			const unsigned int isRoot = (i == sklBone->parent) || (sklBone->parent >= obj->skeletonData.skl->boneNum);
 
 			// Apply configuration and the skeleton's bind transform.
@@ -733,6 +734,7 @@ void objPhysicsBodySimulate(object *const __RESTRICT__ obj, const boneIndex_t bo
 
 	if(body != NULL){
 
+		/** Split the root into a separate case. **/
 		const sklNode sklBone = obj->skeletonData.skl->bones[boneID];
 		const unsigned int isRoot = (boneID == sklBone.parent) || (sklBone.parent >= obj->skeletonData.skl->boneNum);
 
@@ -905,6 +907,7 @@ return_t objTick(object *const __RESTRICT__ obj, physIsland *const __RESTRICT__ 
 
 			// Apply animation transformations.
 
+			/** Split the root into a separate case. **/
 			const unsigned int isRoot = (i == sklBone->parent) || (sklBone->parent >= obj->skeletonData.skl->boneNum);
 
 			/** Should configurations be optional? **/

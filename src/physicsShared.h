@@ -4,6 +4,6 @@
 #include "physicsSettings.h"
 #include <stdint.h>
 
-typedef uint_least32_t physicsBodyIndex_t;
+typedef uint_least16_t physicsBodyIndex_t;
 
 #endif

@@ -86,6 +86,8 @@ aabbNode *modulePhysicsAABBNodeAllocate();
 void modulePhysicsAABBNodeFree(aabbNode *const __RESTRICT__ resource);
 void modulePhysicsAABBNodeClear();
 
+/** These should be moved to physIsland. **/
+void modulePhysicsPresolveConstraints(const float dt);
 void modulePhysicsSolveConstraints(const float dt);
 
 #endif
