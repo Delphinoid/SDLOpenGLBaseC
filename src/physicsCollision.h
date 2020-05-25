@@ -152,6 +152,13 @@ typedef struct physContactPair {
 	physCollider *colliderA;
 	physCollider *colliderB;
 
+	// Previous and next pointers for collider A's
+	// and collider B's contact pair arrays.
+	#ifndef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+	physContactPair *prevA, *nextA;
+	physContactPair *prevB, *nextB;
+	#endif
+
 } physContactPair;
 
 typedef struct cSeparation physSeparation;
@@ -171,7 +178,17 @@ typedef struct physSeparationPair {
 	physCollider *colliderA;
 	physCollider *colliderB;
 
+	// Previous and next pointers for collider A's
+	// and collider B's separation pair arrays.
+	#ifndef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+	physSeparationPair *prevA, *nextA;
+	physSeparationPair *prevB, *nextB;
+	#endif
+
 } physSeparationPair;
+
+void physContactInit(physContact *const __RESTRICT__ contact, const cContact *const __RESTRICT__ manifold, const physRigidBody *const __RESTRICT__ bodyA, const physRigidBody *const __RESTRICT__ bodyB, const physCollider *const __RESTRICT__ colliderA, const physCollider *const __RESTRICT__ colliderB);
+void physContactPersist(physContact *const __RESTRICT__ contact, const cContact *const __RESTRICT__ manifold, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, const physCollider *const __RESTRICT__ colliderA, const physCollider *const __RESTRICT__ colliderB);
 
 #ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 void physContactPresolveConstraints(physContact *const __RESTRICT__ contact, physCollider *const __RESTRICT__ colliderA, physCollider *const __RESTRICT__ colliderB, const float frequency);
@@ -187,8 +204,6 @@ void physContactPairInit(physContactPair *const pair, physCollider *const c1, ph
 void physSeparationPairInit(physSeparationPair *const pair, physCollider *const c1, physCollider *const c2, physSeparationPair *previous, physSeparationPair *next);
 void physContactPairDelete(physContactPair *const pair);
 void physSeparationPairDelete(physSeparationPair *const pair);
-
-return_t physCollisionQuery(aabbNode *const n1, aabbNode *const n2);
 
 void physContactSolveVelocityConstraints(physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB);
 #ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL

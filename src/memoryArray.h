@@ -50,20 +50,24 @@ void memArrayClear(memoryArray *const __RESTRICT__ array);
 void *memArrayExtend(memoryArray *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length);
 void memArrayDelete(memoryArray *const __RESTRICT__ array);
 
-#define MEMORY_ARRAY_LOOP_BEGIN(allocator, n, type)                           \
-	{                                                                         \
-		const memoryRegion *__region_##n = allocator.region;                  \
-		size_t __left_##n = allocator.size;                                   \
-		do {                                                                  \
-			type n = memArrayFirst(__region_##n);                             \
-			while(__left_##n < 0 && n < (type)memAllocatorEnd(__region_##n)){ \
+#define MEMORY_ARRAY_LOOP_BEGIN(allocator, n, type)                              \
+	{                                                                            \
+		const memoryRegion *__region_##n = allocator.region;                     \
+		size_t __left_##n = allocator.size;                                      \
+		type n = memArrayFirst(__region_##n);                                    \
+		for(;;){
 
-#define MEMORY_ARRAY_LOOP_END(allocator, n, earlyexit)                        \
-				n = memArrayBlockNext(allocator, n);                          \
-				--__left_##n;                                                 \
-			}                                                                 \
-			__region_##n = memAllocatorNext(__region_##n);                    \
-		} while(__region_##n != NULL);                                        \
+#define MEMORY_ARRAY_LOOP_END(allocator, n)                                      \
+			n = memArrayBlockNext(allocator, n);                                 \
+			--__left_##n;                                                        \
+			if(__left_##n <= 0 || (byte_t *)n >= memAllocatorEnd(__region_##n)){ \
+				__region_##n = memAllocatorNext(__region_##n);                   \
+				if(__region_##n == NULL){                                        \
+					break;                                                       \
+				}                                                                \
+				n = memArrayFirst(__region_##n);                                 \
+			}                                                                    \
+		}                                                                        \
 	}
 
 #endif

@@ -124,26 +124,30 @@ void *memSLinkExtend(memorySLink *const __RESTRICT__ array, void *const start, c
 void *memSLinkExtendInit(memorySLink *const __RESTRICT__ array, void *const start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block));
 void memSLinkDelete(memorySLink *const __RESTRICT__ array);
 
-#define MEMORY_SLINK_LOOP_BEGIN(allocator, n, type)                      \
-	{                                                                    \
-		const memoryRegion *__region_##n = allocator.region;             \
-		do {                                                             \
-			type n = memSLinkFirst(__region_##n);                        \
-			while(n < (type)memAllocatorEnd(__region_##n)){              \
-				const byte_t __flag_##n = memSLinkDataGetActive(n);      \
-				if((__flag_##n & MEMORY_SLINK_BLOCK_INACTIVE_MASK) == 0){
+#define MEMORY_SLINK_LOOP_BEGIN(allocator, n, type)                   \
+	{                                                                 \
+		const memoryRegion *__region_##n = allocator.region;          \
+		type n = memSLinkFirst(__region_##n);                         \
+		for(;;){                                                      \
+			const byte_t __flag_##n = memSLinkDataGetActive(n);       \
+			if((__flag_##n & MEMORY_SLINK_BLOCK_INACTIVE_MASK) == 0){
 
-#define MEMORY_SLINK_LOOP_INACTIVE_CASE(n)                               \
-				}else if((__flag_##n & MEMORY_SLINK_BLOCK_INACTIVE) > 0){
+#define MEMORY_SLINK_LOOP_INACTIVE_CASE(n)                            \
+			}else if((__flag_##n & MEMORY_SLINK_BLOCK_INACTIVE) > 0){
 
-#define MEMORY_SLINK_LOOP_END(allocator, n, earlyexit)                   \
-				}else if((__flag_##n & MEMORY_SLINK_BLOCK_INVALID) > 0){ \
-					earlyexit                                            \
-				}                                                        \
-				n = memSLinkBlockNext(allocator, n);                     \
-			}                                                            \
-			__region_##n = memAllocatorNext(__region_##n);               \
-		} while(__region_##n != NULL);                                   \
+#define MEMORY_SLINK_LOOP_END(allocator, n, earlyexit)                \
+			}else if((__flag_##n & MEMORY_SLINK_BLOCK_INVALID) > 0){  \
+				earlyexit                                             \
+			}                                                         \
+			n = memSLinkBlockNext(allocator, n);                      \
+			if((byte_t *)n >= memAllocatorEnd(__region_##n)){         \
+				__region_##n = memAllocatorNext(__region_##n);        \
+				if(__region_##n == NULL){                             \
+					break;                                            \
+				}                                                     \
+				n = memSLinkFirst(__region_##n);                      \
+			}                                                         \
+		}                                                             \
 	}
 
 #endif

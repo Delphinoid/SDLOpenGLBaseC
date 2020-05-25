@@ -20,7 +20,6 @@
 typedef struct aabbNode aabbNode;
 typedef struct physContactPair physContactPair;
 typedef struct physSeparationPair physSeparationPair;
-typedef struct physIsland physIsland;
 
 typedef struct physCollider {
 
@@ -34,6 +33,8 @@ typedef struct physCollider {
 	float restitution;  // The coefficient of restitution, or the ratio of energy kept after a collision.
 
 	// Broadphase data.
+	// Contacts and separations are stored in QLinks, as both colliders
+	// involved in a collision store them in their own linked lists.
 	aabbNode *node;  // Pointer to the collider's node in the AABB tree.
 	physContactPair    *contactCache;     // A QLink of contact pairs.
 	physSeparationPair *separationCache;  // A QLink of separation pairs.
@@ -60,9 +61,8 @@ extern void (* const physColliderGenerateMomentJumpTable[COLLIDER_TYPE_NUM])(
 	vec3 *const __RESTRICT__ centroid,
 	const float **const __RESTRICT__ vertexMassArray
 );
-extern return_t (* const physColliderTransformJumpTable[COLLIDER_TYPE_NUM])(
-	physCollider *const __RESTRICT__ c,
-	physIsland *const __RESTRICT__ island
+extern void (* const physColliderTransformJumpTable[COLLIDER_TYPE_NUM])(
+	physCollider *const __RESTRICT__ c
 );
 
 void physColliderInit(physCollider *const __RESTRICT__ c, const colliderType_t type, void *const __RESTRICT__ body);
@@ -71,7 +71,7 @@ return_t physColliderPermitCollision(const physCollider *const __RESTRICT__ c1, 
 
 void physColliderGenerateMass(collider *const __RESTRICT__ local, float *const __RESTRICT__ mass, float *const __RESTRICT__ inverseMass, vec3 *const __RESTRICT__ centroid, const float **const vertexMassArray);
 void physColliderGenerateMoment(collider *const __RESTRICT__ local, mat3 *const __RESTRICT__ inertiaTensor, vec3 *const __RESTRICT__ centroid, const float **const vertexMassArray);
-return_t physColliderTransform(physCollider *const __RESTRICT__ c, physIsland *const __RESTRICT__ island);
+void physColliderTransform(physCollider *const __RESTRICT__ c);
 
 physContactPair *physColliderFindContact(const physCollider *const c1, const physCollider *const c2, physContactPair **const previous, physContactPair **const next);
 physSeparationPair *physColliderFindSeparation(const physCollider *const c1, const physCollider *const c2, physSeparationPair **const previous, physSeparationPair **const next);

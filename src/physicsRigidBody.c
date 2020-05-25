@@ -263,6 +263,7 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, co
 		int currentCommand = -1;     // The current multiline command type (-1 = none, 0 = rigid body, 1 = collider).
 		fileLine_t currentLine = 0;  // Current file line being read.
 
+		int isRoot = 1;
 		physRigidBodyBase *currentBody = NULL;
 		physCollider *currentCollider = NULL;
 		size_t currentBodyColliderNum = 0;
@@ -390,6 +391,10 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, co
 					currentBody->id = currentBodyID;
 					currentBodyColliderNum = 0;
 					currentBody->flags = PHYSICS_BODY_DEFAULT_STATE;
+					if(isRoot){
+						currentBody->flags |= PHYSICS_BODY_ROOT;
+						isRoot = 0;
+					}
 					currentCommand = 0;
 
 				}
@@ -1066,61 +1071,23 @@ __FORCE_INLINE__ void physRigidBodyIgnoreLinear(physRigidBody *const __RESTRICT_
 __FORCE_INLINE__ void physRigidBodyIgnoreAngular(physRigidBody *const __RESTRICT__ body){
 	flagsUnset(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR);
 }
-
 __FORCE_INLINE__ return_t physRigidBodyIsUninitialized(const physRigidBody *const __RESTRICT__ body){
 	return flagsAreSet(body->flags, PHYSICS_BODY_UNINITIALIZED);
 }
-
 __FORCE_INLINE__ return_t physRigidBodyIsSimulated(const physRigidBody *const __RESTRICT__ body){
 	return flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE);
 }
-
 __FORCE_INLINE__ return_t physRigidBodyIsCollidable(const physRigidBody *const __RESTRICT__ body){
 	return flagsAreSet(body->flags, PHYSICS_BODY_COLLIDE);
 }
 __FORCE_INLINE__ return_t physRigidBodyIsAsleep(physRigidBody *const __RESTRICT__ body){
 	return body->flags;
 }
-
 __FORCE_INLINE__ return_t physRigidBodyWasInitialized(const physRigidBody *const __RESTRICT__ body){
 	return flagsAreSet(body->flags, PHYSICS_BODY_INITIALIZED);
 }
-
-__FORCE_INLINE__ return_t physRigidBodyUpdateColliders(physRigidBody *const __RESTRICT__ body, physIsland *const __RESTRICT__ island){
-
-	// Transform the vertices of each body into global space.
-	// If the body is set to not collide, remove the colliders
-	// from the island that they are a part of.
-
-	if(physRigidBodyIsCollidable(body)){
-
-		// Update each collider.
-		physCollider *c = body->hull;
-		while(c != NULL){
-			if(physColliderTransform(c, island) < 0){
-				/** Memory allocation failure. **/
-				return -1;
-			}
-			c = (physCollider *)memSLinkNext(c);
-		}
-
-		flagsUnset(body->flags, PHYSICS_BODY_COLLISION_MODIFIED);
-
-	}else if(flagsAreSet(body->flags, PHYSICS_BODY_COLLISION_MODIFIED)){
-
-		// Remove each collider.
-		physCollider *c = body->hull;
-		while(c != NULL){
-			physIslandRemoveCollider(island, c);
-			c = (physCollider *)memSLinkNext(c);
-		}
-
-		flagsUnset(body->flags, PHYSICS_BODY_COLLISION_MODIFIED);
-
-	}
-
-	return 1;
-
+__FORCE_INLINE__ return_t physRigidBodyIsRoot(const physRigidBody *const __RESTRICT__ body){
+	return flagsAreSet(body->flags, PHYSICS_BODY_ROOT);
 }
 
 __HINT_INLINE__ void physRigidBodyApplyLinearForce(physRigidBody *const __RESTRICT__ body, const vec3 F){
@@ -1647,7 +1614,11 @@ return_t physRigidBodyPermitCollision(const physRigidBody *const body1, const ph
 				// the bodies may collide.
 				return 1;
 			}
+			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 			i = (physJoint *)memQLinkNextA(i);
+			#else
+			i = i->nextA;
+			#endif
 		}
 
 		return 1;
@@ -1669,7 +1640,11 @@ return_t physRigidBodyPermitCollision(const physRigidBody *const body1, const ph
 				// the bodies may collide.
 				return 1;
 			}
+			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 			i = (physJoint *)memQLinkNextA(i);
+			#else
+			i = i->nextA;
+			#endif
 		}
 
 		return 1;

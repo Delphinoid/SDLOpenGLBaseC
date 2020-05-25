@@ -5,8 +5,8 @@ void particleEmitterInit(particleEmitter *const __RESTRICT__ emitter){
 	emitter->frequency = 0.032f;
 }
 
-size_t particleEmitterTick(particleEmitter *const __RESTRICT__ emitter, const particleEmitterBase *base, const float elapsedTime){
-	emitter->lifetime += elapsedTime;
+size_t particleEmitterTick(particleEmitter *const __RESTRICT__ emitter, const particleEmitterBase *base, const float dt){
+	emitter->lifetime += dt;
 	return((*base->func)(emitter));
 }
 

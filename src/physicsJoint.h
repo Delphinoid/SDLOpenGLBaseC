@@ -50,6 +50,13 @@ typedef struct physJoint {
 	physRigidBody *bodyA;
 	physRigidBody *bodyB;
 
+	// Previous and next pointers for
+	// body A's and body B's joint arrays.
+	#ifndef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+	physJoint *prevA, *nextA;
+	physJoint *prevB, *nextB;
+	#endif
+
 } physJoint;
 
 extern void (* const physJointPresolveConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM])(

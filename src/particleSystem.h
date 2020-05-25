@@ -76,7 +76,7 @@ void particleSystemInit(particleSystem *const __RESTRICT__ system);
 
 void particleSystemInstantiate(particleSystem *const __RESTRICT__ system, const particleSystemBase *const base);
 
-return_t particleSystemTick(particleSystem *const __RESTRICT__ system, const float elapsedTime);
+return_t particleSystemTick(particleSystem *const __RESTRICT__ system, const float dt);
 void particleSystemRender(const particleSystem *const __RESTRICT__ system, graphicsManager *const __RESTRICT__ gfxMngr, const camera *const __RESTRICT__ cam, const float distance, const float interpT);
 
 void particleSystemBaseDelete(particleSystemBase *const __RESTRICT__ base);

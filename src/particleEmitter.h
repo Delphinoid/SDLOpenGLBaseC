@@ -22,7 +22,7 @@ typedef struct particleEmitterBase {
 
 void particleEmitterInit(particleEmitter *const __RESTRICT__ emitter);
 
-size_t particleEmitterTick(particleEmitter *const __RESTRICT__ emitter, const particleEmitterBase *base, const float elapsedTime);
+size_t particleEmitterTick(particleEmitter *const __RESTRICT__ emitter, const particleEmitterBase *base, const float dt);
 
 /** TEMPORARY **/
 size_t particleEmitterContinuous(particleEmitter *const __RESTRICT__ emitter);

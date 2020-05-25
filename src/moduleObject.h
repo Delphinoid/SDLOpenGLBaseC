@@ -2,6 +2,7 @@
 #define MODULEOBJECT_H
 
 #include "memoryPool.h"
+#include "memoryDLink.h"
 #include "return.h"
 
 #define RESOURCE_DEFAULT_OBJECT_BASE_NUM 1024
@@ -9,7 +10,7 @@
 
 // Forward declarations for inlining.
 extern memoryPool __g_ObjectBaseResourceArray;  // Contains objectBases.
-extern memoryPool __g_ObjectResourceArray;      // Contains objects.
+extern memoryDLink __g_ObjectResourceArray;     // Contains objects.
 
 typedef struct objectBase objectBase;
 typedef struct object object;
@@ -31,7 +32,6 @@ void moduleObjectBaseClear();
 
 object *moduleObjectAllocateStatic();
 object *moduleObjectAllocate();
-object *moduleObjectIndex(const size_t i);
 void moduleObjectFree(object *const __RESTRICT__ resource);
 void moduleObjectClear();
 

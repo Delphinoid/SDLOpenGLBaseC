@@ -48,19 +48,19 @@ __FORCE_INLINE__ static void particleSystemParticleInitialize(const particleSyst
 	/** Apply system configuration? **/
 }
 
-__FORCE_INLINE__ static void particleSystemParticleOperate(const particleSystemBase *const __RESTRICT__ base, particle *const p, const float elapsedTime){
+__FORCE_INLINE__ static void particleSystemParticleOperate(const particleSystemBase *const __RESTRICT__ base, particle *const p, const float dt){
 	particleOperator *o = base->operators;
 	const particleOperator *const oLast = base->operatorLast;
 	for(; o < oLast; ++o){
-		(*o->func)((void *)(&o->data), p, elapsedTime);
+		(*o->func)((void *)(&o->data), p, dt);
 	}
 }
 
-__FORCE_INLINE__ static void particleSystemParticleConstrain(const particleSystemBase *const __RESTRICT__ base, particle *const p, const float elapsedTime){
+__FORCE_INLINE__ static void particleSystemParticleConstrain(const particleSystemBase *const __RESTRICT__ base, particle *const p, const float dt){
 	particleConstraint *c = base->constraints;
 	const particleConstraint *const cLast = base->constraintLast;
 	for(; c < cLast; ++c){
-		(*c->func)((void *)(&c->data), p, elapsedTime);
+		(*c->func)((void *)(&c->data), p, dt);
 	}
 }
 
@@ -130,7 +130,7 @@ void particleSystemInstantiate(particleSystem *const __RESTRICT__ system, const 
 
 }
 
-__FORCE_INLINE__ static void particleSystemEmittersTick(particleSystem *const __RESTRICT__ system, const float elapsedTime){
+__FORCE_INLINE__ static void particleSystemEmittersTick(particleSystem *const __RESTRICT__ system, const float dt){
 
 	size_t remaining = system->base->particleMax - system->particleNum;
 
@@ -142,7 +142,7 @@ __FORCE_INLINE__ static void particleSystemEmittersTick(particleSystem *const __
 
 		for(; e < eLast; ++e, ++eBase){
 
-			const size_t count = particleEmitterTick(e, eBase, elapsedTime);
+			const size_t count = particleEmitterTick(e, eBase, dt);
 
 			if(count > 0){
 				if(count < remaining){
@@ -160,18 +160,18 @@ __FORCE_INLINE__ static void particleSystemEmittersTick(particleSystem *const __
 
 }
 
-__FORCE_INLINE__ static void particleSystemParticlesTick(particleSystem *const __RESTRICT__ system, const float elapsedTime){
+__FORCE_INLINE__ static void particleSystemParticlesTick(particleSystem *const __RESTRICT__ system, const float dt){
 
 	const particleSystemBase *base = system->base;
 	particle *p = system->particles;
 	const particle *const pLast = &p[system->particleNum];
 
 	for(; p < pLast; ++p){
-		p->lifetime -= elapsedTime;
+		p->lifetime -= dt;
 		///if(p->lifetime > 0.f){
-			particleSystemParticleOperate(base, p, elapsedTime);
-			particleSystemParticleConstrain(base, p, elapsedTime);
-			particleTick(p, elapsedTime);
+			particleSystemParticleOperate(base, p, dt);
+			particleSystemParticleConstrain(base, p, dt);
+			particleTick(p, dt);
 		///}else{
 		///	particleInit(p);
 		///}
@@ -179,9 +179,9 @@ __FORCE_INLINE__ static void particleSystemParticlesTick(particleSystem *const _
 
 }
 
-return_t particleSystemTick(particleSystem *const __RESTRICT__ system, const float elapsedTime){
+return_t particleSystemTick(particleSystem *const __RESTRICT__ system, const float dt){
 
-	system->lifetime -= elapsedTime;
+	system->lifetime -= dt;
 
 	if(system->lifetime > 0.f){
 
@@ -193,13 +193,13 @@ return_t particleSystemTick(particleSystem *const __RESTRICT__ system, const flo
 		particleSystem *c = system->children;
 		const particleSystem *const cLast = &c[system->base->childNum];
 
-		particleSystemEmittersTick(system, elapsedTime);
-		particleSystemParticlesTick(system, elapsedTime);
+		particleSystemEmittersTick(system, dt);
+		particleSystemParticlesTick(system, dt);
 
 		// Recursively update the particle systems.
 		/// Try to make this function iterative?
 		for(; c < cLast; ++c){
-			particleSystemTick(c, elapsedTime);
+			particleSystemTick(c, dt);
 		}
 
 		return 1;

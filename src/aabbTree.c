@@ -267,13 +267,13 @@ static __FORCE_INLINE__ void aabbTreeRemoveLeaf(aabbTree *const __RESTRICT__ tre
 
 }
 
-return_t aabbTreeInsert(aabbTree *const __RESTRICT__ tree, aabbNode **node, void *const __RESTRICT__ value, const cAABB *const __RESTRICT__ aabb, aabbNode *(*const allocator)()){
+return_t aabbTreeInsert(aabbTree *const __RESTRICT__ tree, aabbNode **node, void *const __RESTRICT__ value, const cAABB *const __RESTRICT__ aabb, aabbNode *(*const allocator)(void *), void *argv){
 
 	// Insert a user-specified value into the tree.
 	// Takes in a pointer to an allocator.
 	// This is for modularity's sake with allocation.
 
-	*node = allocator();
+	*node = allocator(argv);
 	if(*node != NULL){
 
 		aabbNode *const leaf = *node;
@@ -285,7 +285,7 @@ return_t aabbTreeInsert(aabbTree *const __RESTRICT__ tree, aabbNode **node, void
 
 		if(tree->root != NULL){
 
-			aabbNode *const parent = allocator();
+			aabbNode *const parent = allocator(argv);
 			if(parent != NULL){
 				aabbTreeInsertLeaf(tree, *node, parent);
 			}else{
@@ -309,7 +309,7 @@ return_t aabbTreeInsert(aabbTree *const __RESTRICT__ tree, aabbNode **node, void
 
 }
 
-void aabbTreeRemove(aabbTree *const __RESTRICT__ tree, aabbNode *const node, void (*const deallocator)(aabbNode *const __RESTRICT__)){
+void aabbTreeRemove(aabbTree *const __RESTRICT__ tree, aabbNode *const node, void (*const deallocator)(aabbNode *const __RESTRICT__, void *), void *argv){
 
 	// Remove a user-specified value from the tree.
 	// Takes in a pointer to an deallocator.
@@ -317,7 +317,7 @@ void aabbTreeRemove(aabbTree *const __RESTRICT__ tree, aabbNode *const node, voi
 
 	if(node != tree->root){
 		aabbTreeRemoveLeaf(tree, node);
-		deallocator(node->parent);
+		deallocator(node->parent, argv);
 	}else{
 		// We're deleting the root node.
 		// If it's a leaf, it won't have
@@ -326,7 +326,7 @@ void aabbTreeRemove(aabbTree *const __RESTRICT__ tree, aabbNode *const node, voi
 		tree->root = NULL;
 	}
 
-	deallocator(node);
+	deallocator(node, argv);
 
 }
 
@@ -342,7 +342,7 @@ void aabbTreeUpdate(aabbTree *const __RESTRICT__ tree, aabbNode *const node){
 
 }
 
-__HINT_INLINE__ return_t aabbTreeQueryNodeStack(const aabbTree *const __RESTRICT__ tree, aabbNode *const node, return_t (*const func)(aabbNode *const, aabbNode *const)){
+__HINT_INLINE__ return_t aabbTreeQueryNodeStack(const aabbTree *const __RESTRICT__ tree, aabbNode *const node, return_t (*const func)(aabbNode *const, aabbNode *const, void *), void *argv){
 
 	// Runs "func()" on each potential leaf that could collide with node.
 
@@ -356,7 +356,7 @@ __HINT_INLINE__ return_t aabbTreeQueryNodeStack(const aabbTree *const __RESTRICT
 		aabbNode *test = stack[--i];
 
 		if(AABB_TREE_NODE_IS_LEAF(test)){
-			const return_t r = (*func)(node, test);
+			const return_t r = (*func)(node, test, argv);
 			if(r < 0){
 				/** Memory allocation failure. **/
 				return r;
@@ -374,7 +374,7 @@ __HINT_INLINE__ return_t aabbTreeQueryNodeStack(const aabbTree *const __RESTRICT
 
 }
 
-__HINT_INLINE__ return_t aabbTreeQueryNode(const aabbTree *const __RESTRICT__ tree, aabbNode *const node, return_t (*const func)(aabbNode *const, aabbNode *const)){
+__HINT_INLINE__ return_t aabbTreeQueryNode(const aabbTree *const __RESTRICT__ tree, aabbNode *const node, return_t (*const func)(aabbNode *const, aabbNode *const, void *), void *argv){
 
 	// Runs "func()" on each potential leaf that could collide with node.
 
@@ -395,7 +395,7 @@ __HINT_INLINE__ return_t aabbTreeQueryNode(const aabbTree *const __RESTRICT__ tr
 					// Run the callback function on both children.
 					if(AABB_TREE_NODE_IS_LEAF(test)){
 
-						const return_t r = (*func)(node, test);
+						const return_t r = (*func)(node, test, argv);
 						if(r < 0){
 							/** Memory allocation failure. **/
 							return r;
@@ -431,7 +431,7 @@ __HINT_INLINE__ return_t aabbTreeQueryNode(const aabbTree *const __RESTRICT__ tr
 		}else{
 
 			// The tree only has one node.
-			const return_t r = (*func)(node, test);
+			const return_t r = (*func)(node, test, argv);
 			if(r < 0){
 				/** Memory allocation failure. **/
 				return r;
@@ -445,13 +445,13 @@ __HINT_INLINE__ return_t aabbTreeQueryNode(const aabbTree *const __RESTRICT__ tr
 
 }
 
-return_t aabbTreeQueryStack(const aabbTree *const __RESTRICT__ tree, return_t (*const func)(aabbNode *const, aabbNode *const)){
+return_t aabbTreeQueryStack(const aabbTree *const __RESTRICT__ tree, return_t (*const func)(aabbNode *const, aabbNode *const, void *), void *argv){
 
 	// Queries every leaf node in the tree.
 
 	aabbNode *node = tree->leaves;
 	while(node != NULL){
-		const return_t r = aabbTreeQueryNodeStack(tree, node, func);
+		const return_t r = aabbTreeQueryNodeStack(tree, node, func, argv);
 		if(r < 0){
 			/** Memory allocation failure. **/
 			return r;
@@ -462,11 +462,11 @@ return_t aabbTreeQueryStack(const aabbTree *const __RESTRICT__ tree, return_t (*
 
 }
 
-return_t aabbTreeQuery(const aabbTree *const __RESTRICT__ tree, return_t (*const func)(aabbNode *const, aabbNode *const)){
+return_t aabbTreeQuery(const aabbTree *const __RESTRICT__ tree, return_t (*const func)(aabbNode *const, aabbNode *const, void *), void *argv){
 	// Queries every leaf node in the tree.
 	aabbNode *node = tree->leaves;
 	while(node != NULL){
-		const return_t r = aabbTreeQueryNode(tree, node, func);
+		const return_t r = aabbTreeQueryNode(tree, node, func, argv);
 		if(r < 0){
 			/** Memory allocation failure. **/
 			return r;
@@ -476,7 +476,7 @@ return_t aabbTreeQuery(const aabbTree *const __RESTRICT__ tree, return_t (*const
 	return 1;
 }
 
-void aabbTreeTraverse(aabbTree *const __RESTRICT__ tree, void (*const func)(aabbNode *const __RESTRICT__)){
+void aabbTreeTraverse(aabbTree *const __RESTRICT__ tree, void (*const func)(aabbNode *const __RESTRICT__, void *), void *argv){
 
 	// Postorder tree traversal where
 	// "func()" is run on each node.
@@ -511,11 +511,11 @@ void aabbTreeTraverse(aabbTree *const __RESTRICT__ tree, void (*const func)(aabb
 					(nodeParent = node->parent) != NULL &&
 					node == nodeParent->data.children.right
 				){
-					(*func)(node);
+					(*func)(node, argv);
 					node = nodeParent;
 				}
 				// Go up one final time for the left node.
-				(*func)(node);
+				(*func)(node, argv);
 				node = nodeParent;
 			}
 

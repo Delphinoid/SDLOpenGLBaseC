@@ -28,10 +28,9 @@ void moduleSceneFree(scene *const __RESTRICT__ resource);
 void moduleSceneClear();
 
 #ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-void moduleSceneQueryIslands(const float frequency);
+void moduleSceneTick(const float elapsedTime, const float dt, const float frequency);
 #else
-void moduleSceneQueryIslands();
+void moduleSceneTick(const float elapsedTime, const float dt);
 #endif
-void moduleSceneTick(const float elapsedTime/**, const float dt**/);
 
 #endif

@@ -21,7 +21,7 @@
 // this and manually invoking the physRigidBodyScale()
 // function instead.
 
-#define PHYSICS_BODY_UNINITIALIZED      0x01  // Whether or not the simulation has just begun on this frame.
+#define PHYSICS_BODY_UNINITIALIZED      0x01  // Whether or not the simulation has just begun on this frame. Currently unused.
 #define PHYSICS_BODY_SIMULATE_LINEAR    0x02  // Simulate linear velocity.
 #define PHYSICS_BODY_SIMULATE_ANGULAR   0x04  // Simulate angular velocity. Disabling this is useful for certain entities, such as players.
 #define PHYSICS_BODY_SIMULATE           0x06  // Simulate both linear and angular velocity.
@@ -33,6 +33,7 @@
 #define PHYSICS_BODY_ROTATED            0x40  // The body was rotated this frame.
 #define PHYSICS_BODY_TRANSFORMED        0x60  // The body was transformed this frame.
 #define PHYSICS_BODY_INITIALIZED        0x80  // The body was initialized on this frame. Currently unused.
+#define PHYSICS_BODY_ROOT               0x80  //
 
 #ifndef PHYSICS_BODY_DEFAULT_STATE
 	#define PHYSICS_BODY_DEFAULT_STATE PHYSICS_BODY_UNINITIALIZED | PHYSICS_BODY_SIMULATE | PHYSICS_BODY_COLLIDE | PHYSICS_BODY_COLLISION_MODIFIED
@@ -95,11 +96,10 @@ typedef struct physRigidBody {
 	vec3 netTorque;        // Torque accumulator.
 
 	// Physical constraints.
-	// joints is a QLink of all joints that the body is a part of,
-	// ordered from smallest partner address to largest.
-	// At the beginning of the QLink is all of the joints where this
-	// body is the one with the larger address, similar to collider
-	// contacts and separations.
+	// Each joint stores pointers to the previous and next joints for
+	// both bodies it is attached to. At the beginning of the list is
+	// all of the joints where this body is the one with the larger
+	// address, similar to collider contacts and separations.
 	physJoint *joints;
 
 	// The rigid body this instance is derived from, in local space.
@@ -139,8 +139,7 @@ return_t physRigidBodyIsSimulated(const physRigidBody *const __RESTRICT__ body);
 return_t physRigidBodyIsCollidable(const physRigidBody *const __RESTRICT__ body);
 return_t physRigidBodyIsAsleep(physRigidBody *const __RESTRICT__ body);
 return_t physRigidBodyWasInitialized(const physRigidBody *const __RESTRICT__ body);
-
-return_t physRigidBodyUpdateColliders(physRigidBody *const __RESTRICT__ body, physIsland *const __RESTRICT__ island);
+return_t physRigidBodyIsRoot(const physRigidBody *const __RESTRICT__ body);
 
 void physRigidBodyApplyLinearForce(physRigidBody *const __RESTRICT__ body, const vec3 F);
 void physRigidBodyApplyAngularForceGlobal(physRigidBody *const __RESTRICT__ body, const vec3 F, const vec3 r);

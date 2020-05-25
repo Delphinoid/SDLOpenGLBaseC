@@ -1,86 +1,118 @@
 #include "scene.h"
 #include "object.h"
+#include "physicsRigidBody.h"
 #include "memoryManager.h"
 
-return_t scnInit(scene *const __RESTRICT__ scn, size_t objectNum, size_t bodyNum){
-
+void scnInit(scene *const __RESTRICT__ scn){
+	// Allocate the object pointer list.
+	scn->objects = NULL;
 	scn->objectNum = 0;
-	memPoolInit(&scn->objects);
-
-	if(objectNum == 0){
-		objectNum = SCENE_ZONE_DEFAULT_OBJECT_NUM;
-	}
-
-	{
-		void *const memory = memAllocate(
-			memPoolAllocationSize(NULL, sizeof(object *), objectNum)
-		);
-		if(memPoolCreate(&scn->objects, memory, sizeof(object *), objectNum) == NULL){
-			return -1;
-		}
-	}
-
-	scn->objectNum = objectNum;
 	physIslandInit(&scn->island);
-	return 1;
-
 }
 
-__FORCE_INLINE__ object **scnAllocate(scene *const __RESTRICT__ scn){
-	/** scn->objectNum is not correct here. We want fixed-size regions. **/
-	object **r = memPoolAllocate(&scn->objects);
-	if(r == NULL){
-		// Attempt to extend the allocator.
-		void *const memory = memAllocate(
-			memPoolAllocationSize(NULL, sizeof(object *), scn->objectNum)
-		);
-		if(memPoolExtend(&scn->objects, memory, sizeof(object *), scn->objectNum)){
-			r = memPoolAllocate(&scn->objects);
-		}
+void scnInsertJoint(scene *const __RESTRICT__ scn, physJoint *const joint){
+	physIslandInsertJoint(&scn->island, joint);
+}
+void scnRemoveJoint(scene *const __RESTRICT__ scn, physJoint *const joint){
+	physIslandRemoveJoint(&scn->island, joint);
+}
+
+void scnInsertRigidBody(scene *const __RESTRICT__ scn, physRigidBody *const body){
+	physIslandInsertRigidBody(&scn->island, body);
+}
+void scnRemoveRigidBody(scene *const __RESTRICT__ scn, physRigidBody *const body){
+	physIslandRemoveRigidBody(&scn->island, body);
+}
+
+void scnInsertObject(scene *const __RESTRICT__ scn, object *const __RESTRICT__ obj){
+
+	///physRigidBody *body;
+
+	// Prepend the object to the linked list.
+	if(scn->objects != NULL){
+		memDLinkPrev(scn->objects) = (byte_t *)obj;
+		memDLinkNext(obj) = (byte_t *)scn->objects;
 	}
-	if(r != NULL){
-		++scn->objectNum;
+	scn->objects = obj;
+	++scn->objectNum;
+
+	// Insert the rigid bodies into the physics system,
+	// maintaining the doubly-linked list pointers.
+	physIslandInsertRigidBodies(&scn->island, obj->skeletonBodies);
+
+	/// Insert the rigid bodies into the physics system.
+	/**body = obj->skeletonBodies;
+	if(body != NULL){
+		do {
+			physIslandInsertRigidBody(&scn->island, body);
+			body = (physRigidBody *)memDLinkNext(body);
+		} while(body != NULL && !physRigidBodyIsRoot(body));
+	}**/
+
+}
+void scnRemoveObject(scene *const __RESTRICT__ scn, object *const __RESTRICT__ obj){
+
+	///physRigidBody *body;
+
+	// Set the next element's previous pointer.
+	if(memDLinkNext(obj) != NULL){
+		memDLinkPrev(memDLinkNext(obj)) = memDLinkPrev(obj);
 	}
-	return r;
+	// Set the previous element's next pointer.
+	if(memDLinkPrev(obj) != NULL && scn->objects != obj){
+		memDLinkNext(memDLinkPrev(obj)) = memDLinkNext(obj);
+	}else{
+		scn->objects = (object *)memDLinkNext(obj);
+	}
+	--scn->objectNum;
+
+	// Remove the rigid bodies from the physics system,
+	// maintaining the doubly-linked list pointers.
+	physIslandRemoveRigidBodies(&scn->island, obj->skeletonBodies);
+
+	/// Remove the rigid bodies from the physics system.
+	/**body = obj->skeletonBodies;
+	if(body != NULL){
+		do {
+			physIslandRemoveRigidBody(&scn->island, body);
+			body = (physRigidBody *)memDLinkNext(body);
+		} while(body != NULL && !physRigidBodyIsRoot(body));
+	}**/
+
 }
 
-__FORCE_INLINE__ void scnFree(scene *const __RESTRICT__ scn, object **const __RESTRICT__ obj){
-	memPoolFree(&scn->objects, (void *)obj);
-}
-#include "moduleObject.h"
-return_t scnTick(scene *const __RESTRICT__ scn, const float elapsedTime/**, const float dt**/){
+#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+return_t scnTick(scene *const __RESTRICT__ scn, const float elapsedTime, const float dt, const float frequency){
+#else
+return_t scnTick(scene *const __RESTRICT__ scn, const float elapsedTime, const float dt){
+#endif
 
 	// Update each object in the scene.
-	MEMORY_POOL_LOOP_BEGIN(scn->objects, i, object **);
-
+	object *i = scn->objects;
+	while(i != NULL){
 		// Update each object in the scene.
-		objTick(*i, &scn->island, elapsedTime);
+		if(objTick(i, elapsedTime) < 0){
+			/** Memory allocation failure. **/
+			return -1;
+		}
+		i = (object *)memDLinkNext(i);
+	}
 
-	MEMORY_POOL_LOOP_END(scn->objects, i, return 1;);
-
-	return 1;
+	// Update the physics system.
+	#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+	return physIslandTick(&scn->island, dt, frequency);
+	#else
+	return physIslandTick(&scn->island, dt);
+	#endif
 
 }
 
 void scnReset(scene *const __RESTRICT__ scn){
-	// Free each of the scene's memory regions.
-	memoryRegion *region = scn->objects.region->next;
-	while(region != NULL){
-		memoryRegion *next = memAllocatorNext(region);
-		memFree(region->start);
-		region = next;
-	}
-	scn->objects.region->next = NULL;
 	physIslandDelete(&scn->island);
+	scn->objects = NULL;
+	scn->objectNum = 0;
 }
 
 void scnDelete(scene *const __RESTRICT__ scn){
-	// Free each of the scene's memory regions.
-	memoryRegion *region = scn->objects.region;
-	while(region != NULL){
-		memoryRegion *next = memAllocatorNext(region);
-		memFree(region->start);
-		region = next;
-	}
 	physIslandDelete(&scn->island);
 }

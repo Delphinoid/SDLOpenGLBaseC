@@ -70,32 +70,28 @@ void *memListExtend(memoryList *const __RESTRICT__ list, void *const start, cons
 void *memListExtendInit(memoryList *const __RESTRICT__ list, void *const start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block));
 void memListDelete(memoryList *const __RESTRICT__ list);
 
-#define MEMORY_LIST_LOOP_BEGIN(allocator, n, type)           \
-	{                                                        \
-		const memoryRegion *__region_##n = allocator.region; \
-		do {                                                 \
-			type n = memListFirst(__region_##n);             \
-			while(n < (type)memAllocatorEnd(__region_##n)){  \
+#define MEMORY_LIST_LOOP_BEGIN(allocator, n, type)             \
+	{                                                          \
+		const memoryRegion *__region_##n = allocator.region;   \
+		type n = memListFirst(__region_##n);                   \
+		for(;;){
 
-#define MEMORY_LIST_LOOP_END(allocator, n)                   \
-				n = memListBlockNext(allocator, n);          \
-			}                                                \
-			__region_##n = memAllocatorNext(__region_##n);   \
-		} while(__region_##n != NULL);                       \
+#define MEMORY_LIST_LOOP_END(allocator, n)                     \
+			n = memListBlockNext(allocator, n);                \
+			if((byte_t *)n >= memAllocatorEnd(__region_##n)){  \
+				__region_##n = memAllocatorNext(__region_##n); \
+				if(__region_##n == NULL){                      \
+					break;                                     \
+				}                                              \
+				n = memListFirst(__region_##n);                \
+			}                                                  \
+		}                                                      \
 	}
 
 #define MEMORY_LIST_OFFSET_LOOP_BEGIN(allocator, n, type, region) \
 	{                                                             \
 		const memoryRegion *__region_##n = region;                \
-		do {                                                      \
-			type n = memListFirst(__region_##n);                  \
-			while(n < (type)memAllocatorEnd(__region_##n)){       \
-
-#define MEMORY_LIST_OFFSET_LOOP_END(allocator, n)                 \
-				n = memListBlockNext(allocator, n);               \
-			}                                                     \
-			__region_##n = memAllocatorNext(__region_##n);        \
-		} while(__region_##n != NULL);                            \
-	}
+		type n = memListFirst(__region_##n);                      \
+		for(;;){
 
 #endif

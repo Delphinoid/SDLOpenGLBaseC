@@ -8,7 +8,7 @@
 #define RESOURCE_DEFAULT_OBJECT_SIZE sizeof(object)
 
 memoryPool __g_ObjectBaseResourceArray;  // Contains objectBases.
-memoryPool __g_ObjectResourceArray;      // Contains objects.
+memoryDLink __g_ObjectResourceArray;     // Contains objects.
 
 return_t moduleObjectResourcesInit(){
 	void *memory = memAllocate(
@@ -22,13 +22,13 @@ return_t moduleObjectResourcesInit(){
 		return -1;
 	}
 	memory = memAllocate(
-		memPoolAllocationSize(
+		memDLinkAllocationSize(
 			NULL,
 			RESOURCE_DEFAULT_OBJECT_SIZE,
 			RESOURCE_DEFAULT_OBJECT_NUM
 		)
 	);
-	if(memPoolCreate(&__g_ObjectResourceArray, memory, RESOURCE_DEFAULT_OBJECT_SIZE, RESOURCE_DEFAULT_OBJECT_NUM) == NULL){
+	if(memDLinkCreate(&__g_ObjectResourceArray, memory, RESOURCE_DEFAULT_OBJECT_SIZE, RESOURCE_DEFAULT_OBJECT_NUM) == NULL){
 		return -1;
 	}
 	return 1;
@@ -124,43 +124,40 @@ void moduleObjectBaseClear(){
 }
 
 __HINT_INLINE__ object *moduleObjectAllocateStatic(){
-	return memPoolAllocate(&__g_ObjectResourceArray);
+	return memDLinkAllocate(&__g_ObjectResourceArray);
 }
 __HINT_INLINE__ object *moduleObjectAllocate(){
 	object *r = moduleObjectAllocateStatic();
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
-			memPoolAllocationSize(
+			memDLinkAllocationSize(
 				NULL,
 				RESOURCE_DEFAULT_OBJECT_SIZE,
 				RESOURCE_DEFAULT_OBJECT_NUM
 			)
 		);
-		if(memPoolExtend(&__g_ObjectResourceArray, memory, RESOURCE_DEFAULT_OBJECT_SIZE, RESOURCE_DEFAULT_OBJECT_NUM)){
+		if(memDLinkExtend(&__g_ObjectResourceArray, memory, RESOURCE_DEFAULT_OBJECT_SIZE, RESOURCE_DEFAULT_OBJECT_NUM)){
 			r = moduleObjectAllocateStatic();
 		}
 	}
 	return r;
 }
-__HINT_INLINE__ object *moduleObjectIndex(const size_t i){
-	return memPoolIndex(&__g_ObjectResourceArray, i);
-}
 __HINT_INLINE__ void moduleObjectFree(object *const __RESTRICT__ resource){
 	objDelete(resource);
-	memPoolFree(&__g_ObjectResourceArray, (void *)resource);
+	memDLinkFree(&__g_ObjectResourceArray, NULL, (void *)resource);
 }
 void moduleObjectClear(){
 
-	MEMORY_POOL_LOOP_BEGIN(__g_ObjectResourceArray, i, object *);
+	MEMORY_DLINK_LOOP_BEGIN(__g_ObjectResourceArray, i, object *);
 
 		moduleObjectFree(i);
-		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
+		memDLinkDataSetFlags(i, MEMORY_DLINK_BLOCK_INVALID);
 
-	MEMORY_POOL_LOOP_INACTIVE_CASE(i);
+	MEMORY_DLINK_LOOP_INACTIVE_CASE(i);
 
-		memPoolDataSetFlags(i, MEMORY_POOL_BLOCK_INVALID);
+		memDLinkDataSetFlags(i, MEMORY_DLINK_BLOCK_INVALID);
 
-	MEMORY_POOL_LOOP_END(__g_ObjectResourceArray, i, return;);
+	MEMORY_DLINK_LOOP_END(__g_ObjectResourceArray, i, return;);
 
 }

@@ -16,6 +16,7 @@
 #include "moduleRenderable.h"
 #include "modulePhysics.h"
 #include "moduleObject.h"
+#include "moduleGUI.h"
 #include "moduleScene.h"
 #include "moduleCamera.h"
 
@@ -64,6 +65,9 @@ int main(int argc, char **argv){
 	//
 
 	/** Most of the code below this comment will be removed eventually. **/
+	moduleCameraResourcesInit();
+	moduleSceneResourcesInit();
+	moduleGUIResourcesInit();
 	moduleTextureResourcesInit();
 	moduleTextureWrapperResourcesInit();
 	moduleSkeletonResourcesInit();
@@ -71,8 +75,6 @@ int main(int argc, char **argv){
 	moduleRenderableResourcesInit();
 	modulePhysicsResourcesInit();
 	moduleObjectResourcesInit();
-	moduleSceneResourcesInit();
-	moduleCameraResourcesInit();
 
 	/**printf("%u + ", memPoolBlockSize(RESOURCE_DEFAULT_TEXTURE_SIZE)*RESOURCE_DEFAULT_TEXTURE_NUM);
 
@@ -102,6 +104,30 @@ int main(int argc, char **argv){
 	printf("%u + ", memPoolBlockSize(RESOURCE_DEFAULT_SCENE_SIZE)*RESOURCE_DEFAULT_SCENE_NUM);
 
 	printf("%u\n", memPoolBlockSize(RESOURCE_DEFAULT_CAMERA_SIZE)*RESOURCE_DEFAULT_CAMERA_NUM);**/
+
+	// Scenes.
+	scene *scnMain = moduleSceneAllocate();
+	scnInit(scnMain);
+	//
+	scene *scnHUD = moduleSceneAllocate();
+	scnInit(scnHUD);
+
+	// Cameras.
+	camera *camMain = moduleCameraAllocate();
+	camInit(camMain);
+	//camMain->orientation.value = quatNewEuler(0.f, 0.f, 45.f*RADIAN_RATIO);
+	camMain->position.value = vec3New(0.f, 1.f, 7.f);
+	flagsSet(camMain->flags, CAM_PROJECTION_FRUSTUM);
+	//
+	camera *camHUD = moduleCameraAllocate();
+	camInit(camHUD);
+	camHUD->position.value = vec3New(0.f, 0.f, 0.f);
+	flagsSet(camHUD->flags, CAM_PROJECTION_ORTHOGRAPHIC);
+	//
+	camera *camGUI = moduleCameraAllocate();
+	camInit(camGUI);
+	camGUI->position.value = vec3New(0.f, 0.f, 0.f);
+	flagsSet(camGUI->flags, CAM_PROJECTION_FIXED_SIZE);
 
 	// Textures.
 	texture *tempTex = moduleTextureAllocate();
@@ -189,6 +215,7 @@ int main(int argc, char **argv){
 	tempObji3 = tempObji;
 	//tempObji->configuration[0].position = vec3New(6.032421, -1.907336, -6.143989);
 	//tempObji->configuration[0].orientation = quatNew(-0.537948, 0.455196, 0.453047, -0.541063);
+	scnInsertObject(scnMain, tempObji);
 	//
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest2.tdo", 13));
@@ -205,6 +232,7 @@ int main(int argc, char **argv){
 	tempObji4 = tempObji;
 	//tempObji->configuration[0].scale.x = 8.f;
 	//tempObji->configuration[0].scale.y = 0.25f;
+	scnInsertObject(scnMain, tempObji);
 	//
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest.tdo", 12));
@@ -224,6 +252,7 @@ int main(int argc, char **argv){
 	tempObji->renderables->state.alpha = 0.5f;
 	tempObji->renderables->state.flags = RENDERABLE_STATE_ALPHA_DITHER;
 	tempObji2 = tempObji;
+	scnInsertObject(scnMain, tempObji);
 	//
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest.tdo", 12));
@@ -238,6 +267,7 @@ int main(int argc, char **argv){
 	objPhysicsPrepare(tempObji);
 	//tempObji->skeletonBodies->hull->restitution = 1.f;
 	tempObji->skeletonBodies->hull->restitution = 0.f;
+	scnInsertObject(scnMain, tempObji);
 	//
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest.tdo", 12));
@@ -250,6 +280,7 @@ int main(int argc, char **argv){
 	tempObji->configuration[0].position.y = 6.f;
 	objPhysicsPrepare(tempObji);
 	tempObji->skeletonBodies->hull->restitution = 0.f;
+	///scnInsertObject(scnMain, tempObji);
 	//
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("Wall.tdo", 8));
@@ -264,6 +295,7 @@ int main(int argc, char **argv){
 	tempObji->configuration[0].scale.y = 0.1f;
 	tempObji->configuration[0].scale.z = 100.f;
 	objPhysicsPrepare(tempObji);
+	scnInsertObject(scnMain, tempObji);
 	//
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("Kobold.tdo", 10));
@@ -272,51 +304,20 @@ int main(int argc, char **argv){
 	tempObji->configuration[0].position.y = -2.9f;
 	tempObji->configuration[0].position.z = 2.f;
 	tempObji->renderables->billboardData.flags = BILLBOARD_TARGET_SPRITE | BILLBOARD_LOCK_Y;
+	scnInsertObject(scnMain, tempObji);
 
 	// Sprite Object Instances.
 	//
 
-	// Scenes.
-	scene *scnMain = moduleSceneAllocate();
-	scnInit(scnMain, 3, 3);
-	*scnAllocate(scnMain) = moduleObjectIndex(0);
-	*scnAllocate(scnMain) = moduleObjectIndex(1);
-	*scnAllocate(scnMain) = moduleObjectIndex(2);
-	*scnAllocate(scnMain) = moduleObjectIndex(3);
-	//*scnAllocate(scnMain) = moduleObjectIndex(4);
-	*scnAllocate(scnMain) = moduleObjectIndex(5);
-	*scnAllocate(scnMain) = moduleObjectIndex(6);
-	//
-	scene *scnHUD = moduleSceneAllocate();
-	scnInit(scnHUD, 0, 0);
-
-	// Cameras.
-	camera *camMain = moduleCameraAllocate();
-	camInit(camMain);
-	//camMain->orientation.value = quatNewEuler(0.f, 0.f, 45.f*RADIAN_RATIO);
-	camMain->position.value = vec3New(0.f, 1.f, 7.f);
-	flagsSet(camMain->flags, CAM_PROJECTION_FRUSTUM);
-	//
-	camera *camHUD = moduleCameraAllocate();
-	camInit(camHUD);
-	camHUD->position.value = vec3New(0.f, 0.f, 0.f);
-	flagsSet(camHUD->flags, CAM_PROJECTION_ORTHOGRAPHIC);
-	//
-	camera *camGUI = moduleCameraAllocate();
-	camInit(camGUI);
-	camGUI->position.value = vec3New(0.f, 0.f, 0.f);
-	flagsSet(camGUI->flags, CAM_PROJECTION_FIXED_SIZE);
-
 	physJoint *joint = modulePhysicsJointAllocate();
 	physJointInit(joint, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_DISTANCE);
 	physJointAdd(joint, tempObji4->skeletonBodies, tempObji3->skeletonBodies);
-
 	/*physJointSphereInit(
 		&joint->data.sphere, tempObji3->skeletonBodies, tempObji4->skeletonBodies, vec3Zero(), vec3Zero(),
 		PHYSICS_JOINT_SPHERE_CONE_LIMIT_ENABLED, vec3New(1.f, 0.f, 0.f), 45.f*RADIAN_RATIO
 	);*/
-
 	physJointDistanceInit(&joint->data.distance, vec3Zero(), vec3Zero(), 4.f, 0.f, 0.f);
+	scnInsertJoint(scnMain, joint);
 
 	guiElement gui, *gEl, *gTxt;
 	guiInit(&gui, GUI_ELEMENT_TYPE_CONTROLLER);
@@ -413,11 +414,11 @@ int main(int argc, char **argv){
 
 	float framerate = 1000.f / 125.f;  // Desired milliseconds per render.
 	float tickrate = 1000.f / 125.f;   // Desired milliseconds per update.
-	float tickratio = tickrate / 1000.f;  // Desired seconds per update.
+	float timestep = tickrate / 1000.f;  // Desired seconds per update.
 
 	float tickrateTimeMod = tickrate * timeMod;
-	float tickratioTimeMod = tickratio * timeMod;
-	float tickratioTimeModFrequency = 1.f / tickratioTimeMod;
+	float timestepTimeMod = timestep * timeMod;
+	float frequencyTimeMod = 1.f / timestepTimeMod;
 	float tickrateUpdateMod = tickrate / updateMod;
 
 	float startUpdate;
@@ -511,13 +512,13 @@ int main(int argc, char **argv){
 				//moduleObjectIndex(0)->renderables[0].alpha = 1.f;
 				//globalTimeMod = 1.f;
 				//tickrateTimeMod = tickrate*globalTimeMod;
-				//tickratioTimeMod = tickratio*globalTimeMod;
+				//timestepTimeMod = timestep*globalTimeMod;
 				//const quat changeRotation = quatNewEuler(-90.f*RADIAN_RATIO, 0.f, 0.f);
-				//quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, tickratioTimeMod, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
-				camMain->position.value.z += -5.f * tickratio;
+				//quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, timestepTimeMod, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
+				camMain->position.value.z += -5.f * timestepTimeMod;
 				//objGetState(&gameStateManager, 6, 0)->tempRndrConfig.target.value = camMain->position.value;
 				if(tempObji2->skeletonBodies->linearVelocity.z > -9.f){
-					tempObji2->skeletonBodies->linearVelocity.z -= 62.5f * tickratio;
+					tempObji2->skeletonBodies->linearVelocity.z -= 62.5f * timestepTimeMod;
 				}else if(tempObji2->skeletonBodies->linearVelocity.z < -9.f){
 					tempObji2->skeletonBodies->linearVelocity.z = -9.f;
 				}
@@ -529,13 +530,13 @@ int main(int argc, char **argv){
 				//moduleObjectIndex(0)->renderables[0].alpha = 0.f;
 				//globalTimeMod = -1.f;
 				//tickrateTimeMod = tickrate*globalTimeMod;
-				//tickratioTimeMod = tickratio*globalTimeMod;
+				//timestepTimeMod = timestep*globalTimeMod;
 				//const quat changeRotation = quatNewEuler(90.f*RADIAN_RATIO, 0.f, 0.f);
-				//quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, tickratioTimeMod, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
-				camMain->position.value.z += 5.f * tickratio;
+				//quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, timestepTimeMod, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
+				camMain->position.value.z += 5.f * timestepTimeMod;
 				//objGetState(&gameStateManager, 6, 0)->tempRndrConfig.target.value = camMain->position.value;
 				if(tempObji2->skeletonBodies->linearVelocity.z < 9.f){
-					tempObji2->skeletonBodies->linearVelocity.z += 62.5f * tickratio;
+					tempObji2->skeletonBodies->linearVelocity.z += 62.5f * timestepTimeMod;
 				}else if(tempObji2->skeletonBodies->linearVelocity.z > 9.f){
 					tempObji2->skeletonBodies->linearVelocity.z = 9.f;
 				}
@@ -546,13 +547,13 @@ int main(int argc, char **argv){
 			if(LEFT){
 				//const quat changeRotation =
 				//quatNewEuler(&changeRotation, 0.f, -90.f*RADIAN_RATIO, 0.f);
-				//quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, tickratioTimeMod, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
+				//quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, timestepTimeMod, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
 				//quatNewEuler(0.f, 0.f, -90.f*RADIAN_RATIO);
-				//quatRotate(&objGetState(&gameStateManager, 5, 0)->configuration[0].orientation, &changeRotation, tickratioTimeMod, &objGetState(&gameStateManager, 5, 0)->configuration[0].orientation);
-				camMain->position.value.x += -5.f * tickratio;
+				//quatRotate(&objGetState(&gameStateManager, 5, 0)->configuration[0].orientation, &changeRotation, timestepTimeMod, &objGetState(&gameStateManager, 5, 0)->configuration[0].orientation);
+				camMain->position.value.x += -5.f * timestepTimeMod;
 				//objGetState(&gameStateManager, 6, 0)->tempRndrConfig.target.value = camMain->position.value;
 				if(tempObji2->skeletonBodies->linearVelocity.x > -9.f){
-					tempObji2->skeletonBodies->linearVelocity.x -= 62.5f * tickratio;
+					tempObji2->skeletonBodies->linearVelocity.x -= 62.5f * timestepTimeMod;
 				}else if(tempObji2->skeletonBodies->linearVelocity.x < -9.f){
 					tempObji2->skeletonBodies->linearVelocity.x = -9.f;
 				}
@@ -562,13 +563,13 @@ int main(int argc, char **argv){
 				++gEl->root.scale.x;
 				//const quat changeRotation =
 				//quatNewEuler(&changeRotation, 0.f, 90.f*RADIAN_RATIO, 0.f);
-				//quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, tickratioTimeMod, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
+				//quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, timestepTimeMod, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
 				//quatNewEuler(0.f, 0.f, 90.f*RADIAN_RATIO);
-				//quatRotate(&objGetState(&gameStateManager, 5, 0)->configuration[0].orientation, &changeRotation, tickratioTimeMod, &objGetState(&gameStateManager, 5, 0)->configuration[0].orientation);
-				camMain->position.value.x += 5.f * tickratio;
+				//quatRotate(&objGetState(&gameStateManager, 5, 0)->configuration[0].orientation, &changeRotation, timestepTimeMod, &objGetState(&gameStateManager, 5, 0)->configuration[0].orientation);
+				camMain->position.value.x += 5.f * timestepTimeMod;
 				//objGetState(&gameStateManager, 6, 0)->tempRndrConfig.target.value = camMain->position.value;
 				if(tempObji2->skeletonBodies->linearVelocity.x < 9.f){
-					tempObji2->skeletonBodies->linearVelocity.x += 62.5f * tickratio;
+					tempObji2->skeletonBodies->linearVelocity.x += 62.5f * timestepTimeMod;
 				}else if(tempObji2->skeletonBodies->linearVelocity.x > 9.f){
 					tempObji2->skeletonBodies->linearVelocity.x = 9.f;
 				}
@@ -576,23 +577,14 @@ int main(int argc, char **argv){
 
 			///
 			guiTick(&gui, tickrateTimeMod);
-			particleSystemTick(&c, tickratioTimeMod);
+			particleSystemTick(&c, timestepTimeMod);
 			///
 			// Update scenes.
-			moduleSceneTick(tickrateTimeMod);
-
-			// Presolve physics constraints.
-			modulePhysicsPresolveConstraints(tickratioTimeMod);
-
-			// Query physics islands and presolve contact constraints.
 			#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-			moduleSceneQueryIslands(tickratioTimeModFrequency);
+			moduleSceneTick(tickrateTimeMod, timestepTimeMod, frequencyTimeMod);
 			#else
-			moduleSceneQueryIslands();
+			moduleSceneTick(tickrateTimeMod, timestepTimeMod);
 			#endif
-
-			// Solve physics constraints.
-			modulePhysicsSolveConstraints(tickratioTimeMod);
 
 			// Next frame.
 			nextUpdate += tickrateUpdateMod;
@@ -663,18 +655,15 @@ int main(int argc, char **argv){
 			renders = 0;
 		}
 
-    }
+	}
 
-    /****/
+	/****/
 	memFree(gTxt->data.text.stream.front);
-    txtFontDelete(&testFont);
+	txtFontDelete(&testFont);
 	particleSystemBaseDelete(&b);
 	particleSystemDelete(&c);
-    /****/
+	/****/
 
-	moduleCameraResourcesDelete();
-	moduleSceneResourcesDelete();
-	moduleGUIResourcesDelete();
 	moduleObjectResourcesDelete();
 	modulePhysicsResourcesDelete();
 	moduleRenderableResourcesDelete();
@@ -682,6 +671,9 @@ int main(int argc, char **argv){
 	moduleSkeletonResourcesDelete();
 	moduleTextureWrapperResourcesDelete();
 	moduleTextureResourcesDelete();
+	moduleGUIResourcesDelete();
+	moduleSceneResourcesDelete();
+	moduleCameraResourcesDelete();
 
 	gfxMngrDestroyProgram(&gfxMngr);
 

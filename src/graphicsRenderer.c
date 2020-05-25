@@ -109,54 +109,44 @@ static __FORCE_INLINE__ void gfxRendererGenerateQueuesArray(gfxRenderer *const _
 
 }
 
-static __FORCE_INLINE__ void gfxRendererGenerateQueuesList(gfxRenderer *const __RESTRICT__ renderer, const size_t objectNum, memoryPool objects){
+static __FORCE_INLINE__ void gfxRendererGenerateQueuesList(gfxRenderer *const __RESTRICT__ renderer, const size_t objectNum, const object *const objects){
 
 	// Generates opaque and translucent render
 	// queues from a memoryPool.
 
 	gfxRenderElement *array = &renderer->qOpaque.elements[renderer->qOpaque.elementNum];
 
-	const memoryRegion *region = objects.region;
-	const object **i;
+	const object *i = objects;
 
-	do {
-		i = memPoolFirst(region);
-		while(i < (const object **)memAllocatorEnd(region)){
-			const byte_t flag = memPoolBlockStatus(i);
-			if(flag == MEMORY_POOL_BLOCK_ACTIVE){
+	while(i != NULL){
 
-				const object *const obj = *i;
-				const gfxRenderGroup_t group = objRenderGroup(obj, renderer->interpT);
+		const gfxRenderGroup_t group = objRenderGroup(i, renderer->interpT);
 
-				if(group == GFX_RNDR_GROUP_OPAQUE){
+		if(group == GFX_RNDR_GROUP_OPAQUE){
 
-					// The object is fully opaque.
-					array->structure = (const void *)obj;
-					array->type = GFX_RNDR_ELEMENT_TYPE_OBJECT;
-					array->distance = 0.f;
-					++array;
-					++renderer->qOpaque.elementNum;
+			// The object is fully opaque.
+			array->structure = (const void *)i;
+			array->type = GFX_RNDR_ELEMENT_TYPE_OBJECT;
+			array->distance = 0.f;
+			++array;
+			++renderer->qOpaque.elementNum;
 
-				}else if(group == GFX_RNDR_GROUP_TRANSLUCENT){
+		}else if(group == GFX_RNDR_GROUP_TRANSLUCENT){
 
-					// The object contains translucency.
-					// It will have to be depth-sorted and
-					// rendered after the opaque objects.
-					--renderer->qTranslucent.elements;
-					renderer->qTranslucent.elements->structure = (const void *)obj;
-					renderer->qTranslucent.elements->type = GFX_RNDR_ELEMENT_TYPE_OBJECT;
-					renderer->qTranslucent.elements->distance = 0.f;
-					++renderer->qTranslucent.elementNum;
+			// The object contains translucency.
+			// It will have to be depth-sorted and
+			// rendered after the opaque objects.
+			--renderer->qTranslucent.elements;
+			renderer->qTranslucent.elements->structure = (const void *)i;
+			renderer->qTranslucent.elements->type = GFX_RNDR_ELEMENT_TYPE_OBJECT;
+			renderer->qTranslucent.elements->distance = 0.f;
+			++renderer->qTranslucent.elementNum;
 
-				}
-
-			}else if(flag == MEMORY_POOL_BLOCK_INVALID){
-				return;
-			}
-			i = memPoolBlockNext(objects, i);
 		}
-		region = memAllocatorNext(region);
-	} while(region != NULL);
+
+		i = (const object *)memDLinkNext(i);
+
+	}
 
 }
 

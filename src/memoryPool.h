@@ -102,26 +102,30 @@ void *memPoolExtend(memoryPool *const __RESTRICT__ pool, void *const start, cons
 void *memPoolExtendInit(memoryPool *const __RESTRICT__ pool, void *const start, const size_t bytes, const size_t length, void (*func)(void *const __RESTRICT__ block));
 void memPoolDelete(memoryPool *const __RESTRICT__ pool);
 
-#define MEMORY_POOL_LOOP_BEGIN(allocator, n, type)                 \
-	{                                                              \
-		const memoryRegion *__region_##n = allocator.region;       \
-		do {                                                       \
-			type n = memPoolFirst(__region_##n);                   \
-			while(n < (type)memAllocatorEnd(__region_##n)){        \
-				const byte_t __flag_##n = memPoolBlockStatus(n);   \
-				if(__flag_##n == MEMORY_POOL_BLOCK_ACTIVE){
+#define MEMORY_POOL_LOOP_BEGIN(allocator, n, type)             \
+	{                                                           \
+		const memoryRegion *__region_##n = allocator.region;    \
+		type n = memPoolFirst(__region_##n);                    \
+		for(;;){                                                \
+			const byte_t __flag_##n = memPoolBlockStatus(n);    \
+			if(__flag_##n == MEMORY_POOL_BLOCK_ACTIVE){
 
-#define MEMORY_POOL_LOOP_INACTIVE_CASE(n)                          \
-				}else if(__flag_##n == MEMORY_POOL_BLOCK_INACTIVE){
+#define MEMORY_POOL_LOOP_INACTIVE_CASE(n)                       \
+			}else if(__flag_##n == MEMORY_POOL_BLOCK_INACTIVE){
 
-#define MEMORY_POOL_LOOP_END(allocator, n, earlyexit)              \
-				}else if(__flag_##n == MEMORY_POOL_BLOCK_INVALID){ \
-					earlyexit                                      \
-				}                                                  \
-				n = memPoolBlockNext(allocator, n);                \
-			}                                                      \
-			__region_##n = memAllocatorNext(__region_##n);         \
-		} while(__region_##n != NULL);                             \
+#define MEMORY_POOL_LOOP_END(allocator, n, earlyexit)           \
+			}else if(__flag_##n == MEMORY_POOL_BLOCK_INVALID){  \
+				earlyexit;                                      \
+			}                                                   \
+			n = memPoolBlockNext(allocator, n);                 \
+			if((byte_t *)n >= memAllocatorEnd(__region_##n)){   \
+				__region_##n = memAllocatorNext(__region_##n);  \
+				if(__region_##n == NULL){                       \
+					break;                                      \
+				}                                               \
+				n = memPoolFirst(__region_##n);                 \
+			}                                                   \
+		}                                                       \
 	}
 
 #define MEMORY_POOL_OFFSET_LOOP_BEGIN(allocator, n, type, region, block) \
@@ -129,22 +133,7 @@ void memPoolDelete(memoryPool *const __RESTRICT__ pool);
 		const memoryRegion *__region_##n = region;                       \
 		type n = (type)(block);                                          \
 		for(;;){                                                         \
-			while(n < (type)memAllocatorEnd(__region_##n)){              \
-				const byte_t __flag_##n = memPoolBlockStatus(n);         \
-				if(__flag_##n == MEMORY_POOL_BLOCK_ACTIVE){
-
-#define MEMORY_POOL_OFFSET_LOOP_END(allocator, n, earlyexit)             \
-				}else if(__flag_##n == MEMORY_POOL_BLOCK_INVALID){       \
-					earlyexit                                            \
-				}                                                        \
-				n = memPoolBlockNext(allocator, n);                      \
-			}                                                            \
-			__region_##n = memAllocatorNext(__region_##n);               \
-			if(__region_##n == NULL){                                    \
-				break;                                                   \
-			}                                                            \
-			n = memPoolFirst(__region_##n);                              \
-		}                                                                \
-	}
+			const byte_t __flag_##n = memPoolBlockStatus(n);             \
+			if(__flag_##n == MEMORY_POOL_BLOCK_ACTIVE){
 
 #endif

@@ -4,10 +4,10 @@
 #include "sceneSettings.h"
 #include "collider.h"
 #include "physicsIsland.h"
-#include "memoryPool.h"
+#include "memoryDLink.h"
 
-#ifndef SCENE_ZONE_DEFAULT_OBJECT_NUM
-	#define SCENE_ZONE_DEFAULT_OBJECT_NUM 1024
+#ifndef SCENE_OBJECT_REGION_SIZE
+	#define SCENE_OBJECT_REGION_SIZE 1024
 #endif
 
 #define SCENE_ZONE_SLEEP 0x01
@@ -20,6 +20,8 @@
 //typedef uint_least32_t objectIndex_t;
 
 typedef struct object object;
+typedef struct physRigidBody physRigidBody;
+typedef struct physJoint physJoint;
 
 ///typedef struct scnZone scnZone;
 typedef struct {
@@ -43,11 +45,6 @@ typedef struct scnZone {
 	*** Or just use an SLink, depending on
 	*** performance.
 	**/
-
-	// Objects in the zone.
-	memoryPool objects;  // Contains object pointers.
-	size_t objectNum;    // The number of objects in each region.
-	                     // Allows preallocations when rendering.
 
 	// Zone portals.
 	// Used to mark the areas between
@@ -74,10 +71,11 @@ typedef struct scene {
 	*** performance.
 	**/
 
-	// Objects in the zone.
-	memoryPool objects;  // Contains object pointers.
-	size_t objectNum;    // The number of objects in each region.
-	                     // Allows preallocations when rendering.
+	// Objects in the scene.
+	// We store the number of objects to allow
+	// easier preallocations when rendering.
+	object *objects;   // Contains object pointers.
+	size_t objectNum;  // The number of objects in the scene.
 
 	// SLink of scene zones.
 	///scnZone *zones;
@@ -87,16 +85,24 @@ typedef struct scene {
 
 } scene;
 
-return_t scnInit(scene *scn, size_t objectNum, size_t bodyNum);
+void scnInit(scene *const __RESTRICT__ scn);
 
-object **scnAllocate(scene *scn);
-void scnFree(scene *scn, object **obj);
+void scnInsertJoint(scene *const __RESTRICT__ scn, physJoint *const joint);
+void scnRemoveJoint(scene *const __RESTRICT__ scn, physJoint *const joint);
 
-return_t scnTick(scene *scn, const float elapsedTime/**, const float dt**/);
+void scnInsertRigidBody(scene *const __RESTRICT__ scn, physRigidBody *const body);
+void scnRemoveRigidBody(scene *const __RESTRICT__ scn, physRigidBody *const body);
 
-void scnReset(scene *scn);
-void scnDelete(scene *scn);
+void scnInsertObject(scene *const __RESTRICT__ scn, object *const obj);
+void scnRemoveObject(scene *const __RESTRICT__ scn, object *const obj);
 
-//void scnDelete(void *scn);
+#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+return_t scnTick(scene *const __RESTRICT__ scn, const float elapsedTime, const float dt, const float frequency);
+#else
+return_t scnTick(scene *const __RESTRICT__ scn, const float elapsedTime, const float dt);
+#endif
+
+void scnReset(scene *const __RESTRICT__ scn);
+void scnDelete(scene *const __RESTRICT__ scn);
 
 #endif

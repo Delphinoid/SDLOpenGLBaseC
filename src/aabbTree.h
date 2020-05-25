@@ -37,13 +37,13 @@ typedef struct {
 } aabbTree;
 
 void aabbTreeInit(aabbTree *const __RESTRICT__ tree);
-return_t aabbTreeInsert(aabbTree *const __RESTRICT__ tree, aabbNode **node, void *const __RESTRICT__ value, const cAABB *const __RESTRICT__ aabb, aabbNode *(*const allocator)());
-void aabbTreeRemove(aabbTree *const __RESTRICT__ tree, aabbNode *const node, void (*deallocator)(aabbNode *const __RESTRICT__));
+return_t aabbTreeInsert(aabbTree *const __RESTRICT__ tree, aabbNode **node, void *const __RESTRICT__ value, const cAABB *const __RESTRICT__ aabb, aabbNode *(*const allocator)(void *), void *argv);
+void aabbTreeRemove(aabbTree *const __RESTRICT__ tree, aabbNode *const node, void (*deallocator)(aabbNode *const __RESTRICT__, void *), void *argv);
 void aabbTreeUpdate(aabbTree *const __RESTRICT__ tree, aabbNode *const node);
-return_t aabbTreeQueryNodeStack(const aabbTree *const __RESTRICT__ tree, aabbNode *const node, return_t (*const func)(aabbNode *const, aabbNode *const));
-return_t aabbTreeQueryNode(const aabbTree *const __RESTRICT__ tree, aabbNode *const node, return_t (*const func)(aabbNode *const, aabbNode *const));
-return_t aabbTreeQueryStack(const aabbTree *const __RESTRICT__ tree, return_t (*const func)(aabbNode *const, aabbNode *const));
-return_t aabbTreeQuery(const aabbTree *const __RESTRICT__ tree, return_t (*const func)(aabbNode *const, aabbNode *const));
-void aabbTreeTraverse(aabbTree *const __RESTRICT__ tree, void (*const func)(aabbNode *const __RESTRICT__));
+return_t aabbTreeQueryNodeStack(const aabbTree *const __RESTRICT__ tree, aabbNode *const node, return_t (*const func)(aabbNode *const, aabbNode *const, void *), void *argv);
+return_t aabbTreeQueryNode(const aabbTree *const __RESTRICT__ tree, aabbNode *const node, return_t (*const func)(aabbNode *const, aabbNode *const, void *), void *argv);
+return_t aabbTreeQueryStack(const aabbTree *const __RESTRICT__ tree, return_t (*const func)(aabbNode *const, aabbNode *const, void *), void *argv);
+return_t aabbTreeQuery(const aabbTree *const __RESTRICT__ tree, return_t (*const func)(aabbNode *const, aabbNode *const, void *), void *argv);
+void aabbTreeTraverse(aabbTree *const __RESTRICT__ tree, void (*const func)(aabbNode *const __RESTRICT__, void *), void *argv);
 
 #endif

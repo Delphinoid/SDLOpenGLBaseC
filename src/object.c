@@ -453,7 +453,11 @@ void objDelete(object *const __RESTRICT__ obj){
 		state = next;
 	}
 	if(obj->skeletonBodies != NULL){
-		modulePhysicsRigidBodyFreeArray(&obj->skeletonBodies);
+		physRigidBody *body = obj->skeletonBodies;
+		do {
+			modulePhysicsRigidBodyFree(&body, body);
+		} while(body != NULL && !physRigidBodyIsRoot(body));
+		obj->skeletonBodies = NULL;
 	}
 	if(obj->skeletonColliders != NULL){
 		collider *c = obj->skeletonColliders;
@@ -548,7 +552,13 @@ return_t objInstantiate(object *const __RESTRICT__ obj, const objectBase *const 
 					/** Memory allocation failure. **/
 					memFree(obj->configuration);
 					skliDelete(&obj->skeletonData);
-					modulePhysicsRigidBodyFreeArray(&obj->skeletonBodies);
+					if(obj->skeletonBodies != NULL){
+						physRigidBody *body = obj->skeletonBodies;
+						do {
+							modulePhysicsRigidBodyFree(&body, body);
+						} while(body != NULL && !physRigidBodyIsRoot(body));
+						obj->skeletonBodies = NULL;
+					}
 					return -1;
 				}
 
@@ -635,7 +645,11 @@ return_t objInitSkeleton(object *const __RESTRICT__ obj, const skeleton *const _
 		memFree(obj->configuration);
 	}
 	if(obj->skeletonBodies != NULL){
-		modulePhysicsRigidBodyFreeArray(&obj->skeletonBodies);
+		physRigidBody *body = obj->skeletonBodies;
+		do {
+			modulePhysicsRigidBodyFree(&body, body);
+		} while(body != NULL && !physRigidBodyIsRoot(body));
+		obj->skeletonBodies = NULL;
 	}
 	if(obj->skeletonColliders != NULL){
 		free(obj->skeletonColliders);
@@ -850,7 +864,7 @@ void objAddAngularVelocity(object *obj, const size_t boneID, const float angle, 
 	physRigidBodyAddAngularVelocity(&obj->skeletonBodies[boneID], angle, x, y, z);
 }**/
 
-return_t objTick(object *const __RESTRICT__ obj, physIsland *const __RESTRICT__ island, const float elapsedTime){
+return_t objTick(object *const __RESTRICT__ obj, const float elapsedTime){
 
 	boneIndex_t i;
 	renderable *j;
@@ -892,16 +906,11 @@ return_t objTick(object *const __RESTRICT__ obj, physIsland *const __RESTRICT__ 
 			*configuration = body->configuration;
 			*sklState = *configuration;
 
-			/** Move this out eventually. **/
-			// Add the body to the physics island
-			// and update all of its colliders.
-			if(physRigidBodyUpdateColliders(body, island) < 0){
-				/** Memory allocation failure. **/
-				return -1;
-			}
-
 			// Get the next body.
 			body = modulePhysicsRigidBodyNext(body);
+			if(body != NULL && physRigidBodyIsRoot(body)){
+				body = NULL;
+			}
 
 		}else{
 
@@ -936,16 +945,11 @@ return_t objTick(object *const __RESTRICT__ obj, physIsland *const __RESTRICT__ 
 				// Initialize the body's moment of inertia and centroid.
 				physRigidBodyCentroidFromPosition(body);
 
-				/** Move this out eventually. **/
-				// Add the body to the physics island
-				// and update all of its colliders.
-				if(physRigidBodyUpdateColliders(body, island) < 0){
-					/** Memory allocation failure. **/
-					return -1;
-				}
-
 				// Get the next body.
 				body = modulePhysicsRigidBodyNext(body);
+				if(body != NULL && physRigidBodyIsRoot(body)){
+					body = NULL;
+				}
 
 			}
 

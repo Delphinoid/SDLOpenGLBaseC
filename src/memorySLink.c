@@ -148,8 +148,8 @@ void memSLinkFree(memorySLink *const __RESTRICT__ array, void **const start, voi
 	// Removes an element from an array
 	// and frees the block.
 
+	// Set the previous element's next pointer.
 	if(previous != NULL){
-		// Set the previous element's next pointer.
 		memSLinkDataGetNext(previous) = memSLinkDataGetNext(element);
 	}else if(start != NULL){
 		*start = memSLinkDataGetNext(element);

@@ -22,7 +22,6 @@ typedef struct renderableBase renderableBase;
 typedef struct renderable renderable;
 typedef struct physRigidBodyBase physRigidBodyBase;
 typedef struct physRigidBody physRigidBody;
-typedef struct physIsland physIsland;
 typedef struct collider collider;
 typedef struct vertex vertex;
 typedef struct camera camera;
@@ -62,6 +61,7 @@ typedef struct object {
 
 	sklInstance skeletonData;  // An array of skeletal animation instances.
 
+	/** Remove this? **/
 	stateIndex_t stateMax;  // Maximum number of previous states.
 
 	stateIndex_t stateNum;  // Number of previous states.
@@ -115,7 +115,7 @@ void objAddLinearVelocity(object *obj, const size_t boneID, const float x, const
 void objApplyLinearImpulse(object *obj, const size_t boneID, const float x, const float y, const float z);
 void objAddAngularVelocity(object *obj, const size_t boneID, const float angle, const float x, const float y, const float z);**/
 
-return_t objTick(object *const restrict obj, physIsland *const restrict island, const float elapsedTime);
+return_t objTick(object *const restrict obj, const float elapsedTime);
 
 void objGenerateSprite(const object *const restrict obj, const renderable *const restrict rndr, const float interpT, const float *const restrict texFrag, vertex *const restrict vertices);
 

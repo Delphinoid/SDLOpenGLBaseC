@@ -83,28 +83,18 @@ void moduleSceneClear(){
 }
 
 #ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-void moduleSceneQueryIslands(const float frequency){
+void moduleSceneTick(const float elapsedTime, const float dt, const float frequency){
 #else
-void moduleSceneQueryIslands(){
+void moduleSceneTick(const float elapsedTime, const float dt){
 #endif
 
 	MEMORY_POOL_LOOP_BEGIN(__g_SceneResourceArray, i, scene *);
 
 		#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-		physIslandQuery(&i->island, frequency);
+		scnTick(i, elapsedTime, dt, frequency);
 		#else
-		physIslandQuery(&i->island);
+		scnTick(i, elapsedTime, dt);
 		#endif
-
-	MEMORY_POOL_LOOP_END(__g_SceneResourceArray, i, return;);
-
-}
-
-void moduleSceneTick(const float elapsedTime/**, const float dt**/){
-
-	MEMORY_POOL_LOOP_BEGIN(__g_SceneResourceArray, i, scene *);
-
-		scnTick(i, elapsedTime/**, dt**/);
 
 	MEMORY_POOL_LOOP_END(__g_SceneResourceArray, i, return;);
 

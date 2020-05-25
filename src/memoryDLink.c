@@ -168,11 +168,13 @@ void memDLinkFree(memoryDLink *const __RESTRICT__ array, void **const start, voi
 	// and frees the block.
 
 	// Set the next element's previous pointer.
-	memDLinkDataGetPrev(memDLinkDataGetNext(element)) = memDLinkDataGetPrev(element);
+	if(memDLinkDataGetNext(element) != NULL){
+		memDLinkDataGetPrev(memDLinkDataGetNext(element)) = memDLinkDataGetPrev(element);
+	}
+	// Set the previous element's next pointer.
 	if(memDLinkDataGetPrev(element) != NULL){
-		// Set the previous element's next pointer.
 		memDLinkDataGetNext(memDLinkDataGetPrev(element)) = memDLinkDataGetNext(element);
-	}else{
+	}else if(start != NULL){
 		*start = memDLinkDataGetNext(element);
 	}
 

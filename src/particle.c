@@ -24,8 +24,8 @@ void particleInit(particle *const __RESTRICT__ p){
 }
 
 /** TEMPORARY **/
-void particleTick(particle *const __RESTRICT__ p, const float elapsedTime){
-	const vec3 delta = vec3VMultS(p->velocity, elapsedTime);
+void particleTick(particle *const __RESTRICT__ p, const float dt){
+	const vec3 delta = vec3VMultS(p->velocity, dt);
 	#ifdef PARTICLE_ALLOW_INTERPOLATION
 	p->previous = p->configuration;
 	#endif

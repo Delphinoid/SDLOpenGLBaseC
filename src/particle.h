@@ -48,7 +48,7 @@ void particleBaseInit(particleBase *const __RESTRICT__ base);
 void particleInit(particle *const __RESTRICT__ p);
 
 /** TEMPORARY **/
-void particleTick(particle *const __RESTRICT__ p, const float elapsedTime);
+void particleTick(particle *const __RESTRICT__ p, const float dt);
 #ifdef PARTICLE_ALLOW_INTERPOLATION
 bone particleState(particle *const __RESTRICT__ p, const float interpT);
 #endif

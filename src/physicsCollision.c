@@ -118,7 +118,7 @@ static __FORCE_INLINE__ float physContactCalculateFriction(const float f1, const
 	#endif
 }
 
-static __FORCE_INLINE__ void physContactInit(physContact *const __RESTRICT__ contact, const cContact *const __RESTRICT__ manifold, const physRigidBody *const __RESTRICT__ bodyA, const physRigidBody *const __RESTRICT__ bodyB, const physCollider *const __RESTRICT__ colliderA, const physCollider *const __RESTRICT__ colliderB){
+__FORCE_INLINE__ void physContactInit(physContact *const __RESTRICT__ contact, const cContact *const __RESTRICT__ manifold, const physRigidBody *const __RESTRICT__ bodyA, const physRigidBody *const __RESTRICT__ bodyB, const physCollider *const __RESTRICT__ colliderA, const physCollider *const __RESTRICT__ colliderB){
 
 	// Sets the incident and reference bodies
 	// and reset the impulse accumulators.
@@ -226,7 +226,7 @@ static __FORCE_INLINE__ void physContactPointWarmStart(physContactPoint *const _
 }
 #endif
 
-static __FORCE_INLINE__ void physContactPersist(physContact *const __RESTRICT__ contact, const cContact *const __RESTRICT__ manifold, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, const physCollider *const __RESTRICT__ colliderA, const physCollider *const __RESTRICT__ colliderB){
+__FORCE_INLINE__ void physContactPersist(physContact *const __RESTRICT__ contact, const cContact *const __RESTRICT__ manifold, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, const physCollider *const __RESTRICT__ colliderA, const physCollider *const __RESTRICT__ colliderB){
 
 	// Copies the accumulators for persisting contacts
 	// and resets non-persisting accumulators.
@@ -523,41 +523,75 @@ void physContactPairInit(physContactPair *const pair, physCollider *const c1, ph
 
 	if(previous != NULL){
 		// Insert between the previous pair and its next pair.
+		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 		memQLinkNextA(previous) = (byte_t *)pair;
+		#else
+		previous->nextA = pair;
+		#endif
 	}else{
 		// Insert directly before the first pair.
 		c1->contactCache = pair;
 	}
 	if(next != NULL){
 		if(next->colliderA == c1){
+			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 			memQLinkPrevA(next) = (byte_t *)pair;
+			#else
+			next->prevA = pair;
+			#endif
 		}else{
+			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 			memQLinkPrevB(next) = (byte_t *)pair;
+			#else
+			next->prevB = pair;
+			#endif
 		}
 	}
+	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 	memQLinkPrevA(pair) = (byte_t *)previous;
 	memQLinkNextA(pair) = (byte_t *)next;
+	#else
+	pair->prevA = previous;
+	pair->nextA = next;
+	#endif
 
 	// Find the previous and next nodes for the second collider.
 	previous = NULL;
 	next = c2->contactCache;
 	while(next != NULL && next->colliderA == c2){
 		previous = next;
+		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 		next = (physContactPair *)memQLinkNextA(next);
+		#else
+		next = next->nextA;
+		#endif
 	}
 
 	if(previous != NULL){
 		// Insert between the previous pair and its next pair.
+		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 		memQLinkNextA(previous) = (byte_t *)pair;
+		#else
+		previous->nextA = pair;
+		#endif
 	}else{
 		// Insert directly before the first pair.
 		c2->contactCache = pair;
 	}
 	if(next != NULL){
+		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 		memQLinkPrevB(next) = (byte_t *)pair;
+		#else
+		next->prevB = pair;
+		#endif
 	}
+	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 	memQLinkPrevB(pair) = (byte_t *)previous;
 	memQLinkNextB(pair) = (byte_t *)next;
+	#else
+	pair->prevB = previous;
+	pair->nextB = next;
+	#endif
 
 	// Set the pair's miscellaneous variables.
 	pair->colliderA = c1;
@@ -571,41 +605,75 @@ void physSeparationPairInit(physSeparationPair *const pair, physCollider *const 
 
 	if(previous != NULL){
 		// Insert between the previous pair and its next pair.
+		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 		memQLinkNextA(previous) = (byte_t *)pair;
+		#else
+		previous->nextA = pair;
+		#endif
 	}else{
 		// Insert directly before the first pair.
 		c1->separationCache = pair;
 	}
 	if(next != NULL){
 		if(next->colliderA == c1){
+			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 			memQLinkPrevA(next) = (byte_t *)pair;
+			#else
+			next->prevA = pair;
+			#endif
 		}else{
+			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 			memQLinkPrevB(next) = (byte_t *)pair;
+			#else
+			next->prevB = pair;
+			#endif
 		}
 	}
+	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 	memQLinkPrevA(pair) = (byte_t *)previous;
 	memQLinkNextA(pair) = (byte_t *)next;
+	#else
+	pair->prevA = previous;
+	pair->nextA = next;
+	#endif
 
 	// Find the previous and next nodes for the second collider.
 	previous = NULL;
 	next = c2->separationCache;
 	while(next != NULL && next->colliderA == c2){
 		previous = next;
+		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 		next = (physSeparationPair *)memQLinkNextA(next);
+		#else
+		next = next->nextA;
+		#endif
 	}
 
 	if(previous != NULL){
 		// Insert between the previous pair and its next pair.
+		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 		memQLinkNextA(previous) = (byte_t *)pair;
+		#else
+		previous->nextA = pair;
+		#endif
 	}else{
 		// Insert directly before the first pair.
 		c2->separationCache = pair;
 	}
 	if(next != NULL){
+		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 		memQLinkPrevB(next) = (byte_t *)pair;
+		#else
+		next->prevB = pair;
+		#endif
 	}
+	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 	memQLinkPrevB(pair) = (byte_t *)previous;
 	memQLinkNextB(pair) = (byte_t *)next;
+	#else
+	pair->prevB = previous;
+	pair->nextB = next;
+	#endif
 
 	// Set the pair's miscellaneous variables.
 	pair->colliderA = c1;
@@ -620,35 +688,83 @@ void physContactPairDelete(physContactPair *const pair){
 	physContactPair *temp;
 
 	// Remove references from the previous pairs.
+	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 	temp = (physContactPair *)memQLinkPrevA(pair);
+	#else
+	temp = pair->prevA;
+	#endif
 	if(temp != NULL){
+		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 		memQLinkNextA(temp) = memQLinkNextA(pair);
+		#else
+		temp->nextA = pair->nextA;
+		#endif
 	}else{
+		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 		pair->colliderA->contactCache = (physContactPair *)memQLinkNextA(pair);
+		#else
+		pair->colliderA->contactCache = pair->nextA;
+		#endif
 	}
+	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 	temp = (physContactPair *)memQLinkPrevB(pair);
+	#else
+	temp = pair->prevB;
+	#endif
 	if(temp != NULL){
 		if(temp->colliderA == pair->colliderB){
+			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 			memQLinkNextA(temp) = memQLinkNextB(pair);
+			#else
+			temp->nextA = pair->nextB;
+			#endif
 		}else{
+			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 			memQLinkNextB(temp) = memQLinkNextB(pair);
+			#else
+			temp->nextB = pair->nextB;
+			#endif
 		}
 	}else{
+		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 		pair->colliderB->contactCache = (physContactPair *)memQLinkNextB(pair);
+		#else
+		pair->colliderB->contactCache = pair->nextB;
+		#endif
 	}
 
 	// Remove references from the next pairs.
+	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 	temp = (physContactPair *)memQLinkNextA(pair);
+	#else
+	temp = pair->nextA;
+	#endif
 	if(temp != NULL){
 		if(temp->colliderA == pair->colliderA){
+			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 			memQLinkPrevA(temp) = memQLinkPrevA(pair);
+			#else
+			temp->prevA = pair->prevA;
+			#endif
 		}else{
+			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 			memQLinkPrevB(temp) = memQLinkPrevA(pair);
+			#else
+			temp->prevB = pair->prevA;
+			#endif
 		}
 	}
+	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 	temp = (physContactPair *)memQLinkNextB(pair);
+	#else
+	temp = pair->nextB;
+	#endif
 	if(temp != NULL){
+		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 		memQLinkPrevB(temp) = memQLinkPrevB(pair);
+		#else
+		temp->prevB = pair->prevB;
+		#endif
 	}
 
 }
@@ -659,127 +775,84 @@ void physSeparationPairDelete(physSeparationPair *const pair){
 	physSeparationPair *temp;
 
 	// Remove references from the previous pairs.
+	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 	temp = (physSeparationPair *)memQLinkPrevA(pair);
+	#else
+	temp = pair->prevA;
+	#endif
 	if(temp != NULL){
+		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 		memQLinkNextA(temp) = memQLinkNextA(pair);
+		#else
+		temp->nextA = pair->nextA;
+		#endif
 	}else{
+		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 		pair->colliderA->separationCache = (physSeparationPair *)memQLinkNextA(pair);
+		#else
+		pair->colliderA->separationCache = pair->nextA;
+		#endif
 	}
+	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 	temp = (physSeparationPair *)memQLinkPrevB(pair);
+	#else
+	temp = pair->prevB;
+	#endif
 	if(temp != NULL){
 		if(temp->colliderA == pair->colliderB){
+			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 			memQLinkNextA(temp) = memQLinkNextB(pair);
+			#else
+			temp->nextA = pair->nextA;
+			#endif
 		}else{
+			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 			memQLinkNextB(temp) = memQLinkNextB(pair);
+			#else
+			temp->nextB = pair->nextB;
+			#endif
 		}
 	}else{
+		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 		pair->colliderB->separationCache = (physSeparationPair *)memQLinkNextB(pair);
+		#else
+		pair->colliderB->separationCache = pair->nextB;
+		#endif
 	}
 
 	// Remove references from the next pairs.
+	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 	temp = (physSeparationPair *)memQLinkNextA(pair);
+	#else
+	temp = pair->nextA;
+	#endif
 	if(temp != NULL){
 		if(temp->colliderA == pair->colliderA){
+			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 			memQLinkPrevA(temp) = memQLinkPrevA(pair);
+			#else
+			temp->prevA = pair->prevA;
+			#endif
 		}else{
+			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 			memQLinkPrevB(temp) = memQLinkPrevA(pair);
+			#else
+			temp->prevB = pair->prevA;
+			#endif
 		}
 	}
+	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 	temp = (physSeparationPair *)memQLinkNextB(pair);
+	#else
+	temp = pair->nextB;
+	#endif
 	if(temp != NULL){
+		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 		memQLinkPrevB(temp) = memQLinkPrevB(pair);
+		#else
+		temp->prevB = pair->prevB;
+		#endif
 	}
-
-}
-
-return_t physCollisionQuery(aabbNode *const n1, aabbNode *const n2){
-
-	// Manages the broadphase and narrowphase
-	// between a potential contact pair.
-
-	physCollider *const c1 = (physCollider *)n1->data.leaf.value;
-	physCollider *const c2 = (physCollider *)n2->data.leaf.value;
-
-	// Make sure the colliders and their owning bodies permit collisions.
-	if(physColliderPermitCollision(c1, c2) && physRigidBodyPermitCollision((physRigidBody *)c1->body, (physRigidBody *)c2->body)){
-
-		// Broadphase collision check.
-		if(cAABBCollision(&c1->aabb, &c2->aabb)){
-
-			cContact manifold;
-			physSeparation separation;
-			physSeparation *separationPointer;
-
-			// Find a previous separation for the pair, if one exists.
-			void *previous, *next;
-			void *pair = physColliderFindSeparation(c1, c2, (physSeparationPair **)&previous, (physSeparationPair **)&next);
-
-			// If a separation does exist, check it.
-			if(pair != NULL){
-				separationPointer = &((physSeparationPair *)pair)->data;
-				if(cCheckSeparation(&c1->c, &c2->c, separationPointer)){
-					// The separation still exists, refresh it and exit.
-					physSeparationPairRefresh((physSeparationPair *)pair);
-					return 1;
-				}
-			}else{
-				// Create a new separation.
-				separationPointer = &separation;
-			}
-
-			// Narrowphase collision check.
-			if(cCheckCollision(&c1->c, &c2->c, separationPointer, &manifold)){
-
-				// The two colliders are in contact.
-				// If a contact pair already exists, refresh
-				// it, otherwise allocate a new pair.
-				pair = physColliderFindContact(c1, c2, (physContactPair **)&previous, (physContactPair **)&next);
-				if(pair != NULL){
-					// The contact already exists, refresh it.
-					physContactPairRefresh((physContactPair *)pair);
-					physContactPersist(&((physContactPair *)pair)->data, &manifold, c1->body, c2->body, c1, c2);
-				}else{
-					// Allocate a new contact.
-					pair = modulePhysicsContactPairAllocate();
-					if(pair == NULL){
-						/** Memory allocation failure. **/
-						return -1;
-					}
-					// Initialize the pair and its contact.
-					physContactPairInit(pair, c1, c2, previous, next);
-					physContactInit(&((physContactPair *)pair)->data, &manifold, c1->body, c2->body, c1, c2);
-				}
-				// Update the contact.
-				/// Moved to physColliderUpdateContacts().
-				/// physContactPresolveConstraints(&((physContactPair *)pair)->data, c1->body, c2->body, c1, c2, frequency);
-
-			}else{
-
-				// The two colliders are not in contact.
-				// If a separation pair already exists, refresh
-				// it, otherwise allocate a new pair.
-				if(pair != NULL){
-					// The separation already exists, refresh it.
-					physSeparationPairRefresh((physSeparationPair *)pair);
-				}else{
-					// Allocate a new separation.
-					pair = modulePhysicsSeparationPairAllocate();
-					if(pair == NULL){
-						/** Memory allocation failure. **/
-						return -1;
-					}
-					// Initialize the pair and its separation.
-					physSeparationPairInit(pair, c1, c2, previous, next);
-					((physSeparationPair *)pair)->data = separation;
-				}
-
-			}
-
-		}
-
-	}
-
-	return 1;
 
 }
 
