@@ -660,7 +660,7 @@ const twFrame *twiStateOffset(const twInstance *const __RESTRICT__ twi, const un
 
 		frameIndex_t frame;
 		animState(&twi->animator, &twAnimation(twi->tw, twi->currentAnim+offset)->animData, interpT, &frame, NULL, NULL);
-		return &twi->tw->animations[twi->currentAnim].frames[frame];
+		return &twi->tw->animations[twi->currentAnim+offset].frames[frame];
 
 	//}else{
 

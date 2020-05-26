@@ -133,7 +133,7 @@ unsigned int billboardLenticular(const billboard data, const camera *const __RES
 		const vec3 projection = vec3NormalizeFast(
 				pointPlaneProject(
 					billboardUp, billboardBackward,
-					vec3VSubV(cam->position.render, cam->target.render)
+					vec3VSubV(cam->target.render, cam->position.render)
 				)
 		);
 
