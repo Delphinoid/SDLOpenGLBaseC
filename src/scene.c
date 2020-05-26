@@ -33,6 +33,7 @@ void scnInsertObject(scene *const __RESTRICT__ scn, object *const __RESTRICT__ o
 		memDLinkPrev(scn->objects) = (byte_t *)obj;
 		memDLinkNext(obj) = (byte_t *)scn->objects;
 	}
+	memDLinkPrev(obj) = NULL;
 	scn->objects = obj;
 	++scn->objectNum;
 
@@ -64,6 +65,9 @@ void scnRemoveObject(scene *const __RESTRICT__ scn, object *const __RESTRICT__ o
 	}else{
 		scn->objects = (object *)memDLinkNext(obj);
 	}
+	// Completely remove the element from the list.
+	memDLinkPrev(obj) = NULL;
+	memDLinkNext(obj) = NULL;
 	--scn->objectNum;
 
 	// Remove the rigid bodies from the physics system,

@@ -3,6 +3,7 @@
 
 #include "objectState.h"
 #include "skeleton.h"
+#include "physicsShared.h"
 #include "graphicsRenderGroup.h"
 #include "state.h"
 
@@ -14,7 +15,7 @@
 
 /**#define OBJECT_MAX_RENDERABLE_NUM 256**/
 
-typedef uint_least8_t renderableIndex_t;
+///typedef uint_least8_t renderableIndex_t;
 
 typedef struct model model;
 typedef struct textureWrapper textureWrapper;
@@ -39,11 +40,14 @@ typedef struct objectBase {
 	animIndex_t animationNum;  // Number of animations.
 	sklAnim **animations;      // Array of pointers to animations associated with the object.
 
+	boneIndex_t *skeletonBodyIDs;       // Which bone each rigid body corresponds to.
 	physRigidBodyBase *skeletonBodies;  // Rigid bodies for each bone.
 	collider *skeletonColliders;        // Collider arrays for each bone.
 
 	renderableBase *renderables;  // Default renderable array.
 
+	boneIndex_t skeletonBodyNum;      // Number of rigid bodies attached to the skeleton.
+	boneIndex_t skeletonColliderNum;  // Number of colliders attached to the skeleton.
 	stateIndex_t stateMax;  // Maximum number of previous states.
 
 	char *name;
@@ -61,15 +65,18 @@ typedef struct object {
 
 	sklInstance skeletonData;  // An array of skeletal animation instances.
 
-	/** Remove this? **/
+	/** Remove these? **/
+	physicsBodyIndex_t skeletonBodyNum;  // Number of rigid bodies attached to the skeleton.
+	boneIndex_t skeletonColliderNum;     // Number of colliders attached to the skeleton.
 	stateIndex_t stateMax;  // Maximum number of previous states.
 
 	stateIndex_t stateNum;  // Number of previous states.
 	objectState state;
 	objectState **oldestStatePrevious;  // The oldest state's previous pointer.
 
-	physRigidBody *skeletonBodies;  // Rigid body instances for each bone.
-	collider *skeletonColliders;    // Collider arrays for each bone.
+	physicsBodyIndex_t *skeletonBodyIDs;  // Which bone each rigid body corresponds to.
+	physRigidBody *skeletonBodies;        // Rigid body instances for each bone.
+	collider *skeletonColliders;          // Collider arrays for each bone.
 
 	renderable *renderables;  // Renderable instance array.
 
@@ -91,7 +98,7 @@ return_t objStatePreallocate(object *const restrict obj);
 return_t objNewRenderable(object *const restrict obj, model *const mdl, textureWrapper *const tw);
 return_t objNewRenderableFromBase(object *const restrict obj, const renderableBase *const rndr);
 return_t objNewRenderableFromInstance(object *const restrict obj, const renderable *const rndr);
-return_t objInitSkeleton(object *const restrict obj, const skeleton *const skl);
+///return_t objInitSkeleton(object *const restrict obj, const skeleton *const skl);
 
 physRigidBody *objBoneGetPhysicsBody(const object *const restrict obj, const boneIndex_t boneID);
 

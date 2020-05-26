@@ -87,6 +87,7 @@ __HINT_INLINE__ void physIslandInsertJoint(physIsland *const __RESTRICT__ island
 		memDLinkPrev(island->joints) = (byte_t *)joint;
 		memDLinkNext(joint) = (byte_t *)island->joints;
 	}
+	memDLinkPrev(joint) = NULL;
 	island->joints = joint;
 }
 __HINT_INLINE__ void physIslandRemoveJoint(physIsland *const __RESTRICT__ island, physJoint *const joint){
@@ -100,6 +101,9 @@ __HINT_INLINE__ void physIslandRemoveJoint(physIsland *const __RESTRICT__ island
 	}else{
 		island->joints = (physJoint *)memDLinkNext(joint);
 	}
+	// Completely remove the element from the list.
+	memDLinkPrev(joint) = NULL;
+	memDLinkNext(joint) = NULL;
 }
 
 static __FORCE_INLINE__ return_t physIslandUpdateRigidBody(physIsland *const __RESTRICT__ island, physRigidBody *const __RESTRICT__ body){
@@ -155,6 +159,7 @@ __HINT_INLINE__ void physIslandInsertRigidBody(physIsland *const __RESTRICT__ is
 		memDLinkPrev(island->bodies) = (byte_t *)body;
 		memDLinkNext(body) = (byte_t *)island->bodies;
 	}
+	memDLinkPrev(body) = NULL;
 	island->bodies = body;
 
 	// Insert joints.
@@ -184,6 +189,9 @@ __HINT_INLINE__ void physIslandRemoveRigidBody(physIsland *const __RESTRICT__ is
 	}else{
 		island->bodies = (physRigidBody *)memDLinkNext(body);
 	}
+	// Completely remove the element from the list.
+	memDLinkPrev(body) = NULL;
+	memDLinkNext(body) = NULL;
 
 	// Remove joints.
 	j = body->joints;
@@ -240,6 +248,7 @@ __HINT_INLINE__ void physIslandInsertRigidBodies(physIsland *const __RESTRICT__ 
 
 		}
 
+		memDLinkPrev(bodies) = NULL;
 		island->bodies = bodies;
 
 	}
@@ -294,6 +303,9 @@ __HINT_INLINE__ void physIslandRemoveRigidBodies(physIsland *const __RESTRICT__ 
 		}else{
 			island->bodies = (physRigidBody *)memDLinkNext(last);
 		}
+		// Completely remove the element from the list.
+		memDLinkPrev(bodies) = NULL;
+		memDLinkNext(last) = NULL;
 
 	}
 

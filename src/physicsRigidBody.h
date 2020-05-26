@@ -33,7 +33,6 @@
 #define PHYSICS_BODY_ROTATED            0x40  // The body was rotated this frame.
 #define PHYSICS_BODY_TRANSFORMED        0x60  // The body was transformed this frame.
 #define PHYSICS_BODY_INITIALIZED        0x80  // The body was initialized on this frame. Currently unused.
-#define PHYSICS_BODY_ROOT               0x80  //
 
 #ifndef PHYSICS_BODY_DEFAULT_STATE
 	#define PHYSICS_BODY_DEFAULT_STATE PHYSICS_BODY_UNINITIALIZED | PHYSICS_BODY_SIMULATE | PHYSICS_BODY_COLLIDE | PHYSICS_BODY_COLLISION_MODIFIED
@@ -57,13 +56,8 @@ typedef struct physRigidBodyBase {
 	vec3 centroid;              // The body's center of mass.
 	mat3 inverseInertiaTensor;  // The inverse of the body's local inertia tensor.
 
-	// The bone the body is associated with.
-	physicsBodyIndex_t id;
-
 	// Default flags.
 	flags_t flags;
-
-	/**char *name;**/
 
 } physRigidBodyBase;
 
@@ -113,12 +107,12 @@ typedef struct physRigidBody {
 // Physics rigid body functions.
 void physRigidBodyBaseInit(physRigidBodyBase *const __RESTRICT__ local);
 void physRigidBodyBaseGenerateMassProperties(physRigidBodyBase *const __RESTRICT__ local, const float **const vertexMassArray);
-return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, const skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ filePath, const size_t filePathLength);
+return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, physicsBodyIndex_t **bodyIDs, physicsBodyIndex_t *const bodyNum, const const skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ filePath, const size_t filePathLength);
 void physRigidBodyBaseDelete(physRigidBodyBase *const __RESTRICT__ local);
 
 // Physics rigid body instance functions.
 void physRigidBodyInit(physRigidBody *const __RESTRICT__ body);
-return_t physRigidBodyInstantiate(physRigidBody *const __RESTRICT__ body, physRigidBodyBase *const __RESTRICT__ local);
+return_t physRigidBodyInstantiate(physRigidBody *const __RESTRICT__ body, const physRigidBodyBase *const __RESTRICT__ local);
 
 void physRigidBodySetUninitialized(physRigidBody *const __RESTRICT__ body);
 void physRigidBodySetInitialized(physRigidBody *const __RESTRICT__ body);
@@ -139,7 +133,6 @@ return_t physRigidBodyIsSimulated(const physRigidBody *const __RESTRICT__ body);
 return_t physRigidBodyIsCollidable(const physRigidBody *const __RESTRICT__ body);
 return_t physRigidBodyIsAsleep(physRigidBody *const __RESTRICT__ body);
 return_t physRigidBodyWasInitialized(const physRigidBody *const __RESTRICT__ body);
-return_t physRigidBodyIsRoot(const physRigidBody *const __RESTRICT__ body);
 
 void physRigidBodyApplyLinearForce(physRigidBody *const __RESTRICT__ body, const vec3 F);
 void physRigidBodyApplyAngularForceGlobal(physRigidBody *const __RESTRICT__ body, const vec3 F, const vec3 r);

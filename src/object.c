@@ -29,9 +29,12 @@ void objBaseInit(objectBase *const __RESTRICT__ base){
 	base->animationAllocate = 0;
 	base->animationNum = 0;
 	base->animations = NULL;
+	base->skeletonBodyIDs = NULL;
 	base->skeletonBodies = NULL;
 	base->skeletonColliders = NULL;
 	base->renderables = 0;
+	base->skeletonBodyNum = 0;
+	base->skeletonColliderNum = 0;
 	base->stateMax = 0;
 }
 
@@ -108,7 +111,10 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 					loadPathLength = fileParseResourcePath(loadPath, line+16, lineLength-16);
 
 					// Load the rigid body from a file.
-					r = physRigidBodyBaseLoad(&base->skeletonBodies, base->skl, loadPath, loadPathLength);
+					r = physRigidBodyBaseLoad(
+						&base->skeletonBodies, &base->skeletonBodyIDs, &base->skeletonBodyNum,
+						base->skl, loadPath, loadPathLength
+					);
 
 					if(r < 0){
 						/** Memory allocation failure. **/
@@ -411,6 +417,9 @@ void objBaseDelete(objectBase *const __RESTRICT__ base){
 		memFree(base->animations);
 	}
 	if(base->skl != NULL){
+		if(base->skeletonBodyIDs != NULL){
+			memFree(base->skeletonBodyIDs);
+		}
 		if(base->skeletonBodies != NULL){
 			modulePhysicsRigidBodyBaseFreeArray(&base->skeletonBodies);
 		}
@@ -420,7 +429,7 @@ void objBaseDelete(objectBase *const __RESTRICT__ base){
 			for(; c < cLast; ++c){
 				cDelete(c);
 			}
-			free(base->skeletonColliders);
+			memFree(base->skeletonColliders);
 		}
 	}
 	if(base->renderables != NULL){
@@ -431,11 +440,14 @@ void objBaseDelete(objectBase *const __RESTRICT__ base){
 return_t objInit(object *const __RESTRICT__ obj){
 	obj->base = NULL;
 	obj->configuration = NULL;
+	obj->skeletonBodyNum = 0;
+	obj->skeletonColliderNum = 0;
 	obj->stateMax = 0;
 	obj->stateNum = 0;
 	obj->state.configuration = NULL;
 	obj->state.previous = NULL;
 	obj->oldestStatePrevious = &obj->state.previous;
+	obj->skeletonBodyIDs = NULL;
 	obj->skeletonBodies = NULL;
 	obj->skeletonColliders = NULL;
 	obj->renderables = NULL;
@@ -444,7 +456,9 @@ return_t objInit(object *const __RESTRICT__ obj){
 
 void objDelete(object *const __RESTRICT__ obj){
 	objectState *state = obj->state.previous;
+	boneIndex_t id = obj->skeletonBodyNum;
 	if(obj->configuration != NULL){
+		// This frees skeletonBodyIDs and skeletonColliders as well.
 		memFree(obj->configuration);
 	}
 	while(state != NULL){
@@ -452,12 +466,9 @@ void objDelete(object *const __RESTRICT__ obj){
 		memFree(state);
 		state = next;
 	}
-	if(obj->skeletonBodies != NULL){
-		physRigidBody *body = obj->skeletonBodies;
-		do {
-			modulePhysicsRigidBodyFree(&body, body);
-		} while(body != NULL && !physRigidBodyIsRoot(body));
-		obj->skeletonBodies = NULL;
+	while(id > 0){
+		modulePhysicsRigidBodyFree(&obj->skeletonBodies, obj->skeletonBodies);
+		--id;
 	}
 	if(obj->skeletonColliders != NULL){
 		collider *c = obj->skeletonColliders;
@@ -465,7 +476,6 @@ void objDelete(object *const __RESTRICT__ obj){
 		for(; c < cLast; ++c){
 			cDelete(c);
 		}
-		free(obj->skeletonColliders);
 	}
 	if(obj->renderables != NULL){
 		moduleRenderableFreeArray(&obj->renderables);
@@ -475,106 +485,138 @@ void objDelete(object *const __RESTRICT__ obj){
 
 return_t objInstantiate(object *const __RESTRICT__ obj, const objectBase *const __RESTRICT__ base){
 
+	uintptr_t offset_bone = 0;
+	uintptr_t offset_collider = 0;
+	uintptr_t offset_body = 0;
+	byte_t *buffer;
 	renderableBase *j;
 
-	if(skliInit(&obj->skeletonData, base->skl, base->animationAllocate) < 0){
+	if(base->skl->boneNum > 0){
+		// Allocate memory for the configuration and current state skeletons.
+		offset_bone = base->skl->boneNum * sizeof(bone);
+	}
+	if(base->skeletonColliderNum > 0){
+		// Allocate memory for the collider array.
+		offset_collider = base->skeletonColliderNum * sizeof(collider);
+	}
+	if(base->skeletonBodyNum > 0){
+		// Allocate memory for the rigid body ID array.
+		offset_body = base->skeletonBodyNum * sizeof(boneIndex_t);
+	}
+
+	// Allocate a single block of memory for everything.
+	buffer = memAllocate((offset_bone << 1) + offset_collider + offset_body);
+	if(buffer == NULL){
 		/** Memory allocation failure. **/
 		return -1;
 	}
 
-	if(base->skl->boneNum != 0){
+	// Set up the object's skeleton arrays.
+	if(base->skl->boneNum > 0){
 
-		// Allocate memory for the object instance.
-		obj->configuration = memAllocate(2 * base->skl->boneNum * sizeof(bone));
-		if(obj->configuration == NULL){
-			/** Memory allocation failure. **/
-			skliDelete(&obj->skeletonData);
-			return -1;
+		bone *b = (bone *)buffer;
+
+		// Set up the configuration skeleton.
+		obj->configuration = b;
+		buffer += offset_bone;
+
+		// Initialize each bone.
+		for(; b < (bone *)buffer; ++b){
+			boneInit(b);
 		}
-		obj->state.configuration = &obj->configuration[base->skl->boneNum];
 
-		// Allocate memory for and initialize the colliders if necessary.
-		if(base->skeletonColliders != NULL){
+		// Set up the current state skeleton.
+		obj->state.configuration = (bone *)buffer;
+		buffer += offset_bone;
 
-			collider *cLocal = base->skeletonColliders;
-			collider *c = obj->skeletonColliders;
-			const collider *const cLast = &c[base->skl->boneNum];
+	}else{
+		obj->configuration = NULL;
+		obj->state.configuration = NULL;
+	}
 
-			/** Why do I still use malloc here? Was this incomplete? **/
-			obj->skeletonColliders = malloc(base->skl->boneNum * sizeof(collider));
-			if(obj->skeletonColliders == NULL){
+	// Set up the object's collider array.
+	if(base->skeletonColliderNum > 0){
+
+		collider *cLocal = base->skeletonColliders;
+		collider *c = (collider *)buffer;
+
+		// Set the collider array pointer.
+		obj->skeletonColliders = c;
+		buffer += offset_collider;
+
+		// Instantiate each collider.
+		for(; c < (collider *)buffer; ++c, ++cLocal){
+			if(cInstantiate(c, cLocal) < 0){
 				/** Memory allocation failure. **/
+				while(c > obj->skeletonColliders){
+					--c;
+					cDelete(c);
+				}
+				memFree(obj->configuration);
+				skliDelete(&obj->skeletonData);
+				return -1;
+			}
+		}
+
+	}else{
+		obj->skeletonColliders = NULL;
+	}
+
+	// Set up the object's rigid body arrays.
+	if(base->skeletonBodyNum > 0){
+
+		const physRigidBodyBase *bodyBase = base->skeletonBodies;
+		physRigidBody *bodyInstance;
+
+		// Set the body ID array pointer and copy over the IDs.
+		obj->skeletonBodyIDs = (boneIndex_t *)buffer;
+		memcpy(buffer, base->skeletonBodyIDs, offset_body);
+
+		do {
+
+			bodyInstance = modulePhysicsRigidBodyAppend(&obj->skeletonBodies);
+			if(
+				bodyInstance == NULL ||
+				physRigidBodyInstantiate(bodyInstance, bodyBase) < 0
+			){
+				/** Memory allocation failure. **/
+				boneIndex_t id = obj->skeletonBodyNum;
+				while(id > 0){
+					modulePhysicsRigidBodyFree(&obj->skeletonBodies, obj->skeletonBodies);
+					--id;
+				}
+				if(obj->skeletonColliders != NULL){
+					collider *c = obj->skeletonColliders;
+					while(c < (collider *)buffer){
+						cDelete(c);
+						++c;
+					}
+				}
 				memFree(obj->configuration);
 				skliDelete(&obj->skeletonData);
 				return -1;
 			}
 
-			for(; c < cLast; ++c, ++cLocal){
-				if(cInstantiate(c, cLocal) < 0){
-					/** Memory allocation failure. **/
-					while(c > obj->skeletonColliders){
-						--c;
-						cDelete(c);
-					}
-					free(obj->skeletonColliders);
-					memFree(obj->configuration);
-					skliDelete(&obj->skeletonData);
-					return -1;
-				}
-			}
+			/** Figure out constraint loading. **/
+			///bodyInstance->flags = PHYSICS_BODY_INACTIVE;
+			///bodyInstance->constraintNum = base->skeletonJointNum[i];
+			///bodyInstance->constraints = base->skeletonJoints[i];
 
-		}else{
-			obj->skeletonColliders = NULL;
-		}
+			bodyBase = modulePhysicsRigidBodyBaseNext(bodyBase);
 
-		{
-			bone *b = obj->configuration;
-			const bone *const bLast = &b[base->skl->boneNum];
-			// Initialize each bone.
-			for(; b < bLast; ++b){
-				boneInit(b);
-			}
-		}
+		} while(bodyBase != NULL);
 
-		// Allocate memory for and initialize the rigid bodies if necessary.
-		if(base->skeletonBodies != NULL){
+		buffer += offset_body;
 
-			physRigidBodyBase *bodyBase = base->skeletonBodies;
-			physRigidBody *bodyInstance;
+	}else{
+		obj->skeletonBodyIDs = NULL;
+	}
 
-			do {
-
-				bodyInstance = modulePhysicsRigidBodyAppend(&obj->skeletonBodies);
-				if(
-					bodyInstance == NULL ||
-					physRigidBodyInstantiate(bodyInstance, bodyBase) < 0
-				){
-					/** Memory allocation failure. **/
-					memFree(obj->configuration);
-					skliDelete(&obj->skeletonData);
-					if(obj->skeletonBodies != NULL){
-						physRigidBody *body = obj->skeletonBodies;
-						do {
-							modulePhysicsRigidBodyFree(&body, body);
-						} while(body != NULL && !physRigidBodyIsRoot(body));
-						obj->skeletonBodies = NULL;
-					}
-					return -1;
-				}
-
-				/** Figure out constraint loading. **/
-				///bodyInstance->flags = PHYSICS_BODY_INACTIVE;
-				///bodyInstance->constraintNum = base->skeletonJointNum[i];
-				///bodyInstance->constraints = base->skeletonJoints[i];
-
-				bodyBase = modulePhysicsRigidBodyBaseNext(bodyBase);
-
-			} while(bodyBase != NULL);
-
-		}else{
-			obj->skeletonBodies = NULL;
-		}
-
+	// Allocate the animated skeleton instance.
+	if(skliInit(&obj->skeletonData, base->skl, base->animationAllocate) < 0){
+		/** Memory allocation failure. **/
+		memFree(buffer);
+		return -1;
 	}
 
 	// Instantiate each renderable.
@@ -583,7 +625,8 @@ return_t objInstantiate(object *const __RESTRICT__ obj, const objectBase *const 
 		renderable *const resource = moduleRenderableAppend(&obj->renderables);
 		if(resource == NULL){
 			/** Memory allocation failure. **/
-			objDelete(obj);
+			memFree(buffer);
+			skliDelete(&obj->skeletonData);
 			return -1;
 		}
 		rndrInstantiate(resource, j);
@@ -591,6 +634,8 @@ return_t objInstantiate(object *const __RESTRICT__ obj, const objectBase *const 
 	}
 
 	obj->base = base;
+	obj->skeletonBodyNum = base->skeletonBodyNum;
+	obj->skeletonColliderNum = base->skeletonColliderNum;
 	obj->stateMax = base->stateMax;
 	obj->stateNum = 0;
 	obj->state.previous = NULL;
@@ -634,22 +679,25 @@ return_t objNewRenderableFromInstance(object *const __RESTRICT__ obj, const rend
 	return 1;
 }
 
-return_t objInitSkeleton(object *const __RESTRICT__ obj, const skeleton *const __RESTRICT__ skl){
-	bone *tempBuffer = memAllocate(3 * skl->boneNum * sizeof(bone));
+/**return_t objInitSkeleton(object *const __RESTRICT__ obj, const skeleton *const __RESTRICT__ skl){
+	bone *tempBuffer = memAllocate(2 * skl->boneNum * sizeof(bone));
 	const bone *const bLast = &tempBuffer[skl->boneNum];
 	if(tempBuffer == NULL){
-		/** Memory allocation failure. **/
+		/** Memory allocation failure. **
 		return -1;
 	}
 	if(obj->configuration != NULL){
 		memFree(obj->configuration);
 	}
 	if(obj->skeletonBodies != NULL){
-		physRigidBody *body = obj->skeletonBodies;
-		do {
-			modulePhysicsRigidBodyFree(&body, body);
-		} while(body != NULL && !physRigidBodyIsRoot(body));
+		boneIndex_t id = obj->skeletonBodyNum;
+		while(id > 0){
+			modulePhysicsRigidBodyFree(&obj->skeletonBodies, obj->skeletonBodies);
+			--id;
+		}
+		obj->skeletonBodyIDs = NULL;
 		obj->skeletonBodies = NULL;
+		obj->skeletonBodyNum = 0;
 	}
 	if(obj->skeletonColliders != NULL){
 		free(obj->skeletonColliders);
@@ -662,7 +710,7 @@ return_t objInitSkeleton(object *const __RESTRICT__ obj, const skeleton *const _
 	skliDelete(&obj->skeletonData);
 	obj->skeletonData.skl = skl;
 	return 1;
-}
+}**/
 
 /**return_t objInitPhysics(object *obj){
 	if(obj->skl != NULL){
@@ -686,19 +734,27 @@ physRigidBody *objBoneGetPhysicsBody(const object *const __RESTRICT__ obj, const
 	// specified bone, if one exists.
 
 	boneIndex_t i;
+	const boneIndex_t *id = obj->skeletonBodyIDs;
+	const boneIndex_t *const idLast = &id[obj->skeletonBodyNum];
 	physRigidBody *body = obj->skeletonBodies;
 
 	for(i = 0; i < boneID; ++i){
 		if(body != NULL){
-			if(body->base->id == i){
-				++body;
+			if(*id == i){
+				// Get the next body.
+				++id;
+				if(id >= idLast){
+					body = NULL;
+				}else{
+					body = modulePhysicsRigidBodyNext(body);
+				}
 			}
 		}else{
 			return NULL;
 		}
 	}
 
-	if(body != NULL && body->base->id == boneID){
+	if(body != NULL && *id == boneID){
 		return body;
 	}
 
@@ -712,12 +768,14 @@ void objPhysicsPrepare(object *const __RESTRICT__ obj){
 	boneIndex_t i;
 	sklNode *sklBone = obj->skeletonData.skl->bones;
 	bone *configuration = obj->configuration;
+	const boneIndex_t *id = obj->skeletonBodyIDs;
+	const boneIndex_t *const idLast = &id[obj->skeletonBodyNum];
 	physRigidBody *body = obj->skeletonBodies;
 
 	// Update the object's skeleton.
 	for(i = 0; i < obj->skeletonData.skl->boneNum; ++i, ++sklBone, ++configuration){
 
-		if(body != NULL && body->base->id == i && physRigidBodyIsSimulated(body)){
+		if(id < idLast && *id == i && physRigidBodyIsSimulated(body)){
 
 			/** Split the root into a separate case. **/
 			const unsigned int isRoot = (i == sklBone->parent) || (sklBone->parent >= obj->skeletonData.skl->boneNum);
@@ -735,6 +793,10 @@ void objPhysicsPrepare(object *const __RESTRICT__ obj){
 
 			// Initialize the body's moment of inertia and centroid.
 			physRigidBodyCentroidFromPosition(body);
+
+			// Get the next body.
+			++id;
+			body = modulePhysicsRigidBodyNext(body);
 
 		}
 
@@ -871,6 +933,8 @@ return_t objTick(object *const __RESTRICT__ obj, const float elapsedTime){
 	sklNode *sklBone = obj->skeletonData.skl->bones;
 	bone *sklState = obj->state.configuration;
 	bone *configuration = obj->configuration;
+	const boneIndex_t *id = obj->skeletonBodyIDs;
+	const boneIndex_t *const idLast = &id[obj->skeletonBodyNum];
 	physRigidBody *body = obj->skeletonBodies;
 
 	// If we can create a new previous state, do so.
@@ -890,7 +954,7 @@ return_t objTick(object *const __RESTRICT__ obj, const float elapsedTime){
 		// Update the previous states.
 		objStateCopyBone(&obj->state, i);
 
-		if(body != NULL && body->base->id == i && physRigidBodyIsSimulated(body)){
+		if(id < idLast && *id == i && physRigidBodyIsSimulated(body)){
 
 			// Simulate the body attached to the bone.
 
@@ -907,10 +971,8 @@ return_t objTick(object *const __RESTRICT__ obj, const float elapsedTime){
 			*sklState = *configuration;
 
 			// Get the next body.
+			++id;
 			body = modulePhysicsRigidBodyNext(body);
-			if(body != NULL && physRigidBodyIsRoot(body)){
-				body = NULL;
-			}
 
 		}else{
 
@@ -937,7 +999,7 @@ return_t objTick(object *const __RESTRICT__ obj, const float elapsedTime){
 				*sklState = boneTransformAppend(obj->state.configuration[sklBone->parent], *sklState);
 			}
 
-			if(body != NULL && body->base->id == i){
+			if(id < idLast && *id == i){
 
 				// Copy the bone state over to the body.
 				body->configuration = *sklState;
@@ -946,10 +1008,8 @@ return_t objTick(object *const __RESTRICT__ obj, const float elapsedTime){
 				physRigidBodyCentroidFromPosition(body);
 
 				// Get the next body.
+				++id;
 				body = modulePhysicsRigidBodyNext(body);
-				if(body != NULL && physRigidBodyIsRoot(body)){
-					body = NULL;
-				}
 
 			}
 

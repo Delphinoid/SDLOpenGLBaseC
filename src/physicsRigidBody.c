@@ -17,7 +17,6 @@
 /** Use Parallel Axis Theorem for loading colliders. **/
 
 void physRigidBodyBaseInit(physRigidBodyBase *const __RESTRICT__ local){
-	local->id = (physicsBodyIndex_t)-1;
 	local->flags = PHYSICS_BODY_ASLEEP;
 	local->hull = NULL;
 	local->mass = 0.f;
@@ -232,7 +231,8 @@ static return_t physColliderResizeToFit(physCollider *const __RESTRICT__ local){
 
 }
 
-return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, const skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ filePath, const size_t filePathLength){
+/** Everything about this function sucks and I hate it. **/
+return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, physicsBodyIndex_t **bodyIDs, physicsBodyIndex_t *const bodyNum, const skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ filePath, const size_t filePathLength){
 
 	// Loads a series of rigid bodies.
 	//
@@ -254,6 +254,7 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, co
 		char *line;
 		size_t lineLength;
 
+		physicsBodyIndex_t idCapacity = 0;
 		cVertexIndex_t vertexCapacity = 0;
 		cFaceIndex_t normalCapacity = 0;
 		cEdgeIndex_t edgeCapacity = 0;
@@ -263,7 +264,6 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, co
 		int currentCommand = -1;     // The current multiline command type (-1 = none, 0 = rigid body, 1 = collider).
 		fileLine_t currentLine = 0;  // Current file line being read.
 
-		int isRoot = 1;
 		physRigidBodyBase *currentBody = NULL;
 		physCollider *currentCollider = NULL;
 		size_t currentBodyColliderNum = 0;
@@ -363,6 +363,9 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, co
 									}
 									memFree(vertexMassArrays);
 								}
+								if(*bodyIDs != NULL){
+									memFree(*bodyIDs);
+								}
 								modulePhysicsRigidBodyBaseFreeArray(bodies);
 								fclose(rbInfo);
 								return -1;
@@ -383,19 +386,48 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, co
 							}
 							memFree(vertexMassArrays);
 						}
+						if(*bodyIDs != NULL){
+							memFree(*bodyIDs);
+						}
 						modulePhysicsRigidBodyBaseFreeArray(bodies);
 						fclose(rbInfo);
 						return -1;
 					}
+					// Reallocate ID array if necessary.
+					if(*bodyNum == idCapacity){
+						if(idCapacity == 0){
+							idCapacity = 1;
+						}else{
+							idCapacity *= 2;
+						}
+						physicsBodyIndex_t *tempBuffer = memReallocate(*bodyIDs, idCapacity*sizeof(physicsBodyIndex_t));
+						if(tempBuffer == NULL){
+							/** Memory allocation failure. **/
+							if(vertexMassArrays != NULL){
+								float **array = vertexMassArrays;
+								float **const arrayLast = &vertexMassArrays[currentBodyColliderNum];
+								for(; array < arrayLast; ++array){
+									if(array != NULL){
+										memFree(*array);
+									}
+								}
+								memFree(vertexMassArrays);
+							}
+							if(*bodyIDs != NULL){
+								memFree(*bodyIDs);
+							}
+							modulePhysicsRigidBodyBaseFreeArray(bodies);
+							fclose(rbInfo);
+							return -1;
+						}
+						*bodyIDs = tempBuffer;
+					}
 					physRigidBodyBaseInit(currentBody);
-					currentBody->id = currentBodyID;
+					(*bodyIDs)[*bodyNum] = currentBodyID;
 					currentBodyColliderNum = 0;
 					currentBody->flags = PHYSICS_BODY_DEFAULT_STATE;
-					if(isRoot){
-						currentBody->flags |= PHYSICS_BODY_ROOT;
-						isRoot = 0;
-					}
 					currentCommand = 0;
+					++(*bodyNum);
 
 				}
 
@@ -424,6 +456,9 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, co
 										}
 										memFree(vertexMassArrays);
 									}
+									if(*bodyIDs != NULL){
+										memFree(*bodyIDs);
+									}
 									modulePhysicsRigidBodyBaseFreeArray(bodies);
 									fclose(rbInfo);
 									return -1;
@@ -445,6 +480,9 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, co
 								}
 								memFree(vertexMassArrays);
 							}
+							if(*bodyIDs != NULL){
+								memFree(*bodyIDs);
+							}
 							modulePhysicsRigidBodyBaseFreeArray(bodies);
 							fclose(rbInfo);
 							return -1;
@@ -461,6 +499,9 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, co
 									}
 								}
 								memFree(vertexMassArrays);
+							}
+							if(*bodyIDs != NULL){
+								memFree(*bodyIDs);
 							}
 							modulePhysicsRigidBodyBaseFreeArray(bodies);
 							fclose(rbInfo);
@@ -518,6 +559,9 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, co
 								}
 								memFree(vertexMassArrays);
 							}
+							if(*bodyIDs != NULL){
+								memFree(*bodyIDs);
+							}
 							modulePhysicsRigidBodyBaseFreeArray(bodies);
 							fclose(rbInfo);
 							return -1;
@@ -534,6 +578,9 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, co
 									}
 								}
 								memFree(vertexMassArrays);
+							}
+							if(*bodyIDs != NULL){
+								memFree(*bodyIDs);
 							}
 							modulePhysicsRigidBodyBaseFreeArray(bodies);
 							fclose(rbInfo);
@@ -619,6 +666,9 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, co
 											}
 										}
 										memFree(vertexMassArrays);
+									}
+									if(*bodyIDs != NULL){
+										memFree(*bodyIDs);
 									}
 									modulePhysicsRigidBodyBaseFreeArray(bodies);
 									fclose(rbInfo);
@@ -715,6 +765,9 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, co
 									}
 									memFree(vertexMassArrays);
 								}
+								if(*bodyIDs != NULL){
+									memFree(*bodyIDs);
+								}
 								modulePhysicsRigidBodyBaseFreeArray(bodies);
 								fclose(rbInfo);
 								return -1;
@@ -731,6 +784,9 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, co
 										}
 									}
 									memFree(vertexMassArrays);
+								}
+								if(*bodyIDs != NULL){
+									memFree(*bodyIDs);
 								}
 								modulePhysicsRigidBodyBaseFreeArray(bodies);
 								fclose(rbInfo);
@@ -902,6 +958,9 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, co
 								}
 								memFree(vertexMassArrays);
 							}
+							if(*bodyIDs != NULL){
+								memFree(*bodyIDs);
+							}
 							modulePhysicsRigidBodyBaseFreeArray(bodies);
 							return -1;
 						}
@@ -962,6 +1021,9 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, co
 						}
 						memFree(vertexMassArrays);
 					}
+					if(*bodyIDs != NULL){
+						memFree(*bodyIDs);
+					}
 					modulePhysicsRigidBodyBaseFreeArray(bodies);
 					return -1;
 				}
@@ -999,7 +1061,7 @@ void physRigidBodyInit(physRigidBody *const __RESTRICT__ body){
 	vec3ZeroP(&body->netTorque);
 }
 
-return_t physRigidBodyInstantiate(physRigidBody *const __RESTRICT__ body, physRigidBodyBase *const __RESTRICT__ local){
+return_t physRigidBodyInstantiate(physRigidBody *const __RESTRICT__ body, const physRigidBodyBase *const __RESTRICT__ local){
 
 	physCollider *cBody = NULL;
 	physCollider *cLocal = local->hull;
@@ -1085,9 +1147,6 @@ __FORCE_INLINE__ return_t physRigidBodyIsAsleep(physRigidBody *const __RESTRICT_
 }
 __FORCE_INLINE__ return_t physRigidBodyWasInitialized(const physRigidBody *const __RESTRICT__ body){
 	return flagsAreSet(body->flags, PHYSICS_BODY_INITIALIZED);
-}
-__FORCE_INLINE__ return_t physRigidBodyIsRoot(const physRigidBody *const __RESTRICT__ body){
-	return flagsAreSet(body->flags, PHYSICS_BODY_ROOT);
 }
 
 __HINT_INLINE__ void physRigidBodyApplyLinearForce(physRigidBody *const __RESTRICT__ body, const vec3 F){
