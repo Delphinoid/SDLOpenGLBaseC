@@ -213,7 +213,7 @@ __HINT_INLINE__ void physIslandRemoveRigidBody(physIsland *const __RESTRICT__ is
 
 }
 
-__HINT_INLINE__ void physIslandInsertRigidBodies(physIsland *const __RESTRICT__ island, physRigidBody *const bodies){
+__HINT_INLINE__ void physIslandInsertRigidBodies(physIsland *const __RESTRICT__ island, physRigidBody *const bodies, physicsBodyIndex_t bodyNum){
 
 	// Prepend the body to the linked list.
 	if(bodies != NULL){
@@ -234,11 +234,11 @@ __HINT_INLINE__ void physIslandInsertRigidBodies(physIsland *const __RESTRICT__ 
 					}
 				}
 
-				if(memDLinkNext(last) != NULL){
-					last = (physRigidBody *)memDLinkNext(last);
-				}else{
+				--bodyNum;
+				if(bodyNum <= 0){
 					break;
 				}
+				last = (physRigidBody *)memDLinkNext(last);
 
 			}
 
@@ -254,7 +254,7 @@ __HINT_INLINE__ void physIslandInsertRigidBodies(physIsland *const __RESTRICT__ 
 	}
 
 }
-__HINT_INLINE__ void physIslandRemoveRigidBodies(physIsland *const __RESTRICT__ island, physRigidBody *const bodies){
+__HINT_INLINE__ void physIslandRemoveRigidBodies(physIsland *const __RESTRICT__ island, physRigidBody *const bodies, physicsBodyIndex_t bodyNum){
 
 	// Remove the bodies from the linked list.
 	// Prepend the body to the linked list.
@@ -285,11 +285,11 @@ __HINT_INLINE__ void physIslandRemoveRigidBodies(physIsland *const __RESTRICT__ 
 				c = (physCollider *)memSLinkNext(c);
 			}
 
-			if(memDLinkNext(last) != NULL){
-				last = (physRigidBody *)memDLinkNext(last);
-			}else{
+			--bodyNum;
+			if(bodyNum <= 0){
 				break;
 			}
+			last = (physRigidBody *)memDLinkNext(last);
 
 		}
 

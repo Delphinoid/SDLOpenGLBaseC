@@ -39,7 +39,7 @@ void scnInsertObject(scene *const __RESTRICT__ scn, object *const __RESTRICT__ o
 
 	// Insert the rigid bodies into the physics system,
 	// maintaining the doubly-linked list pointers.
-	physIslandInsertRigidBodies(&scn->island, obj->skeletonBodies);
+	physIslandInsertRigidBodies(&scn->island, obj->skeletonBodies, obj->skeletonBodyNum);
 
 	/// Insert the rigid bodies into the physics system.
 	/**body = obj->skeletonBodies;
@@ -72,7 +72,7 @@ void scnRemoveObject(scene *const __RESTRICT__ scn, object *const __RESTRICT__ o
 
 	// Remove the rigid bodies from the physics system,
 	// maintaining the doubly-linked list pointers.
-	physIslandRemoveRigidBodies(&scn->island, obj->skeletonBodies);
+	physIslandRemoveRigidBodies(&scn->island, obj->skeletonBodies, obj->skeletonBodyNum);
 
 	/// Remove the rigid bodies from the physics system.
 	/**body = obj->skeletonBodies;

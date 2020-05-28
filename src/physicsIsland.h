@@ -48,8 +48,8 @@ void physIslandRemoveJoint(physIsland *const __RESTRICT__ island, physJoint *con
 void physIslandInsertRigidBody(physIsland *const __RESTRICT__ island, physRigidBody *const body);
 void physIslandRemoveRigidBody(physIsland *const __RESTRICT__ island, physRigidBody *const body);
 
-void physIslandInsertRigidBodies(physIsland *const __RESTRICT__ island, physRigidBody *const bodies);
-void physIslandRemoveRigidBodies(physIsland *const __RESTRICT__ island, physRigidBody *const bodies);
+void physIslandInsertRigidBodies(physIsland *const __RESTRICT__ island, physRigidBody *const bodies, physicsBodyIndex_t bodyNum);
+void physIslandRemoveRigidBodies(physIsland *const __RESTRICT__ island, physRigidBody *const bodies, physicsBodyIndex_t bodyNum);
 
 #ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 return_t physIslandTick(physIsland *const __RESTRICT__ island, const float dt, const float frequency);

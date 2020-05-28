@@ -16,22 +16,29 @@ mat4 billboardState(const billboard data, const camera *const __RESTRICT__ cam, 
 	// Generates a billboard transformation matrix.
 	// If no flags are set, returns the identity matrix.
 
+	if(flagsAreSet(data.flags, BILLBOARD_INVERT_ORIENTATION)){
+		// Reset the basis vectors to the (scaled) standard basis vectors.
+		*((vec3 *)&configuration.m[0][0]) = vec3New(vec3Magnitude(*((vec3 *)&configuration.m[0][0])), 0.f, 0.f);
+		*((vec3 *)&configuration.m[1][0]) = vec3New(0.f, vec3Magnitude(*((vec3 *)&configuration.m[1][0])), 0.f);
+		*((vec3 *)&configuration.m[2][0]) = vec3New(0.f, 0.f, vec3Magnitude(*((vec3 *)&configuration.m[2][0])));
+	}
+
 	// Use a faster method for billboarding. Doesn't support individual axis locking.
 	if(flagsAreSet(data.flags, BILLBOARD_SPRITE)){
 
 		// Use the camera's X, Y and Z axes for cheap sprite billboarding.
 		// This is technically an inverse matrix, so we need rows rather than columns.
-		*((vec3 *)&configuration.m[0][0]) = vec3New(cam->viewMatrix.m[0][0], cam->viewMatrix.m[1][0], cam->viewMatrix.m[2][0]);
+		*((vec4 *)&configuration.m[0][0]) = vec4New(cam->viewMatrix.m[0][0], cam->viewMatrix.m[1][0], cam->viewMatrix.m[2][0], 0.f);
 
 		if(data.axis != NULL){
 			*((vec3 *)&configuration.m[1][0]) = *data.axis;
+			configuration.m[1][3] = 0.f;
 		}else{
-			*((vec3 *)&configuration.m[1][0]) = vec3New(cam->viewMatrix.m[0][1], cam->viewMatrix.m[1][1], cam->viewMatrix.m[2][1]);
+			*((vec4 *)&configuration.m[1][0]) = vec4New(cam->viewMatrix.m[0][1], cam->viewMatrix.m[1][1], cam->viewMatrix.m[2][1], 0.f);
 		}
 
-		*((vec3 *)&configuration.m[2][0]) = vec3New(cam->viewMatrix.m[0][2], cam->viewMatrix.m[1][2], cam->viewMatrix.m[2][2]);
-
-		configuration.m[0][3] = 0.f; configuration.m[1][3] = 0.f; configuration.m[2][3] = 0.f; configuration.m[3][3] = 1.f;
+		*((vec4 *)&configuration.m[2][0]) = vec4New(cam->viewMatrix.m[0][2], cam->viewMatrix.m[1][2], cam->viewMatrix.m[2][2], 0.f);
+		///configuration.m[3][3] = 1.f;
 
 		if(flagsAreSet(data.flags, BILLBOARD_SCALE)){
 			const float distance = camDistance(cam, centroid) * data.scale;
@@ -110,14 +117,14 @@ mat4 billboardState(const billboard data, const camera *const __RESTRICT__ cam, 
 
 }
 
-unsigned int billboardLenticular(const billboard data, const camera *const __RESTRICT__ cam, mat4 configuration){
+unsigned int billboardLenticular(const billboard data, const camera *const __RESTRICT__ cam, const mat4 configuration){
 
 	if(data.sectors > 1){
 
 		unsigned int frame = 0;
 
 		const float sectorHalf = M_PI / (float)data.sectors;
-		const float sector = 2*sectorHalf;
+		const float sector = 2.f*sectorHalf;
 
 		// Normalize the billboard's basis vectors.
 		const vec3 billboardUp = vec3NormalizeFast(*((vec3 *)&configuration.m[1][0]));
@@ -149,7 +156,7 @@ unsigned int billboardLenticular(const billboard data, const camera *const __RES
 			if(angle >= -sectorHalf){
 				return 0;
 			}
-			angle += 2*M_PI;
+			angle += 2.f*M_PI;
 		}else if(angle <= sectorHalf){
 			// Exit instantly for "forward" facing angles.
 			return 0;

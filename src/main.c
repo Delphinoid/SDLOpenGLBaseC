@@ -187,7 +187,7 @@ int main(int argc, char **argv){
 	objBaseLoad(tempObj, "CubeTest2.tdo", 13);
 	tempObj->stateMax = 1;
 	tempObj = moduleObjectBaseAllocate();
-	objBaseLoad(tempObj, "Kobold.tdo", 10);
+	objBaseLoad(tempObj, "Lenticular.tdo", 14);
 	//objLoad(&tempObj, "ntrance.tdo");
 	//cvPush(&allObjects, (void *)&tempObj, sizeof(tempObj));
 
@@ -298,12 +298,13 @@ int main(int argc, char **argv){
 	scnInsertObject(scnMain, tempObji);
 	//
 	tempObji = moduleObjectAllocate();
-	objInstantiate(tempObji, moduleObjectBaseFind("Kobold.tdo", 10));
+	objInstantiate(tempObji, moduleObjectBaseFind("Lenticular.tdo", 14));
 	tempObji->configuration[0].orientation = quatNewEuler(0.f, 0.f*RADIAN_RATIO, 0.f);
 	tempObji->configuration[0].position.x = 6.f;
 	tempObji->configuration[0].position.y = -2.9f;
 	tempObji->configuration[0].position.z = 2.f;
-	tempObji->renderables->billboardData.flags = BILLBOARD_TARGET_SPRITE | BILLBOARD_LOCK_Y;
+	tempObji->renderables->billboardData.flags = BILLBOARD_TARGET_SPRITE | BILLBOARD_INVERT_ORIENTATION | BILLBOARD_LOCK_Y;
+	tempObji->renderables->billboardData.sectors = 8;
 	scnInsertObject(scnMain, tempObji);
 
 	// Sprite Object Instances.
