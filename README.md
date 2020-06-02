@@ -6,11 +6,10 @@ Current feature list:
 * Complete animation system supporting interpolated skeletal animations and animated textures.
 * Dynamic, programmable particle system.
 * Custom font format and fast rendering, supporting both BMP and MSDF (multi-channel signed distance fields). Based off the OpenType font specifications, so conversion from TTF is simple.
+* GUI system supporting various types of objects.
 * Custom maths library supporting 2, 3 and 4 dimensional vectors and square matrices, as well as quaternions. Also supports various geometric operations.
 
 List of features to be implemented in order of priority (or in reality, in order from the stuff that's easiest or most fun to the more annoying stuff):
-* Particle system.
-* GUI.
 * Multiple textures for models.
 * Finish command system.
 * Finish scenes / zones.
