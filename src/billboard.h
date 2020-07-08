@@ -34,6 +34,6 @@ typedef struct {
 
 void billboardInit(billboard *const __RESTRICT__ data);
 mat4 billboardState(const billboard data, const camera *const __RESTRICT__ cam, const vec3 centroid, mat4 configuration);
-unsigned int billboardRoot(const billboard data, const camera *const __RESTRICT__ cam, const mat4 configuration);
+unsigned int billboardLenticular(const billboard data, const camera *const __RESTRICT__ cam, const mat4 configuration);
 
 #endif

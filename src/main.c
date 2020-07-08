@@ -541,9 +541,10 @@ int main(int argc, char **argv){
 				}else if(tempObji2->skeletonBodies->linearVelocity.z > 9.f){
 					tempObji2->skeletonBodies->linearVelocity.z = 9.f;
 				}
-				if(tempObji->skeletonData.animations->fragments->animBlendProgress == -1.f){
-					///sklaiChange(&tempObji->skeletonData.animations[0], tempObji->skeletonData.skl, tempObji->base->animations[1], 1.4f, 0, 1000.f);
-				}
+				///if(tempObji->skeletonData.animations->fragments->animBlendProgress == -1.f){
+					///sklaiDecay(tempObji->skeletonData.animations, 0.f, -tickrate/1000.f);
+					///sklaiDecay(moduleSkeletonAnimationInstanceNext(tempObji->skeletonData.animations), 1.4f, tickrate/1000.f);
+				///}
 			}
 			if(LEFT){
 				//const quat changeRotation =

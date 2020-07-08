@@ -23,13 +23,12 @@ List of features to be implemented in order of priority (or in reality, in order
 
 List of potential modifications and ideas:
 * Replace strtok() with a better function.
-* Touch up skeletal animations. Animation fragments seem silly.
-* Research the Featherstone method for object kinematic chains.
-* Research post stabilization to prevent drift.
+* Tidy up and unify file parsing functionality to use binary files. Each file parsing function pretty much needs a major rework. Maybe put them in separate files as well (e.g. textureWrapperIO.c).
 * Every vertex of every physics object's collider should ideally not be transformed unless it needs to be.
 * Quaternions may need to be tweaked, as they seem to give different results at different update rates.
-* Tidy up and unify file parsing functionality to use binary files. Each file parsing function pretty much needs a major rework. Maybe put them in separate files as well (e.g. textureWrapperIO.c).
 * Tidy up and streamline maths functions. In particular, cut back on unnecessary 'pass-by-references' and possibly add support for SIMD intrinsics.
+* Research the Featherstone method for object kinematic chains.
+* Research post stabilization to prevent drift.
 * A large number of functions need to be cleaned up. Look for comments starting with /**.
 * Organize source files into folders. Eventually.
 * Phase out SDL?

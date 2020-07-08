@@ -845,105 +845,36 @@ void sklaDelete(sklAnim *const __RESTRICT__ skla){
 	animDataDelete(&skla->animData);
 }
 
-static return_t sklafInit(sklAnimFragment *const __RESTRICT__ sklaf, sklAnim *const __RESTRICT__ anim, const skeleton *const __RESTRICT__ skl, const float intensity, const frameIndex_t frame){
-
-	// Initialize animBoneLookup.
-	/**uint_least8_t i;
-	for(i = 0; i < anim->boneNum; ++i){
-		// Create a proper lookup below. **
-		sklaf->animBoneLookup[i] = i;
-	}**/
-
-	sklaf->animStartFrame = 0;
-	sklaf->animEndFrame = 0;
-	sklaf->animInterpT = 0.f;
-	sklaf->animBlendTime = -1.f;
-	sklaf->animBlendProgress = -1.f;
-	sklaf->animBlendInterpT = 1.f;
-	sklaf->intensity = intensity;
-	sklaf->animation = anim;
-	animInstInit(&sklaf->animator);
-
-	// Set the fragment to the current frame.
-	if(frame < anim->animData.frameNum){
-		sklaf->animator.currentFrame = frame;
-		if(frame > 0){
-			sklaf->animator.totalElapsedTime = anim->animData.frameDelays[frame-1];
-		}
-		if(frame == anim->animData.frameNum-1){
-			sklaf->animator.nextFrame = 0;
-		}else{
-			sklaf->animator.nextFrame = frame+1;
-		}
-	}
-
-	return 1;
-
-}
-/**static void sklafDelete(sklAnimFragment *sklaf){
-	*if(sklaf->animBoneLookup != NULL){
-		memFree(sklaf->animBoneLookup);
-	}*
-}**/
-
-void sklaiInit(sklAnimInstance *const __RESTRICT__ sklai, const flags_t flags){
-	sklai->flags = flags;
+void sklaiInit(sklAnimInstance *const __RESTRICT__ sklai, const sklAnim *const __RESTRICT__ animation, const float intensity, const flags_t flags){
+	sklai->animation = animation;
+	animInstInit(&sklai->animator);
+	sklai->animStartFrame = 0;
+	sklai->animEndFrame = 0;
+	sklai->animInterpT = 0.f;
+	sklai->intensity = intensity;
+	sklai->decay = 0.f;
 	sklai->timeMod = 1.f;
-	sklai->fragments = NULL;
+	sklai->flags = flags;
 }
 static __FORCE_INLINE__ void sklaiTick(sklAnimInstance *const __RESTRICT__ sklai, const float elapsedTime, const float interpT){
 
 	const float elapsedTimeMod = elapsedTime * sklai->timeMod;
 
-	sklAnimFragment *frag = sklai->fragments;
+	// Invoke the animator.
+	animTick(&sklai->animator, &sklai->animation->animData, elapsedTimeMod);
+	animState(
+		&sklai->animator, &sklai->animation->animData, interpT,
+		&sklai->animStartFrame, &sklai->animEndFrame, &sklai->animInterpT
+	);
 
-	if(frag != NULL){
-
-		sklAnimFragment *previous = NULL;
-		sklAnimFragment *next = moduleSkeletonAnimationFragmentNext(frag);
-
-		frag->animBlendInterpT = 1.f;
-
-		// Loop through each sklAnimFragment, updating them.
-		if(next != NULL){
-
-			for(;;){
-
-				/****/
-				// Check if the animation has finished blending on its oldest state.
-				if(frag->animBlendProgress >= frag->animBlendTime){
-					// Since it's no longer being used in any state, it can be safely freed.
-					///sklafDelete(frag);
-					moduleSkeletonAnimationFragmentFree(&sklai->fragments, frag, previous);
-				}else{
-					// Advance animator, update the blend and go to the next fragment.
-					animTick(&frag->animator, &frag->animation->animData, elapsedTimeMod);
-					animState(
-						&frag->animator, &frag->animation->animData, interpT,
-						&frag->animStartFrame, &frag->animEndFrame, &frag->animInterpT
-					);
-					frag->animBlendProgress += elapsedTimeMod;
-					next->animBlendInterpT = frag->animBlendProgress / frag->animBlendTime;
-				}
-
-				previous = frag;
-				frag = next;
-				next = moduleSkeletonAnimationFragmentNext(next);
-				if(next == NULL){
-					break;
-				}
-
-			}
-
-		}
-
-		// Advance animator and exit.
-		animTick(&frag->animator, &frag->animation->animData, elapsedTimeMod);
-		animState(
-			&frag->animator, &frag->animation->animData, interpT,
-			&frag->animStartFrame, &frag->animEndFrame, &frag->animInterpT
-		);
-
+	// Decay intensity for blending.
+	sklai->intensity += sklai->decay;
+	if(sklai->decay < 0.f && sklai->intensity <= sklai->intensityLimit){
+		sklai->intensity = sklai->intensityLimit;
+		sklai->decay = 0.f;
+	}else if(sklai->decay > 0.f && sklai->intensity >= sklai->intensityLimit){
+		sklai->intensity = sklai->intensityLimit;
+		sklai->decay = 0.f;
 	}
 
 }
@@ -1050,54 +981,28 @@ void sklaiGenerateAnimState(sklAnimInstance *sklai, bone *skeletonState, const b
 __FORCE_INLINE__ void sklaiSetType(sklAnimInstance *const __RESTRICT__ sklai, const flags_t additive){
 	sklai->flags = additive;
 }
-return_t sklaiChange(sklAnimInstance *const __RESTRICT__ sklai, const skeleton *const __RESTRICT__ skl, sklAnim *const __RESTRICT__ anim, const float intensity, const frameIndex_t frame, const float blendTime){
+void sklaiChange(sklAnimInstance *const __RESTRICT__ sklai, sklAnim *const __RESTRICT__ anim, const frameIndex_t frame){
 
-	sklAnimFragment *newFragment;
+	sklai->animation = anim;
 
-	if(sklai->fragments == NULL){
-
-		// Create a new fragment.
-		newFragment = moduleSkeletonAnimationFragmentAppend(&sklai->fragments);
-
-	}else{
-
-		sklAnimFragment *lastFragment;
-		sklAnimFragment *nextFragment = sklai->fragments;
-
-		// Get the last fragment.
-		do {
-			lastFragment = nextFragment;
-			nextFragment = moduleSkeletonAnimationFragmentNext(lastFragment);
-		} while(nextFragment != NULL);
-
-		// Set blending variables.
-		lastFragment->animBlendTime = blendTime;
-		lastFragment->animBlendProgress = 0.f;
-
-		// Create a new fragment.
-		newFragment = moduleSkeletonAnimationFragmentInsertAfter(&sklai->fragments, lastFragment);
-
+	// Set the fragment to the current frame.
+	if(frame < anim->animData.frameNum){
+		sklai->animator.currentFrame = frame;
+		if(frame > 0){
+			sklai->animator.totalElapsedTime = anim->animData.frameDelays[frame-1];
+		}
+		if(frame == anim->animData.frameNum-1){
+			sklai->animator.nextFrame = 0;
+		}else{
+			sklai->animator.nextFrame = frame+1;
+		}
 	}
-
-	if(newFragment == NULL){
-		/** Memory allocation failure. **/
-		return -1;
-	}
-
-	// Initialize the fragment.
-	return sklafInit(newFragment, anim, skl, intensity, frame);
 
 }
-void sklaiClearAnimation(sklAnimInstance *const __RESTRICT__ sklai){
-	if(sklai->fragments != NULL){
-		moduleSkeletonAnimationFragmentFreeArray(&sklai->fragments);
-	}
-	sklaiInit(sklai, SKELETON_ANIM_INSTANCE_ADDITIVE);
-}
-void sklaiDelete(sklAnimInstance *const __RESTRICT__ sklai){
-	if(sklai->fragments != NULL){
-		moduleSkeletonAnimationFragmentFreeArray(&sklai->fragments);
-	}
+__FORCE_INLINE__ void sklaiDecay(sklAnimInstance *const __RESTRICT__ sklai, const float intensity, const float decay){
+	// Start decaying an animation.
+	sklai->intensityLimit = intensity;
+	sklai->decay = decay;
 }
 
 return_t skliInit(sklInstance *const __RESTRICT__ skli, const skeleton *const __RESTRICT__ skl, const animIndex_t animationCapacity){
@@ -1108,7 +1013,7 @@ return_t skliInit(sklInstance *const __RESTRICT__ skli, const skeleton *const __
 			if(newAnim == NULL){
 				break;
 			}
-			sklaiInit(newAnim, SKELETON_ANIM_INSTANCE_ADDITIVE);
+			sklaiInit(newAnim, NULL, 0.f, SKELETON_ANIM_INSTANCE_ADDITIVE);
 			++i;
 		}
 		if(i != animationCapacity){
@@ -1187,7 +1092,6 @@ return_t skliLoad(sklInstance *const __RESTRICT__ skli, const char *const __REST
 
 
 
-	sklAnimInstance *sklai;
 	sklAnim *skla = moduleSkeletonAnimationAllocate();
 	skla->name = memAllocate(5*sizeof(char));
 	memcpy(skla->name, "test\0", 5);
@@ -1228,23 +1132,21 @@ return_t skliLoad(sklInstance *const __RESTRICT__ skli, const char *const __REST
 	skla->frames[2][1] = tempBoneTop;
 	skla->animData.frameDelays[2] = 3000.f;
 
-	sklai = skliAnimationNew(skli, 0);
-	sklaiChange(sklai, skli->skl, skla, 1.f, 0, 0.f);
+	skliAnimationNew(skli, skla, 1.f, 0);
 
 
 
 	return 1;
 
 }
-__FORCE_INLINE__ sklAnimInstance *skliAnimationNew(sklInstance *const __RESTRICT__ skli, const flags_t flags){
+__FORCE_INLINE__ sklAnimInstance *skliAnimationNew(sklInstance *const __RESTRICT__ skli, sklAnim *const __RESTRICT__ anim, const float intensity, const flags_t flags){
 	sklAnimInstance *const r = moduleSkeletonAnimationInstanceAppend(&skli->animations);
 	if(r != NULL){
-		sklaiInit(r, flags);
+		sklaiInit(r, anim, intensity, flags);
 	}
 	return r;
 }
 __FORCE_INLINE__ void skliAnimationDelete(sklInstance *const __RESTRICT__ skli, sklAnimInstance *const __RESTRICT__ anim, sklAnimInstance *const __RESTRICT__ previous){
-	sklaiDelete(anim);
 	moduleSkeletonAnimationInstanceFree(&skli->animations, anim, previous);
 }
 __FORCE_INLINE__ void skliTick(sklInstance *const __RESTRICT__ skli, const float elapsedTime, const float interpT){
@@ -1259,58 +1161,46 @@ void skliGenerateBoneState(const sklInstance *const __RESTRICT__ skli, const bon
 
 	bone baseState = *state;
 	bone animationState;
-	bone fragmentState;
+	boneIndex_t animBoneID;
 
 	// Loop through each animation.
 	sklAnimInstance *anim = skli->animations;
 	while(anim != NULL){
 
-		sklAnimFragment *frag = anim->fragments;
+		if(anim->intensity > 0.f){
 
-		boneInit(&animationState);
+			// If the bone exists in the current animation, generate a fragment state.
+			animBoneID = sklaFindBone(anim->animation, id, name);
+			if(animBoneID < anim->animation->boneNum){
 
-		// Loop through each animation fragment, blending between them and generating an animation state.
-		while(frag != NULL){
-
-			// If the bone exists in the current animation fragment, generate a fragment state and add it to the animation state.
-			boneIndex_t animBoneID = sklaFindBone(frag->animation, id, name);
-			if(animBoneID < frag->animation->boneNum && frag->intensity != 0.f){
-
-				// Interpolate between startFrame and endFrame, storing the result in fragmentState.
-				fragmentState = boneInterpolate(frag->animation->frames[frag->animStartFrame][animBoneID],
-												frag->animation->frames[frag->animEndFrame][animBoneID],
-												frag->animInterpT);
+				// Interpolate between startFrame and endFrame, storing the result in animationState.
+				animationState = boneInterpolate(
+					anim->animation->frames[anim->animator.currentFrame][animBoneID],
+					anim->animation->frames[anim->animator.nextFrame][animBoneID],
+					anim->animInterpT
+				);
 
 				/** This is necessary if animations include bind information, such as with SMDs. **/
 				///fragmentState = boneTransformAppend(boneInvert(skli->skl->bones[id].defaultState), fragmentState);
 
-				// Apply intensity.
-				if(frag->intensity != 1.f){
-					fragmentState = boneInterpolate(boneIdentity(), fragmentState, frag->intensity);
-				}
-
-				// Blend from the previous animation fragment. animBlendInterpT is always 1.f for the first animation fragment.
-				if(frag->animBlendInterpT != 1.f){
-					animationState = boneInterpolate(animationState, fragmentState, frag->animBlendInterpT);
-				}else{
-					animationState = fragmentState;
+				// Weight the animation by its intensity.
+				if(anim->intensity != 1.f){
+					animationState = boneInterpolate(boneIdentity(), animationState, anim->intensity);
 				}
 
 			}else{
-				boneInit(&fragmentState);
+				boneInit(&animationState);
 			}
 
-			frag = moduleSkeletonAnimationFragmentNext(frag);
+			if(anim->flags == SKELETON_ANIM_INSTANCE_OVERWRITE){
+				// Set if the animation is not additive. Start from the
+				// base state so custom transformations aren't lost.
+				*state = boneTransformAppend(baseState, animationState);
+			}else{
+				// Add the changes in lastState to skeletonState if the animation is additive.
+				*state = boneTransformAppend(*state, animationState);
+			}
 
-		}
-
-		if(anim->flags == SKELETON_ANIM_INSTANCE_OVERWRITE){
-			// Set if the animation is not additive. Start from the
-			// base state so custom transformations aren't lost.
-			*state = boneTransformAppend(baseState, animationState);
-		}else{
-			// Add the changes in lastState to skeletonState if the animation is additive.
-			*state = boneTransformAppend(*state, animationState);
 		}
 
 		anim = moduleSkeletonAnimationInstanceNext(anim);
