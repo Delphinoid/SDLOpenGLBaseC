@@ -2,38 +2,35 @@
 
 __HINT_INLINE__ float fastInvSqrt(float x){
 	// Black magic perfected by some very clever people.
-	const float halfx = x*0.5f;
 	union {
 		float f;
 		uint32_t l;
 	} i;
 	i.f = x;
-	i.l = 0x5F3504F3 - (i.l>>1);  // Floating-point approximation of sqrtf(powf(2.f, 127.f)).
-	i.f *= 1.5f - halfx*i.f*i.f;  // Initial Newton-Raphson iteration (repeat this line for more accurate results).
-	return i.f;
+	i.l = 0x5F1FFFF9 - (i.l >> 1);   // Jan Kadlec's brute-force optimization to the fast inverse square root.
+	i.f *= 2.38924456f - x*i.f*i.f;  // Initial Newton-Raphson iteration (repeat this line for more accurate results).
+	return 0.703952253f * i.f;
 }
 
 __HINT_INLINE__ float fastInvSqrtAccurate(float x){
 
 	// Black magic perfected by some very clever people.
-	const float halfx = x*0.5f;
 	union {
 		float f;
 		uint32_t l;
 	} i;
 	i.f = x;
-	i.l = 0x5F3504F3 - (i.l>>1);  // Floating-point approximation of sqrtf(powf(2.f, 127.f)).
-	i.f *= 1.5f - halfx*i.f*i.f;  // Initial Newton-Raphson iteration (repeat this line for more accurate results).
-
+	i.l = 0x5F1FFFF9 - (i.l >> 1);   // Jan Kadlec's brute-force optimization to the fast inverse square root.
+	i.f *=
+		(2.38924456f - x*i.f*i.f) *  // Initial Newton-Raphson iteration (repeat this line for more accurate results).
 	// Second and third iterations.
 	// The engine primarily uses this function for contact normal generation.
 	// Highly accurate unit vectors are required for contact normals in order
 	// to prevent as much energy loss as possible during contact resolution.
 	// Three iterations seems to give the best ratio of accuracy to performance.
-	i.f *= 1.5f - halfx*i.f*i.f;
-	i.f *= 1.5f - halfx*i.f*i.f;
+		(2.38924456f - x*i.f*i.f) * (2.38924456f - x*i.f*i.f);
 
-	return i.f;
+	return 0.703952253f * i.f;
 
 }
 
