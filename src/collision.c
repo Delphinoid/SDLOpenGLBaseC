@@ -2,46 +2,46 @@
 #include "qualifiers.h"
 #include <math.h>
 
-return_t cCollisionMesh(const void *const __RESTRICT__ c1h, const void *const __RESTRICT__ c2h, void *const __RESTRICT__ sc, cContact *const __RESTRICT__ cm){
-	return cMeshCollisionSAT((const cMesh *const __RESTRICT__)c1h, (const cMesh *const __RESTRICT__)c2h, (cMeshSeparation *const __RESTRICT__)sc, cm);
+return_t cCollisionHull(const void *const __RESTRICT__ c1h, const void *const __RESTRICT__ c2h, void *const __RESTRICT__ sc, cContact *const __RESTRICT__ cm){
+	return cHullCollisionSAT((const cHull *const __RESTRICT__)c1h, (const cHull *const __RESTRICT__)c2h, (cHullSeparation *const __RESTRICT__)sc, cm);
 }
 
 /** The lines below should eventually be removed. **/
-#define cCollisionMeshCapsule      NULL
-#define cCollisionMeshSphere       NULL
-#define cCollisionMeshAABB         NULL
-#define cCollisionMeshPoint        NULL
-#define cCollisionMeshComposite    NULL
+#define cCollisionHullCapsule      NULL
+#define cCollisionHullSphere       NULL
+#define cCollisionHullAABB         NULL
+#define cCollisionHullPoint        NULL
+#define cCollisionHullComposite    NULL
 
-#define cCollisionCapsuleMesh      NULL
+#define cCollisionCapsuleHull      NULL
 #define cCollisionCapsule          NULL
 #define cCollisionCapsuleSphere    NULL
 #define cCollisionCapsuleAABB      NULL
 #define cCollisionCapsulePoint     NULL
 #define cCollisionCapsuleComposite NULL
 
-#define cCollisionSphereMesh       NULL
+#define cCollisionSphereHull       NULL
 #define cCollisionSphereCapsule    NULL
 #define cCollisionSphere           NULL
 #define cCollisionSphereAABB       NULL
 #define cCollisionSpherePoint      NULL
 #define cCollisionSphereComposite  NULL
 
-#define cCollisionAABBMesh         NULL
+#define cCollisionAABBHull         NULL
 #define cCollisionAABBCapsule      NULL
 #define cCollisionAABBSphere       NULL
 #define cCollisionAABB             NULL
 #define cCollisionAABBPoint        NULL
 #define cCollisionAABBComposite    NULL
 
-#define cCollisionPointMesh        NULL
+#define cCollisionPointHull        NULL
 #define cCollisionPointCapsule     NULL
 #define cCollisionPointSphere      NULL
 #define cCollisionPointAABB        NULL
 #define cCollisionPoint            NULL
 #define cCollisionPointComposite   NULL
 
-#define cCollisionCompositeMesh    NULL
+#define cCollisionCompositeHull    NULL
 #define cCollisionCompositeCapsule NULL
 #define cCollisionCompositeSphere  NULL
 #define cCollisionCompositeAABB    NULL
@@ -55,58 +55,58 @@ return_t (* const cCollisionJumpTable[COLLIDER_TYPE_NUM][COLLIDER_TYPE_NUM])(
 	void *const __RESTRICT__,
 	cContact *const __RESTRICT__
 ) = {
-	{cCollisionMesh,          cCollisionMeshCapsule,      cCollisionMeshSphere,      cCollisionMeshAABB,      cCollisionMeshPoint,      cCollisionMeshComposite},
-	{cCollisionCapsuleMesh,   cCollisionCapsule,          cCollisionCapsuleSphere,   cCollisionCapsuleAABB,   cCollisionCapsulePoint,   cCollisionCapsuleComposite},
-	{cCollisionSphereMesh,    cCollisionSphereCapsule,    cCollisionSphere,          cCollisionSphereAABB,    cCollisionSpherePoint,    cCollisionSphereComposite},
-	{cCollisionAABBMesh,      cCollisionAABBCapsule,      cCollisionAABBSphere,      cCollisionAABB,          cCollisionAABBPoint,      cCollisionAABBComposite},
-	{cCollisionPointMesh,     cCollisionPointCapsule,     cCollisionPointSphere,     cCollisionPointAABB,     cCollisionPoint,          cCollisionPointComposite},
-	{cCollisionCompositeMesh, cCollisionCompositeCapsule, cCollisionCompositeSphere, cCollisionCompositeAABB, cCollisionCompositePoint, cCollisionComposite}
+	{cCollisionHull,          cCollisionHullCapsule,      cCollisionHullSphere,      cCollisionHullAABB,      cCollisionHullPoint,      cCollisionHullComposite},
+	{cCollisionCapsuleHull,   cCollisionCapsule,          cCollisionCapsuleSphere,   cCollisionCapsuleAABB,   cCollisionCapsulePoint,   cCollisionCapsuleComposite},
+	{cCollisionSphereHull,    cCollisionSphereCapsule,    cCollisionSphere,          cCollisionSphereAABB,    cCollisionSpherePoint,    cCollisionSphereComposite},
+	{cCollisionAABBHull,      cCollisionAABBCapsule,      cCollisionAABBSphere,      cCollisionAABB,          cCollisionAABBPoint,      cCollisionAABBComposite},
+	{cCollisionPointHull,     cCollisionPointCapsule,     cCollisionPointSphere,     cCollisionPointAABB,     cCollisionPoint,          cCollisionPointComposite},
+	{cCollisionCompositeHull, cCollisionCompositeCapsule, cCollisionCompositeSphere, cCollisionCompositeAABB, cCollisionCompositePoint, cCollisionComposite}
 };
 __FORCE_INLINE__ return_t cCheckCollision(const collider *const __RESTRICT__ c1, const collider *const __RESTRICT__ c2, cSeparation *const __RESTRICT__ sc, cContact *const __RESTRICT__ cm){
 	return cCollisionJumpTable[c1->type][c2->type](&c1->data, &c2->data, sc, cm);
 }
 
 
-return_t cSeparationMesh(const void *const __RESTRICT__ c1h, const void *const __RESTRICT__ c2h, const void *const __RESTRICT__ sc){
-	return cMeshSeparationSAT((const cMesh *const __RESTRICT__)c1h, (const cMesh *const __RESTRICT__)c2h, (const cMeshSeparation *const __RESTRICT__)sc);
+return_t cSeparationHull(const void *const __RESTRICT__ c1h, const void *const __RESTRICT__ c2h, const void *const __RESTRICT__ sc){
+	return cHullSeparationSAT((const cHull *const __RESTRICT__)c1h, (const cHull *const __RESTRICT__)c2h, (const cHullSeparation *const __RESTRICT__)sc);
 }
 
 /** The lines below should eventually be removed. **/
-#define cSeparationMeshCapsule   NULL
-#define cSeparationMeshSphere    NULL
-#define cSeparationMeshAABB      NULL
-#define cSeparationMeshPoint     NULL
-#define cSeparationMeshComposite NULL
+#define cSeparationHullCapsule   NULL
+#define cSeparationHullSphere    NULL
+#define cSeparationHullAABB      NULL
+#define cSeparationHullPoint     NULL
+#define cSeparationHullComposite NULL
 
-#define cSeparationCapsuleMesh      NULL
+#define cSeparationCapsuleHull      NULL
 #define cSeparationCapsule          NULL
 #define cSeparationCapsuleSphere    NULL
 #define cSeparationCapsuleAABB      NULL
 #define cSeparationCapsulePoint     NULL
 #define cSeparationCapsuleComposite NULL
 
-#define cSeparationSphereMesh       NULL
+#define cSeparationSphereHull       NULL
 #define cSeparationSphereCapsule    NULL
 #define cSeparationSphere           NULL
 #define cSeparationSphereAABB       NULL
 #define cSeparationSpherePoint      NULL
 #define cSeparationSphereComposite  NULL
 
-#define cSeparationAABBMesh         NULL
+#define cSeparationAABBHull         NULL
 #define cSeparationAABBCapsule      NULL
 #define cSeparationAABBSphere       NULL
 #define cSeparationAABB             NULL
 #define cSeparationAABBPoint        NULL
 #define cSeparationAABBComposite    NULL
 
-#define cSeparationPointMesh        NULL
+#define cSeparationPointHull        NULL
 #define cSeparationPointCapsule     NULL
 #define cSeparationPointSphere      NULL
 #define cSeparationPointAABB        NULL
 #define cSeparationPoint            NULL
 #define cSeparationPointComposite   NULL
 
-#define cSeparationCompositeMesh    NULL
+#define cSeparationCompositeHull    NULL
 #define cSeparationCompositeCapsule NULL
 #define cSeparationCompositeSphere  NULL
 #define cSeparationCompositeAABB    NULL
@@ -119,12 +119,12 @@ return_t (* const cSeparationJumpTable[COLLIDER_TYPE_NUM][COLLIDER_TYPE_NUM])(
 	const void *const __RESTRICT__,
 	const void *const __RESTRICT__
 ) = {
-	{cSeparationMesh,          cSeparationMeshCapsule,      cSeparationMeshSphere,      cSeparationMeshAABB,      cSeparationMeshPoint,      cSeparationMeshComposite},
-	{cSeparationCapsuleMesh,   cSeparationCapsule,          cSeparationCapsuleSphere,   cSeparationCapsuleAABB,   cSeparationCapsulePoint,   cSeparationCapsuleComposite},
-	{cSeparationSphereMesh,    cSeparationSphereCapsule,    cSeparationSphere,          cSeparationSphereAABB,    cSeparationSpherePoint,    cSeparationSphereComposite},
-	{cSeparationAABBMesh,      cSeparationAABBCapsule,      cSeparationAABBSphere,      cSeparationAABB,          cSeparationAABBPoint,      cSeparationAABBComposite},
-	{cSeparationPointMesh,     cSeparationPointCapsule,     cSeparationPointSphere,     cSeparationPointAABB,     cSeparationPoint,          cSeparationPointComposite},
-	{cSeparationCompositeMesh, cSeparationCompositeCapsule, cSeparationCompositeSphere, cSeparationCompositeAABB, cSeparationCompositePoint, cSeparationComposite}
+	{cSeparationHull,          cSeparationHullCapsule,      cSeparationHullSphere,      cSeparationHullAABB,      cSeparationHullPoint,      cSeparationHullComposite},
+	{cSeparationCapsuleHull,   cSeparationCapsule,          cSeparationCapsuleSphere,   cSeparationCapsuleAABB,   cSeparationCapsulePoint,   cSeparationCapsuleComposite},
+	{cSeparationSphereHull,    cSeparationSphereCapsule,    cSeparationSphere,          cSeparationSphereAABB,    cSeparationSpherePoint,    cSeparationSphereComposite},
+	{cSeparationAABBHull,      cSeparationAABBCapsule,      cSeparationAABBSphere,      cSeparationAABB,          cSeparationAABBPoint,      cSeparationAABBComposite},
+	{cSeparationPointHull,     cSeparationPointCapsule,     cSeparationPointSphere,     cSeparationPointAABB,     cSeparationPoint,          cSeparationPointComposite},
+	{cSeparationCompositeHull, cSeparationCompositeCapsule, cSeparationCompositeSphere, cSeparationCompositeAABB, cSeparationCompositePoint, cSeparationComposite}
 };
 __FORCE_INLINE__ return_t cCheckSeparation(const collider *const __RESTRICT__ c1, const collider *const __RESTRICT__ c2, const cSeparation *const __RESTRICT__ sc){
 	return cSeparationJumpTable[c1->type][c2->type](&c1->data, &c2->data, sc);

@@ -8,8 +8,8 @@ void cInit(collider *const __RESTRICT__ c, const colliderType_t type){
 }
 
 
-return_t cInstantiateMesh(void *const instance, const void *const local){
-	return cMeshInstantiate((cMesh *)instance, (cMesh *)local);
+return_t cInstantiateHull(void *const instance, const void *const local){
+	return cHullInstantiate((cHull *)instance, (cHull *)local);
 }
 
 return_t cInstantiateComposite(void *const instance, const void *const local){
@@ -26,7 +26,7 @@ return_t (* const cInstantiateJumpTable[COLLIDER_TYPE_NUM])(
 	void *const instance,
 	const void *const local
 ) = {
-	cInstantiateMesh,
+	cInstantiateHull,
 	cInstantiateCapsule,
 	cInstantiateSphere,
 	cInstantiateAABB,
@@ -41,10 +41,10 @@ __FORCE_INLINE__ return_t cInstantiate(collider *const instance, const collider 
 }
 
 
-cAABB cTransformMesh(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale){
+cAABB cTransformHull(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale){
 
-	cMesh *const cInstance = instance;
-	const cMesh *const cLocal = local;
+	cHull *const cInstance = instance;
+	const cHull *const cLocal = local;
 
 	const vec3 *vLocal = cLocal->vertices;
 	vec3 *vGlobal = cInstance->vertices;
@@ -56,7 +56,7 @@ cAABB cTransformMesh(void *const instance, const vec3 instanceCentroid, const vo
 	if(vGlobal < vLast){
 
 		// Extrapolate the collider's centroid from its position.
-		cMeshCentroidFromPosition(cInstance, cLocal, position, orientation, scale);
+		cHullCentroidFromPosition(cInstance, cLocal, position, orientation, scale);
 
 		// First iteration.
 		// Transform the vertex.
@@ -175,7 +175,7 @@ cAABB (* const cTransformJumpTable[COLLIDER_TYPE_NUM])(
 	const quat orientation,
 	const vec3 scale
 ) = {
-	cTransformMesh,
+	cTransformHull,
 	cTransformCapsule,
 	cTransformSphere,
 	cTransformAABB,
@@ -193,14 +193,14 @@ __FORCE_INLINE__ cAABB cTransform(collider *const instance, const vec3 instanceC
 void cDelete(collider *const __RESTRICT__ c){
 	// Handle deletions for base and instance colliders.
 	if(flagsAreSet(c->flags, COLLIDER_INSTANCE)){
-		if(c->type == COLLIDER_TYPE_MESH){
-			cMeshDelete((cMesh *)&c->data);
+		if(c->type == COLLIDER_TYPE_HULL){
+			cHullDelete((cHull *)&c->data);
 		}else if(c->type == COLLIDER_TYPE_COMPOSITE){
 			cCompositeDelete((cComposite *)&c->data);
 		}
 	}else{
-		if(c->type == COLLIDER_TYPE_MESH){
-			cMeshDeleteBase((cMesh *)&c->data);
+		if(c->type == COLLIDER_TYPE_HULL){
+			cHullDeleteBase((cHull *)&c->data);
 		}else if(c->type == COLLIDER_TYPE_COMPOSITE){
 			cCompositeDeleteBase((cComposite *)&c->data);
 		}

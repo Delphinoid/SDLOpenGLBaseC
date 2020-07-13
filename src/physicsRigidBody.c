@@ -169,60 +169,60 @@ __FORCE_INLINE__ static void physRigidBodyBaseGenerateProperties(physRigidBodyBa
 /** TEMPORARY **/
 static return_t physColliderResizeToFit(physCollider *const __RESTRICT__ local){
 
-	if(local->c.type == COLLIDER_TYPE_MESH){
+	if(local->c.type == COLLIDER_TYPE_HULL){
 
-		cMesh *const cHull = (cMesh *)&local->c.data;
+		cHull *const hull = (cHull *)&local->c.data;
 
-		if(cHull->vertexNum != 0){
-			vec3 *const tempBuffer = memReallocate(cHull->vertices, cHull->vertexNum*sizeof(vec3));
+		if(hull->vertexNum != 0){
+			vec3 *const tempBuffer = memReallocate(hull->vertices, hull->vertexNum*sizeof(vec3));
 			if(tempBuffer == NULL){
 				/** Memory allocation failure. **/
 				return -1;
 			}
-			cHull->vertices = tempBuffer;
+			hull->vertices = tempBuffer;
 		}else{
-			if(cHull->vertices != NULL){
-				memFree(cHull->vertices);
-				cHull->vertices = NULL;
+			if(hull->vertices != NULL){
+				memFree(hull->vertices);
+				hull->vertices = NULL;
 			}
 		}
 
-		if(cHull->faceNum != 0){
-			cMeshFace *tempBuffer2;
-			vec3 *tempBuffer1 = memReallocate(cHull->normals, cHull->faceNum*sizeof(vec3));
+		if(hull->faceNum != 0){
+			cHullFace *tempBuffer2;
+			vec3 *tempBuffer1 = memReallocate(hull->normals, hull->faceNum*sizeof(vec3));
 			if(tempBuffer1 == NULL){
 				/** Memory allocation failure. **/
 				return -1;
 			}
-			tempBuffer2 = memReallocate(cHull->faces, cHull->faceNum*sizeof(cMeshFace));
+			tempBuffer2 = memReallocate(hull->faces, hull->faceNum*sizeof(cHullFace));
 			if(tempBuffer2 == NULL){
 				/** Memory allocation failure. **/
 				memFree(tempBuffer1);
 				return -1;
 			}
-			cHull->normals = tempBuffer1;
-			cHull->faces = tempBuffer2;
+			hull->normals = tempBuffer1;
+			hull->faces = tempBuffer2;
 		}else{
-			if(cHull->normals != NULL){
-				memFree(cHull->normals);
-				cHull->normals = NULL;
+			if(hull->normals != NULL){
+				memFree(hull->normals);
+				hull->normals = NULL;
 			}
-			if(cHull->faces != NULL){
-				memFree(cHull->faces);
-				cHull->faces = NULL;
+			if(hull->faces != NULL){
+				memFree(hull->faces);
+				hull->faces = NULL;
 			}
 		}
 
-		if(cHull->edgeNum != 0){
-			cMeshEdge *const tempBuffer = memReallocate(cHull->edges, cHull->edgeNum*sizeof(cMeshEdge));
+		if(hull->edgeNum != 0){
+			cHullEdge *const tempBuffer = memReallocate(hull->edges, hull->edgeNum*sizeof(cHullEdge));
 			if(tempBuffer == NULL){
 				/** Memory allocation failure. **/
 				return -1;
 			}
-			cHull->edges = tempBuffer;
-		}else if(cHull->edges != NULL){
-			memFree(cHull->edges);
-			cHull->edges = NULL;
+			hull->edges = tempBuffer;
+		}else if(hull->edges != NULL){
+			memFree(hull->edges);
+			hull->edges = NULL;
 		}
 
 	}
@@ -514,7 +514,7 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 						normalCapacity = 0;
 						edgeCapacity = 0;
 
-						physColliderInit(currentCollider, COLLIDER_TYPE_MESH, currentBody);
+						physColliderInit(currentCollider, COLLIDER_TYPE_HULL, currentBody);
 						++currentBodyColliderNum;
 
 						currentCommand = 1;
@@ -535,18 +535,18 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 
 				if(currentBodyColliderNum > 0){
 
-					cMesh *const cHull = (cMesh *)&currentCollider->c.data;
+					cHull *const hull = (cHull *)&currentCollider->c.data;
 					const char *token;
 
 					// Reallocate vertex array if necessary.
-					if(cHull->vertexNum == vertexCapacity){
+					if(hull->vertexNum == vertexCapacity){
 						if(vertexCapacity == 0){
 							vertexCapacity = 1;
 						}else{
 							vertexCapacity *= 2;
 						}
 						float *tempBuffer2;
-						vec3 *tempBuffer1 = memReallocate(cHull->vertices, vertexCapacity*sizeof(vec3));
+						vec3 *tempBuffer1 = memReallocate(hull->vertices, vertexCapacity*sizeof(vec3));
 						if(tempBuffer1 == NULL){
 							/** Memory allocation failure. **/
 							if(vertexMassArrays != NULL){
@@ -587,21 +587,21 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 							memFree(tempBuffer1);
 							return -1;
 						}
-						cHull->vertices = tempBuffer1;
+						hull->vertices = tempBuffer1;
 						vertexMassArrays[currentBodyColliderNum-1] = tempBuffer2;
 					}
 
 					token = strtok(line+2, " ");
-					cHull->vertices[cHull->vertexNum].x = strtod(token, NULL);
+					hull->vertices[hull->vertexNum].x = strtod(token, NULL);
 					token = strtok(NULL, " ");
-					cHull->vertices[cHull->vertexNum].y = strtod(token, NULL);
+					hull->vertices[hull->vertexNum].y = strtod(token, NULL);
 					token = strtok(NULL, " ");
-					cHull->vertices[cHull->vertexNum].z = strtod(token, NULL);
+					hull->vertices[hull->vertexNum].z = strtod(token, NULL);
 					token = strtok(NULL, " ");
 					if(token != NULL){
-						vertexMassArrays[currentBodyColliderNum-1][cHull->vertexNum] = strtod(token, NULL);
+						vertexMassArrays[currentBodyColliderNum-1][hull->vertexNum] = strtod(token, NULL);
 					}
-					++cHull->vertexNum;
+					++hull->vertexNum;
 
 				}
 
@@ -614,12 +614,12 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 					const char *token = strtok(line+2, " ");
 					if(token != NULL){
 
-						cMesh *const cHull = (cMesh *)&currentCollider->c.data;
+						cHull *const hull = (cHull *)&currentCollider->c.data;
 
 						cEdgeIndex_t start;
 						cEdgeIndex_t end = strtoul(token, NULL, 0)-1;
 
-						cEdgeIndex_t oldNum = cHull->edgeNum;
+						cEdgeIndex_t oldNum = hull->edgeNum;
 						cEdgeIndex_t addNum = 0;
 
 						cEdgeIndex_t first = (cEdgeIndex_t)-1;
@@ -647,14 +647,14 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 							}
 
 							// Reallocate edge array if necessary.
-							if(cHull->edgeNum == edgeCapacity){
-								cMeshEdge *tempBuffer;
+							if(hull->edgeNum == edgeCapacity){
+								cHullEdge *tempBuffer;
 								if(edgeCapacity == 0){
 									edgeCapacity = 3;
 								}else{
 									edgeCapacity *= 2;
 								}
-								tempBuffer = memReallocate(cHull->edges, edgeCapacity*sizeof(cMeshEdge));
+								tempBuffer = memReallocate(hull->edges, edgeCapacity*sizeof(cHullEdge));
 								if(tempBuffer == NULL){
 									/** Memory allocation failure. **/
 									if(vertexMassArrays != NULL){
@@ -674,7 +674,7 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 									fclose(rbInfo);
 									return -1;
 								}
-								cHull->edges = tempBuffer;
+								hull->edges = tempBuffer;
 							}
 
 							start = end;
@@ -684,7 +684,7 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 							// we don't have to store the new edge.
 							while(i < oldNum){
 								// Check if the current edge is the next edge or a twin.
-								if(start == cHull->edges[i].end && end == cHull->edges[i].start){
+								if(start == hull->edges[i].end && end == hull->edges[i].start){
 									// If the new edge is a twin, don't add it.
 									// Instead, set the current edge's twin.
 									if(first == (cEdgeIndex_t)-1){
@@ -694,12 +694,12 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 									}else{
 										// Set this edge as the last edge's next.
 										if(lastTwin){
-											cHull->edges[last].twinNext = i;
+											hull->edges[last].twinNext = i;
 										}else{
-											cHull->edges[last].next = i;
+											hull->edges[last].next = i;
 										}
 									}
-									cHull->edges[i].twinFace = cHull->faceNum;
+									hull->edges[i].twinFace = hull->faceNum;
 									last = i;
 									lastTwin = 1;
 									break;
@@ -711,32 +711,32 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 								// No twin was found.
 								if(first == (cEdgeIndex_t)-1){
 									// If this is the first vertex, set it.
-									first = cHull->edgeNum;
+									first = hull->edgeNum;
 									firstTwin = 0;
 								}else{
 									// Set this edge as the last edge's next.
 									if(lastTwin){
-										cHull->edges[last].twinNext = cHull->edgeNum;
+										hull->edges[last].twinNext = hull->edgeNum;
 									}else{
-										cHull->edges[last].next = cHull->edgeNum;
+										hull->edges[last].next = hull->edgeNum;
 									}
 								}
-								last = cHull->edgeNum;
+								last = hull->edgeNum;
 								lastTwin = 0;
-								cHull->edges[last].start = start;
-								cHull->edges[last].end = end;
-								cHull->edges[last].face = cHull->faceNum;
-								cHull->edges[last].twinFace = cHull->faceNum;
-								++cHull->edgeNum;
+								hull->edges[last].start = start;
+								hull->edges[last].end = end;
+								hull->edges[last].face = hull->faceNum;
+								hull->edges[last].twinFace = hull->faceNum;
+								++hull->edgeNum;
 							}
 
 							++addNum;
 
 							if(exit){
 								if(lastTwin){
-									cHull->edges[last].twinNext = first;
+									hull->edges[last].twinNext = first;
 								}else{
-									cHull->edges[last].next = first;
+									hull->edges[last].next = first;
 								}
 								break;
 							}
@@ -744,15 +744,15 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 						}
 
 						// Reallocate normal and offset arrays if necessary.
-						if(cHull->faceNum == normalCapacity){
+						if(hull->faceNum == normalCapacity){
 							vec3 *tempBuffer1;
-							cMeshFace *tempBuffer2;
+							cHullFace *tempBuffer2;
 							if(normalCapacity == 0){
 								normalCapacity = 1;
 							}else{
 								normalCapacity *= 2;
 							}
-							tempBuffer1 = memReallocate(cHull->normals, normalCapacity*sizeof(vec3));
+							tempBuffer1 = memReallocate(hull->normals, normalCapacity*sizeof(vec3));
 							if(tempBuffer1 == NULL){
 								/** Memory allocation failure. **/
 								if(vertexMassArrays != NULL){
@@ -772,7 +772,7 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 								fclose(rbInfo);
 								return -1;
 							}
-							tempBuffer2 = memReallocate(cHull->faces, normalCapacity*sizeof(cMeshFace));
+							tempBuffer2 = memReallocate(hull->faces, normalCapacity*sizeof(cHullFace));
 							if(tempBuffer2 == NULL){
 								/** Memory allocation failure. **/
 								if(vertexMassArrays != NULL){
@@ -793,36 +793,36 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 								memFree(tempBuffer1);
 								return -1;
 							}
-							cHull->normals = tempBuffer1;
-							cHull->faces = tempBuffer2;
+							hull->normals = tempBuffer1;
+							hull->faces = tempBuffer2;
 						}
 
 						// Generate a normal for the face.
 						if(firstTwin){
-							BsA = vec3VSubV(cHull->vertices[cHull->edges[first].start], cHull->vertices[cHull->edges[first].end]);
+							BsA = vec3VSubV(hull->vertices[hull->edges[first].start], hull->vertices[hull->edges[first].end]);
 							if(lastTwin){
-								CsA = vec3VSubV(cHull->vertices[cHull->edges[last].end], cHull->vertices[cHull->edges[first].end]);
+								CsA = vec3VSubV(hull->vertices[hull->edges[last].end], hull->vertices[hull->edges[first].end]);
 							}else{
-								CsA = vec3VSubV(cHull->vertices[cHull->edges[last].start], cHull->vertices[cHull->edges[first].end]);
+								CsA = vec3VSubV(hull->vertices[hull->edges[last].start], hull->vertices[hull->edges[first].end]);
 							}
 						}else{
-							BsA = vec3VSubV(cHull->vertices[cHull->edges[first].end], cHull->vertices[cHull->edges[first].start]);
+							BsA = vec3VSubV(hull->vertices[hull->edges[first].end], hull->vertices[hull->edges[first].start]);
 							if(lastTwin){
-								CsA = vec3VSubV(cHull->vertices[cHull->edges[last].end], cHull->vertices[cHull->edges[first].start]);
+								CsA = vec3VSubV(hull->vertices[hull->edges[last].end], hull->vertices[hull->edges[first].start]);
 							}else{
-								CsA = vec3VSubV(cHull->vertices[cHull->edges[last].start], cHull->vertices[cHull->edges[first].start]);
+								CsA = vec3VSubV(hull->vertices[hull->edges[last].start], hull->vertices[hull->edges[first].start]);
 							}
 						}
-						cHull->normals[cHull->faceNum] = vec3NormalizeFastAccurate(vec3Cross(BsA, CsA));
+						hull->normals[hull->faceNum] = vec3NormalizeFastAccurate(vec3Cross(BsA, CsA));
 
-						//cHull->faces[cHull->faceNum].edgeNum = addNum;
-						if(addNum > cHull->edgeMax){
+						//hull->faces[hull->faceNum].edgeNum = addNum;
+						if(addNum > hull->edgeMax){
 							// Update the maximum edge num.
-							cHull->edgeMax = addNum;
+							hull->edgeMax = addNum;
 						}
-						cHull->faces[cHull->faceNum].edge = first;
+						hull->faces[hull->faceNum].edge = first;
 
-						++cHull->faceNum;
+						++hull->faceNum;
 
 					}else{
 						printf("Error loading rigid bodies \"%s\": Collider face at line %u "
@@ -942,9 +942,9 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 
 				}else if(currentCommand == 1){
 
-					const cMesh *const cHull = (cMesh *)&currentCollider->c.data;
+					const cHull *const hull = (cHull *)&currentCollider->c.data;
 
-					if(cHull->vertexNum > 0 && cHull->faceNum > 0 && cHull->edgeNum > 0){
+					if(hull->vertexNum > 0 && hull->faceNum > 0 && hull->edgeNum > 0){
 
 						if(physColliderResizeToFit(currentCollider) < 0){
 							/** Memory allocation failure. **/
@@ -1005,9 +1005,9 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 
 		}else if(currentCommand == 1){
 
-			const cMesh *const cHull = (cMesh *)&currentCollider->c.data;
+			const cHull *const hull = (cHull *)&currentCollider->c.data;
 
-			if(cHull->vertexNum > 0 && cHull->faceNum > 0 && cHull->edgeNum > 0){
+			if(hull->vertexNum > 0 && hull->faceNum > 0 && hull->edgeNum > 0){
 
 				if(physColliderResizeToFit(currentCollider) < 0){
 					/** Memory allocation failure. **/

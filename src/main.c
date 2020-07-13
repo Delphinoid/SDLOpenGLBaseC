@@ -1,6 +1,6 @@
 #include "memoryManager.h"
 #include "graphicsRenderer.h"
-#include "colliderMesh.h"
+#include "colliderHull.h"
 #include "constantsMath.h"
 #include "helpersFileIO.h"
 #include "sleep.h"

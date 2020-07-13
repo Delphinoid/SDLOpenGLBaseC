@@ -3,7 +3,7 @@
 
 #include "colliderShared.h"
 #include "colliderComposite.h"
-#include "colliderMesh.h"
+#include "colliderHull.h"
 #include "colliderCapsule.h"
 #include "colliderSphere.h"
 #include "colliderAABB.h"
@@ -11,7 +11,7 @@
 #include "flags.h"
 
 #define COLLIDER_TYPE_UNKNOWN  -1
-#define COLLIDER_TYPE_MESH      0
+#define COLLIDER_TYPE_HULL      0
 #define COLLIDER_TYPE_CAPSULE   1
 #define COLLIDER_TYPE_SPHERE    2
 #define COLLIDER_TYPE_AABB      3
@@ -26,7 +26,7 @@ typedef int_least8_t colliderType_t;
 typedef struct collider {
 	// Calculate the size of the largest collider type.
 	union {
-		cMesh mesh;
+		cHull mesh;
 		cCapsule capsule;
 		cSphere sphere;
 		cAABB aabb;

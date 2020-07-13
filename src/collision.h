@@ -63,7 +63,7 @@ typedef struct cSeparation {
 // Stores a type of separation.
 /**
 typedef union cSeparation {
-	cMeshSeparation mesh;
+	cHullSeparation mesh;
 } cSeparation;
 **/
 

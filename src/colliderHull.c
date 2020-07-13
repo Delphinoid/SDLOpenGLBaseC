@@ -10,7 +10,7 @@
 	#include <alloca.h>
 #endif
 
-#define COLLIDER_MESH_SAT_USE_STACK_ALLOCATION
+#define COLLIDER_HULL_SAT_USE_STACK_ALLOCATION
 
 #define COLLISION_MAX_ITERATIONS 64
 #define COLLISION_MAX_FACE_NUM_EPA 64
@@ -24,7 +24,7 @@
 #define COLLISION_TOLERANCE_COEFFICIENT 0.95f
 #define COLLISION_TOLERANCE_TERM        0.025f  // 0.5f * PHYSICS_PENETRATION_SLOP
 
-void cMeshInit(cMesh *const __RESTRICT__ c){
+void cHullInit(cHull *const __RESTRICT__ c){
 	c->vertexNum = 0;
 	c->vertices = NULL;
 	c->faceNum = 0;
@@ -35,7 +35,7 @@ void cMeshInit(cMesh *const __RESTRICT__ c){
 	c->edges = NULL;
 }
 
-return_t cMeshInstantiate(cMesh *const __RESTRICT__ instance, const cMesh *const __RESTRICT__ local){
+return_t cHullInstantiate(cHull *const __RESTRICT__ instance, const cHull *const __RESTRICT__ local){
 
 	cVertexIndex_t vertexArraySize;
 	cFaceIndex_t normalArraySize;
@@ -72,12 +72,12 @@ return_t cMeshInstantiate(cMesh *const __RESTRICT__ instance, const cMesh *const
 
 }
 
-__FORCE_INLINE__ void cMeshCentroidFromPosition(cMesh *const __RESTRICT__ c, const cMesh *const __RESTRICT__ l, const vec3 position, const quat orientation, const vec3 scale){
+__FORCE_INLINE__ void cHullCentroidFromPosition(cHull *const __RESTRICT__ c, const cHull *const __RESTRICT__ l, const vec3 position, const quat orientation, const vec3 scale){
 	// Extrapolate the mesh's centroid from a configuration.
 	c->centroid = vec3VAddV(vec3VMultV(quatRotateVec3FastApproximate(orientation, l->centroid), scale), position);
 }
 
-static __FORCE_INLINE__ const vec3 *cMeshCollisionSupport(const cMesh *const __RESTRICT__ c, const vec3 axis){
+static __FORCE_INLINE__ const vec3 *cHullCollisionSupport(const cHull *const __RESTRICT__ c, const vec3 axis){
 	// Finds the vertex in c that is farthest in
 	// the direction of axis by projecting each
 	// vertex onto axis.
@@ -95,7 +95,7 @@ static __FORCE_INLINE__ const vec3 *cMeshCollisionSupport(const cMesh *const __R
 	return r;
 }
 /** UNUSED **/
-static __FORCE_INLINE__ const vec3 *cMeshCollisionSupportIndex(const cMesh *const __RESTRICT__ c, const vec3 axis, cVertexIndex_t *const index){
+static __FORCE_INLINE__ const vec3 *cHullCollisionSupportIndex(const cHull *const __RESTRICT__ c, const vec3 axis, cVertexIndex_t *const index){
 
 	// Finds the vertex in c that is farthest in
 	// the direction of axis by projecting each
@@ -124,67 +124,67 @@ static __FORCE_INLINE__ const vec3 *cMeshCollisionSupportIndex(const cMesh *cons
 typedef struct {
 	float separation;
 	cFaceIndex_t index;
-} cMeshSHFaceHelper;
+} cHullSHFaceHelper;
 
 typedef struct {
 	float separation;
 	cEdgeIndex_t edge1;
 	cEdgeIndex_t edge2;
-} cMeshSHEdgeHelper;
+} cHullSHEdgeHelper;
 
 typedef struct {
 	// The first collider's deepest penetrating face.
 	// Provides the minimum penetration vector.
-	cMeshSHFaceHelper face1;
+	cHullSHFaceHelper face1;
 	// The second collider's deepest penetrating face.
 	// Provides the minimum penetration vector.
-	cMeshSHFaceHelper face2;
+	cHullSHFaceHelper face2;
 	// Two penetrating edges for edge-edge contact.
-	cMeshSHEdgeHelper edge;
-} cMeshPenetrationPlanes;
+	cHullSHEdgeHelper edge;
+} cHullPenetrationPlanes;
 
 typedef struct {
 	vec3 v;
 	cContactKey key;
-} cMeshClipVertex;
+} cHullClipVertex;
 
 typedef struct {
 	vec3 v;
 	float depth;
-} cMeshProjectVertex;
+} cHullProjectVertex;
 
-static __FORCE_INLINE__ void cMeshSHFaceInit(cMeshSHFaceHelper *e){
+static __FORCE_INLINE__ void cHullSHFaceInit(cHullSHFaceHelper *e){
 	e->separation = -INFINITY;
 	e->index = (cFaceIndex_t)-1;
 }
 
-static __FORCE_INLINE__ void cMeshSHEdgeInit(cMeshSHEdgeHelper *e){
+static __FORCE_INLINE__ void cHullSHEdgeInit(cHullSHEdgeHelper *e){
 	e->separation = -INFINITY;
 	e->edge1 = (cEdgeIndex_t)-1;
 	e->edge2 = (cEdgeIndex_t)-1;
 }
 
-static __FORCE_INLINE__ void cMeshPenetrationPlanesInit(cMeshPenetrationPlanes *planes){
-	cMeshSHFaceInit(&planes->face1);
-	cMeshSHFaceInit(&planes->face2);
-	cMeshSHEdgeInit(&planes->edge);
+static __FORCE_INLINE__ void cHullPenetrationPlanesInit(cHullPenetrationPlanes *planes){
+	cHullSHFaceInit(&planes->face1);
+	cHullSHFaceInit(&planes->face2);
+	cHullSHEdgeInit(&planes->edge);
 }
 
-static __HINT_INLINE__ void cMeshClipEdgeContact(const cMesh *const reference, const cMesh *const incident,
-                                                 const cMeshSHEdgeHelper edges, cMeshContact *const __RESTRICT__ cm){
+static __HINT_INLINE__ void cHullClipEdgeContact(const cHull *const reference, const cHull *const incident,
+                                                 const cHullSHEdgeHelper edges, cHullContact *const __RESTRICT__ cm){
 
-	const cMeshEdge *const referenceEdge = &reference->edges[edges.edge1];
+	const cHullEdge *const referenceEdge = &reference->edges[edges.edge1];
 	const vec3 referenceEdgeStart = reference->vertices[referenceEdge->start];
 	const vec3 referenceEdgeEnd   = reference->vertices[referenceEdge->end];
 
-	const cMeshEdge *const incidentEdge = &incident->edges[edges.edge2];
+	const cHullEdge *const incidentEdge = &incident->edges[edges.edge2];
 	const vec3 incidentEdgeStart = incident->vertices[incidentEdge->start];
 	const vec3 incidentEdgeEnd   = incident->vertices[incidentEdge->end];
 
 	vec3 referencePoint, incidentPoint;
 	vec3 separation;
 
-	cMeshContactPoint *contact = cm->contacts;
+	cHullContactPoint *contact = cm->contacts;
 
 	const vec3 v2 = vec3VSubV(referenceEdgeEnd, referenceEdgeStart);
 	const vec3 v3 = vec3VSubV(incidentEdgeEnd, incidentEdgeStart);
@@ -244,7 +244,7 @@ static __HINT_INLINE__ void cMeshClipEdgeContact(const cMesh *const reference, c
 
 }
 
-static __HINT_INLINE__ const cMeshFace *cMeshFindIncidentClipFace(const cMesh *const incident, const vec3 referenceNormal, cFaceIndex_t *const __RESTRICT__ incidentFaceIndex){
+static __HINT_INLINE__ const cHullFace *cHullFindIncidentClipFace(const cHull *const incident, const vec3 referenceNormal, cFaceIndex_t *const __RESTRICT__ incidentFaceIndex){
 
 	if(vec3Dot(referenceNormal, incident->normals[*incidentFaceIndex]) < 0.f){
 		// If the suggested face is penetrating, use it.
@@ -254,11 +254,11 @@ static __HINT_INLINE__ const cMeshFace *cMeshFindIncidentClipFace(const cMesh *c
 		// Otherwise find the deepest penetrating face.
 		cFaceIndex_t i;
 		const vec3 *n = incident->normals;
-		const cMeshFace *f = incident->faces;
+		const cHullFace *f = incident->faces;
 
 		float min = vec3Dot(referenceNormal, *n);
 
-		const cMeshFace *r = f;
+		const cHullFace *r = f;
 		*incidentFaceIndex = 0;
 
 		for(i = 1; i < incident->faceNum; ++i){
@@ -279,27 +279,27 @@ static __HINT_INLINE__ const cMeshFace *cMeshFindIncidentClipFace(const cMesh *c
 
 }
 
-static __HINT_INLINE__ void cMeshReduceManifold(const cMeshClipVertex *const vertices, const cMeshClipVertex *const verticesLast, const cMeshProjectVertex *const projections,
-                                                const vec3 planeNormal, const int offset, cMeshContact *const __RESTRICT__ cm){
+static __HINT_INLINE__ void cHullReduceManifold(const cHullClipVertex *const vertices, const cHullClipVertex *const verticesLast, const cHullProjectVertex *const projections,
+                                                const vec3 planeNormal, const int offset, cHullContact *const __RESTRICT__ cm){
 
 	// Reduce the manifold to the combination of
 	// contacts that provides the greatest area.
 
-	cMeshContactPoint *contact = cm->contacts;
+	cHullContactPoint *contact = cm->contacts;
 
-	const cMeshClipVertex *pointBest;
-	const cMeshProjectVertex *projectionBest;
+	const cHullClipVertex *pointBest;
+	const cHullProjectVertex *projectionBest;
 	float distanceBest;
 
-	const cMeshClipVertex *pointWorst;
-	const cMeshProjectVertex *projectionWorst;
+	const cHullClipVertex *pointWorst;
+	const cHullProjectVertex *projectionWorst;
 	float distanceWorst;
 
-	const cMeshClipVertex *point;
-	const cMeshProjectVertex *projection;
+	const cHullClipVertex *point;
+	const cHullProjectVertex *projection;
 
-	const cMeshProjectVertex *first;
-	const cMeshProjectVertex *second;
+	const cHullProjectVertex *first;
+	const cHullProjectVertex *second;
 
 	vec3 normal;
 
@@ -475,9 +475,9 @@ static __HINT_INLINE__ void cMeshReduceManifold(const cMeshClipVertex *const ver
 
 }
 
-static __HINT_INLINE__ void cMeshClipFaceContact(const cMesh *const reference, const cMesh *const incident,
+static __HINT_INLINE__ void cHullClipFaceContact(const cHull *const reference, const cHull *const incident,
                                                  const cFaceIndex_t referenceFaceIndex, cFaceIndex_t incidentFaceIndex,
-                                                 const int offset, cMeshContact *const __RESTRICT__ cm){
+                                                 const int offset, cHullContact *const __RESTRICT__ cm){
 
 	// Generates a contact manifold by clipping the edges of
 	// the incident face against the faces adjacent to the
@@ -491,43 +491,43 @@ static __HINT_INLINE__ void cMeshClipFaceContact(const cMesh *const reference, c
 	// This method is capable of performing manifold reduction.
 
 	// Allocate two arrays of vertices for each edge on the face.
-	cMeshClipVertex *const vertices =
-	#if defined(COLLIDER_MESH_SAT_USE_STACK_ALLOCATION) && !defined(_STDC_NO_VLA_)
-	alloca(incident->edgeMax * 2 * sizeof(cMeshClipVertex) * 2);
+	cHullClipVertex *const vertices =
+	#if defined(COLLIDER_HULL_SAT_USE_STACK_ALLOCATION) && !defined(_STDC_NO_VLA_)
+	alloca(incident->edgeMax * 2 * sizeof(cHullClipVertex) * 2);
 	#else
-	memAllocate(incident->edgeMax * 2 * sizeof(cMeshClipVertex) * 2);
+	memAllocate(incident->edgeMax * 2 * sizeof(cHullClipVertex) * 2);
 	// Make sure the allocation didn't fail.
 	if(vertices != NULL){
 	#endif
 
-		cMeshContactPoint *contact = cm->contacts;
+		cHullContactPoint *contact = cm->contacts;
 
 		const cEdgeIndex_t referenceFaceFirstEdgeIndex = reference->faces[referenceFaceIndex].edge;
-		const cMeshEdge *const referenceFaceFirstEdge = &reference->edges[referenceFaceFirstEdgeIndex];
-		const cMeshEdge *referenceFaceEdge;
+		const cHullEdge *const referenceFaceFirstEdge = &reference->edges[referenceFaceFirstEdgeIndex];
+		const cHullEdge *referenceFaceEdge;
 
 		const vec3 referenceFaceVertex = reference->vertices[referenceFaceFirstEdge->start];
 		const vec3 referenceFaceNormal = reference->normals[referenceFaceIndex];
 
 		// Find the incident face to clip against,
 		// if the test index is insufficient.
-		const cEdgeIndex_t incidentFaceFirstEdgeIndex = cMeshFindIncidentClipFace(incident, referenceFaceNormal, &incidentFaceIndex)->edge;
-		const cMeshEdge *incidentFaceFirstEdge = &incident->edges[incidentFaceFirstEdgeIndex];
-		const cMeshEdge *incidentFaceEdge;
+		const cEdgeIndex_t incidentFaceFirstEdgeIndex = cHullFindIncidentClipFace(incident, referenceFaceNormal, &incidentFaceIndex)->edge;
+		const cHullEdge *incidentFaceFirstEdge = &incident->edges[incidentFaceFirstEdgeIndex];
+		const cHullEdge *incidentFaceEdge;
 
 		// Pointer to the array with the vertices to be clipped.
-		cMeshClipVertex *vertexArray = vertices;
+		cHullClipVertex *vertexArray = vertices;
 		union {
-			cMeshClipVertex *vertices;
-			cMeshProjectVertex *projections;
+			cHullClipVertex *vertices;
+			cHullProjectVertex *projections;
 		} clipArray;
-		cMeshClipVertex *vertexArraySwap;
+		cHullClipVertex *vertexArraySwap;
 
-		const cMeshClipVertex *vertex;
-		cMeshClipVertex *vertexLast;
+		const cHullClipVertex *vertex;
+		cHullClipVertex *vertexLast;
 
-		cMeshClipVertex *vertexNext;
-		cMeshProjectVertex *projectionNext;
+		cHullClipVertex *vertexNext;
+		cHullProjectVertex *projectionNext;
 
 		cEdgeIndex_t inEdgeIndex;
 		cEdgeIndex_t outEdgeIndex;
@@ -605,8 +605,8 @@ static __HINT_INLINE__ void cMeshClipFaceContact(const cMesh *const reference, c
 			// Clip the vertex with the normal of the
 			// current twin edge's face.
 
-			cMeshClipVertex *vertexClip;
-			const cMeshClipVertex *vertexPrevious;
+			cHullClipVertex *vertexClip;
+			const cHullClipVertex *vertexPrevious;
 
 			vec3 adjacentFaceNormal;
 			vec3 adjacentFaceVertex;
@@ -733,7 +733,7 @@ static __HINT_INLINE__ void cMeshClipFaceContact(const cMesh *const reference, c
 			// Perform manifold reduction if we have too
 			// many valid contact points. Calculates the
 			// contact tangents during reduction.
-			cMeshReduceManifold(vertexArray, vertexNext, clipArray.projections, referenceFaceNormal, offset, cm);
+			cHullReduceManifold(vertexArray, vertexNext, clipArray.projections, referenceFaceNormal, offset, cm);
 			cm->contactNum = COLLISION_MANIFOLD_MAX_CONTACT_POINTS;
 		}else{
 			// Otherwise add each contact to the manifold.
@@ -801,7 +801,7 @@ static __HINT_INLINE__ void cMeshClipFaceContact(const cMesh *const reference, c
 		#endif
 
 
-	#if !defined(COLLIDER_MESH_SAT_USE_STACK_ALLOCATION) || defined(_STDC_NO_VLA_)
+	#if !defined(COLLIDER_HULL_SAT_USE_STACK_ALLOCATION) || defined(_STDC_NO_VLA_)
 		memFree(vertices);
 
 	}else{
@@ -811,7 +811,7 @@ static __HINT_INLINE__ void cMeshClipFaceContact(const cMesh *const reference, c
 
 }
 
-static __FORCE_INLINE__ void cMeshCollisionSHClipping(const cMesh *const __RESTRICT__ c1, const cMesh *const __RESTRICT__ c2, const cMeshPenetrationPlanes planes, cMeshContact *const __RESTRICT__ cm){
+static __FORCE_INLINE__ void cHullCollisionSHClipping(const cHull *const __RESTRICT__ c1, const cHull *const __RESTRICT__ c2, const cHullPenetrationPlanes planes, cHullContact *const __RESTRICT__ cm){
 
 	// Implementation of the Sutherland-Hodgman clipping
 	// algorithm for generating a contact manifold after
@@ -823,7 +823,7 @@ static __FORCE_INLINE__ void cMeshCollisionSHClipping(const cMesh *const __RESTR
 	// is greater than both face penetration depths. Favours
 	// face contacts over edge contacts.
 	if(planes.edge.separation > COLLISION_TOLERANCE_COEFFICIENT * maxSeparation + COLLISION_TOLERANCE_TERM){
-		cMeshClipEdgeContact(c1, c2, planes.edge, cm);
+		cHullClipEdgeContact(c1, c2, planes.edge, cm);
 	}else{
 		// If the second face penetration depth is greater than
 		// the first, create a face contact with it. Favours the
@@ -832,21 +832,21 @@ static __FORCE_INLINE__ void cMeshCollisionSHClipping(const cMesh *const __RESTR
 		if(planes.face2.separation > COLLISION_TOLERANCE_COEFFICIENT * planes.face1.separation + COLLISION_TOLERANCE_TERM){
 
 			// Offset is 1 so pointA and pointB in the contact manifold are swapped.
-			cMeshClipFaceContact(c2, c1, planes.face2.index, planes.face1.index, 1, cm);
+			cHullClipFaceContact(c2, c1, planes.face2.index, planes.face1.index, 1, cm);
 
 			// Make sure at least one contact point was generated.
 			if(cm->contactNum == 0){
 				// Couldn't generate contact points.
 				// Try again, ignoring tolerances.
 				if(planes.edge.separation > maxSeparation){
-					cMeshClipEdgeContact(c1, c2, planes.edge, cm);
+					cHullClipEdgeContact(c1, c2, planes.edge, cm);
 				}else{
-					cMeshClipFaceContact(c1, c2, planes.face1.index, planes.face2.index, 0, cm);
+					cHullClipFaceContact(c1, c2, planes.face1.index, planes.face2.index, 0, cm);
 					if(cm->contactNum == 0){
 						// Clipping still failed. Treat the contact as an
 						// edge contact, which guarantees at least two
 						// contact points will be created.
-						cMeshClipEdgeContact(c1, c2, planes.edge, cm);
+						cHullClipEdgeContact(c1, c2, planes.edge, cm);
 					}
 				}
 			}
@@ -854,21 +854,21 @@ static __FORCE_INLINE__ void cMeshCollisionSHClipping(const cMesh *const __RESTR
 		}else{
 
 			// Offset is 0 so pointA and pointB in the contact manifold are NOT swapped.
-			cMeshClipFaceContact(c1, c2, planes.face1.index, planes.face2.index, 0, cm);
+			cHullClipFaceContact(c1, c2, planes.face1.index, planes.face2.index, 0, cm);
 
 			// Make sure at least one contact point was generated.
 			if(cm->contactNum == 0){
 				// Couldn't generate contact points.
 				// Try again, ignoring tolerances.
 				if(planes.edge.separation > maxSeparation){
-					cMeshClipEdgeContact(c1, c2, planes.edge, cm);
+					cHullClipEdgeContact(c1, c2, planes.edge, cm);
 				}else{
-					cMeshClipFaceContact(c2, c1, planes.face2.index, planes.face1.index, 1, cm);
+					cHullClipFaceContact(c2, c1, planes.face2.index, planes.face1.index, 1, cm);
 					if(cm->contactNum == 0){
 						// Clipping still failed. Treat the contact as an
 						// edge contact, which guarantees at least two
 						// contact points will be created.
-						cMeshClipEdgeContact(c1, c2, planes.edge, cm);
+						cHullClipEdgeContact(c1, c2, planes.edge, cm);
 					}
 				}
 			}
@@ -878,7 +878,7 @@ static __FORCE_INLINE__ void cMeshCollisionSHClipping(const cMesh *const __RESTR
 
 }
 
-static __FORCE_INLINE__ return_t cMeshCollisionSATFaceQuery(const cMesh *const __RESTRICT__ c1, const cMesh *const __RESTRICT__ c2, cMeshSHFaceHelper *const __RESTRICT__ r, cMeshSeparation *const __RESTRICT__ sc, const cSeparationFeature_t type){
+static __FORCE_INLINE__ return_t cHullCollisionSATFaceQuery(const cHull *const __RESTRICT__ c1, const cHull *const __RESTRICT__ c2, cHullSHFaceHelper *const __RESTRICT__ r, cHullSeparation *const __RESTRICT__ sc, const cSeparationFeature_t type){
 
 	// Find the maximum separation distance between
 	// the faces of the first and the vertices of the
@@ -889,7 +889,7 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATFaceQuery(const cMesh *const _
 
 	cFaceIndex_t i;
 	const vec3 *n;
-	const cMeshFace *f;
+	const cHullFace *f;
 
 	for(i = 0, n = c1->normals, f = c1->faces; i < c1->faceNum; ++i, ++n, ++f){
 
@@ -898,7 +898,7 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATFaceQuery(const cMesh *const _
 		// collider in the opposite direction that the
 		// face is pointing.
 		// After this, find the distance between them.
-		const float distance = pointPlaneDistance(*n, c1->vertices[c1->edges[f->edge].start], *cMeshCollisionSupport(c2, vec3Negate(*n)));
+		const float distance = pointPlaneDistance(*n, c1->vertices[c1->edges[f->edge].start], *cHullCollisionSupport(c2, vec3Negate(*n)));
 
 		if(distance > 0.f){
 			// Early exit, a separating axis has been found.
@@ -919,7 +919,7 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATFaceQuery(const cMesh *const _
 
 }
 
-static __FORCE_INLINE__ return_t cMeshCollisionSATMinkowskiFace(const vec3 A, const vec3 B, const vec3 BxA,
+static __FORCE_INLINE__ return_t cHullCollisionSATMinkowskiFace(const vec3 A, const vec3 B, const vec3 BxA,
 																const vec3 C, const vec3 D, const vec3 DxC){
 
 	// Tests if the specified edges overlap
@@ -979,7 +979,7 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATMinkowskiFace(const vec3 A, co
 
 }
 
-static __FORCE_INLINE__ float cMeshCollisionSATEdgeSeparation(const vec3 pointA, const vec3 e1InvDir,
+static __FORCE_INLINE__ float cHullCollisionSATEdgeSeparation(const vec3 pointA, const vec3 e1InvDir,
                                                               const vec3 pointB, const vec3 e2InvDir,
                                                               const vec3 centroid){
 
@@ -1009,18 +1009,18 @@ static __FORCE_INLINE__ float cMeshCollisionSATEdgeSeparation(const vec3 pointA,
 
 }
 
-static __FORCE_INLINE__ return_t cMeshCollisionSATEdgeQuery(const cMesh *c1, const cMesh *c2, cMeshSHEdgeHelper *r, cMeshSeparation *const __RESTRICT__ sc){
+static __FORCE_INLINE__ return_t cHullCollisionSATEdgeQuery(const cHull *c1, const cHull *c2, cHullSHEdgeHelper *r, cHullSeparation *const __RESTRICT__ sc){
 
 	// Find the maximum separation distance between
 	// the edges of the first and second colliders.
 
 	cEdgeIndex_t i;
-	const cMeshEdge *e1;
+	const cHullEdge *e1;
 
 	for(i = 0, e1 = c1->edges; i < c1->edgeNum; ++i, ++e1){
 
 		cEdgeIndex_t j;
-		const cMeshEdge *e2;
+		const cHullEdge *e2;
 
 		const vec3 s1 = c1->vertices[e1->start];
 		const vec3 e1InvDir = vec3VSubV(s1, c1->vertices[e1->end]);
@@ -1032,19 +1032,19 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATEdgeQuery(const cMesh *c1, con
 
 			// The inverse direction vectors are used in place of the cross product
 			// between the edge's face normal and its twin's face normal.
-			if(cMeshCollisionSATMinkowskiFace(
+			if(cHullCollisionSATMinkowskiFace(
 				c1->normals[e1->face], c1->normals[e1->twinFace], e1InvDir,
 				c2->normals[e2->face], c2->normals[e2->twinFace], e2InvDir
 			)){
 
 				// Now that we have a Minkowski face, we can
 				// get the distance between the two edges.
-				const float distance = cMeshCollisionSATEdgeSeparation(s1, e1InvDir, s2, e2InvDir, c1->centroid);
+				const float distance = cHullCollisionSATEdgeSeparation(s1, e1InvDir, s2, e2InvDir, c1->centroid);
 				if(distance > 0.f){
 					// Early exit, a separating axis has been found.
 					// Cache the separating axis.
 					if(sc != NULL){
-						sc->type = COLLIDER_MESH_SEPARATION_FEATURE_EDGE;
+						sc->type = COLLIDER_HULL_SEPARATION_FEATURE_EDGE;
 						sc->featureA = i;
 						sc->featureB = j;
 					}
@@ -1068,7 +1068,7 @@ static __FORCE_INLINE__ return_t cMeshCollisionSATEdgeQuery(const cMesh *c1, con
 
 }
 
-return_t cMeshCollisionSAT(const cMesh *const __RESTRICT__ c1, const cMesh *const __RESTRICT__ c2, cMeshSeparation *const __RESTRICT__ sc, cMeshContact *const __RESTRICT__ cm){
+return_t cHullCollisionSAT(const cHull *const __RESTRICT__ c1, const cHull *const __RESTRICT__ c2, cHullSeparation *const __RESTRICT__ sc, cHullContact *const __RESTRICT__ cm){
 
 	// Implementation of the separating axis theorem
 	// using Minkowski space and Gauss map optimizations.
@@ -1077,14 +1077,14 @@ return_t cMeshCollisionSAT(const cMesh *const __RESTRICT__ c1, const cMesh *cons
 	// Dirk Gregorius for his amazing presentation at
 	// GDC 2013.
 
-	cMeshPenetrationPlanes planes;
-	cMeshPenetrationPlanesInit(&planes);
+	cHullPenetrationPlanes planes;
+	cHullPenetrationPlanesInit(&planes);
 
-	if(cMeshCollisionSATFaceQuery(c1, c2, &planes.face1, sc, COLLIDER_MESH_SEPARATION_FEATURE_FACE_1)){
-		if(cMeshCollisionSATFaceQuery(c2, c1, &planes.face2, sc, COLLIDER_MESH_SEPARATION_FEATURE_FACE_2)){
-			if(cMeshCollisionSATEdgeQuery(c1, c2, &planes.edge, sc)){
+	if(cHullCollisionSATFaceQuery(c1, c2, &planes.face1, sc, COLLIDER_HULL_SEPARATION_FEATURE_FACE_1)){
+		if(cHullCollisionSATFaceQuery(c2, c1, &planes.face2, sc, COLLIDER_HULL_SEPARATION_FEATURE_FACE_2)){
+			if(cHullCollisionSATEdgeQuery(c1, c2, &planes.edge, sc)){
 				if(cm != NULL){
-					cMeshCollisionSHClipping(c1, c2, planes, cm);
+					cHullCollisionSHClipping(c1, c2, planes, cm);
 				}
 				return 1;
 			}
@@ -1095,31 +1095,31 @@ return_t cMeshCollisionSAT(const cMesh *const __RESTRICT__ c1, const cMesh *cons
 
 }
 
-static __FORCE_INLINE__ return_t cMeshSeparationSATFaceQuery(const cMesh *const __RESTRICT__ c1, const cMesh *const __RESTRICT__ c2, const cMeshSeparation *const __RESTRICT__ sc){
-	return pointPlaneDistance(c1->normals[sc->featureA], c1->vertices[c1->edges[c1->faces[sc->featureA].edge].start], *cMeshCollisionSupport(c2, vec3Negate(c1->normals[sc->featureA]))/**&c2->vertices[sc->featureB]**/) > 0.f;
+static __FORCE_INLINE__ return_t cHullSeparationSATFaceQuery(const cHull *const __RESTRICT__ c1, const cHull *const __RESTRICT__ c2, const cHullSeparation *const __RESTRICT__ sc){
+	return pointPlaneDistance(c1->normals[sc->featureA], c1->vertices[c1->edges[c1->faces[sc->featureA].edge].start], *cHullCollisionSupport(c2, vec3Negate(c1->normals[sc->featureA]))/**&c2->vertices[sc->featureB]**/) > 0.f;
 }
 
-static __FORCE_INLINE__ return_t cMeshSeparationSATEdgeQuery(const cMesh *const __RESTRICT__ c1, const cMesh *const __RESTRICT__ c2, const cMeshSeparation *const __RESTRICT__ sc){
-	const cMeshEdge e1 = c1->edges[sc->featureA];
-	const cMeshEdge e2 = c2->edges[sc->featureB];
+static __FORCE_INLINE__ return_t cHullSeparationSATEdgeQuery(const cHull *const __RESTRICT__ c1, const cHull *const __RESTRICT__ c2, const cHullSeparation *const __RESTRICT__ sc){
+	const cHullEdge e1 = c1->edges[sc->featureA];
+	const cHullEdge e2 = c2->edges[sc->featureB];
 	const vec3 s1 = c1->vertices[e1.start];
 	const vec3 s2 = c2->vertices[e2.start];
 	const vec3 e1InvDir = vec3VSubV(s1, c1->vertices[e1.end]);
 	const vec3 e2InvDir = vec3VSubV(s2, c2->vertices[e2.end]);
-	return cMeshCollisionSATMinkowskiFace(c1->normals[e1.face], c1->normals[e1.twinFace], e1InvDir,
+	return cHullCollisionSATMinkowskiFace(c1->normals[e1.face], c1->normals[e1.twinFace], e1InvDir,
 	                                      c2->normals[e2.face], c2->normals[e2.twinFace], e2InvDir) &&
-	       cMeshCollisionSATEdgeSeparation(s1, e1InvDir, s2, e2InvDir, c1->centroid) > 0.f;
+	       cHullCollisionSATEdgeSeparation(s1, e1InvDir, s2, e2InvDir, c1->centroid) > 0.f;
 }
 
-return_t cMeshSeparationSAT(const cMesh *const __RESTRICT__ c1, const cMesh *const __RESTRICT__ c2, const cMeshSeparation *const __RESTRICT__ sc){
+return_t cHullSeparationSAT(const cHull *const __RESTRICT__ c1, const cHull *const __RESTRICT__ c2, const cHullSeparation *const __RESTRICT__ sc){
 	// Check the separation cache for possible early exits.
 	switch(sc->type){
-		case COLLIDER_MESH_SEPARATION_FEATURE_FACE_1:
-			return cMeshSeparationSATFaceQuery(c1, c2, sc);
-		case COLLIDER_MESH_SEPARATION_FEATURE_FACE_2:
-			return cMeshSeparationSATFaceQuery(c2, c1, sc);
-		case COLLIDER_MESH_SEPARATION_FEATURE_EDGE:
-			return cMeshSeparationSATEdgeQuery(c1, c2, sc);
+		case COLLIDER_HULL_SEPARATION_FEATURE_FACE_1:
+			return cHullSeparationSATFaceQuery(c1, c2, sc);
+		case COLLIDER_HULL_SEPARATION_FEATURE_FACE_2:
+			return cHullSeparationSATFaceQuery(c2, c1, sc);
+		case COLLIDER_HULL_SEPARATION_FEATURE_EDGE:
+			return cHullSeparationSATEdgeQuery(c1, c2, sc);
 	}
 	return 0;
 }
@@ -1130,20 +1130,20 @@ typedef struct {
 	// The support points used to generate v.
 	const vec3 *s1;
 	const vec3 *s2;
-} cMeshSupportVertex;
+} cHullSupportVertex;
 
 typedef struct {
 	// Three vertices and a normal.
-	cMeshSupportVertex vertex[3];
+	cHullSupportVertex vertex[3];
 	vec3 normal;
-} cMeshEPAFaceHelper;
+} cHullEPAFaceHelper;
 
 typedef struct {
 	// An edge that will be removed.
-	cMeshSupportVertex vertex[2];
-} cMeshEPAEdgeHelper;
+	cHullSupportVertex vertex[2];
+} cHullEPAEdgeHelper;
 
-static __FORCE_INLINE__ void cMeshEPAFaceInit(cMeshEPAFaceHelper *const __RESTRICT__ face, const cMeshSupportVertex v0, const cMeshSupportVertex v1, const cMeshSupportVertex v2){
+static __FORCE_INLINE__ void cHullEPAFaceInit(cHullEPAFaceHelper *const __RESTRICT__ face, const cHullSupportVertex v0, const cHullSupportVertex v1, const cHullSupportVertex v2){
 	// Create a new face.
 	face->vertex[0] = v0;
 	face->vertex[1] = v1;
@@ -1151,13 +1151,13 @@ static __FORCE_INLINE__ void cMeshEPAFaceInit(cMeshEPAFaceHelper *const __RESTRI
 	face->normal = vec3NormalizeFastAccurate(faceNormal(v0.v, v1.v, v2.v));
 }
 
-static __FORCE_INLINE__ void cMeshEPAEdgeInit(cMeshEPAEdgeHelper *const __RESTRICT__ edge, const cMeshSupportVertex v0, const cMeshSupportVertex v1){
+static __FORCE_INLINE__ void cHullEPAEdgeInit(cHullEPAEdgeHelper *const __RESTRICT__ edge, const cHullSupportVertex v0, const cHullSupportVertex v1){
 	// Create a new face.
 	edge->vertex[0] = v0;
 	edge->vertex[1] = v1;
 }
 
-static __FORCE_INLINE__ void cMeshCollisionMinkowskiSupport(const cMesh *const __RESTRICT__ c1, const cMesh *const __RESTRICT__ c2, const vec3 axis, cMeshSupportVertex *const __RESTRICT__ r){
+static __FORCE_INLINE__ void cHullCollisionMinkowskiSupport(const cHull *const __RESTRICT__ c1, const cHull *const __RESTRICT__ c2, const vec3 axis, cHullSupportVertex *const __RESTRICT__ r){
 	// Returns a point in Minkowski space on the edge of
 	// the polygons' "Minkowski difference".
 	//
@@ -1166,44 +1166,44 @@ static __FORCE_INLINE__ void cMeshCollisionMinkowskiSupport(const cMesh *const _
 	// negative axis for the second polygon; this will
 	// give us the two closest vertices along a given
 	// axis.
-	r->s1 = cMeshCollisionSupport(c1, axis);
-	r->s2 = cMeshCollisionSupport(c2, vec3Negate(axis));
+	r->s1 = cHullCollisionSupport(c1, axis);
+	r->s2 = cHullCollisionSupport(c2, vec3Negate(axis));
 	// Get the "Minkowski Difference" of the two support points.
 	r->v = vec3VSubV(*r->s1, *r->s2);
 }
 
-static __FORCE_INLINE__ void cMeshCollisionEPA(const cMesh *const __RESTRICT__ c1, const cMesh *const __RESTRICT__ c2, cMeshSupportVertex *const __RESTRICT__ simplex, cMeshContact *const __RESTRICT__ cm){
+static __FORCE_INLINE__ void cHullCollisionEPA(const cHull *const __RESTRICT__ c1, const cHull *const __RESTRICT__ c2, cHullSupportVertex *const __RESTRICT__ simplex, cHullContact *const __RESTRICT__ cm){
 
 	// Implementation of the expanding polytope algorithm. Extrapolates
 	// additional collision information from two convex polygons and the
 	// simplex generated by the Gilbert-Johnson-Keerthi algorithm.
 
 	int i, j;
-	cMeshEPAFaceHelper *f;
-	cMeshEPAEdgeHelper *e;
-	const cMeshEPAFaceHelper *closestFace;
+	cHullEPAFaceHelper *f;
+	cHullEPAEdgeHelper *e;
+	const cHullEPAFaceHelper *closestFace;
 	float distance;
-	cMeshSupportVertex point;
+	cHullSupportVertex point;
 
 	// Create the face and edge arrays.
-	cMeshEPAFaceHelper faces[COLLISION_MAX_FACE_NUM_EPA];
-	cMeshEPAFaceHelper *faceLast = &faces[4];
-	cMeshEPAEdgeHelper edges[COLLISION_MAX_EDGE_NUM_EPA];
-	cMeshEPAEdgeHelper *edgeLast = edges;
+	cHullEPAFaceHelper faces[COLLISION_MAX_FACE_NUM_EPA];
+	cHullEPAFaceHelper *faceLast = &faces[4];
+	cHullEPAEdgeHelper edges[COLLISION_MAX_EDGE_NUM_EPA];
+	cHullEPAEdgeHelper *edgeLast = edges;
 
 	// Ensure the vertex winding order of the simplex is CCW.
 	if(vec3Dot(vec3VSubV(simplex[0].v, simplex[3].v), vec3Cross(vec3VSubV(simplex[1].v, simplex[3].v), vec3VSubV(simplex[2].v, simplex[3].v))) < 0.f){
 		// If it's not, swap two vertices.
-		const cMeshSupportVertex swap = simplex[0];
+		const cHullSupportVertex swap = simplex[0];
 		simplex[0] = simplex[1];
 		simplex[1] = swap;
 	}
 
 	// Generate a starting tetrahedron from the given vertices.
-	cMeshEPAFaceInit(&faces[0], simplex[0], simplex[1], simplex[2]);  // Face 1 - ABC
-	cMeshEPAFaceInit(&faces[1], simplex[0], simplex[2], simplex[3]);  // Face 2 - ACD
-	cMeshEPAFaceInit(&faces[2], simplex[0], simplex[3], simplex[1]);  // Face 3 - ADB
-	cMeshEPAFaceInit(&faces[3], simplex[1], simplex[3], simplex[2]);  // Face 4 - BDC
+	cHullEPAFaceInit(&faces[0], simplex[0], simplex[1], simplex[2]);  // Face 1 - ABC
+	cHullEPAFaceInit(&faces[1], simplex[0], simplex[2], simplex[3]);  // Face 2 - ACD
+	cHullEPAFaceInit(&faces[2], simplex[0], simplex[3], simplex[1]);  // Face 3 - ADB
+	cHullEPAFaceInit(&faces[3], simplex[1], simplex[3], simplex[2]);  // Face 4 - BDC
 
 	// Find the edge on the Minkowski difference closest to the origin.
 	for(i = 0; i < COLLISION_MAX_ITERATIONS; ++i){
@@ -1228,7 +1228,7 @@ static __FORCE_INLINE__ void cMeshCollisionEPA(const cMesh *const __RESTRICT__ c
 
 		// Search in the direction of the closest face to find
 		// a point on the edge of the Minkowski difference.
-		cMeshCollisionMinkowskiSupport(c1, c2, closestFace->normal, &point);
+		cHullCollisionMinkowskiSupport(c1, c2, closestFace->normal, &point);
 		if(vec3Dot(point.v, closestFace->normal) - distance < COLLISION_DISTANCE_THRESHOLD){
 			// The new point is not much further from the origin, break from the loop.
 			break;
@@ -1248,8 +1248,8 @@ static __FORCE_INLINE__ void cMeshCollisionEPA(const cMesh *const __RESTRICT__ c
 				for(j = 0; j < 3; ++j){
 
 					int add = 1;
-					cMeshEPAEdgeHelper newEdge;
-					cMeshEPAEdgeInit(&newEdge, f->vertex[j], f->vertex[(j+1)%3]);
+					cHullEPAEdgeHelper newEdge;
+					cHullEPAEdgeInit(&newEdge, f->vertex[j], f->vertex[(j+1)%3]);
 
 					// Check if the new edge has already been added to the edge array.
 					// An edge should never appear more than twice, so if it has already
@@ -1303,12 +1303,12 @@ static __FORCE_INLINE__ void cMeshCollisionEPA(const cMesh *const __RESTRICT__ c
 				break;
 			}
 
-			cMeshEPAFaceInit(faceLast, e->vertex[0], e->vertex[1], point);
+			cHullEPAFaceInit(faceLast, e->vertex[0], e->vertex[1], point);
 
 			// Ensure the vertex winding order of the simplex is CCW.
 			if(vec3Dot(faceLast->vertex[0].v, faceLast->normal) < 0.f){
 				// If it's not, swap two vertices.
-				cMeshSupportVertex swap = faceLast->vertex[0];
+				cHullSupportVertex swap = faceLast->vertex[0];
 				faceLast->vertex[0] = faceLast->vertex[1];
 				faceLast->vertex[1] = swap;
 				// Invert the face's normal as well.
@@ -1360,7 +1360,7 @@ static __FORCE_INLINE__ void cMeshCollisionEPA(const cMesh *const __RESTRICT__ c
 
 }
 
-static __FORCE_INLINE__ void cMeshCollisionGJKTriangle(cMeshSupportVertex simplex[4], vec3 *const __RESTRICT__ axis){
+static __FORCE_INLINE__ void cHullCollisionGJKTriangle(cHullSupportVertex simplex[4], vec3 *const __RESTRICT__ axis){
 
 	const vec3 AO = vec3Negate(simplex[0].v);
 	const vec3 AB = vec3VSubV(simplex[1].v, simplex[0].v);
@@ -1414,7 +1414,7 @@ static __FORCE_INLINE__ void cMeshCollisionGJKTriangle(cMeshSupportVertex simple
 
 }
 
-static __FORCE_INLINE__ return_t cMeshCollisionGJKTetrahedron(cMeshSupportVertex *const __RESTRICT__ simplex, vec3 *const __RESTRICT__ axis){
+static __FORCE_INLINE__ return_t cHullCollisionGJKTetrahedron(cHullSupportVertex *const __RESTRICT__ simplex, vec3 *const __RESTRICT__ axis){
 
 	// Check if the normal of ABC is crossing the origin.
 	const vec3 AO = vec3Negate(simplex[0].v);
@@ -1457,13 +1457,13 @@ static __FORCE_INLINE__ return_t cMeshCollisionGJKTetrahedron(cMeshSupportVertex
 
 }
 
-return_t cMeshCollisionGJK(const cMesh *const __RESTRICT__ c1, const cMesh *const __RESTRICT__ c2, cMeshContact *const __RESTRICT__ cm){
+return_t cHullCollisionGJK(const cHull *const __RESTRICT__ c1, const cHull *const __RESTRICT__ c2, cHullContact *const __RESTRICT__ cm){
 
 	// Implementation of the Gilbert-Johnson-Keerthi distance algorithm,
 	// which is only compatible with convex polytopes.
 
 	int i;
-	cMeshSupportVertex simplex[4];
+	cHullSupportVertex simplex[4];
 
 	// Set the current number of vertices of our simplex. We will be
 	// creating a line segment with vertices B and C before the main
@@ -1476,12 +1476,12 @@ return_t cMeshCollisionGJK(const cMesh *const __RESTRICT__ c1, const cMesh *cons
 	vec3 axis = vec3VSubV(c2->centroid, c1->centroid);
 
 	// Create an initial vertex for the simplex.
-	cMeshCollisionMinkowskiSupport(c1, c2, axis, &simplex[2]);
+	cHullCollisionMinkowskiSupport(c1, c2, axis, &simplex[2]);
 
 	// Create another vertex to form a line segment. B should be
 	// a vertex in the opposite direction of C from the origin.
 	axis = vec3Negate(simplex[2].v);
-	cMeshCollisionMinkowskiSupport(c1, c2, axis, &simplex[1]);
+	cHullCollisionMinkowskiSupport(c1, c2, axis, &simplex[1]);
 
 	// If the origin was not crossed, the Minkowski space is
 	// entirely on one side of the origin, so the two
@@ -1507,7 +1507,7 @@ return_t cMeshCollisionGJK(const cMesh *const __RESTRICT__ c1, const cMesh *cons
 
 		// Add a new vertex to our simplex.
 		// Vertex A is the "working vertex".
-		cMeshCollisionMinkowskiSupport(c1, c2, axis, &simplex[0]);
+		cHullCollisionMinkowskiSupport(c1, c2, axis, &simplex[0]);
 		if(vec3Dot(simplex[0].v, axis) < 0.f){
 			// If the new vertex has not crossed the origin on the given axis,
 			// the origin cannot lie within the "Minkowski difference" of the
@@ -1519,12 +1519,12 @@ return_t cMeshCollisionGJK(const cMesh *const __RESTRICT__ c1, const cMesh *cons
 		if(simplex[3].s1 == NULL){  //++simplexVertices == 3
 			// We only have a triangle right now, find which
 			// direction to search for our next vertex in.
-			cMeshCollisionGJKTriangle(simplex, &axis);
-		}else if(cMeshCollisionGJKTetrahedron(simplex, &axis)){
+			cHullCollisionGJKTriangle(simplex, &axis);
+		}else if(cHullCollisionGJKTetrahedron(simplex, &axis)){
 			// The origin lies within our simplex, so we know there was
 			// a collision.
 			if(cm != NULL){
-				cMeshCollisionEPA(c1, c2, &simplex[0], cm);
+				cHullCollisionEPA(c1, c2, &simplex[0], cm);
 			}
 			return 1;
 		}
@@ -1535,7 +1535,7 @@ return_t cMeshCollisionGJK(const cMesh *const __RESTRICT__ c1, const cMesh *cons
 
 }
 
-void cMeshDeleteBase(cMesh *const __RESTRICT__ c){
+void cHullDeleteBase(cHull *const __RESTRICT__ c){
 	if(c->vertices != NULL){
 		memFree(c->vertices);
 	}
@@ -1550,7 +1550,7 @@ void cMeshDeleteBase(cMesh *const __RESTRICT__ c){
 	}
 }
 
-void cMeshDelete(cMesh *const __RESTRICT__ c){
+void cHullDelete(cHull *const __RESTRICT__ c){
 	// Meshes reuse the local collider's
 	// arrays, except for vertices and
 	// normals which need to be modified.

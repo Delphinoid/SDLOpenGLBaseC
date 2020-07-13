@@ -2,7 +2,7 @@
 #define COLLIDERCOMPOSITE_H
 
 #include "memoryShared.h"
-#include "colliderMesh.h"
+#include "colliderHull.h"
 #include "colliderCapsule.h"
 #include "colliderSphere.h"
 #include "colliderAABB.h"

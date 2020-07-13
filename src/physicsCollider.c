@@ -41,9 +41,9 @@ return_t physColliderPermitCollision(const physCollider *const c1, const physCol
 }
 
 
-void physColliderGenerateMassMesh(void *const __RESTRICT__ local, float *const __RESTRICT__ mass, float *const __RESTRICT__ inverseMass, vec3 *const __RESTRICT__ centroid, const float **const vertexMassArray){
+void physColliderGenerateMassHull(void *const __RESTRICT__ local, float *const __RESTRICT__ mass, float *const __RESTRICT__ inverseMass, vec3 *const __RESTRICT__ centroid, const float **const vertexMassArray){
 
-	cMesh *const cLocal = local;
+	cHull *const cLocal = local;
 
 	float tempMass = 0.f;
 	float tempInverseMass = 0.f;
@@ -145,7 +145,7 @@ void (* const physColliderGenerateMassJumpTable[COLLIDER_TYPE_NUM])(
 	vec3 *const __RESTRICT__ centroid,
 	const float **const vertexMassArray
 ) = {
-	physColliderGenerateMassMesh,
+	physColliderGenerateMassHull,
 	physColliderGenerateMassCapsule,
 	physColliderGenerateMassSphere,
 	physColliderGenerateMassAABB,
@@ -161,9 +161,9 @@ __FORCE_INLINE__ void physColliderGenerateMass(collider *const __RESTRICT__ loca
 }
 
 
-void physColliderGenerateMomentMesh(void *const __RESTRICT__ local, mat3 *const __RESTRICT__ inertiaTensor, vec3 *const __RESTRICT__ centroid, const float **const vertexMassArray){
+void physColliderGenerateMomentHull(void *const __RESTRICT__ local, mat3 *const __RESTRICT__ inertiaTensor, vec3 *const __RESTRICT__ centroid, const float **const vertexMassArray){
 
-	cMesh *const cLocal = local;
+	cHull *const cLocal = local;
 
 	const float *m = *vertexMassArray;
 	const vec3 *v = cLocal->vertices;
@@ -257,7 +257,7 @@ void (* const physColliderGenerateMomentJumpTable[COLLIDER_TYPE_NUM])(
 	vec3 *const __RESTRICT__ centroid,
 	const float **const vertexMassArray
 ) = {
-	physColliderGenerateMomentMesh,
+	physColliderGenerateMomentHull,
 	physColliderGenerateMomentCapsule,
 	physColliderGenerateMomentSphere,
 	physColliderGenerateMomentAABB,
@@ -272,15 +272,15 @@ __FORCE_INLINE__ void physColliderGenerateMoment(collider *const __RESTRICT__ lo
 }
 
 
-cAABB cTransformMesh(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale);
+cAABB cTransformHull(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale);
 cAABB cTransformCapsule(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale);
 cAABB cTransformSphere(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale);
 cAABB cTransformAABB(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale);
 cAABB cTransformPoint(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale);
 
-void physColliderTransformMesh(physCollider *const __RESTRICT__ c){
+void physColliderTransformHull(physCollider *const __RESTRICT__ c){
 	const physRigidBody *const body = c->body;
-	c->aabb = cTransformMesh(
+	c->aabb = cTransformHull(
 		&c->c.data, body->centroidGlobal, &c->base->data,
 		#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
 		 body->centroidLocal,
@@ -301,7 +301,7 @@ void physColliderTransformMesh(physCollider *const __RESTRICT__ c){
 void (* const physColliderTransformJumpTable[COLLIDER_TYPE_NUM])(
 	physCollider *const __RESTRICT__ c
 ) = {
-	physColliderTransformMesh,
+	physColliderTransformHull,
 	physColliderTransformCapsule,
 	physColliderTransformSphere,
 	physColliderTransformAABB,
