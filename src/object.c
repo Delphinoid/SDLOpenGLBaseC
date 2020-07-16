@@ -776,6 +776,7 @@ void objPhysicsPrepare(object *const __RESTRICT__ obj){
 	for(i = 0; i < obj->skeletonData.skl->boneNum; ++i, ++sklBone, ++configuration){
 
 		if(id < idLast && *id == i){
+
 			if(physRigidBodyIsSimulated(body)){
 
 				/** Split the root into a separate case. **/
@@ -795,14 +796,16 @@ void objPhysicsPrepare(object *const __RESTRICT__ obj){
 				// Initialize the body's moment of inertia and centroid.
 				physRigidBodyCentroidFromPosition(body);
 
-				// Get the next body.
-				++id;
-				body = modulePhysicsRigidBodyNext(body);
-
-			}else if(physRigidBodyIsCollidable(body)){
-			// Remember to add the body's collider to the island.
+			}
+			if(physRigidBodyIsCollidable(body)){
+				// Remember to add the body's collider to the island.
 				body->flags |= PHYSICS_BODY_TRANSFORMED;
 			}
+
+			// Get the next body.
+			++id;
+			body = modulePhysicsRigidBodyNext(body);
+
 		}
 
 	}
@@ -835,7 +838,7 @@ void objPhysicsBodySimulate(object *const __RESTRICT__ obj, const boneIndex_t bo
 
 		if(physRigidBodyIsCollidable(body)){
 			// Remember to add the body's collider to the island.
-			body->flags |= PHYSICS_BODY_COLLISION_MODIFIED;
+			body->flags |= PHYSICS_BODY_TRANSFORMED;
 		}
 
 	}
