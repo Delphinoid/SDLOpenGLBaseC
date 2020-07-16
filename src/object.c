@@ -775,29 +775,34 @@ void objPhysicsPrepare(object *const __RESTRICT__ obj){
 	// Update the object's skeleton.
 	for(i = 0; i < obj->skeletonData.skl->boneNum; ++i, ++sklBone, ++configuration){
 
-		if(id < idLast && *id == i && physRigidBodyIsSimulated(body)){
+		if(id < idLast && *id == i){
+			if(physRigidBodyIsSimulated(body)){
 
-			/** Split the root into a separate case. **/
-			const unsigned int isRoot = (i == sklBone->parent) || (sklBone->parent >= obj->skeletonData.skl->boneNum);
+				/** Split the root into a separate case. **/
+				const unsigned int isRoot = (i == sklBone->parent) || (sklBone->parent >= obj->skeletonData.skl->boneNum);
 
-			// Apply configuration and the skeleton's bind transform.
-			body->configuration = boneTransformAppend(*configuration, sklBone->defaultState);
+				// Apply configuration and the skeleton's bind transform.
+				body->configuration = boneTransformAppend(*configuration, sklBone->defaultState);
 
-			// Generate a new animated bone state.
-			skliGenerateBoneState(&obj->skeletonData, i, sklBone->name, &body->configuration);
+				// Generate a new animated bone state.
+				skliGenerateBoneState(&obj->skeletonData, i, sklBone->name, &body->configuration);
 
-			// Apply the parent's transformations to each bone.
-			if(!isRoot){
-				body->configuration = boneTransformAppend(obj->state.configuration[sklBone->parent], body->configuration);
+				// Apply the parent's transformations to each bone.
+				if(!isRoot){
+					body->configuration = boneTransformAppend(obj->state.configuration[sklBone->parent], body->configuration);
+				}
+
+				// Initialize the body's moment of inertia and centroid.
+				physRigidBodyCentroidFromPosition(body);
+
+				// Get the next body.
+				++id;
+				body = modulePhysicsRigidBodyNext(body);
+
+			}else if(physRigidBodyIsCollidable(body)){
+			// Remember to add the body's collider to the island.
+				body->flags |= PHYSICS_BODY_TRANSFORMED;
 			}
-
-			// Initialize the body's moment of inertia and centroid.
-			physRigidBodyCentroidFromPosition(body);
-
-			// Get the next body.
-			++id;
-			body = modulePhysicsRigidBodyNext(body);
-
 		}
 
 	}
@@ -827,6 +832,11 @@ void objPhysicsBodySimulate(object *const __RESTRICT__ obj, const boneIndex_t bo
 
 		// Initialize the body's moment of inertia and centroid.
 		physRigidBodyCentroidFromPosition(body);
+
+		if(physRigidBodyIsCollidable(body)){
+			// Remember to add the body's collider to the island.
+			body->flags |= PHYSICS_BODY_COLLISION_MODIFIED;
+		}
 
 	}
 
