@@ -1,8 +1,8 @@
 #ifndef COLLIDERHULL_H
 #define COLLIDERHULL_H
 
+#include "colliderAABB.h"
 #include "quat.h"
-#include "return.h"
 #include <stddef.h>
 
 // Convex mesh data structure optimized for collision
@@ -81,7 +81,8 @@ typedef struct cContact      cHullContact;
 typedef struct cSeparation   cHullSeparation;
 
 void cHullInit(cHull *const __RESTRICT__ c);
-return_t cHullInstantiate(cHull *const __RESTRICT__ instance, const cHull *const __RESTRICT__ local);
+return_t cHullInstantiate(void *const __RESTRICT__ instance, const void *const __RESTRICT__ local);
+cAABB cHullTransform(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale);
 void cHullCentroidFromPosition(cHull *const __RESTRICT__ c, const cHull *const __RESTRICT__ l, const vec3 position, const quat orientation, const vec3 scale);
 return_t cHullCollisionSAT(const cHull *const __RESTRICT__ c1, const cHull *const __RESTRICT__ c2, cHullSeparation *const __RESTRICT__ sc, cHullContact *const __RESTRICT__ cm);
 return_t cHullSeparationSAT(const cHull *const __RESTRICT__ c1, const cHull *const __RESTRICT__ c2, const cHullSeparation *const __RESTRICT__ sc);

@@ -65,6 +65,7 @@ typedef struct {
 } shaderData;
 
 void shdrDataInit(shaderData *const __RESTRICT__ shdrData);
+return_t shdrLoad(GLuint *const __RESTRICT__ id, GLenum type, const char *const __RESTRICT__ filePath, const size_t filePathLength);
 return_t shdrPrgLoad(GLuint *const __RESTRICT__ id, const char *const __RESTRICT__ vertexPath, const size_t vertexPathLength, const char *const __RESTRICT__ fragmentPath, const size_t fragmentPathLength);
 return_t shdrPrgObjLink(shaderProgramObject *const __RESTRICT__ shdrPrg);
 return_t shdrPrgSprLink(shaderProgramSprite *const __RESTRICT__ shdrPrg);

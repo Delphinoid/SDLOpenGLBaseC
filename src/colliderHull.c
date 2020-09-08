@@ -35,40 +35,110 @@ void cHullInit(cHull *const __RESTRICT__ c){
 	c->edges = NULL;
 }
 
-return_t cHullInstantiate(cHull *const __RESTRICT__ instance, const cHull *const __RESTRICT__ local){
+return_t cHullInstantiate(void *const __RESTRICT__ instance, const void *const __RESTRICT__ local){
 
 	cVertexIndex_t vertexArraySize;
 	cFaceIndex_t normalArraySize;
 
-	vertexArraySize = local->vertexNum * sizeof(vec3);
-	instance->vertices = memAllocate(vertexArraySize);
-	if(instance->vertices == NULL){
+	vertexArraySize = ((cHull *)local)->vertexNum * sizeof(vec3);
+	((cHull *)instance)->vertices = memAllocate(vertexArraySize);
+	if(((cHull *)instance)->vertices == NULL){
 		/** Memory allocation failure. **/
 		return -1;
 	}
-	normalArraySize = local->faceNum * sizeof(vec3);
-	instance->normals = memAllocate(normalArraySize);
-	if(instance->normals == NULL){
+	normalArraySize = ((cHull *)local)->faceNum * sizeof(vec3);
+	((cHull *)instance)->normals = memAllocate(normalArraySize);
+	if(((cHull *)instance)->normals == NULL){
 		/** Memory allocation failure. **/
-		memFree(instance->vertices);
+		memFree(((cHull *)instance)->vertices);
 		return -1;
 	}
 
-	instance->vertexNum = local->vertexNum;
-	instance->edgeMax   = local->edgeMax;
-	instance->faceNum   = local->faceNum;
-	instance->edgeNum   = local->edgeNum;
+	((cHull *)instance)->vertexNum = ((cHull *)local)->vertexNum;
+	((cHull *)instance)->edgeMax   = ((cHull *)local)->edgeMax;
+	((cHull *)instance)->faceNum   = ((cHull *)local)->faceNum;
+	((cHull *)instance)->edgeNum   = ((cHull *)local)->edgeNum;
 
-	memcpy(instance->vertices, local->vertices, vertexArraySize);
-	memcpy(instance->normals,  local->normals,  normalArraySize);
+	memcpy(((cHull *)instance)->vertices, ((cHull *)local)->vertices, vertexArraySize);
+	memcpy(((cHull *)instance)->normals,  ((cHull *)local)->normals,  normalArraySize);
 
 	// Re-use the faces and edges arrays. Vertices and
 	// normals, however, are modified each update when the
 	// collider's configuration changes.
-	instance->faces = local->faces;
-	instance->edges = local->edges;
+	((cHull *)instance)->faces = ((cHull *)local)->faces;
+	((cHull *)instance)->edges = ((cHull *)local)->edges;
 
 	return 1;
+
+}
+
+cAABB cHullTransform(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale){
+
+	cHull *const cInstance = instance;
+	const cHull *const cLocal = local;
+
+	const vec3 *vLocal = cLocal->vertices;
+	vec3 *vGlobal = cInstance->vertices;
+	const vec3 *vLast = &vGlobal[cInstance->vertexNum];
+
+	cAABB tempAABB = {.min.x = 0.f, .min.y = 0.f, .min.z = 0.f, .max.x = 0.f, .max.y = 0.f, .max.z = 0.f};
+
+	// Update each collider and find the total bounding box.
+	if(vGlobal < vLast){
+
+		// Extrapolate the collider's centroid from its position.
+		cHullCentroidFromPosition(cInstance, cLocal, position, orientation, scale);
+
+		// First iteration.
+		// Transform the vertex.
+		*vGlobal = vec3VAddV(quatRotateVec3FastApproximate(orientation, vec3VMultV(vec3VSubV(*vLocal, localCentroid), scale)), instanceCentroid);
+
+		// Initialize the AABB to the first vertex.
+		tempAABB.min = *vGlobal;
+		tempAABB.max = *vGlobal;
+
+		// Remaining iterations.
+		// Update each vertex.
+		for(++vLocal, ++vGlobal; vGlobal < vLast; ++vLocal, ++vGlobal){
+
+			// Transform the vertex.
+			*vGlobal = vec3VAddV(quatRotateVec3FastApproximate(orientation, vec3VMultV(vec3VSubV(*vLocal, localCentroid), scale)), instanceCentroid);
+
+			// Update collider minima and maxima.
+			// Update aabb.left and aabb.right.
+			if(vGlobal->x <= tempAABB.min.x){
+				tempAABB.min.x = vGlobal->x;
+			}else if(vGlobal->x > tempAABB.max.x){
+				tempAABB.max.x = vGlobal->x;
+			}
+			// Update aabb.bottom and aabb.top.
+			if(vGlobal->y <= tempAABB.min.y){
+				tempAABB.min.y = vGlobal->y;
+			}else if(vGlobal->y > tempAABB.max.y){
+				tempAABB.max.y = vGlobal->y;
+			}
+			// Update aabb.back and aabb.front.
+			if(vGlobal->z <= tempAABB.min.z){
+				tempAABB.min.z = vGlobal->z;
+			}else if(vGlobal->z > tempAABB.max.z){
+				tempAABB.max.z = vGlobal->z;
+			}
+
+		}
+
+	}
+
+	vLocal = cLocal->normals;
+	vGlobal = cInstance->normals;
+	vLast = &vGlobal[cInstance->faceNum];
+
+	// Update each normal. We actually do need to scale the normals.
+	for(; vGlobal < vLast; ++vLocal, ++vGlobal){
+		*vGlobal = vec3NormalizeFastAccurate(quatRotateVec3FastApproximate(orientation, vec3VMultV(*vLocal, scale)));
+
+	}
+
+	return tempAABB;
 
 }
 
@@ -536,13 +606,8 @@ static __HINT_INLINE__ void cHullClipFaceContact(const cHull *const reference, c
 		// Pointer to the array with the clipped vertices. Starts halfway through the vertex array.
 		clipArray.vertices = vertices+incident->edgeMax*2;
 
-
-		// Set the contact normal.
-		// Used for calculating the distance of
-		// penetrating vertices from the reference face.
-		// Contact tangents are calculated later on.
+		// We haven't found any contacts yet.
 		cm->contactNum = 0;
-
 
 		// Add the positions of all the vertices
 		// for the incident edges to vertexArray.

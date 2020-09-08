@@ -97,7 +97,7 @@ static return_t cmdTrieRemoveChild(cmdTrieNode *const __RESTRICT__ node, const c
 	return 1;
 }
 
-static return_t cmdValid(const char *const name, const command cmd){
+static return_t cmdValid(const char *const name, const cmdFunction cmd){
 	const char *check = name;
 	// Make sure the name and function pointer are not NULL.
 	if(check != NULL && cmd != NULL){
@@ -129,9 +129,9 @@ void cmdInit(cmdSystem *const __RESTRICT__ root){
 	root->children = NULL;
 	root->cmd = NULL;
 }
-return_t cmdAdd(cmdSystem *const node, const char *__RESTRICT__ name, const int (*func)(const cmdVariables *const __RESTRICT__ cmdv, const cmdInput *const __RESTRICT__ cmdi)){
+return_t cmdAdd(cmdSystem *const node, const char *__RESTRICT__ name, cmdFunction cmd){
 	// Check if the command is valid before adding it.
-	if(cmdValid(name, func)){
+	if(cmdValid(name, cmd)){
 		// Go through each character in name, adding
 		// a node when we don't have a match.
 		while(*name != '\0'){
@@ -145,7 +145,7 @@ return_t cmdAdd(cmdSystem *const node, const char *__RESTRICT__ name, const int 
 		if(node->cmd == NULL){
 			// If a function is not already linked to
 			// this node, link func and return success.
-			node->cmd = func;
+			node->cmd = cmd;
 			return 1;
 		}
 	}
@@ -179,14 +179,14 @@ return_t cmdRemove(cmdSystem *const node, const char *__RESTRICT__ name){
 	}
 	return 0;
 }
-return_t cmdFind(cmdSystem *const node, const char *__RESTRICT__ name, command *const cmd){
+return_t cmdFind(cmdSystem *const node, const char *__RESTRICT__ name, cmdFunction cmd){
 	/** Any non-null-terminated input name has unexpected results. **/
 	while(cmdTrieNext((cmdTrieNode **const __RESTRICT__)&node, *name) != (size_t)-1){
 		++name;
 	}
 	// If we reached the end of the command's name, we've found it.
 	if(*name == '\0'){
-		*cmd = node->cmd;
+		cmd = node->cmd;
 		return 1;
 	}
 	return 0;

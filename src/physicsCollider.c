@@ -272,16 +272,11 @@ __FORCE_INLINE__ void physColliderGenerateMoment(collider *const __RESTRICT__ lo
 }
 
 
-cAABB cTransformHull(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale);
-cAABB cTransformCapsule(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale);
-cAABB cTransformSphere(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale);
-cAABB cTransformAABB(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale);
-cAABB cTransformPoint(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale);
-
-void physColliderTransformHull(physCollider *const __RESTRICT__ c){
+__FORCE_INLINE__ void physColliderTransform(physCollider *const __RESTRICT__ c){
+	// Transforms a physics collider, updating its AABB.
 	const physRigidBody *const body = c->body;
-	c->aabb = cTransformHull(
-		&c->c.data, body->centroidGlobal, &c->base->data,
+	c->aabb = cTransform(
+		&c->c, body->centroidGlobal, c->base,
 		#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
 		 body->centroidLocal,
 		#else
@@ -289,28 +284,6 @@ void physColliderTransformHull(physCollider *const __RESTRICT__ c){
 		#endif
 		body->configuration.position, body->configuration.orientation, body->configuration.scale
 	);
-}
-
-/** The lines below should eventually be removed. **/
-#define physColliderTransformCapsule   NULL
-#define physColliderTransformSphere    NULL
-#define physColliderTransformAABB      NULL
-#define physColliderTransformPoint     NULL
-#define physColliderTransformComposite NULL
-
-void (* const physColliderTransformJumpTable[COLLIDER_TYPE_NUM])(
-	physCollider *const __RESTRICT__ c
-) = {
-	physColliderTransformHull,
-	physColliderTransformCapsule,
-	physColliderTransformSphere,
-	physColliderTransformAABB,
-	physColliderTransformPoint,
-	physColliderTransformComposite
-};
-__FORCE_INLINE__ void physColliderTransform(physCollider *const __RESTRICT__ c){
-	// Transforms a physics collider, updating its AABB.
-	physColliderTransformJumpTable[c->c.type](c);
 }
 
 
@@ -338,7 +311,7 @@ physContactPair *physColliderFindContact(const physCollider *const c1, const phy
 		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 		i = (physContactPair *)memQLinkNextA(p);
 		#else
-		i = p->nextA;
+		i = i->nextA;
 		#endif
 	}
 
@@ -371,7 +344,7 @@ physSeparationPair *physColliderFindSeparation(const physCollider *const c1, con
 		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 		i = (physSeparationPair *)memQLinkNextA(p);
 		#else
-		i = p->nextA;
+		i = i->nextA;
 		#endif
 	}
 

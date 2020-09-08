@@ -2,6 +2,7 @@
 #define PHYSICSRIGIDBODY_H
 
 #include "physicsShared.h"
+#include "colliderShared.h"
 #include "bone.h"
 #include "mat3.h"
 #include "flags.h"
@@ -39,6 +40,7 @@
 #endif
 
 typedef struct physCollider physCollider;
+typedef struct physContactPair physContactPair;
 typedef struct physJoint physJoint;
 typedef struct physIsland physIsland;
 typedef struct skeleton skeleton;
@@ -131,7 +133,7 @@ void physRigidBodyIgnoreAngular(physRigidBody *const __RESTRICT__ body);
 return_t physRigidBodyIsUninitialized(const physRigidBody *const __RESTRICT__ body);
 return_t physRigidBodyIsSimulated(const physRigidBody *const __RESTRICT__ body);
 return_t physRigidBodyIsCollidable(const physRigidBody *const __RESTRICT__ body);
-return_t physRigidBodyIsAsleep(physRigidBody *const __RESTRICT__ body);
+return_t physRigidBodyIsAwake(physRigidBody *const __RESTRICT__ body);
 return_t physRigidBodyWasInitialized(const physRigidBody *const __RESTRICT__ body);
 
 void physRigidBodyApplyLinearForce(physRigidBody *const __RESTRICT__ body, const vec3 F);
@@ -172,6 +174,8 @@ return_t physRigidBodyPermitCollision(const physRigidBody *const __RESTRICT__ bo
 void physRigidBodyAddCollider(physRigidBody *const __RESTRICT__ body, physCollider *const c, const float **const vertexMassArray);
 #endif
 return_t physRigidBodyAddJoint(physRigidBody *const body, physJoint *const joint);
+
+const physContactPair *physRigidBodyCheckContact(const physRigidBody *const __RESTRICT__ body, const colliderMask_t layer);
 
 void physRigidBodyDelete(physRigidBody *const __RESTRICT__ body);
 

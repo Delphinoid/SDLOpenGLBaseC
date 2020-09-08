@@ -1,4 +1,5 @@
 #include "physicsRigidBody.h"
+#include "physicsCollision.h"
 #include "physicsCollider.h"
 #include "physicsJoint.h"
 #include "physicsIsland.h"
@@ -1142,8 +1143,8 @@ __FORCE_INLINE__ return_t physRigidBodyIsSimulated(const physRigidBody *const __
 __FORCE_INLINE__ return_t physRigidBodyIsCollidable(const physRigidBody *const __RESTRICT__ body){
 	return flagsAreSet(body->flags, PHYSICS_BODY_COLLIDE);
 }
-__FORCE_INLINE__ return_t physRigidBodyIsAsleep(physRigidBody *const __RESTRICT__ body){
-	return body->flags;
+__FORCE_INLINE__ return_t physRigidBodyIsAwake(physRigidBody *const __RESTRICT__ body){
+	return flagsAreSet(body->flags, PHYSICS_BODY_AWAKE);
 }
 __FORCE_INLINE__ return_t physRigidBodyWasInitialized(const physRigidBody *const __RESTRICT__ body){
 	return flagsAreSet(body->flags, PHYSICS_BODY_INITIALIZED);
@@ -1310,16 +1311,16 @@ __HINT_INLINE__ void physRigidBodyApplyConfigurationImpulseInverse(physRigidBody
 
 __FORCE_INLINE__ void physRigidBodyCentroidFromPosition(physRigidBody *const __RESTRICT__ body){
 	body->centroidGlobal = vec3VAddV(
-		vec3VMultV(
-			quatRotateVec3FastApproximate(
-				body->configuration.orientation,
+		quatRotateVec3FastApproximate(
+			body->configuration.orientation,
+			vec3VMultV(
 				#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
-				body->centroidLocal
+				body->centroidLocal,
 				#else
-				body->base->centroid
+				body->base->centroid,
 				#endif
-			),
-			body->configuration.scale
+				body->configuration.scale
+			)
 		),
 		body->configuration.position
 	);
@@ -1327,16 +1328,16 @@ __FORCE_INLINE__ void physRigidBodyCentroidFromPosition(physRigidBody *const __R
 
 __FORCE_INLINE__ void physRigidBodyPositionFromCentroid(physRigidBody *const __RESTRICT__ body){
 	body->configuration.position = vec3VAddV(
-		vec3VMultV(
-			quatRotateVec3FastApproximate(
-				body->configuration.orientation,
+		quatRotateVec3FastApproximate(
+			body->configuration.orientation,
+			vec3VMultV(
 				#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
-				vec3Negate(body->centroidLocal)
+				vec3Negate(body->centroidLocal),
 				#else
-				vec3Negate(body->base->centroid)
+				vec3Negate(body->base->centroid),
 				#endif
-			),
-			body->configuration.scale
+				body->configuration.scale
+			)
 		),
 		body->centroidGlobal
 	);
@@ -1779,6 +1780,42 @@ void physRigidBodyAddCollider(physRigidBody *const __RESTRICT__ body, physCollid
 
 }
 #endif
+
+const physContactPair *physRigidBodyCheckContact(const physRigidBody *const __RESTRICT__ body, const colliderMask_t layer){
+
+	// Check all contacts for one with the provided mask.
+	const physCollider *c = body->hull;
+	const physContactPair *i;
+
+	// Loop through each collider.
+	while(c != NULL){
+
+		// Loop through each cached contact.
+		i = c->contactCache;
+		while(i != NULL){
+			// Check if the incident collider is the same.
+			if(c == i->colliderA){
+				if((i->colliderB->layers | layer) > 0){
+					return i;
+				}
+				i = i->nextA;
+			}else if(c == i->colliderB){
+				if((i->colliderA->layers | layer) > 0){
+					return i;
+				}
+				i = i->nextB;
+			}else{
+				break;
+			}
+		}
+
+		c = (physCollider *)memSLinkNext(c);
+
+	}
+
+	return NULL;
+
+}
 
 void physRigidBodyDelete(physRigidBody *const __RESTRICT__ body){
 	modulePhysicsColliderFreeArray(&body->hull);

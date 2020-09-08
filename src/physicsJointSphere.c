@@ -40,7 +40,7 @@
 //
 // and the identity JV = C', we can solve for the Jacobian J:
 //
-// J = J = [0, -n, 0, n].
+// J = [0, -n, 0, n].
 //
 // Finally, adding a potential bias term, we have
 //

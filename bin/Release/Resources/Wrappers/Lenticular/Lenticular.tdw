@@ -1,6 +1,5 @@
 animation {
 	loop 0
-	
 	frameEntire 0 "Lenticular\0.tdt"
 }
 animation {

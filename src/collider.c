@@ -8,30 +8,22 @@ void cInit(collider *const __RESTRICT__ c, const colliderType_t type){
 }
 
 
-return_t cInstantiateHull(void *const instance, const void *const local){
-	return cHullInstantiate((cHull *)instance, (cHull *)local);
-}
-
-return_t cInstantiateComposite(void *const instance, const void *const local){
-	return cCompositeInstantiate((cComposite *)instance, (cComposite *)local);
-}
-
 /** The lines below should eventually be removed. **/
-#define cInstantiateCapsule NULL
-#define cInstantiateSphere  NULL
-#define cInstantiateAABB    NULL
-#define cInstantiatePoint   NULL
+#define cCapsuleInstantiate NULL
+#define cSphereInstantiate  NULL
+#define cAABBInstantiate    NULL
+#define cPointInstantiate   NULL
 
 return_t (* const cInstantiateJumpTable[COLLIDER_TYPE_NUM])(
 	void *const instance,
 	const void *const local
 ) = {
-	cInstantiateHull,
-	cInstantiateCapsule,
-	cInstantiateSphere,
-	cInstantiateAABB,
-	cInstantiatePoint,
-	cInstantiateComposite
+	cHullInstantiate,
+	cCapsuleInstantiate,
+	cSphereInstantiate,
+	cAABBInstantiate,
+	cPointInstantiate,
+	cCompositeInstantiate
 };
 __FORCE_INLINE__ return_t cInstantiate(collider *const instance, const collider *const local){
 	// Instantiates a collider by performing a copy.
@@ -41,130 +33,11 @@ __FORCE_INLINE__ return_t cInstantiate(collider *const instance, const collider 
 }
 
 
-cAABB cTransformHull(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale){
-
-	cHull *const cInstance = instance;
-	const cHull *const cLocal = local;
-
-	const vec3 *vLocal = cLocal->vertices;
-	vec3 *vGlobal = cInstance->vertices;
-	const vec3 *vLast = &vGlobal[cInstance->vertexNum];
-
-	cAABB tempAABB = {.min.x = 0.f, .min.y = 0.f, .min.z = 0.f, .max.x = 0.f, .max.y = 0.f, .max.z = 0.f};
-
-	// Update each collider and find the total bounding box.
-	if(vGlobal < vLast){
-
-		// Extrapolate the collider's centroid from its position.
-		cHullCentroidFromPosition(cInstance, cLocal, position, orientation, scale);
-
-		// First iteration.
-		// Transform the vertex.
-		*vGlobal = vec3VAddV(quatRotateVec3FastApproximate(orientation, vec3VMultV(vec3VSubV(*vLocal, localCentroid), scale)), instanceCentroid);
-
-		// Initialize the AABB to the first vertex.
-		tempAABB.min = *vGlobal;
-		tempAABB.max = *vGlobal;
-
-		// Remaining iterations.
-		// Update each vertex.
-		for(++vLocal, ++vGlobal; vGlobal < vLast; ++vLocal, ++vGlobal){
-
-			// Transform the vertex.
-			*vGlobal = vec3VAddV(quatRotateVec3FastApproximate(orientation, vec3VMultV(vec3VSubV(*vLocal, localCentroid), scale)), instanceCentroid);
-
-			// Update collider minima and maxima.
-			// Update aabb.left and aabb.right.
-			if(vGlobal->x <= tempAABB.min.x){
-				tempAABB.min.x = vGlobal->x;
-			}else if(vGlobal->x > tempAABB.max.x){
-				tempAABB.max.x = vGlobal->x;
-			}
-			// Update aabb.bottom and aabb.top.
-			if(vGlobal->y <= tempAABB.min.y){
-				tempAABB.min.y = vGlobal->y;
-			}else if(vGlobal->y > tempAABB.max.y){
-				tempAABB.max.y = vGlobal->y;
-			}
-			// Update aabb.back and aabb.front.
-			if(vGlobal->z <= tempAABB.min.z){
-				tempAABB.min.z = vGlobal->z;
-			}else if(vGlobal->z > tempAABB.max.z){
-				tempAABB.max.z = vGlobal->z;
-			}
-
-		}
-
-	}
-
-	vLocal = cLocal->normals;
-	vGlobal = cInstance->normals;
-	vLast = &vGlobal[cInstance->faceNum];
-
-	// Update each normal.
-	for(; vGlobal < vLast; ++vLocal, ++vGlobal){
-		*vGlobal = quatRotateVec3FastApproximate(orientation, *vLocal);
-	}
-
-	return tempAABB;
-
-}
-
-cAABB cTransformComposite(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale){
-
-	cComposite *const cInstance = instance;
-	const cComposite *const cLocal = local;
-
-	collider *c1 = cInstance->colliders;
-	collider *c2 = cLocal->colliders;
-	const collider *const cLast = &c1[cInstance->colliderNum];
-
-	cAABB tempAABB = {.min.x = 0.f, .min.y = 0.f, .min.z = 0.f, .max.x = 0.f, .max.y = 0.f, .max.z = 0.f};
-
-	// Update each collider and find the total bounding box.
-	if(c1 < cLast){
-
-		// First iteration.
-		tempAABB = cTransform(c1, instanceCentroid, c2, localCentroid, position, orientation, scale);
-
-		// Remaining iterations.
-		for(++c1, ++c2; c1 < cLast; ++c1, ++c2){
-
-			const cAABB colliderAABB = cTransform(c1, instanceCentroid, c2, localCentroid, position, orientation, scale);
-
-			// Update collider minima and maxima.
-			// Update aabb.left and aabb.right.
-			if(colliderAABB.min.x <= tempAABB.min.x){
-				tempAABB.min.x = colliderAABB.min.x;
-			}else if(colliderAABB.max.x > tempAABB.max.x){
-				tempAABB.max.x = colliderAABB.max.x;
-			}
-			// Update aabb.bottom and aabb.top.
-			if(colliderAABB.min.y <= tempAABB.min.y){
-				tempAABB.min.y = colliderAABB.min.y;
-			}else if(colliderAABB.max.y > tempAABB.max.y){
-				tempAABB.max.y = colliderAABB.max.y;
-			}
-			// Update aabb.back and aabb.front.
-			if(colliderAABB.min.z <= tempAABB.min.z){
-				tempAABB.min.z = colliderAABB.min.z;
-			}else if(colliderAABB.max.z > tempAABB.max.z){
-				tempAABB.max.z = colliderAABB.max.z;
-			}
-
-		}
-
-	}
-
-	return tempAABB;
-
-}
-
 /** The lines below should eventually be removed. **/
-#define cTransformCapsule NULL
-#define cTransformSphere  NULL
-#define cTransformAABB    NULL
-#define cTransformPoint   NULL
+#define cCapsuleTransform NULL
+#define cSphereTransform  NULL
+#define cAABBTransform    NULL
+#define cPointTransform   NULL
 
 cAABB (* const cTransformJumpTable[COLLIDER_TYPE_NUM])(
 	void *const instance,
@@ -175,12 +48,12 @@ cAABB (* const cTransformJumpTable[COLLIDER_TYPE_NUM])(
 	const quat orientation,
 	const vec3 scale
 ) = {
-	cTransformHull,
-	cTransformCapsule,
-	cTransformSphere,
-	cTransformAABB,
-	cTransformPoint,
-	cTransformComposite
+	cHullTransform,
+	cCapsuleTransform,
+	cSphereTransform,
+	cAABBTransform,
+	cPointTransform,
+	cCompositeTransform
 };
 __FORCE_INLINE__ cAABB cTransform(collider *const instance, const vec3 instanceCentroid, const collider *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale){
 

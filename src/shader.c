@@ -16,7 +16,7 @@ void shdrDataInit(shaderData *const __RESTRICT__ shdrData){
 	shdrData->biasLOD = SHADER_DEFAULT_BIAS_LOD;
 }
 
-static __FORCE_INLINE__ return_t shdrLoad(GLuint *const __RESTRICT__ id, GLenum type, const char *const __RESTRICT__ filePath, const size_t filePathLength){
+return_t shdrLoad(GLuint *const __RESTRICT__ id, GLenum type, const char *const __RESTRICT__ filePath, const size_t filePathLength){
 
 	char fullPath[FILE_MAX_PATH_LENGTH];
 

@@ -20,6 +20,10 @@
 #include "moduleRenderable.h"
 #include "modulePhysics.h"
 
+/****/
+///#include "graphicsDebug.h"
+///#include "camera.h"
+
 #define OBJECT_RESOURCE_DIRECTORY_STRING FILE_PATH_RESOURCE_DIRECTORY_SHARED"Resources"FILE_PATH_DELIMITER_STRING"Objects"FILE_PATH_DELIMITER_STRING
 #define OBJECT_RESOURCE_DIRECTORY_LENGTH 20
 
@@ -1008,6 +1012,7 @@ return_t objTick(object *const __RESTRICT__ obj, const float elapsedTime){
 			skliGenerateBoneState(&obj->skeletonData, i, sklBone->name, sklState);
 
 			// Apply the parent's transformations to each bone.
+			// Only do this if we are not on the root bone, of course.
 			if(!isRoot){
 				*sklState = boneTransformAppend(obj->state.configuration[sklBone->parent], *sklState);
 			}
@@ -1211,6 +1216,8 @@ void objRender(const object *const __RESTRICT__ obj, graphicsManager *const __RE
 		bone *bAccumulator = gfxMngr->shdrData.skeletonBindAccumulator;
 
 		bone state;
+		///vec3 gfxDebugBonePositions[SKELETON_MAX_BONE_NUM];
+		///boneIndex_t gfxDebugBoneParents[SKELETON_MAX_BONE_NUM];
 
 		// Handle the root separately.
 		state = boneInterpolate(*bPrevious, *bCurrent, interpT);
@@ -1222,6 +1229,9 @@ void objRender(const object *const __RESTRICT__ obj, graphicsManager *const __RE
 		*transformCurrent = boneMatrix(
 			boneTransformAppend(state, *bAccumulator)
 		);
+
+		///gfxDebugBonePositions[boneNum - i] = state.position;
+		///gfxDebugBoneParents[boneNum - i] = 0;
 
 		// Handle the rest of the bones.
 		while(i > 0){
@@ -1240,7 +1250,16 @@ void objRender(const object *const __RESTRICT__ obj, graphicsManager *const __RE
 				boneTransformAppend(state, *bAccumulator)
 			);
 
+			///gfxDebugBonePositions[boneNum - i] = state.position;
+			///gfxDebugBoneParents[boneNum - i] = nLayout->parent;
+
 		}
+
+		// Draw the skeleton for debugging.
+		/**gfxDebugDrawSkeleton(
+			gfxDebugBonePositions, gfxDebugBoneParents, boneNum,
+			gfxDebugInfoInit(GL_LINE, vec3New(0.f, 1.f, 0.f)), &cam->viewProjectionMatrix
+		);**/
 
 	}
 

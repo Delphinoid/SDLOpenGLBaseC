@@ -1,0 +1,9 @@
+#version 330 core
+
+uniform vec3 meshColour;
+
+out vec4 colour;
+
+void main(){
+	colour = vec4(meshColour, 1.f);
+}

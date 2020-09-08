@@ -221,7 +221,7 @@ static __FORCE_INLINE__ void aabbTreeInsertLeaf(aabbTree *const __RESTRICT__ tre
 	if(siblingParent != NULL){
 		// Make the sibling's parent point to the parent node.
 		if(siblingParent->data.children.left == sibling){
-		   siblingParent->data.children.left = parent;
+			siblingParent->data.children.left = parent;
 		}else{
 			siblingParent->data.children.right = parent;
 		}

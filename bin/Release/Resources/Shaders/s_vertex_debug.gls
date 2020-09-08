@@ -1,0 +1,9 @@
+#version 330 core
+
+uniform mat4 vpMatrix;
+
+layout(location = 0) in vec3 vertexPos;
+
+void main(){
+	gl_Position = vpMatrix * vec4(vertexPos, 1.f);
+}

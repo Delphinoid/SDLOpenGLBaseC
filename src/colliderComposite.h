@@ -22,7 +22,8 @@ typedef struct {
 } cComposite;
 
 void cCompositeInit(cComposite *const __RESTRICT__ c);
-return_t cCompositeInstantiate(cComposite *const __RESTRICT__ instance, const cComposite *const __RESTRICT__ local);
+return_t cCompositeInstantiate(void *const __RESTRICT__ instance, const void *const __RESTRICT__ local);
+cAABB cCompositeTransform(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale);
 void cCompositeDeleteBase(cComposite *const __RESTRICT__ c);
 void cCompositeDelete(cComposite *const __RESTRICT__ c);
 

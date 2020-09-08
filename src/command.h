@@ -13,32 +13,37 @@ typedef struct {
 
 } cmdVariables;
 
-// A command is effectively a pointer to a function that fits
-// the following prototype:
-//
-// int func(const cmdVariables *cmdv, const cmdInput *cmdi);
+typedef struct command command;
 typedef struct {
 	size_t argc;
 	void *argv;
-	flags_t parsed;  // Whether argv is parsed in the expected format or as a string.
-} cmdInput;
-typedef const int (*command)(const cmdVariables *const __RESTRICT__ cmdv, const cmdInput *const __RESTRICT__ cmdi);
+} cmdArgument;
+// int func(const cmdVariables *cmdv, const cmdInput *cmdi);
+typedef const int (*cmdFunction)(const command *const __RESTRICT__ cmd, const flags_t state, const cmdVariables *const __RESTRICT__ cmdv);
+
+// A command instance contains a set of
+// inputs and a function to run on them.
+typedef struct command {
+	cmdArgument arg;
+	cmdFunction cmd;
+} command;
 
 // Command trie nodes store an array of characters
 // that represent the following characters that
 // appear for various strings.
+/** Create a new cmdSystem containing cmdVariables and a root node. **/
 typedef struct cmdTrieNode cmdTrieNode;
 typedef struct cmdTrieNode {
 	cmdNodeIndex_t childNum;
 	cmdTrieNode *children;
-	command cmd;
+	cmdFunction cmd;
 	char value;
 } cmdTrieNode, cmdSystem;
 
 /** Fixed-length names? **/
 void cmdInit(cmdSystem *const __RESTRICT__ root);
-return_t cmdAdd(cmdSystem *const node, const char *__RESTRICT__ name, const int (*func)(const cmdVariables *const __RESTRICT__ cmdv, const cmdInput *const __RESTRICT__ cmdi));
+return_t cmdAdd(cmdSystem *const node, const char *__RESTRICT__ name, cmdFunction cmd);
 return_t cmdRemove(cmdSystem *const node, const char *__RESTRICT__ name);
-return_t cmdFind(cmdSystem *const node, const char *__RESTRICT__ name, command *const cmd);
+return_t cmdFind(cmdSystem *const node, const char *__RESTRICT__ name, cmdFunction cmd);
 
 #endif
