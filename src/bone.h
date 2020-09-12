@@ -12,20 +12,23 @@ typedef struct {
 
 void boneInit(bone *const __RESTRICT__ b);
 bone boneIdentity();
+
 mat4 boneMatrix(const bone b);
 
-bone boneInvert(const bone b);
-void boneInvertP(bone *const __RESTRICT__ b);
-void boneInvertPR(const bone *const __RESTRICT__ b, bone *const __RESTRICT__ r);
-
-bone boneInvertFast(const bone b);
-void boneInvertFastP(bone *const __RESTRICT__ b);
-void boneInvertFastPR(const bone *const __RESTRICT__ b, bone *const __RESTRICT__ r);
+bone boneInverse(const bone b);
+void boneInverseP(bone *const __RESTRICT__ b);
+void boneInversePR(const bone *const __RESTRICT__ b, bone *const __RESTRICT__ r);
 
 bone boneInterpolate(const bone b1, const bone b2, const float t);
 void boneInterpolateP1(bone *const __RESTRICT__ b1, const bone *const __RESTRICT__ b2, const float t);
 void boneInterpolateP2(const bone *const __RESTRICT__ b1, bone *const __RESTRICT__ b2, const float t);
 void boneInterpolatePR(const bone *const __RESTRICT__ b1, const bone *const __RESTRICT__ b2, const float t, bone *const __RESTRICT__ r);
+
+vec3 boneTransform(const bone b, const vec3 v);
+
+bone boneTransformInverse(const bone b);
+void boneTransformInverseP(bone *const __RESTRICT__ b);
+void boneTransformInversePR(const bone *const __RESTRICT__ b, bone *const __RESTRICT__ r);
 
 vec3 boneTransformAppendPosition1(const bone b1, const bone b2);
 vec3 boneTransformAppendPosition2(const bone b1, const bone b2);
@@ -51,7 +54,7 @@ void boneTransformAppendP1(bone *const __RESTRICT__ b1, const bone *const __REST
 void boneTransformAppendP2(const bone *const __RESTRICT__ b1, bone *const __RESTRICT__ b2);
 void boneTransformAppendPR(const bone *const __RESTRICT__ b1, const bone *const __RESTRICT__ b2, bone *const __RESTRICT__ r);
 
-bone boneTransformUndoPrepend(const bone b1, const bone b2);
+bone boneTransformPrepend(const bone b1, const bone b2);
 
 bone boneTransformCombine(const bone b1, const bone b2);
 void boneTransformCombineP1(bone *const __RESTRICT__ b1, const bone *const __RESTRICT__ b2);

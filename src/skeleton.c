@@ -731,7 +731,7 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *const __RES
 								/** Some SMD animations are different to how I do animations. **/
 								/** See skliGenerateBoneState for more information. **/
 								if(invert){
-									bone thing = boneInvert(skl->bones[boneID].defaultState);
+									bone thing = boneInverse(skl->bones[boneID].defaultState);
 									*currentState = boneTransformAppend(thing, *currentState);
 								}
 

@@ -72,6 +72,11 @@ return_t cHullInstantiate(void *const __RESTRICT__ instance, const void *const _
 
 }
 
+__FORCE_INLINE__ void cHullCentroidFromPosition(cHull *const __RESTRICT__ c, const cHull *const __RESTRICT__ l, const vec3 position, const quat orientation, const vec3 scale){
+	// Extrapolate the mesh's centroid from a configuration.
+	c->centroid = vec3VAddV(vec3VMultV(quatRotateVec3FastApproximate(orientation, l->centroid), scale), position);
+}
+
 cAABB cHullTransform(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale){
 
 	cHull *const cInstance = instance;
@@ -87,7 +92,7 @@ cAABB cHullTransform(void *const instance, const vec3 instanceCentroid, const vo
 	if(vGlobal < vLast){
 
 		// Extrapolate the collider's centroid from its position.
-		cHullCentroidFromPosition(cInstance, cLocal, position, orientation, scale);
+		cInstance->centroid = vec3VAddV(vec3VMultV(quatRotateVec3FastApproximate(orientation, cLocal->centroid), scale), position);
 
 		// First iteration.
 		// Transform the vertex.
@@ -140,11 +145,6 @@ cAABB cHullTransform(void *const instance, const vec3 instanceCentroid, const vo
 
 	return tempAABB;
 
-}
-
-__FORCE_INLINE__ void cHullCentroidFromPosition(cHull *const __RESTRICT__ c, const cHull *const __RESTRICT__ l, const vec3 position, const quat orientation, const vec3 scale){
-	// Extrapolate the mesh's centroid from a configuration.
-	c->centroid = vec3VAddV(vec3VMultV(quatRotateVec3FastApproximate(orientation, l->centroid), scale), position);
 }
 
 static __FORCE_INLINE__ const vec3 *cHullCollisionSupport(const cHull *const __RESTRICT__ c, const vec3 axis){

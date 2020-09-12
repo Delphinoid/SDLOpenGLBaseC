@@ -24,57 +24,28 @@ mat4 boneMatrix(const bone b){
 	transform.m[3][1] = b.position.y;
 	transform.m[3][2] = b.position.z;
 	return transform;
-	/*mat4 scale = mat4ScaleMatrix(b.scale.x, b.scale.y, b.scale.z);
-	mat4 rotate = mat4RotationMatrix(b.orientation);
-	mat4 translate = mat4TranslationMatrix(b.position.x, b.position.y, b.position.z);
-	return mat4MMultM(translate, mat4MMultM(rotate, scale));*/
 }
 
-bone boneInvert(const bone b){
+bone boneInverse(const bone b){
 	bone r;
 	r.orientation = quatConjugate(b.orientation);
 	r.position = vec3Negate(quatRotateVec3FastApproximate(r.orientation, b.position));
 	r.scale = vec3SDivV(1.f, b.scale);
 	return r;
 }
-void boneInvertP(bone *const __RESTRICT__ b){
+void boneInverseP(bone *const __RESTRICT__ b){
 	quatConjugateP(&b->orientation);
 	quatRotateVec3FastApproximateP(&b->orientation, &b->position);
 	vec3NegateP(&b->position);
 	vec3SDivVP(1.f, &b->scale);
 }
-void boneInvertPR(const bone *const __RESTRICT__ b, bone *const __RESTRICT__ r){
+void boneInversePR(const bone *const __RESTRICT__ b, bone *const __RESTRICT__ r){
 	quatConjugatePR(&b->orientation, &r->orientation);
 	quatRotateVec3FastApproximatePR(&r->orientation, &b->position, &r->position);
 	vec3NegateP(&r->position);
 	r->scale.x = 1.f/b->scale.x;
 	r->scale.y = 1.f/b->scale.y;
 	r->scale.z = 1.f/b->scale.z;
-}
-
-bone boneInvertFast(const bone b){
-	// WARNING: This is technically incorrect, and may
-	// result in singularities during interpolation.
-	const bone r = {
-		.position = vec3Negate(b.position),
-		.orientation = quatConjugateFast(b.orientation),
-		.scale = vec3SDivV(1.f, b.scale)
-	};
-	return r;
-}
-void boneInvertFastP(bone *const __RESTRICT__ b){
-	// WARNING: This is technically incorrect, and may
-	// result in singularities during interpolation.
-	vec3NegateP(&b->position);
-	quatConjugateFastP(&b->orientation);
-	vec3SDivVP(1.f, &b->scale);
-}
-void boneInvertFastPR(const bone *const __RESTRICT__ b, bone *const __RESTRICT__ r){
-	// WARNING: This is technically incorrect, and may
-	// result in singularities during interpolation.
-	vec3NegatePR(&b->position, &r->position);
-	quatConjugateFastPR(&b->orientation, &r->orientation);
-	vec3SDivVPR(1.f, &b->scale, &r->scale);
 }
 
 bone boneInterpolate(const bone b1, const bone b2, const float t){
@@ -182,6 +153,38 @@ void boneInterpolatePR(const bone *const __RESTRICT__ b1, const bone *const __RE
 
 }
 
+vec3 boneTransform(const bone b, const vec3 v){
+	return vec3VAddV(b.position, quatRotateVec3FastApproximate(b.orientation, vec3VMultV(v, b.scale)));
+}
+
+bone boneTransformInverse(const bone b){
+	// WARNING: This is technically incorrect, and may
+	// result in singularities during interpolation.
+	// See quatConjugateFast for more information.
+	const bone r = {
+		.position = vec3Negate(b.position),
+		.orientation = quatConjugateFast(b.orientation),
+		.scale = vec3SDivV(1.f, b.scale)
+	};
+	return r;
+}
+void boneTransformInverseP(bone *const __RESTRICT__ b){
+	// WARNING: This is technically incorrect, and may
+	// result in singularities during interpolation.
+	// See quatConjugateFast for more information.
+	vec3NegateP(&b->position);
+	quatConjugateFastP(&b->orientation);
+	vec3SDivVP(1.f, &b->scale);
+}
+void boneTransformInversePR(const bone *const __RESTRICT__ b, bone *const __RESTRICT__ r){
+	// WARNING: This is technically incorrect, and may
+	// result in singularities during interpolation.
+	// See quatConjugateFast for more information.
+	vec3NegatePR(&b->position, &r->position);
+	quatConjugateFastPR(&b->orientation, &r->orientation);
+	vec3SDivVPR(1.f, &b->scale, &r->scale);
+}
+
 vec3 boneTransformAppendPosition1(const bone b1, const bone b2){
 	return vec3VAddV(b1.position, quatRotateVec3FastApproximate(b1.orientation, vec3VMultV(b2.position, b1.scale)));
 }
@@ -273,17 +276,6 @@ bone boneTransformAppend(const bone b1, const bone b2){
 	};
 	return r;
 }
-
-bone boneTransformUndoPrepend(const bone b1, const bone b2){
-	const quat qInverse = quatInverseFast(b1.orientation);
-	const vec3 sInverse = vec3SDivV(1.f, b1.scale);
-	const bone r = {
-		.position = vec3VMultV(quatRotateVec3FastApproximate(qInverse, vec3VSubV(b2.position, b1.position)), sInverse),
-		.orientation = quatNormalizeFast(quatQMultQ(qInverse, b2.orientation)),
-		.scale = vec3VMultV(b2.scale, sInverse)
-	};
-	return r;
-}
 void boneTransformAppendP1(bone *const __RESTRICT__ b1, const bone *const __RESTRICT__ b2){
 	// Adds the transformations for b2 to b1 and stores the result in b1.
 	// Used for getting the total sum of all transformations of a bone.
@@ -326,6 +318,19 @@ void boneTransformAppendPR(const bone *const __RESTRICT__ b1, const bone *const 
 	quatNormalizeFastP(&r->orientation);
 	// Calculate total scale.
 	vec3VMultVPR(&b1->scale, &b2->scale, &r->scale);
+}
+
+bone boneTransformPrepend(const bone b1, const bone b2){
+	// Just performs the reverse of boneTransformAppend,
+	// such that the following equality holds:
+	//     b = boneTransformPrepend(boneTransformInverse(T), boneTransformAppend(T, b)),
+	// for some transformation T.
+	const bone r = {
+		.position = vec3VMultV(quatRotateVec3FastApproximate(b1.orientation, vec3VAddV(b1.position, b2.position)), b1.scale),
+		.orientation = quatNormalizeFast(quatQMultQ(b1.orientation, b2.orientation)),
+		.scale = vec3VMultV(b2.scale, b1.scale)
+	};
+	return r;
 }
 
 bone boneTransformCombine(const bone b1, const bone b2){

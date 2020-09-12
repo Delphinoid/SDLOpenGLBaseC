@@ -1209,7 +1209,7 @@ void objRender(const object *const __RESTRICT__ obj, graphicsManager *const __RE
 	// to the shader.
 	if(boneNum > 0){
 
-		boneIndex_t i = 0;///boneNum;
+		boneIndex_t i = 0;
 
 		mat4 *transformCurrent = gfxMngr->shdrData.skeletonTransformState;
 		const bone *bCurrent = obj->state.configuration;
@@ -1220,7 +1220,7 @@ void objRender(const object *const __RESTRICT__ obj, graphicsManager *const __RE
 		bone *bAccumulator = gfxMngr->shdrData.skeletonBindAccumulator;
 
 		// Configuration and animated bone state accumulators.
-		/** Might have to use memAllocate here to prevent stack overflows, ~10 KB is a pretty significant chunk of the stack. **/
+		/** Might have to use memAllocate here to prevent stack overflows, ~5 KB is a pretty significant chunk of the stack. **/
 		bone accumulators[SKELETON_MAX_BONE_NUM];
 		bone *cAccumulator = &accumulators[0];
 
@@ -1235,14 +1235,19 @@ void objRender(const object *const __RESTRICT__ obj, graphicsManager *const __RE
 		///gfxDebugBoneParents[i] = 0;
 
 		// Calculate the root inverse bind pose.
-		*bAccumulator = boneInvert(sklBone->defaultState);
+		*bAccumulator = boneInverse(sklBone->defaultState);
 
-		// Add the inverse bind offsets to the bone state and
-		// convert it to a transformation matrix for the shader.
+		// Accumulate the object configurations and undo the configuration transformation.
+		// Bones cannot fully represent an arbitrary configuration state, so we need to
+		// use matrices. We still want the global bone positions during updates, though.
 		*cAccumulator = obj->configuration[i];
-		state = boneTransformUndoPrepend(*cAccumulator, state);
+		state = boneTransformPrepend(boneTransformInverse(*cAccumulator), state);
+
+		// Compute the global bone states. Then add the inverse bind offsets
+		// and convert it to a transformation matrix for the shader.
 		*transformCurrent = mat4MMultM(
-			mat4MMultM(boneMatrix(*cAccumulator), boneMatrix(state)), boneMatrix(*bAccumulator)
+			mat4MMultM(boneMatrix(*cAccumulator), boneMatrix(state)),
+			boneMatrix(*bAccumulator)
 		);
 
 		// Handle the rest of the bones.
@@ -1257,14 +1262,19 @@ void objRender(const object *const __RESTRICT__ obj, graphicsManager *const __RE
 			///gfxDebugBoneParents[i] = sklBone->parent;
 
 			// Add the parent's inverse bind position.
-			*bAccumulator = boneTransformAppend(boneInvert(sklBone->defaultState), gfxMngr->shdrData.skeletonBindAccumulator[sklBone->parent]);
+			*bAccumulator = boneTransformAppend(boneInverse(sklBone->defaultState), gfxMngr->shdrData.skeletonBindAccumulator[sklBone->parent]);
 
-			// Add the inverse bind offsets to the bone state and
-			// convert it to a transformation matrix for the shader.
+			// Accumulate the object configurations and undo the configuration transformation.
+			// Bones cannot fully represent an arbitrary configuration state, so we need to
+			// use matrices. We still want the global bone positions during updates, though.
 			*cAccumulator = boneTransformAppend(accumulators[sklBone->parent], obj->configuration[i]);
-			state = boneTransformUndoPrepend(*cAccumulator, state);
+			state = boneTransformPrepend(boneTransformInverse(*cAccumulator), state);
+
+			// Compute the global bone states. Then add the inverse bind offsets
+			// and convert it to a transformation matrix for the shader.
 			*transformCurrent = mat4MMultM(
-				mat4MMultM(boneMatrix(*cAccumulator), boneMatrix(state)), boneMatrix(*bAccumulator)
+				mat4MMultM(boneMatrix(*cAccumulator), boneMatrix(state)),
+				boneMatrix(*bAccumulator)
 			);
 
 		}
