@@ -106,7 +106,7 @@ typedef struct physContact {
 
 	#endif
 
-	#if defined PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+	#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 
 	// The "untransformed" average normal relative to the average pointA.
 	vec3 normalA;

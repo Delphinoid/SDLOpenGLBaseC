@@ -108,7 +108,7 @@ sklAnimInstance *skliAnimationNew(sklInstance *const __RESTRICT__ skli, sklAnim 
 void skliAnimationDelete(sklInstance *const __RESTRICT__ skli, sklAnimInstance *const __RESTRICT__ anim, sklAnimInstance *const __RESTRICT__ previous);
 void skliTick(sklInstance *const __RESTRICT__ skli, const float elapsedTime, const float interpT);
 //void skliGenerateBoneState(sklInstance *skli, bone *boneState, const boneIndex_t boneID);
-void skliGenerateBoneState(const sklInstance *const __RESTRICT__ skli, const boneIndex_t id, const char *const __RESTRICT__ name, bone *const __RESTRICT__ state);
+bone skliGenerateBoneState(const sklInstance *const __RESTRICT__ skli, const boneIndex_t id, const char *const __RESTRICT__ name, bone state);
 ///void skliSetAnimationType(sklInstance *skli, const animIndex_t slot, const flags_t additive);
 ///return_t skliChangeAnimation(sklInstance *skli, const animIndex_t slot, sklAnim *anim, const frameIndex_t frame, const float blendTime);
 ///void skliClearAnimation(sklInstance *skli, const animIndex_t slot);

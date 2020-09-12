@@ -389,15 +389,15 @@ static __FORCE_INLINE__ void physContactPointGenerateInverseEffectiveMass(physCo
 
 	#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
 	effectiveMass = physContactEffectiveMass(
-		point->rA, physContactTangent1(contact), bodyA->inverseInertiaTensorGlobal,
-		point->rB, physContactTangent1(contact), bodyB->inverseInertiaTensorGlobal,
+		physContactTangent1(contact), point->rA, bodyA->inverseInertiaTensorGlobal,
+		physContactTangent1(contact), point->rB, bodyB->inverseInertiaTensorGlobal,
 		inverseMassTotal
 	);
 	point->tangentInverseEffectiveMass1 = (effectiveMass > 0.f ? 1.f/effectiveMass : 0.f);
 
 	effectiveMass = physContactEffectiveMass(
-		point->rA, physContactTangent2(contact), bodyA->inverseInertiaTensorGlobal,
-		point->rB, physContactTangent2(contact), bodyB->inverseInertiaTensorGlobal,
+		physContactTangent2(contact), point->rA, bodyA->inverseInertiaTensorGlobal,
+		physContactTangent2(contact), point->rB, bodyB->inverseInertiaTensorGlobal,
 		inverseMassTotal
 	);
 	point->tangentInverseEffectiveMass2 = (effectiveMass > 0.f ? 1.f/effectiveMass : 0.f);

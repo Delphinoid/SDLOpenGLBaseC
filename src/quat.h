@@ -73,9 +73,12 @@ quat quatNegate(const quat q);
 void quatNegateP(quat *const __RESTRICT__ q);
 void quatNegatePR(const quat *const __RESTRICT__ q, quat *const __RESTRICT__ r);
 
-quat quatInvert(const quat q);
-void quatInvertP(quat *const __RESTRICT__ q);
-void quatInvertPR(const quat *const __RESTRICT__ q, quat *const __RESTRICT__ r);
+#define quatInverse(q)          quatConjugate(q)
+#define quatInverseFast(q)      quatConjugateFast(q)
+#define quatInverseP(q)         quatConjugateP(q)
+#define quatInverseFastP(q)     quatConjugateFastP(q)
+#define quatInversePR(q, r)     quatConjugatePR(q, r)
+#define quatInverseFastPR(q, r) quatConjugateFastPR(q, r)
 
 quat quatDifference(const quat q1, const quat q2);
 void quatDifferenceP(const quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2, quat *const __RESTRICT__ r);

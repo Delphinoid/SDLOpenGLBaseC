@@ -368,24 +368,11 @@ __HINT_INLINE__ void quatNegatePR(const quat *const __RESTRICT__ q, quat *const 
 	r->v.z = -q->v.z;
 }
 
-__HINT_INLINE__ quat quatInvert(const quat q){
-	return quatQMultQ(q, quatConjugateFast(q));
-}
-__HINT_INLINE__ void quatInvertP(quat *const __RESTRICT__ q){
-	quat c;
-	quatConjugateFastPR(q, &c);
-	quatQMultQP1(q, &c);
-}
-__HINT_INLINE__ void quatInvertPR(const quat *const __RESTRICT__ q, quat *const __RESTRICT__ r){
-	quatConjugateFastPR(q, r);
-	quatQMultQP2(q, r);
-}
-
 __HINT_INLINE__ quat quatDifference(const quat q1, const quat q2){
-	return quatQMultQ(quatInvert(q1), q2);
+	return quatQMultQ(quatInverseFast(q1), q2);
 }
 __HINT_INLINE__ void quatDifferenceP(const quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2, quat *const __RESTRICT__ r){
-	quatInvertPR(q1, r);
+	quatInverseFastPR(q1, r);
 	quatQMultQP1(r, q2);
 }
 

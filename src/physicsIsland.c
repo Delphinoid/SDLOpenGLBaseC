@@ -57,8 +57,11 @@ static void physIslandFreeNode(aabbNode *const __RESTRICT__ node, void *island){
 
 static __FORCE_INLINE__ return_t physIslandUpdateCollider(physIsland *const __RESTRICT__ island, physCollider *const __RESTRICT__ c){
 	if(c->node == NULL){
-		// Insert a collider into the island.
-		if(aabbTreeInsert(&island->tree, &c->node, (void *)c, &c->aabb, &physIslandAllocateNode, NULL) < 0){
+		// Fatten and insert a collider into the island.
+		cAABB expandedAABB = c->aabb;
+		cAABBExpandVelocity(&expandedAABB, ((physRigidBody *)c->body)->linearVelocity, PHYSICS_ISLAND_COLLIDER_AABB_VELOCITY_FACTOR);
+		cAABBExpand(&expandedAABB, PHYSICS_ISLAND_COLLIDER_AABB_PADDING);
+		if(aabbTreeInsert(&island->tree, &c->node, (void *)c, &expandedAABB, &physIslandAllocateNode, NULL) < 0){
 			/** Memory allocation failure. **/
 			if(c->node != NULL){
 				modulePhysicsAABBNodeFree(c->node);

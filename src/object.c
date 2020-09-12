@@ -21,8 +21,8 @@
 #include "modulePhysics.h"
 
 /****/
-///#include "graphicsDebug.h"
-///#include "camera.h"
+#include "graphicsDebug.h"
+#include "camera.h"
 
 #define OBJECT_RESOURCE_DIRECTORY_STRING FILE_PATH_RESOURCE_DIRECTORY_SHARED"Resources"FILE_PATH_DELIMITER_STRING"Objects"FILE_PATH_DELIMITER_STRING
 #define OBJECT_RESOURCE_DIRECTORY_LENGTH 20
@@ -687,7 +687,7 @@ return_t objNewRenderableFromInstance(object *const __RESTRICT__ obj, const rend
 	bone *tempBuffer = memAllocate(2 * skl->boneNum * sizeof(bone));
 	const bone *const bLast = &tempBuffer[skl->boneNum];
 	if(tempBuffer == NULL){
-		/** Memory allocation failure. **
+		** Memory allocation failure. **
 		return -1;
 	}
 	if(obj->configuration != NULL){
@@ -721,7 +721,7 @@ return_t objNewRenderableFromInstance(object *const __RESTRICT__ obj, const rend
 		size_t i;
 		physRigidBody *const tempBuffer = malloc(obj->skl->boneNum*sizeof(physRigidBody));
 		if(tempBuffer == NULL){
-			// Memory allocation failure. **
+			** Memory allocation failure. **
 			return 0;
 		}
 		obj->skeletonBodies = tempBuffer;
@@ -776,26 +776,39 @@ void objPhysicsPrepare(object *const __RESTRICT__ obj){
 	const boneIndex_t *const idLast = &id[obj->skeletonBodyNum];
 	physRigidBody *body = obj->skeletonBodies;
 
+	// Configuration and animated bone state accumulators.
+	/** Might have to use memAllocate here to prevent stack overflows, ~10 KB is a pretty significant chunk of the stack. **/
+	bone accumulators[SKELETON_MAX_BONE_NUM<<1];
+	bone *cAccumulator = &accumulators[0];
+	bone *sAccumulator = &accumulators[obj->skeletonData.skl->boneNum];
+
 	// Update the object's skeleton.
 	for(i = 0; i < obj->skeletonData.skl->boneNum; ++i, ++sklBone, ++configuration){
+
+		/** Split the root into a separate case. **/
+		const unsigned int isRoot = (i == sklBone->parent) || (sklBone->parent >= obj->skeletonData.skl->boneNum);
+
+		// Generate a new animated bone state.
+		*sAccumulator = skliGenerateBoneState(&obj->skeletonData, i, sklBone->name, sklBone->defaultState);
+
+		// Apply the parent's transformations to each bone.
+		// Only do this if we are not on the root bone, of course.
+		// We do, however, need to accumulate the configurations for every bone.
+		if(!isRoot){
+			*cAccumulator = boneTransformAppend(accumulators[sklBone->parent], *configuration);
+			*sAccumulator = boneTransformAppend(accumulators[obj->skeletonData.skl->boneNum+sklBone->parent], *sAccumulator);
+		}else{
+			*cAccumulator = *configuration;
+		}
 
 		if(id < idLast && *id == i){
 
 			if(physRigidBodyIsSimulated(body)){
 
-				/** Split the root into a separate case. **/
-				const unsigned int isRoot = (i == sklBone->parent) || (sklBone->parent >= obj->skeletonData.skl->boneNum);
-
-				// Apply configuration and the skeleton's bind transform.
-				body->configuration = boneTransformAppend(*configuration, sklBone->defaultState);
-
-				// Generate a new animated bone state.
-				skliGenerateBoneState(&obj->skeletonData, i, sklBone->name, &body->configuration);
-
-				// Apply the parent's transformations to each bone.
-				if(!isRoot){
-					body->configuration = boneTransformAppend(obj->state.configuration[sklBone->parent], body->configuration);
-				}
+				// Apply the accumulated bone state to the accumulated bone configurations.
+				// Accumulating the transformations allows us to do everything in one loop
+				// rather than splitting this into two separate ones.
+				body->configuration = boneTransformAppend(*cAccumulator, *sAccumulator);
 
 				// Initialize the body's moment of inertia and centroid.
 				physRigidBodyCentroidFromPosition(body);
@@ -817,36 +830,17 @@ void objPhysicsPrepare(object *const __RESTRICT__ obj){
 }
 
 void objPhysicsBodySimulate(object *const __RESTRICT__ obj, const boneIndex_t boneID){
-
 	physRigidBody *body = objBoneGetPhysicsBody(obj, boneID);
-
 	if(body != NULL){
-
-		/** Split the root into a separate case. **/
-		const sklNode sklBone = obj->skeletonData.skl->bones[boneID];
-		const unsigned int isRoot = (boneID == sklBone.parent) || (sklBone.parent >= obj->skeletonData.skl->boneNum);
-
-		// Apply configuration and the skeleton's bind transform.
-		body->configuration = boneTransformAppend(obj->configuration[boneID], sklBone.defaultState);
-
-		// Generate a new animated bone state.
-		skliGenerateBoneState(&obj->skeletonData, boneID, sklBone.name, &body->configuration);
-
-		// Apply the parent's transformations to each bone.
-		if(!isRoot){
-			body->configuration = boneTransformAppend(obj->state.configuration[sklBone.parent], body->configuration);
-		}
-
+		// Start at the animated bone state.
+		body->configuration = obj->state.configuration[boneID];
 		// Initialize the body's moment of inertia and centroid.
 		physRigidBodyCentroidFromPosition(body);
-
+		// Remember to add the body's collider to the island if necessary.
 		if(physRigidBodyIsCollidable(body)){
-			// Remember to add the body's collider to the island.
 			body->flags |= PHYSICS_BODY_TRANSFORMED;
 		}
-
 	}
-
 }
 
 void objPhysicsBodySuspend(object *const __RESTRICT__ obj, const boneIndex_t boneID){
@@ -943,6 +937,7 @@ void objAddAngularVelocity(object *obj, const size_t boneID, const float angle, 
 	physRigidBodyAddAngularVelocity(&obj->skeletonBodies[boneID], angle, x, y, z);
 }**/
 
+
 return_t objTick(object *const __RESTRICT__ obj, const float elapsedTime){
 
 	boneIndex_t i;
@@ -953,6 +948,12 @@ return_t objTick(object *const __RESTRICT__ obj, const float elapsedTime){
 	const boneIndex_t *id = obj->skeletonBodyIDs;
 	const boneIndex_t *const idLast = &id[obj->skeletonBodyNum];
 	physRigidBody *body = obj->skeletonBodies;
+
+	// Configuration and animated bone state accumulators.
+	/** Might have to use memAllocate here to prevent stack overflows, ~10 KB is a pretty significant chunk of the stack. **/
+	bone accumulators[SKELETON_MAX_BONE_NUM<<1];
+	bone *cAccumulator = &accumulators[0];
+	bone *sAccumulator = &accumulators[obj->skeletonData.skl->boneNum];
 
 	// If we can create a new previous state, do so.
 	if(obj->stateNum < obj->stateMax){
@@ -966,7 +967,7 @@ return_t objTick(object *const __RESTRICT__ obj, const float elapsedTime){
 	skliTick(&obj->skeletonData, elapsedTime, 1.f);
 
 	// Update the object's skeleton.
-	for(i = 0; i < obj->skeletonData.skl->boneNum; ++i, ++sklBone, ++sklState, ++configuration){
+	for(i = 0; i < obj->skeletonData.skl->boneNum; ++i, ++sklBone, ++sklState, ++configuration, ++cAccumulator, ++sAccumulator){
 
 		// Update the previous states.
 		objStateCopyBone(&obj->state, i);
@@ -987,6 +988,10 @@ return_t objTick(object *const __RESTRICT__ obj, const float elapsedTime){
 			*configuration = body->configuration;
 			*sklState = *configuration;
 
+			// Update the accumulators.
+			*cAccumulator = *configuration;
+			*sAccumulator = boneIdentity();
+
 			// Get the next body.
 			++id;
 			body = modulePhysicsRigidBodyNext(body);
@@ -998,37 +1003,35 @@ return_t objTick(object *const __RESTRICT__ obj, const float elapsedTime){
 			/** Split the root into a separate case. **/
 			const unsigned int isRoot = (i == sklBone->parent) || (sklBone->parent >= obj->skeletonData.skl->boneNum);
 
-			/** Should configurations be optional? **/
-
-			// Apply configuration and the skeleton's bind transform.
-			// We can just set sklState to configuration we don't want
-			// global bone configurations. Doing this may break more
-			// complex physics objects, however. If this is removed,
-			// the transformation loop before rendering can also be
-			// safely removed.
-			*sklState = boneTransformAppend(*configuration, sklBone->defaultState);
-
 			// Generate a new animated bone state.
-			skliGenerateBoneState(&obj->skeletonData, i, sklBone->name, sklState);
+			*sAccumulator = skliGenerateBoneState(
+				&obj->skeletonData, i, sklBone->name,
+				sklBone->defaultState
+			);
 
 			// Apply the parent's transformations to each bone.
 			// Only do this if we are not on the root bone, of course.
+			// We do, however, need to accumulate the configurations for every bone.
 			if(!isRoot){
-				*sklState = boneTransformAppend(obj->state.configuration[sklBone->parent], *sklState);
+				*cAccumulator = boneTransformAppend(accumulators[sklBone->parent], *configuration);
+				*sAccumulator = boneTransformAppend(accumulators[obj->skeletonData.skl->boneNum+sklBone->parent], *sAccumulator);
+			}else{
+				*cAccumulator = *configuration;
 			}
 
-			if(id < idLast && *id == i){
+			// Apply the accumulated bone state to the accumulated bone configurations.
+			// Accumulating the transformations allows us to do everything in one loop
+			// rather than splitting this into two separate ones.
+			*sklState = boneTransformAppend(*cAccumulator, *sAccumulator);
 
+			if(id < idLast && *id == i){
 				// Copy the bone state over to the body.
 				body->configuration = *sklState;
-
 				// Initialize the body's moment of inertia and centroid.
 				physRigidBodyCentroidFromPosition(body);
-
 				// Get the next body.
 				++id;
 				body = modulePhysicsRigidBodyNext(body);
-
 			}
 
 		}
@@ -1206,60 +1209,71 @@ void objRender(const object *const __RESTRICT__ obj, graphicsManager *const __RE
 	// to the shader.
 	if(boneNum > 0){
 
-		boneIndex_t i = boneNum;
+		boneIndex_t i = 0;///boneNum;
 
 		mat4 *transformCurrent = gfxMngr->shdrData.skeletonTransformState;
 		const bone *bCurrent = obj->state.configuration;
 		const bone *bPrevious = (obj->state.previous == NULL ? bCurrent : obj->state.previous->configuration);
 
-		sklNode *nLayout = obj->skeletonData.skl->bones;
+		bone state;
+		sklNode *sklBone = obj->skeletonData.skl->bones;
 		bone *bAccumulator = gfxMngr->shdrData.skeletonBindAccumulator;
 
-		bone state;
+		// Configuration and animated bone state accumulators.
+		/** Might have to use memAllocate here to prevent stack overflows, ~10 KB is a pretty significant chunk of the stack. **/
+		bone accumulators[SKELETON_MAX_BONE_NUM];
+		bone *cAccumulator = &accumulators[0];
+
 		///vec3 gfxDebugBonePositions[SKELETON_MAX_BONE_NUM];
 		///boneIndex_t gfxDebugBoneParents[SKELETON_MAX_BONE_NUM];
 
 		// Handle the root separately.
 		state = boneInterpolate(*bPrevious, *bCurrent, interpT);
-		*bAccumulator = boneInvert(nLayout->defaultState);
 		centroid = state.position;
+
+		///gfxDebugBonePositions[i] = state.position;
+		///gfxDebugBoneParents[i] = 0;
+
+		// Calculate the root inverse bind pose.
+		*bAccumulator = boneInvert(sklBone->defaultState);
 
 		// Add the inverse bind offsets to the bone state and
 		// convert it to a transformation matrix for the shader.
-		*transformCurrent = boneMatrix(
-			boneTransformAppend(state, *bAccumulator)
+		*cAccumulator = obj->configuration[i];
+		state = boneTransformUndoPrepend(*cAccumulator, state);
+		*transformCurrent = mat4MMultM(
+			mat4MMultM(boneMatrix(*cAccumulator), boneMatrix(state)), boneMatrix(*bAccumulator)
 		);
 
-		///gfxDebugBonePositions[boneNum - i] = state.position;
-		///gfxDebugBoneParents[boneNum - i] = 0;
-
 		// Handle the rest of the bones.
-		while(i > 0){
+		while(i < boneNum){
 
-			++bCurrent, ++bPrevious, ++transformCurrent, ++nLayout, ++bAccumulator, --i;
+			++bCurrent, ++bPrevious, ++transformCurrent, ++sklBone, ++bAccumulator, ++cAccumulator, ++i;
 
 			// Interpolate between bone states.
 			state = boneInterpolate(*bPrevious, *bCurrent, interpT);
 
+			///gfxDebugBonePositions[i] = state.position;
+			///gfxDebugBoneParents[i] = sklBone->parent;
+
 			// Add the parent's inverse bind position.
-			*bAccumulator = boneTransformAppend(boneInvert(nLayout->defaultState), gfxMngr->shdrData.skeletonBindAccumulator[nLayout->parent]);
+			*bAccumulator = boneTransformAppend(boneInvert(sklBone->defaultState), gfxMngr->shdrData.skeletonBindAccumulator[sklBone->parent]);
 
 			// Add the inverse bind offsets to the bone state and
 			// convert it to a transformation matrix for the shader.
-			*transformCurrent = boneMatrix(
-				boneTransformAppend(state, *bAccumulator)
+			*cAccumulator = boneTransformAppend(accumulators[sklBone->parent], obj->configuration[i]);
+			state = boneTransformUndoPrepend(*cAccumulator, state);
+			*transformCurrent = mat4MMultM(
+				mat4MMultM(boneMatrix(*cAccumulator), boneMatrix(state)), boneMatrix(*bAccumulator)
 			);
-
-			///gfxDebugBonePositions[boneNum - i] = state.position;
-			///gfxDebugBoneParents[boneNum - i] = nLayout->parent;
 
 		}
 
 		// Draw the skeleton for debugging.
-		/**gfxDebugDrawSkeleton(
-			gfxDebugBonePositions, gfxDebugBoneParents, boneNum,
-			gfxDebugInfoInit(GL_LINE, vec3New(0.f, 1.f, 0.f)), &cam->viewProjectionMatrix
-		);**/
+		///gfxDebugDrawSkeleton(
+		///	gfxDebugBonePositions, gfxDebugBoneParents, boneNum,
+		///	gfxDebugInfoInit(GL_LINE, vec3New(0.f, 1.f, 0.f)), &cam->viewProjectionMatrix
+		///);
 
 	}
 

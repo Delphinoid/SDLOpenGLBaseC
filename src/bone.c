@@ -16,7 +16,7 @@ bone boneIdentity(){
 mat4 boneMatrix(const bone b){
 	// Translate, rotate and scale.
 	// It looks a bit weird because it's ultra optimized.
-	mat4 transform = mat4ScalePre(
+	mat4 transform = mat4Scale(
 		mat4RotationMatrix(b.orientation),
 		b.scale.x, b.scale.y, b.scale.z
 	);
@@ -24,6 +24,10 @@ mat4 boneMatrix(const bone b){
 	transform.m[3][1] = b.position.y;
 	transform.m[3][2] = b.position.z;
 	return transform;
+	/*mat4 scale = mat4ScaleMatrix(b.scale.x, b.scale.y, b.scale.z);
+	mat4 rotate = mat4RotationMatrix(b.orientation);
+	mat4 translate = mat4TranslationMatrix(b.position.x, b.position.y, b.position.z);
+	return mat4MMultM(translate, mat4MMultM(rotate, scale));*/
 }
 
 bone boneInvert(const bone b){
@@ -263,9 +267,20 @@ bone boneTransformAppend(const bone b1, const bone b2){
 	// Adds the transformations for b2 to b1 and stores the result in r.
 	// Used for getting the total sum of all transformations of a bone.
 	const bone r = {
-		.position = vec3VAddV(b1.position, vec3VMultV(quatRotateVec3FastApproximate(b1.orientation, b2.position), b1.scale)),
+		.position = vec3VAddV(b1.position, quatRotateVec3FastApproximate(b1.orientation, vec3VMultV(b2.position, b1.scale))),
 		.orientation = quatNormalizeFast(quatQMultQ(b1.orientation, b2.orientation)),
 		.scale = vec3VMultV(b1.scale, b2.scale)
+	};
+	return r;
+}
+
+bone boneTransformUndoPrepend(const bone b1, const bone b2){
+	const quat qInverse = quatInverseFast(b1.orientation);
+	const vec3 sInverse = vec3SDivV(1.f, b1.scale);
+	const bone r = {
+		.position = vec3VMultV(quatRotateVec3FastApproximate(qInverse, vec3VSubV(b2.position, b1.position)), sInverse),
+		.orientation = quatNormalizeFast(quatQMultQ(qInverse, b2.orientation)),
+		.scale = vec3VMultV(b2.scale, sInverse)
 	};
 	return r;
 }
@@ -274,9 +289,9 @@ void boneTransformAppendP1(bone *const __RESTRICT__ b1, const bone *const __REST
 	// Used for getting the total sum of all transformations of a bone.
 	// Calculate total translation.
 	vec3 tempVec3;
-	quatRotateVec3FastApproximatePR(&b1->orientation, &b2->position, &tempVec3);  // Rotate
-	vec3VMultVP(&tempVec3, &b1->scale);                                           // Scale
-	vec3VAddVP(&b1->position, &tempVec3);                                         // Translate
+	vec3VMultVPR(&b2->position, &b1->scale, &tempVec3);           // Scale
+	quatRotateVec3FastApproximateP(&b1->orientation, &tempVec3);  // Rotate
+	vec3VAddVP(&b1->position, &tempVec3);                         // Translate
 	// Calculate total orientation.
 	quatQMultQP1(&b1->orientation, &b2->orientation);
 	// Normalize the new orientation to prevent error build-ups.
@@ -288,8 +303,8 @@ void boneTransformAppendP2(const bone *const __RESTRICT__ b1, bone *const __REST
 	// Adds the transformations for b2 to b1 and stores the result in b2.
 	// Used for getting the total sum of all transformations of a bone.
 	// Calculate total translation.
-	quatRotateVec3FastApproximateP(&b1->orientation, &b2->position);  // Rotate
 	vec3VMultVP(&b2->position, &b1->scale);                           // Scale
+	quatRotateVec3FastApproximateP(&b1->orientation, &b2->position);  // Rotate
 	vec3VAddVP(&b2->position, &b1->position);                         // Translate
 	// Calculate total orientation.
 	quatQMultQP2(&b1->orientation, &b2->orientation);
@@ -302,9 +317,9 @@ void boneTransformAppendPR(const bone *const __RESTRICT__ b1, const bone *const 
 	// Adds the transformations for b2 to b1 and stores the result in r.
 	// Used for getting the total sum of all transformations of a bone.
 	// Calculate total translation.
-	quatRotateVec3FastApproximatePR(&b1->orientation, &b2->position, &r->position);  // Rotate
-	vec3VMultVP(&r->position, &b1->scale);                                           // Scale
-	vec3VAddVP(&r->position, &b1->position);                                         // Translate
+	vec3VMultVPR(&b2->position, &b1->scale, &r->position);           // Scale
+	quatRotateVec3FastApproximateP(&b1->orientation, &r->position);  // Rotate
+	vec3VAddVP(&r->position, &b1->position);                         // Translate
 	// Calculate total orientation.
 	quatQMultQPR(&b1->orientation, &b2->orientation, &r->orientation);
 	// Normalize the new orientation to prevent error build-ups.

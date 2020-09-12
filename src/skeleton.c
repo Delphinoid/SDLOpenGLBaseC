@@ -1157,9 +1157,9 @@ __FORCE_INLINE__ void skliTick(sklInstance *const __RESTRICT__ skli, const float
 		anim = moduleSkeletonAnimationInstanceNext(anim);
 	}
 }
-void skliGenerateBoneState(const sklInstance *const __RESTRICT__ skli, const boneIndex_t id, const char *const __RESTRICT__ name, bone *const __RESTRICT__ state){
+bone skliGenerateBoneState(const sklInstance *const __RESTRICT__ skli, const boneIndex_t id, const char *const __RESTRICT__ name, bone state){
 
-	bone baseState = *state;
+	const bone baseState = state;
 	bone animationState;
 	boneIndex_t animBoneID;
 
@@ -1195,10 +1195,10 @@ void skliGenerateBoneState(const sklInstance *const __RESTRICT__ skli, const bon
 			if(anim->flags == SKELETON_ANIM_INSTANCE_OVERWRITE){
 				// Set if the animation is not additive. Start from the
 				// base state so custom transformations aren't lost.
-				*state = boneTransformAppend(baseState, animationState);
+				state = boneTransformAppend(baseState, animationState);
 			}else{
 				// Add the changes in lastState to skeletonState if the animation is additive.
-				*state = boneTransformAppend(*state, animationState);
+				state = boneTransformAppend(state, animationState);
 			}
 
 		}
@@ -1206,6 +1206,8 @@ void skliGenerateBoneState(const sklInstance *const __RESTRICT__ skli, const bon
 		anim = moduleSkeletonAnimationInstanceNext(anim);
 
 	}
+
+	return state;
 
 }
 void skliAddAnimation(sklInstance *const __RESTRICT__ skli, const sklAnim *const __RESTRICT__ skla, const frameIndex_t frame){

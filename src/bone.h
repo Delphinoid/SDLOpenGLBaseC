@@ -51,6 +51,8 @@ void boneTransformAppendP1(bone *const __RESTRICT__ b1, const bone *const __REST
 void boneTransformAppendP2(const bone *const __RESTRICT__ b1, bone *const __RESTRICT__ b2);
 void boneTransformAppendPR(const bone *const __RESTRICT__ b1, const bone *const __RESTRICT__ b2, bone *const __RESTRICT__ r);
 
+bone boneTransformUndoPrepend(const bone b1, const bone b2);
+
 bone boneTransformCombine(const bone b1, const bone b2);
 void boneTransformCombineP1(bone *const __RESTRICT__ b1, const bone *const __RESTRICT__ b2);
 void boneTransformCombineP2(const bone *const __RESTRICT__ b1, bone *const __RESTRICT__ b2);

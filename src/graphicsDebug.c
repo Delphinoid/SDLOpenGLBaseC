@@ -7,6 +7,7 @@ typedef struct {
 	GLuint vertexBufferID;
 	GLuint indexBufferID;
 	size_t indexNum;
+	GLuint drawMode;
 } gfxDebugMesh;
 
 typedef struct {
@@ -67,7 +68,7 @@ static void gfxDebugMeshDrawBuffers(
 	glPolygonMode(GL_FRONT_AND_BACK, info->fillMode);
 	glUniform3fv(shdrPrgDbg.colourID, 1, (GLfloat *)&info->colour);
 	glUniformMatrix4fv(shdrPrgDbg.vpMatrixID, 1, GL_FALSE, (GLfloat *)vpMatrix);
-	glDrawElements(GL_LINES, dbgMesh->indexNum, GL_UNSIGNED_INT, NULL);
+	glDrawElements(dbgMesh->drawMode, dbgMesh->indexNum, GL_UNSIGNED_INT, NULL);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
@@ -96,12 +97,13 @@ void gfxDebugDrawSkeleton(
 	GLint prevArrayObject, prevShader;
 
 	// Set up the index array.
+	dbgMesh.drawMode = GL_LINES;
 	dbgMesh.indexNum = (boneNum - 1) * 2;
 	indices = memAllocate(dbgMesh.indexNum*sizeof(size_t));
 	i = 1;
 	for(i = 1; i < boneNum; ++i){
-		indices[i*2-2] = i;
-		indices[i*2-1] = parents[i];
+		indices[(i<<1)-2] = i;
+		indices[(i<<1)-1] = parents[i];
 	}
 
 	// Make sure we keep the current global state so we can restore it after drawing.
