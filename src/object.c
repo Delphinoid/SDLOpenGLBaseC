@@ -783,7 +783,7 @@ void objPhysicsPrepare(object *const __RESTRICT__ obj){
 	bone *sAccumulator = &accumulators[obj->skeletonData.skl->boneNum];
 
 	// Update the object's skeleton.
-	for(i = 0; i < obj->skeletonData.skl->boneNum; ++i, ++sklBone, ++configuration){
+	for(i = 0; i < obj->skeletonData.skl->boneNum; ++i, ++sklBone, ++configuration, ++cAccumulator, ++sAccumulator){
 
 		/** Split the root into a separate case. **/
 		const unsigned int isRoot = (i == sklBone->parent) || (sklBone->parent >= obj->skeletonData.skl->boneNum);
