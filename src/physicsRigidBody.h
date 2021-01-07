@@ -109,7 +109,7 @@ typedef struct physRigidBody {
 // Physics rigid body functions.
 void physRigidBodyBaseInit(physRigidBodyBase *const __RESTRICT__ local);
 void physRigidBodyBaseGenerateMassProperties(physRigidBodyBase *const __RESTRICT__ local, const float **const vertexMassArray);
-return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, physicsBodyIndex_t **bodyIDs, physicsBodyIndex_t *const bodyNum, const const skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ filePath, const size_t filePathLength);
+return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, physicsBodyIndex_t **bodyIDs, physicsBodyIndex_t *const bodyNum, const skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ filePath, const size_t filePathLength);
 void physRigidBodyBaseDelete(physRigidBodyBase *const __RESTRICT__ local);
 
 // Physics rigid body instance functions.

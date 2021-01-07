@@ -42,7 +42,7 @@ void inMngrUnbindLast(inputManager *const __RESTRICT__ inMngr, const SDL_Scancod
 	}
 }
 
-void inMngrTakeInput(inputManager *const __RESTRICT__ inMngr/**, const cmdVariables *const __RESTRICT__ cmdv**/){
+void inMngrTakeInput(inputManager *const __RESTRICT__ inMngr){
 
 	inputKeyBinding *key = inMngr->keys;
 
@@ -55,7 +55,7 @@ void inMngrTakeInput(inputManager *const __RESTRICT__ inMngr/**, const cmdVariab
 		if(inMngr->internal[key->scancode]){
 
 			// Key has been pressed.
-			const command *cmd = key->binding;
+			/**const command *cmd = key->binding;
 			if(flagsAreSet(key->state, INPUT_KEY_STATE_MASK)){
 				if(key->state == INPUT_KEY_STATE_PRESSED){
 					--key->state;
@@ -65,9 +65,9 @@ void inMngrTakeInput(inputManager *const __RESTRICT__ inMngr/**, const cmdVariab
 			}
 			// Execute each command bound to the key.
 			while(cmd->cmd != NULL){
-				cmd->cmd(cmd, key->state, NULL/**cmdv**/);
+				cmd->cmd(cmd, key->state);
 				++cmd;
-			}
+			}**/
 
 		}else{
 

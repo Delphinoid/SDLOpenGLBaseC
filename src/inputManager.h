@@ -4,7 +4,7 @@
 #include <SDL2/SDL.h>
 #include "command.h"
 
-#define INPUT_KEY_BINDING_COMMAND_NUM 64
+#define INPUT_KEY_BINDING_LENGTH 1024
 
 #define INPUT_KEY_STATE_UP       0x00
 #define INPUT_KEY_STATE_RELEASED 0x01
@@ -14,7 +14,7 @@
 
 typedef struct inputKeyBinding {
 	SDL_Scancode scancode;
-	command binding[INPUT_KEY_BINDING_COMMAND_NUM];
+	char binding[INPUT_KEY_BINDING_LENGTH];
 	flags_t state;
 } inputKeyBinding;
 
@@ -33,6 +33,6 @@ void inMngrInit(inputManager *const __RESTRICT__ inMngr);
 return_t inMngrBind(inputManager *const __RESTRICT__ inMngr, const inputKeyBinding binding);
 void inMngrUnbind(inputManager *const __RESTRICT__ inMngr, const SDL_Scancode scancode);
 void inMngrUnbindLast(inputManager *const __RESTRICT__ inMngr, const SDL_Scancode scancode);
-void inMngrTakeInput(inputManager *const __RESTRICT__ inMngr/**, const cmdVariables *const __RESTRICT__ cmdv**/);
+void inMngrTakeInput(inputManager *const __RESTRICT__ inMngr);
 
 #endif

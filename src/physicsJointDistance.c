@@ -7,11 +7,11 @@
 //
 // Distance constraint equation:
 //
-// C = ||pB - pA|| - L = 0.
+// C : ||pB - pA|| - L = 0.
 //
 // Differentiating so we can solve w.r.t. velocity:
 //
-// C' = dC/dt = (((wB X rB) + vB) - ((wA X rA) + vA)) . n = 0,
+// C' : dC/dt = (((wB X rB) + vB) - ((wA X rA) + vA)) . n = 0,
 //
 // where n = (pB - pA)/||pB - pA|| and the p terms are the
 // transformed anchor points in global space.
@@ -31,7 +31,7 @@
 //
 // Finally, adding a potential bias term, we have
 //
-// C' = JV + b >= 0.
+// C' : JV + b >= 0.
 //
 // ----------------------------------------------------------------------
 //

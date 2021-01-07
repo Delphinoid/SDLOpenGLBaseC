@@ -50,7 +50,7 @@ static void guiControllerTick(guiElement *const element, const float elapsedTime
 #define guiRenderableTick NULL
 #define guiObjectTick     NULL
 
-void (* const guiTickJumpTable[4])(
+void (* const guiTickJumpTable[6])(
 	guiElement *const element, const float elapsedTime
 ) = {
 	guiControllerTick,
@@ -103,7 +103,7 @@ static void guiControllerRender(const guiElement *const element, graphicsManager
 #define guiRenderableRender NULL
 #define guiObjectRender     NULL
 
-void (* const guiRenderJumpTable[4])(
+void (* const guiRenderJumpTable[6])(
 	const guiElement *const element, graphicsManager *const gfxMngr, const camera *const cam, const float distance, const float interpT
 ) = {
 	guiControllerRender,

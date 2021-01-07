@@ -16,12 +16,12 @@
 //
 // Cone constraint equation:
 //
-// C = (u2 . u1) - cos(coneAngle / 2) >= 0
+// C : (u2 . u1) - cos(coneAngle / 2) >= 0
 //   = cos(upAngle) - cos(coneAngle / 2) >= 0.
 //
 // Differentiating so we can solve w.r.t. velocity:
 //
-// C' = dC/dt = (u2 . (w1 X u1)) + (u1 . (w2 X u2)) >= 0,
+// C' = dC/dt : (u2 . (w1 X u1)) + (u1 . (w2 X u2)) >= 0,
 //
 // where n = (u2 X u1) and u1, u2 are the second column vectors
 // from the bodies' rotation matrices. The column vectors of a
@@ -44,7 +44,7 @@
 //
 // Finally, adding a potential bias term, we have
 //
-// C' = JV + b >= 0.
+// C' : JV + b >= 0.
 //
 // ----------------------------------------------------------------------
 //

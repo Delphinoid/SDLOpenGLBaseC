@@ -443,12 +443,23 @@ __HINT_INLINE__ void vec3PerpendicularPR(const vec3 *const __RESTRICT__ v, vec3 
 
 __HINT_INLINE__ void vec3OrthonormalBasis(const vec3 v1, vec3 *const __RESTRICT__ v2, vec3 *const __RESTRICT__ v3){
 	// Generates an orthonormal basis from v1.
-	*v3 = vec3Cross(v1, (*v2 = vec3Perpendicular(v1)));
+	// Taken from Duff et al.'s paper "Building an Orthonormal Basis, Revisited",
+	// published in the Journal of Computer Graphics Techniques 6.1, 1-8 (2017).
+	const float sign = copySign(1.f, v1.z);
+	const float a = -1.f/(sign + v1.z);
+	const float b = v1.x*v1.y*a;
+	vec3Set(v2, 1.f + sign*v1.x*v1.x*a, sign*b, -sign*v1.x);
+	vec3Set(v3, b, sign + v1.y*v1.y*a, -v1.y);
 }
 __HINT_INLINE__ void vec3OrthonormalBasisP(const vec3 *const __RESTRICT__ v1, vec3 *const __RESTRICT__ v2, vec3 *const __RESTRICT__ v3){
 	// Generates an orthonormal basis from v1.
-	vec3PerpendicularPR(v1, v2);
-	vec3CrossPR(v1, v2, v3);
+	// Taken from Duff et al.'s paper "Building an Orthonormal Basis, Revisited",
+	// published in the Journal of Computer Graphics Techniques 6.1, 1-8 (2017).
+	const float sign = copySign(1.f, v1->z);
+	const float a = -1.f/(sign + v1->z);
+	const float b = v1->x*v1->y*a;
+	vec3Set(v2, 1.f + sign*v1->x*v1->x*a, sign*b, -sign*v1->x);
+	vec3Set(v3, b, sign + v1->y*v1->y*a, -v1->y);
 }
 
 __HINT_INLINE__ vec3 vec3Lerp(const vec3 v1, const vec3 v2, const float t){

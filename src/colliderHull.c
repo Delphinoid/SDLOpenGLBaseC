@@ -1138,9 +1138,10 @@ return_t cHullCollisionSAT(const cHull *const __RESTRICT__ c1, const cHull *cons
 	// Implementation of the separating axis theorem
 	// using Minkowski space and Gauss map optimizations.
 	//
-	// Credit to Erin Catto for the original idea and
-	// Dirk Gregorius for his amazing presentation at
-	// GDC 2013.
+	// Credit to Dirk Gregorius for his amazing presentation
+	// at GDC 2013. For a better understanding of the method,
+	// I would definitely recommend going through the list
+	// of references at the end of this presentation.
 
 	cHullPenetrationPlanes planes;
 	cHullPenetrationPlanesInit(&planes);

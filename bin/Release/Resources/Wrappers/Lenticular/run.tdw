@@ -1,0 +1,52 @@
+animation {
+	loop -1
+	frameEntire 166.66 "Lenticular\run\0\0.tdt"
+	frameEntire 166.66 "Lenticular\run\0\1.tdt"
+	frameEntire 166.66 "Lenticular\run\0\2.tdt"
+	frameEntire 166.66 "Lenticular\run\0\3.tdt"
+	frameEntire 166.66 "Lenticular\run\0\4.tdt"
+	frameEntire 166.66 "Lenticular\run\0\5.tdt"
+}
+animation {
+	loop 0
+	frameEntire 0 "Lenticular\stand\1.tdt"
+}
+animation {
+	loop -1
+	frameEntire 166.66 "Lenticular\run\2\0.tdt"
+	frameEntire 166.66 "Lenticular\run\2\1.tdt"
+	frameEntire 166.66 "Lenticular\run\2\2.tdt"
+	frameEntire 166.66 "Lenticular\run\2\3.tdt"
+	frameEntire 166.66 "Lenticular\run\2\4.tdt"
+	frameEntire 166.66 "Lenticular\run\2\5.tdt"
+}
+animation {
+	loop 0
+	frameEntire 0 "Lenticular\stand\3.tdt"
+}
+animation {
+	loop -1
+	frameEntire 166.66 "Lenticular\run\4\0.tdt"
+	frameEntire 166.66 "Lenticular\run\4\1.tdt"
+	frameEntire 166.66 "Lenticular\run\4\2.tdt"
+	frameEntire 166.66 "Lenticular\run\4\3.tdt"
+	frameEntire 166.66 "Lenticular\run\4\4.tdt"
+	frameEntire 166.66 "Lenticular\run\4\5.tdt"
+}
+animation {
+	loop 0
+	frameEntire 0 "Lenticular\stand\5.tdt"
+}
+animation {
+	loop -1
+	frameEntire 166.66 "Lenticular\run\6\0.tdt"
+	frameEntire 166.66 "Lenticular\run\6\1.tdt"
+	frameEntire 166.66 "Lenticular\run\6\2.tdt"
+	frameEntire 166.66 "Lenticular\run\6\3.tdt"
+	frameEntire 166.66 "Lenticular\run\6\4.tdt"
+	frameEntire 166.66 "Lenticular\run\6\5.tdt"
+}
+animation {
+	loop 0
+	frameEntire 0 "Lenticular\stand\7.tdt"
+}

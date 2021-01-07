@@ -167,13 +167,10 @@ __HINT_INLINE__ void physIslandInsertRigidBody(physIsland *const __RESTRICT__ is
 
 	// Insert joints.
 	joint = body->joints;
-	while(joint != NULL){
+	while(joint != NULL && joint->bodyA == body){
+		// Only insert joints that this body owns.
 		physIslandInsertJoint(island, joint);
-		if(joint->bodyA != body){
-			joint = joint->nextB;
-		}else{
-			joint = joint->nextA;
-		}
+		joint = joint->nextA;
 	}
 
 }
@@ -428,9 +425,9 @@ static __FORCE_INLINE__ void physIslandUpdateColliderContacts(physIsland *const 
 		}else{
 			// Update the contact.
 			#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-			physContactPresolveConstraints(&i->data, i->colliderA, i->colliderB, frequency);
+			physContactPresolveConstraints(&i->data, i->colliderA->body, i->colliderB->body, frequency);
 			#else
-			physContactPresolveConstraints(&i->data, i->colliderA, i->colliderB);
+			physContactPresolveConstraints(&i->data, i->colliderA->body, i->colliderB->body);
 			#endif
 			++i->inactive;
 		}

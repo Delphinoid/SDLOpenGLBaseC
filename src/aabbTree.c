@@ -5,7 +5,6 @@ void aabbTreeInit(aabbTree *const __RESTRICT__ tree){
 	tree->leaves = NULL;
 }
 
-/** UNUSED **/
 static __FORCE_INLINE__ aabbNode *aabbTreeBalanceNode(aabbTree *const __RESTRICT__ tree, aabbNode *const node){
 
 	// Rotate the tree to the left or right to
@@ -82,12 +81,12 @@ static __FORCE_INLINE__ aabbNode *aabbTreeBalanceNode(aabbTree *const __RESTRICT
 			// Replace the node with its left child.
 			if(parent != NULL){
 				if(parent->data.children.left == node){
-					parent->data.children.left = right;
+					parent->data.children.left = left;
 				}else{
-					parent->data.children.right = right;
+					parent->data.children.right = left;
 				}
 			}else{
-				tree->root = right;
+				tree->root = left;
 			}
 			left->parent = parent;
 			left->data.children.right = node;
@@ -101,10 +100,10 @@ static __FORCE_INLINE__ aabbNode *aabbTreeBalanceNode(aabbTree *const __RESTRICT
 				node->data.children.left = grandparentRight;
 				grandparentRight->parent = node;
 
-				cAABBCombine(&left->aabb, &grandparentRight->aabb, &node->aabb);
+				cAABBCombine(&right->aabb, &grandparentRight->aabb, &node->aabb);
 				cAABBCombine(&node->aabb, &grandparentLeft->aabb,  &left->aabb);
 
-				node->height = (left->height >= grandparentRight->height ? left->height : grandparentRight->height) + 1;
+				node->height = (right->height >= grandparentRight->height ? right->height : grandparentRight->height) + 1;
 				left->height = (node->height >= grandparentLeft->height  ? node->height : grandparentLeft->height)  + 1;
 
 			}else{
@@ -113,10 +112,10 @@ static __FORCE_INLINE__ aabbNode *aabbTreeBalanceNode(aabbTree *const __RESTRICT
 				node->data.children.left = grandparentLeft;
 				grandparentLeft->parent = node;
 
-				cAABBCombine(&left->aabb, &grandparentLeft->aabb,  &node->aabb);
+				cAABBCombine(&right->aabb, &grandparentLeft->aabb,  &node->aabb);
 				cAABBCombine(&node->aabb, &grandparentRight->aabb, &left->aabb);
 
-				node->height = (left->height >= grandparentLeft->height  ? left->height : grandparentLeft->height)  + 1;
+				node->height = (right->height >= grandparentLeft->height  ? right->height : grandparentLeft->height)  + 1;
 				left->height = (node->height >= grandparentRight->height ? node->height : grandparentRight->height) + 1;
 
 			}
@@ -139,8 +138,12 @@ static __FORCE_INLINE__ void aabbTreeBalanceHierarchy(aabbTree *const __RESTRICT
 
 	do {
 
-		aabbNode *const left  = node->data.children.left;
-		aabbNode *const right = node->data.children.right;
+		aabbNode *left;
+		aabbNode *right;
+
+		aabbTreeBalanceNode(tree, node);
+		left = node->data.children.left;
+		right = node->data.children.right;
 
 		// Repair the node's properties to represent its new children.
 		cAABBCombine(&left->aabb, &right->aabb, &node->aabb);

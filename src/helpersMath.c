@@ -1,12 +1,19 @@
 #include "helpersMath.h"
 
+typedef union {
+	float f;
+	uint32_t l;
+} bitFloat;
+
+__HINT_INLINE__ float copySign(const float x, const float y){
+	const bitFloat i = {.f = x}; const bitFloat j = {.f = y};
+	const bitFloat k = {.l = (i.l & 0x7FFFFFFF) | (j.l & 0x80000000)};
+	return k.f;
+}
+
 __HINT_INLINE__ float fastInvSqrt(float x){
 	// Black magic perfected by some very clever people.
-	union {
-		float f;
-		uint32_t l;
-	} i;
-	i.f = x;
+	bitFloat i = {.f = x};
 	i.l = 0x5F1FFFF9 - (i.l >> 1);   // Jan Kadlec's brute-force optimization to the fast inverse square root.
 	i.f *= 2.38924456f - x*i.f*i.f;  // Initial Newton-Raphson iteration (repeat this line for more accurate results).
 	return 0.703952253f * i.f;
@@ -15,11 +22,7 @@ __HINT_INLINE__ float fastInvSqrt(float x){
 __HINT_INLINE__ float fastInvSqrtAccurate(float x){
 
 	// Black magic perfected by some very clever people.
-	union {
-		float f;
-		uint32_t l;
-	} i;
-	i.f = x;
+	bitFloat i = {.f = x};
 	i.l = 0x5F1FFFF9 - (i.l >> 1);   // Jan Kadlec's brute-force optimization to the fast inverse square root.
 	i.f *=
 		(2.38924456f - x*i.f*i.f) *  // Initial Newton-Raphson iteration (repeat this line for more accurate results).

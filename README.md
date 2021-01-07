@@ -33,4 +33,4 @@ List of potential modifications and ideas:
 * Organize source files into folders. Eventually.
 * Phase out SDL?
 
-Download the bin folder if you would like to give it a go.
+Download the bin folder if you would like to give it a go. Note that this is a 32-bit version of the application, although 64-bit compilation works fine.

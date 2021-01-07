@@ -93,6 +93,7 @@ return_t memMngrInit(const size_t bytes, size_t num){
 	// Initialize the memory manager.
 	memInit();
 
+
 	// Allocate "num" virtual heaps.
 	while(num > 0){
 		if(memAllocateVirtualHeap(bytes) == NULL){

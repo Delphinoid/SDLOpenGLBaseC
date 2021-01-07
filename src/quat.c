@@ -800,10 +800,11 @@ void quatSlerpPR(const quat *const __RESTRICT__ q1, const quat *const __RESTRICT
 
 quat quatSlerpFast(const quat q1, const quat q2, const float t){
 
-	// Fast quaternion slerp function as described in David Eberly's
-	// 2011 paper, "A Fast and Accurate Algorithm for Computing SLERP".
-	// Uses only additions and multiplications, with no transcendental
-	// (trigonometric) function calls or branching.
+	// Fast quaternion slerp function, as described in David Eberly's
+	// paper "A Fast and Accurate Algorithm for Computing SLERP",
+	// published in the Journal of Graphics, GPU, and Game Tools 15.3,
+	// 161-176 (2011). Uses only additions and multiplications, with no
+	// transcendental (trigonometric) function calls or branching.
 
 	float x = quatDot(q1, q2);
 	const float sign = (x >= 0.f ? 1.f : (x = -x, -1.f));
@@ -853,10 +854,11 @@ quat quatSlerpFast(const quat q1, const quat q2, const float t){
 }
 void quatSlerpFastP1(quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2, const float t){
 
-	// Fast quaternion slerp function as described in David Eberly's
-	// 2011 paper, "A Fast and Accurate Algorithm for Computing SLERP".
-	// Uses only additions and multiplications, with no transcendental
-	// (trigonometric) function calls or branching.
+	// Fast quaternion slerp function, as described in David Eberly's
+	// paper "A Fast and Accurate Algorithm for Computing SLERP",
+	// published in the Journal of Graphics, GPU, and Game Tools 15.3,
+	// 161-176 (2011). Uses only additions and multiplications, with no
+	// transcendental (trigonometric) function calls or branching.
 
 	float x = quatDotP(q1, q2);
 	const float sign = (x >= 0.f ? 1.f : (x = -x, -1.f));
@@ -906,10 +908,11 @@ void quatSlerpFastP1(quat *const __RESTRICT__ q1, const quat *const __RESTRICT__
 }
 void quatSlerpFastP2(const quat *const __RESTRICT__ q1, quat *const __RESTRICT__ q2, const float t){
 
-	// Fast quaternion slerp function as described in David Eberly's
-	// 2011 paper, "A Fast and Accurate Algorithm for Computing SLERP".
-	// Uses only additions and multiplications, with no transcendental
-	// (trigonometric) function calls or branching.
+	// Fast quaternion slerp function, as described in David Eberly's
+	// paper "A Fast and Accurate Algorithm for Computing SLERP",
+	// published in the Journal of Graphics, GPU, and Game Tools 15.3,
+	// 161-176 (2011). Uses only additions and multiplications, with no
+	// transcendental (trigonometric) function calls or branching.
 
 	float x = quatDotP(q1, q2);
 	const float sign = (x >= 0.f ? 1.f : (x = -x, -1.f));
@@ -959,10 +962,11 @@ void quatSlerpFastP2(const quat *const __RESTRICT__ q1, quat *const __RESTRICT__
 }
 void quatSlerpFastPR(const quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2, const float t, quat *const __RESTRICT__ r){
 
-	// Fast quaternion slerp function as described in David Eberly's
-	// 2011 paper, "A Fast and Accurate Algorithm for Computing SLERP".
-	// Uses only additions and multiplications, with no transcendental
-	// (trigonometric) function calls or branching.
+	// Fast quaternion slerp function, as described in David Eberly's
+	// paper "A Fast and Accurate Algorithm for Computing SLERP",
+	// published in the Journal of Graphics, GPU, and Game Tools 15.3,
+	// 161-176 (2011). Uses only additions and multiplications, with no
+	// transcendental (trigonometric) function calls or branching.
 
 	float x = quatDotP(q1, q2);
 	const float sign = (x >= 0.f ? 1.f : (x = -x, -1.f));
@@ -1061,3 +1065,35 @@ __HINT_INLINE__ void quatRotatePR(const quat *const __RESTRICT__ q1, const quat 
 	// *r = temp;
 	quatSlerpFastPR(q1, &temp, t, r);
 }
+
+/*__HINT_INLINE__ quat quatMat4(const mat4 m){
+    quat q;
+    float t;
+    if(m.m[2][2] < 0.f){
+        if(m.m[0][0] > m.m[1][1]){
+            t = m.m[0][0] - m.m[1][1] - m.m[2][2] + 1.f;
+            q = quatNew(m.m[1][2] - m.m[2][1], t, m.m[0][1] + m.m[1][0], m.m[2][0] + m.m[0][2]);
+        }else{
+            t = -m.m[0][0] + m.m[1][1] - m.m[2][2] + 1.f;
+            q = quatNew(m.m[2][0] - m.m[0][2], m.m[0][1] + m.m[1][0], t, m.m[1][2] + m.m[2][1]);
+        }
+    }else{
+        if(m.m[0][0] < -m.m[1][1]){
+            t = -m.m[0][0] - m.m[1][1] + m.m[2][2] + 1.f;
+            q = quatNew(m.m[0][1] - m.m[1][0], m.m[2][0] + m.m[0][2], m.m[1][2] + m.m[2][1], t);
+        }else{
+            t = m.m[0][0] + m.m[1][1] + m.m[2][2] + 1.f;
+            q = quatNew(t, m.m[1][2] - m.m[2][1], m.m[2][0] - m.m[0][2], m.m[0][1] - m.m[1][0]);
+        }
+    }
+    return quatQMultS(q, 0.5f*rsqrt(t));
+}
+__HINT_INLINE__ quat quatMat4Alt(const mat4 m){
+    const quat q = {
+        .w = 0.5f * sqrtf(m.m[0][0] + m.m[1][1] + m.m[2][2] + 1.f),
+        .v.x = copySignZero(0.5f * sqrtf( m.m[0][0] - m.m[1][1] - m.m[2][2] + 1.f), m.m[1][2] - m.m[2][1]),
+        .v.y = copySignZero(0.5f * sqrtf(-m.m[0][0] + m.m[1][1] - m.m[2][2] + 1.f), m.m[2][0] - m.m[0][2]),
+        .v.z = copySignZero(0.5f * sqrtf(-m.m[0][0] - m.m[1][1] + m.m[2][2] + 1.f), m.m[0][1] - m.m[1][0])
+    };
+    return q;
+}*/

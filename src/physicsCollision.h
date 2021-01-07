@@ -191,9 +191,9 @@ void physContactInit(physContact *const __RESTRICT__ contact, const cContact *co
 void physContactPersist(physContact *const __RESTRICT__ contact, const cContact *const __RESTRICT__ manifold, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, const physCollider *const __RESTRICT__ colliderA, const physCollider *const __RESTRICT__ colliderB);
 
 #ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-void physContactPresolveConstraints(physContact *const __RESTRICT__ contact, physCollider *const __RESTRICT__ colliderA, physCollider *const __RESTRICT__ colliderB, const float frequency);
+void physContactPresolveConstraints(physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, const float frequency);
 #else
-void physContactPresolveConstraints(physContact *const __RESTRICT__ contact, physCollider *const __RESTRICT__ colliderA, physCollider *const __RESTRICT__ colliderB);
+void physContactPresolveConstraints(physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB);
 #endif
 void physContactReset(physContact *const __RESTRICT__ contact);
 

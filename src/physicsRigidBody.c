@@ -1660,19 +1660,14 @@ return_t physRigidBodyPermitCollision(const physRigidBody *const body1, const ph
 	if(body1 > body2){
 
 		// Body 1's joints.
-		unsigned int found = 0;
 		const physJoint *i = body1->joints;
 		while(i != NULL && body2 >= (physRigidBody *)i->bodyB){
 			// Check if the child body is the same.
-			if(body2 == (physRigidBody *)i->bodyB){
-				if(flagsAreUnset(i->flags, PHYSICS_JOINT_COLLISION)){
-					return 0;
-				}
-				found = 1;
-			}else if(found){
-				// Exit once we know for certain
-				// the bodies may collide.
-				return 1;
+			if(
+				body2 == (physRigidBody *)i->bodyB &&
+				flagsAreUnset(i->flags, PHYSICS_JOINT_COLLISION)
+			){
+				return 0;
 			}
 			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 			i = (physJoint *)memQLinkNextA(i);
@@ -1686,19 +1681,14 @@ return_t physRigidBodyPermitCollision(const physRigidBody *const body1, const ph
 	}else if(body2 > body1){
 
 		// Body 2's joints.
-		unsigned int found = 0;
 		const physJoint *i = body2->joints;
 		while(i != NULL && body1 >= (physRigidBody *)i->bodyB){
 			// Check if the child body is the same.
-			if(body1 == (physRigidBody *)i->bodyB){
-				if(flagsAreUnset(i->flags, PHYSICS_JOINT_COLLISION)){
-					return 0;
-				}
-				found = 1;
-			}else if(found){
-				// Exit once we know for certain
-				// the bodies may collide.
-				return 1;
+			if(
+				body1 == (physRigidBody *)i->bodyB &&
+				flagsAreUnset(i->flags, PHYSICS_JOINT_COLLISION)
+			){
+				return 0;
 			}
 			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 			i = (physJoint *)memQLinkNextA(i);

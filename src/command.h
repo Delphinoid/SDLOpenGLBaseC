@@ -6,44 +6,43 @@
 #include "qualifiers.h"
 #include <stddef.h>
 
+// Returns '1' for heap allocations and '0' for function pointers.
+#define cmdType(cmd) ((uintptr_t)(cmd) & (uintptr_t)~0x01)
+
 typedef size_t cmdNodeIndex_t;
 
-typedef struct {
-	// Contains each console variable.
-
-} cmdVariables;
-
-typedef struct command command;
-typedef struct {
-	size_t argc;
-	void *argv;
-} cmdArgument;
-// int func(const cmdVariables *cmdv, const cmdInput *cmdi);
-typedef const int (*cmdFunction)(const command *const __RESTRICT__ cmd, const flags_t state, const cmdVariables *const __RESTRICT__ cmdv);
-
-// A command instance contains a set of
-// inputs and a function to run on them.
-typedef struct command {
-	cmdArgument arg;
-	cmdFunction cmd;
-} command;
+// Commands are a little weird. They're not strictly
+// commands, per se: they may refer to either function
+// pointers or addresses on the heap.
+//
+// This allows the creation of regular commands, as
+// well as aliases, registers and so on.
+//
+// To separate these two cases, a '1' is stored in the
+// LSB of the address if it is to refer to a location
+// on the heap.
+typedef void *command;
 
 // Command trie nodes store an array of characters
 // that represent the following characters that
 // appear for various strings.
-/** Create a new cmdSystem containing cmdVariables and a root node. **/
 typedef struct cmdTrieNode cmdTrieNode;
 typedef struct cmdTrieNode {
 	cmdNodeIndex_t childNum;
 	cmdTrieNode *children;
-	cmdFunction cmd;
+	command cmd;
 	char value;
 } cmdTrieNode, cmdSystem;
 
-/** Fixed-length names? **/
-void cmdInit(cmdSystem *const __RESTRICT__ root);
-return_t cmdAdd(cmdSystem *const node, const char *__RESTRICT__ name, cmdFunction cmd);
-return_t cmdRemove(cmdSystem *const node, const char *__RESTRICT__ name);
-return_t cmdFind(cmdSystem *const node, const char *__RESTRICT__ name, cmdFunction cmd);
+// Command function prototype.
+typedef const void (*cmdFunction)(cmdSystem *const __RESTRICT__ cmdsys);
+
+void cmdSystemInit(cmdSystem *const __RESTRICT__ cmdsys);
+return_t cmdSystemAdd(cmdSystem *const node, const char *__RESTRICT__ name, command cmd);
+return_t cmdSystemRemove(cmdSystem *const node, const char *__RESTRICT__ name);
+command cmdSystemFind(cmdSystem *const node, const char *__RESTRICT__ name);
+void cmdSystemDelete(cmdSystem *const __RESTRICT__ cmdsys);
+
+return_t cmdSystemParse(cmdSystem *const __RESTRICT__ cmdsys, char *str);
 
 #endif

@@ -15,6 +15,8 @@
 	#define rsqrtAccurate(x) (1.f/sqrtf(x))
 #endif
 
+float copySign(const float x, const float y);
+
 float fastInvSqrt(float x);
 float fastInvSqrtAccurate(float x);
 

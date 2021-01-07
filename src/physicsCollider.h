@@ -5,11 +5,12 @@
 #include "collider.h"
 #include "mat3.h"
 
-// The pair linked lists are ordered from
-// smallest colliderB address to largest.
-//
 // The collider with the larger address
-// is the "owner" of a particular pair.
+// is the "owner" of a particular contact
+// or separation pair. Each collider will
+// store the pairs that it owns first in
+// these linked lists, sorted by smallest
+// colliderB address to largest.
 //
 // The last linked list node points to the
 // last pair that the collider is involved

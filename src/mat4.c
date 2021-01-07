@@ -640,9 +640,9 @@ __HINT_INLINE__ mat4 mat4ScalePre(const mat4 m, const float x, const float y, co
 }
 
 __HINT_INLINE__ mat4 mat4Quaternion(const quat q){
-	const float x2 = q.v.x+q.v.x;
-	const float y2 = q.v.y+q.v.y;
-	const float z2 = q.v.z+q.v.z;
+	const float x2 = 2.f*q.v.x;
+	const float y2 = 2.f*q.v.y;
+	const float z2 = 2.f*q.v.z;
 	const float w2x = q.w*x2;
 	const float w2y = q.w*y2;
 	const float w2z = q.w*z2;
@@ -664,9 +664,9 @@ __HINT_INLINE__ mat4 mat4Quaternion(const quat q){
 	return r;
 }
 __HINT_INLINE__ void mat4QuaternionP(mat4 *const __RESTRICT__ m, const quat *const __RESTRICT__ q){
-	const float x2 = q->v.x+q->v.x;
-	const float y2 = q->v.y+q->v.y;
-	const float z2 = q->v.z+q->v.z;
+	const float x2 = 2.f*q->v.x;
+	const float y2 = 2.f*q->v.y;
+	const float z2 = 2.f*q->v.z;
 	const float w2x = q->w*x2;
 	const float w2y = q->w*y2;
 	const float w2z = q->w*z2;

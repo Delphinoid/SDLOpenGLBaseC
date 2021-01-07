@@ -33,11 +33,11 @@
 //
 // Contact constraint equation:
 //
-// C = (pB - pA) . n >= 0.
+// C : (pB - pA) . n >= 0.
 //
 // Differentiating so we can solve w.r.t. velocity:
 //
-// C' = dC/dt = (((wB X rB) + vB) - ((wA X rA) + vA)) . n >= 0,
+// C' : dC/dt = (((wB X rB) + vB) - ((wA X rA) + vA)) . n >= 0,
 //
 // where n is the contact normal and the p terms are the
 // contact points in global space.
@@ -57,7 +57,7 @@
 //
 // Finally, adding a potential bias term, we have
 //
-// C' = JV + b >= 0.
+// C' : JV + b >= 0.
 //
 // ----------------------------------------------------------------------
 //
@@ -406,9 +406,9 @@ static __FORCE_INLINE__ void physContactPointGenerateInverseEffectiveMass(physCo
 }
 
 #ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *const __RESTRICT__ point, const physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, physCollider *const __RESTRICT__ colliderA, physCollider *const __RESTRICT__ colliderB, const float frequency){
+static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *const __RESTRICT__ point, const physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, const float frequency){
 #else
-static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *const __RESTRICT__ point, const physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, physCollider *const __RESTRICT__ colliderA, physCollider *const __RESTRICT__ colliderB){
+static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *const __RESTRICT__ point, const physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB){
 #endif
 
 	// Generate the constraint bias. Used in the
@@ -452,15 +452,12 @@ static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *cons
 }
 
 #ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-__FORCE_INLINE__ void physContactPresolveConstraints(physContact *const __RESTRICT__ contact, physCollider *const __RESTRICT__ colliderA, physCollider *const __RESTRICT__ colliderB, const float frequency){
+__FORCE_INLINE__ void physContactPresolveConstraints(physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, const float frequency){
 #else
-__FORCE_INLINE__ void physContactPresolveConstraints(physContact *const __RESTRICT__ contact, physCollider *const __RESTRICT__ colliderA, physCollider *const __RESTRICT__ colliderB){
+__FORCE_INLINE__ void physContactPresolveConstraints(physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB){
 #endif
 
 	// Builds a physContact from a cContact.
-
-	physRigidBody *const bodyA = colliderA->body;
-	physRigidBody *const bodyB = colliderB->body;
 
 	physContactPoint *pPoint = &contact->contacts[0];
 	const physContactPoint *const pPointLast = &pPoint[contact->contactNum];
@@ -476,9 +473,9 @@ __FORCE_INLINE__ void physContactPresolveConstraints(physContact *const __RESTRI
 
 		// Generate bias term.
 		#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-		physContactPointGenerateBias(pPoint, contact, bodyA, bodyB, colliderA, colliderB, frequency);
+		physContactPointGenerateBias(pPoint, contact, bodyA, bodyB, frequency);
 		#else
-		physContactPointGenerateBias(pPoint, contact, bodyA, bodyB, colliderA, colliderB);
+		physContactPointGenerateBias(pPoint, contact, bodyA, bodyB);
 		#endif
 
 	}

@@ -468,9 +468,9 @@ __HINT_INLINE__ return_t mat3SolvePR(const mat3 *const __RESTRICT__ A, const vec
 }
 
 __HINT_INLINE__ mat3 mat3Quaternion(const quat q){
-	const float x2 = q.v.x+q.v.x;
-	const float y2 = q.v.y+q.v.y;
-	const float z2 = q.v.z+q.v.z;
+	const float x2 = 2.f*q.v.x;
+	const float y2 = 2.f*q.v.y;
+	const float z2 = 2.f*q.v.z;
 	const float w2x = q.w*x2;
 	const float w2y = q.w*y2;
 	const float w2z = q.w*z2;
@@ -486,9 +486,9 @@ __HINT_INLINE__ mat3 mat3Quaternion(const quat q){
 	return r;
 }
 __HINT_INLINE__ void mat3QuaternionP(mat3 *const __RESTRICT__ m, const quat *const __RESTRICT__ q){
-	const float x2 = q->v.x+q->v.x;
-	const float y2 = q->v.y+q->v.y;
-	const float z2 = q->v.z+q->v.z;
+	const float x2 = 2.f*q->v.x;
+	const float y2 = 2.f*q->v.y;
+	const float z2 = 2.f*q->v.z;
 	const float w2x = q->w*x2;
 	const float w2y = q->w*y2;
 	const float w2z = q->w*z2;

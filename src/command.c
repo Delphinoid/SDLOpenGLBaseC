@@ -97,7 +97,7 @@ static return_t cmdTrieRemoveChild(cmdTrieNode *const __RESTRICT__ node, const c
 	return 1;
 }
 
-static return_t cmdValid(const char *const name, const cmdFunction cmd){
+static return_t cmdValid(const char *const name, command cmd){
 	const char *check = name;
 	// Make sure the name and function pointer are not NULL.
 	if(check != NULL && cmd != NULL){
@@ -115,21 +115,14 @@ static return_t cmdValid(const char *const name, const cmdFunction cmd){
 	}
 	return check != name;
 }
-static return_t cmdParse(char *const __RESTRICT__ str){
-	return 0;
-}
 
-void cmdInit(cmdSystem *const __RESTRICT__ root){
-	/**
-	*** Value is set to DEL instead of NUL so that passing an empty
-	*** string into cmdFind() doesn't have unexpected results.
-	**/
-	root->value = 0x7F;
-	root->childNum = 0;
-	root->children = NULL;
-	root->cmd = NULL;
+void cmdSystemInit(cmdSystem *const __RESTRICT__ cmdsys){
+	cmdsys->value = 0;
+	cmdsys->childNum = 0;
+	cmdsys->children = NULL;
+	cmdsys->cmd = NULL;
 }
-return_t cmdAdd(cmdSystem *const node, const char *__RESTRICT__ name, cmdFunction cmd){
+return_t cmdSystemAdd(cmdSystem *const node, const char *__RESTRICT__ name, command cmd){
 	// Check if the command is valid before adding it.
 	if(cmdValid(name, cmd)){
 		// Go through each character in name, adding
@@ -151,7 +144,7 @@ return_t cmdAdd(cmdSystem *const node, const char *__RESTRICT__ name, cmdFunctio
 	}
 	return 0;
 }
-return_t cmdRemove(cmdSystem *const node, const char *__RESTRICT__ name){
+return_t cmdSystemRemove(cmdSystem *const node, const char *__RESTRICT__ name){
 	// Remove the command and all unused nodes.
 	cmdTrieNode *last = node;
 	cmdNodeIndex_t lastChildIndex = 0;
@@ -179,15 +172,21 @@ return_t cmdRemove(cmdSystem *const node, const char *__RESTRICT__ name){
 	}
 	return 0;
 }
-return_t cmdFind(cmdSystem *const node, const char *__RESTRICT__ name, cmdFunction cmd){
-	/** Any non-null-terminated input name has unexpected results. **/
+command cmdSystemFind(cmdSystem *const node, const char *__RESTRICT__ name){
 	while(cmdTrieNext((cmdTrieNode **const __RESTRICT__)&node, *name) != (size_t)-1){
 		++name;
 	}
-	// If we reached the end of the command's name, we've found it.
-	if(*name == '\0'){
-		cmd = node->cmd;
-		return 1;
+	if(*name != '\0'){
+		return NULL;
 	}
+	// If we reached the end of the command's name, we've found it.
+	return node->cmd;
+}
+
+return_t cmdSystemParse(cmdSystem *const __RESTRICT__ cmdsys, char *str){
+
+	// Parse the string into a series of commands.
+
 	return 0;
+
 }
