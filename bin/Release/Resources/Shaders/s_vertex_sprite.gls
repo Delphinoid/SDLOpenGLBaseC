@@ -24,7 +24,7 @@ void main(){
 	// Generate the vertex position for the sprite.
 	gl_Position = vpMatrix * transformation * vec4(vertexPosition, 1.f);
 	
-	// Calculate UVs for the current vertex based on the texture dimensions.
+	// Calculate UVs for the current vertex based on the texture fragment.
 	UV.x = vertexUV.x * textureFragment[2] + textureFragment[0];
 	UV.y = vertexUV.y * textureFragment[3] + textureFragment[1];
 	

@@ -1,40 +1,47 @@
-#include "memoryManager.h"
-#include "graphicsRenderer.h"
-#include "colliderHull.h"
-#include "constantsMath.h"
-#include "helpersFileIO.h"
-#include "sleep.h"
+#include "engine/memoryManager.h"
+#include "engine/graphicsRenderer.h"
+#include "engine/colliderHull.h"
+#include "engine/constantsMath.h"
+#include "engine/helpersFileIO.h"
+#include "engine/sleep.h"
 #include <stdio.h>
 #include <string.h>
 #include <fenv.h>
 
 /****/
-#include "moduleTexture.h"
-#include "moduleTextureWrapper.h"
-#include "moduleSkeleton.h"
-#include "moduleModel.h"
-#include "moduleRenderable.h"
-#include "modulePhysics.h"
-#include "moduleObject.h"
-#include "moduleGUI.h"
-#include "moduleScene.h"
-#include "moduleCamera.h"
+#include "engine/graphicsDebug.h"
 
-#include "texture.h"
-#include "model.h"
-#include "renderable.h"
-#include "physicsRigidBody.h"
-#include "physicsCollider.h"
-#include "physicsJoint.h"
-#include "object.h"
-#include "scene.h"
-#include "camera.h"
+/****/
+#include "engine/moduleObject.h"
+#include "engine/modulePhysics.h"
+#include "engine/moduleRenderable.h"
+#include "engine/moduleModel.h"
+#include "engine/moduleSkeleton.h"
+#include "engine/moduleTextureWrapper.h"
+#include "engine/moduleTexture.h"
+#include "engine/moduleGUI.h"
+#include "engine/moduleScene.h"
+#include "engine/moduleCamera.h"
+#include "engine/moduleInput.h"
 
-#include "gui.h"
-#include "particleSystem.h"
-#include "particleInitializer.h"
-#include "particleEmitter.h"
-#include "particleOperator.h"
+#include "engine/texture.h"
+#include "engine/model.h"
+#include "engine/renderable.h"
+#include "engine/physicsRigidBody.h"
+#include "engine/physicsCollider.h"
+#include "engine/physicsJoint.h"
+#include "engine/object.h"
+#include "engine/scene.h"
+#include "engine/camera.h"
+
+#include "engine/gui.h"
+#include "engine/particleSystem.h"
+#include "engine/particleInitializer.h"
+#include "engine/particleEmitter.h"
+#include "engine/particleOperator.h"
+
+#include "game/player.h"
+#include "game/playerCamera.h"
 
 /**
 *** TREE ITERATION FIXES
@@ -65,6 +72,7 @@ int main(int argc, char **argv){
 	//
 
 	/** Most of the code below this comment will be removed eventually. **/
+	moduleInputResourcesInit();
 	moduleCameraResourcesInit();
 	moduleSceneResourcesInit();
 	moduleGUIResourcesInit();
@@ -299,13 +307,24 @@ int main(int argc, char **argv){
 	//
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("Lenticular.tdo", 14));
+	objPhysicsPrepare(tempObji);
 	tempObji->configuration[0].orientation = quatNewEuler(0.f, 0.f*RADIAN_RATIO, 0.f);
 	tempObji->configuration[0].position.x = 6.f;
 	tempObji->configuration[0].position.y = -2.9f;
 	tempObji->configuration[0].position.z = 2.f;
+	tempObji->skeletonBodies->flags &= ~(0x04);
 	tempObji->renderables->billboardData.flags = BILLBOARD_TARGET_SPRITE | BILLBOARD_INVERT_ORIENTATION | BILLBOARD_LOCK_Y;
 	tempObji->renderables->billboardData.sectors = 8;
 	scnInsertObject(scnMain, tempObji);
+
+	// Player.
+	player p; playerCamera pc;
+	pInit(&p, tempObji);
+	pcInit(&pc, camMain);
+	pc.position = &tempObji->configuration[0].position;
+	pc.positionOffsetStatic = vec3New(0.f, 0.f, 0.f);
+	pcPositionOffsetDynamic(&pc, vec3New(0.f, 4.66f, 5.f));
+	pc.targetOffset = vec3New(0.f, 0.f, -5.f);
 
 	// Sprite Object Instances.
 	//
@@ -417,8 +436,14 @@ int main(int argc, char **argv){
 	float tickrate = 1000.f / 125.f;   // Desired milliseconds per update.
 	float timestep = tickrate / 1000.f;  // Desired seconds per update.
 
+	// We store dt in terms of both milliseconds and seconds.
+	// Milliseconds are most helpful for animating, while engine
+	// physics tend to be expressed most naturally w.r.t. seconds.
+	// dt_ms
 	float tickrateTimeMod = tickrate * timeMod;
+	// dt_s
 	float timestepTimeMod = timestep * timeMod;
+	// dt_s^{-1}
 	float frequencyTimeMod = 1.f / timestepTimeMod;
 	float tickrateUpdateMod = tickrate / updateMod;
 
@@ -431,16 +456,25 @@ int main(int argc, char **argv){
 	uint_least32_t renders = 0;
 	uint_least32_t lastPrint = 0;
 
-	SDL_Event prgEventHandler;
+	const unsigned char *state = SDL_GetKeyboardState(NULL);
 
+	signed char released = 1;
 	signed char UP    = 0;
 	signed char DOWN  = 0;
 	signed char LEFT  = 0;
 	signed char RIGHT = 0;
+	signed char SPACE = 0;
 
 	signed char lockMouse = 0;
-	int mouseRelX;
-	int mouseRelY;
+	int mx = 0; int my = 0;
+	int mx_accumulator = 0; int my_accumulator = 0;
+
+	float speed = 1600.f * timestepTimeMod;
+	float acceleration = 250 * timestepTimeMod;
+	float stopspeed = 500 * timestepTimeMod;
+	float friction = 5 * timestepTimeMod;
+	float jump = 2000.f * timestepTimeMod;
+	uint_least32_t on_ground = 0;
 
     while(prgRunning){
 
@@ -448,56 +482,60 @@ int main(int argc, char **argv){
 
 
 		// Take input.
-		/** Use command queuing system and poll input on another thread? Probably not actually. **/
-		// Detect input.
-		SDL_PollEvent(&prgEventHandler);
+		// This is soon to be replaced by inputManager.
+		SDL_PumpEvents();
 
-		// Exit.
-		if(prgEventHandler.type == SDL_QUIT){
+		if(state[SDL_SCANCODE_ESCAPE]){
 			prgRunning = 0;
 		}
-
-		// Key presses.
-		if(prgEventHandler.type == SDL_KEYDOWN){
-			if(prgEventHandler.key.keysym.sym == SDLK_ESCAPE){
-				prgRunning = 0;
-			}
-			if(prgEventHandler.key.keysym.sym == SDLK_l){
+		if(state[SDL_SCANCODE_L]){
+			if(released){
 				lockMouse = !lockMouse;
 				SDL_SetRelativeMouseMode(lockMouse);
+				released = 0;
 			}
-			if(prgEventHandler.key.keysym.sym == SDLK_UP){
-				UP = 1;
-			}
-			if(prgEventHandler.key.keysym.sym == SDLK_DOWN){
-				DOWN = 1;
-			}
-			if(prgEventHandler.key.keysym.sym == SDLK_LEFT){
-				LEFT = 1;
-			}
-			if(prgEventHandler.key.keysym.sym == SDLK_RIGHT){
-				RIGHT = 1;
-			}
+		}else{
+			released = 1;
 		}
-
-		// Key releases.
-		if(prgEventHandler.type == SDL_KEYUP){
-			if(prgEventHandler.key.keysym.sym == SDLK_UP){
-				UP = 0;
-			}
-			if(prgEventHandler.key.keysym.sym == SDLK_DOWN){
-				DOWN = 0;
-			}
-			if(prgEventHandler.key.keysym.sym == SDLK_LEFT){
-				LEFT = 0;
-			}
-			if(prgEventHandler.key.keysym.sym == SDLK_RIGHT){
-				RIGHT = 0;
-			}
+		if(state[SDL_SCANCODE_T]){
+			pc.positionOffsetStatic = vec3New(0.f, 0.f, 0.f);
+			pcPositionOffsetDynamic(&pc, vec3New(0.f, 4.66f, 5.f));
+			p.obj->renderables[0].state.alpha = 1.f;
+		}
+		if(state[SDL_SCANCODE_F]){
+			pc.positionOffsetStatic = vec3New(0.f, 3.66f, 0.f);
+			pcPositionOffsetDynamic(&pc, vec3New(0.f, 0.f, 0.f));
+			p.obj->renderables[0].state.alpha = 0.f;
+		}
+		if(state[SDL_SCANCODE_W]){
+			UP = 1;
+		}else{
+			UP = 0;
+		}
+		if(state[SDL_SCANCODE_S]){
+			DOWN = 1;
+		}else{
+			DOWN = 0;
+		}
+		if(state[SDL_SCANCODE_A]){
+			LEFT = 1;
+		}else{
+			LEFT = 0;
+		}
+		if(state[SDL_SCANCODE_D]){
+			RIGHT = 1;
+		}else{
+			RIGHT = 0;
+		}
+		if(state[SDL_SCANCODE_SPACE]){
+			SPACE = 1;
+		}else{
+			SPACE = 0;
 		}
 
 		// Get mouse position relative to its position in the last call.
-		SDL_GetRelativeMouseState(&mouseRelX, &mouseRelY);
+		SDL_GetRelativeMouseState(&mx_accumulator, &my_accumulator);
+		mx += mx_accumulator; my += my_accumulator;
 
 
 		startUpdate = (float)SDL_GetTicks();
@@ -516,13 +554,13 @@ int main(int argc, char **argv){
 				//timestepTimeMod = timestep*globalTimeMod;
 				//const quat changeRotation = quatNewEuler(-90.f*RADIAN_RATIO, 0.f, 0.f);
 				//quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, timestepTimeMod, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
-				camMain->position.value.z += -5.f * timestepTimeMod;
+				///camMain->position.value.z += -5.f * timestepTimeMod;
 				//objGetState(&gameStateManager, 6, 0)->tempRndrConfig.target.value = camMain->position.value;
-				if(tempObji2->skeletonBodies->linearVelocity.z > -9.f){
+				/**if(tempObji2->skeletonBodies->linearVelocity.z > -9.f){
 					tempObji2->skeletonBodies->linearVelocity.z -= 62.5f * timestepTimeMod;
 				}else if(tempObji2->skeletonBodies->linearVelocity.z < -9.f){
 					tempObji2->skeletonBodies->linearVelocity.z = -9.f;
-				}
+				}**/
 				--gEl->root.scale.y;
 			}
 			if(DOWN){
@@ -534,13 +572,13 @@ int main(int argc, char **argv){
 				//timestepTimeMod = timestep*globalTimeMod;
 				//const quat changeRotation = quatNewEuler(90.f*RADIAN_RATIO, 0.f, 0.f);
 				//quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, timestepTimeMod, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
-				camMain->position.value.z += 5.f * timestepTimeMod;
+				///camMain->position.value.z += 5.f * timestepTimeMod;
 				//objGetState(&gameStateManager, 6, 0)->tempRndrConfig.target.value = camMain->position.value;
-				if(tempObji2->skeletonBodies->linearVelocity.z < 9.f){
+				/**if(tempObji2->skeletonBodies->linearVelocity.z < 9.f){
 					tempObji2->skeletonBodies->linearVelocity.z += 62.5f * timestepTimeMod;
 				}else if(tempObji2->skeletonBodies->linearVelocity.z > 9.f){
 					tempObji2->skeletonBodies->linearVelocity.z = 9.f;
-				}
+				}**/
 				///if(tempObji->skeletonData.animations->fragments->animBlendProgress == -1.f){
 					///sklaiDecay(tempObji->skeletonData.animations, 0.f, -tickrate/1000.f);
 					///sklaiDecay(moduleSkeletonAnimationInstanceNext(tempObji->skeletonData.animations), 1.4f, tickrate/1000.f);
@@ -552,13 +590,13 @@ int main(int argc, char **argv){
 				//quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, timestepTimeMod, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
 				//quatNewEuler(0.f, 0.f, -90.f*RADIAN_RATIO);
 				//quatRotate(&objGetState(&gameStateManager, 5, 0)->configuration[0].orientation, &changeRotation, timestepTimeMod, &objGetState(&gameStateManager, 5, 0)->configuration[0].orientation);
-				camMain->position.value.x += -5.f * timestepTimeMod;
+				///camMain->position.value.x += -5.f * timestepTimeMod;
 				//objGetState(&gameStateManager, 6, 0)->tempRndrConfig.target.value = camMain->position.value;
-				if(tempObji2->skeletonBodies->linearVelocity.x > -9.f){
+				/**if(tempObji2->skeletonBodies->linearVelocity.x > -9.f){
 					tempObji2->skeletonBodies->linearVelocity.x -= 62.5f * timestepTimeMod;
 				}else if(tempObji2->skeletonBodies->linearVelocity.x < -9.f){
 					tempObji2->skeletonBodies->linearVelocity.x = -9.f;
-				}
+				}**/
 				--gEl->root.scale.x;
 			}
 			if(RIGHT){
@@ -568,14 +606,35 @@ int main(int argc, char **argv){
 				//quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, timestepTimeMod, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
 				//quatNewEuler(0.f, 0.f, 90.f*RADIAN_RATIO);
 				//quatRotate(&objGetState(&gameStateManager, 5, 0)->configuration[0].orientation, &changeRotation, timestepTimeMod, &objGetState(&gameStateManager, 5, 0)->configuration[0].orientation);
-				camMain->position.value.x += 5.f * timestepTimeMod;
+				///camMain->position.value.x += 5.f * timestepTimeMod;
 				//objGetState(&gameStateManager, 6, 0)->tempRndrConfig.target.value = camMain->position.value;
-				if(tempObji2->skeletonBodies->linearVelocity.x < 9.f){
+				/**if(tempObji2->skeletonBodies->linearVelocity.x < 9.f){
 					tempObji2->skeletonBodies->linearVelocity.x += 62.5f * timestepTimeMod;
 				}else if(tempObji2->skeletonBodies->linearVelocity.x > 9.f){
 					tempObji2->skeletonBodies->linearVelocity.x = 9.f;
-				}
+				}**/
 			}///camMain->target.value = tempObji2->configuration[0].position;
+
+			/** TEMPORARILY ADD GRAVITY. **/
+			physRigidBodyApplyLinearForce(tempObji2->skeletonBodies, vec3New(0.f, -9.80665f*tempObji2->skeletonBodies->mass, 0.f));
+			physRigidBodyApplyLinearForce(tempObji3->skeletonBodies, vec3New(0.f, -9.80665f*tempObji3->skeletonBodies->mass, 0.f));
+			physRigidBodyApplyLinearForce(tempObji4->skeletonBodies, vec3New(0.f, -9.80665f*tempObji4->skeletonBodies->mass, 0.f));
+
+			pcTick(&pc, mx, my);
+			pBasis(&p, pc.cam);
+			pInput(&p, (float)(RIGHT-LEFT), (float)(UP-DOWN), SPACE*INPUT_KEY_STATE_PRESSED);
+			pTick(&p, timestepTimeMod);
+			if(p.movement.airborne){
+				if(p.movement.velocity.y >= 0.f){
+					p.obj->renderables[0].twi.currentAnim = 16;
+				}else{
+					p.obj->renderables[0].twi.currentAnim = 24;
+				}
+			}else if((LEFT | RIGHT | UP | DOWN) != 0){
+				p.obj->renderables[0].twi.currentAnim = 8;
+			}else{
+				p.obj->renderables[0].twi.currentAnim = 0;
+			}
 
 			///
 			guiTick(&gui, tickrateTimeMod);
@@ -587,6 +646,10 @@ int main(int argc, char **argv){
 			#else
 			moduleSceneTick(tickrateTimeMod, timestepTimeMod);
 			#endif
+
+			// Reset mouse movement.
+			mx = 0.f;
+			my = 0.f;
 
 			// Next frame.
 			nextUpdate += tickrateUpdateMod;
@@ -676,6 +739,10 @@ int main(int argc, char **argv){
 	moduleGUIResourcesDelete();
 	moduleSceneResourcesDelete();
 	moduleCameraResourcesDelete();
+	moduleInputResourcesDelete();
+
+	/** Debug shader program. **/
+	gfxDebugDeleteShaderProgram();
 
 	gfxMngrDestroyProgram(&gfxMngr);
 

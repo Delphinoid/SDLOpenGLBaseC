@@ -1,2 +1,3 @@
 skeleton "default"
-renderable "Lenticular.obj" "Lenticular\stand.tdw"
+skeletonPhysics "Lenticular.tdp"
+renderable "Lenticular.obj" "Lenticular\Lenticular.tdw"

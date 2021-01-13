@@ -6,8 +6,8 @@
 // Texture samplers.
 #define GFX_TEXTURE_SAMPLER_NUM 1
 
-// Bone struct.
-struct bone {
+// Affine transformation struct.
+struct transform {
 	vec3 position;
 	vec4 orientation;
 	vec3 scale;
@@ -56,7 +56,7 @@ void main(){
 	// Get the width and height of the texture.
 	ivec2 textureDimensions = textureSize(textureSampler[0], 0);
 	
-	// Calculate UVs for the current vertex based on the texture dimensions.
+	// Calculate UVs for the current vertex based on the texture fragment.
 	UV.x = vertexUV.x * textureFragment[0][2] + textureFragment[0][0];
 	UV.y = vertexUV.y * textureFragment[0][3] + textureFragment[0][1];
 
