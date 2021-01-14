@@ -1,4 +1,5 @@
 #include "player.h"
+#include "playerCamera.h"
 #include "../engine/camera.h"
 #include "../engine/physicsRigidBody.h"
 #include "../engine/physicsCollision.h"
@@ -11,19 +12,18 @@
 #define PLAYER_FRICTION 4.f
 #define PLAYER_GRAVITY 20.f
 #define PLAYER_JUMP 8.f
-#define PLAYER_AIR_CONTROL 0.4f
+#define PLAYER_AIR_CONTROL 4.f
 
 #define PLAYER_GROUND_MAX_SPEED    10.f
 #define PLAYER_GROUND_ACCELERATION 15.f
-#define PLAYER_GROUND_DECELERATION 10.f
+#define PLAYER_GROUND_DECELERATION 8.f
 
 #define PLAYER_AIR_MAX_SPEED    10.f
-#define PLAYER_AIR_ACCELERATION 2.f
-#define PLAYER_AIR_DECELERATION 3.f
+#define PLAYER_AIR_ACCELERATION 2.5f
+#define PLAYER_AIR_DECELERATION 2.5f
 
-#define PLAYER_STRAFE_MAX_SPEED    1.f
-#define PLAYER_STRAFE_ACCELERATION 70.f
-#define PLAYER_STRAFE_DECELERATION 70.f
+#define PLAYER_AIR_STRAFE_MAX_SPEED    4.f
+#define PLAYER_AIR_STRAFE_ACCELERATION 10.f
 
 static __HINT_INLINE__ void pMoveAccelerate(
 	pMove *const __RESTRICT__ movement, const vec2 wishdir, const float wishspeed, const float accel, const float dt_s
@@ -74,10 +74,7 @@ static __HINT_INLINE__ void pMoveAirControl(
 ){
 
 	// Only control air movement when moving forward or backward.
-	if(
-		fabsf(movement->fwish) >= PLAYER_MOVE_STOP_EPSILON &&
-		fabsf(wishspeed)       >= PLAYER_MOVE_STOP_EPSILON
-	){
+	if(movement->rwish == 0.f && wishspeed != 0.f){
 
 		vec2 velocity = {
 			.x = movement->velocity.x,
@@ -87,14 +84,15 @@ static __HINT_INLINE__ void pMoveAirControl(
 		velocity = vec2NormalizeFastAccurate(velocity);
 
 		{
-			// Change direction while slowing down.
+			// Can't change direction if we're slowing down.
 			const float dot = vec2Dot(velocity, wishdir);
-			//if(dot > 0.f){
-				const float k = 480.f*PLAYER_AIR_CONTROL*dot*dot*dt_s;
+			if(dot > 0.f){
+				const float k = 32.f*PLAYER_AIR_CONTROL*dot*dot*dt_s;
 				velocity.x = velocity.x*speed + wishdir.x*k;
 				velocity.y = velocity.y*speed + wishdir.y*k;
 				velocity = vec2NormalizeFastAccurate(velocity);
-			//}
+				movement->direction = velocity;
+			}
 		}
 
 		movement->velocity.x = velocity.x * speed;
@@ -114,9 +112,12 @@ static __HINT_INLINE__ void pMoveGround(pMove *const __RESTRICT__ movement, cons
 	};
 	// Calculate the speed.
 	const float wishspeed = vec2Magnitude(wishdir) * PLAYER_GROUND_MAX_SPEED;
-	wishdir = vec2NormalizeFastAccurate(wishdir);
 
-	pMoveAccelerate(movement, wishdir, wishspeed, PLAYER_GROUND_ACCELERATION, dt_s);
+	if(wishspeed > PLAYER_MOVE_STOP_EPSILON){
+		wishdir = vec2NormalizeFastAccurate(wishdir);
+		movement->direction = wishdir;
+		pMoveAccelerate(movement, wishdir, wishspeed, PLAYER_GROUND_ACCELERATION, dt_s);
+	}
 
 }
 
@@ -131,39 +132,51 @@ static __HINT_INLINE__ void pMoveAir(pMove *const __RESTRICT__ movement, const f
 		.y = movement->rwish*movement->rbasis.y + movement->fwish*movement->fbasis.y,
 	};
 	// Calculate the speed.
-	const float wishspeed = vec2Magnitude(wishdir) * PLAYER_AIR_MAX_SPEED;
-	float wishspeed_strafe = wishspeed;
-	float accel;
-	wishdir = vec2NormalizeFastAccurate(wishdir);
+	const float wishspeed2 = vec2Magnitude(wishdir) * PLAYER_AIR_MAX_SPEED;
 
-	// Use CPM-style air control.
-	if(movement->velocity.x*wishdir.x + movement->velocity.z*wishdir.y < 0.f){
-		accel = PLAYER_AIR_DECELERATION;
-	}else{
-		accel = PLAYER_AIR_ACCELERATION;
-	}
+	if(wishspeed2 > PLAYER_MOVE_STOP_EPSILON){
 
-	// Handle strafing movement.
-	if(movement->rwish != 0.f && movement->fwish == 0.f){
-		if(wishspeed_strafe > PLAYER_STRAFE_MAX_SPEED){
-			wishspeed_strafe = PLAYER_STRAFE_MAX_SPEED;
+		float wishspeed = wishspeed2;
+		float accel;
+		wishdir = vec2NormalizeFastAccurate(wishdir);
+		movement->direction = wishdir;
+
+		// Use CPM-style air control.
+		if(movement->velocity.x*wishdir.x + movement->velocity.z*wishdir.y < 0.f){
+			accel = PLAYER_AIR_DECELERATION;
+		}else{
+			accel = PLAYER_AIR_ACCELERATION;
 		}
-		accel = PLAYER_STRAFE_ACCELERATION;
-	}
 
-	// Accelerate.
-	pMoveAccelerate(movement, wishdir, wishspeed_strafe, accel, dt_s);
-	if(PLAYER_AIR_CONTROL > 0.f){
-		pMoveAirControl(movement, wishdir, wishspeed, dt_s);
+		// Handle strafing movement.
+		if(movement->rwish != 0.f && movement->fwish == 0.f){
+			if(wishspeed > PLAYER_AIR_STRAFE_MAX_SPEED){
+				wishspeed = PLAYER_AIR_STRAFE_MAX_SPEED;
+			}
+			accel = PLAYER_AIR_STRAFE_ACCELERATION;
+		}
+
+		// Accelerate.
+		pMoveAccelerate(movement, wishdir, wishspeed, accel, dt_s);
+		if(PLAYER_AIR_CONTROL > 0.f){
+			pMoveAirControl(movement, wishdir, wishspeed2, dt_s);
+		}
+
 	}
 
 }
 
-static __HINT_INLINE__ void pMoveRotate(player *const __RESTRICT__ p){
+void pRotateWish(player *const __RESTRICT__ p){
+	p->obj->skeletonBodies->configuration.orientation = quatNewRotation(
+		vec3New(0.f, 0.f, 1.f), vec3New(p->movement.direction.x, 0.f, p->movement.direction.y)
+	);
+}
+
+void pRotateVelocity(player *const __RESTRICT__ p){
 	// Only update the direction if we've moved far enough.
 	const vec3 direction = vec3New(p->movement.velocity.x, 0.f, p->movement.velocity.z);
 	if(vec3Magnitude(direction) >= PLAYER_MOVE_STOP_EPSILON){
-		p->obj->skeletonBodies[0].configuration.orientation = quatNewRotation(
+		p->obj->skeletonBodies->configuration.orientation = quatNewRotation(
 			vec3New(0.f, 0.f, 1.f), vec3NormalizeFastAccurate(direction)
 		);
 	}
@@ -172,9 +185,22 @@ static __HINT_INLINE__ void pMoveRotate(player *const __RESTRICT__ p){
 void pInit(player *const __RESTRICT__ p, object *const obj){
 	memset(p, 0, sizeof(player));
 	p->obj = obj;
+	p->movement.direction = vec2New(0.f, 1.f);
 }
 
-void pBasis(player *const __RESTRICT__ p, const camera *const __RESTRICT__ cam){
+void pBasisPC(player *const __RESTRICT__ p, const playerCamera *const __RESTRICT__ pc){
+	// Project the camera's basis onto the xz plane and normalize.
+	// This gives us our movement basis, that is used for moving
+	// the player based on the direction the camera is facing.
+	// Note that the z-coordinates must be negated.
+	const quat orientation = quatNewEuler(0.f, -pc->rx, 0.f);
+	const vec3 rbasis = quatRotateVec3(orientation, vec3New(1.f, 0.f, 0.f));
+	const vec3 fbasis = quatRotateVec3(orientation, vec3New(0.f, 0.f, -1.f));
+	p->movement.rbasis.x = rbasis.x; p->movement.rbasis.y = rbasis.z;
+	p->movement.fbasis.x = fbasis.x; p->movement.fbasis.y = fbasis.z;
+}
+
+void pBasisC(player *const __RESTRICT__ p, const camera *const __RESTRICT__ cam){
 	// Project the camera's basis onto the xz plane and normalize.
 	// This gives us our movement basis, that is used for moving
 	// the player based on the direction the camera is facing.
@@ -237,21 +263,17 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 	if(!p->movement.airborne){
 		if(p->movement.jump < INPUT_KEY_STATE_DOWN){
 			pMoveFriction(&p->movement, 1.f, dt_s);
+			pMoveGround(&p->movement, dt_s);
+			p->movement.velocity.y = -PLAYER_GRAVITY * dt_s;
 		}else{
 			p->movement.airborne = 1;
 			p->movement.velocity.y = PLAYER_JUMP;
-		}
-		pMoveGround(&p->movement, dt_s);
-		if(!p->movement.airborne){
-			p->movement.velocity.y = -PLAYER_GRAVITY * dt_s;
+			pMoveAir(&p->movement, dt_s);
 		}
 	}else{
 		pMoveAir(&p->movement, dt_s);
 		p->movement.velocity.y -= PLAYER_GRAVITY * dt_s;
 	}
 	p->obj->skeletonBodies->linearVelocity = p->movement.velocity;
-
-	// Rotate to face the direction of the (projected) velocity vector.
-	pMoveRotate(p);
 
 }

@@ -6,7 +6,12 @@
 #ifndef M_PI
 	#define M_PI 3.1415926535897932384626433832795028841971693993751058209749445923078164062
 #endif
-#define M_PI_on_2 (M_PI/2.0)
+#ifndef M_PI_2
+	#define M_PI_2 (M_PI/2.0)
+#endif
+#ifndef M_PI_4
+	#define M_PI_4 (M_PI/4.0)
+#endif
 
 #ifndef INFINITY
 	#define INFINITY 1.0/0.0

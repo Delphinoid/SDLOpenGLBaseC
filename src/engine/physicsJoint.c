@@ -29,9 +29,9 @@ void (* const physJointPresolveConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM])(
 	physJointSpherePresolveConstraints
 };
 __FORCE_INLINE__ void physJointPresolveConstraints(physJoint *const __RESTRICT__ joint, const float dt_s){
-
-	physJointPresolveConstraintsJumpTable[joint->type](joint, joint->bodyA, joint->bodyB, dt_s);
-
+	if(joint->type < PHYSICS_JOINT_TYPE_NUM){
+		physJointPresolveConstraintsJumpTable[joint->type](joint, joint->bodyA, joint->bodyB, dt_s);
+	}
 }
 
 /** The lines below should eventually be removed. **/
@@ -52,9 +52,9 @@ void (* const physJointSolveVelocityConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM]
 	physJointSphereSolveVelocityConstraints
 };
 __FORCE_INLINE__ void physJointSolveVelocityConstraints(physJoint *const __RESTRICT__ joint){
-
-	physJointSolveVelocityConstraintsJumpTable[joint->type](joint, joint->bodyA, joint->bodyB);
-
+	if(joint->type < PHYSICS_JOINT_TYPE_NUM){
+		physJointSolveVelocityConstraintsJumpTable[joint->type](joint, joint->bodyA, joint->bodyB);
+	}
 }
 
 #ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
@@ -77,9 +77,9 @@ return_t (* const physJointSolveConfigurationConstraintsJumpTable[PHYSICS_JOINT_
 	physJointSphereSolveConfigurationConstraints
 };
 __FORCE_INLINE__ return_t physJointSolveConfigurationConstraints(physJoint *const __RESTRICT__ joint){
-
-	return physJointSolveConfigurationConstraintsJumpTable[joint->type](joint, joint->bodyA, joint->bodyB);
-
+	if(joint->type < PHYSICS_JOINT_TYPE_NUM){
+		return physJointSolveConfigurationConstraintsJumpTable[joint->type](joint, joint->bodyA, joint->bodyB);
+	}
 }
 
 #endif
@@ -207,7 +207,7 @@ void physJointDelete(physJoint *const joint){
 		#else
 		temp->nextA = joint->nextA;
 		#endif
-	}else{
+	}else if(joint->bodyA != NULL){
 		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 		joint->bodyA->joints = (physJoint *)memQLinkNextA(joint);
 		#else
@@ -233,7 +233,7 @@ void physJointDelete(physJoint *const joint){
 			temp->nextB = joint->nextB;
 			#endif
 		}
-	}else{
+	}else if(joint->bodyB != NULL){
 		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 		joint->bodyB->joints = (physJoint *)memQLinkNextB(joint);
 		#else

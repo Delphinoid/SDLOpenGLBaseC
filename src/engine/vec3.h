@@ -102,9 +102,13 @@ void vec3CrossPR(const vec3 *const __RESTRICT__ v1, const vec3 *const __RESTRICT
 float vec3Triple(const vec3 v1, const vec3 v2, const vec3 v3);
 float vec3TripleP(const vec3 *const __RESTRICT__ v1, const vec3 *const __RESTRICT__ v2, const vec3 *const __RESTRICT__ v3);
 
-vec3 vec3Perpendicular(const vec3 v);
-void vec3PerpendicularP(vec3 *const __RESTRICT__ v);
-void vec3PerpendicularPR(const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r);
+vec3 vec3Orthogonal(const vec3 v);
+void vec3OrthogonalP(vec3 *const __RESTRICT__ v);
+void vec3OrthogonalPR(const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r);
+
+vec3 vec3Orthonormal(const vec3 v);
+void vec3OrthonormalP(vec3 *const __RESTRICT__ v);
+void vec3OrthonormalPR(const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r);
 
 void vec3OrthonormalBasis(const vec3 v1, vec3 *const __RESTRICT__ v2, vec3 *const __RESTRICT__ v3);
 void vec3OrthonormalBasisP(const vec3 *const __RESTRICT__ v1, vec3 *const __RESTRICT__ v2, vec3 *const __RESTRICT__ v3);

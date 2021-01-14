@@ -236,7 +236,7 @@ int main(int argc, char **argv){
 	tempObji->configuration[0].position.y = 4.f-1.9f;//-0.65f;
 	objPhysicsPrepare(tempObji);
 	tempObji->skeletonBodies->hull->restitution = 0.f;
-	//physRigidBodyIgnoreLinear(tempObji->skeletonBodies);
+	physRigidBodyIgnoreLinear(tempObji->skeletonBodies);
 	tempObji4 = tempObji;
 	//tempObji->configuration[0].scale.x = 8.f;
 	//tempObji->configuration[0].scale.y = 0.25f;
@@ -307,24 +307,21 @@ int main(int argc, char **argv){
 	//
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("Lenticular.tdo", 14));
-	objPhysicsPrepare(tempObji);
 	tempObji->configuration[0].orientation = quatNewEuler(0.f, 0.f*RADIAN_RATIO, 0.f);
-	tempObji->configuration[0].position.x = 6.f;
-	tempObji->configuration[0].position.y = -2.9f;
-	tempObji->configuration[0].position.z = 2.f;
+	tempObji->configuration[0].position.y = 6.f;
 	tempObji->skeletonBodies->flags &= ~(0x04);
 	tempObji->renderables->billboardData.flags = BILLBOARD_TARGET_SPRITE | BILLBOARD_INVERT_ORIENTATION | BILLBOARD_LOCK_Y;
 	tempObji->renderables->billboardData.sectors = 8;
+	objPhysicsPrepare(tempObji);
 	scnInsertObject(scnMain, tempObji);
 
 	// Player.
 	player p; playerCamera pc;
 	pInit(&p, tempObji);
 	pcInit(&pc, camMain);
-	pc.position = &tempObji->configuration[0].position;
-	pc.positionOffsetStatic = vec3New(0.f, 0.f, 0.f);
-	pcPositionOffsetDynamic(&pc, vec3New(0.f, 4.66f, 5.f));
-	pc.targetOffset = vec3New(0.f, 0.f, -5.f);
+	pc.pivot = &tempObji->configuration->position;
+	pc.pivotStatic = vec3New(0.f, 3.66f, 0.f);
+	pcLook(&pc, vec3New(0.f, 0.f, 5.f), vec3New(0.f, 0.f, -5.f));
 
 	// Sprite Object Instances.
 	//
@@ -337,7 +334,11 @@ int main(int argc, char **argv){
 		PHYSICS_JOINT_SPHERE_CONE_LIMIT_ENABLED, vec3New(1.f, 0.f, 0.f), 45.f*RADIAN_RATIO
 	);*/
 	physJointDistanceInit(&joint->data.distance, vec3Zero(), vec3Zero(), 4.f, 0.f, 0.f);
-	scnInsertJoint(scnMain, joint);
+	///scnInsertJoint(scnMain, joint);
+
+	physJoint *joint_carry = modulePhysicsJointAllocate();
+	physJointInit(joint_carry, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_UNKNOWN);
+	//scnInsertJoint(scnMain, joint_carry);
 
 	guiElement gui, *gEl, *gTxt;
 	guiInit(&gui, GUI_ELEMENT_TYPE_CONTROLLER);
@@ -356,6 +357,7 @@ int main(int argc, char **argv){
 	gEl->root.position.z = -1.f;
 	//guiPanelInit(&gEl, areas);
 	//rndrStateInit(&gEl.data.panel.rndr.state);
+	gEl->data.window.flags = 0;
 	twiInit(&gEl->data.window.body, moduleTextureWrapperFind("gui"FILE_PATH_DELIMITER_STRING"body.tdw", 12));
 	twiInit(&gEl->data.window.border, moduleTextureWrapperFind("gui"FILE_PATH_DELIMITER_STRING"border.tdw", 14));
 	gEl->data.window.offsets[0].x = 3.f/4.f; gEl->data.window.offsets[0].y = 4.f/5.f; gEl->data.window.offsets[0].w = 1.f/4.f; gEl->data.window.offsets[0].h = 1.f/5.f;
@@ -366,23 +368,27 @@ int main(int argc, char **argv){
 	gEl->data.window.offsets[5].x = 0.f; gEl->data.window.offsets[5].y = 0.f; gEl->data.window.offsets[5].w = 1.f; gEl->data.window.offsets[5].h = 1.f/5.f;
 	gEl->data.window.offsets[6].x = 0.f; gEl->data.window.offsets[6].y = 1.f/5.f; gEl->data.window.offsets[6].w = 1.f; gEl->data.window.offsets[6].h = 1.f/5.f;
 	gEl->data.window.offsets[7].x = 0.f; gEl->data.window.offsets[7].y = 3.f/5.f; gEl->data.window.offsets[7].w = 1.f; gEl->data.window.offsets[7].h = 1.f/5.f;
+	gEl->root.position.x = -((float)(gfxMngr.viewport.width>>1));
+	gEl->root.position.y = (float)(gfxMngr.viewport.height>>1);
+	gEl->root.scale.x = 400.f;//(float)(gfxMngr.viewport.width>>1);
+	gEl->root.scale.y = 40.f;
 
 	txtFont testFont;
 	gTxt = guiNewChild(&gui);
 	guiInit(gTxt, GUI_ELEMENT_TYPE_TEXT);
-	gTxt->root.position.x = -((float)(gfxMngr.windowWidth>>1));
-	gTxt->root.position.y = (float)(gfxMngr.windowHeight>>1);
-	gTxt->data.text.width = (float)(gfxMngr.windowWidth>>1);
-	gTxt->data.text.height = (float)(gfxMngr.windowHeight>>1);
+	gTxt->root.position.x = -((float)(gfxMngr.viewport.width>>1))+24;
+	gTxt->root.position.y = (float)(gfxMngr.viewport.height>>1)-24;
+	gTxt->data.text.width = (float)(gfxMngr.viewport.width>>1);
+	gTxt->data.text.height = (float)(gfxMngr.viewport.height>>1);
 	gTxt->data.text.format.font = &testFont;
-	gTxt->data.text.format.size = 1.f;
+	gTxt->data.text.format.size = 0.5f;
 	gTxt->data.text.format.colour = vec4New(1.f, 1.f, 1.f, 1.f);
 	gTxt->data.text.format.background = vec4New(1.f, 1.f, 1.f, 0.f);
 	gTxt->data.text.format.style = 0;
-	gTxt->data.text.stream.front = memAllocate(44*sizeof(char));
-	gTxt->data.text.stream.back = &gTxt->data.text.stream.front[43];
+	gTxt->data.text.stream.front = memAllocate(1024*sizeof(char));
+	gTxt->data.text.stream.back = &gTxt->data.text.stream.front[1023];
 	gTxt->data.text.stream.offset = gTxt->data.text.stream.front;
-	memcpy(gTxt->data.text.stream.front, "The quick brown fox jumps over the lazy dog.", 44*sizeof(char));
+	memcpy(gTxt->data.text.stream.front, "Speed: 0", 8*sizeof(char));
 	txtFontLoad(
 		&testFont, TEXT_FONT_TYPE_MSDF,
 		"IBM_BIOS", 8,
@@ -466,8 +472,12 @@ int main(int argc, char **argv){
 	signed char SPACE = 0;
 
 	signed char lockMouse = 0;
+	unsigned int mstate;
 	int mx = 0; int my = 0;
 	int mx_accumulator = 0; int my_accumulator = 0;
+
+	signed char carry = 0;
+	signed char mreleased = 1;
 
 	float speed = 1600.f * timestepTimeMod;
 	float acceleration = 250 * timestepTimeMod;
@@ -479,6 +489,15 @@ int main(int argc, char **argv){
     while(prgRunning){
 
 		gfxMngrUpdateWindow(&gfxMngr);
+
+
+		gEl->root.position.x = -((float)(gfxMngr.viewport.width>>1));
+		gEl->root.position.y = (float)(gfxMngr.viewport.height>>1);
+		gEl->root.scale.x = 400.f;//(float)(gfxMngr.viewport.width>>1);
+		gTxt->root.position.x = -((float)(gfxMngr.viewport.width>>1))+24;
+		gTxt->root.position.y = (float)(gfxMngr.viewport.height>>1)-24;
+		gTxt->data.text.width = (float)(gfxMngr.viewport.width>>1);
+		gTxt->data.text.height = (float)(gfxMngr.viewport.height>>1);
 
 
 		// Take input.
@@ -498,13 +517,17 @@ int main(int argc, char **argv){
 			released = 1;
 		}
 		if(state[SDL_SCANCODE_T]){
-			pc.positionOffsetStatic = vec3New(0.f, 0.f, 0.f);
-			pcPositionOffsetDynamic(&pc, vec3New(0.f, 4.66f, 5.f));
+			pcLook(&pc, vec3New(0.f, 0.f, 5.f), vec3New(0.f, 0.f, -5.f));
 			p.obj->renderables[0].state.alpha = 1.f;
+			if(carry){
+				scnRemoveJoint(scnMain, joint_carry);
+				physJointDelete(joint_carry);
+				physJointInit(joint_carry, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_UNKNOWN);
+				carry = 0;
+			}
 		}
 		if(state[SDL_SCANCODE_F]){
-			pc.positionOffsetStatic = vec3New(0.f, 3.66f, 0.f);
-			pcPositionOffsetDynamic(&pc, vec3New(0.f, 0.f, 0.f));
+			pcLook(&pc, vec3New(0.f, 0.f, 0.f), vec3New(0.f, 0.f, -5.f));
 			p.obj->renderables[0].state.alpha = 0.f;
 		}
 		if(state[SDL_SCANCODE_W]){
@@ -534,7 +557,7 @@ int main(int argc, char **argv){
 		}
 
 		// Get mouse position relative to its position in the last call.
-		SDL_GetRelativeMouseState(&mx_accumulator, &my_accumulator);
+		mstate |= SDL_GetRelativeMouseState(&mx_accumulator, &my_accumulator);
 		mx += mx_accumulator; my += my_accumulator;
 
 
@@ -545,85 +568,16 @@ int main(int argc, char **argv){
 			/**smPrepareNextState(&gameStateManager);**/
 			moduleCameraPrepare();
 
-			// Handle inputs.
-			if(UP){
-				//tempObji2->skeletonBodies->flags &= ~(0x04);
-				//moduleObjectIndex(0)->renderables[0].alpha = 1.f;
-				//globalTimeMod = 1.f;
-				//tickrateTimeMod = tickrate*globalTimeMod;
-				//timestepTimeMod = timestep*globalTimeMod;
-				//const quat changeRotation = quatNewEuler(-90.f*RADIAN_RATIO, 0.f, 0.f);
-				//quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, timestepTimeMod, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
-				///camMain->position.value.z += -5.f * timestepTimeMod;
-				//objGetState(&gameStateManager, 6, 0)->tempRndrConfig.target.value = camMain->position.value;
-				/**if(tempObji2->skeletonBodies->linearVelocity.z > -9.f){
-					tempObji2->skeletonBodies->linearVelocity.z -= 62.5f * timestepTimeMod;
-				}else if(tempObji2->skeletonBodies->linearVelocity.z < -9.f){
-					tempObji2->skeletonBodies->linearVelocity.z = -9.f;
-				}**/
-				--gEl->root.scale.y;
-			}
-			if(DOWN){
-				++gEl->root.scale.y;
-				//tempObji2->skeletonBodies->flags |= (0x04);
-				//moduleObjectIndex(0)->renderables[0].alpha = 0.f;
-				//globalTimeMod = -1.f;
-				//tickrateTimeMod = tickrate*globalTimeMod;
-				//timestepTimeMod = timestep*globalTimeMod;
-				//const quat changeRotation = quatNewEuler(90.f*RADIAN_RATIO, 0.f, 0.f);
-				//quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, timestepTimeMod, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
-				///camMain->position.value.z += 5.f * timestepTimeMod;
-				//objGetState(&gameStateManager, 6, 0)->tempRndrConfig.target.value = camMain->position.value;
-				/**if(tempObji2->skeletonBodies->linearVelocity.z < 9.f){
-					tempObji2->skeletonBodies->linearVelocity.z += 62.5f * timestepTimeMod;
-				}else if(tempObji2->skeletonBodies->linearVelocity.z > 9.f){
-					tempObji2->skeletonBodies->linearVelocity.z = 9.f;
-				}**/
-				///if(tempObji->skeletonData.animations->fragments->animBlendProgress == -1.f){
-					///sklaiDecay(tempObji->skeletonData.animations, 0.f, -tickrate/1000.f);
-					///sklaiDecay(moduleSkeletonAnimationInstanceNext(tempObji->skeletonData.animations), 1.4f, tickrate/1000.f);
-				///}
-			}
-			if(LEFT){
-				//const quat changeRotation =
-				//quatNewEuler(&changeRotation, 0.f, -90.f*RADIAN_RATIO, 0.f);
-				//quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, timestepTimeMod, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
-				//quatNewEuler(0.f, 0.f, -90.f*RADIAN_RATIO);
-				//quatRotate(&objGetState(&gameStateManager, 5, 0)->configuration[0].orientation, &changeRotation, timestepTimeMod, &objGetState(&gameStateManager, 5, 0)->configuration[0].orientation);
-				///camMain->position.value.x += -5.f * timestepTimeMod;
-				//objGetState(&gameStateManager, 6, 0)->tempRndrConfig.target.value = camMain->position.value;
-				/**if(tempObji2->skeletonBodies->linearVelocity.x > -9.f){
-					tempObji2->skeletonBodies->linearVelocity.x -= 62.5f * timestepTimeMod;
-				}else if(tempObji2->skeletonBodies->linearVelocity.x < -9.f){
-					tempObji2->skeletonBodies->linearVelocity.x = -9.f;
-				}**/
-				--gEl->root.scale.x;
-			}
-			if(RIGHT){
-				++gEl->root.scale.x;
-				//const quat changeRotation =
-				//quatNewEuler(&changeRotation, 0.f, 90.f*RADIAN_RATIO, 0.f);
-				//quatRotate(&objGetState(&gameStateManager, 0, 0)->configuration[0].orientation, &changeRotation, timestepTimeMod, &objGetState(&gameStateManager, 0, 0)->configuration[0].orientation);
-				//quatNewEuler(0.f, 0.f, 90.f*RADIAN_RATIO);
-				//quatRotate(&objGetState(&gameStateManager, 5, 0)->configuration[0].orientation, &changeRotation, timestepTimeMod, &objGetState(&gameStateManager, 5, 0)->configuration[0].orientation);
-				///camMain->position.value.x += 5.f * timestepTimeMod;
-				//objGetState(&gameStateManager, 6, 0)->tempRndrConfig.target.value = camMain->position.value;
-				/**if(tempObji2->skeletonBodies->linearVelocity.x < 9.f){
-					tempObji2->skeletonBodies->linearVelocity.x += 62.5f * timestepTimeMod;
-				}else if(tempObji2->skeletonBodies->linearVelocity.x > 9.f){
-					tempObji2->skeletonBodies->linearVelocity.x = 9.f;
-				}**/
-			}///camMain->target.value = tempObji2->configuration[0].position;
-
 			/** TEMPORARILY ADD GRAVITY. **/
 			physRigidBodyApplyLinearForce(tempObji2->skeletonBodies, vec3New(0.f, -9.80665f*tempObji2->skeletonBodies->mass, 0.f));
 			physRigidBodyApplyLinearForce(tempObji3->skeletonBodies, vec3New(0.f, -9.80665f*tempObji3->skeletonBodies->mass, 0.f));
 			physRigidBodyApplyLinearForce(tempObji4->skeletonBodies, vec3New(0.f, -9.80665f*tempObji4->skeletonBodies->mass, 0.f));
 
 			pcTick(&pc, mx, my);
-			pBasis(&p, pc.cam);
+			pBasisPC(&p, &pc);
 			pInput(&p, (float)(RIGHT-LEFT), (float)(UP-DOWN), SPACE*INPUT_KEY_STATE_PRESSED);
 			pTick(&p, timestepTimeMod);
+			pRotateVelocity(&p);
 			if(p.movement.airborne){
 				if(p.movement.velocity.y >= 0.f){
 					p.obj->renderables[0].twi.currentAnim = 16;
@@ -635,6 +589,44 @@ int main(int argc, char **argv){
 			}else{
 				p.obj->renderables[0].twi.currentAnim = 0;
 			}
+			if(mstate & SDL_BUTTON(SDL_BUTTON_LEFT)){
+				if(mreleased){
+					if(p.obj->renderables[0].state.alpha == 0.f){
+						if(carry){
+							scnRemoveJoint(scnMain, joint_carry);
+							physJointDelete(joint_carry);
+							physJointInit(joint_carry, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_UNKNOWN);
+							carry = 0;
+						}else{
+							const vec3 pos = vec3VAddV(*pc.pivot, pc.pivotStatic);
+							const vec3 target = vec3VSubV(pc.cam->target.value, pos);
+							const vec3 v = vec3VSubV(tempObji2->configuration->position, pos);
+							if(vec3Magnitude(v) <= 5.f && vec3Dot(vec3NormalizeFast(target), vec3NormalizeFast(v)) >= 0.9f){
+								physJointInit(joint_carry, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_DISTANCE);
+								physJointAdd(joint_carry, tempObji2->skeletonBodies, p.obj->skeletonBodies);
+								physJointDistanceInit(&joint_carry->data.distance, vec3Zero(), vec3Zero(), 0.f, 0.f, 0.f);
+								scnInsertJoint(scnMain, joint_carry);
+								carry = 1;
+							}
+						}
+					}
+					mreleased = 0;
+				}
+				mstate &= ~SDL_BUTTON(SDL_BUTTON_LEFT);
+			}else{
+				mreleased = 1;
+			}
+			if(carry){
+				const vec3 target = vec3VSubV(
+					pc.cam->target.value,
+					*pc.pivot
+				);
+				joint_carry->data.distance.anchorB = vec3Negate(target);
+			}
+			sprintf(
+				(char *)&gTxt->data.text.stream.front[7], "%f",
+				sqrt(p.movement.velocity.x*p.movement.velocity.x + p.movement.velocity.z*p.movement.velocity.z)
+			);
 
 			///
 			guiTick(&gui, tickrateTimeMod);

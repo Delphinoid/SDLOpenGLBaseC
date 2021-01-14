@@ -189,7 +189,7 @@ __FORCE_INLINE__ void physContactInit(physContact *const __RESTRICT__ contact, c
 	#else
 	vec3OrthonormalBasis(normal, &physContactTangent1(contact), &physContactTangent2(contact));
 	#endif
-	//physContactTangent1(contact) = vec3Perpendicular(normal);
+	//physContactTangent1(contact) = vec3Orthogonal(normal);
 	//physContactTangent2(contact) = vec3Cross(normal, physContactTangent1(contact));
 	#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 	contact->normalA = quatRotateVec3FastApproximate(quatConjugateFast(bodyA->configuration.orientation), normal);
@@ -302,7 +302,7 @@ __FORCE_INLINE__ void physContactPersist(physContact *const __RESTRICT__ contact
 	normal = vec3NormalizeFastAccurate(normal);
 	physContactNormal(contact) = normal;
 	vec3OrthonormalBasis(normal, &physContactTangent1(contact), &physContactTangent2(contact));
-	///physContactTangent1(contact) = vec3Perpendicular(normal);
+	///physContactTangent1(contact) = vec3Orthogonal(normal);
 	///physContactTangent2(contact) = vec3Cross(normal, physContactTangent1(contact));
 	#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 	contact->normalA = quatRotateVec3FastApproximate(quatConjugateFast(bodyA->configuration.orientation), normal);

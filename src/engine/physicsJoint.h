@@ -26,7 +26,7 @@
 #define PHYSICS_JOINT_COLLISION_IGNORE  0x00
 #define PHYSICS_JOINT_COLLISION         0x01
 
-typedef int_least8_t physJointType_t;
+typedef uint_least8_t physJointType_t;
 
 typedef struct physRigidBody physRigidBody;
 typedef struct physJoint {

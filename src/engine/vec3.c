@@ -417,13 +417,13 @@ __HINT_INLINE__ float vec3TripleP(const vec3 *const __RESTRICT__ v1, const vec3 
 	return vec3DotP(v1, &cross);
 }
 
-__HINT_INLINE__ vec3 vec3Perpendicular(const vec3 v){
+__HINT_INLINE__ vec3 vec3Orthogonal(const vec3 v){
 	if(fabsf(v.x) >= 0.5773502691896257){  // sqrtf(1.f / 3.f), 0x3F13CD3A
 		return vec3New(v.y, -v.x, 0.f);
 	}
 	return vec3New(0.f, v.z, -v.y);
 }
-__HINT_INLINE__ void vec3PerpendicularP(vec3 *const __RESTRICT__ v){
+__HINT_INLINE__ void vec3OrthogonalP(vec3 *const __RESTRICT__ v){
 	const float y = v->y;
 	if(fabsf(v->x) >= 0.5773502691896257){  // sqrtf(1.f / 3.f), 0x3F13CD3A
 		v->y = -v->x;
@@ -434,7 +434,7 @@ __HINT_INLINE__ void vec3PerpendicularP(vec3 *const __RESTRICT__ v){
 	v->x = 0.f;
 	v->z = -y;
 }
-__HINT_INLINE__ void vec3PerpendicularPR(const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r){
+__HINT_INLINE__ void vec3OrthogonalPR(const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r){
 	if(fabsf(v->x) >= 0.5773502691896257){  // sqrtf(1.f / 3.f), 0x3F13CD3A
 		r->x = v->y;
 		r->y = -v->x;
@@ -443,6 +443,34 @@ __HINT_INLINE__ void vec3PerpendicularPR(const vec3 *const __RESTRICT__ v, vec3 
 	r->x = 0.f;
 	r->y = v->z;
 	r->z = -v->y;
+}
+
+__HINT_INLINE__ vec3 vec3Orthonormal(const vec3 v){
+	// Generates an orthonormal basis from v1.
+	// Taken from Duff et al.'s paper "Building an Orthonormal Basis, Revisited",
+	// published in the Journal of Computer Graphics Techniques 6.1, 1-8 (2017).
+	const float sign = copySign(1.f, v.z);
+	const float a = -1.f/(sign + v.z);
+	const float b = v.x*v.y*a;
+	return vec3New(b, sign + v.y*v.y*a, -v.y);
+}
+__HINT_INLINE__ void vec3OrthonormalP(vec3 *const __RESTRICT__ v){
+	// Generates an orthonormal basis from v1.
+	// Taken from Duff et al.'s paper "Building an Orthonormal Basis, Revisited",
+	// published in the Journal of Computer Graphics Techniques 6.1, 1-8 (2017).
+	const float sign = copySign(1.f, v->z);
+	const float a = -1.f/(sign + v->z);
+	const float b = v->x*v->y*a;
+	vec3Set(v, b, sign + v->y*v->y*a, -v->y);
+}
+__HINT_INLINE__ void vec3OrthonormalPR(const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r){
+	// Generates an orthonormal basis from v1.
+	// Taken from Duff et al.'s paper "Building an Orthonormal Basis, Revisited",
+	// published in the Journal of Computer Graphics Techniques 6.1, 1-8 (2017).
+	const float sign = copySign(1.f, v->z);
+	const float a = -1.f/(sign + v->z);
+	const float b = v->x*v->y*a;
+	vec3Set(r, b, sign + v->y*v->y*a, -v->y);
 }
 
 __HINT_INLINE__ void vec3OrthonormalBasis(const vec3 v1, vec3 *const __RESTRICT__ v2, vec3 *const __RESTRICT__ v3){

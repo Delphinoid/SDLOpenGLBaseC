@@ -13,6 +13,7 @@ quat quatNewS(const float s);
 quat quatNewAxisAngle(const float angle, const float axisX, const float axisY, const float axisZ);
 quat quatNewEuler(const float x, const float y, const float z);
 quat quatNewRotation(const vec3 v1, const vec3 v2);
+quat quatNewRotationFast(const vec3 v1, const vec3 v2);
 quat quatZero();
 void quatSet(quat *const __RESTRICT__ q, const float w, const float x, const float y, const float z);
 void quatSetS(quat *const __RESTRICT__ q, const float s);

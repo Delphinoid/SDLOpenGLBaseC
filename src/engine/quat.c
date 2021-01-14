@@ -4,6 +4,9 @@
 #include <float.h>
 #include <string.h>
 
+// Antiparallel threshold for rotating between two vectors.
+#define QUAT_SINGULARITY_THRESHOLD 0.0001f
+
 // The LERP threshold is the cosine of 1 radian.
 // Try 1/2 radians if spherical lerp results are bad: 0.99996192306417128873735516482698
 #define QUAT_LERP_THRESHOLD 0.99984769515639123915701155881391  // cos(RADIAN_RATIO)
@@ -73,8 +76,27 @@ __HINT_INLINE__ quat quatNewEuler(const float x, const float y, const float z){
 }
 __HINT_INLINE__ quat quatNewRotation(const vec3 v1, const vec3 v2){
 	// Rotation from v1 to v2.
+	const float d = vec3Dot(v1, v2);
+	// Handle the case where the vectors are
+	// antiparallel to avoid singularities.
+	if(d < -1.f + QUAT_SINGULARITY_THRESHOLD){
+		const quat q = {
+			.w = 0.f,
+			.v = vec3Orthonormal(v1)
+		};
+		return q;
+	}else{
+		const float s = sqrtf(2.f * (1.f + d));
+		const float rs = 1.f/s;
+		const vec3 axis = vec3Cross(v1, v2);
+		return quatNew(s*0.5f, rs*axis.x, rs*axis.y, rs*axis.z);
+	}
+}
+__HINT_INLINE__ quat quatNewRotationFast(const vec3 v1, const vec3 v2){
+	// Rotation from v1 to v2.
+	// Doesn't check antiparallel vectors.
 	const quat r = {
-		.w = sqrtf(vec3MagnitudeSquared(v1)*vec3MagnitudeSquared(v2)) + vec3Dot(v1, v2),
+		.w = 1.f + vec3Dot(v1, v2),
 		.v = vec3Cross(v1, v2)
 	};
 	return quatNormalizeFastAccurate(r);
