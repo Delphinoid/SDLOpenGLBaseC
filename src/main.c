@@ -338,7 +338,7 @@ int main(int argc, char **argv){
 
 	physJoint *joint_carry = modulePhysicsJointAllocate();
 	physJointInit(joint_carry, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_UNKNOWN);
-	//scnInsertJoint(scnMain, joint_carry);
+	scnInsertJoint(scnMain, joint_carry);
 
 	guiElement gui, *gEl, *gTxt;
 	guiInit(&gui, GUI_ELEMENT_TYPE_CONTROLLER);
@@ -520,7 +520,6 @@ int main(int argc, char **argv){
 			pcLook(&pc, vec3New(0.f, 0.f, 5.f), vec3New(0.f, 0.f, -5.f));
 			p.obj->renderables[0].state.alpha = 1.f;
 			if(carry){
-				scnRemoveJoint(scnMain, joint_carry);
 				physJointDelete(joint_carry);
 				physJointInit(joint_carry, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_UNKNOWN);
 				carry = 0;
@@ -593,7 +592,6 @@ int main(int argc, char **argv){
 				if(mreleased){
 					if(p.obj->renderables[0].state.alpha == 0.f){
 						if(carry){
-							scnRemoveJoint(scnMain, joint_carry);
 							physJointDelete(joint_carry);
 							physJointInit(joint_carry, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_UNKNOWN);
 							carry = 0;
@@ -605,7 +603,6 @@ int main(int argc, char **argv){
 								physJointInit(joint_carry, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_DISTANCE);
 								physJointAdd(joint_carry, tempObji2->skeletonBodies, p.obj->skeletonBodies);
 								physJointDistanceInit(&joint_carry->data.distance, vec3Zero(), vec3Zero(), 0.f, 0.f, 0.f);
-								scnInsertJoint(scnMain, joint_carry);
 								carry = 1;
 							}
 						}

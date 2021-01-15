@@ -10,8 +10,8 @@ Current feature list:
 * Custom maths library supporting 2, 3 and 4 dimensional vectors and square matrices, as well as quaternions. Also supports various geometric operations.
 
 List of features to be implemented in order of priority (or in reality, in order from the stuff that's easiest or most fun to the more annoying stuff):
-* Multiple textures for models.
 * Finish command system.
+* Multiple textures for models.
 * Finish scenes / zones.
 * Decals.
 * Audio system.

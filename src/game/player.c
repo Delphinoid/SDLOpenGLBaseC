@@ -6,7 +6,7 @@
 #include <math.h>
 #include <string.h>
 
-#define PLAYER_STEEPEST_SLOPE_ANGLE 0.6f  // Sine of the maximum slope angle.
+#define PLAYER_STEEPEST_SLOPE_ANGLE 0.7f  // Cosine of the maximum slope angle.
 #define	PLAYER_MOVE_STOP_EPSILON 0.001f
 
 #define PLAYER_FRICTION 4.f

@@ -138,10 +138,10 @@ unsigned int billboardLenticular(const billboard data, const camera *const __RES
 		// We do this because we can't guarantee that objects will always
 		// be axis-aligned.
 		const vec3 projection = vec3NormalizeFast(
-				pointPlaneProject(
-					billboardUp, billboardBackward,
-					vec3VSubV(cam->target.render, cam->position.render)
-				)
+			pointPlaneProject(
+				billboardUp, billboardBackward,
+				vec3VSubV(cam->target.render, cam->position.render)
+			)
 		);
 
 		// Use the dot and triple products to obtain the signed angle.
