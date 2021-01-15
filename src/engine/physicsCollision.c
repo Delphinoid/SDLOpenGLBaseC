@@ -800,7 +800,7 @@ void physSeparationPairDelete(physSeparationPair *const pair){
 			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
 			memQLinkNextA(temp) = memQLinkNextB(pair);
 			#else
-			temp->nextA = pair->nextA;
+			temp->nextA = pair->nextB;
 			#endif
 		}else{
 			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR

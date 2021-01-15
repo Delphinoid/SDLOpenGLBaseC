@@ -43,7 +43,6 @@ typedef struct {
 	object *obj;
 
 	// Movement controller.
-	// Based on both QuakeWorld and CPM movement.
 	pMove movement;
 
 } player;
