@@ -23,7 +23,7 @@
 #define PLAYER_AIR_DECELERATION 2.5f
 
 #define PLAYER_AIR_STRAFE_MAX_SPEED    4.f
-#define PLAYER_AIR_STRAFE_ACCELERATION 10.f
+#define PLAYER_AIR_STRAFE_ACCELERATION 30.f
 
 static __HINT_INLINE__ void pMoveAccelerate(
 	pMove *const __RESTRICT__ movement, const vec2 wishdir, const float wishspeed, const float accel, const float dt_s
