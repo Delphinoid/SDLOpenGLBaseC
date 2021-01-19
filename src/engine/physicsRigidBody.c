@@ -1072,6 +1072,10 @@ return_t physRigidBodyInstantiate(physRigidBody *const __RESTRICT__ body, const 
 	// Copy the colliders so we can transform them into global space.
 	while(cLocal != NULL){
 		cBody = modulePhysicsColliderInsertAfter(&body->hull, cBody);
+		if(cBody == NULL){
+			/** Memory allocation failure. **/
+			return -1;
+		}
 		physColliderInstantiate(cBody, cLocal, body);
 		cLocal = (physCollider *)memSLinkNext(cLocal);
 	}

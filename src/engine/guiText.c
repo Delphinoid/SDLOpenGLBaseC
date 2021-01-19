@@ -50,7 +50,7 @@ void guiTextRender(const guiElement *const element, graphicsManager *const gfxMn
 		}else if(code._32 == '\n'){
 			// New line.
 			cursor.x = 0.f;
-			cursor.y += advanceY*text.format.size;
+			cursor.y += advanceY;
 			advanceY = font.height;
 		/**
 		}else if(code._32 == TEXT_UTF8_INVALID_CODEUNIT){

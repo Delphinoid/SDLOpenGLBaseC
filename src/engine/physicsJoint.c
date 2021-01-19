@@ -77,9 +77,10 @@ return_t (* const physJointSolveConfigurationConstraintsJumpTable[PHYSICS_JOINT_
 	physJointSphereSolveConfigurationConstraints
 };
 __FORCE_INLINE__ return_t physJointSolveConfigurationConstraints(physJoint *const __RESTRICT__ joint){
-	if(joint->type < PHYSICS_JOINT_TYPE_NUM){
-		return physJointSolveConfigurationConstraintsJumpTable[joint->type](joint, joint->bodyA, joint->bodyB);
+	if(joint->type >= PHYSICS_JOINT_TYPE_NUM){
+		return 1;
 	}
+	return physJointSolveConfigurationConstraintsJumpTable[joint->type](joint, joint->bodyA, joint->bodyB);
 }
 
 #endif

@@ -68,6 +68,6 @@ void pcTick(playerCamera *const __RESTRICT__ pc, const int mx, const int my){
 		pc->cam->target.value   = vec3VAddV(pc->pivotStatic, quatRotateVec3(orientation, pc->target));
 	}
 
-	/// If the camera is in a wall, move it along the target vector.
+	/// If the camera is in a wall, move it along the eye vector.
 
 }

@@ -1,13 +1,19 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
+#include "memoryShared.h"
 #include <stddef.h>
 
-#define CONSOLE_BUFFER_SIZE 65536
+#define CONSOLE_BUFFER_SIZE 8192
 
 typedef struct {
-	char buffer[CONSOLE_BUFFER_SIZE];
-	size_t start;  // The current beginning of the buffer.
+	byte_t buffer[CONSOLE_BUFFER_SIZE];
+	byte_t *start;
+	byte_t *end;
 } console;
+
+void conInit(console *const __RESTRICT__ con);
+/// This should probably become part of txtStream.
+void conAppendLine(console *const __RESTRICT__ con, const byte_t *str, const size_t strLength);
 
 #endif

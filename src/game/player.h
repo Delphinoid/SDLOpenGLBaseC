@@ -4,6 +4,10 @@
 #include "../engine/inputManager.h"
 #include "../engine/object.h"
 #include "../engine/vec2.h"
+#include "../engine/tick.h"
+
+#define PLAYER_MOVEMENT_WALKING 0x01
+#define PLAYER_MOVEMENT_JUMPING 0x02
 
 typedef struct playerCamera playerCamera;
 
@@ -25,13 +29,16 @@ typedef struct {
 	flags_t jump;
 
 	// Number of ticks since the player left the ground.
-	uint_least32_t airborne;
+	tick_t airborne;
 
 	// Player velocity this tick.
 	vec3 velocity;
 
 	// Normalized movement direction.
 	vec2 direction;
+
+	// Movement state.
+	flags_t state;
 
 } pMove;
 

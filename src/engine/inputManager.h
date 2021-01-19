@@ -4,37 +4,45 @@
 #include <SDL2/SDL.h>
 #include "command.h"
 
-#define INPUT_KEY_BINDING_LENGTH 1024
+#define INPUT_MAX_KEYBOARD_KEYS 256
+#define INPUT_MAX_MOUSE_BUTTONS 7
 
-#define INPUT_KEY_STATE_UP       0x00
-#define INPUT_KEY_STATE_RELEASED 0x01
-#define INPUT_KEY_STATE_DOWN     0x02
-#define INPUT_KEY_STATE_PRESSED  0x03
-#define INPUT_KEY_STATE_MASK     0x02
+#define INPUT_MBUTTON0   0
+#define INPUT_MBUTTON1   1
+#define INPUT_MBUTTON2   2
+#define INPUT_MBUTTON3   3
+#define INPUT_MBUTTON4   4
+#define INPUT_MWHEELDOWN 5
+#define INPUT_MWHEELUP   6
 
-typedef struct inputKeyBinding {
-	SDL_Scancode scancode;
-	char binding[INPUT_KEY_BINDING_LENGTH];
-	// This is 32-bit so that we can store
-	// a float, in the case of controllers.
-	flags32_t state;
-} inputKeyBinding;
+typedef struct {
+	// Button binding.
+	int id;
+	char *binding;
+	size_t bindingLength;
+} inputButtonBinding;
 
 typedef struct {
 
-	// Internal keyboard state.
-	// Written to by SDL_PumpEvents().
-	const Uint8 *internal;
+	// Array of keyboard key bindings.
+	inputButtonBinding kbKeys[INPUT_MAX_KEYBOARD_KEYS];
 
-	// Singly-linked list of keys to poll.
-	inputKeyBinding *keys;
+	// Array of mouse button bindings.
+	inputButtonBinding mButtons[INPUT_MAX_MOUSE_BUTTONS];
+
+	// Relative mouse offset since the last tick.
+	int mx, my;
 
 } inputManager;
 
 void inMngrInit(inputManager *const __RESTRICT__ inMngr);
-return_t inMngrBind(inputManager *const __RESTRICT__ inMngr, const inputKeyBinding binding);
-void inMngrUnbind(inputManager *const __RESTRICT__ inMngr, const SDL_Scancode scancode);
-void inMngrUnbindLast(inputManager *const __RESTRICT__ inMngr, const SDL_Scancode scancode);
-void inMngrTakeInput(inputManager *const __RESTRICT__ inMngr);
+return_t inMngrKeyboardBind(inputManager *const __RESTRICT__ inMngr, const int id, const char *const binding, const size_t bindingLength);
+void inMngrKeyboardUnbind(inputManager *const __RESTRICT__ inMngr, const int id);
+return_t inMngrMouseBind(inputManager *const __RESTRICT__ inMngr, const int id, const char *const binding, const size_t bindingLength);
+void inMngrMouseUnbind(inputManager *const __RESTRICT__ inMngr, const int id);
+void inMngrDelete(inputManager *const __RESTRICT__ inMngr);
+
+return_t inMngrTakeInput(inputManager *const __RESTRICT__ inMngr, cmdBuffer *const __RESTRICT__ cmdbuf);
+void inMngrMouseDeltas(inputManager *const __RESTRICT__ inMngr, int *const mx, int *const my);
 
 #endif

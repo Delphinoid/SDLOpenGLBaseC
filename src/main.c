@@ -22,7 +22,7 @@
 #include "engine/moduleGUI.h"
 #include "engine/moduleScene.h"
 #include "engine/moduleCamera.h"
-#include "engine/moduleInput.h"
+#include "engine/moduleCommand.h"
 
 #include "engine/texture.h"
 #include "engine/model.h"
@@ -34,12 +34,14 @@
 #include "engine/scene.h"
 #include "engine/camera.h"
 
+#include "engine/console.h"
 #include "engine/gui.h"
 #include "engine/particleSystem.h"
 #include "engine/particleInitializer.h"
 #include "engine/particleEmitter.h"
 #include "engine/particleOperator.h"
 
+#include "game/cvars.h"
 #include "game/player.h"
 #include "game/playerCamera.h"
 
@@ -72,7 +74,7 @@ int main(int argc, char **argv){
 	//
 
 	/** Most of the code below this comment will be removed eventually. **/
-	moduleInputResourcesInit();
+	moduleCommandResourcesInit();
 	moduleCameraResourcesInit();
 	moduleSceneResourcesInit();
 	moduleGUIResourcesInit();
@@ -83,6 +85,44 @@ int main(int argc, char **argv){
 	moduleRenderableResourcesInit();
 	modulePhysicsResourcesInit();
 	moduleObjectResourcesInit();
+
+	// Initialize input system.
+	cmdSystem cmdsys;
+	cmdBuffer cmdbuf;
+	inputManager inMngr;
+	console con;
+	cmdSystemInit(&cmdsys);
+	cmdBufferInit(&cmdbuf);
+	inMngrInit(&inMngr);
+	conInit(&con);
+
+	// Create commands.
+	cmdSystemAdd(&cmdsys, "+forward", (command)&c_forward1);
+	cmdSystemAdd(&cmdsys, "-forward", (command)&c_forward0);
+	cmdSystemAdd(&cmdsys, "+backward", (command)&c_backward1);
+	cmdSystemAdd(&cmdsys, "-backward", (command)&c_backward0);
+	cmdSystemAdd(&cmdsys, "+left", (command)&c_left1);
+	cmdSystemAdd(&cmdsys, "-left", (command)&c_left0);
+	cmdSystemAdd(&cmdsys, "+right", (command)&c_right1);
+	cmdSystemAdd(&cmdsys, "-right", (command)&c_right0);
+	cmdSystemAdd(&cmdsys, "+jump", (command)&c_jump1);
+	cmdSystemAdd(&cmdsys, "-jump", (command)&c_jump0);
+	cmdSystemAdd(&cmdsys, "+interact", (command)&c_interact1);
+	cmdSystemAdd(&cmdsys, "-interact", (command)&c_interact0);
+	cmdSystemAdd(&cmdsys, "firstperson", (command)&c_firstperson);
+	cmdSystemAdd(&cmdsys, "thirdperson", (command)&c_thirdperson);
+	cmdSystemAdd(&cmdsys, "exit", (command)&c_exit);
+
+	// Set up keybinds.
+	inMngrKeyboardBind(&inMngr, SDL_SCANCODE_W, "+forward", 8);
+	inMngrKeyboardBind(&inMngr, SDL_SCANCODE_S, "+backward", 9);
+	inMngrKeyboardBind(&inMngr, SDL_SCANCODE_A, "+left", 5);
+	inMngrKeyboardBind(&inMngr, SDL_SCANCODE_D, "+right", 6);
+	inMngrKeyboardBind(&inMngr, SDL_SCANCODE_SPACE, "+jump", 5);
+	inMngrKeyboardBind(&inMngr, SDL_SCANCODE_F, "firstperson", 11);
+	inMngrKeyboardBind(&inMngr, SDL_SCANCODE_T, "thirdperson", 11);
+	inMngrKeyboardBind(&inMngr, SDL_SCANCODE_ESCAPE, "exit", 4);
+	inMngrMouseBind(&inMngr, INPUT_MBUTTON0, "+interact", 9);
 
 	/**printf("%u + ", memPoolBlockSize(RESOURCE_DEFAULT_TEXTURE_SIZE)*RESOURCE_DEFAULT_TEXTURE_NUM);
 
@@ -352,7 +392,7 @@ int main(int argc, char **argv){
 		{.x = 0.f, .y = 2.f/3.f, .w = 1.f/3.f, .h = 1.f/3.f},
 		{.x = 2.f/3.f, .y = 2.f/3.f, .w = 1.f/3.f, .h = 1.f/3.f}
 	};*/
-	gEl = guiNewChild(&gui);
+	/*gEl = guiNewChild(&gui);
 	guiInit(gEl, GUI_ELEMENT_TYPE_WINDOW);
 	gEl->root.position.z = -1.f;
 	//guiPanelInit(&gEl, areas);
@@ -371,7 +411,7 @@ int main(int argc, char **argv){
 	gEl->root.position.x = -((float)(gfxMngr.viewport.width>>1));
 	gEl->root.position.y = (float)(gfxMngr.viewport.height>>1);
 	gEl->root.scale.x = 400.f;//(float)(gfxMngr.viewport.width>>1);
-	gEl->root.scale.y = 40.f;
+	gEl->root.scale.y = 40.f;*/
 
 	txtFont testFont;
 	gTxt = guiNewChild(&gui);
@@ -381,14 +421,14 @@ int main(int argc, char **argv){
 	gTxt->data.text.width = (float)(gfxMngr.viewport.width>>1);
 	gTxt->data.text.height = (float)(gfxMngr.viewport.height>>1);
 	gTxt->data.text.format.font = &testFont;
-	gTxt->data.text.format.size = 0.5f;
+	gTxt->data.text.format.size = 0.25f;
 	gTxt->data.text.format.colour = vec4New(1.f, 1.f, 1.f, 1.f);
 	gTxt->data.text.format.background = vec4New(1.f, 1.f, 1.f, 0.f);
 	gTxt->data.text.format.style = 0;
-	gTxt->data.text.stream.front = memAllocate(1024*sizeof(char));
-	gTxt->data.text.stream.back = &gTxt->data.text.stream.front[1023];
-	gTxt->data.text.stream.offset = gTxt->data.text.stream.front;
-	memcpy(gTxt->data.text.stream.front, "Speed: 0", 8*sizeof(char));
+	gTxt->data.text.stream.front = con.buffer;
+	gTxt->data.text.stream.back = &con.buffer[CONSOLE_BUFFER_SIZE-1];
+	gTxt->data.text.stream.offset = con.start;
+	//memcpy(gTxt->data.text.stream.front, "Speed: 0", 8*sizeof(char));
 	txtFontLoad(
 		&testFont, TEXT_FONT_TYPE_MSDF,
 		"IBM_BIOS", 8,
@@ -433,8 +473,6 @@ int main(int argc, char **argv){
 	blahend = SDL_GetTicks();
 	printf("%u - %u\n%u\n", blahstart, blahend, blahend-blahstart);*/
 
-	signed char prgRunning = 1;
-
 	float timeMod = 1.f;
 	float updateMod = 1.f;
 
@@ -465,48 +503,25 @@ int main(int argc, char **argv){
 	const unsigned char *state = SDL_GetKeyboardState(NULL);
 
 	signed char released = 1;
-	signed char UP    = 0;
-	signed char DOWN  = 0;
-	signed char LEFT  = 0;
-	signed char RIGHT = 0;
-	signed char SPACE = 0;
-
 	signed char lockMouse = 0;
-	unsigned int mstate;
-	int mx = 0; int my = 0;
-	int mx_accumulator = 0; int my_accumulator = 0;
-
 	signed char carry = 0;
-	signed char mreleased = 1;
 
-	float speed = 1600.f * timestepTimeMod;
-	float acceleration = 250 * timestepTimeMod;
-	float stopspeed = 500 * timestepTimeMod;
-	float friction = 5 * timestepTimeMod;
-	float jump = 2000.f * timestepTimeMod;
-	uint_least32_t on_ground = 0;
-
-    while(prgRunning){
+    while(CVAR_RUNNING){
 
 		gfxMngrUpdateWindow(&gfxMngr);
 
-
-		gEl->root.position.x = -((float)(gfxMngr.viewport.width>>1));
-		gEl->root.position.y = (float)(gfxMngr.viewport.height>>1);
-		gEl->root.scale.x = 400.f;//(float)(gfxMngr.viewport.width>>1);
+		//gEl->root.position.x = -((float)(gfxMngr.viewport.width>>1));
+		//gEl->root.position.y = (float)(gfxMngr.viewport.height>>1);
+		//gEl->root.scale.x = 400.f;//(float)(gfxMngr.viewport.width>>1);
 		gTxt->root.position.x = -((float)(gfxMngr.viewport.width>>1))+24;
 		gTxt->root.position.y = (float)(gfxMngr.viewport.height>>1)-24;
 		gTxt->data.text.width = (float)(gfxMngr.viewport.width>>1);
 		gTxt->data.text.height = (float)(gfxMngr.viewport.height>>1);
-
+		gTxt->data.text.format.size = gfxMngr.viewport.height/1800.f;
 
 		// Take input.
-		// This is soon to be replaced by inputManager.
-		SDL_PumpEvents();
+		inMngrTakeInput(&inMngr, &cmdbuf);
 
-		if(state[SDL_SCANCODE_ESCAPE]){
-			prgRunning = 0;
-		}
 		if(state[SDL_SCANCODE_L]){
 			if(released){
 				lockMouse = !lockMouse;
@@ -516,102 +531,98 @@ int main(int argc, char **argv){
 		}else{
 			released = 1;
 		}
-		if(state[SDL_SCANCODE_T]){
-			pcLook(&pc, vec3New(0.f, 0.f, 5.f), vec3New(0.f, 0.f, -5.f));
-			p.obj->renderables[0].state.alpha = 1.f;
-			if(carry){
-				physJointDelete(joint_carry);
-				physJointInit(joint_carry, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_UNKNOWN);
-				carry = 0;
-			}
+		if(state[SDL_SCANCODE_R]){
+			p.obj->skeletonBodies->centroidGlobal.x = -200.f;
+			p.obj->skeletonBodies->centroidGlobal.y = 142.9f;
+			p.obj->skeletonBodies->centroidGlobal.z = 3.f;
 		}
-		if(state[SDL_SCANCODE_F]){
-			pcLook(&pc, vec3New(0.f, 0.f, 0.f), vec3New(0.f, 0.f, -5.f));
-			p.obj->renderables[0].state.alpha = 0.f;
-		}
-		if(state[SDL_SCANCODE_W]){
-			UP = 1;
-		}else{
-			UP = 0;
-		}
-		if(state[SDL_SCANCODE_S]){
-			DOWN = 1;
-		}else{
-			DOWN = 0;
-		}
-		if(state[SDL_SCANCODE_A]){
-			LEFT = 1;
-		}else{
-			LEFT = 0;
-		}
-		if(state[SDL_SCANCODE_D]){
-			RIGHT = 1;
-		}else{
-			RIGHT = 0;
-		}
-		if(state[SDL_SCANCODE_SPACE]){
-			SPACE = 1;
-		}else{
-			SPACE = 0;
-		}
-
-		// Get mouse position relative to its position in the last call.
-		mstate |= SDL_GetRelativeMouseState(&mx_accumulator, &my_accumulator);
-		mx += mx_accumulator; my += my_accumulator;
-
 
 		startUpdate = (float)SDL_GetTicks();
 		if(startUpdate >= nextUpdate){
+
+			// Get the accumulated mouse deltas.
+			int mx, my;
+			inMngrMouseDeltas(&inMngr, &mx, &my);
+
+			// Display the command buffer.
+			{
+				byte_t cmd[COMMAND_MAX_LENGTH+1];
+				cmdTokenized *cmdtok = cmdbuf.cmdList;
+				cmd[0] = '\n';
+				while(cmdtok != NULL){
+					const size_t cmdSize = (uintptr_t)cmdtok->argv[cmdtok->argc-1] - (uintptr_t)cmdtok->argv[0] + strlen(cmdtok->argv[cmdtok->argc-1]);
+					byte_t *c = &cmd[1];
+					const byte_t *const cLast = &c[cmdSize];
+					memcpy(c, cmdtok->argv[0], cmdSize);
+					while(c < cLast){
+						if(*c == '\0'){
+							*c = ' ';
+						}
+						++c;
+					}
+					conAppend(&con, cmd, cmdSize+1);
+					cmdtok = moduleCommandTokenizedNext(cmdtok);
+				}
+				gTxt->data.text.stream.offset = con.start;
+			}
+			// Execute the command buffer.
+			cmdBufferExecute(&cmdbuf, &cmdsys);
 
 			// Prepare the next game state.
 			/**smPrepareNextState(&gameStateManager);**/
 			moduleCameraPrepare();
 
-			/** TEMPORARILY ADD GRAVITY. **/
-			physRigidBodyApplyLinearForce(tempObji2->skeletonBodies, vec3New(0.f, -9.80665f*tempObji2->skeletonBodies->mass, 0.f));
-			physRigidBodyApplyLinearForce(tempObji3->skeletonBodies, vec3New(0.f, -9.80665f*tempObji3->skeletonBodies->mass, 0.f));
-			physRigidBodyApplyLinearForce(tempObji4->skeletonBodies, vec3New(0.f, -9.80665f*tempObji4->skeletonBodies->mass, 0.f));
+			if(CVAR_FIRSTPERSON){
+				pcLook(&pc, vec3New(0.f, 0.f, 0.f), vec3New(0.f, 0.f, -5.f));
+				p.obj->renderables[0].state.alpha = 0.f;
+			}
+			if(CVAR_THIRDPERSON){
+				pcLook(&pc, vec3New(0.f, 0.f, 5.f), vec3New(0.f, 0.f, -5.f));
+				p.obj->renderables[0].state.alpha = 1.f;
+				if(carry){
+					physJointDelete(joint_carry);
+					physJointInit(joint_carry, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_UNKNOWN);
+					carry = 0;
+				}
+			}
 
+			// Player code.
 			pcTick(&pc, mx, my);
 			pBasisPC(&p, &pc);
-			pInput(&p, (float)(RIGHT-LEFT), (float)(UP-DOWN), SPACE*INPUT_KEY_STATE_PRESSED);
+			pInput(&p, (float)(CVAR_RIGHT-CVAR_LEFT), (float)(CVAR_FORWARD-CVAR_BACKWARD), CVAR_JUMP);
 			pTick(&p, timestepTimeMod);
 			pRotateVelocity(&p);
-			if(p.movement.airborne){
+			if(flagsAreSet(p.movement.state, PLAYER_MOVEMENT_JUMPING)){
 				if(p.movement.velocity.y >= 0.f){
+					// Jumping up.
 					p.obj->renderables[0].twi.currentAnim = 16;
 				}else{
+					// Falling down.
 					p.obj->renderables[0].twi.currentAnim = 24;
 				}
-			}else if((LEFT | RIGHT | UP | DOWN) != 0){
+			}else if(flagsAreSet(p.movement.state, PLAYER_MOVEMENT_WALKING)){
 				p.obj->renderables[0].twi.currentAnim = 8;
 			}else{
 				p.obj->renderables[0].twi.currentAnim = 0;
 			}
-			if(mstate & SDL_BUTTON(SDL_BUTTON_LEFT)){
-				if(mreleased){
-					if(p.obj->renderables[0].state.alpha == 0.f){
-						if(carry){
-							physJointDelete(joint_carry);
-							physJointInit(joint_carry, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_UNKNOWN);
-							carry = 0;
-						}else{
-							const vec3 pos = vec3VAddV(*pc.pivot, pc.pivotStatic);
-							const vec3 target = vec3VSubV(pc.cam->target.value, pos);
-							const vec3 v = vec3VSubV(tempObji2->configuration->position, pos);
-							if(vec3Magnitude(v) <= 5.f && vec3Dot(vec3NormalizeFast(target), vec3NormalizeFast(v)) >= 0.9f){
-								physJointInit(joint_carry, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_DISTANCE);
-								physJointAdd(joint_carry, tempObji2->skeletonBodies, p.obj->skeletonBodies);
-								physJointDistanceInit(&joint_carry->data.distance, vec3Zero(), vec3Zero(), 0.f, 0.f, 0.f);
-								carry = 1;
-							}
+			if(CVAR_INTERACT){
+				if(p.obj->renderables[0].state.alpha == 0.f){
+					if(carry){
+						physJointDelete(joint_carry);
+						physJointInit(joint_carry, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_UNKNOWN);
+						carry = 0;
+					}else{
+						const vec3 pos = vec3VAddV(*pc.pivot, pc.pivotStatic);
+						const vec3 target = vec3VSubV(pc.cam->target.value, pos);
+						const vec3 v = vec3VSubV(tempObji2->configuration->position, pos);
+						if(vec3Magnitude(v) <= 5.f && vec3Dot(vec3NormalizeFast(target), vec3NormalizeFast(v)) >= 0.9f){
+							physJointInit(joint_carry, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_DISTANCE);
+							physJointAdd(joint_carry, tempObji2->skeletonBodies, p.obj->skeletonBodies);
+							physJointDistanceInit(&joint_carry->data.distance, vec3Zero(), vec3Zero(), 0.f, 0.f, 0.f);
+							carry = 1;
 						}
 					}
-					mreleased = 0;
 				}
-				mstate &= ~SDL_BUTTON(SDL_BUTTON_LEFT);
-			}else{
-				mreleased = 1;
 			}
 			if(carry){
 				const vec3 target = vec3VSubV(
@@ -620,10 +631,13 @@ int main(int argc, char **argv){
 				);
 				joint_carry->data.distance.anchorB = vec3Negate(target);
 			}
-			sprintf(
-				(char *)&gTxt->data.text.stream.front[7], "%f",
-				sqrt(p.movement.velocity.x*p.movement.velocity.x + p.movement.velocity.z*p.movement.velocity.z)
-			);
+
+
+			/** TEMPORARILY ADD GRAVITY. **/
+			physRigidBodyApplyLinearForce(tempObji2->skeletonBodies, vec3New(0.f, -9.80665f*tempObji2->skeletonBodies->mass, 0.f));
+			physRigidBodyApplyLinearForce(tempObji3->skeletonBodies, vec3New(0.f, -9.80665f*tempObji3->skeletonBodies->mass, 0.f));
+			physRigidBodyApplyLinearForce(tempObji4->skeletonBodies, vec3New(0.f, -9.80665f*tempObji4->skeletonBodies->mass, 0.f));
+
 
 			///
 			guiTick(&gui, tickrateTimeMod);
@@ -636,9 +650,10 @@ int main(int argc, char **argv){
 			moduleSceneTick(tickrateTimeMod, timestepTimeMod);
 			#endif
 
-			// Reset mouse movement.
-			mx = 0.f;
-			my = 0.f;
+			//sprintf(
+			//	(char *)&gTxt->data.text.stream.front[7], "%f",
+			//	sqrt(p.obj->skeletonBodies->linearVelocity.x*p.obj->skeletonBodies->linearVelocity.x + p.obj->skeletonBodies->linearVelocity.z*p.obj->skeletonBodies->linearVelocity.z)
+			//);
 
 			// Next frame.
 			nextUpdate += tickrateUpdateMod;
@@ -700,7 +715,6 @@ int main(int argc, char **argv){
 		// Sleep until the next event.
 		sleepm((int)(nextUpdate <= nextRender ? nextUpdate : nextRender) - (int)SDL_GetTicks());
 
-
 		if(SDL_GetTicks() - lastPrint > 1000){
 			printf("Updates: %u\n", updates);
 			printf("Renders: %u\n", renders);
@@ -712,7 +726,7 @@ int main(int argc, char **argv){
 	}
 
 	/****/
-	memFree(gTxt->data.text.stream.front);
+	///memFree(gTxt->data.text.stream.front);
 	txtFontDelete(&testFont);
 	particleSystemBaseDelete(&b);
 	particleSystemDelete(&c);
@@ -728,7 +742,11 @@ int main(int argc, char **argv){
 	moduleGUIResourcesDelete();
 	moduleSceneResourcesDelete();
 	moduleCameraResourcesDelete();
-	moduleInputResourcesDelete();
+	moduleCommandResourcesDelete();
+
+	inMngrDelete(&inMngr);
+	cmdBufferDelete(&cmdbuf);
+	cmdSystemDelete(&cmdsys);
 
 	/** Debug shader program. **/
 	gfxDebugDeleteShaderProgram();

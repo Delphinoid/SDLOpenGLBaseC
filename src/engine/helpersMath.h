@@ -15,6 +15,9 @@
 	#define rsqrtAccurate(x) (1.f/sqrtf(x))
 #endif
 
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#define max(a, b) ((a) > (b) ? (a) : (b))
+
 float copySign(const float x, const float y);
 
 float fastInvSqrt(float x);

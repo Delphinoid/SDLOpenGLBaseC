@@ -22,7 +22,7 @@
 #define PLAYER_GRAVITY 20.f
 #define PLAYER_JUMP 9.f
 // Note: air control only affects you when you're not strafing.
-// You're probably looking for PLAYER_AIR_STRAFE_MAX_SPEED.
+// You're probably looking for PLAYER_AIR_STRAFE_ACCELERATION.
 #define PLAYER_AIR_CONTROL 4.f
 
 #define PLAYER_GROUND_MAX_SPEED    10.f
@@ -33,6 +33,10 @@
 #define PLAYER_AIR_ACCELERATION 1.f
 #define PLAYER_AIR_DECELERATION 2.5f
 
+// A low air strafe speed and high acceleration allows for good
+// air control while stopping the player from easily climbing
+// slopes that are much too steep for them, like in Quake. It
+// also helps surfing feel more natural, similar to TF2.
 #define PLAYER_AIR_STRAFE_MAX_SPEED    1.f
 #define PLAYER_AIR_STRAFE_ACCELERATION 120.f
 
@@ -133,11 +137,11 @@ static __HINT_INLINE__ void pMoveGround(pMove *const __RESTRICT__ movement, cons
 	// Calculate the speed.
 	const float wishspeed = vec2Magnitude(wishdir) * PLAYER_GROUND_MAX_SPEED;
 
-	if(wishspeed > 0.f){
+	//if(wishspeed > 0.f){
 		wishdir = vec2NormalizeFastAccurate(wishdir);
 		movement->direction = wishdir;
 		pMoveAccelerate(movement, wishdir, wishspeed, PLAYER_GROUND_ACCELERATION, dt_s);
-	}
+	//}
 
 }
 
@@ -287,21 +291,37 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 	// change the physics friction accordingly!
 	if(maximum_normal.y >= PLAYER_STEEPEST_SLOPE_ANGLE){
 		p->movement.airborne = 0;
-	}else if(p->movement.airborne != (uint_least32_t)-1){
+		flagsUnset(p->movement.state, PLAYER_MOVEMENT_JUMPING);
+	}else if(p->movement.airborne != (tick_t)-1){
 		++p->movement.airborne;
 	}
 
 	// Handle movement related input.
 	p->movement.velocity = p->obj->skeletonBodies->linearVelocity;
 	if(!p->movement.airborne){
-		if(p->movement.jump < INPUT_KEY_STATE_DOWN){
+		if(p->movement.jump < 1){
+
+			// Handle friction.
 			pMoveFriction(&p->movement, 1.f, dt_s);
-			pMoveGround(&p->movement, dt_s);
-			pMoveClipVelocity(&p->movement, maximum_normal);
+
+			if(p->movement.fwish != 0.f || p->movement.rwish != 0.f){
+				// Move along the ground.
+				flagsSet(p->movement.state, PLAYER_MOVEMENT_WALKING);
+				pMoveGround(&p->movement, dt_s);
+				pMoveClipVelocity(&p->movement, maximum_normal);
+			}else{
+				flagsUnset(p->movement.state, PLAYER_MOVEMENT_WALKING);
+			}
+
 		}else{
+
+			// A jump has been input.
 			p->movement.airborne = 1;
 			p->movement.velocity.y = PLAYER_JUMP;
+			flagsSet(p->movement.state, PLAYER_MOVEMENT_JUMPING);
+			flagsUnset(p->movement.state, PLAYER_MOVEMENT_WALKING);
 			pMoveAir(&p->movement, dt_s);
+
 		}
 	}else{
 		pMoveAir(&p->movement, dt_s);

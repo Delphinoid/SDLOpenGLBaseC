@@ -4,13 +4,13 @@ Current feature list:
 * Fully custom memory management system implemented on top of low-level system calls.
 * Efficient rigid body physics engine with support for various types of colliders and constraints, as well as a space-partitioning system for islands.
 * Complete animation system supporting interpolated skeletal animations and animated textures.
+* Fully featured command system, similar to Quake or the Source engine.
 * Dynamic, programmable particle system.
 * Custom font format and fast rendering, supporting both BMP and MSDF (multi-channel signed distance fields). Based off the OpenType font specifications, so conversion from TTF is simple.
 * GUI system supporting various types of objects.
 * Custom maths library supporting 2, 3 and 4 dimensional vectors and square matrices, as well as quaternions. Also supports various geometric operations.
 
 List of features to be implemented in order of priority (or in reality, in order from the stuff that's easiest or most fun to the more annoying stuff):
-* Finish command system.
 * Multiple textures for models.
 * Finish scenes / zones.
 * Decals.
