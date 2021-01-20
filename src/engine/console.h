@@ -4,7 +4,7 @@
 #include "memoryShared.h"
 #include <stddef.h>
 
-#define CONSOLE_BUFFER_SIZE 8192
+#define CONSOLE_BUFFER_SIZE 200
 
 typedef struct {
 	byte_t buffer[CONSOLE_BUFFER_SIZE];

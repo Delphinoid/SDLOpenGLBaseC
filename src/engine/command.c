@@ -387,7 +387,8 @@ return_t cmdBufferExecute(cmdBuffer *const __RESTRICT__ cmdbuf, cmdSystem *const
 				if(cmdType(cmd) == 0){
 
 					// The command is valid! Execute it.
-					((cmdFunction)cmd)(cmdsys, cmdtok->argc, cmdtok->argv);
+					// Don't forget to skip the first argument!
+					((cmdFunction)cmd)(cmdsys, cmdtok->argc-1, &cmdtok->argv[1]);
 
 				}else{
 
