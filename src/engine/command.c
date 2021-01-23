@@ -75,8 +75,9 @@ static __HINT_INLINE__ cmdTrieNode *cmdTrieAddNode(cmdTrieNode *const node, cons
 	}
 	node->children = tempBuffer;
 
-	cmdTrieInit(&node->children[node->childNum-1], c);
-	return &node->children[node->childNum-1];
+	n = &tempBuffer[node->childNum-1];
+	cmdTrieInit(n, c);
+	return n;
 
 }
 static __HINT_INLINE__ return_t cmdValid(const char *name, const command cmd){
@@ -109,13 +110,13 @@ return_t cmdSystemAdd(cmdSystem *node, const char *__RESTRICT__ name, const comm
 
 		// Go through each character in name, adding
 		// a node when we don't have a match.
-		while(*name != '\0'){
+		do {
 			if((node = cmdTrieAddNode(node, *name)) == NULL){
 				/** Memory allocation failure. **/
 				return -1;
 			}
 			++name;
-		}
+		} while(*name != '\0');
 
 		// We've reached the final node at the end of the command's name.
 		if(node->cmd == 0){
@@ -164,7 +165,9 @@ static __HINT_INLINE__ void cmdTokenizedInit(cmdTokenized *const __RESTRICT__ cm
 }
 
 void cmdBufferInit(cmdBuffer *const __RESTRICT__ buffer){
-	memset(buffer, 0, sizeof(cmdBuffer));
+	buffer->argBufferSize = 0;
+	buffer->cmdListStart = NULL;
+	buffer->cmdListEnd = NULL;
 }
 
 static __FORCE_INLINE__ void cmdBufferAddArgument(
@@ -193,7 +196,7 @@ static __FORCE_INLINE__ void cmdBufferAddArgument(
 
 }
 
-static __FORCE_INLINE__ const char *cmdBufferParseCommand(
+static __FORCE_INLINE__ const char *cmdBufferTokenizeCommand(
 	char *const __RESTRICT__ argBuffer, size_t *argBufferSize,
 	cmdTokenized *const __RESTRICT__ cmd,
 	const char *str, const char *const strEnd
@@ -279,7 +282,7 @@ static __FORCE_INLINE__ const char *cmdBufferParseCommand(
 
 }
 
-return_t cmdBufferParse(cmdBuffer *const __RESTRICT__ cmdbuf, const char *str, const size_t strLength, const tick_t timestamp, const tick_t delay){
+return_t cmdBufferTokenize(cmdBuffer *const __RESTRICT__ cmdbuf, const char *str, const size_t strLength, const tick_t timestamp, const tick_t delay){
 
 	// Parse the string into a series of tokenized commands.
 	const char *const strEnd = &str[strLength];
@@ -288,14 +291,16 @@ return_t cmdBufferParse(cmdBuffer *const __RESTRICT__ cmdbuf, const char *str, c
 	// Note that this delay is only modified when the
 	// 'wait' command is invoked. This function takes
 	// in a delay argument to work with aliases.
-	cmdtok.argc = 0;
 	cmdtok.timestamp = timestamp;
 	cmdtok.delay = delay;
 
 	while(str != strEnd){
 
 		// Find where the current command ends and the next command begins.
-		str = cmdBufferParseCommand(cmdbuf->argBuffer, &cmdbuf->argBufferSize, &cmdtok, str, strEnd);
+		// Don't reset cmdtok.delay or cmdtok.timestamp.
+		// The delay affects all commands here.
+		cmdtok.argc = 0;
+		str = cmdBufferTokenizeCommand(cmdbuf->argBuffer, &cmdbuf->argBufferSize, &cmdtok, str, strEnd);
 
 		if(cmdtok.argc > 0){
 
@@ -311,29 +316,27 @@ return_t cmdBufferParse(cmdBuffer *const __RESTRICT__ cmdbuf, const char *str, c
 			}else{
 
 				// Add the command to the linked list.
-				// We order the list using the command timestamps.
+				// We loop backwards through the list, since we
+				// assume commands will roughly be added in order
+				// of timestamp. We wish to maintain chronological
+				// ordering for all elements in the list.
 				cmdTokenized *cmdNew;
-				cmdTokenized *cmdInsert = cmdbuf->cmdList;
-				if(cmdInsert != NULL){
-					while(cmdInsert->timestamp < timestamp){
-						cmdTokenized *const cmdInsertNext = moduleCommandTokenizedNext(cmdInsert);
-						if(cmdInsertNext == NULL){
-							break;
-						}
-						cmdInsert = cmdInsertNext;
-					}
+				cmdTokenized *cmdInsert = cmdbuf->cmdListEnd;
+				while(cmdInsert != NULL && timestamp < cmdInsert->timestamp){
+					cmdInsert = moduleCommandTokenizedPrev(cmdInsert);
 				}
 
-				cmdNew = moduleCommandTokenizedInsertAfter(&cmdbuf->cmdList, cmdInsert);
+				// Insert the command.
+				cmdNew = moduleCommandTokenizedInsertAfter(&cmdbuf->cmdListStart, cmdInsert);
 				if(cmdNew == NULL){
 					/** Memory allocation failure. **/
 					return -1;
 				}
+				// Update the end pointer.
+				if(cmdInsert == cmdbuf->cmdListEnd){
+					cmdbuf->cmdListEnd = cmdNew;
+				}
 				*cmdNew = cmdtok;
-
-				// Don't reset cmdtok.delay or cmdtok.timestamp.
-				// The delay affects all commands here.
-				cmdtok.argc = 0;
 
 			}
 
@@ -348,10 +351,11 @@ return_t cmdBufferParse(cmdBuffer *const __RESTRICT__ cmdbuf, const char *str, c
 return_t cmdBufferExecute(cmdBuffer *const __RESTRICT__ cmdbuf, cmdSystem *const __RESTRICT__ cmdsys){
 
 	// Execute a series of tokenized commands.
-	cmdTokenized *cmdtokPrev = NULL;
-	cmdTokenized *cmdtokNext;
-	cmdTokenized *cmdtok = cmdbuf->cmdList;
 	size_t argBufferSize = 0;
+	cmdTokenized *cmdListEnd = NULL;
+
+	cmdTokenized *cmdtokNext;
+	cmdTokenized *cmdtok = cmdbuf->cmdListStart;
 
 	while(cmdtok != NULL){
 
@@ -368,16 +372,16 @@ return_t cmdBufferExecute(cmdBuffer *const __RESTRICT__ cmdbuf, cmdSystem *const
 
 			// Copy the arguments over.
 			memmove(&cmdbuf->argBuffer[argBufferSize], *arg, cmdSize);
-
 			// Adjust the pointers.
 			while(*arg <= argLast){
 				*arg -= offset;
 			}
-
+			// Update the delay.
 			--cmdtok->delay;
-			argBufferSize += cmdSize;
 
-			cmdtokPrev = cmdtok;
+			// Track buffer variables.
+			argBufferSize += cmdSize;
+			cmdListEnd = cmdtok;
 
 		}else{
 
@@ -394,8 +398,11 @@ return_t cmdBufferExecute(cmdBuffer *const __RESTRICT__ cmdbuf, cmdSystem *const
 
 					// This is an alias.
 					// Tokenize it and insert it into the command buffer.
+					// We temporarily set the end of the
+					// linked list for faster insertions.
+					cmdbuf->cmdListEnd = cmdtok;
 					cmd = cmdAddress(cmd);
-					if(cmdBufferParse(cmdbuf, (const char *)cmd, strlen((const char *)cmd), cmdtok->timestamp, cmdtok->delay) < 0){
+					if(cmdBufferTokenize(cmdbuf, (const char *)cmd, strlen((const char *)cmd), cmdtok->timestamp, cmdtok->delay) < 0){
 						/** Memory allocation failure. **/
 						return -1;
 					}
@@ -404,7 +411,7 @@ return_t cmdBufferExecute(cmdBuffer *const __RESTRICT__ cmdbuf, cmdSystem *const
 			}
 
 			// Remove it from the list.
-			moduleCommandTokenizedFree(&cmdbuf->cmdList, cmdtok, cmdtokPrev);
+			moduleCommandTokenizedFree(&cmdbuf->cmdListStart, cmdtok);
 
 
 		}
@@ -413,20 +420,20 @@ return_t cmdBufferExecute(cmdBuffer *const __RESTRICT__ cmdbuf, cmdSystem *const
 
 	}
 
-	// This is the size of all the delayed commands.
+	// This is the size of all the delayed
+	// commands, and a pointer to the last one.
 	cmdbuf->argBufferSize = argBufferSize;
+	cmdbuf->cmdListEnd = cmdListEnd;
 	return 1;
 
 }
 
 void cmdBufferDelete(cmdBuffer *const __RESTRICT__ cmdbuf){
-	cmdTokenized *cmdtokPrev = NULL;
 	cmdTokenized *cmdtokNext;
-	cmdTokenized *cmdtok = cmdbuf->cmdList;
+	cmdTokenized *cmdtok = cmdbuf->cmdListStart;
 	while(cmdtok != NULL){
 		cmdtokNext = moduleCommandTokenizedNext(cmdtok);
-		moduleCommandTokenizedFree(&cmdbuf->cmdList, cmdtok, cmdtokPrev);
-		cmdtokPrev = cmdtok;
+		moduleCommandTokenizedFree(&cmdbuf->cmdListStart, cmdtok);
 		cmdtok = cmdtokNext;
 	}
 }

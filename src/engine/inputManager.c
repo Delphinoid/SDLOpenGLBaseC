@@ -1,5 +1,6 @@
 #include "inputManager.h"
 #include "memoryManager.h"
+#include <SDL2/SDL.h>
 
 static __HINT_INLINE__ void inputButtonBindingDelete(inputButtonBinding *const __RESTRICT__ bind){
 	if(bind->binding != NULL){
@@ -99,7 +100,7 @@ return_t inMngrTakeInput(inputManager *const __RESTRICT__ inMngr, cmdBuffer *con
 				// Make sure the button isn't being held down.
 				btn = &inMngr->mButtons[e.button.button-1];
 				if(btn->binding != NULL){
-					if(cmdBufferParse(buffer, btn->binding, btn->bindingLength, e.button.timestamp, 0) < 0){
+					if(cmdBufferTokenize(buffer, btn->binding, btn->bindingLength, e.button.timestamp, 0) < 0){
 						/** Memory allocation failure. **/
 						return -1;
 					}
@@ -114,7 +115,7 @@ return_t inMngrTakeInput(inputManager *const __RESTRICT__ inMngr, cmdBuffer *con
 					// If the command begins with a '+', execute its '-' pair.
 					if(btn->binding[0] == '+'){
 						btn->binding[0] = '-';
-						if(cmdBufferParse(buffer, btn->binding, btn->bindingLength, e.button.timestamp, 0) < 0){
+						if(cmdBufferTokenize(buffer, btn->binding, btn->bindingLength, e.button.timestamp, 0) < 0){
 							/** Memory allocation failure. **/
 							return -1;
 						}
@@ -134,14 +135,14 @@ return_t inMngrTakeInput(inputManager *const __RESTRICT__ inMngr, cmdBuffer *con
 				}
 				if(btn->binding != NULL){
 					// We perform both the press and release events.
-					if(cmdBufferParse(buffer, btn->binding, btn->bindingLength, e.wheel.timestamp, 0) < 0){
+					if(cmdBufferTokenize(buffer, btn->binding, btn->bindingLength, e.wheel.timestamp, 0) < 0){
 						/** Memory allocation failure. **/
 						return -1;
 					}
 					// If the command begins with a '+', execute its '-' pair.
 					if(btn->binding[0] == '+'){
 						btn->binding[0] = '-';
-						if(cmdBufferParse(buffer, btn->binding, btn->bindingLength, e.wheel.timestamp, 0) < 0){
+						if(cmdBufferTokenize(buffer, btn->binding, btn->bindingLength, e.wheel.timestamp, 0) < 0){
 							/** Memory allocation failure. **/
 							return -1;
 						}
@@ -155,7 +156,7 @@ return_t inMngrTakeInput(inputManager *const __RESTRICT__ inMngr, cmdBuffer *con
 				// Make sure the key isn't being held down.
 				btn = &inMngr->kbKeys[e.key.keysym.scancode];
 				if(!e.key.repeat && btn->binding != NULL){
-					if(cmdBufferParse(buffer, btn->binding, btn->bindingLength, e.key.timestamp, 0) < 0){
+					if(cmdBufferTokenize(buffer, btn->binding, btn->bindingLength, e.key.timestamp, 0) < 0){
 						/** Memory allocation failure. **/
 						return -1;
 					}
@@ -170,7 +171,7 @@ return_t inMngrTakeInput(inputManager *const __RESTRICT__ inMngr, cmdBuffer *con
 					// If the command begins with a '+', execute its '-' pair.
 					if(btn->binding[0] == '+'){
 						btn->binding[0] = '-';
-						if(cmdBufferParse(buffer, btn->binding, btn->bindingLength, e.key.timestamp, 0) < 0){
+						if(cmdBufferTokenize(buffer, btn->binding, btn->bindingLength, e.key.timestamp, 0) < 0){
 							/** Memory allocation failure. **/
 							return -1;
 						}

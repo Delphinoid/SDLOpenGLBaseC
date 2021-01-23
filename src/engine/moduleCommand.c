@@ -6,17 +6,17 @@
 
 #define RESOURCE_DEFAULT_COMMAND_TOKENIZED_SIZE sizeof(cmdTokenized)
 
-memorySLink __g_CommandTokenizedResourceArray;  // Contains tokenized commands.
+memoryDLink __g_CommandTokenizedResourceArray;  // Contains tokenized commands.
 
 return_t moduleCommandResourcesInit(){
 	void *const memory = memAllocate(
-		memSLinkAllocationSize(
+		memDLinkAllocationSize(
 			NULL,
 			RESOURCE_DEFAULT_COMMAND_TOKENIZED_SIZE,
 			RESOURCE_DEFAULT_COMMAND_TOKENIZED_NUM
 		)
 	);
-	if(memSLinkCreate(&__g_CommandTokenizedResourceArray, memory, RESOURCE_DEFAULT_COMMAND_TOKENIZED_SIZE, RESOURCE_DEFAULT_COMMAND_TOKENIZED_NUM) == NULL){
+	if(memDLinkCreate(&__g_CommandTokenizedResourceArray, memory, RESOURCE_DEFAULT_COMMAND_TOKENIZED_SIZE, RESOURCE_DEFAULT_COMMAND_TOKENIZED_NUM) == NULL){
 		return -1;
 	}
 	return 1;
@@ -44,49 +44,73 @@ void moduleCommandResourcesDelete(){
 }
 
 __HINT_INLINE__ cmdTokenized *moduleCommandTokenizedInsertAfterStatic(cmdTokenized **const __RESTRICT__ array, cmdTokenized *const __RESTRICT__ resource){
-	return memSLinkInsertAfter(&__g_CommandTokenizedResourceArray, (void **)array, (void *)resource);
+	return memDLinkInsertAfter(&__g_CommandTokenizedResourceArray, (void **)array, (void *)resource);
 }
 __HINT_INLINE__ cmdTokenized *moduleCommandTokenizedInsertAfter(cmdTokenized **const __RESTRICT__ array, cmdTokenized *const __RESTRICT__ resource){
 	cmdTokenized *r = moduleCommandTokenizedInsertAfterStatic(array, resource);
 	if(r == NULL){
 		// Attempt to extend the allocator.
 		void *const memory = memAllocate(
-			memSLinkAllocationSize(
+			memDLinkAllocationSize(
 				NULL,
 				RESOURCE_DEFAULT_COMMAND_TOKENIZED_SIZE,
 				RESOURCE_DEFAULT_COMMAND_TOKENIZED_NUM
 			)
 		);
-		if(memSLinkExtend(&__g_CommandTokenizedResourceArray, memory, RESOURCE_DEFAULT_COMMAND_TOKENIZED_SIZE, RESOURCE_DEFAULT_COMMAND_TOKENIZED_NUM)){
+		if(memDLinkExtend(&__g_CommandTokenizedResourceArray, memory, RESOURCE_DEFAULT_COMMAND_TOKENIZED_SIZE, RESOURCE_DEFAULT_COMMAND_TOKENIZED_NUM)){
 			r = moduleCommandTokenizedInsertAfterStatic(array, resource);
 		}
 	}
 	return r;
 }
-__HINT_INLINE__ cmdTokenized *moduleCommandTokenizedNext(const cmdTokenized *const __RESTRICT__ i){
-	return (cmdTokenized *)memSLinkDataGetNext(i);
+
+__HINT_INLINE__ cmdTokenized *moduleCommandTokenizedInsertBeforeStatic(cmdTokenized **const __RESTRICT__ array, cmdTokenized *const __RESTRICT__ resource){
+	return memDLinkInsertBefore(&__g_CommandTokenizedResourceArray, (void **)array, (void *)resource);
 }
-__HINT_INLINE__ void moduleCommandTokenizedFree(cmdTokenized **const __RESTRICT__ array, cmdTokenized *const __RESTRICT__ resource, const cmdTokenized *const __RESTRICT__ previous){
-	memSLinkFree(&__g_CommandTokenizedResourceArray, (void **)array, (void *)resource, (const void *)previous);
+__HINT_INLINE__ cmdTokenized *moduleCommandTokenizedInsertBefore(cmdTokenized **const __RESTRICT__ array, cmdTokenized *const __RESTRICT__ resource){
+	cmdTokenized *r = moduleCommandTokenizedInsertBeforeStatic(array, resource);
+	if(r == NULL){
+		// Attempt to extend the allocator.
+		void *const memory = memAllocate(
+			memDLinkAllocationSize(
+				NULL,
+				RESOURCE_DEFAULT_COMMAND_TOKENIZED_SIZE,
+				RESOURCE_DEFAULT_COMMAND_TOKENIZED_NUM
+			)
+		);
+		if(memDLinkExtend(&__g_CommandTokenizedResourceArray, memory, RESOURCE_DEFAULT_COMMAND_TOKENIZED_SIZE, RESOURCE_DEFAULT_COMMAND_TOKENIZED_NUM)){
+			r = moduleCommandTokenizedInsertBeforeStatic(array, resource);
+		}
+	}
+	return r;
+}
+__HINT_INLINE__ cmdTokenized *moduleCommandTokenizedNext(const cmdTokenized *const __RESTRICT__ i){
+	return (cmdTokenized *)memDLinkDataGetNext(i);
+}
+__HINT_INLINE__ cmdTokenized *moduleCommandTokenizedPrev(const cmdTokenized *const __RESTRICT__ i){
+	return (cmdTokenized *)memDLinkDataGetPrev(i);
+}
+__HINT_INLINE__ void moduleCommandTokenizedFree(cmdTokenized **const __RESTRICT__ array, cmdTokenized *const __RESTRICT__ resource){
+	memDLinkFree(&__g_CommandTokenizedResourceArray, (void **)array, (void *)resource);
 }
 void moduleCommandTokenizedFreeArray(cmdTokenized **const __RESTRICT__ array){
 	cmdTokenized *resource = *array;
 	while(resource != NULL){
-		moduleCommandTokenizedFree(array, resource, NULL);
+		moduleCommandTokenizedFree(array, resource);
 		resource = *array;
 	}
 }
 void moduleCommandTokenizedClear(){
 
-	MEMORY_SLINK_LOOP_BEGIN(__g_CommandTokenizedResourceArray, i, cmdTokenized *);
+	MEMORY_DLINK_LOOP_BEGIN(__g_CommandTokenizedResourceArray, i, cmdTokenized *);
 
-		moduleCommandTokenizedFree(NULL, i, NULL);
-		memSLinkDataSetFlags(i, MEMORY_SLINK_BLOCK_INVALID);
+		moduleCommandTokenizedFree(NULL, i);
+		memDLinkDataSetFlags(i, MEMORY_DLINK_BLOCK_INVALID);
 
-	MEMORY_SLINK_LOOP_INACTIVE_CASE(i);
+	MEMORY_DLINK_LOOP_INACTIVE_CASE(i);
 
-		memSLinkDataSetFlags(i, MEMORY_SLINK_BLOCK_INVALID);
+		memDLinkDataSetFlags(i, MEMORY_DLINK_BLOCK_INVALID);
 
-	MEMORY_SLINK_LOOP_END(__g_CommandTokenizedResourceArray, i, return;);
+	MEMORY_DLINK_LOOP_END(__g_CommandTokenizedResourceArray, i, return;);
 
 }

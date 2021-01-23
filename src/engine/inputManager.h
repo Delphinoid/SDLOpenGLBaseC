@@ -1,7 +1,6 @@
 #ifndef INPUTMANAGER_H
 #define INPUTMANAGER_H
 
-#include <SDL2/SDL.h>
 #include "command.h"
 
 #define INPUT_MAX_KEYBOARD_KEYS 256

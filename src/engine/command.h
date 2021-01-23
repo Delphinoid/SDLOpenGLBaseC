@@ -70,8 +70,9 @@ typedef struct {
 	char argBuffer[COMMAND_MAX_ARGUMENT_BUFFER_SIZE];
 	size_t argBufferSize;
 
-	// SLink of tokenized commands.
-	cmdTokenized *cmdList;
+	// DLink of tokenized commands.
+	cmdTokenized *cmdListStart;
+	cmdTokenized *cmdListEnd;
 
 } cmdBuffer;
 
@@ -81,7 +82,7 @@ command cmdSystemFind(const cmdSystem *node, const char *__RESTRICT__ name);
 void cmdSystemDelete(cmdSystem *const __RESTRICT__ cmdsys);
 
 void cmdBufferInit(cmdBuffer *const __RESTRICT__ cmdbuf);
-return_t cmdBufferParse(cmdBuffer *const __RESTRICT__ cmdbuf, const char *str, const size_t strLength, const tick_t timestamp, const tick_t delay);
+return_t cmdBufferTokenize(cmdBuffer *const __RESTRICT__ cmdbuf, const char *str, const size_t strLength, const tick_t timestamp, const tick_t delay);
 return_t cmdBufferExecute(cmdBuffer *const __RESTRICT__ cmdbuf, cmdSystem *const __RESTRICT__ cmdsys);
 void cmdBufferDelete(cmdBuffer *const __RESTRICT__ cmdbuf);
 

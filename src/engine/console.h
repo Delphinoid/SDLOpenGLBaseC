@@ -14,6 +14,6 @@ typedef struct {
 
 void conInit(console *const __RESTRICT__ con);
 /// This should probably become part of txtStream.
-void conAppendLine(console *const __RESTRICT__ con, const byte_t *str, const size_t strLength);
+void conAppend(console *const __RESTRICT__ con, const byte_t *str, const size_t strLength);
 
 #endif

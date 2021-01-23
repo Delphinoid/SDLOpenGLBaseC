@@ -506,7 +506,7 @@ int main(int argc, char **argv){
 	signed char lockMouse = 0;
 	signed char carry = 0;
 
-    while(CVAR_RUNNING){
+	while(CVAR_RUNNING){
 
 		gfxMngrUpdateWindow(&gfxMngr);
 
@@ -547,7 +547,7 @@ int main(int argc, char **argv){
 			// Display the command buffer.
 			{
 				byte_t cmd[COMMAND_MAX_LENGTH+1];
-				cmdTokenized *cmdtok = cmdbuf.cmdList;
+				cmdTokenized *cmdtok = cmdbuf.cmdListStart;
 				cmd[0] = '\n';
 				while(cmdtok != NULL){
 					const size_t cmdSize = (uintptr_t)cmdtok->argv[cmdtok->argc-1] - (uintptr_t)cmdtok->argv[0] + strlen(cmdtok->argv[cmdtok->argc-1]);
