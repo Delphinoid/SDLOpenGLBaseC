@@ -174,8 +174,7 @@ static __FORCE_INLINE__ void cmdBufferAddArgument(
 	char *const __RESTRICT__ argBuffer, size_t *argBufferSize, cmdTokenized *const __RESTRICT__ cmd, const char *const str
 ){
 
-	// If we've just switched, copy the
-	// last argument into the buffer.
+	// Copy the last argument into the buffer.
 	size_t argLength = str - cmd->argv[cmd->argc];
 	if(*argBufferSize + argLength + 1 > COMMAND_MAX_ARGUMENT_BUFFER_SIZE){
 		// The argument is too long to
@@ -367,16 +366,17 @@ return_t cmdBufferExecute(cmdBuffer *const __RESTRICT__ cmdbuf, cmdSystem *const
 
 			// This command is delayed. Move
 			// it to the front of the buffer.
-			const char *const argLast = cmdtok->argv[cmdtok->argc-1];
 			const char **arg = &cmdtok->argv[0];
-			const size_t cmdSize = argLast + strlen(argLast) - *arg;
+			const char **const argLast = &cmdtok->argv[cmdtok->argc-1];
+			const size_t cmdSize = *argLast + strlen(*argLast) - *arg;
 			const size_t offset = *arg - &cmdbuf->argBuffer[argBufferSize];
 
 			// Copy the arguments over.
 			memmove(&cmdbuf->argBuffer[argBufferSize], *arg, cmdSize);
 			// Adjust the pointers.
-			while(*arg <= argLast){
+			while(arg <= argLast){
 				*arg -= offset;
+				++arg;
 			}
 			// Update the delay.
 			--cmdtok->delay;
@@ -431,10 +431,9 @@ return_t cmdBufferExecute(cmdBuffer *const __RESTRICT__ cmdbuf, cmdSystem *const
 }
 
 void cmdBufferDelete(cmdBuffer *const __RESTRICT__ cmdbuf){
-	cmdTokenized *cmdtokNext;
 	cmdTokenized *cmdtok = cmdbuf->cmdListStart;
 	while(cmdtok != NULL){
-		cmdtokNext = moduleCommandTokenizedNext(cmdtok);
+		cmdTokenized *const cmdtokNext = moduleCommandTokenizedNext(cmdtok);
 		moduleCommandTokenizedFree(&cmdbuf->cmdListStart, cmdtok);
 		cmdtok = cmdtokNext;
 	}
