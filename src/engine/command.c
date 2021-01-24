@@ -236,6 +236,8 @@ static __FORCE_INLINE__ const char *cmdBufferTokenizeCommand(
 						break;
 					}else if(*str == '/'){
 						strCommented = 1;
+					}else{
+						continue;
 					}
 				}else if(c == ';'){
 					// Check for the end of the command.
