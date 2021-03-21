@@ -19,11 +19,11 @@ typedef struct {
 	GLuint vpMatrixID;
 	GLuint alphaID;
 	GLuint mipID;
-	GLuint textureFragmentID[SHADER_TEXTURE_SAMPLER_NUM];
-	GLuint boneArrayID[SKELETON_MAX_BONE_NUM];
+	GLuint textureFragmentArrayID;
+	GLuint boneArrayID;
 
 	// Texture samplers.
-	GLuint textureSamplerArrayID[SHADER_TEXTURE_SAMPLER_NUM];
+	GLuint textureSamplerArrayID;
 
 } shaderProgramObject;
 

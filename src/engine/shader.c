@@ -105,53 +105,19 @@ return_t shdrPrgLoad(GLuint *const __RESTRICT__ id, const char *const __RESTRICT
 return_t shdrPrgObjLink(shaderProgramObject *const __RESTRICT__ shdrPrg){
 
 	GLenum glError;
-	boneIndex_t i;
-
 	glUseProgram(shdrPrg->id);
 
 	// Link the uniform variables.
 	shdrPrg->vpMatrixID = glGetUniformLocation(shdrPrg->id, "vpMatrix");
 	shdrPrg->alphaID = glGetUniformLocation(shdrPrg->id, "alpha");
 	shdrPrg->mipID = glGetUniformLocation(shdrPrg->id, "mip");
+	shdrPrg->boneArrayID = glGetUniformLocation(shdrPrg->id, "boneArray");
+	shdrPrg->textureFragmentArrayID = glGetUniformLocation(shdrPrg->id, "textureFragmentArray");
+	shdrPrg->textureSamplerArrayID = glGetUniformLocation(shdrPrg->id, "textureSamplerArray");
 
+	// Initialize the uniform variables.
 	glUniform1f(shdrPrg->mipID, 0);
-
-	// Create references to each bone.
-	for(i = 0; i < SKELETON_MAX_BONE_NUM; ++i){
-
-		char num[LTOSTR_MAX_LENGTH];
-		const size_t numLen = ltostr(i, num);
-		char uniformString[11+LTOSTR_MAX_LENGTH];  // LTOSTR_MAX_LENGTH includes NULL terminator.
-
-		memcpy(&uniformString[0], "boneArray[", 10*sizeof(char));
-		memcpy(&uniformString[10], num, numLen*sizeof(char));
-		uniformString[10+numLen] = ']';
-		uniformString[10+numLen+1] = '\0';
-		shdrPrg->boneArrayID[i] = glGetUniformLocation(shdrPrg->id, uniformString);
-
-	}
-
-	// Create references to each texture sampler.
-	for(i = 0; i < SHADER_TEXTURE_SAMPLER_NUM; ++i){
-
-		char num[LTOSTR_MAX_LENGTH];
-		const size_t numLen = ltostr(i, num);
-		char uniformString[17+LTOSTR_MAX_LENGTH];  // LTOSTR_MAX_LENGTH includes NULL terminator.
-
-		memcpy(&uniformString[0], "textureFragment[", 16);
-		memcpy(&uniformString[16], num, numLen);
-		uniformString[16+numLen] = ']';
-		uniformString[16+numLen+1] = '\0';
-		shdrPrg->textureFragmentID[i] = glGetUniformLocation(shdrPrg->id, uniformString);
-
-		memcpy(&uniformString[0], "textureSampler[", 15);
-		memcpy(&uniformString[15], num, numLen);
-		uniformString[15+numLen] = ']';
-		uniformString[15+numLen+1] = '\0';
-		shdrPrg->textureSamplerArrayID[i] = glGetUniformLocation(shdrPrg->id, uniformString);
-		glUniform1i(shdrPrg->textureSamplerArrayID[i], 0);
-
-	}
+	glUniform1i(shdrPrg->textureSamplerArrayID, 0);
 
 	glError = glGetError();
 	if(glError != GL_NO_ERROR){
@@ -178,6 +144,7 @@ return_t shdrPrgSprLink(shaderProgramSprite *const __RESTRICT__ shdrPrg){
 	shdrPrg->sdfBackgroundID = glGetUniformLocation(shdrPrg->id, "sdfBackground");
 	shdrPrg->textureSamplerID = glGetUniformLocation(shdrPrg->id, "textureSampler");
 
+	// Initialize the uniform variables.
 	glUniform1f(shdrPrg->alphaID, 1.f);
 	glUniform1f(shdrPrg->mipID, SHADER_DEFAULT_BIAS_MIP);
 	glUniform1ui(shdrPrg->sdfTypeID, SHADER_SDF_MODE_DISABLED);

@@ -669,7 +669,11 @@ int main(int argc, char **argv){
 			pBasisPC(&p, &pc);
 			///pInput(&p, (float)(CVAR_RIGHT-CVAR_LEFT), (float)(CVAR_FORWARD-CVAR_BACKWARD), CVAR_JUMP);
 			pTick(&p, timestepTimeMod);
-			pRotateVelocity(&p);
+			if(CVAR_FIRSTPERSON){
+				pRotateCamera(&p, &pc);
+			}else{
+				pRotateVelocity(&p);
+			}
 			if(flagsAreSet(p.movement.state, PLAYER_MOVEMENT_JUMPING)){
 				if(p.movement.velocity.y >= 0.f){
 					// Jumping up.

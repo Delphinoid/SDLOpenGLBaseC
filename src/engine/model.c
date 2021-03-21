@@ -319,7 +319,7 @@ void mdlRender(const model *const __RESTRICT__ mdl, const skeleton *const __REST
 		vertexIndex_t indexNum;
 		const void *offset;
 		mat4 transform;
-		GLuint *bArray = gfxMngr->shdrPrgObj.boneArrayID;
+		GLuint bArray = gfxMngr->shdrPrgObj.boneArrayID;
 		boneIndex_t boneNum = mdl->base->skl->boneNum;
 		sklNode *nLayout = mdl->base->skl->bones;
 		boneIndex_t i;
@@ -333,7 +333,7 @@ void mdlRender(const model *const __RESTRICT__ mdl, const skeleton *const __REST
 		// Bind the texture (if needed).
 		gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, frame->image->diffuseID);
 		// Feed the texture coordinates to the shader.
-		glUniform4fv(gfxMngr->shdrPrgObj.textureFragmentID[0], 1, (const GLfloat *)&frame->subframe);
+		glUniform4fv(gfxMngr->shdrPrgObj.textureFragmentArrayID, 1, (const GLfloat *)&frame->subframe);
 		// Feed the translucency multiplier to the shader.
 		// Negative alpha values indicate dithering.
 		glUniform1f(gfxMngr->shdrPrgObj.alphaID, alpha);
@@ -358,7 +358,7 @@ void mdlRender(const model *const __RESTRICT__ mdl, const skeleton *const __REST
 				transform = gfxMngr->shdrData.skeletonTransformState[rndrBone];
 			}
 			// Feed the bone configuration to the shader.
-			glUniformMatrix4fv(*bArray, 1, GL_FALSE, &transform.m[0][0]);
+			glUniformMatrix4fv(bArray, 1, GL_FALSE, &transform.m[0][0]);
 		}
 
 		// Render each of the meshes associated with the model.

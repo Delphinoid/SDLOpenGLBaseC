@@ -22,11 +22,11 @@ layout(location = 4) in vec4  vertexBoneWeights;
 
 // Per-instance data (same as per-call for now since we're not using instancing).
 uniform mat4 vpMatrix;
-uniform vec4 textureFragment[GFX_TEXTURE_SAMPLER_NUM];
+uniform vec4 textureFragmentArray[GFX_TEXTURE_SAMPLER_NUM];
 uniform mat4 boneArray[SKELETON_MAX_BONE_NUM];
 
 // Per-call data.
-uniform sampler2D textureSampler[GFX_TEXTURE_SAMPLER_NUM];
+uniform sampler2D textureSamplerArray[GFX_TEXTURE_SAMPLER_NUM];
 
 out vec2 UV;
 
@@ -54,10 +54,10 @@ void main(){
 	gl_Position = vpMatrix * vec4(vertex.xyz, 1.f);
 	
 	// Get the width and height of the texture.
-	ivec2 textureDimensions = textureSize(textureSampler[0], 0);
+	ivec2 textureDimensions = textureSize(textureSamplerArray[0], 0);
 	
 	// Calculate UVs for the current vertex based on the texture fragment.
-	UV.x = vertexUV.x * textureFragment[0][2] + textureFragment[0][0];
-	UV.y = vertexUV.y * textureFragment[0][3] + textureFragment[0][1];
+	UV.x = vertexUV.x * textureFragmentArray[0][2] + textureFragmentArray[0][0];
+	UV.y = vertexUV.y * textureFragmentArray[0][3] + textureFragmentArray[0][1];
 
 }

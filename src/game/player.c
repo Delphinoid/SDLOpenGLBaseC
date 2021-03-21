@@ -218,6 +218,18 @@ void pRotateVelocity(player *const __RESTRICT__ p){
 	}
 }
 
+void pRotateCamera(player *const __RESTRICT__ p, const playerCamera *const __RESTRICT__ pc){
+	// Rotate the player to face the direction of the camera.
+	const vec3 direction = vec3New(
+		pc->cam->target.value.x - pc->cam->position.value.x,
+		0.f,
+		pc->cam->target.value.z - pc->cam->position.value.z
+	);
+	p->obj->skeletonBodies->configuration.orientation = quatNewRotation(
+		vec3New(0.f, 0.f, 1.f), vec3NormalizeFastAccurate(direction)
+	);
+}
+
 void pInit(player *const __RESTRICT__ p, object *const obj){
 	memset(p, 0, sizeof(player));
 	p->obj = obj;
