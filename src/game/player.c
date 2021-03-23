@@ -6,6 +6,7 @@
 #include "../engine/physicsCollision.h"
 #include "../engine/physicsCollider.h"
 #include "../engine/memorySLink.h"
+#include "../engine/helpersMath.h"
 #include <math.h>
 #include <string.h>
 
@@ -16,9 +17,14 @@
 #define PLAYER_PHYSICS_GROUND_FRICTION 1.f
 #define PLAYER_PHYSICS_AIR_FRICTION    0.f
 
-// Note that this friction value does not account for
+// Note that these friction values do not account for
 // the added friction from the physics simulation.
+// We use separate friction values while stationary
+// and in motion to reduce excessive acceleration while
+// strafing while still keeping the slippery, "socks
+// on timber" feeling.
 #define PLAYER_FRICTION 1.5f
+#define PLAYER_FRICTION_WISH 6.f
 // This combination gives a jump height of almost exactly 1 unit (1.0125).
 #define PLAYER_GRAVITY 20.f
 #define PLAYER_JUMP 9.f
@@ -26,7 +32,7 @@
 // You're probably looking for PLAYER_AIR_STRAFE_ACCELERATION.
 #define PLAYER_AIR_CONTROL 4.f
 
-#define PLAYER_GROUND_MAX_SPEED    10.f
+#define PLAYER_GROUND_MAX_SPEED    20.f
 #define PLAYER_GROUND_ACCELERATION 15.f
 #define PLAYER_GROUND_DECELERATION 8.f
 
@@ -40,6 +46,19 @@
 // also helps surfing feel more natural, similar to TF2.
 #define PLAYER_AIR_STRAFE_MAX_SPEED    1.f
 #define PLAYER_AIR_STRAFE_ACCELERATION 120.f
+
+static __HINT_INLINE__ float pMoveScale(const pMove *const __RESTRICT__ movement, const float speed){
+	// Scale to reduce sqrt(2) movement along diagonals.
+	// A little bit of zigzagging is still nice.
+	const float fwishAbs = fabsf(movement->fwish);
+	const float rwishAbs = fabsf(movement->rwish);
+	const float max = rwishAbs > fwishAbs ? rwishAbs : fwishAbs;
+	if(max <= 0.f){
+		return 0.f;
+	}else{
+		return speed*max*rsqrtAccurate(fwishAbs*fwishAbs + rwishAbs*rwishAbs);
+	}
+}
 
 static __HINT_INLINE__ void pMoveClipVelocity(pMove *const __RESTRICT__ movement, const vec3 normal){
 	// Clip the player velocity such
@@ -78,7 +97,11 @@ static __HINT_INLINE__ void pMoveFriction(pMove *const __RESTRICT__ movement, fl
 	// Only apply friction when grounded.
 	if(!movement->airborne){
 		const float control = speed < PLAYER_GROUND_DECELERATION ? PLAYER_GROUND_DECELERATION : speed;
-		newSpeed -= control * t * PLAYER_FRICTION * dt_s;
+		if(movement->fwish != 0.f || movement->rwish != 0.f){
+			newSpeed -= control * t * PLAYER_FRICTION_WISH * dt_s;
+		}else{
+			newSpeed -= control * t * PLAYER_FRICTION * dt_s;
+		}
 	}
 
 	if(newSpeed < 0.f){
@@ -136,7 +159,7 @@ static __HINT_INLINE__ void pMoveGround(pMove *const __RESTRICT__ movement, cons
 		.y = movement->rwish*movement->rbasis.y + movement->fwish*movement->fbasis.y,
 	};
 	// Calculate the speed.
-	const float wishspeed = vec2Magnitude(wishdir) * PLAYER_GROUND_MAX_SPEED;
+	const float wishspeed = vec2Magnitude(wishdir) * pMoveScale(movement, PLAYER_GROUND_MAX_SPEED);
 
 	//if(wishspeed > 0.f){
 		wishdir = vec2NormalizeFastAccurate(wishdir);
@@ -157,7 +180,7 @@ static __HINT_INLINE__ void pMoveAir(pMove *const __RESTRICT__ movement, const f
 		.y = movement->rwish*movement->rbasis.y + movement->fwish*movement->fbasis.y,
 	};
 	// Calculate the speed.
-	const float wishspeed2 = vec2Magnitude(wishdir) * PLAYER_AIR_MAX_SPEED;
+	const float wishspeed2 = vec2Magnitude(wishdir) * pMoveScale(movement, PLAYER_AIR_MAX_SPEED);
 
 	if(wishspeed2 > 0.f){
 
@@ -275,10 +298,6 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 
 	// The object is automatically updated by the module.
 
-	p->movement.rwish = (float)(CVAR_RIGHT-CVAR_LEFT);
-	p->movement.fwish = (float)(CVAR_FORWARD-CVAR_BACKWARD);
-	///p->movement.jump = CVAR_JUMP;
-
 	// Check whether or not the body is on the ground.
 	// We do this by finding the contact normal with
 	// the greatest y-coordinate of the and checking if
@@ -314,6 +333,11 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 		}
 		++p->movement.airborne;
 	}
+
+	// Capture console input.
+	p->movement.rwish = (float)(CVAR_RIGHT-CVAR_LEFT);
+	p->movement.fwish = (float)(CVAR_FORWARD-CVAR_BACKWARD);
+	///p->movement.jump = CVAR_JUMP;
 
 	// Handle movement related input.
 	p->movement.velocity = p->obj->skeletonBodies->linearVelocity;
