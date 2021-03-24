@@ -347,6 +347,7 @@ int main(int argc, char **argv){
 	tempObji->configuration[0].scale.y = 0.1f;
 	tempObji->configuration[0].scale.z = 100.f;
 	objPhysicsPrepare(tempObji);
+	tempObji->skeletonBodies->hull->friction = 1.f;
 	scnInsertObject(scnMain, tempObji);
 	//
 	tempObji = moduleObjectAllocate();
@@ -386,6 +387,18 @@ int main(int argc, char **argv){
 	tempObji->configuration[0].position.x = 0.f;//-0.65f;
 	tempObji->configuration[0].position.y = 20.f;//-0.65f;
 	quatSetEuler(&tempObji->configuration[0].orientation, 45.6f*RADIAN_RATIO, 0.f, 0.f*RADIAN_RATIO);
+	objPhysicsPrepare(tempObji);
+	tempObji->skeletonBodies->hull->restitution = 0.f;
+	tempObji->skeletonBodies->flags &= ~(0x06);
+	scnInsertObject(scnMain, tempObji);
+	//
+	tempObji = moduleObjectAllocate();
+	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest2.tdo", 13));
+	tempObji->configuration[0].scale.x = 75.f;//-0.65f;
+	tempObji->configuration[0].scale.y = 50.f;
+	tempObji->configuration[0].scale.z = 5.f;//-0.65f;
+	tempObji->configuration[0].position.x = 0.f;//-0.65f;
+	tempObji->configuration[0].position.z = -75.f;//-0.65f;
 	objPhysicsPrepare(tempObji);
 	tempObji->skeletonBodies->hull->restitution = 0.f;
 	tempObji->skeletonBodies->flags &= ~(0x06);

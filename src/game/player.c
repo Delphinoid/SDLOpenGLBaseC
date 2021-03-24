@@ -14,7 +14,7 @@
 #define	PLAYER_MOVE_STOP_EPSILON 0.001f
 
 // Physics engine friction for different states.
-#define PLAYER_PHYSICS_GROUND_FRICTION 1.f
+#define PLAYER_PHYSICS_GROUND_FRICTION 0.f
 #define PLAYER_PHYSICS_AIR_FRICTION    0.f
 
 // Note that these friction values do not account for
@@ -23,7 +23,7 @@
 // and in motion to reduce excessive acceleration while
 // strafing while still keeping the slippery, "socks
 // on timber" feeling.
-#define PLAYER_FRICTION 1.5f
+#define PLAYER_FRICTION 2.75f
 #define PLAYER_FRICTION_WISH 6.f
 // This combination gives a jump height of almost exactly 1 unit (1.0125).
 #define PLAYER_GRAVITY 20.f
@@ -50,13 +50,12 @@
 static __HINT_INLINE__ float pMoveScale(const pMove *const __RESTRICT__ movement, const float speed){
 	// Scale to reduce sqrt(2) movement along diagonals.
 	// A little bit of zigzagging is still nice.
-	const float fwishAbs = fabsf(movement->fwish);
-	const float rwishAbs = fabsf(movement->rwish);
-	const float max = rwishAbs > fwishAbs ? rwishAbs : fwishAbs;
-	if(max <= 0.f){
+	if(movement->rwish == 0.f && movement->fwish == 0.f){
 		return 0.f;
 	}else{
-		return speed*max*rsqrtAccurate(fwishAbs*fwishAbs + rwishAbs*rwishAbs);
+		return speed*rsqrtAccurate(
+			movement->rwish*movement->rwish + movement->fwish*movement->fwish
+		);
 	}
 }
 
@@ -70,12 +69,12 @@ static __HINT_INLINE__ void pMoveClipVelocity(pMove *const __RESTRICT__ movement
 }
 
 static __HINT_INLINE__ void pMoveAccelerate(
-	pMove *const __RESTRICT__ movement, const vec2 wishdir, const float wishspeed, const float accel, const float dt_s
+	pMove *const __RESTRICT__ movement, const vec2 wishdir, const float wishspeed, const float accel, const float friction, const float dt_s
 ){
 
 	const float addspeed = wishspeed - movement->velocity.x*wishdir.x - movement->velocity.z*wishdir.y;
 	if(addspeed > 0.f){
-		float accelspeed = accel * wishspeed * dt_s;
+		float accelspeed = accel * wishspeed * friction * dt_s;
 		if(accelspeed > addspeed){
 			accelspeed = addspeed;
 		}
@@ -85,7 +84,7 @@ static __HINT_INLINE__ void pMoveAccelerate(
 
 }
 
-static __HINT_INLINE__ void pMoveFriction(pMove *const __RESTRICT__ movement, float t, const float dt_s){
+static __HINT_INLINE__ void pMoveFriction(pMove *const __RESTRICT__ movement, const float t, const float dt_s){
 
 	const vec2 velocity = {
 		.x = movement->velocity.x,
@@ -150,7 +149,7 @@ static __HINT_INLINE__ void pMoveAirControl(
 
 }
 
-static __HINT_INLINE__ void pMoveGround(pMove *const __RESTRICT__ movement, const float dt_s){
+static __HINT_INLINE__ void pMoveGround(pMove *const __RESTRICT__ movement, const float friction, const float dt_s){
 
 	// Transform the joystick direction
 	// into the projected camera basis.
@@ -164,7 +163,7 @@ static __HINT_INLINE__ void pMoveGround(pMove *const __RESTRICT__ movement, cons
 	//if(wishspeed > 0.f){
 		wishdir = vec2NormalizeFastAccurate(wishdir);
 		movement->direction = wishdir;
-		pMoveAccelerate(movement, wishdir, wishspeed, PLAYER_GROUND_ACCELERATION, dt_s);
+		pMoveAccelerate(movement, wishdir, wishspeed, PLAYER_GROUND_ACCELERATION, friction, dt_s);
 	//}
 
 }
@@ -204,7 +203,7 @@ static __HINT_INLINE__ void pMoveAir(pMove *const __RESTRICT__ movement, const f
 		}
 
 		// Accelerate.
-		pMoveAccelerate(movement, wishdir, wishspeed, accel, dt_s);
+		pMoveAccelerate(movement, wishdir, wishspeed, accel, 1.f, dt_s);
 		if(PLAYER_AIR_CONTROL > 0.f){
 			pMoveAirControl(movement, wishdir, wishspeed2, dt_s);
 		}
@@ -305,7 +304,9 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 	const physCollider *lastCollider = NULL;
 	const physContactPair *lastContact = NULL;
 	vec3 maximum_normal = {.x = 0.f, .y = 0.f, .z = 0.f};
+	float contact_friction = 1.f;
 	while(physRigidBodyCheckContact(p->obj->skeletonBodies, 0xFFFF, &lastCollider, &lastContact)){
+		float friction;
 		#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
 		vec3 normal = lastContact->data.normal;
 		#else
@@ -317,9 +318,13 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 			// player is collider A, valid normals
 			// will be negative: make them positive.
 			normal = vec3Negate(normal);
+			friction = lastContact->colliderB->friction;
+		}else{
+			friction = lastContact->colliderA->friction;
 		}
 		if(normal.y > maximum_normal.y){
 			maximum_normal = normal;
+			contact_friction = friction;
 		}
 	}
 	// Check the greatest contact normal to determine
@@ -345,13 +350,13 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 		if(CVAR_JUMP == 0){
 
 			// Handle friction.
-			pMoveFriction(&p->movement, 1.f, dt_s);
+			pMoveFriction(&p->movement, contact_friction, dt_s);
 			flagsUnset(p->movement.state, PLAYER_MOVEMENT_JUMPING);
 
 			if(p->movement.fwish != 0.f || p->movement.rwish != 0.f){
 				// Move along the ground.
 				flagsSet(p->movement.state, PLAYER_MOVEMENT_WALKING);
-				pMoveGround(&p->movement, dt_s);
+				pMoveGround(&p->movement, contact_friction, dt_s);
 				pMoveClipVelocity(&p->movement, maximum_normal);
 			}else{
 				flagsUnset(p->movement.state, PLAYER_MOVEMENT_WALKING);
