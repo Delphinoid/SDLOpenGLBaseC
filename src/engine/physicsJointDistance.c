@@ -159,9 +159,9 @@ static __FORCE_INLINE__ void physJointDistancePersist(physJointDistance *const _
 		vec3VMultV(
 			bodyA->configuration.scale,
 			#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
-			vec3VSubV(((physJointDistance *)joint)->anchorA, bodyA->centroidLocal)
+			vec3VSubV(joint->anchorA, bodyA->centroidLocal)
 			#else
-			vec3VSubV(((physJointDistance *)joint)->anchorA, bodyA->base->centroid)
+			vec3VSubV(joint->anchorA, bodyA->base->centroid)
 			#endif
 		)
 	);
@@ -170,9 +170,9 @@ static __FORCE_INLINE__ void physJointDistancePersist(physJointDistance *const _
 		vec3VMultV(
 			bodyB->configuration.scale,
 			#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
-			vec3VSubV(((physJointDistance *)joint)->anchorB, bodyB->centroidLocal)
+			vec3VSubV(joint->anchorB, bodyB->centroidLocal)
 			#else
-			vec3VSubV(((physJointDistance *)joint)->anchorB, bodyB->base->centroid)
+			vec3VSubV(joint->anchorB, bodyB->base->centroid)
 			#endif
 		)
 	);

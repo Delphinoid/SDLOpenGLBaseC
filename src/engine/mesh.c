@@ -3,22 +3,27 @@
 #include "mesh.h"
 #include "vertex.h"
 #include <stdio.h>
+#include <string.h>
 
 // Default meshes.
 mesh g_meshDefault = {
-	.vertexNum = 0,
+	///.vertexNum = 0,
 	.indexNum = 0,
 	.vaoID = 0,
 	.vboID = 0,
 	.iboID = 0
 };
 mesh g_meshBillboard = {
-	.vertexNum = 0,
+	///.vertexNum = 0,
 	.indexNum = 0,
 	.vaoID = 0,
 	.vboID = 0,
 	.iboID = 0
 };
+
+void meshInit(mesh *const __RESTRICT__ m){
+	memset(m, 0, sizeof(mesh));
+}
 
 static void meshVertexAttributes(){
 	// Position offset.
@@ -90,7 +95,7 @@ return_t meshGenerateBuffers(mesh *const __RESTRICT__ m, const vertexIndex_t ver
 		return 0;
 	}
 
-	m->vertexNum = vertexNum;
+	///m->vertexNum = vertexNum;
 	m->indexNum = indexNum;
 	return 1;
 

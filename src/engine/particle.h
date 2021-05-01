@@ -5,14 +5,13 @@
 #include <GL/glew.h>
 #include "particleSettings.h"
 #include "colliderShared.h"
-#include "renderable.h"
 #include "transform.h"
-#include "return.h"
+#include "model.h"
 
 typedef struct {
 
 	// Render data.
-	renderableBase rndr;
+	const modelBase *mdl;
 	flags_t billboardFlags;
 
 	// Particle lifetime.

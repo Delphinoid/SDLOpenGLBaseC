@@ -1,14 +1,11 @@
 #include "animation.h"
 #include "memoryManager.h"
+#include <string.h>
 
 /** These animation functions are particularly bad, redo them later maybe? **/
 
 void animInstInit(animationInstance *const __RESTRICT__ animInst){
-	animInst->currentLoops = 0;
-	animInst->currentFrame = 0;
-	animInst->nextFrame = 0;
-	animInst->prevElapsedTime = 0.f;
-	animInst->totalElapsedTime = 0.f;
+	memset(animInst, 0, sizeof(animationInstance));
 }
 void animDataInit(animationData *const __RESTRICT__ animData){
 	animData->desiredLoops = -1;
@@ -16,6 +13,8 @@ void animDataInit(animationData *const __RESTRICT__ animData){
 	animData->frameDelays = NULL;
 }
 void animDataDelete(animationData *animData){
+	// Needing to call animDataDelete probably means
+	// the allocation system is poorly designed.
 	if(animData->frameDelays != NULL){
 		memFree(animData->frameDelays);
 	}

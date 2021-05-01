@@ -1,3 +1,5 @@
+texture "Lenticular\Lenticular.tdw"
+
 v -1.66 5.33 0.000000
 v 1.66 5.33 0.000000
 v -1.66 0.000000 0.000000

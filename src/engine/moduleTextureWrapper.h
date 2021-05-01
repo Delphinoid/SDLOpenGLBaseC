@@ -2,6 +2,7 @@
 #define MODULETEXTUREWRAPPER_H
 
 #include "memoryPool.h"
+#include "memorySLink.h"
 #include "return.h"
 
 #define RESOURCE_DEFAULT_TEXTURE_WRAPPER_NUM 4096

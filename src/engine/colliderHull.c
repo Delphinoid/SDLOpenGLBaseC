@@ -37,22 +37,15 @@ void cHullInit(cHull *const __RESTRICT__ c){
 
 return_t cHullInstantiate(void *const __RESTRICT__ instance, const void *const __RESTRICT__ local){
 
-	cVertexIndex_t vertexArraySize;
-	cFaceIndex_t normalArraySize;
+	const cVertexIndex_t vertexArraySize = ((cHull *)local)->vertexNum * sizeof(vec3);
+	const cFaceIndex_t normalArraySize = ((cHull *)local)->faceNum * sizeof(vec3);
 
-	vertexArraySize = ((cHull *)local)->vertexNum * sizeof(vec3);
-	((cHull *)instance)->vertices = memAllocate(vertexArraySize);
+	((cHull *)instance)->vertices = memAllocate(vertexArraySize + normalArraySize);
 	if(((cHull *)instance)->vertices == NULL){
 		/** Memory allocation failure. **/
 		return -1;
 	}
-	normalArraySize = ((cHull *)local)->faceNum * sizeof(vec3);
-	((cHull *)instance)->normals = memAllocate(normalArraySize);
-	if(((cHull *)instance)->normals == NULL){
-		/** Memory allocation failure. **/
-		memFree(((cHull *)instance)->vertices);
-		return -1;
-	}
+	((cHull *)instance)->normals = (vec3 *)(((uintptr_t)((cHull *)instance)->vertices) + vertexArraySize);
 
 	((cHull *)instance)->vertexNum = ((cHull *)local)->vertexNum;
 	((cHull *)instance)->edgeMax   = ((cHull *)local)->edgeMax;
@@ -1603,16 +1596,8 @@ return_t cHullCollisionGJK(const cHull *const __RESTRICT__ c1, const cHull *cons
 
 void cHullDeleteBase(cHull *const __RESTRICT__ c){
 	if(c->vertices != NULL){
+		// This also frees normals, faces and edges.
 		memFree(c->vertices);
-	}
-	if(c->normals != NULL){
-		memFree(c->normals);
-	}
-	if(c->faces != NULL){
-		memFree(c->faces);
-	}
-	if(c->edges != NULL){
-		memFree(c->edges);
 	}
 }
 
@@ -1621,9 +1606,7 @@ void cHullDelete(cHull *const __RESTRICT__ c){
 	// arrays, except for vertices and
 	// normals which need to be modified.
 	if(c->vertices != NULL){
+		// This also frees normals.
 		memFree(c->vertices);
-	}
-	if(c->normals != NULL){
-		memFree(c->normals);
 	}
 }

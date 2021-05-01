@@ -1,9 +1,8 @@
 #ifndef PLAYER_CAMERA_H
 #define PLAYER_CAMERA_H
 
+#include "../engine/camera.h"
 #include "../engine/colliderPoint.h"
-
-typedef struct camera camera;
 
 // Camera controller.
 /// Move sensitivity, yaw and pitch into a mouse event handler.

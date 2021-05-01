@@ -10,8 +10,6 @@
 // when "PHYSICS_CONTACT_FRICTION_CONSTRAINT" is defined.
 
 typedef struct physRigidBody physRigidBody;
-
-typedef struct physJoint physJoint;
 typedef struct {
 
 	// Halfway points transformed by the

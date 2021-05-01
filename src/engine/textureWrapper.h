@@ -7,6 +7,8 @@
 #include "rectangle.h"
 #include "return.h"
 
+/** We should rename these eventually. **/
+
 typedef struct texture texture;
 
 // Contains details describing a single image.
@@ -19,6 +21,7 @@ typedef struct {
 typedef struct {
 	animationData animData;
 	twFrame *frames;
+	///char *name;
 } twAnim;
 
 // Combines the above structures.
@@ -29,7 +32,7 @@ typedef struct textureWrapper {
 } textureWrapper;
 
 // Texture wrapper instance.
-typedef struct {
+typedef struct twInstance {
 	const textureWrapper *tw;
 	float timeMod;
 	animIndex_t currentAnim;

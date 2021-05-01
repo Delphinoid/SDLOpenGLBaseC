@@ -31,6 +31,8 @@ typedef struct {
 /** The two functions below are REALLY bad, redo them later. **/
 void animInstInit(animationInstance *const __RESTRICT__ animInst);
 void animDataInit(animationData *const __RESTRICT__ animData);
+// Needing to call animDataDelete probably means
+// the allocation system is poorly designed.
 void animDataDelete(animationData *const __RESTRICT__ animData);
 void animTick(animationInstance *const __RESTRICT__ animInst, const animationData *const __RESTRICT__ animData, const float dt_ms);
 void animState(const animationInstance *const __RESTRICT__ animInst, const animationData *const __RESTRICT__ animData, const float interpT,

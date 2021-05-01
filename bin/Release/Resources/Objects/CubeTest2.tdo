@@ -5,4 +5,4 @@ skeletonPhysics "CubeTestPhysics2.tdp"
 animation "CubeTestAnimation.tda"
 animationCapacity 1
 
-renderable "CubeAnimated2.obj" "Animated\GuySpr.stdw"
+renderable "CubeAnimated2.obj"

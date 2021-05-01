@@ -168,61 +168,41 @@ __FORCE_INLINE__ static void physRigidBodyBaseGenerateProperties(physRigidBodyBa
 }
 
 /** TEMPORARY **/
-static return_t physColliderResizeToFit(physCollider *const __RESTRICT__ local){
+static return_t physColliderDefragment(physCollider *const __RESTRICT__ local){
 
 	if(local->c.type == COLLIDER_TYPE_HULL){
 
 		cHull *const hull = (cHull *)&local->c.data;
 
 		if(hull->vertexNum != 0){
-			vec3 *const tempBuffer = memReallocate(hull->vertices, hull->vertexNum*sizeof(vec3));
+
+			vec3 *const tempBuffer = memReallocate(hull->vertices,
+				hull->vertexNum*sizeof(vec3) +
+				hull->faceNum*(sizeof(vec3) + sizeof(cHullFace)) +
+				hull->edgeNum*sizeof(cHullEdge)
+			);
 			if(tempBuffer == NULL){
 				/** Memory allocation failure. **/
 				return -1;
 			}
 			hull->vertices = tempBuffer;
-		}else{
-			if(hull->vertices != NULL){
-				memFree(hull->vertices);
-				hull->vertices = NULL;
-			}
-		}
 
-		if(hull->faceNum != 0){
-			cHullFace *tempBuffer2;
-			vec3 *tempBuffer1 = memReallocate(hull->normals, hull->faceNum*sizeof(vec3));
-			if(tempBuffer1 == NULL){
-				/** Memory allocation failure. **/
-				return -1;
-			}
-			tempBuffer2 = memReallocate(hull->faces, hull->faceNum*sizeof(cHullFace));
-			if(tempBuffer2 == NULL){
-				/** Memory allocation failure. **/
-				memFree(tempBuffer1);
-				return -1;
-			}
-			hull->normals = tempBuffer1;
-			hull->faces = tempBuffer2;
-		}else{
-			if(hull->normals != NULL){
-				memFree(hull->normals);
-				hull->normals = NULL;
-			}
-			if(hull->faces != NULL){
-				memFree(hull->faces);
-				hull->faces = NULL;
-			}
-		}
+			memcpy(&tempBuffer[hull->vertexNum], hull->normals, hull->faceNum*sizeof(vec3));
+			memFree(hull->normals);
+			hull->normals = &tempBuffer[hull->vertexNum];
 
-		if(hull->edgeNum != 0){
-			cHullEdge *const tempBuffer = memReallocate(hull->edges, hull->edgeNum*sizeof(cHullEdge));
-			if(tempBuffer == NULL){
-				/** Memory allocation failure. **/
-				return -1;
-			}
-			hull->edges = tempBuffer;
-		}else if(hull->edges != NULL){
+			memcpy(&hull->normals[hull->faceNum], hull->faces, hull->faceNum*sizeof(cHullFace));
+			memFree(hull->faces);
+			hull->faces = (cHullFace *)&hull->normals[hull->faceNum];
+
+			memcpy(&hull->faces[hull->faceNum], hull->edges, hull->edgeNum*sizeof(cHullEdge));
 			memFree(hull->edges);
+			hull->edges = (cHullEdge *)&hull->faces[hull->faceNum];
+
+		}else{
+			hull->vertices = NULL;
+			hull->normals = NULL;
+			hull->faces = NULL;
 			hull->edges = NULL;
 		}
 
@@ -352,7 +332,7 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 								break;
 							}
 						}else if(currentCommand == 1){
-							if(physColliderResizeToFit(currentCollider) < 0){
+							if(physColliderDefragment(currentCollider) < 0){
 								/** Memory allocation failure. **/
 								if(vertexMassArrays != NULL){
 									float **array = vertexMassArrays;
@@ -445,7 +425,7 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 							printf("Error loading rigid bodies \"%s\": Trying to start a multiline command at line %u "
 							       "while another is already in progress. Closing the current command.\n", fullPath, currentLine);
 							if(currentCommand == 1){
-								if(physColliderResizeToFit(currentCollider) < 0){
+								if(physColliderDefragment(currentCollider) < 0){
 									/** Memory allocation failure. **/
 									if(vertexMassArrays != NULL){
 										float **array = vertexMassArrays;
@@ -947,7 +927,7 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 
 					if(hull->vertexNum > 0 && hull->faceNum > 0 && hull->edgeNum > 0){
 
-						if(physColliderResizeToFit(currentCollider) < 0){
+						if(physColliderDefragment(currentCollider) < 0){
 							/** Memory allocation failure. **/
 							if(vertexMassArrays != NULL){
 								float **array = vertexMassArrays;
@@ -969,7 +949,7 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 					}else{
 						printf("Error loading rigid bodies \"%s\": Collider has no vertices or faces.\n", fullPath);
 						--currentBodyColliderNum;
-						physColliderResizeToFit(currentCollider);
+						physColliderDefragment(currentCollider);
 					}
 					currentCommand = 0;
 
@@ -1010,7 +990,7 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 
 			if(hull->vertexNum > 0 && hull->faceNum > 0 && hull->edgeNum > 0){
 
-				if(physColliderResizeToFit(currentCollider) < 0){
+				if(physColliderDefragment(currentCollider) < 0){
 					/** Memory allocation failure. **/
 					if(vertexMassArrays != NULL){
 						float **array = vertexMassArrays;
@@ -1032,7 +1012,7 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 			}else{
 				printf("Error loading rigid bodies \"%s\": Collider has no vertices or faces.\n", fullPath);
 				--currentBodyColliderNum;
-				physColliderResizeToFit(currentCollider);
+				physColliderDefragment(currentCollider);
 			}
 			currentCommand = 0;
 

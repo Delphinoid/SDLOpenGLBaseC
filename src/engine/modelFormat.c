@@ -45,7 +45,7 @@
 		memFree(tempBoneWeights); \
 	}
 
-return_t mdlWavefrontObjLoad(const char *const __RESTRICT__ filePath, vertexIndex_t *const __RESTRICT__ vertexNum, vertex **const vertices, vertexIndex_t *const __RESTRICT__ indexNum, vertexIndex_t **const indices, size_t *const __RESTRICT__ lodNum, mdlLOD **const lods, int *const __RESTRICT__ sprite, char *const __RESTRICT__ sklPath, size_t *const __RESTRICT__ sklPathLength){
+return_t mdlWavefrontObjLoad(const char *const __RESTRICT__ filePath, vertexIndex_t *const __RESTRICT__ vertexNum, vertex **const vertices, vertexIndex_t *const __RESTRICT__ indexNum, vertexIndex_t **const indices, size_t *const __RESTRICT__ lodNum, mdlLOD **const lods, int *const __RESTRICT__ sprite, char *const __RESTRICT__ sklPath, size_t *const __RESTRICT__ sklPathLength, char *const __RESTRICT__ twPath, size_t *const __RESTRICT__ twPathLength){
 
 	FILE *const __RESTRICT__ mdlInfo = fopen(filePath, "r");
 
@@ -196,6 +196,26 @@ return_t mdlWavefrontObjLoad(const char *const __RESTRICT__ filePath, vertexInde
 				}
 				memcpy(sklPath, line+pathBegin, pathLength);
 				*sklPathLength = pathLength;
+
+			// Texture wrapper
+			}else if(twPath != NULL && *twPathLength == 0 && lineLength > 8 && strncmp(line, "texture ", 8) == 0){
+				size_t pathBegin;
+				size_t pathLength;
+				const char *firstQuote = strchr(line+8, '"');
+				const char *secondQuote = NULL;
+				if(firstQuote != NULL){
+					++firstQuote;
+					pathBegin = firstQuote-line;
+					secondQuote = strrchr(firstQuote, '"');
+				}
+				if(secondQuote > firstQuote){
+					pathLength = secondQuote-firstQuote;
+				}else{
+					pathBegin = 8;
+					pathLength = lineLength-pathBegin;
+				}
+				memcpy(twPath, line+pathBegin, pathLength);
+				*twPathLength = pathLength;
 
 			// Sprite
 			}else if(lineLength >= 6 && strncmp(line, "sprite ", 7) == 0){
@@ -580,7 +600,7 @@ return_t mdlWavefrontObjLoad(const char *const __RESTRICT__ filePath, vertexInde
 #define mdlSMDFreeHelpers() \
 	sklDelete(skl);
 
-return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndex_t *indexNum, vertexIndex_t **indices, skeleton *const skl){
+return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndex_t *indexNum, vertexIndex_t **indices, skeleton *const skl, char *const __RESTRICT__ twPath, size_t *const __RESTRICT__ twPathLength){
 	// Temporary function by 8426THMY.
 	//Load the textureGroup!
 	FILE *mdlFile = fopen(filePath, "r");
@@ -610,7 +630,27 @@ return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **ver
 
 		while(fileParseNextLine(mdlFile, lineFeed, sizeof(lineFeed), &line, &lineLength)){
 
-			if(dataType == 0){
+			// Texture wrapper
+			if(twPath != NULL && *twPathLength == 0 && lineLength > 8 && strncmp(line, "texture ", 8) == 0){
+				size_t pathBegin;
+				size_t pathLength;
+				const char *firstQuote = strchr(line+8, '"');
+				const char *secondQuote = NULL;
+				if(firstQuote != NULL){
+					++firstQuote;
+					pathBegin = firstQuote-line;
+					secondQuote = strrchr(firstQuote, '"');
+				}
+				if(secondQuote > firstQuote){
+					pathLength = secondQuote-firstQuote;
+				}else{
+					pathBegin = 8;
+					pathLength = lineLength-pathBegin;
+				}
+				memcpy(twPath, line+pathBegin, pathLength);
+				*twPathLength = pathLength;
+
+			}else if(dataType == 0){
 				if(strcmp(line, "nodes") == 0){
 					dataType = 1;
 				}else if(strcmp(line, "skeleton") == 0){

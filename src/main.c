@@ -3,7 +3,7 @@
 #include "engine/colliderHull.h"
 #include "engine/constantsMath.h"
 #include "engine/helpersFileIO.h"
-#include "engine/sleep.h"
+#include "engine/timer.h"
 #include <stdio.h>
 #include <string.h>
 #include <fenv.h>
@@ -14,7 +14,6 @@
 /****/
 #include "engine/moduleObject.h"
 #include "engine/modulePhysics.h"
-#include "engine/moduleRenderable.h"
 #include "engine/moduleModel.h"
 #include "engine/moduleSkeleton.h"
 #include "engine/moduleTextureWrapper.h"
@@ -26,7 +25,6 @@
 
 #include "engine/texture.h"
 #include "engine/model.h"
-#include "engine/renderable.h"
 #include "engine/physicsRigidBody.h"
 #include "engine/physicsCollider.h"
 #include "engine/physicsJoint.h"
@@ -69,6 +67,7 @@ int main(int argc, char **argv){
 	if(!gfxMngrInit(&gfxMngr)){
 		return 1;
 	}
+	timerInit();
 
 	/** Debug shader program. **/
 	gfxDebugLoadShaderProgram();
@@ -85,7 +84,6 @@ int main(int argc, char **argv){
 	moduleTextureWrapperResourcesInit();
 	moduleSkeletonResourcesInit();
 	moduleModelResourcesInit();
-	moduleRenderableResourcesInit();
 	modulePhysicsResourcesInit();
 	moduleObjectResourcesInit();
 
@@ -203,8 +201,8 @@ int main(int argc, char **argv){
 	cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));*/
 
 	// Models.
-	model *tempMdl = moduleModelAllocate();
-	mdlLoad(tempMdl, "CubeAnimated.obj\0", 16);
+	modelBase *tempMdl = moduleModelBaseAllocate();
+	mdlBaseLoad(tempMdl, "CubeAnimated.obj\0", 16);
 	//mdlLoad(&tempMdl, prgPath, "ntrance.obj", &allSkeletons);
 	//cvPush(&allModels, (void *)&tempMdl, sizeof(tempMdl));
 
@@ -219,7 +217,6 @@ int main(int argc, char **argv){
 	tempObj->stateMax = 1;
 	tempObj = moduleObjectBaseAllocate();
 	objBaseLoad(tempObj, "Lenticular.tdo", 14);
-	tempObj = moduleObjectBaseAllocate();
 	/*objBaseLoad(tempObj, "soldier.tdo", 11);
 	tempObj->skl = tempObj->renderables[0].mdl->skl;
 	tempObj->animationNum = 2;
@@ -303,8 +300,8 @@ int main(int argc, char **argv){
 	tempObji->skeletonBodies->hull->friction = 1.f;
 	tempObji->skeletonBodies->flags &= ~(0x04);
 	tempObji->skeletonBodies->hull->restitution = 0.f;
-	tempObji->renderables->state.alpha = 0.75f;
-	tempObji->renderables->state.flags = RENDERABLE_STATE_ALPHA_DITHER;
+	tempObji->models->state.alpha = 0.75f;
+	tempObji->models->state.flags = MODEL_STATE_ALPHA_DITHER;
 	tempObji2 = tempObji;
 	scnInsertObject(scnMain, tempObji);
 	//
@@ -413,8 +410,8 @@ int main(int argc, char **argv){
 	tempObji5->configuration[0].position.y = -2.9f;
 	tempObji5->configuration[0].position.z = 3.f;
 	tempObji5->skeletonBodies->flags &= ~(0x04);
-	tempObji5->renderables->billboardData.flags = BILLBOARD_TARGET_SPRITE | BILLBOARD_INVERT_ORIENTATION | BILLBOARD_LOCK_Y;
-	tempObji5->renderables->billboardData.sectors = 8;
+	tempObji5->models->billboardData.flags = BILLBOARD_TARGET_SPRITE | BILLBOARD_INVERT_ORIENTATION | BILLBOARD_LOCK_Y;
+	tempObji5->models->billboardData.sectors = 8;
 	objPhysicsPrepare(tempObji5);
 	scnInsertObject(scnMain, tempObji5);
 
@@ -502,7 +499,10 @@ int main(int argc, char **argv){
 	);
 
 
-	particleBase a; particleBaseInit(&a); a.rndr.mdl = &g_mdlSprite; a.rndr.tw = &g_twDefault;
+	particleBase a; particleBaseInit(&a);
+	modelBase *particleMdl = moduleModelBaseAllocate(); mdlBaseInit(particleMdl);
+	particleMdl->buffers = g_meshSprite; particleMdl->tw = &g_twDefault;
+	a.mdl = particleMdl;
 	particleSystemBase b; particleSystemBaseInit(&b); b.properties = a;
 	b.initializers = memAllocate(sizeof(particleInitializer));
 	b.initializers->func = &particleInitializerSphereRandom;
@@ -554,10 +554,10 @@ int main(int argc, char **argv){
 	float frequencyTimeMod = 1.f / timestepTimeMod;
 	float tickrateUpdateMod = tickrate / updateMod;
 
-	float startUpdate;
-	float nextUpdate = (float)SDL_GetTicks();
-	float startRender;
-	float nextRender = (float)SDL_GetTicks();
+	float startTick;
+	float nextUpdate = timerGetTimeFloat();
+	float nextRender = nextRender;
+	float sleepTime;
 
 	tick_t updates = 0;
 	tick_t renders = 0;
@@ -570,8 +570,6 @@ int main(int argc, char **argv){
 	signed char carry = 0;
 
 	while(CVAR_RUNNING){
-
-		gfxMngrUpdateWindow(&gfxMngr);
 
 		//gEl->root.position.x = -((float)(gfxMngr.viewport.width>>1));
 		//gEl->root.position.y = (float)(gfxMngr.viewport.height>>1);
@@ -600,8 +598,8 @@ int main(int argc, char **argv){
 			p.obj->skeletonBodies->centroidGlobal.z = 3.f;
 		}
 
-		startUpdate = (float)SDL_GetTicks();
-		while(startUpdate >= nextUpdate){
+		startTick = timerGetTimeFloat();
+		if(startTick >= nextUpdate){
 
 			// Get the accumulated mouse deltas.
 			int mx, my;
@@ -609,6 +607,7 @@ int main(int argc, char **argv){
 
 			// Display the command buffer.
 			{
+				/** conAppend sucks and causes crashes. **/
 				byte_t cmd[COMMAND_MAX_LENGTH+1];
 				cmdTokenized *cmdtok = cmdbuf.cmdListStart;
 				cmd[0] = '\n';
@@ -623,7 +622,7 @@ int main(int argc, char **argv){
 						}
 						++c;
 					}
-					conAppend(&con, cmd, cmdSize+1);
+					///conAppend(&con, cmd, cmdSize+1);
 					cmdtok = moduleCommandTokenizedNext(cmdtok);
 				}
 				gTxt->data.text.stream.offset = con.start;
@@ -637,11 +636,11 @@ int main(int argc, char **argv){
 
 			if(CVAR_FIRSTPERSON){
 				pcLook(&pc, vec3New(0.f, 0.f, 0.f), vec3New(0.f, 0.f, -5.f));
-				p.obj->renderables[0].state.alpha = 0.f;
+				p.obj->models[0].state.alpha = 0.f;
 			}
 			if(CVAR_THIRDPERSON){
 				pcLook(&pc, vec3New(0.f, 0.f, 5.f), vec3New(0.f, 0.f, -5.f));
-				p.obj->renderables[0].state.alpha = 1.f;
+				p.obj->models[0].state.alpha = 1.f;
 				if(carry){
 					physJointDelete(joint_carry);
 					physJointInit(joint_carry, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_UNKNOWN);
@@ -658,18 +657,18 @@ int main(int argc, char **argv){
 			if(flagsAreSet(p.movement.state, PLAYER_MOVEMENT_JUMPING)){
 				if(p.movement.velocity.y >= 0.f){
 					// Jumping up.
-					p.obj->renderables[0].twi.currentAnim = 16;
+					p.obj->models[0].twi.currentAnim = 16;
 				}else{
 					// Falling down.
-					p.obj->renderables[0].twi.currentAnim = 24;
+					p.obj->models[0].twi.currentAnim = 24;
 				}
 			}else if(flagsAreSet(p.movement.state, PLAYER_MOVEMENT_WALKING)){
-				p.obj->renderables[0].twi.currentAnim = 8;
+				p.obj->models[0].twi.currentAnim = 8;
 			}else{
-				p.obj->renderables[0].twi.currentAnim = 0;
+				p.obj->models[0].twi.currentAnim = 0;
 			}
 			if(CVAR_INTERACT){
-				if(p.obj->renderables[0].state.alpha == 0.f){
+				if(p.obj->models[0].state.alpha == 0.f){
 					if(carry){
 						physJointDelete(joint_carry);
 						physJointInit(joint_carry, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_UNKNOWN);
@@ -722,13 +721,12 @@ int main(int argc, char **argv){
 			nextUpdate += tickrateUpdateMod;
 			++updates;
 
-		}
-
-		startRender = (float)SDL_GetTicks();
-		if(startRender >= nextRender){
+		}else if(startTick >= nextRender){
 
 			// Progress between current and next frame.
-			const float interpT = (startRender - (nextUpdate - tickrateUpdateMod)) / tickrateUpdateMod;
+			const float interpT = (startTick - (nextUpdate - tickrateUpdateMod)) / tickrateUpdateMod;
+
+			gfxMngrUpdateWindow(&gfxMngr);
 
 			/** Remove later **/
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -769,19 +767,25 @@ int main(int argc, char **argv){
 			SDL_GL_SwapWindow(gfxMngr.window);
 
 			// Next frame.
-			//nextRender = startRender + framerate;
+			//nextRender = startTick + framerate;
 			nextRender += framerate;
 			++renders;
 
 		}
 
 		// Sleep until the next event.
-		sleepm((int)(nextUpdate <= nextRender ? nextUpdate : nextRender) - (int)SDL_GetTicks());
+		sleepTime = (nextUpdate <= nextRender ? nextUpdate : nextRender) - timerGetTimeFloat();
+		if(sleepTime > 0.f){
+			// Having applications like Discord open
+			// can mess up the timer resolution.
+			sleepAccurate((time32_t)sleepTime);
+			//sleepResolution((time32_t)sleepTime, 0);
+		}
 
-		if(SDL_GetTicks() - lastPrint > 1000){
+		if(timerGetTime() - lastPrint > 1000){
 			printf("Updates: %u\n", updates);
 			printf("Renders: %u\n", renders);
-			lastPrint = SDL_GetTicks();
+			lastPrint = timerGetTime();
 			updates = 0;
 			renders = 0;
 		}
@@ -797,7 +801,6 @@ int main(int argc, char **argv){
 
 	moduleObjectResourcesDelete();
 	modulePhysicsResourcesDelete();
-	moduleRenderableResourcesDelete();
 	moduleModelResourcesDelete();
 	moduleSkeletonResourcesDelete();
 	moduleTextureWrapperResourcesDelete();

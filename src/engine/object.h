@@ -17,10 +17,11 @@
 
 ///typedef uint_least8_t renderableIndex_t;
 
+typedef uint_least8_t modelIndex_t;
+
+typedef struct modelBase modelBase;
 typedef struct model model;
 typedef struct textureWrapper textureWrapper;
-typedef struct renderableBase renderableBase;
-typedef struct renderable renderable;
 typedef struct physRigidBodyBase physRigidBodyBase;
 typedef struct physRigidBody physRigidBody;
 typedef struct collider collider;
@@ -37,14 +38,15 @@ typedef struct objectBase {
 
 	animIndex_t animationAllocate;  // The number of animations to allocate on instantiation.
 
-	animIndex_t animationNum;  // Number of animations.
 	sklAnim **animations;      // Array of pointers to animations associated with the object.
+	animIndex_t animationNum;  // Number of animations.
 
 	boneIndex_t *skeletonBodyIDs;       // Which bone each rigid body corresponds to.
 	physRigidBodyBase *skeletonBodies;  // Rigid bodies for each bone.
 	collider *skeletonColliders;        // Collider arrays for each bone.
 
-	renderableBase *renderables;  // Default renderable array.
+	const modelBase **models;  // Default renderable array.
+	modelIndex_t modelNum;
 
 	boneIndex_t skeletonBodyNum;      // Number of rigid bodies attached to the skeleton.
 	boneIndex_t skeletonColliderNum;  // Number of colliders attached to the skeleton.
@@ -70,15 +72,15 @@ typedef struct object {
 	boneIndex_t skeletonColliderNum;     // Number of colliders attached to the skeleton.
 	stateIndex_t stateMax;  // Maximum number of previous states.
 
+	objState state;
+	objState **oldestStatePrevious;  // The oldest state's previous pointer.
 	stateIndex_t stateNum;  // Number of previous states.
-	objectState state;
-	objectState **oldestStatePrevious;  // The oldest state's previous pointer.
 
 	physicsBodyIndex_t *skeletonBodyIDs;  // Which bone each rigid body corresponds to.
 	physRigidBody *skeletonBodies;        // Rigid body instances for each bone.
 	collider *skeletonColliders;          // Collider arrays for each bone.
 
-	renderable *renderables;  // Renderable instance array.
+	model *models;  // Renderable instance array.
 
 	const objectBase *base;
 
@@ -95,9 +97,7 @@ return_t objInstantiate(object *const __RESTRICT__ obj, const objectBase *const 
 
 return_t objStatePreallocate(object *const __RESTRICT__ obj);
 
-return_t objNewRenderable(object *const __RESTRICT__ obj, model *const mdl, textureWrapper *const tw);
-return_t objNewRenderableFromBase(object *const __RESTRICT__ obj, const renderableBase *const rndr);
-return_t objNewRenderableFromInstance(object *const __RESTRICT__ obj, const renderable *const rndr);
+return_t objNewModelFromBase(object *const __RESTRICT__ obj, const modelBase *const mdl);
 ///return_t objInitSkeleton(object *const __RESTRICT__ obj, const skeleton *const skl);
 
 physRigidBody *objBoneGetPhysicsBody(const object *const __RESTRICT__ obj, const boneIndex_t boneID);
@@ -124,7 +124,7 @@ void objAddAngularVelocity(object *obj, const size_t boneID, const float angle, 
 
 return_t objTick(object *const __RESTRICT__ obj, const float dt_ms);
 
-void objGenerateSprite(const object *const __RESTRICT__ obj, const renderable *const __RESTRICT__ rndr, const float interpT, const float *const __RESTRICT__ texFrag, vertex *const __RESTRICT__ vertices);
+void objGenerateSprite(const object *const __RESTRICT__ obj, const model *const __RESTRICT__ mdl, const float interpT, const float *const __RESTRICT__ texFrag, vertex *const __RESTRICT__ vertices);
 
 gfxRenderGroup_t objRenderGroup(const object *const __RESTRICT__ obj, const float interpT);
 void objRender(const object *const __RESTRICT__ obj, graphicsManager *const __RESTRICT__ gfxMngr, const camera *const __RESTRICT__ cam, const float distance, const float interpT);

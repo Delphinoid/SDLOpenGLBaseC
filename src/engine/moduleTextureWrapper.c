@@ -5,7 +5,6 @@
 #include <string.h>
 
 #define RESOURCE_DEFAULT_TEXTURE_WRAPPER_SIZE sizeof(textureWrapper)
-#define RESOURCE_TEXTURE_WRAPPER_BLOCK_SIZE memPoolBlockSize(sizeof(textureWrapper))
 
 memoryPool __g_TextureWrapperResourceArray;  // Contains textureWrappers.
 

@@ -122,36 +122,39 @@ static return_t twAddAnim(textureWrapper *const __RESTRICT__ tw, const twAnim *c
 	tw->animations[tw->animationNum++] = *a;
 	return 1;
 }
-static void twDefragment(textureWrapper *const __RESTRICT__ tw){
+static void twDefragment(textureWrapper *const __RESTRICT__ tw, const char *const __RESTRICT__ resource, const size_t length){
+
 	if(tw->animations != &g_twaDefault){
-		twAnim *a; const twAnim *aLast;
-		tw->animations = memReallocate(tw->animations, tw->animationNum*sizeof(twAnim ));
-		a = tw->animations; aLast = &a[tw->animationNum];
-		for(; a < aLast; ++a){
-			// Shift frame delays to account for the extra capacity.
-			memmove(&a->frames[a->animData.frameNum], a->animData.frameDelays, a->animData.frameNum*sizeof(float));
-			a->frames = memReallocate(
-				a->frames,
-				a->animData.frameNum*(sizeof(twFrame) + sizeof(float))
-			);
-			a->animData.frameDelays = (float *)&a->frames[a->animData.frameNum];
+
+		frameIndex_t i;
+		size_t bytes = 0;
+		char *namePtr;
+
+		// Count frames.
+		for(i = 0; i < tw->animationNum; ++i){
+			bytes += tw->animations[i].animData.frameNum;
 		}
+		tw->animations = memReallocate(tw->animations, tw->animationNum*(sizeof(twAnim ) + bytes*(sizeof(twFrame) + sizeof(float))) + length + 1);
+
+		namePtr = (char *)&tw->animations[tw->animationNum];
+		for(i = 0; i < tw->animationNum; ++i){
+			bytes = tw->animations[i].animData.frameNum*(sizeof(twFrame) + sizeof(float));
+			memcpy(namePtr, tw->animations[i].frames, bytes);
+			memFree(tw->animations[i].frames);
+			tw->animations[i].frames = (twFrame *)namePtr;
+			tw->animations[i].animData.frameDelays = (float *)&((twFrame *)namePtr)[tw->animations[i].animData.frameNum];
+			namePtr += bytes;
+		}
+
+		memcpy(namePtr, resource, length);
+		namePtr[length] = '\0';
+		tw->name = namePtr;
+
 	}
-}
-static return_t twResizeToFit(textureWrapper *const __RESTRICT__ tw, const animIndex_t animationCapacity){
-	/**
-	*** Defrag until I create a new
-	*** binary texture wrapper file
-	*** format where the sizes are
-	*** all known beforehand.
-	**/
-	twDefragment(tw);
-	return 1;
+
 }
 void twInit(textureWrapper *const __RESTRICT__ tw){
-	tw->name = NULL;
-	tw->animationNum = 0;
-	tw->animations = NULL;
+	memset(tw, 0, sizeof(textureWrapper));
 }
 
 return_t twLoad(textureWrapper *const __RESTRICT__ tw, const char *const __RESTRICT__ filePath, const size_t filePathLength){
@@ -534,17 +537,15 @@ return_t twLoad(textureWrapper *const __RESTRICT__ tw, const char *const __RESTR
 	***
 	***
 	**/
-	if(twResizeToFit(tw, animationCapacity) < 0){
-		return -1;
-	}
+	twDefragment(tw, filePath, filePathLength);
 
 	// Generate a name based off the file path.
-	tw->name = fileGenerateResourceName(filePath, filePathLength);
+	/**tw->name = fileGenerateResourceName(filePath, filePathLength);
 	if(tw->name == NULL){
-		/** Memory allocation failure. **/
+		** Memory allocation failure. **
 		twDelete(tw);
 		return -1;
-	}
+	}**/
 
 	return 1;
 
@@ -552,15 +553,8 @@ return_t twLoad(textureWrapper *const __RESTRICT__ tw, const char *const __RESTR
 
 void twDelete(textureWrapper *const __RESTRICT__ tw){
 	if(tw->animations != NULL && tw->animations != &g_twaDefault){
-		twAnim *a = tw->animations;
-		const twAnim *const aLast = &a[tw->animationNum];
-		for(; a < aLast; ++a){
-			twaDelete(a);
-		}
+		// Also frees frames, frameDelays and the name.
 		memFree(tw->animations);
-	}
-	if(tw->name != NULL && tw->name != g_twDefault.name){
-		memFree(tw->name);
 	}
 }
 

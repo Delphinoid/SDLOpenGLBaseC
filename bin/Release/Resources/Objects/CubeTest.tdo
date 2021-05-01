@@ -5,4 +5,4 @@ skeletonPhysics "CubeTestPhysics.tdp"
 animation "CubeTestAnimation.tda"
 animationCapacity 1
 
-renderable "CubeAnimated.obj" "gui\body.tdw"
+renderable "CubeAnimated.obj"

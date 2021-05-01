@@ -15,6 +15,7 @@
 
 void particleSystemBaseInit(particleSystemBase *const __RESTRICT__ base){
 	particleBaseInit(&base->properties);
+	base->particleInitial = 0;
 	base->particleMax = SPRITE_STATE_BUFFER_SIZE;
 	base->initializers = NULL;
 	base->initializerLast = NULL;
@@ -27,6 +28,7 @@ void particleSystemBaseInit(particleSystemBase *const __RESTRICT__ base){
 	base->lifetime = 0.f;
 	base->children = NULL;
 	base->childNum = 0;
+	base->name = NULL;
 }
 
 void particleSystemInit(particleSystem *const __RESTRICT__ system){
@@ -210,7 +212,7 @@ return_t particleSystemTick(particleSystem *const __RESTRICT__ system, const flo
 
 __FORCE_INLINE__ static void particleSystemParticlesRender(const particleSystem *const __RESTRICT__ system, graphicsManager *const __RESTRICT__ gfxMngr, const camera *const __RESTRICT__ cam, const float distance, const float interpT){
 
-	const renderableBase *const rndr = &system->base->properties.rndr;
+	const modelBase *const mdl = system->base->properties.mdl;
 	vertexIndex_t indexNum;
 	const void *offset;
 
@@ -219,22 +221,27 @@ __FORCE_INLINE__ static void particleSystemParticlesRender(const particleSystem 
 
 	spriteState *state = &gfxMngr->shdrData.spriteTransformState[0];
 
-	gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, rndr->tw->animations[p->currentAnim].frames[p->animator.currentFrame].image->diffuseID);
+	gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, mdl->tw->animations[p->currentAnim].frames[p->animator.currentFrame].image->diffuseID);
 
 	// Generate state buffers.
 	for(; p < pLast; ++p, ++state){
 		state->transformation = tfMatrix(p->configuration);
-		state->frame = twState(rndr->tw, &p->animator, p->currentAnim, interpT)->subframe;
+		state->frame = twState(mdl->tw, &p->animator, p->currentAnim, interpT)->subframe;
 	}
 
-	glBindVertexArray(rndr->mdl->buffers.vaoID);
+	glBindVertexArray(mdl->buffers.vaoID);
 
 	// Upload the state data to the shader.
 	glBindBuffer(GL_ARRAY_BUFFER, g_sprStateBufferID);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, system->particleNum*sizeof(spriteState), &gfxMngr->shdrData.spriteTransformState[0]);
 
 	// Render the system.
-	mdlFindCurrentLOD(rndr->mdl, &indexNum, &offset, distance, gfxMngr->shdrData.biasLOD);
+	if(mdl->lods == NULL){
+		indexNum = mdl->buffers.indexNum;
+		offset = 0;
+	}else{
+		mdlFindCurrentLOD(mdl->lods, mdl->lodNum, &indexNum, &offset, distance, gfxMngr->shdrData.biasLOD);
+	}
 	if(indexNum){
 		glDrawElementsInstanced(GL_TRIANGLES, indexNum, GL_UNSIGNED_INT, offset, system->particleNum);
 	}
@@ -257,7 +264,7 @@ void particleSystemRender(const particleSystem *const __RESTRICT__ system, graph
 }
 
 void particleSystemBaseDelete(particleSystemBase *const __RESTRICT__ base){
-	/** memFree() IS TEMPORARY HERE **/
+	/** We should ideally only have one call to memFree. **/
 	if(base->initializers != NULL){
 		memFree(base->initializers);
 	}
@@ -276,7 +283,7 @@ void particleSystemBaseDelete(particleSystemBase *const __RESTRICT__ base){
 }
 
 void particleSystemDelete(particleSystem *const __RESTRICT__ system){
-	/** memFree() IS TEMPORARY HERE **/
+	/** We should ideally only have one call to memFree. **/
 	if(system->emitters != NULL){
 		memFree(system->emitters);
 	}

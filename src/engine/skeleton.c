@@ -37,34 +37,33 @@ skeleton g_sklDefault = {
 	.bones = &g_sklNodeDefault
 };
 
-static void sklDefragment(skeleton *const __RESTRICT__ skl){
+static void sklDefragment(skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ resource, const size_t length){
+
 	frameIndex_t i;
-	skl->bones = memReallocate(skl->bones, skl->boneNum*sizeof(sklNode));
+	size_t bytes = 0;
+	char *namePtr;
+
+	// Count name string lengths.
 	for(i = 0; i < skl->boneNum; ++i){
-		skl->bones[i].name =
-		memReallocate(
-			skl->bones[i].name,
-			strlen(skl->bones[i].name)*sizeof(char)
-		);
+		bytes += strlen(skl->bones[i].name)+1;
 	}
+	skl->bones = memReallocate(skl->bones, skl->boneNum*sizeof(sklNode) + bytes + length + 1);
+
+	namePtr = (char *)&skl->bones[skl->boneNum];
+	for(i = 0; i < skl->boneNum; ++i){
+		bytes = strlen(skl->bones[i].name)+1;
+		memcpy(namePtr, skl->bones[i].name, bytes);
+		memFree(skl->bones[i].name);
+		skl->bones[i].name = namePtr;
+		namePtr += bytes;
+	}
+
+	memcpy(namePtr, resource, length);
+	namePtr[length] = '\0';
+	skl->name = namePtr;
+
 }
 
-static return_t sklResizeToFit(skeleton *const __RESTRICT__ skl){
-	/**bone *const tempBuffer = memReallocate(skl->bones, skl->boneNum*sizeof(sklNode));
-	if(tempBuffer == NULL){
-		// Memory allocation failure. **
-		sklDelete(skl);
-		return 0;
-	}**/
-	/**
-	*** Defrag until I create a new
-	*** binary skeleton file format
-	*** where the sizes are all known
-	*** beforehand.
-	**/
-	sklDefragment(skl);
-	return 1;
-}
 void sklInit(skeleton *const __RESTRICT__ skl){
 	skl->name = NULL;
 	skl->boneNum = 0;
@@ -181,17 +180,15 @@ return_t sklLoad(skeleton *const __RESTRICT__ skl, const char *const __RESTRICT_
 	***
 	***
 	**/
-	if(sklResizeToFit(skl) < 0){
-		return -1;
-	}
+	sklDefragment(skl, filePath, filePathLength);
 
 	// Generate a name based off the file path.
-	skl->name = fileGenerateResourceName(filePath, filePathLength);
+	/**skl->name = fileGenerateResourceName(filePath, filePathLength, skl->bones, totalBytes);
 	if(skl->name == NULL){
-		/** Memory allocation failure. **/
+		** Memory allocation failure. **
 		sklDelete(skl);
 		return -1;
-	}
+	}**/
 
 	return 1;
 
@@ -234,17 +231,8 @@ boneIndex_t sklFindBone(const skeleton *const __RESTRICT__ skl, const boneIndex_
 	return (boneIndex_t)-1;
 }
 void sklDelete(skeleton *const __RESTRICT__ skl){
-	if(skl->name != NULL && skl->name != g_sklDefault.name){
-		memFree(skl->name);
-	}
 	if(skl->bones != NULL && skl->bones != &g_sklNodeDefault){
-		sklNode *n = skl->bones;
-		const sklNode *const nLast = &n[skl->boneNum];
-		for(; n < nLast; ++n){
-			if(n->name != NULL){
-				memFree(n->name);
-			}
-		}
+		// This also frees the name.
 		memFree(skl->bones);
 	}
 }
@@ -257,49 +245,53 @@ void sklaInit(sklAnim *const __RESTRICT__ skla){
 	skla->bones = NULL;
 	skla->frames = NULL;
 }
-static void sklaDefragment(sklAnim *const __RESTRICT__ skla){
+static void sklaDefragment(sklAnim *const __RESTRICT__ skla, const char *const __RESTRICT__ resource, const size_t length){
+
 	frameIndex_t i;
-	skla->bones = memReallocate(skla->bones, skla->boneNum*sizeof(char *));
-	skla->frames = memReallocate(skla->frames, skla->animData.frameNum*sizeof(transform *));
-	skla->animData.frameDelays = memReallocate(skla->animData.frameDelays, skla->animData.frameNum*sizeof(float));
+	size_t bytes = 0;
+	char *namePtr;
+
 	for(i = 0; i < skla->boneNum; ++i){
-		skla->bones[i] = memReallocate(skla->bones[i], strlen(skla->bones[i])*sizeof(char));
+		bytes += strlen(skla->bones[i])+1;
 	}
+
+	// Allocate bones array, bone names arrays, frames array, frame transform arrays and frameDelays array.
+	skla->bones = memReallocate(skla->bones,
+		skla->boneNum*sizeof(char *) + bytes +
+		skla->animData.frameNum*(sizeof(transform *) + skla->boneNum*sizeof(transform) + sizeof(float)) +
+		length + 1
+	);
+
+	namePtr = (char *)&skla->bones[skla->boneNum];
+	for(i = 0; i < skla->boneNum; ++i){
+		bytes = strlen(skla->bones[i])+1;
+		memcpy(namePtr, skla->bones[i], bytes);
+		memFree(skla->bones[i]);
+		skla->bones[i] = namePtr;
+		namePtr += bytes;
+	}
+
+	memcpy(namePtr, skla->frames, skla->animData.frameNum*sizeof(transform *));
+	memFree(skla->frames);
+	skla->frames = (transform **)namePtr;
+	namePtr += skla->animData.frameNum*sizeof(transform *);
+	bytes = skla->boneNum*sizeof(transform);
 	for(i = 0; i < skla->animData.frameNum; ++i){
-		skla->frames[i] = memReallocate(skla->frames[i], skla->boneNum*sizeof(transform));
+		memcpy(namePtr, skla->frames[i], bytes);
+		memFree(skla->frames[i]);
+		skla->frames[i] = (transform *)namePtr;
+		namePtr += bytes;
 	}
-}
-static return_t sklaResizeToFit(sklAnim *const __RESTRICT__ skla, const size_t boneCapacity, const size_t frameCapacity){
-	/**if(skla->boneNum != boneCapacity){
-		skla->bones = memReallocate(skla->bones, skla->boneNum*sizeof(bone *));
-		if(skla->bones == NULL){
-			// Memory allocation failure. **
-			sklaDelete(skla);
-			return -1;
-		}
-	}
-	if(skla->animData.frameNum != frameCapacity){
-		skla->frames = memReallocate(skla->frames, skla->animData.frameNum*sizeof(char *));
-		if(skla->frames == NULL){
-			// Memory allocation failure. **
-			sklaDelete(skla);
-			return -1;
-		}
-		skla->animData.frameDelays = memReallocate(skla->animData.frameDelays, skla->animData.frameNum*sizeof(char *));
-		if(skla->animData.frameDelays == NULL){
-			// Memory allocation failure. **
-			sklaDelete(skla);
-			return -1;
-		}
-	}**/
-	/**
-	*** Defrag until I create a new
-	*** binary skeletal animation
-	*** file format where the sizes
-	*** are all known beforehand.
-	**/
-	sklaDefragment(skla);
-	return 1;
+
+	memcpy(namePtr, skla->animData.frameDelays, skla->animData.frameNum*sizeof(float));
+	memFree(skla->animData.frameDelays);
+	skla->animData.frameDelays = (float *)namePtr;
+	namePtr += skla->animData.frameNum*sizeof(float);
+
+	memcpy(namePtr, resource, length);
+	namePtr[length] = '\0';
+	skla->name = namePtr;
+
 }
 return_t sklaLoad(sklAnim *const __RESTRICT__ skla, const char *const __RESTRICT__ filePath, const size_t filePathLength){
 
@@ -529,17 +521,15 @@ return_t sklaLoad(sklAnim *const __RESTRICT__ skla, const char *const __RESTRICT
 	***
 	***
 	**/
-	if(sklaResizeToFit(skla, boneCapacity, frameCapacity) < 0){
-		return -1;
-	}
+	sklaDefragment(skla, filePath, filePathLength);
 
 	// Generate a name based off the file path.
-	skla->name = fileGenerateResourceName(filePath, filePathLength);
+	/**skla->name = fileGenerateResourceName(filePath, filePathLength);
 	if(skla->name == NULL){
-		/** Memory allocation failure. **/
+		** Memory allocation failure. **
 		sklaDelete(skla);
 		return -1;
-	}
+	}**/
 
 	return 1;
 
@@ -764,15 +754,13 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *const __RES
 		fclose(skeleAnimFile);
 		memFree(fullPath);
 
-
-		skla->name = memAllocate((filePathLength+1)*sizeof(char));
+		sklaDefragment(skla, filePath, filePathLength);
+		/**skla->name = fileGenerateResourceName(filePath, filePathLength, skla->boneNum);
 		if(skla->name == NULL){
-			/** Memory allocation failure. **/
+			** Memory allocation failure. **
 			sklaDelete(skla);
 			return -1;
-		}
-		memcpy(skla->name, filePath, filePathLength);
-		skla->name[filePathLength] = '\0';
+		}**/
 	}else{
 		printf("Unable to open skeletal animation file!\n"
 		       "Path: %s\n", fullPath);
@@ -821,30 +809,10 @@ boneIndex_t sklaFindBone(const sklAnim *const __RESTRICT__ skla, const boneIndex
 	return (boneIndex_t)-1;
 }
 void sklaDelete(sklAnim *const __RESTRICT__ skla){
-	if(skla->name != NULL){
-		memFree(skla->name);
-	}
 	if(skla->bones != NULL){
-		char **n = skla->bones;
-		char **const nLast = &n[skla->boneNum];
-		for(; n < nLast; ++n){
-			if(*n != NULL){
-				memFree(*n);
-			}
-		}
+		// This also frees frames, frameDelays and the name.
 		memFree(skla->bones);
 	}
-	if(skla->frames != NULL){
-		transform **b = skla->frames;
-		transform **const bLast = &b[skla->animData.frameNum];
-		for(; b < bLast; ++b){
-			if(*b != NULL){
-				memFree(*b);
-			}
-		}
-		memFree(skla->frames);
-	}
-	animDataDelete(&skla->animData);
 }
 
 void sklaiInit(sklAnimInstance *const __RESTRICT__ sklai, const sklAnim *const __RESTRICT__ animation, const float intensity, const flags_t flags){

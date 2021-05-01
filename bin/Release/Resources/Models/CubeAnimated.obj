@@ -1,6 +1,5 @@
-usemtl Luna
-
 skeleton "CubeTestSkeleton.tds"
+texture "gui\body.tdw"
 
 v 1.000000 -1.000000 1.000000 0 -1 -1 -1 1 0 0 0
 v 1.000000 1.000000 1.000000 1 -1 -1 -1 1 0 0 0

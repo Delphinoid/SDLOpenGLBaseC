@@ -4,7 +4,7 @@
 #include "guiText.h"
 #include "guiWindow.h"
 #include "guiContainer.h"
-#include "renderable.h"
+#include "model.h"
 #include "text.h"
 #include "transform.h"
 #include "vec2.h"
@@ -33,7 +33,7 @@ typedef struct guiElement {
 		guiText text;
 		guiWindow window;
 		guiContainer container;
-		renderable rndr;
+		model mdl;
 		object *obj;  /// Replace with struct containing void pointer and function pointers?
 	} data;
 	transform root;

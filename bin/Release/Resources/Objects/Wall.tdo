@@ -5,4 +5,4 @@ skeletonPhysics "WallPhysics.tdp"
 //animation "Animations\CubeTestAnimation.tda"
 //animationCapacity 1
 
-renderable "CubeTest.obj" "default"
+renderable "CubeTest.obj"

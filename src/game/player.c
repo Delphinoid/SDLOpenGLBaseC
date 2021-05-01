@@ -291,7 +291,6 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 	// change the physics friction accordingly!
 	if(maximum_normal.y >= PLAYER_STEEPEST_SLOPE_ANGLE){
 		p->movement.airborne = 0;
-		flagsUnset(p->movement.state, PLAYER_MOVEMENT_JUMPING);
 	}else if(p->movement.airborne != (tick_t)-1){
 		++p->movement.airborne;
 	}
@@ -303,6 +302,7 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 
 			// Handle friction.
 			pMoveFriction(&p->movement, 1.f, dt_s);
+			flagsUnset(p->movement.state, PLAYER_MOVEMENT_JUMPING);
 
 			if(p->movement.fwish != 0.f || p->movement.rwish != 0.f){
 				// Move along the ground.
@@ -319,7 +319,6 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 			p->movement.airborne = 1;
 			p->movement.velocity.y = PLAYER_JUMP;
 			flagsSet(p->movement.state, PLAYER_MOVEMENT_JUMPING);
-			flagsUnset(p->movement.state, PLAYER_MOVEMENT_WALKING);
 			pMoveAir(&p->movement, dt_s);
 
 		}

@@ -11,6 +11,7 @@ typedef GLsizei vertexIndex_t;
 typedef struct vertex vertex;
 
 typedef struct {
+
 	// Vertex array object ID.
 	GLuint vaoID;
 	// Vertex buffer object ID.
@@ -20,14 +21,16 @@ typedef struct {
 	// Total number of vertices for
 	// every LOD, and the number of
 	// indices for the default LOD.
-	vertexIndex_t vertexNum;
+	///vertexIndex_t vertexNum;
 	vertexIndex_t indexNum;
+
 } mesh;
 
 extern mesh g_meshDefault;
 extern mesh g_meshSprite;
 extern mesh g_meshBillboard;
 
+void meshInit(mesh *const __RESTRICT__ m);
 return_t meshDefaultInit();
 return_t meshBillboardInit();
 return_t meshGenerateBuffers(mesh *const __RESTRICT__ m, const vertexIndex_t vertexNum, const vertex *const __RESTRICT__ vertices, const vertexIndex_t indexNum, const vertexIndex_t *const __RESTRICT__ indices);

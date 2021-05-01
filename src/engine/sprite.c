@@ -16,7 +16,7 @@ typedef struct {
 
 // Default sprite.
 mesh g_meshSprite = {
-	.vertexNum = 0,
+	///.vertexNum = 0,
 	.indexNum = 0,
 	.vaoID = 0,
 	.vboID = 0,
@@ -140,7 +140,7 @@ return_t sprGenerateBuffers(mesh *const __RESTRICT__ spr, const vertexIndex_t ve
 		return 0;
 	}
 
-	spr->vertexNum = vertexNum;
+	///spr->vertexNum = vertexNum;
 	spr->indexNum = indexNum;
 	return 1;
 

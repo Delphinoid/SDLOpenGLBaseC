@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 void particleBaseInit(particleBase *const __RESTRICT__ base){
-	rndrBaseInit(&base->rndr);
+	base->mdl = &g_mdlDefault;
 	base->billboardFlags = BILLBOARD_SPRITE;
 	base->lifetime = 0.f;
 	base->density = 0.f;

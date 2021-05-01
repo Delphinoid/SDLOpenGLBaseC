@@ -6,6 +6,7 @@ void conInit(console *const __RESTRICT__ con){
 	con->start = con->buffer;
 	con->end = con->buffer;
 }
+/** This function is poorly written and doesn't work properly. **/
 void conAppend(console *const __RESTRICT__ con, const byte_t *str, const size_t strLength){
 
 	if(str != NULL && strLength > 0){

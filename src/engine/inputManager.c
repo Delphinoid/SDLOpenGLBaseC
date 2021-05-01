@@ -1,6 +1,7 @@
 #include "inputManager.h"
 #include "memoryManager.h"
 #include <SDL2/SDL.h>
+#include <string.h>
 
 static __HINT_INLINE__ void inputButtonBindingDelete(inputButtonBinding *const __RESTRICT__ bind){
 	if(bind->binding != NULL){
