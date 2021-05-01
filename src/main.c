@@ -453,7 +453,7 @@ int main(int argc, char **argv){
 		{.x = 0.f, .y = 2.f/3.f, .w = 1.f/3.f, .h = 1.f/3.f},
 		{.x = 2.f/3.f, .y = 2.f/3.f, .w = 1.f/3.f, .h = 1.f/3.f}
 	};*/
-	/*gEl = guiNewChild(&gui);
+	gEl = guiNewChild(&gui);
 	guiInit(gEl, GUI_ELEMENT_TYPE_WINDOW);
 	gEl->root.position.z = -1.f;
 	//guiPanelInit(&gEl, areas);
@@ -469,10 +469,10 @@ int main(int argc, char **argv){
 	gEl->data.window.offsets[5].x = 0.f; gEl->data.window.offsets[5].y = 0.f; gEl->data.window.offsets[5].w = 1.f; gEl->data.window.offsets[5].h = 1.f/5.f;
 	gEl->data.window.offsets[6].x = 0.f; gEl->data.window.offsets[6].y = 1.f/5.f; gEl->data.window.offsets[6].w = 1.f; gEl->data.window.offsets[6].h = 1.f/5.f;
 	gEl->data.window.offsets[7].x = 0.f; gEl->data.window.offsets[7].y = 3.f/5.f; gEl->data.window.offsets[7].w = 1.f; gEl->data.window.offsets[7].h = 1.f/5.f;
-	gEl->root.position.x = -((float)(gfxMngr.viewport.width>>1));
-	gEl->root.position.y = (float)(gfxMngr.viewport.height>>1);
-	gEl->root.scale.x = 400.f;//(float)(gfxMngr.viewport.width>>1);
-	gEl->root.scale.y = 40.f;*/
+	gEl->root.position.x = 0.f;//-(float)(gfxMngr.viewport.width>>1);
+	gEl->root.position.y = 0.f;//(float)(gfxMngr.viewport.height>>1);
+	gEl->root.scale.x = 0.45f*(float)(gfxMngr.viewport.width>>1);
+	gEl->root.scale.y = 40.f;
 
 	txtFont testFont;
 	gTxt = guiNewChild(&gui);
@@ -486,10 +486,13 @@ int main(int argc, char **argv){
 	gTxt->data.text.format.colour = vec4New(1.f, 1.f, 1.f, 1.f);
 	gTxt->data.text.format.background = vec4New(1.f, 1.f, 1.f, 0.f);
 	gTxt->data.text.format.style = 0;
-	gTxt->data.text.stream.front = con.buffer;
-	gTxt->data.text.stream.back = &con.buffer[CONSOLE_BUFFER_SIZE-1];
-	gTxt->data.text.stream.offset = con.start;
-	//memcpy(gTxt->data.text.stream.front, "Speed: 0", 8*sizeof(char));
+	///gTxt->data.text.stream.front = con.buffer;
+	///gTxt->data.text.stream.back = &con.buffer[CONSOLE_BUFFER_SIZE-1];
+	///gTxt->data.text.stream.offset = con.start;
+	gTxt->data.text.stream.front = memAllocate(1024*sizeof(char));
+	gTxt->data.text.stream.back = &gTxt->data.text.stream.front[1023];
+	gTxt->data.text.stream.offset = gTxt->data.text.stream.front;
+	memcpy(gTxt->data.text.stream.front, "Speed: 0", 8*sizeof(char));
 	txtFontLoad(
 		&testFont, TEXT_FONT_TYPE_MSDF,
 		"IBM_BIOS", 8,
@@ -572,9 +575,9 @@ int main(int argc, char **argv){
 
 	while(CVAR_RUNNING){
 
-		//gEl->root.position.x = -((float)(gfxMngr.viewport.width>>1));
-		//gEl->root.position.y = (float)(gfxMngr.viewport.height>>1);
-		//gEl->root.scale.x = 400.f;//(float)(gfxMngr.viewport.width>>1);
+		gEl->root.position.x = -(float)(gfxMngr.viewport.width>>1);
+		gEl->root.position.y = (float)(gfxMngr.viewport.height>>1);
+		gEl->root.scale.x = 0.45f*(float)(gfxMngr.viewport.width>>1);
 		gTxt->root.position.x = -((float)(gfxMngr.viewport.width>>1))+24;
 		gTxt->root.position.y = (float)(gfxMngr.viewport.height>>1)-24;
 		gTxt->data.text.width = (float)(gfxMngr.viewport.width>>1);
@@ -597,6 +600,18 @@ int main(int argc, char **argv){
 			p.obj->skeletonBodies->centroidGlobal.x = -200.f;
 			p.obj->skeletonBodies->centroidGlobal.y = 142.9f;
 			p.obj->skeletonBodies->centroidGlobal.z = 3.f;
+		}
+		if(state[SDL_SCANCODE_UP]){
+			gEl->root.position.y += 0.5f*timestepTimeMod;
+		}
+		if(state[SDL_SCANCODE_DOWN]){
+			gEl->root.position.y -= 0.5f*timestepTimeMod;
+		}
+		if(state[SDL_SCANCODE_RIGHT]){
+			gEl->root.position.x += 0.5f*timestepTimeMod;
+		}
+		if(state[SDL_SCANCODE_LEFT]){
+			gEl->root.position.x -= 0.5f*timestepTimeMod;
 		}
 
 		startTick = timerGetTimeFloat();
@@ -626,7 +641,7 @@ int main(int argc, char **argv){
 					///conAppend(&con, cmd, cmdSize+1);
 					cmdtok = moduleCommandTokenizedNext(cmdtok);
 				}
-				gTxt->data.text.stream.offset = con.start;
+				///gTxt->data.text.stream.offset = con.start;
 			}
 			// Execute the command buffer.
 			cmdBufferExecute(&cmdbuf, &cmdsys);
@@ -652,7 +667,7 @@ int main(int argc, char **argv){
 			// Player code.
 			pcTick(&pc, mx, my);
 			pBasisPC(&p, &pc);
-			pInput(&p, (float)(CVAR_RIGHT-CVAR_LEFT), (float)(CVAR_FORWARD-CVAR_BACKWARD), CVAR_JUMP);
+			///pInput(&p, (float)(CVAR_RIGHT-CVAR_LEFT), (float)(CVAR_FORWARD-CVAR_BACKWARD), CVAR_JUMP);
 			pTick(&p, timestepTimeMod);
 			pRotateVelocity(&p);
 			if(flagsAreSet(p.movement.state, PLAYER_MOVEMENT_JUMPING)){
@@ -713,10 +728,10 @@ int main(int argc, char **argv){
 			moduleSceneTick(tickrateTimeMod, timestepTimeMod);
 			#endif
 
-			//sprintf(
-			//	(char *)&gTxt->data.text.stream.front[7], "%f",
-			//	sqrt(p.obj->skeletonBodies->linearVelocity.x*p.obj->skeletonBodies->linearVelocity.x + p.obj->skeletonBodies->linearVelocity.z*p.obj->skeletonBodies->linearVelocity.z)
-			//);
+			sprintf(
+				(char *)&gTxt->data.text.stream.front[7], "%f",
+				sqrt(p.obj->skeletonBodies->linearVelocity.x*p.obj->skeletonBodies->linearVelocity.x + p.obj->skeletonBodies->linearVelocity.z*p.obj->skeletonBodies->linearVelocity.z)
+			);
 
 			// Next frame.
 			nextUpdate += tickrateUpdateMod;
@@ -794,7 +809,7 @@ int main(int argc, char **argv){
 	}
 
 	/****/
-	///memFree(gTxt->data.text.stream.front);
+	memFree(gTxt->data.text.stream.front);
 	txtFontDelete(&testFont);
 	particleSystemBaseDelete(&b);
 	particleSystemDelete(&c);

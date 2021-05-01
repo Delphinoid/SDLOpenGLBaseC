@@ -1,5 +1,6 @@
 #include "player.h"
 #include "playerCamera.h"
+#include "cvars.h"
 #include "../engine/camera.h"
 #include "../engine/physicsRigidBody.h"
 #include "../engine/physicsCollision.h"
@@ -252,15 +253,19 @@ void pBasisC(player *const __RESTRICT__ p, const camera *const __RESTRICT__ cam)
 	p->movement.fbasis = vec2NormalizeFastAccurate(forward);
 }
 
-void pInput(player *const __RESTRICT__ p, const float right, const float forward, const flags_t jump){
+/**void pInput(player *const __RESTRICT__ p, const float right, const float forward, const flags_t jump){
 	p->movement.rwish = right;
 	p->movement.fwish = forward;
 	p->movement.jump = jump;
-}
+}**/
 
 void pTick(player *const __RESTRICT__ p, const float dt_s){
 
 	// The object is automatically updated by the module.
+
+	p->movement.rwish = (float)(CVAR_RIGHT-CVAR_LEFT);
+	p->movement.fwish = (float)(CVAR_FORWARD-CVAR_BACKWARD);
+	///p->movement.jump = CVAR_JUMP;
 
 	// Check whether or not the body is on the ground.
 	// We do this by finding the contact normal with
@@ -292,13 +297,16 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 	if(maximum_normal.y >= PLAYER_STEEPEST_SLOPE_ANGLE){
 		p->movement.airborne = 0;
 	}else if(p->movement.airborne != (tick_t)-1){
+		if(p->movement.airborne == 1){
+			CVAR_JUMP = 0;
+		}
 		++p->movement.airborne;
 	}
 
 	// Handle movement related input.
 	p->movement.velocity = p->obj->skeletonBodies->linearVelocity;
 	if(!p->movement.airborne){
-		if(p->movement.jump < 1){
+		if(CVAR_JUMP == 0){
 
 			// Handle friction.
 			pMoveFriction(&p->movement, 1.f, dt_s);

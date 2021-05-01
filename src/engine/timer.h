@@ -3,13 +3,12 @@
 
 #include <stdint.h>
 
-
 #ifdef _WIN32
 	#include <windows.h>
 	typedef LARGE_INTEGER timerVal_t;
 #else
+	#include <sys/time.h>
 	#if HAVE_CLOCK_GETTIME
-		#include <time.h>
 		typedef struct timespec timerVal_t;
 	#else
 		typedef struct timeval timerVal_t;

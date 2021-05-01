@@ -4,9 +4,9 @@
 	static time32_t freq;
 	static float rfreq;
 #else
-	#if HAVE_NANOSLEEP
-		#include <time.h>
-	#else
+	#include <stddef.h>
+	#include <errno.h>
+	#if !HAVE_NANOSLEEP
 		#include <sys/select.h>
 	#endif
 	#if HAVE_CLOCK_GETTIME
@@ -70,7 +70,6 @@ float timerElapsedTimeFloat(const timerVal_t start, const timerVal_t end){
 		#endif
 	#endif
 }
-
 
 time32_t timerGetTime(){
 	// Return how many milliseconds have elapsed
@@ -169,7 +168,7 @@ static void sleepUnix(time32_t ms){
 
 	#if HAVE_NANOSLEEP
 	const time32_t s = ms / 1000;
-	timerVal_t rem = {
+	timerVal_t tv = {
 		.tv_sec = s;
 		.tv_nsec = (ms - s * 1000) * 1000000;
 	};
@@ -186,16 +185,16 @@ static void sleepUnix(time32_t ms){
 		#if HAVE_NANOSLEEP
 
 		const struct timespec ts = {
-			.tv_sec = rem.tv_sec;
-			.tv_nsec = rem.tv_nsec;
+			.tv_sec = tv.tv_sec;
+			.tv_nsec = tv.tv_nsec;
 		};
 		errno = 0;
-		r = nanosleep(&ts, &rem);
+		r = nanosleep(&ts, &tv);
 
 		#else
 
 		struct timeval now;
-		const time32_t elapsed = gettimeofday(&now, NULL), elapsedTime(tv, now);
+		const time32_t elapsed = (gettimeofday(&now, NULL), timerElapsedTime(tv, now));
 		if(elapsed >= ms){
 			return;
 		}
@@ -206,7 +205,7 @@ static void sleepUnix(time32_t ms){
 		tv.tv_usec = (ms - s * 1000) * 1000;
 
 		errno = 0;
-		r = select(0, NULL, NULL, NULL, &rem);
+		r = select(0, NULL, NULL, NULL, &tv);
 
 		#endif
 

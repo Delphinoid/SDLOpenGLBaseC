@@ -26,7 +26,7 @@ typedef struct {
 	float rwish, fwish;
 
 	// Whether the jump button is being pressed.
-	flags_t jump;
+	///flags_t jump;
 
 	// Number of ticks since the player left the ground.
 	tick_t airborne;
@@ -57,7 +57,7 @@ typedef struct {
 void pInit(player *const __RESTRICT__ p, object *const obj);
 void pBasisPC(player *const __RESTRICT__ p, const playerCamera *const __RESTRICT__ pc);
 void pBasisC(player *const __RESTRICT__ p, const camera *const __RESTRICT__ cam);
-void pInput(player *const __RESTRICT__ p, const float right, const float forward, const flags_t jump);
+///void pInput(player *const __RESTRICT__ p, const float right, const float forward, const flags_t jump);
 void pTick(player *const __RESTRICT__ p, const float dt_s);
 void pRotateWish(player *const __RESTRICT__ p);
 void pRotateVelocity(player *const __RESTRICT__ p);

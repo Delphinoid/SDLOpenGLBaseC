@@ -16,6 +16,7 @@ transform tfIdentity(){
 mat4 tfMatrix(const transform tf){
 	// Translate, rotate and scale.
 	// It looks a bit weird because it's ultra optimized.
+	// Note that mat4Scale is a right multiplication.
 	mat4 transform = mat4Scale(
 		mat4RotationMatrix(tf.orientation),
 		tf.scale.x, tf.scale.y, tf.scale.z
