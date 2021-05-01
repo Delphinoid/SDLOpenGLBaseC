@@ -217,6 +217,7 @@ int main(int argc, char **argv){
 	tempObj->stateMax = 1;
 	tempObj = moduleObjectBaseAllocate();
 	objBaseLoad(tempObj, "Lenticular.tdo", 14);
+	tempObj->stateMax = 1;
 	/*objBaseLoad(tempObj, "soldier.tdo", 11);
 	tempObj->skl = tempObj->renderables[0].mdl->skl;
 	tempObj->animationNum = 2;
