@@ -1,5 +1,5 @@
-#ifndef CVARS_H
-#define CVARS_H
+#ifndef CVARS_PLAYER_H
+#define CVARS_PLAYER_H
 
 #include "../engine/command.h"
 
@@ -12,8 +12,6 @@ extern int CVAR_INTERACT;
 
 extern int CVAR_FIRSTPERSON;
 extern int CVAR_THIRDPERSON;
-
-extern int CVAR_RUNNING;
 
 void c_forward0(cmdSystem *const __RESTRICT__ cmdsys, const size_t argc, const char **const argv);
 void c_forward1(cmdSystem *const __RESTRICT__ cmdsys, const size_t argc, const char **const argv);
@@ -30,7 +28,5 @@ void c_interact1(cmdSystem *const __RESTRICT__ cmdsys, const size_t argc, const 
 
 void c_firstperson(cmdSystem *const __RESTRICT__ cmdsys, const size_t argc, const char **const argv);
 void c_thirdperson(cmdSystem *const __RESTRICT__ cmdsys, const size_t argc, const char **const argv);
-
-void c_exit(cmdSystem *const __RESTRICT__ cmdsys, const size_t argc, const char **const argv);
 
 #endif

@@ -1,5 +1,8 @@
 #include "engine/memoryManager.h"
 #include "engine/graphicsRenderer.h"
+#include "engine/inputManager.h"
+#include "engine/cvars_inputManager.h"
+
 #include "engine/colliderHull.h"
 #include "engine/constantsMath.h"
 #include "engine/helpersFileIO.h"
@@ -39,9 +42,9 @@
 #include "engine/particleEmitter.h"
 #include "engine/particleOperator.h"
 
-#include "game/cvars.h"
 #include "game/player.h"
 #include "game/playerCamera.h"
+#include "game/cvars_player.h"
 
 /**
 *** TREE ITERATION FIXES
@@ -98,6 +101,8 @@ int main(int argc, char **argv){
 	conInit(&con);
 
 	// Create commands.
+	cmdSystemAdd(&cmdsys, "mousemove", (command)&c_mousemove);
+	cmdSystemAdd(&cmdsys, "exit", (command)&c_exit);
 	cmdSystemAdd(&cmdsys, "+forward", (command)&c_forward1);
 	cmdSystemAdd(&cmdsys, "-forward", (command)&c_forward0);
 	cmdSystemAdd(&cmdsys, "+backward", (command)&c_backward1);
@@ -112,7 +117,6 @@ int main(int argc, char **argv){
 	cmdSystemAdd(&cmdsys, "-interact", (command)&c_interact0);
 	cmdSystemAdd(&cmdsys, "firstperson", (command)&c_firstperson);
 	cmdSystemAdd(&cmdsys, "thirdperson", (command)&c_thirdperson);
-	cmdSystemAdd(&cmdsys, "exit", (command)&c_exit);
 
 	// Set up keybinds.
 	inMngrKeyboardBind(&inMngr, SDL_SCANCODE_W, "+forward", 8);

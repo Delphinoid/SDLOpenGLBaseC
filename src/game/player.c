@@ -1,6 +1,6 @@
 #include "player.h"
 #include "playerCamera.h"
-#include "cvars.h"
+#include "cvars_player.h"
 #include "../engine/camera.h"
 #include "../engine/physicsRigidBody.h"
 #include "../engine/physicsCollision.h"

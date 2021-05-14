@@ -219,7 +219,7 @@ static __FORCE_INLINE__ const char *cmdBufferTokenizeCommand(
 
 			const unsigned int strWhitespace = cmdWhitespaceCharacter(c);
 
-			if((!strQuoted && strWhitespace) || (strQuoted && c == '"')){
+			if(strReading && ((!strQuoted && strWhitespace) || (strQuoted && c == '"'))){
 
 				// We've finished reading an argument.
 				// Copy it into the argument buffer.
@@ -279,7 +279,8 @@ static __FORCE_INLINE__ const char *cmdBufferTokenizeCommand(
 		cmd->argc = 0;
 	}
 
-	return str;
+	// If we found a newline or semicolon, skip it.
+	return str + (str != strEnd);
 
 }
 

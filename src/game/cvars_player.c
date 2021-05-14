@@ -1,4 +1,4 @@
-#include "cvars.h"
+#include "cvars_player.h"
 
 int CVAR_FORWARD = 0;
 int CVAR_BACKWARD = 0;
@@ -9,8 +9,6 @@ int CVAR_INTERACT = 0;
 
 int CVAR_FIRSTPERSON = 0;
 int CVAR_THIRDPERSON = 0;
-
-int CVAR_RUNNING = 1;
 
 void c_forward0(cmdSystem *const __RESTRICT__ cmdsys, const size_t argc, const char **const argv){
 	CVAR_FORWARD = 0;
@@ -56,8 +54,4 @@ void c_firstperson(cmdSystem *const __RESTRICT__ cmdsys, const size_t argc, cons
 void c_thirdperson(cmdSystem *const __RESTRICT__ cmdsys, const size_t argc, const char **const argv){
 	CVAR_FIRSTPERSON = 0;
 	CVAR_THIRDPERSON = 1;
-}
-
-void c_exit(cmdSystem *const __RESTRICT__ cmdsys, const size_t argc, const char **const argv){
-	CVAR_RUNNING = 0;
 }

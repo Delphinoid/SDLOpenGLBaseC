@@ -1,7 +1,6 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include "../engine/inputManager.h"
 #include "../engine/object.h"
 #include "../engine/vec2.h"
 #include "../engine/tick.h"
