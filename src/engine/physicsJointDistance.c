@@ -111,8 +111,8 @@ static __FORCE_INLINE__ float physJointDistanceEffectiveMass(const vec3 pointA, 
 	const vec3 angularDeltaA = vec3Cross(pointA, normal);
 	const vec3 angularDeltaB = vec3Cross(pointB, normal);
 	return inverseMassTotal +
-	       vec3Dot(angularDeltaA, mat3MMultVKet(inverseInertiaTensorA, angularDeltaA)) +
-	       vec3Dot(angularDeltaB, mat3MMultVKet(inverseInertiaTensorB, angularDeltaB));
+	       vec3Dot(angularDeltaA, mat3MMultV(inverseInertiaTensorA, angularDeltaA)) +
+	       vec3Dot(angularDeltaB, mat3MMultV(inverseInertiaTensorB, angularDeltaB));
 
 }
 

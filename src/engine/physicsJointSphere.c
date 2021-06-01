@@ -140,8 +140,8 @@ static __FORCE_INLINE__ void physJointSphereWarmStart(physJointSphere *const __R
 		const vec3 impulse = vec3VMultS(joint->coneLimitAxis, joint->coneLimitImpulseAccumulator);
 
 		// Apply the accumulated angular cone limit impulse.
-		bodyA->angularVelocity = vec3VSubV(bodyA->angularVelocity, mat3MMultVKet(bodyA->inverseInertiaTensorGlobal, impulse));
-		bodyB->angularVelocity = vec3VAddV(bodyB->angularVelocity, mat3MMultVKet(bodyB->inverseInertiaTensorGlobal, impulse));
+		bodyA->angularVelocity = vec3VSubV(bodyA->angularVelocity, mat3MMultV(bodyA->inverseInertiaTensorGlobal, impulse));
+		bodyB->angularVelocity = vec3VAddV(bodyB->angularVelocity, mat3MMultV(bodyB->inverseInertiaTensorGlobal, impulse));
 
 	}
 
@@ -153,7 +153,7 @@ static __FORCE_INLINE__ float physJointSphereConeLimitEffectiveMass(const mat3 i
 	// Effective mass:
 	// (JM^-1)J^T = ((IA^-1 + IB^-1) X n) . n
 	return vec3Dot(
-		mat3MMultVKet(
+		mat3MMultV(
 			mat3MAddM(inverseInertiaTensorA, inverseInertiaTensorB),
 			normal
 		),
@@ -325,8 +325,8 @@ void physJointSphereSolveVelocityConstraints(physJoint *const __RESTRICT__ joint
 		impulse = vec3VMultS(((physJointSphere *)joint)->coneLimitAxis, lambda);
 
 		// Apply the accumulated angular cone limit impulse.
-		bodyA->angularVelocity = vec3VSubV(bodyA->angularVelocity, mat3MMultVKet(bodyA->inverseInertiaTensorGlobal, impulse));
-		bodyB->angularVelocity = vec3VAddV(bodyB->angularVelocity, mat3MMultVKet(bodyB->inverseInertiaTensorGlobal, impulse));
+		bodyA->angularVelocity = vec3VSubV(bodyA->angularVelocity, mat3MMultV(bodyA->inverseInertiaTensorGlobal, impulse));
+		bodyB->angularVelocity = vec3VAddV(bodyB->angularVelocity, mat3MMultV(bodyB->inverseInertiaTensorGlobal, impulse));
 
 	}
 
@@ -445,7 +445,7 @@ return_t physJointSphereSolveConfigurationConstraints(physJoint *const __RESTRIC
 						bodyA->configuration.orientation,
 						quatDifferentiate(
 							bodyA->configuration.orientation,
-							mat3MMultVKet(
+							mat3MMultV(
 								bodyA->inverseInertiaTensorGlobal,
 								impulse
 							)
@@ -464,7 +464,7 @@ return_t physJointSphereSolveConfigurationConstraints(physJoint *const __RESTRIC
 						bodyB->configuration.orientation,
 						quatDifferentiate(
 							bodyB->configuration.orientation,
-							mat3MMultVKet(
+							mat3MMultV(
 								bodyB->inverseInertiaTensorGlobal,
 								impulse
 							)

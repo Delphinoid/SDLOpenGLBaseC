@@ -96,31 +96,31 @@ __HINT_INLINE__ void mat2MMultMPR(const mat2 *const __RESTRICT__ m1, const mat2 
 	r->m[1][1] = m1->m[0][1]*m2->m[1][0] + m1->m[1][1]*m2->m[1][1];
 
 }
-__HINT_INLINE__ vec2 mat2VMultMBra(const vec2 v, const mat2 m){
+__HINT_INLINE__ vec2 mat2VMultM(const vec2 v, const mat2 m){
 	const vec2 r = {.x = v.x * m.m[0][0] + v.y * m.m[0][1],
 	                .y = v.x * m.m[1][0] + v.y * m.m[1][1]};
 	return r;
 }
-__HINT_INLINE__ void mat2VMultMBraP(vec2 *const __RESTRICT__ v, const mat2 *const __RESTRICT__ m){
+__HINT_INLINE__ void mat2VMultMP(vec2 *const __RESTRICT__ v, const mat2 *const __RESTRICT__ m){
 	const vec2 r = {.x = v->x * m->m[0][0] + v->y * m->m[0][1],
 	                .y = v->x * m->m[1][0] + v->y * m->m[1][1]};
 	*v = r;
 }
-__HINT_INLINE__ void mat2VMultMBraPR(const vec2 *const __RESTRICT__ v, const mat2 *const __RESTRICT__ m, vec2 *const __RESTRICT__ r){
+__HINT_INLINE__ void mat2VMultMPR(const vec2 *const __RESTRICT__ v, const mat2 *const __RESTRICT__ m, vec2 *const __RESTRICT__ r){
 	r->x = v->x * m->m[0][0] + v->y * m->m[0][1];
 	r->y = v->x * m->m[1][0] + v->y * m->m[1][1];
 }
-__HINT_INLINE__ vec2 mat2MMultVKet(const mat2 m, const vec2 v){
+__HINT_INLINE__ vec2 mat2MMultV(const mat2 m, const vec2 v){
 	const vec2 r = {.x = v.x * m.m[0][0] + v.y * m.m[1][0],
 	                .y = v.x * m.m[0][1] + v.y * m.m[1][1]};
 	return r;
 }
-__HINT_INLINE__ void mat2MMultVKetP(const mat2 *const __RESTRICT__ m, vec2 *const __RESTRICT__ v){
+__HINT_INLINE__ void mat2MMultVP(const mat2 *const __RESTRICT__ m, vec2 *const __RESTRICT__ v){
 	const vec2 r = {.x = v->x * m->m[0][0] + v->y * m->m[1][0],
 	                .y = v->x * m->m[0][1] + v->y * m->m[1][1]};
 	*v = r;
 }
-__HINT_INLINE__ void mat2MMultVKetPR(const mat2 *const __RESTRICT__ m, const vec2 *const __RESTRICT__ v, vec2 *const __RESTRICT__ r){
+__HINT_INLINE__ void mat2MMultVPR(const mat2 *const __RESTRICT__ m, const vec2 *const __RESTRICT__ v, vec2 *const __RESTRICT__ r){
 	r->x = v->x * m->m[0][0] + v->y * m->m[1][0];
 	r->y = v->x * m->m[0][1] + v->y * m->m[1][1];
 }

@@ -167,41 +167,41 @@ __HINT_INLINE__ void mat4MMultMPR(const mat4 *const __RESTRICT__ m1, const mat4 
 
 }
 
-__HINT_INLINE__ vec4 mat4VMultMBra(const vec4 v, const mat4 m){
+__HINT_INLINE__ vec4 mat4VMultM(const vec4 v, const mat4 m){
 	const vec4 r = {.x = v.x * m.m[0][0] + v.y * m.m[0][1] + v.z * m.m[0][2] + v.w * m.m[0][3],
 	                .y = v.x * m.m[1][0] + v.y * m.m[1][1] + v.z * m.m[1][2] + v.w * m.m[1][3],
 	                .z = v.x * m.m[2][0] + v.y * m.m[2][1] + v.z * m.m[2][2] + v.w * m.m[2][3],
 	                .w = v.x * m.m[3][0] + v.y * m.m[3][1] + v.z * m.m[3][2] + v.w * m.m[3][3]};
 	return r;
 }
-__HINT_INLINE__ void mat4VMultMBraP(vec4 *const __RESTRICT__ v, const mat4 *const __RESTRICT__ m){
+__HINT_INLINE__ void mat4VMultMP(vec4 *const __RESTRICT__ v, const mat4 *const __RESTRICT__ m){
 	const vec4 r = {.x = v->x * m->m[0][0] + v->y * m->m[0][1] + v->z * m->m[0][2] + v->w * m->m[0][3],
 	                .y = v->x * m->m[1][0] + v->y * m->m[1][1] + v->z * m->m[1][2] + v->w * m->m[1][3],
 	                .z = v->x * m->m[2][0] + v->y * m->m[2][1] + v->z * m->m[2][2] + v->w * m->m[2][3],
 	                .w = v->x * m->m[3][0] + v->y * m->m[3][1] + v->z * m->m[3][2] + v->w * m->m[3][3]};
 	*v = r;
 }
-__HINT_INLINE__ void mat4VMultMBraPR(const vec4 *const __RESTRICT__ v, const mat4 *const __RESTRICT__ m, vec4 *const __RESTRICT__ r){
+__HINT_INLINE__ void mat4VMultMPR(const vec4 *const __RESTRICT__ v, const mat4 *const __RESTRICT__ m, vec4 *const __RESTRICT__ r){
 	r->x = v->x * m->m[0][0] + v->y * m->m[0][1] + v->z * m->m[0][2] + v->w * m->m[0][3];
 	r->y = v->x * m->m[1][0] + v->y * m->m[1][1] + v->z * m->m[1][2] + v->w * m->m[1][3];
 	r->z = v->x * m->m[2][0] + v->y * m->m[2][1] + v->z * m->m[2][2] + v->w * m->m[2][3];
 	r->w = v->x * m->m[3][0] + v->y * m->m[3][1] + v->z * m->m[3][2] + v->w * m->m[3][3];
 }
-__HINT_INLINE__ vec4 mat4MMultVKet(const mat4 m, const vec4 v){
+__HINT_INLINE__ vec4 mat4MMultV(const mat4 m, const vec4 v){
 	const vec4 r = {.x = v.x * m.m[0][0] + v.y * m.m[1][0] + v.z * m.m[2][0] + v.w * m.m[3][0],
 	                .y = v.x * m.m[0][1] + v.y * m.m[1][1] + v.z * m.m[2][1] + v.w * m.m[3][1],
 	                .z = v.x * m.m[0][2] + v.y * m.m[1][2] + v.z * m.m[2][2] + v.w * m.m[3][2],
 	                .w = v.x * m.m[0][3] + v.y * m.m[1][3] + v.z * m.m[2][3] + v.w * m.m[3][3]};
 	return r;
 }
-__HINT_INLINE__ void mat4MMultVKetP(const mat4 *const __RESTRICT__ m, vec4 *const __RESTRICT__ v){
+__HINT_INLINE__ void mat4MMultVP(const mat4 *const __RESTRICT__ m, vec4 *const __RESTRICT__ v){
 	const vec4 r = {.x = v->x * m->m[0][0] + v->y * m->m[1][0] + v->z * m->m[2][0] + v->w * m->m[3][0],
 	                .y = v->x * m->m[0][1] + v->y * m->m[1][1] + v->z * m->m[2][1] + v->w * m->m[3][1],
 	                .z = v->x * m->m[0][2] + v->y * m->m[1][2] + v->z * m->m[2][2] + v->w * m->m[3][2],
 	                .w = v->x * m->m[0][3] + v->y * m->m[1][3] + v->z * m->m[2][3] + v->w * m->m[3][3]};
 	*v = r;
 }
-__HINT_INLINE__ void mat4MMultVKetPR(const mat4 *const __RESTRICT__ m, const vec4 *const __RESTRICT__ v, vec4 *const __RESTRICT__ r){
+__HINT_INLINE__ void mat4MMultVPR(const mat4 *const __RESTRICT__ m, const vec4 *const __RESTRICT__ v, vec4 *const __RESTRICT__ r){
 	r->x = v->x * m->m[0][0] + v->y * m->m[1][0] + v->z * m->m[2][0] + v->w * m->m[3][0];
 	r->y = v->x * m->m[0][1] + v->y * m->m[1][1] + v->z * m->m[2][1] + v->w * m->m[3][1];
 	r->z = v->x * m->m[0][2] + v->y * m->m[1][2] + v->z * m->m[2][2] + v->w * m->m[3][2];

@@ -33,12 +33,12 @@ mat2 mat2MMultM(const mat2 m1, const mat2 m2);
 void mat2MMultMP1(mat2 *const __RESTRICT__ m1, const mat2 *const __RESTRICT__ m2);
 void mat2MMultMP2(const mat2 *const __RESTRICT__ m1, mat2 *const __RESTRICT__ m2);
 void mat2MMultMPR(const mat2 *const __RESTRICT__ m1, const mat2 *const __RESTRICT__ m2, mat2 *const __RESTRICT__ r);
-vec2 mat2VMultMBra(const vec2 v, const mat2 m);
-void mat2VMultMBraP(vec2 *const __RESTRICT__ v, const mat2 *const __RESTRICT__ m);
-void mat2VMultMBraPR(const vec2 *const __RESTRICT__ v, const mat2 *const __RESTRICT__ m, vec2 *const __RESTRICT__ r);
-vec2 mat2MMultVKet(const mat2 m, const vec2 v);
-void mat2MMultVKetP(const mat2 *const __RESTRICT__ m, vec2 *const __RESTRICT__ v);
-void mat2MMultVKetPR(const mat2 *const __RESTRICT__ m, const vec2 *const __RESTRICT__ v, vec2 *const __RESTRICT__ r);
+vec2 mat2VMultM(const vec2 v, const mat2 m);
+void mat2VMultMP(vec2 *const __RESTRICT__ v, const mat2 *const __RESTRICT__ m);
+void mat2VMultMPR(const vec2 *const __RESTRICT__ v, const mat2 *const __RESTRICT__ m, vec2 *const __RESTRICT__ r);
+vec2 mat2MMultV(const mat2 m, const vec2 v);
+void mat2MMultVP(const mat2 *const __RESTRICT__ m, vec2 *const __RESTRICT__ v);
+void mat2MMultVPR(const mat2 *const __RESTRICT__ m, const vec2 *const __RESTRICT__ v, vec2 *const __RESTRICT__ r);
 
 mat2 mat2MAddM(const mat2 m1, const mat2 m2);
 void mat2MAddMP(mat2 *const __RESTRICT__ m1, const mat2 *const __RESTRICT__ m2);

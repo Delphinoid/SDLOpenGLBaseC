@@ -132,7 +132,7 @@ __FORCE_INLINE__ void physJointFrictionGenerateInverseEffectiveMass(physJointFri
 	// (JM^-1)J^T = ((IA^-1 * n) . n) + ((IB^-1 * n) . n)
 
 	const float angularMass = vec3Dot(
-		mat3MMultVKet(
+		mat3MMultV(
 			mat3MAddM(bodyA->inverseInertiaTensorGlobal, bodyB->inverseInertiaTensorGlobal),
 			joint->normal
 		),
@@ -147,14 +147,14 @@ __FORCE_INLINE__ void physJointFrictionGenerateInverseEffectiveMass(physJointFri
 	const vec3 rAt2 = vec3Cross(joint->rA, tangent2);
 	const vec3 rBt2 = vec3Cross(joint->rB, tangent2);
 
-	const vec3 iArAt1 = mat3MMultVKet(bodyA->inverseInertiaTensorGlobal, rAt1);
-	const vec3 iBrBt1 = mat3MMultVKet(bodyB->inverseInertiaTensorGlobal, rBt1);
+	const vec3 iArAt1 = mat3MMultV(bodyA->inverseInertiaTensorGlobal, rAt1);
+	const vec3 iBrBt1 = mat3MMultV(bodyB->inverseInertiaTensorGlobal, rBt1);
 
 	mat2 tangentMass;
 	tangentMass.m[0][0] = inverseMassTotal + vec3Dot(iArAt1, rAt1) + vec3Dot(iBrBt1, rBt1);
 	tangentMass.m[0][1] = vec3Dot(iArAt1, rAt2) + vec3Dot(iBrBt1, rBt2);
 	tangentMass.m[1][0] = tangentMass.m[0][1];
-	tangentMass.m[1][1] = inverseMassTotal + vec3Dot(mat3MMultVKet(bodyA->inverseInertiaTensorGlobal, rAt2), rAt2) + vec3Dot(mat3MMultVKet(bodyB->inverseInertiaTensorGlobal, rBt2), rBt2);
+	tangentMass.m[1][1] = inverseMassTotal + vec3Dot(mat3MMultV(bodyA->inverseInertiaTensorGlobal, rAt2), rAt2) + vec3Dot(mat3MMultV(bodyB->inverseInertiaTensorGlobal, rBt2), rBt2);
 
 	joint->tangentInverseEffectiveMass = mat2Invert(tangentMass);
 	joint->angularInverseEffectiveMass = angularMass > 0.f ? 1.f/angularMass : 0.f;
@@ -190,7 +190,7 @@ __FORCE_INLINE__ void physJointFrictionSolveVelocityConstraints(physJointFrictio
 	// Calculate the tangent friction impulse magnitude,
 	// i.e. the constraint's Lagrange multiplier.
 	// (-JV)((JM^-1)J^T)^-1
-	lambdaTangent = mat2MMultVKet(joint->tangentInverseEffectiveMass, vec2New(-vec3Dot(v, joint->tangent1), -vec3Dot(v, joint->tangent2)));
+	lambdaTangent = mat2MMultV(joint->tangentInverseEffectiveMass, vec2New(-vec3Dot(v, joint->tangent1), -vec3Dot(v, joint->tangent2)));
 	tangentImpulseAccumulatorNew = vec2VAddV(joint->tangentImpulseAccumulator, lambdaTangent);
 
 	// Clamp the tangent friction impulse magnitude.

@@ -35,12 +35,12 @@ void mat4MMultMPR(const mat4 *const __RESTRICT__ m1, const mat4 *const __RESTRIC
 
 ///void mat4TransformVP(const mat4 *const __RESTRICT__ m, vec3 *const __RESTRICT__ v);
 
-vec4 mat4VMultMBra(const vec4 v, const mat4 m);
-void mat4VMultMBraP(vec4 *const __RESTRICT__ v, const mat4 *const __RESTRICT__ m);
-void mat4VMultMBraPR(const vec4 *const __RESTRICT__ v, const mat4 *const __RESTRICT__ m, vec4 *const __RESTRICT__ r);
-vec4 mat4MMultVKet(const mat4 m, const vec4 v);
-void mat4MMultVKetP(const mat4 *const __RESTRICT__ m, vec4 *const __RESTRICT__ v);
-void mat4MMultVKetPR(const mat4 *const __RESTRICT__ m, const vec4 *const __RESTRICT__ v, vec4 *const __RESTRICT__ r);
+vec4 mat4VMultM(const vec4 v, const mat4 m);
+void mat4VMultMP(vec4 *const __RESTRICT__ v, const mat4 *const __RESTRICT__ m);
+void mat4VMultMPR(const vec4 *const __RESTRICT__ v, const mat4 *const __RESTRICT__ m, vec4 *const __RESTRICT__ r);
+vec4 mat4MMultV(const mat4 m, const vec4 v);
+void mat4MMultVP(const mat4 *const __RESTRICT__ m, vec4 *const __RESTRICT__ v);
+void mat4MMultVPR(const mat4 *const __RESTRICT__ m, const vec4 *const __RESTRICT__ v, vec4 *const __RESTRICT__ r);
 
 vec3 mat4V3MultMBra(const vec3 v, const mat4 m);
 void mat4V3MultMBraP(vec3 *const __RESTRICT__ v, const mat4 *const __RESTRICT__ m);

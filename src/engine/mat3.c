@@ -132,36 +132,36 @@ __HINT_INLINE__ void mat3MMultMPR(const mat3 *const __RESTRICT__ m1, const mat3 
 	r->m[2][2] = m1->m[0][2]*m2->m[2][0] + m1->m[1][2]*m2->m[2][1] + m1->m[2][2]*m2->m[2][2];
 
 }
-__HINT_INLINE__ vec3 mat3VMultMBra(const vec3 v, const mat3 m){
+__HINT_INLINE__ vec3 mat3VMultM(const vec3 v, const mat3 m){
 	const vec3 r = {.x = v.x * m.m[0][0] + v.y * m.m[0][1] + v.z * m.m[0][2],
 	                .y = v.x * m.m[1][0] + v.y * m.m[1][1] + v.z * m.m[1][2],
 	                .z = v.x * m.m[2][0] + v.y * m.m[2][1] + v.z * m.m[2][2]};
 	return r;
 }
-__HINT_INLINE__ void mat3VMultMBraP(vec3 *const __RESTRICT__ v, const mat3 *const __RESTRICT__ m){
+__HINT_INLINE__ void mat3VMultMP(vec3 *const __RESTRICT__ v, const mat3 *const __RESTRICT__ m){
 	const vec3 r = {.x = v->x * m->m[0][0] + v->y * m->m[0][1] + v->z * m->m[0][2],
 	                .y = v->x * m->m[1][0] + v->y * m->m[1][1] + v->z * m->m[1][2],
 	                .z = v->x * m->m[2][0] + v->y * m->m[2][1] + v->z * m->m[2][2]};
 	*v = r;
 }
-__HINT_INLINE__ void mat3VMultMBraPR(const vec3 *const __RESTRICT__ v, const mat3 *const __RESTRICT__ m, vec3 *const __RESTRICT__ r){
+__HINT_INLINE__ void mat3VMultMPR(const vec3 *const __RESTRICT__ v, const mat3 *const __RESTRICT__ m, vec3 *const __RESTRICT__ r){
 	r->x = v->x * m->m[0][0] + v->y * m->m[0][1] + v->z * m->m[0][2];
 	r->y = v->x * m->m[1][0] + v->y * m->m[1][1] + v->z * m->m[1][2];
 	r->z = v->x * m->m[2][0] + v->y * m->m[2][1] + v->z * m->m[2][2];
 }
-__HINT_INLINE__ vec3 mat3MMultVKet(const mat3 m, const vec3 v){
+__HINT_INLINE__ vec3 mat3MMultV(const mat3 m, const vec3 v){
 	const vec3 r = {.x = v.x * m.m[0][0] + v.y * m.m[1][0] + v.z * m.m[2][0],
 	                .y = v.x * m.m[0][1] + v.y * m.m[1][1] + v.z * m.m[2][1],
 	                .z = v.x * m.m[0][2] + v.y * m.m[1][2] + v.z * m.m[2][2]};
 	return r;
 }
-__HINT_INLINE__ void mat3MMultVKetP(const mat3 *const __RESTRICT__ m, vec3 *const __RESTRICT__ v){
+__HINT_INLINE__ void mat3MMultVP(const mat3 *const __RESTRICT__ m, vec3 *const __RESTRICT__ v){
 	const vec3 r = {.x = v->x * m->m[0][0] + v->y * m->m[1][0] + v->z * m->m[2][0],
 	                .y = v->x * m->m[0][1] + v->y * m->m[1][1] + v->z * m->m[2][1],
 	                .z = v->x * m->m[0][2] + v->y * m->m[1][2] + v->z * m->m[2][2]};
 	*v = r;
 }
-__HINT_INLINE__ void mat3MMultVKetPR(const mat3 *const __RESTRICT__ m, const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r){
+__HINT_INLINE__ void mat3MMultVPR(const mat3 *const __RESTRICT__ m, const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r){
 	r->x = v->x * m->m[0][0] + v->y * m->m[1][0] + v->z * m->m[2][0];
 	r->y = v->x * m->m[0][2] + v->y * m->m[1][1] + v->z * m->m[2][1];
 	r->z = v->x * m->m[0][2] + v->y * m->m[1][2] + v->z * m->m[2][2];
