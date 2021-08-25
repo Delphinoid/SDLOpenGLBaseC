@@ -22,6 +22,10 @@ typedef struct {
 // Combines the above structures.
 typedef struct skeleton {
 	// Depth-first vector of each bone.
+	// Note that an array of bone names is stored after
+	// the node array in bones, and this is followed by
+	// the name of the skeleton. To free a skeleton, we
+	// only need to free the bones array.
 	sklNode *bones;
 	boneIndex_t boneNum;
 	char *name;

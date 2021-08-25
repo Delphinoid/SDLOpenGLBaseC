@@ -37,25 +37,19 @@ skeleton g_sklDefault = {
 	.bones = &g_sklNodeDefault
 };
 
-static void sklDefragment(skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ resource, const size_t length){
+static void sklDefragment(skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ resource, const size_t length, char *const __RESTRICT__ nameArray, const size_t nameArrayLength){
 
 	frameIndex_t i;
-	size_t bytes = 0;
 	char *namePtr;
 
-	// Count name string lengths.
-	for(i = 0; i < skl->boneNum; ++i){
-		bytes += strlen(skl->bones[i].name)+1;
-	}
-	skl->bones = memReallocate(skl->bones, skl->boneNum*sizeof(sklNode) + bytes + length + 1);
-
+	skl->bones = memReallocate(skl->bones, skl->boneNum*sizeof(sklNode) + nameArrayLength + length + 1);
 	namePtr = (char *)&skl->bones[skl->boneNum];
+	memcpy(namePtr, nameArray, nameArrayLength);
+	memFree(nameArray);
+
 	for(i = 0; i < skl->boneNum; ++i){
-		bytes = strlen(skl->bones[i].name)+1;
-		memcpy(namePtr, skl->bones[i].name, bytes);
-		memFree(skl->bones[i].name);
 		skl->bones[i].name = namePtr;
-		namePtr += bytes;
+		namePtr += strlen(namePtr)+1;
 	}
 
 	memcpy(namePtr, resource, length);
@@ -90,6 +84,9 @@ return_t sklLoad(skeleton *const __RESTRICT__ skl, const char *const __RESTRICT_
 		int currentCommand = -1;     // The current multiline command type (-1 = none, >-1 = bone).
 		fileLine_t currentLine = 0;  // Current file line being read.
 
+		char *nameArray = NULL;
+		size_t nameArrayLength = 0;
+
 		skl->bones = memAllocate(SKELETON_MAX_BONE_NUM*sizeof(sklNode));
 		if(skl->bones == NULL){
 			/** Memory allocation failure. **/
@@ -123,16 +120,19 @@ return_t sklLoad(skeleton *const __RESTRICT__ skl, const char *const __RESTRICT_
 					size_t i, j;
 					float data[3][3];  // Position, orientation (in Eulers) and scale
 
-					size_t nameLen = strlen(token);
-					skl->bones[skl->boneNum].name = memAllocate((nameLen+1)*sizeof(char));
-					if(skl->bones[skl->boneNum].name == NULL){
+					size_t nameLength = strlen(token);
+					nameArray = memReallocate(nameArray, (nameArrayLength+nameLength+1)*sizeof(char));
+					if(nameArray == NULL){
 						/** Memory allocation failure. **/
 						sklDelete(skl);
+						memFree(nameArray);
 						fclose(sklInfo);
 						return -1;
 					}
-					memcpy(skl->bones[skl->boneNum].name, token, nameLen);
-					skl->bones[skl->boneNum].name[nameLen] = '\0';
+					memcpy(&nameArray[nameArrayLength], token, nameLength);
+					nameArrayLength += nameLength;
+					nameArray[nameArrayLength] = '\0';
+					++nameArrayLength;
 
 					for(i = 0; i < 3; ++i){
 						for(j = 0; j < 3; ++j){
@@ -167,20 +167,19 @@ return_t sklLoad(skeleton *const __RESTRICT__ skl, const char *const __RESTRICT_
 		}
 
 		fclose(sklInfo);
+		/**
+		***
+		***
+		***
+		***
+		***
+		**/
+		sklDefragment(skl, filePath, filePathLength, nameArray, nameArrayLength);
 
 	}else{
 		printf("Error loading skeleton \"%s\": Could not open file.\n", fullPath);
 		return 0;
 	}
-
-	/**
-	***
-	***
-	***
-	***
-	***
-	**/
-	sklDefragment(skl, filePath, filePathLength);
 
 	// Generate a name based off the file path.
 	/**skl->name = fileGenerateResourceName(filePath, filePathLength, skl->bones, totalBytes);

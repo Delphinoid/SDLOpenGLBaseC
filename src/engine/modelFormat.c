@@ -596,9 +596,32 @@ return_t mdlWavefrontObjLoad(const char *const __RESTRICT__ filePath, vertexInde
 	if(*indices != NULL){ \
 		memFree(*indices); \
 	} \
+	sklDelete(skl);
 
 #define mdlSMDFreeHelpers() \
-	sklDelete(skl);
+	memFree(nameArray);
+
+/** Temporary! **/
+static void sklDefragmentSMD(skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ resource, const size_t length, char *const __RESTRICT__ nameArray, const size_t nameArrayLength){
+
+	frameIndex_t i;
+	char *namePtr;
+
+	skl->bones = memReallocate(skl->bones, skl->boneNum*sizeof(sklNode) + nameArrayLength + length + 1);
+	namePtr = (char *)&skl->bones[skl->boneNum];
+	memcpy(namePtr, nameArray, nameArrayLength);
+	memFree(nameArray);
+
+	for(i = 0; i < skl->boneNum; ++i){
+		skl->bones[i].name = namePtr;
+		namePtr += strlen(namePtr)+1;
+	}
+
+	memcpy(namePtr, resource, length);
+	namePtr[length] = '\0';
+	skl->name = namePtr;
+
+}
 
 return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndex_t *indexNum, vertexIndex_t **indices, skeleton *const skl, char *const __RESTRICT__ twPath, size_t *const __RESTRICT__ twPathLength){
 	// Temporary function by 8426THMY.
@@ -615,6 +638,8 @@ return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **ver
 		char lineFeed[1024];
 		char *line;
 		size_t lineLength;
+		char *nameArray = NULL;
+		size_t nameArrayLength = 0;
 		//Temporarily stores only unique vertices.
 		*vertexNum = 0;
 		*vertices = memAllocate(vertexCapacity * sizeof(**vertices));
@@ -690,9 +715,11 @@ return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **ver
 							//Get the bone's name.
 							size_t boneNameLength;
 							getDelimitedString(tokPos, line + lineLength - tokPos, "\" ", &tokPos, &boneNameLength);
-							tempBone.name = memAllocate(boneNameLength + 1);
-							memcpy(tempBone.name, tokPos, boneNameLength);
-							tempBone.name[boneNameLength] = '\0';
+							nameArray = memReallocate(nameArray, (nameArrayLength+boneNameLength+1)*sizeof(char));
+							memcpy(&nameArray[nameArrayLength], tokPos, boneNameLength);
+							nameArrayLength += boneNameLength;
+							nameArray[nameArrayLength] = '\0';
+							++nameArrayLength;
 
 							//Get the ID of this bone's parent.
 							tempBone.parent = strtoul(tokPos + boneNameLength + 1, NULL, 10);
@@ -934,6 +961,7 @@ return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **ver
 		}
 
 		fclose(mdlFile);
+		sklDefragmentSMD(skl, filePath, strlen(filePath), nameArray, nameArrayLength);
 
 	}else{
 		printf("Unable to open model file!\n"

@@ -222,17 +222,18 @@ int main(int argc, char **argv){
 	tempObj = moduleObjectBaseAllocate();
 	objBaseLoad(tempObj, "Lenticular.tdo", 14);
 	tempObj->stateMax = 1;
-	/*objBaseLoad(tempObj, "soldier.tdo", 11);
-	tempObj->skl = tempObj->renderables[0].mdl->skl;
+	tempObj = moduleObjectBaseAllocate();
+	/*bjBaseLoad(tempObj, "soldier.tdo", 11);
+	tempObj->skl = tempObj->models[0]->skl;
 	tempObj->animationNum = 2;
 	tempObj->animations = memAllocate(2*sizeof(sklAnim *));
 	tempObj->animations[0] = moduleSkeletonAnimationAllocate();
 	tempObj->animations[1] = moduleSkeletonAnimationAllocate();
 	sklaLoadSMD(tempObj->animations[0], tempObj->skl, "Resources"FILE_PATH_DELIMITER_STRING"Skeletons"FILE_PATH_DELIMITER_STRING"layer_taunt07.smd", 37, 1);
-	sklaLoadSMD(tempObj->animations[1], tempObj->skl, "Resources"FILE_PATH_DELIMITER_STRING"Skeletons"FILE_PATH_DELIMITER_STRING"a_runN_MELEE.smd", 36, 1);
-	tempObj = moduleObjectBaseAllocate();
+	sklaLoadSMD(tempObj->animations[1], tempObj->skl, "Resources"FILE_PATH_DELIMITER_STRING"Skeletons"FILE_PATH_DELIMITER_STRING"a_runN_MELEE.smd", 36, 1);*/
+	/*tempObj = moduleObjectBaseAllocate();
 	objBaseLoad(tempObj, "scout.tdo", 9);
-	tempObj->skl = tempObj->renderables[0].mdl->skl;
+	tempObj->skl = tempObj->models[0]->skl;
 	tempObj->animationNum = 2;
 	tempObj->animations = memAllocate(2*sizeof(sklAnim *));
 	tempObj->animations[0] = moduleObjectBaseFind("soldier.tdo", 11)->animations[0];
@@ -416,7 +417,7 @@ int main(int argc, char **argv){
 	tempObji->configuration[0].position.x = 0.f;
 	tempObji->configuration[0].position.y = -2.9f;
 	tempObji->configuration[0].position.z = 3.f;
-	tempObji->configuration[0].scale.z = 0.01f;
+	///tempObji->configuration[1].scale.z = 0.01f;
 	tempObji->configuration[6].position.y = 1.f;
 	///tempObji->renderables->billboardData.flags = BILLBOARD_TARGET_CAMERA | BILLBOARD_LOCK_XYZ;
 	scnInsertObject(scnMain, tempObji);*/

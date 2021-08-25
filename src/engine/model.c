@@ -72,8 +72,8 @@ return_t mdlBaseLoad(modelBase *const __RESTRICT__ base, const char *const __RES
 	vertex *vertices;
 	vertexIndex_t indexNum;
 	vertexIndex_t *indices;
-	size_t lodNum;
-	mdlLOD *lods;
+	size_t lodNum = 0;
+	mdlLOD *lods = NULL;
 	int sprite;
 
 	char fullPath[FILE_MAX_PATH_LENGTH];
@@ -92,9 +92,6 @@ return_t mdlBaseLoad(modelBase *const __RESTRICT__ base, const char *const __RES
 	}else{
 		skeleton *const tempSkl = moduleSkeletonAllocate();
 		r = mdlSMDLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, tempSkl, twPath, &twPathLength);
-		tempSkl->name = memAllocate(8*sizeof(char));
-		memcpy(tempSkl->name, "SMDTest", 7);
-		tempSkl->name[7] = '\0';
 		base->skl = tempSkl;
 		sprite = 0;
 	}
@@ -141,10 +138,10 @@ return_t mdlBaseLoad(modelBase *const __RESTRICT__ base, const char *const __RES
 		}
 	}}
 	if(base->tw == NULL){if(twPathLength == 0){
-		// Use the default skeleton.
+		// Use the default texture wrapper.
 		base->tw = &g_twDefault;
 	}else{
-		/** Check if the skeleton already exists. If not, load it. **/
+		/** Check if the texture wrapper already exists. If not, load it. **/
 		textureWrapper *const tempTw = moduleTextureWrapperAllocate();
 		if(tempTw != NULL){
 			const return_t r2 = twLoad(tempTw, twPath, twPathLength);
@@ -176,10 +173,9 @@ return_t mdlBaseLoad(modelBase *const __RESTRICT__ base, const char *const __RES
 			/** Memory allocation failure. **/
 			mdlBaseDelete(base);
 			return -1;
-		}else{
-			memcpy(base->name, filePath, filePathLength/**-extension**/);
-			base->name[filePathLength/**-extension**/] = '\0';
 		}
+		memcpy(base->name, filePath, filePathLength/**-extension**/);
+		base->name[filePathLength/**-extension**/] = '\0';
 		/**base->name = fileGenerateResourceName(filePath, filePathLength);
 		if(base->name == NULL){
 			** Memory allocation failure. **
