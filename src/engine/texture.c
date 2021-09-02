@@ -9,6 +9,23 @@
 #include <string.h>
 #include <math.h>
 
+// OpenGL uses big-endian, while SDL uses the platform's endianness.
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+	#define PIXEL_MASK_RED   0xff000000
+	#define PIXEL_MASK_GREEN 0x00ff0000
+	#define PIXEL_MASK_BLUE  0x0000ff00
+	#define PIXEL_MASK_ALPHA 0x000000ff
+	#define PIXEL_FORMAT_RGB  SDL_PIXELFORMAT_RGB24
+	#define PIXEL_FORMAT_RGBA SDL_PIXELFORMAT_RGBA8888
+#else
+	#define PIXEL_MASK_RED    0x000000ff
+ 	#define PIXEL_MASK_GREEN  0x0000ff00
+	#define PIXEL_MASK_BLUE   0x00ff0000
+	#define PIXEL_MASK_ALPHA  0xff000000
+	#define PIXEL_FORMAT_RGB  SDL_PIXELFORMAT_BGR24
+	#define PIXEL_FORMAT_RGBA SDL_PIXELFORMAT_ABGR8888
+#endif
+
 #define IMAGE_RESOURCE_DIRECTORY_STRING FILE_PATH_RESOURCE_DIRECTORY_SHARED"Resources"FILE_PATH_DELIMITER_STRING"Images"FILE_PATH_DELIMITER_STRING
 #define IMAGE_RESOURCE_DIRECTORY_LENGTH 19
 
@@ -110,8 +127,8 @@ return_t tLoad(texture *const __RESTRICT__ tex, const char *const __RESTRICT__ f
 
 	GLenum glError;
 	SDL_Surface *image = NULL;
-	GLenum format;
-	GLuint bytes;
+	GLenum format = 0;
+	GLuint bytes = 0;
 	GLint mipNum = 0;
 	GLsizei mips[32][4];
 	long int generate = 0;
@@ -140,14 +157,49 @@ return_t tLoad(texture *const __RESTRICT__ tex, const char *const __RESTRICT__ f
 			// Image
 			if(lineLength >= 7 && strncmp(line, "image ", 6) == 0){
 				if(image == NULL){
+
 					char imgPath[FILE_MAX_PATH_LENGTH];
 					char resPath[FILE_MAX_PATH_LENGTH];
 					const size_t resPathLength = fileParseResourcePath(resPath, line+6, lineLength);
 					fileGenerateFullPath(imgPath, IMAGE_RESOURCE_DIRECTORY_STRING, IMAGE_RESOURCE_DIRECTORY_LENGTH, resPath, resPathLength);
 					image = tLoadImage(imgPath);
+
 					if(image == NULL){
 						printf("Error generating SDL_Surface for texture \"%s\": %s\n", imgPath, SDL_GetError());
+					}else{
+
+						const uint32_t *pixels = (uint32_t *)image->pixels;
+						const GLsizei textureSize = image->w * image->h;
+						GLsizei i;
+
+						// Convert to the appropriate RGBA format.
+						image = SDL_ConvertSurfaceFormat(image, PIXEL_FORMAT_RGBA, 0);
+						tex->format = GL_RGBA8;
+						format = GL_RGBA;
+						bytes = 3;
+
+						// Check for alpha.
+						for(i = 0; i < textureSize; ++i){
+							uint32_t alpha = pixels[i] & PIXEL_MASK_ALPHA;
+							if(alpha < 255){
+								bytes = 4;
+								if(alpha > 0){
+									tex->translucent = 1;
+									break;
+								}
+							}
+						}
+
+						// No alpha was found; convert to RGB8 to save memory.
+						if(bytes == 3){
+							/// Why is this not BGR24?
+							image = SDL_ConvertSurfaceFormat(image, SDL_PIXELFORMAT_RGB24, 0);
+							tex->format = GL_RGB8;
+							format = GL_RGB;
+						}
+
 					}
+
 				}
 
 			// Filtering
@@ -231,35 +283,6 @@ return_t tLoad(texture *const __RESTRICT__ tex, const char *const __RESTRICT__ f
 			return 0;
 		}
 		return 0;
-	}
-
-	// Determine the pixel format.
-	switch(image->format->BytesPerPixel){
-		case 4:
-			SDL_ConvertSurfaceFormat(image, SDL_PIXELFORMAT_RGBA8888, 0);
-			tex->format = GL_RGBA8;
-			format = GL_RGBA;
-			bytes = 4;
-		break;
-		default:
-			SDL_ConvertSurfaceFormat(image, SDL_PIXELFORMAT_RGB888, 0);
-			tex->format = GL_RGB8;
-			format = GL_RGB;
-			bytes = 3;
-	}
-
-	// Check if the texture contains translucent pixels.
-	if(format == GL_RGBA){
-		const byte_t *pixels = (byte_t *)image->pixels;
-		const GLsizei textureSize = image->w * image->h;
-		GLsizei i;
-		for(i = 0; i < textureSize; ++i){
-			byte_t alpha = pixels[i*4+3];
-			if(alpha > 0 && alpha < 255){
-				tex->translucent = 1;
-				break;
-			}
-		}
 	}
 
 	// Generate MIPs if none were loaded.

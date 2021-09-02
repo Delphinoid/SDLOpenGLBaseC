@@ -291,7 +291,7 @@ void tfAppendP1(transform *const __RESTRICT__ tf1, const transform *const __REST
 	// Used for getting the total sum of all transformations of a basis.
 	// Calculate total translation.
 	vec3 tempVec3;
-	vec3VMultVPR(&tf2->position, &tf1->scale, &tempVec3);           // Scale
+	vec3VMultVPR(&tf2->position, &tf1->scale, &tempVec3);          // Scale
 	quatRotateVec3FastApproximateP(&tf1->orientation, &tempVec3);  // Rotate
 	vec3VAddVP(&tf1->position, &tempVec3);                         // Translate
 	// Calculate total orientation.
@@ -319,7 +319,7 @@ void tfAppendPR(const transform *const __RESTRICT__ tf1, const transform *const 
 	// Adds the transformations for tf2 to tf1 and stores the result in r.
 	// Used for getting the total sum of all transformations of a basis.
 	// Calculate total translation.
-	vec3VMultVPR(&tf2->position, &tf1->scale, &r->position);           // Scale
+	vec3VMultVPR(&tf2->position, &tf1->scale, &r->position);          // Scale
 	quatRotateVec3FastApproximateP(&tf1->orientation, &r->position);  // Rotate
 	vec3VAddVP(&r->position, &tf1->position);                         // Translate
 	// Calculate total orientation.
