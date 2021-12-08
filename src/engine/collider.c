@@ -44,9 +44,7 @@ cAABB (* const cTransformJumpTable[COLLIDER_TYPE_NUM])(
 	const vec3 instanceCentroid,
 	const void *const local,
 	const vec3 localCentroid,
-	const vec3 position,
-	const quat orientation,
-	const vec3 scale
+	const transform configuration
 ) = {
 	cHullTransform,
 	cCapsuleTransform,
@@ -55,10 +53,10 @@ cAABB (* const cTransformJumpTable[COLLIDER_TYPE_NUM])(
 	cPointTransform,
 	cCompositeTransform
 };
-__FORCE_INLINE__ cAABB cTransform(collider *const instance, const vec3 instanceCentroid, const collider *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale){
+__FORCE_INLINE__ cAABB cTransform(collider *const instance, const vec3 instanceCentroid, const collider *const local, const vec3 localCentroid, const transform configuration){
 
 	// Updates the collider by transforming it.
-	return cTransformJumpTable[instance->type](&instance->data, instanceCentroid, &local->data, localCentroid, position, orientation, scale);
+	return cTransformJumpTable[instance->type](&instance->data, instanceCentroid, &local->data, localCentroid, configuration);
 
 }
 

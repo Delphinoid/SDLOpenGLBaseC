@@ -14,7 +14,7 @@ typedef struct {
 
 	// Camera basis vectors.
 	// These just contain the x and z components
-	// and are normalized, so the basis is effectively
+	// and are normalized, so the basis is essentially
 	// projected onto the xz plane.
 	vec2 rbasis, fbasis;
 

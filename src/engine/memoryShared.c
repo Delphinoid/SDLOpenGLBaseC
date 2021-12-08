@@ -10,32 +10,47 @@
 #endif
 
 #ifndef MEMORY_ALLOCATOR_USE_MALLOC
+#ifdef _WIN32
 void *memHeapLowLevelAllocate(const size_t bytes){
-#ifdef _WIN32
 	return HeapAlloc(GetProcessHeap(), 0x01, bytes);
-#else
-	return sbrk(bytes);
-#endif
 }
+#else
+void *memHeapLowLevelAllocate(const size_t bytes){
+	//return sbrk(bytes);
+	// We no longer use brk, since it conflicts with the malloc family.
+	int fd = open("/dev/zero", O_RDWR);
+	void *p = mmap(0, size, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
+	close(fd);
+	return p;
+}
+#endif
 
+#ifdef _WIN32
 void *memHeapLowLevelReallocate(void *const __RESTRICT__ block, const size_t bytes){
-#ifdef _WIN32
 	return HeapReAlloc(GetProcessHeap(), 0x01, block, bytes);
-#else
-	if(brk((byte_t *)block + bytes) == 0){
-		return block;
-	}
-	return NULL;
-#endif
 }
+#else
+void *memHeapLowLevelReallocate(void *const __RESTRICT__ block, const size_t bytes_old, const size_t bytes_new){
+	//if(brk((byte_t *)block + bytes) == 0){
+	//	return block;
+	//}
+	//return NULL;
+	// We no longer use brk, since it conflicts with the malloc family.
+	return mremap(block, bytes_old, bytes_new, MREMAP_MAYMOVE|MREMAP_FIXED);
+}
+#endif
 
-int memHeapLowLevelFree(void *const __RESTRICT__ block){
 #ifdef _WIN32
+int memHeapLowLevelFree(void *const __RESTRICT__ block){
 	return HeapFree(GetProcessHeap(), 0x01, block);
-#else
-	return brk(block);
-#endif
 }
+#else
+int memHeapLowLevelFree(void *const __RESTRICT__ block, const size_t bytes){
+	//return brk(block);
+	// We no longer use brk, since it conflicts with the malloc family.
+	return munmap(block, bytes);
+}
+#endif
 #endif
 
 #define memRegionAppendMacro(first, region) \
@@ -82,7 +97,11 @@ __FORCE_INLINE__ void memRegionFree(const memoryRegion *region){
 	// each of its memory regions.
 	while(region != NULL){
 		const memoryRegion *const next = (memoryRegion *)region->next;
+		#if !defined(MEMORY_ALLOCATOR_USE_MALLOC) && !defined(_WIN32)
+		memHeapLowLevelFree(region->start, region->bytes);
+		#else
 		memHeapLowLevelFree(region->start);
+		#endif
 		region = next;
 	}
 }

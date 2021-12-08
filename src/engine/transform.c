@@ -163,7 +163,7 @@ void tfInterpolatePR(const transform *const __RESTRICT__ tf1, const transform *c
 
 }
 
-vec3 tf(const transform tf, const vec3 v){
+vec3 tfTransform(const transform tf, const vec3 v){
 	return vec3VAddV(tf.position, quatRotateVec3FastApproximate(tf.orientation, vec3VMultV(v, tf.scale)));
 }
 

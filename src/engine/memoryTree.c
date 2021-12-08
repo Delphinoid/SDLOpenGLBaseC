@@ -18,6 +18,9 @@ void *memTreeCreate(memoryTree *const __RESTRICT__ tree, void *const start, cons
 
 		tree->region = (memoryRegion *)((byte_t *)start + memTreeAllocationSize(start, bytes, length) - sizeof(memoryRegion));
 		tree->region->start = start;
+		#if !defined(MEMORY_ALLOCATOR_USE_MALLOC) && !defined(_WIN32)
+		tree->region->bytes = memTreeAllocationSize(start, bytes, length);
+		#endif
 		tree->region->next = NULL;
 
 		memTreeClear(tree);

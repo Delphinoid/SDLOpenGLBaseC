@@ -314,6 +314,9 @@ void *memDLinkExtendInit(memoryDLink *const __RESTRICT__ array, void *const star
 
 		// Place the memory region at the end of the chunk.
 		memoryRegion *const newRegion = (memoryRegion *)((byte_t *)start + memDLinkAllocationSize(start, bytes, length) - sizeof(memoryRegion));
+		#if !defined(MEMORY_ALLOCATOR_USE_MALLOC) && !defined(_WIN32)
+		newRegion->bytes = memDLinkAllocationSize(start, bytes, length);
+		#endif
 		memRegionPrepend(&array->region, newRegion, start);
 
 		memDLinkSetupMemoryInit(start, bytes, length, func);

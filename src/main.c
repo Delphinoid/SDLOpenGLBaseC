@@ -117,6 +117,7 @@ int main(int argc, char **argv){
 	cmdSystemAdd(&cmdsys, "-interact", (command)&c_interact0);
 	cmdSystemAdd(&cmdsys, "firstperson", (command)&c_firstperson);
 	cmdSystemAdd(&cmdsys, "thirdperson", (command)&c_thirdperson);
+	cmdSystemAdd(&cmdsys, "-change", (command)&c_change1);
 
 	// Set up keybinds.
 	inMngrKeyboardBind(&inMngr, SDL_SCANCODE_W, "+forward", 8);
@@ -128,6 +129,7 @@ int main(int argc, char **argv){
 	inMngrKeyboardBind(&inMngr, SDL_SCANCODE_T, "thirdperson", 11);
 	inMngrKeyboardBind(&inMngr, SDL_SCANCODE_ESCAPE, "exit", 4);
 	inMngrMouseBind(&inMngr, INPUT_MBUTTON0, "+interact", 9);
+	inMngrKeyboardBind(&inMngr, SDL_SCANCODE_C, "+change", 7);
 
 	// Cameras.
 	camera *camMain = moduleCameraAllocate();
@@ -196,6 +198,8 @@ int main(int argc, char **argv){
 	twLoad(tempTexWrap, "gui"FILE_PATH_DELIMITER_STRING"body.tdw", 12);
 	tempTexWrap = moduleTextureWrapperAllocate();
 	twLoad(tempTexWrap, "gui"FILE_PATH_DELIMITER_STRING"border.tdw", 14);
+	tempTexWrap = moduleTextureWrapperAllocate();
+	twLoad(tempTexWrap, "LenticularAlt"FILE_PATH_DELIMITER_STRING"LenticularAlt.tdw", 31);
 	/*textureWrapper tempTexWrap;
 	g_twDefault(&tempTexWrap, &resMngr, &memMngr);
 	cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));
@@ -680,6 +684,15 @@ int main(int argc, char **argv){
 					physJointInit(joint_carry, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_UNKNOWN);
 					carry = 0;
 				}
+			}
+			if(CVAR_CHANGE){
+				printf("%s\n", p.obj->models[0].twi.tw->name);
+				if(strncmp(p.obj->models[0].twi.tw->name, "Lenticular"FILE_PATH_DELIMITER_STRING"Lenticular.tdw", 25) == 0){
+					p.obj->models[0].twi.tw = moduleTextureWrapperFind("LenticularAlt"FILE_PATH_DELIMITER_STRING"LenticularAlt.tdw", 31);
+				}else{
+					p.obj->models[0].twi.tw = moduleTextureWrapperFind("Lenticular"FILE_PATH_DELIMITER_STRING"Lenticular.tdw", 25);
+				}
+				CVAR_CHANGE = 0;
 			}
 
 			// Player code.

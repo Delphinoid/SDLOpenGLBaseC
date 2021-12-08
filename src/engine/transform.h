@@ -15,6 +15,8 @@ transform tfIdentity();
 
 mat4 tfMatrix(const transform tf);
 
+vec3 tfTransform(const transform tf, const vec3 v);
+
 ///transform tfInverse(const transform tf);
 ///void tfInverseP(transform *const __RESTRICT__ tf);
 ///void tfInversePR(const transform *const __RESTRICT__ tf, transform *const __RESTRICT__ r);
@@ -23,8 +25,6 @@ transform tfInterpolate(const transform tf1, const transform tf2, const float t)
 void tfInterpolateP1(transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2, const float t);
 void tfInterpolateP2(const transform *const __RESTRICT__ tf1, transform *const __RESTRICT__ tf2, const float t);
 void tfInterpolatePR(const transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2, const float t, transform *const __RESTRICT__ r);
-
-vec3 tfTransform(const transform tf, const vec3 v);
 
 transform tfInverse(const transform tf);
 void tfInverseP(transform *const __RESTRICT__ tf);

@@ -1,7 +1,7 @@
 #ifndef COLLIDERCAPSULE_H
 #define COLLIDERCAPSULE_H
 
-#include "vec3.h"
+#include "transform.h"
 #include "return.h"
 
 typedef struct {

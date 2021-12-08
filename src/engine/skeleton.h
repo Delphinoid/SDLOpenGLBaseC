@@ -66,7 +66,11 @@ typedef struct sklAnimInstance {
 	float animInterpT;
 
 	// Weight coefficient for the animation.
+	// Used when overlapping animations.
 	float intensity;
+	// The following variables are generally used to
+	// smoothly begin or end the playback of an animation,
+	// by linearly interpolating its intensity value.
 	// The intensity to decay to.
 	float intensityLimit;
 	// How much to decrease (or increase, if positive) the

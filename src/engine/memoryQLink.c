@@ -18,6 +18,9 @@ void *memQLinkCreate(memoryQLink *const __RESTRICT__ array, void *const start, c
 		array->block = memQLinkBlockSize(bytes);
 		array->region = (memoryRegion *)((byte_t *)start + memQLinkAllocationSize(start, bytes, length) - sizeof(memoryRegion));
 		array->region->start = start;
+		#if !defined(MEMORY_ALLOCATOR_USE_MALLOC) && !defined(_WIN32)
+		array->region->bytes = memQLinkAllocationSize(start, bytes, length);
+		#endif
 		array->region->next = NULL;
 
 		memQLinkClear(array);

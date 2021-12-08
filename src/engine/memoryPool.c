@@ -18,6 +18,9 @@ void *memPoolCreate(memoryPool *const __RESTRICT__ pool, void *start, const size
 		pool->block = memPoolBlockSize(bytes);
 		pool->region = (memoryRegion *)((byte_t *)start + memPoolAllocationSize(start, bytes, length) - sizeof(memoryRegion));
 		pool->region->start = start;
+		#if !defined(MEMORY_ALLOCATOR_USE_MALLOC) && !defined(_WIN32)
+		pool->region->bytes = memPoolAllocationSize(start, bytes, length);
+		#endif
 		pool->region->next = NULL;
 
 		memPoolClear(pool);

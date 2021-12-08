@@ -278,11 +278,11 @@ __FORCE_INLINE__ void physColliderTransform(physCollider *const __RESTRICT__ c){
 	c->aabb = cTransform(
 		&c->c, body->centroidGlobal, c->base,
 		#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
-		 body->centroidLocal,
+		body->centroidLocal,
 		#else
 		body->base->centroid,
 		#endif
-		body->configuration.position, body->configuration.orientation, body->configuration.scale
+		body->configuration
 	);
 }
 

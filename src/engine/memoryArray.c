@@ -19,6 +19,9 @@ void *memArrayCreate(memoryArray *const __RESTRICT__ array, void *const start, c
 		array->size = length;
 		array->region = (memoryRegion *)((byte_t *)start + memArrayAllocationSize(start, bytes, length) - sizeof(memoryRegion));
 		array->region->start = start;
+		#if !defined(MEMORY_ALLOCATOR_USE_MALLOC) && !defined(_WIN32)
+		array->region->bytes = memArrayAllocationSize(start, bytes, length);
+		#endif
 		array->region->next = NULL;
 
 	}

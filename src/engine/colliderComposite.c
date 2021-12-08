@@ -39,7 +39,7 @@ return_t cCompositeInstantiate(void *const __RESTRICT__ instance, const void *co
 
 }
 
-cAABB cCompositeTransform(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale){
+cAABB cCompositeTransform(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const transform configuration){
 
 	cComposite *const cInstance = instance;
 	const cComposite *const cLocal = local;
@@ -54,12 +54,12 @@ cAABB cCompositeTransform(void *const instance, const vec3 instanceCentroid, con
 	if(c1 < cLast){
 
 		// First iteration.
-		tempAABB = cTransform(c1, instanceCentroid, c2, localCentroid, position, orientation, scale);
+		tempAABB = cTransform(c1, instanceCentroid, c2, localCentroid, configuration);
 
 		// Remaining iterations.
 		for(++c1, ++c2; c1 < cLast; ++c1, ++c2){
 
-			const cAABB colliderAABB = cTransform(c1, instanceCentroid, c2, localCentroid, position, orientation, scale);
+			const cAABB colliderAABB = cTransform(c1, instanceCentroid, c2, localCentroid, configuration);
 
 			// Update collider minima and maxima.
 			// Update aabb.left and aabb.right.

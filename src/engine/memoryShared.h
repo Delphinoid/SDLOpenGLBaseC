@@ -21,9 +21,15 @@ typedef signed char   signed_byte_t;
 typedef byte_t padding_t;
 
 #ifndef MEMORY_ALLOCATOR_USE_MALLOC
+#ifdef _WIN32
 void *memHeapLowLevelAllocate(const size_t bytes);
 void *memHeapLowLevelReallocate(void *const __RESTRICT__ block, const size_t bytes);
 int memHeapLowLevelFree(void *const __RESTRICT__ block);
+#else
+void *memHeapLowLevelAllocate(const size_t bytes);
+void *memHeapLowLevelReallocate(void *const __RESTRICT__ block, const size_t bytes_old, const size_t bytes_new);
+int memHeapLowLevelFree(void *const __RESTRICT__ block, const size_t bytes);
+#endif
 #else
 #define memHeapLowLevelAllocate(bytes) malloc(bytes)
 #define memHeapLowLevelReallocate(block, bytes) realloc(bytes)
@@ -37,6 +43,9 @@ int memHeapLowLevelFree(void *const __RESTRICT__ block);
 typedef struct memoryRegion memoryRegion;
 typedef struct memoryRegion {
 	byte_t *start;
+	#if !defined(MEMORY_ALLOCATOR_USE_MALLOC) && !defined(_WIN32)
+	size_t bytes;
+	#endif
 	memoryRegion *next;
 } memoryRegion;
 

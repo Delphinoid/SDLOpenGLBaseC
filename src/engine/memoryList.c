@@ -18,6 +18,9 @@ void *memListCreate(memoryList *const __RESTRICT__ list, void *const start, cons
 		list->block = memListBlockSize(bytes);
 		list->region = (memoryRegion *)((byte_t *)start + memListAllocationSize(start, bytes, length) - sizeof(memoryRegion));
 		list->region->start = start;
+		#if !defined(MEMORY_ALLOCATOR_USE_MALLOC) && !defined(_WIN32)
+		list->region->bytes = memListAllocationSize(start, bytes, length);
+		#endif
 		list->region->next = NULL;
 
 		memListClear(list);

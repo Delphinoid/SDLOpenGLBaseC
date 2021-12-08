@@ -10,6 +10,10 @@ int CVAR_INTERACT = 0;
 int CVAR_FIRSTPERSON = 0;
 int CVAR_THIRDPERSON = 0;
 
+int CVAR_CHANGE = 0;
+
+void c_void(cmdSystem *const __RESTRICT__ cmdsys, const size_t argc, const char **const argv){}
+
 void c_forward0(cmdSystem *const __RESTRICT__ cmdsys, const size_t argc, const char **const argv){
 	CVAR_FORWARD = 0;
 }
@@ -54,4 +58,8 @@ void c_firstperson(cmdSystem *const __RESTRICT__ cmdsys, const size_t argc, cons
 void c_thirdperson(cmdSystem *const __RESTRICT__ cmdsys, const size_t argc, const char **const argv){
 	CVAR_FIRSTPERSON = 0;
 	CVAR_THIRDPERSON = 1;
+}
+
+void c_change1(cmdSystem *const __RESTRICT__ cmdsys, const size_t argc, const char **const argv){
+	CVAR_CHANGE = 1;
 }

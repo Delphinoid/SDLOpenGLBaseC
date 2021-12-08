@@ -208,86 +208,86 @@ __HINT_INLINE__ void mat4MMultVPR(const mat4 *const __RESTRICT__ m, const vec4 *
 	r->w = v->x * m->m[0][3] + v->y * m->m[1][3] + v->z * m->m[2][3] + v->w * m->m[3][3];
 }
 
-__HINT_INLINE__ vec3 mat4V3MultMBra(const vec3 v, const mat4 m){
+__HINT_INLINE__ vec3 mat4V3MultM(const vec3 v, const mat4 m){
 	const vec3 r = {.x = v.x * m.m[0][0] + v.y * m.m[0][1] + v.z * m.m[0][2] + m.m[0][3],
 	                .y = v.x * m.m[1][0] + v.y * m.m[1][1] + v.z * m.m[1][2] + m.m[1][3],
 	                .z = v.x * m.m[2][0] + v.y * m.m[2][1] + v.z * m.m[2][2] + m.m[2][3]};
 	return r;
 }
-__HINT_INLINE__ void mat4V3MultMBraP(vec3 *const __RESTRICT__ v, const mat4 *const __RESTRICT__ m){
+__HINT_INLINE__ void mat4V3MultMP(vec3 *const __RESTRICT__ v, const mat4 *const __RESTRICT__ m){
 	const vec3 r = {.x = v->x * m->m[0][0] + v->y * m->m[0][1] + v->z * m->m[0][2] + m->m[0][3],
 	                .y = v->x * m->m[1][0] + v->y * m->m[1][1] + v->z * m->m[1][2] + m->m[1][3],
 	                .z = v->x * m->m[2][0] + v->y * m->m[2][1] + v->z * m->m[2][2] + m->m[2][3]};
 	*v = r;
 }
-__HINT_INLINE__ void mat4V3MultMBraPR(const vec3 *const __RESTRICT__ v, const mat4 *const __RESTRICT__ m, vec3 *const __RESTRICT__ r){
+__HINT_INLINE__ void mat4V3MultMPR(const vec3 *const __RESTRICT__ v, const mat4 *const __RESTRICT__ m, vec3 *const __RESTRICT__ r){
 	r->x = v->x * m->m[0][0] + v->y * m->m[0][1] + v->z * m->m[0][2] + m->m[0][3];
 	r->y = v->x * m->m[1][0] + v->y * m->m[1][1] + v->z * m->m[1][2] + m->m[1][3];
 	r->z = v->x * m->m[2][0] + v->y * m->m[2][1] + v->z * m->m[2][2] + m->m[2][3];
 }
-__HINT_INLINE__ vec3 mat4MMultV3Ket(const mat4 m, const vec3 v){
+__HINT_INLINE__ vec3 mat4MMultV3(const mat4 m, const vec3 v){
 	const vec3 r = {.x = v.x * m.m[0][0] + v.y * m.m[1][0] + v.z * m.m[2][0] + m.m[3][0],
 	                .y = v.x * m.m[0][1] + v.y * m.m[1][1] + v.z * m.m[2][1] + m.m[3][1],
 	                .z = v.x * m.m[0][2] + v.y * m.m[1][2] + v.z * m.m[2][2] + m.m[3][2]};
 	return r;
 }
-__HINT_INLINE__ void mat4MMultV3KetP(const mat4 *const __RESTRICT__ m, vec3 *const __RESTRICT__ v){
+__HINT_INLINE__ void mat4MMultV3P(const mat4 *const __RESTRICT__ m, vec3 *const __RESTRICT__ v){
 	const vec3 r = {.x = v->x * m->m[0][0] + v->y * m->m[1][0] + v->z * m->m[2][0] + m->m[3][0],
 	                .y = v->x * m->m[0][1] + v->y * m->m[1][1] + v->z * m->m[2][1] + m->m[3][1],
 	                .z = v->x * m->m[0][2] + v->y * m->m[1][2] + v->z * m->m[2][2] + m->m[3][2]};
 	*v = r;
 }
-__HINT_INLINE__ void mat4MMultV3KetPR(const mat4 *const __RESTRICT__ m, const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r){
+__HINT_INLINE__ void mat4MMultV3PR(const mat4 *const __RESTRICT__ m, const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r){
 	r->x = v->x * m->m[0][0] + v->y * m->m[1][0] + v->z * m->m[2][0] + m->m[3][0];
 	r->y = v->x * m->m[0][1] + v->y * m->m[1][1] + v->z * m->m[2][1] + m->m[3][1];
 	r->z = v->x * m->m[0][2] + v->y * m->m[1][2] + v->z * m->m[2][2] + m->m[3][2];
 }
 
-__HINT_INLINE__ vec4 mat4NMultMBra(const float x, const float y, const float z, const float w, const mat4 m){
+__HINT_INLINE__ vec4 mat4NMultM(const float x, const float y, const float z, const float w, const mat4 m){
 	const vec4 r = {.x = x * m.m[0][0] + y * m.m[0][1] + z * m.m[0][2] + w * m.m[0][3],
 	                .y = x * m.m[1][0] + y * m.m[1][1] + z * m.m[1][2] + w * m.m[1][3],
 	                .z = x * m.m[2][0] + y * m.m[2][1] + z * m.m[2][2] + w * m.m[2][3],
 	                .w = x * m.m[3][0] + y * m.m[3][1] + z * m.m[3][2] + w * m.m[3][3]};
 	return r;
 }
-__HINT_INLINE__ void mat4NMultMBraPR(const float x, const float y, const float z, const float w, const mat4 *const __RESTRICT__ m, vec4 *const __RESTRICT__ r){
+__HINT_INLINE__ void mat4NMultMPR(const float x, const float y, const float z, const float w, const mat4 *const __RESTRICT__ m, vec4 *const __RESTRICT__ r){
 	r->x = x * m->m[0][0] + y * m->m[0][1] + z * m->m[0][2] + w * m->m[0][3];
 	r->y = x * m->m[1][0] + y * m->m[1][1] + z * m->m[1][2] + w * m->m[1][3];
 	r->z = x * m->m[2][0] + y * m->m[2][1] + z * m->m[2][2] + w * m->m[2][3];
 	r->w = x * m->m[3][0] + y * m->m[3][1] + z * m->m[3][2] + w * m->m[3][3];
 }
-__HINT_INLINE__ vec4 mat4MMultNKet(const mat4 m, const float x, const float y, const float z, const float w){
+__HINT_INLINE__ vec4 mat4MMultN(const mat4 m, const float x, const float y, const float z, const float w){
 	const vec4 r = {.x = x * m.m[0][0] + y * m.m[1][0] + z * m.m[2][0] + w * m.m[3][0],
 	                .y = x * m.m[0][1] + y * m.m[1][1] + z * m.m[2][1] + w * m.m[3][1],
 	                .z = x * m.m[0][2] + y * m.m[1][2] + z * m.m[2][2] + w * m.m[3][2],
 	                .w = x * m.m[0][3] + y * m.m[1][3] + z * m.m[2][3] + w * m.m[3][3]};
 	return r;
 }
-__HINT_INLINE__ void mat4MMultNKetPR(const mat4 *const __RESTRICT__ m, const float x, const float y, const float z, const float w, vec4 *r){
+__HINT_INLINE__ void mat4MMultNPR(const mat4 *const __RESTRICT__ m, const float x, const float y, const float z, const float w, vec4 *r){
 	r->x = x * m->m[0][0] + y * m->m[1][0] + z * m->m[2][0] + w * m->m[3][0];
 	r->y = x * m->m[0][1] + y * m->m[1][1] + z * m->m[2][1] + w * m->m[3][1];
 	r->z = x * m->m[0][2] + y * m->m[1][2] + z * m->m[2][2] + w * m->m[3][2];
 	r->w = x * m->m[0][3] + y * m->m[1][3] + z * m->m[2][3] + w * m->m[3][3];
 }
 
-__HINT_INLINE__ vec3 mat4N3MultMBra(const float x, const float y, const float z, const mat4 m){
+__HINT_INLINE__ vec3 mat4N3MultM(const float x, const float y, const float z, const mat4 m){
 	const vec3 r = {.x = x * m.m[0][0] + y * m.m[0][1] + z * m.m[0][2] + m.m[0][3],
 	                .y = x * m.m[1][0] + y * m.m[1][1] + z * m.m[1][2] + m.m[1][3],
 	                .z = x * m.m[2][0] + y * m.m[2][1] + z * m.m[2][2] + m.m[2][3]};
 	return r;
 }
-__HINT_INLINE__ void mat4N3MultMBraPR(const float x, const float y, const float z, const mat4 *const __RESTRICT__ m, vec3 *const __RESTRICT__ r){
+__HINT_INLINE__ void mat4N3MultMPR(const float x, const float y, const float z, const mat4 *const __RESTRICT__ m, vec3 *const __RESTRICT__ r){
 	r->x = x * m->m[0][0] + y * m->m[0][1] + z * m->m[0][2] + m->m[0][3];
 	r->y = x * m->m[1][0] + y * m->m[1][1] + z * m->m[1][2] + m->m[1][3];
 	r->z = x * m->m[2][0] + y * m->m[2][1] + z * m->m[2][2] + m->m[2][3];
 }
-__HINT_INLINE__ vec3 mat4MMultN3Ket(const mat4 m, const float x, const float y, const float z){
+__HINT_INLINE__ vec3 mat4MMultN3(const mat4 m, const float x, const float y, const float z){
 	const vec3 r = {.x = x * m.m[0][0] + y * m.m[1][0] + z * m.m[2][0] + m.m[3][0],
 	                .y = x * m.m[0][1] + y * m.m[1][1] + z * m.m[2][1] + m.m[3][1],
 	                .z = x * m.m[0][2] + y * m.m[1][2] + z * m.m[2][2] + m.m[3][2]};
 	return r;
 }
-__HINT_INLINE__ void mat4MMultN3KetPR(const mat4 *const __RESTRICT__ m, const float x, const float y, const float z, vec3 *r){
+__HINT_INLINE__ void mat4MMultN3PR(const mat4 *const __RESTRICT__ m, const float x, const float y, const float z, vec3 *r){
 	r->x = x * m->m[0][0] + y * m->m[1][0] + z * m->m[2][0] + m->m[3][0];
 	r->y = x * m->m[0][1] + y * m->m[1][1] + z * m->m[2][1] + m->m[3][1];
 	r->z = x * m->m[0][2] + y * m->m[1][2] + z * m->m[2][2] + m->m[3][2];

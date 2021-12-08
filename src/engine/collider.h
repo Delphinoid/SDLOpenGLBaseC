@@ -47,14 +47,12 @@ extern cAABB (* const cTransformJumpTable[COLLIDER_TYPE_NUM])(
 	const vec3 instanceCentroid,
 	const void *const local,
 	const vec3 localCentroid,
-	const vec3 position,
-	const quat orientation,
-	const vec3 scale
+	const transform configuration
 );
 
 void cInit(collider *const __RESTRICT__ c, const colliderType_t type);
 return_t cInstantiate(collider *const instance, const collider *const local);
-cAABB cTransform(collider *const instance, const vec3 instanceCentroid, const collider *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale);
+cAABB cTransform(collider *const instance, const vec3 instanceCentroid, const collider *const local, const vec3 localCentroid, const transform configuration);
 void cDelete(collider *const __RESTRICT__ c);
 
 #endif

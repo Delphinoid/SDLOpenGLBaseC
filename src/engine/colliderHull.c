@@ -70,7 +70,7 @@ __FORCE_INLINE__ void cHullCentroidFromPosition(cHull *const __RESTRICT__ c, con
 	c->centroid = vec3VAddV(vec3VMultV(quatRotateVec3FastApproximate(orientation, l->centroid), scale), position);
 }
 
-cAABB cHullTransform(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const vec3 position, const quat orientation, const vec3 scale){
+cAABB cHullTransform(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const transform configuration){
 
 	cHull *const cInstance = instance;
 	const cHull *const cLocal = local;
@@ -81,15 +81,22 @@ cAABB cHullTransform(void *const instance, const vec3 instanceCentroid, const vo
 
 	cAABB tempAABB = {.min.x = 0.f, .min.y = 0.f, .min.z = 0.f, .max.x = 0.f, .max.y = 0.f, .max.z = 0.f};
 
-	// Update each collider and find the total bounding box.
-	if(vGlobal < vLast){
+	mat4 tfm;
+	transform tf = configuration;
 
-		// Extrapolate the collider's centroid from its position.
-		cInstance->centroid = vec3VAddV(vec3VMultV(quatRotateVec3FastApproximate(orientation, cLocal->centroid), scale), position);
+	// Determine the global collider's centroid by transforming the local (base) centroid.
+	cInstance->centroid = tfTransform(tf, cLocal->centroid);
+
+	// Create a new transformation for the vertices.
+	tf.position = instanceCentroid;
+	tfm = tfMatrix(tf);
+
+	// Update the collider and find the total bounding box.
+	if(vGlobal < vLast){
 
 		// First iteration.
 		// Transform the vertex.
-		*vGlobal = vec3VAddV(quatRotateVec3FastApproximate(orientation, vec3VMultV(vec3VSubV(*vLocal, localCentroid), scale)), instanceCentroid);
+		*vGlobal = mat4MMultV3(tfm, vec3VSubV(*vLocal, localCentroid));
 
 		// Initialize the AABB to the first vertex.
 		tempAABB.min = *vGlobal;
@@ -97,10 +104,12 @@ cAABB cHullTransform(void *const instance, const vec3 instanceCentroid, const vo
 
 		// Remaining iterations.
 		// Update each vertex.
-		for(++vLocal, ++vGlobal; vGlobal < vLast; ++vLocal, ++vGlobal){
+		do {
+
+			++vLocal; ++vGlobal;
 
 			// Transform the vertex.
-			*vGlobal = vec3VAddV(quatRotateVec3FastApproximate(orientation, vec3VMultV(vec3VSubV(*vLocal, localCentroid), scale)), instanceCentroid);
+			*vGlobal = mat4MMultV3(tfm, vec3VSubV(*vLocal, localCentroid));
 
 			// Update collider minima and maxima.
 			// Update aabb.left and aabb.right.
@@ -122,7 +131,7 @@ cAABB cHullTransform(void *const instance, const vec3 instanceCentroid, const vo
 				tempAABB.max.z = vGlobal->z;
 			}
 
-		}
+		} while(vGlobal < vLast);
 
 	}
 
@@ -130,10 +139,13 @@ cAABB cHullTransform(void *const instance, const vec3 instanceCentroid, const vo
 	vGlobal = cInstance->normals;
 	vLast = &vGlobal[cInstance->faceNum];
 
+	// Create a new transformation for the normals.
+	tf.position = vec3Zero();
+	tfm = tfMatrix(tf);
+
 	// Update each normal. We actually do need to scale the normals.
 	for(; vGlobal < vLast; ++vLocal, ++vGlobal){
-		*vGlobal = vec3NormalizeFastAccurate(quatRotateVec3FastApproximate(orientation, vec3VMultV(*vLocal, scale)));
-
+		*vGlobal = vec3NormalizeFastAccurate(mat4MMultV3(tfm, *vLocal));
 	}
 
 	return tempAABB;
