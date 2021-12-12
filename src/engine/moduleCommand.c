@@ -43,6 +43,27 @@ void moduleCommandResourcesDelete(){
 	}
 }
 
+__HINT_INLINE__ cmdTokenized *moduleCommandTokenizedPrependStatic(cmdTokenized **const __RESTRICT__ array){
+	return memDLinkPrepend(&__g_CommandTokenizedResourceArray, (void **)array);
+}
+__HINT_INLINE__ cmdTokenized *moduleCommandTokenizedPrepend(cmdTokenized **const __RESTRICT__ array){
+	cmdTokenized *r = moduleCommandTokenizedPrependStatic(array);
+	if(r == NULL){
+		// Attempt to extend the allocator.
+		void *const memory = memAllocate(
+			memDLinkAllocationSize(
+				NULL,
+				RESOURCE_DEFAULT_COMMAND_TOKENIZED_SIZE,
+				RESOURCE_DEFAULT_COMMAND_TOKENIZED_NUM
+			)
+		);
+		if(memDLinkExtend(&__g_CommandTokenizedResourceArray, memory, RESOURCE_DEFAULT_COMMAND_TOKENIZED_SIZE, RESOURCE_DEFAULT_COMMAND_TOKENIZED_NUM)){
+			r = moduleCommandTokenizedPrependStatic(array);
+		}
+	}
+	return r;
+}
+
 __HINT_INLINE__ cmdTokenized *moduleCommandTokenizedInsertAfterStatic(cmdTokenized **const __RESTRICT__ array, cmdTokenized *const __RESTRICT__ resource){
 	return memDLinkInsertAfter(&__g_CommandTokenizedResourceArray, (void **)array, (void *)resource);
 }

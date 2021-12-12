@@ -168,24 +168,26 @@ return_t tLoad(texture *const __RESTRICT__ tex, const char *const __RESTRICT__ f
 						printf("Error generating SDL_Surface for texture \"%s\": %s\n", imgPath, SDL_GetError());
 					}else{
 
-						const uint32_t *pixels = (uint32_t *)image->pixels;
-						const GLsizei textureSize = image->w * image->h;
-						GLsizei i;
-
 						// Convert to the appropriate RGBA format.
+						// Note that this function can reallocate image->pixels.
 						image = SDL_ConvertSurfaceFormat(image, PIXEL_FORMAT_RGBA, 0);
 						tex->format = GL_RGBA8;
 						format = GL_RGBA;
 						bytes = 3;
 
-						// Check for alpha.
-						for(i = 0; i < textureSize; ++i){
-							uint32_t alpha = pixels[i] & PIXEL_MASK_ALPHA;
-							if(alpha < 255){
-								bytes = 4;
-								if(alpha > 0){
-									tex->translucent = 1;
-									break;
+						{
+							// Check for alpha.
+							GLsizei i;
+							const uint32_t *pixels = (uint32_t *)image->pixels;
+							const GLsizei textureSize = image->w * image->h;
+							for(i = 0; i < textureSize; ++i){
+								uint32_t alpha = pixels[i] & PIXEL_MASK_ALPHA;
+								if(alpha < 255){
+									bytes = 4;
+									if(alpha > 0){
+										tex->translucent = 1;
+										break;
+									}
 								}
 							}
 						}

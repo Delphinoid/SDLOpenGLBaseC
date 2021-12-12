@@ -18,6 +18,8 @@ return_t moduleCommandResourcesInit();
 void moduleCommandResourcesReset();
 void moduleCommandResourcesDelete();
 
+cmdTokenized *moduleCommandTokenizedPrependStatic(cmdTokenized **const __RESTRICT__ array);
+cmdTokenized *moduleCommandTokenizedPrepend(cmdTokenized **const __RESTRICT__ array);
 cmdTokenized *moduleCommandTokenizedInsertAfterStatic(cmdTokenized **const __RESTRICT__ array, cmdTokenized *const __RESTRICT__ resource);
 cmdTokenized *moduleCommandTokenizedInsertAfter(cmdTokenized **const __RESTRICT__ array, cmdTokenized *const __RESTRICT__ resource);
 cmdTokenized *moduleCommandTokenizedInsertBeforeStatic(cmdTokenized **const __RESTRICT__ array, cmdTokenized *const __RESTRICT__ resource);

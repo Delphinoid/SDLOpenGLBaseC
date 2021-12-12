@@ -686,7 +686,6 @@ int main(int argc, char **argv){
 				}
 			}
 			if(CVAR_CHANGE){
-				printf("%s\n", p.obj->models[0].twi.tw->name);
 				if(strncmp(p.obj->models[0].twi.tw->name, "Lenticular"FILE_PATH_DELIMITER_STRING"Lenticular.tdw", 25) == 0){
 					p.obj->models[0].twi.tw = moduleTextureWrapperFind("LenticularAlt"FILE_PATH_DELIMITER_STRING"LenticularAlt.tdw", 31);
 				}else{

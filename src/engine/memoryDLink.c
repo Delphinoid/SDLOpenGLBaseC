@@ -140,13 +140,22 @@ void *memDLinkInsertAfter(memoryDLink *const __RESTRICT__ array, void **const st
 
 	byte_t *const r = array->free;
 	if(r){
-		array->free = memDLinkDataGetNextFreeMasked(r);
 		if(element == NULL){
-			memDLinkDataGetNext(r) = NULL;
-			memDLinkDataGetPrev(r) = NULL;
-			*start = r;
+			if(*start == NULL){
+				// Create a new list.
+				array->free = memDLinkDataGetNextFreeMasked(r);
+				memDLinkDataGetNext(r) = NULL;
+				memDLinkDataGetPrev(r) = NULL;
+				*start = r;
+			}else{
+				// Weird situation - we're inserting after a NULL element.
+				// Append it to the end of the list instead, to avoid
+				// losing the original list.
+				memDLinkAppend(array, start);
+			}
 		}else{
 			byte_t **const next = memDLinkDataGetNextPointer(element);
+			array->free = memDLinkDataGetNextFreeMasked(r);
 			// Set the new element's pointers.
 			memDLinkDataGetNext(r) = *next;
 			memDLinkDataGetPrev(r) = element;
