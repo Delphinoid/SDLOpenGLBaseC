@@ -329,16 +329,12 @@ return_t cmdBufferTokenize(cmdBuffer *const __RESTRICT__ cmdbuf, const char *str
 				}
 
 				// Insert the command.
-				if(cmdInsert == NULL && cmdbuf->cmdListStart != NULL){
-					// Note that sometimes we might encounter a situation where
-					// cmdInsert is NULL, but the list is not empty. This can
-					// create a weird situation for memDLinkInsertAfter().
-					// As a result, we should specifically check for this case.
-					cmdNew = moduleCommandTokenizedPrepend(&cmdbuf->cmdListStart);
-				}else{
-					// Normal case.
-					cmdNew = moduleCommandTokenizedInsertAfter(&cmdbuf->cmdListStart, cmdInsert);
-				}
+				// Note that sometimes we might encounter a situation where
+				// cmdInsert is NULL, but the list is not empty. This can
+				// create a weird situation for the doubly-linked list.
+				// Thus if cmdInsert is NULL, memDLinkInsertAfter() will
+				// actually prepend the element to the list.
+				cmdNew = moduleCommandTokenizedInsertAfter(&cmdbuf->cmdListStart, cmdInsert);
 				if(cmdNew == NULL){
 					/** Memory allocation failure. **/
 					return -1;
