@@ -230,13 +230,14 @@ void mdlBaseBillboardInit(){
 __FORCE_INLINE__ void mdlFindCurrentLOD(const mdlLOD *lods, const size_t lodNum, vertexIndex_t *const __RESTRICT__ indexNum, const void **const __RESTRICT__ offset, const float distance, size_t bias){
 
 	// Find the current LOD based off the distance.
-	lodIndex_t i = 1;
+	const mdlLOD *const lodFirst = lods;
+	const mdlLOD *const lodLast = &lods[lodNum];
 
 	// Loop through each LOD until one within
 	// the specified distance is found.
 	MDL_FIND_CURRENT_LOD_LOOP:
 	if((++lods)->distance <= distance){
-		if(++i < lodNum){
+		if(lods < lodLast){
 			goto MDL_FIND_CURRENT_LOD_LOOP;
 		}
 	}else{
@@ -248,17 +249,14 @@ __FORCE_INLINE__ void mdlFindCurrentLOD(const mdlLOD *lods, const size_t lodNum,
 		if(bias < 0){
 			// If the bias is negative, get some
 			// higher-detail LODs.
-			while(i < lodNum && bias != 0){
-				--lods;
-				--bias;
-				++i;
+			while(lods > lodFirst && bias != 0){
+				--lods; ++bias;
 			}
 		}else{
 			// If the bias is positive, get some
 			// lower-detail LODs.
-			while(lods->distance != 0.f && bias != 0){
-				--lods;
-				--bias;
+			while(lods < lodLast && bias != 0){
+				++lods; --bias;
 			}
 		}
 	}

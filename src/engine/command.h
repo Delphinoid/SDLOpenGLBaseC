@@ -46,7 +46,7 @@ typedef struct cmdTrieNode {
 	command cmd;
 	cmdNodeIndex_t childNum;
 	char value;
-	unsigned char type;
+	flags_t type;
 } cmdTrieNode, cmdSystem;
 
 // Command function prototype.

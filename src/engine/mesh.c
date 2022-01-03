@@ -379,7 +379,7 @@ return_t meshBillboardInit(){
 		// Find the current LOD based off the distance.
 		const mdlLOD *lod = m->lod;
 		const mdlLOD *const lodFirst = lod;
-		const mdlLOD *const lodLast = lod[m->lodNum];
+		const mdlLOD *const lodLast = &lod[m->lodNum];
 
 		// Loop through each LOD until one within
 		// the specified distance is found.
