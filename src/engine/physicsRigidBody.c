@@ -25,7 +25,7 @@ void physRigidBodyBaseInit(physRigidBodyBase *const __RESTRICT__ local){
 	local->linearDamping = 0.f;
 	local->angularDamping = 0.f;
 	vec3ZeroP(&local->centroid);
-	mat3Identity(&local->inverseInertiaTensor);
+	local->inverseInertiaTensor = g_mat3Identity;
 }
 
 __FORCE_INLINE__ static void physRigidBodyBaseAddCollider(physRigidBodyBase *const __RESTRICT__ local, physCollider *const c, const float **const vertexMassArray){
@@ -1035,7 +1035,7 @@ void physRigidBodyInit(physRigidBody *const __RESTRICT__ body){
 	body->flags = PHYSICS_BODY_ASLEEP;
 	body->base = NULL;
 	body->hull = NULL;
-	tfInit(&body->configuration);
+	body->configuration = g_tfIdentity;
 	vec3ZeroP(&body->linearVelocity);
 	vec3ZeroP(&body->angularVelocity);
 	vec3ZeroP(&body->netForce);

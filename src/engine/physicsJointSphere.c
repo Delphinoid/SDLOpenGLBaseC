@@ -48,14 +48,14 @@
 //
 // ----------------------------------------------------------------------
 //
-// The effective mass for the constraint is given by (JM^-1)J^T,
-// where M^-1 is the inverse mass matrix and J^T is the transposed
+// The effective mass for the constraint is given by (JM^{-1})J^T,
+// where M^{-1} is the inverse mass matrix and J^T is the transposed
 // Jacobian.
 //
-//        [mA^-1  0    0    0  ]
-//        [  0  IA^-1  0    0  ]
-// M^-1 = [  0    0  mB^-1  0  ]
-//        [  0    0    0  IB^-1],
+//          [mA^{-1}   0      0      0   ]
+//          [   0   IA^{-1}   0      0   ]
+// M^{-1} = [   0      0   mB^{-1}   0   ]
+//          [   0      0      0   IB^{-1}],
 //
 //       [ 0]
 //       [-n]
@@ -64,14 +64,14 @@
 //
 // Expanding results in
 //
-// (JM^-1)J^T = ((IA^-1 + IB^-1) X n) . n.
+// (JM^{-1})J^T = ((IA^{-1} + IB^{-1}) X n) . n.
 //
 // ----------------------------------------------------------------------
 //
 // Semi-implicit Euler:
 //
-// V   = V_i + dt * M^-1 * F,
-// V_f = V   + dt * M^-1 * P.
+// V   = V_i + dt * M^{-1} * F,
+// V_f = V   + dt * M^{-1} * P.
 //
 // Where V_i is the initial velocity vector, V_f is the final
 // velocity vector, F is the external force on the body (e.g.
@@ -82,12 +82,12 @@
 // multiplier) lambda':
 //
 // JV_f + b = 0
-// J(V + dt * M^-1 * P) + b = 0
-// JV + dt * (JM^-1)P + b = 0
-// JV + dt * (JM^-1)J^T . lambda + b = 0
-// dt * (JM^-1)J^T . lambda = -(JV + b)
-// dt * lambda = -(JV + b)/((JM^-1)J^T)
-// lambda' = -(JV + b)/((JM^-1)J^T).
+// J(V + dt * M^{-1} * P) + b = 0
+// JV + dt * (JM^{-1})P + b = 0
+// JV + dt * (JM^{-1})J^T . lambda + b = 0
+// dt * (JM^{-1})J^T . lambda = -(JV + b)
+// dt * lambda = -(JV + b)/((JM^{-1})J^T)
+// lambda' = -(JV + b)/((JM^{-1})J^T).
 //
 // ----------------------------------------------------------------------
 
@@ -151,7 +151,7 @@ static __FORCE_INLINE__ void physJointSphereWarmStart(physJointSphere *const __R
 static __FORCE_INLINE__ float physJointSphereConeLimitEffectiveMass(const mat3 inverseInertiaTensorA, const mat3 inverseInertiaTensorB, const vec3 normal){
 
 	// Effective mass:
-	// (JM^-1)J^T = ((IA^-1 + IB^-1) X n) . n
+	// (JM^{-1})J^T = ((IA^{-1} + IB^{-1}) X n) . n
 	return vec3Dot(
 		mat3MMultV(
 			mat3MAddM(inverseInertiaTensorA, inverseInertiaTensorB),
@@ -224,14 +224,14 @@ static __FORCE_INLINE__ void physJointSpherePersist(physJointSphere *const __RES
 		const quat q1 = bodyA->configuration.orientation;
 		const quat q2 = bodyB->configuration.orientation;
 		const vec3 u1 = vec3New(
-			q1.v.x*(q1.v.y+q1.v.y)-q1.w*(q1.v.z+q1.v.z),
-			1.f-q1.v.x*(q1.v.x+q1.v.x)-q1.v.z*(q1.v.z+q1.v.z),
-			q1.v.y*(q1.v.z+q1.v.z)+q1.w*(q1.v.x+q1.v.x)
+			q1.x*(q1.y+q1.y)-q1.w*(q1.z+q1.z),
+			1.f-q1.x*(q1.x+q1.x)-q1.z*(q1.z+q1.z),
+			q1.y*(q1.z+q1.z)+q1.w*(q1.x+q1.x)
 		);
 		const vec3 u2 = vec3New(
-			q2.v.x*(q2.v.y+q2.v.y)-q2.w*(q2.v.z+q2.v.z),
-			1.f-q2.v.x*(q2.v.x+q2.v.x)-q2.v.z*(q2.v.z+q2.v.z),
-			q2.v.y*(q2.v.z+q2.v.z)+q2.w*(q2.v.x+q2.v.x)
+			q2.x*(q2.y+q2.y)-q2.w*(q2.z+q2.z),
+			1.f-q2.x*(q2.x+q2.x)-q2.z*(q2.z+q2.z),
+			q2.y*(q2.z+q2.z)+q2.w*(q2.x+q2.x)
 		);
 		joint->coneLimitAxis = vec3Cross(u2, u1);
 
@@ -311,7 +311,7 @@ void physJointSphereSolveVelocityConstraints(physJoint *const __RESTRICT__ joint
 
 		// Calculate the cone limit impulse magnitude,
 		// i.e. the constraint's Lagrange multiplier.
-		// -JV/((JM^-1)J^T)
+		// -JV/((JM^{-1})J^T)
 		lambda *= -((physJointSphere *)joint)->coneLimitInverseEffectiveMass;
 
 		// Clamp the cone limit impulse magnitude.

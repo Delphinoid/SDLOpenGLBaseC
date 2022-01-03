@@ -34,7 +34,7 @@ void particleSystemBaseInit(particleSystemBase *const __RESTRICT__ base){
 void particleSystemInit(particleSystem *const __RESTRICT__ system){
 	system->particles = NULL;
 	system->particleNum = 0;
-	tfInit(&system->configuration);
+	system->configuration = g_tfIdentity;
 	system->lifetime = 0.f;
 	system->children = NULL;
 	system->base = NULL;
@@ -94,7 +94,7 @@ void particleSystemInstantiate(particleSystem *const __RESTRICT__ system, const 
 		}
 	}
 
-	tfInit(&system->configuration);
+	system->configuration = g_tfIdentity;
 	system->lifetime = base->lifetime;
 
 	if(base->particleMax != 0){
@@ -225,7 +225,7 @@ __FORCE_INLINE__ static void particleSystemParticlesRender(const particleSystem 
 
 	// Generate state buffers.
 	for(; p < pLast; ++p, ++state){
-		state->transformation = tfMatrix(p->configuration);
+		state->transformation = tfMatrix4(p->configuration);
 		state->frame = twState(mdl->tw, &p->animator, p->currentAnim, interpT)->subframe;
 	}
 

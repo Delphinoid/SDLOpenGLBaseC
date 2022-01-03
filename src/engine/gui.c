@@ -4,7 +4,7 @@
 void guiInit(guiElement *const __RESTRICT__ element, const flags_t type){
 	element->children = NULL;
 	element->type = type;
-	tfInit(&element->root);
+	element->root = g_tfIdentity;
 }
 
 guiElement *guiNewChild(guiElement *const element){

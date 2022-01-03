@@ -11,7 +11,7 @@
 
 void shdrDataInit(shaderData *const __RESTRICT__ shdrData){
 	shdrData->lastTexID = 0;
-	shdrData->identityMatrix = mat4Identity();
+	shdrData->identityMatrix = g_mat4Identity;
 	shdrData->biasMIP = SHADER_DEFAULT_BIAS_MIP;
 	shdrData->biasLOD = SHADER_DEFAULT_BIAS_LOD;
 }

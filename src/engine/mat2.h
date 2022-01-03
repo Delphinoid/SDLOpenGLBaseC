@@ -4,6 +4,13 @@
 #include "vec2.h"
 #include "return.h"
 
+// WARNING: Both quaternions and matrices often violate
+// strict-aliasing rules. That is, it is common for the
+// engine to cast adjacent floats in quaternion and matrix
+// structures to vectors, for instance. While this is not
+// an issue on most sensible compilers and platforms, it
+// is still technically undefined behaviour.
+
 /** Use an alias? **/
 // All matrices are stored in column-major
 // order, despite this being non-standard
@@ -14,8 +21,9 @@ typedef struct {
 	float m[2][2];
 } mat2;
 
-mat2 mat2Identity();
-mat2 mat2Zero();
+extern mat2 g_mat2Identity;
+extern mat2 g_mat2Zero;
+
 void mat2IdentityP(mat2 *const __RESTRICT__ m);
 void mat2ZeroP(mat2 *const __RESTRICT__ m);
 

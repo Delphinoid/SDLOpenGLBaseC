@@ -51,7 +51,7 @@ typedef struct {
 	GLuint lastTexID;
 
 	// Buffer data.
-	transform skeletonBindAccumulator[SKELETON_MAX_BONE_NUM];  // Accumulates bind states for bones before rendering.
+	///transform skeletonBindAccumulator[SKELETON_MAX_BONE_NUM];  // Accumulates bind states for bones before rendering.
 	mat4 skeletonTransformState[SKELETON_MAX_BONE_NUM];   // Stores the renderable's transform state before rendering.
 	spriteState spriteTransformState[SPRITE_STATE_BUFFER_SIZE];
 

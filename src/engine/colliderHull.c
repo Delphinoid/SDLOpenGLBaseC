@@ -79,24 +79,20 @@ cAABB cHullTransform(void *const instance, const vec3 instanceCentroid, const vo
 	vec3 *vGlobal = cInstance->vertices;
 	const vec3 *vLast = &vGlobal[cInstance->vertexNum];
 
+	// Create a new transformation for the vertices.
+	const mat3 tfm = tfMatrix3(configuration);
+
 	cAABB tempAABB = {.min.x = 0.f, .min.y = 0.f, .min.z = 0.f, .max.x = 0.f, .max.y = 0.f, .max.z = 0.f};
 
-	mat4 tfm;
-	transform tf = configuration;
-
 	// Determine the global collider's centroid by transforming the local (base) centroid.
-	cInstance->centroid = tfTransform(tf, cLocal->centroid);
-
-	// Create a new transformation for the vertices.
-	tf.position = instanceCentroid;
-	tfm = tfMatrix(tf);
+	cInstance->centroid = tfTransform(configuration, cLocal->centroid);
 
 	// Update the collider and find the total bounding box.
 	if(vGlobal < vLast){
 
 		// First iteration.
 		// Transform the vertex.
-		*vGlobal = mat4MMultV3(tfm, vec3VSubV(*vLocal, localCentroid));
+		*vGlobal = vec3VAddV(mat3MMultV(tfm, vec3VSubV(*vLocal, localCentroid)), instanceCentroid);
 
 		// Initialize the AABB to the first vertex.
 		tempAABB.min = *vGlobal;
@@ -109,7 +105,7 @@ cAABB cHullTransform(void *const instance, const vec3 instanceCentroid, const vo
 			++vLocal; ++vGlobal;
 
 			// Transform the vertex.
-			*vGlobal = mat4MMultV3(tfm, vec3VSubV(*vLocal, localCentroid));
+			*vGlobal = vec3VAddV(mat3MMultV(tfm, vec3VSubV(*vLocal, localCentroid)), instanceCentroid);
 
 			// Update collider minima and maxima.
 			// Update aabb.left and aabb.right.
@@ -139,13 +135,9 @@ cAABB cHullTransform(void *const instance, const vec3 instanceCentroid, const vo
 	vGlobal = cInstance->normals;
 	vLast = &vGlobal[cInstance->faceNum];
 
-	// Create a new transformation for the normals.
-	tf.position = vec3Zero();
-	tfm = tfMatrix(tf);
-
 	// Update each normal. We actually do need to scale the normals.
 	for(; vGlobal < vLast; ++vLocal, ++vGlobal){
-		*vGlobal = vec3NormalizeFastAccurate(mat4MMultV3(tfm, *vLocal));
+		*vGlobal = vec3NormalizeFastAccurate(mat3MMultV(tfm, *vLocal));
 	}
 
 	return tempAABB;

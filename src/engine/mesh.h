@@ -34,6 +34,7 @@ void meshInit(mesh *const __RESTRICT__ m);
 return_t meshDefaultInit();
 return_t meshBillboardInit();
 return_t meshGenerateBuffers(mesh *const __RESTRICT__ m, const vertexIndex_t vertexNum, const vertex *const __RESTRICT__ vertices, const vertexIndex_t indexNum, const vertexIndex_t *const __RESTRICT__ indices);
+///void meshFindCurrentLOD(const mesh *const __RESTRICT__ m, vertexIndex_t *const __RESTRICT__ indexNum, const void **const __RESTRICT__ offset, const float distance, size_t bias);
 void meshDelete(mesh *const __RESTRICT__ m);
 
 #endif

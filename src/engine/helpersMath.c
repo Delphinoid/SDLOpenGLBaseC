@@ -357,3 +357,16 @@ __HINT_INLINE__ float floatMA(const float f1, const float f2, const float t){
 	return f1 + f2 * t;
 }
 #endif
+
+__FORCE_INLINE__ float floatMin(const float x, const float y){
+	return x < y ? x : y;
+}
+
+__FORCE_INLINE__ float floatMax(const float x, const float y){
+	return x > y ? x : y;
+}
+
+__FORCE_INLINE__ float floatClamp(const float x, const float min, const float max){
+	const float t = x < min ? min : x;
+	return t > max ? max : t;
+}

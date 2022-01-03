@@ -35,14 +35,14 @@
 //
 // ----------------------------------------------------------------------
 //
-// The effective mass for the constraint is given by (JM^-1)J^T,
-// where M^-1 is the inverse mass matrix and J^T is the transposed
+// The effective mass for the constraint is given by (JM^{-1})J^T,
+// where M^{-1} is the inverse mass matrix and J^T is the transposed
 // Jacobian.
 //
-//        [mA^-1  0    0    0  ]
-//        [  0  IA^-1  0    0  ]
-// M^-1 = [  0    0  mB^-1  0  ]
-//        [  0    0    0  IB^-1],
+//          [mA^{-1}   0      0      0   ]
+//          [   0   IA^{-1}   0      0   ]
+// M^{-1} = [   0      0   mB^{-1}   0   ]
+//          [   0      0      0   IB^{-1}],
 //
 //       [    -n   ]
 //       [-(rA X n)]
@@ -51,14 +51,14 @@
 //
 // Expanding results in
 //
-// (JM^-1)J^T = mA^-1 + mB^-1 + ((rA X n) . (IA^-1 * (rA X n))) + ((rB X n) . (IB^-1 * (rB X n))).
+// (JM^{-1})J^T = mA^{-1} + mB^{-1} + ((rA X n) . (IA^{-1} * (rA X n))) + ((rB X n) . (IB^{-1} * (rB X n))).
 //
 // ----------------------------------------------------------------------
 //
 // Semi-implicit Euler:
 //
-// V   = V_i + dt * M^-1 * F,
-// V_f = V   + dt * M^-1 * P.
+// V   = V_i + dt * M^{-1} * F,
+// V_f = V   + dt * M^{-1} * P.
 //
 // Where V_i is the initial velocity vector, V_f is the final
 // velocity vector, F is the external force on the body (e.g.
@@ -69,12 +69,12 @@
 // multiplier) lambda':
 //
 // JV_f + b = 0
-// J(V + dt * M^-1 * P) + b = 0
-// JV + dt * (JM^-1)P + b = 0
-// JV + dt * (JM^-1)J^T . lambda + b = 0
-// dt * (JM^-1)J^T . lambda = -(JV + b)
-// dt * lambda = -(JV + b)/((JM^-1)J^T)
-// lambda' = -(JV + b)/((JM^-1)J^T).
+// J(V + dt * M^{-1} * P) + b = 0
+// JV + dt * (JM^{-1})P + b = 0
+// JV + dt * (JM^{-1})J^T . lambda + b = 0
+// dt * (JM^{-1})J^T . lambda = -(JV + b)
+// dt * lambda = -(JV + b)/((JM^{-1})J^T)
+// lambda' = -(JV + b)/((JM^{-1})J^T).
 //
 // ----------------------------------------------------------------------
 
@@ -107,7 +107,7 @@ static __FORCE_INLINE__ void physJointDistanceWarmStart(physJointDistance *const
 static __FORCE_INLINE__ float physJointDistanceEffectiveMass(const vec3 pointA, const mat3 inverseInertiaTensorA, const vec3 pointB, const mat3 inverseInertiaTensorB, const vec3 normal, const float inverseMassTotal){
 
 	// Effective mass:
-	// (JM^-1)J^T = mA^-1 + mB^-1 + ((rA X n) . (IA^-1 * (rA X n))) + ((rB X n) . (IB^-1 * (rB X n)))
+	// (JM^{-1})J^T = mA^{-1} + mB^{-1} + ((rA X n) . (IA^{-1} * (rA X n))) + ((rB X n) . (IB^{-1} * (rB X n)))
 	const vec3 angularDeltaA = vec3Cross(pointA, normal);
 	const vec3 angularDeltaB = vec3Cross(pointB, normal);
 	return inverseMassTotal +
@@ -250,7 +250,7 @@ void physJointDistanceSolveVelocityConstraints(physJoint *const __RESTRICT__ joi
 
 	// Calculate the impulse magnitude, i.e.
 	// the constraint's Lagrange multiplier.
-	// lambda = -(JV + b)/((JM^-1)J^T)
+	// lambda = -(JV + b)/((JM^{-1})J^T)
 	lambda = -((physJointDistance *)joint)->inverseEffectiveMass * (
 		lambda + ((physJointDistance *)joint)->bias +
 		((physJointDistance *)joint)->gamma * ((physJointDistance *)joint)->impulseAccumulator

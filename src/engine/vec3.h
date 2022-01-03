@@ -119,7 +119,9 @@ void vec3LerpP2(const vec3 *const __RESTRICT__ v1, vec3 *const __RESTRICT__ v2, 
 void vec3LerpPR(const vec3 *const __RESTRICT__ v1, const vec3 *const __RESTRICT__ v2, const float t, vec3 *const __RESTRICT__ r);
 
 vec3 vec3LinearCombination(const vec3 v1, const vec3 v2, const vec3 v3, const float a, const float b, const float c);
-void vec3LinearCombinationP(const vec3 *const __RESTRICT__ v1, const vec3 *const __RESTRICT__ v2, const vec3 *const __RESTRICT__ v3,
-                            const float a, const float b, const float c, vec3 *const __RESTRICT__ r);
+void vec3LinearCombinationP(
+	const vec3 *const __RESTRICT__ v1, const vec3 *const __RESTRICT__ v2, const vec3 *const __RESTRICT__ v3,
+	const float a, const float b, const float c, vec3 *const __RESTRICT__ r
+);
 
 #endif

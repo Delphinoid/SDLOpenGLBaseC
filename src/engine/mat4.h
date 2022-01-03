@@ -6,6 +6,13 @@
 #include "quat.h"
 #include "return.h"
 
+// WARNING: Both quaternions and matrices often violate
+// strict-aliasing rules. That is, it is common for the
+// engine to cast adjacent floats in quaternion and matrix
+// structures to vectors, for instance. While this is not
+// an issue on most sensible compilers and platforms, it
+// is still technically undefined behaviour.
+
 /** Use an alias? **/
 // All matrices are stored in column-major
 // order, despite this being non-standard
@@ -16,8 +23,9 @@ typedef struct {
 	float m[4][4];
 } mat4;
 
-mat4 mat4Identity();
-mat4 mat4Zero();
+extern mat4 g_mat4Identity;
+extern mat4 g_mat4Zero;
+
 void mat4IdentityP(mat4 *const __RESTRICT__ m);
 void mat4ZeroP(mat4 *const __RESTRICT__ m);
 
@@ -88,23 +96,26 @@ void mat4LookAtP(mat4 *const __RESTRICT__ m, const vec3 *const __RESTRICT__ eye,
 
 mat4 mat4TranslationMatrix(const float x, const float y, const float z);
 void mat4TranslationMatrixP(mat4 *const __RESTRICT__ r, const float x, const float y, const float z);
-mat4 mat4Translate(const mat4 m, const float x, const float y, const float z);
-void mat4TranslateP(mat4 *const __RESTRICT__ m, const float x, const float y, const float z);
-void mat4TranslatePR(const mat4 *const __RESTRICT__ m, const float x, const float y, const float z, mat4 *const __RESTRICT__ r);
+mat4 mat4Translate(const float x, const float y, const float z, const mat4 m);
+void mat4TranslateP(const float x, const float y, const float z, mat4 *const __RESTRICT__ m);
+void mat4TranslatePR(const float x, const float y, const float z, const mat4 *const __RESTRICT__ m, mat4 *const __RESTRICT__ r);
 mat4 mat4TranslatePre(const mat4 m, const float x, const float y, const float z);
 
 mat4 mat4RotationMatrix(const quat q);
 void mat4RotationMatrixP(mat4 *const __RESTRICT__ m, const quat *const __RESTRICT__ q);
-mat4 mat4Rotate(const mat4 m, const quat q);
-void mat4RotateP(mat4 *const __RESTRICT__ m, const quat *const __RESTRICT__ q);
-void mat4RotatePR(const mat4 *const __RESTRICT__ m, const quat *const __RESTRICT__ q, mat4 *const __RESTRICT__ r);
+mat4 mat4Rotate(const quat q, const mat4 m);
+void mat4RotateP(const quat *const __RESTRICT__ q, mat4 *const __RESTRICT__ m);
+void mat4RotatePR(const quat *const __RESTRICT__ q, const mat4 *const __RESTRICT__ m, mat4 *const __RESTRICT__ r);
 
 mat4 mat4ScaleMatrix(const float x, const float y, const float z);
 void mat4ScaleMatrixP(mat4 *const __RESTRICT__ m, const float x, const float y, const float z);
-mat4 mat4Scale(const mat4 m, const float x, const float y, const float z);
-void mat4ScaleP(mat4 *const __RESTRICT__ m, const float x, const float y, const float z);
-void mat4ScalePR(const mat4 *const __RESTRICT__ m, const float x, const float y, const float z, mat4 *const __RESTRICT__ r);
+mat4 mat4Scale(const float x, const float y, const float z, const mat4 m);
+void mat4ScaleP(const float x, const float y, const float z, mat4 *const __RESTRICT__ m);
+void mat4ScalePR(const float x, const float y, const float z, const mat4 *const __RESTRICT__ m, mat4 *const __RESTRICT__ r);
 mat4 mat4ScalePre(const mat4 m, const float x, const float y, const float z);
+
+mat4 mat4ShearMatrix(const quat q, const vec3 s);
+void mat4ShearMatrixPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ s, mat4 *const __RESTRICT__ r);
 
 mat4 mat4Quaternion(const quat q);
 void mat4QuaternionP(mat4 *const __RESTRICT__ m, const quat *const __RESTRICT__ q);

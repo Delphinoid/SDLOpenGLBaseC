@@ -83,7 +83,7 @@ mat4 billboardState(const billboard data, const camera *const __RESTRICT__ cam, 
 		}
 
 		// Translate the transformation to the "origin".
-		configuration = mat4TranslatePre(configuration, -centroid.x, -centroid.y, -centroid.z);
+		configuration = mat4Translate(-centroid.x, -centroid.y, -centroid.z, configuration);
 		///vec3ZeroP((vec3 *)&configuration.m[3][0]);
 
 		// Scale based on distance if necessary.
@@ -93,12 +93,12 @@ mat4 billboardState(const billboard data, const camera *const __RESTRICT__ cam, 
 		}
 
 		// Rotate to face and translate back.
-		configuration = mat4TranslatePre(
+		configuration = mat4Translate(
+			centroid.x, centroid.y, centroid.z,
 			mat4MMultM(
 				mat4RotateToFace(eye, target, up),
 				configuration
-			),
-			centroid.x, centroid.y, centroid.z
+			)
 		);
 
 		// Translate back.

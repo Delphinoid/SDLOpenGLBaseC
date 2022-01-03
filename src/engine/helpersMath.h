@@ -15,9 +15,6 @@
 	#define rsqrtAccurate(x) (1.f/sqrtf(x))
 #endif
 
-#define min(a, b) ((a) < (b) ? (a) : (b))
-#define max(a, b) ((a) > (b) ? (a) : (b))
-
 float copySign(const float x, const float y);
 
 float fastInvSqrt(float x);
@@ -59,5 +56,9 @@ void segmentClosestPointIncidentP(const vec3 *const __RESTRICT__ s1, const vec3 
 float floatLerp(const float f1, const float f2, const float t);
 float floatMA(const float f1, const float f2, const float t);
 #endif
+
+float floatMin(const float x, const float y);
+float floatMax(const float x, const float y);
+float floatClamp(const float x, const float min, const float max);
 
 #endif

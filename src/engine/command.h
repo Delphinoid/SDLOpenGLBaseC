@@ -12,9 +12,12 @@
 #define COMMAND_MAX_ARGUMENT_BUFFER_SIZE 8192
 #define COMMAND_MAX_ARGUMENTS 64
 
+#define COMMAND_TYPE_FUNCTION 0
+#define COMMAND_TYPE_ALIAS 1
+
 // Returns '1' for heap allocations and '0' for function pointers.
-#define cmdType(cmd) ((uintptr_t)(cmd) & (uintptr_t)0x01)
-#define cmdAddress(cmd) ((uintptr_t)(cmd) & (uintptr_t)~0x01)
+///#define cmdType(cmd) ((uintptr_t)(cmd) & (uintptr_t)0x01)
+///#define cmdAddress(cmd) ((uintptr_t)(cmd) & (uintptr_t)~0x01)
 
 typedef unsigned char cmdNodeIndex_t;
 
@@ -43,6 +46,7 @@ typedef struct cmdTrieNode {
 	command cmd;
 	cmdNodeIndex_t childNum;
 	char value;
+	unsigned char type;
 } cmdTrieNode, cmdSystem;
 
 // Command function prototype.
@@ -77,8 +81,8 @@ typedef struct {
 } cmdBuffer;
 
 void cmdSystemInit(cmdSystem *const __RESTRICT__ cmdsys);
-return_t cmdSystemAdd(cmdSystem *node, const char *__RESTRICT__ name, const command cmd);
-command cmdSystemFind(const cmdSystem *node, const char *__RESTRICT__ name);
+return_t cmdSystemAdd(cmdSystem *node, const char *__RESTRICT__ name, const command cmd, const unsigned char type);
+const cmdTrieNode *const cmdSystemFind(const cmdSystem *node, const char *__RESTRICT__ name);
 void cmdSystemDelete(cmdSystem *const __RESTRICT__ cmdsys);
 
 void cmdBufferInit(cmdBuffer *const __RESTRICT__ cmdbuf);

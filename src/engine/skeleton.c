@@ -25,10 +25,17 @@
 static sklNode g_sklNodeDefault = {
 	.name = "root",
 	.parent = 0,
-	.defaultState = {
-		.position = {.x = 0.f, .y = 0.f, .z = 0.f},
-		.orientation = {.w = 1.f, .v = {.x = 0.f, .y = 0.f, .z = 0.f}},
-		.scale = {.x = 1.f, .y = 1.f, .z = 1.f}
+	.localBind = {
+		.position.x    = 0.f, .position.y    = 0.f, .position.z    = 0.f,
+		.orientation.x = 0.f, .orientation.y = 0.f, .orientation.z = 0.f, .orientation.w = 1.f,
+		.shear.x       = 0.f, .shear.y       = 0.f, .shear.z       = 0.f, .shear.w       = 1.f,
+		.scale.x       = 1.f, .scale.y       = 1.f, .scale.z       = 1.f
+	},
+	.globalBindInverse = {
+		.position.x    = 0.f, .position.y    = 0.f, .position.z    = 0.f,
+		.orientation.x = 0.f, .orientation.y = 0.f, .orientation.z = 0.f, .orientation.w = 1.f,
+		.shear.x       = 0.f, .shear.y       = 0.f, .shear.z       = 0.f, .shear.w       = 1.f,
+		.scale.x       = 1.f, .scale.y       = 1.f, .scale.z       = 1.f
 	}
 };
 skeleton g_sklDefault = {
@@ -48,6 +55,8 @@ static void sklDefragment(skeleton *const __RESTRICT__ skl, const char *const __
 	memFree(nameArray);
 
 	for(i = 0; i < skl->boneNum; ++i){
+		/// Fix comments referencing globalBindInverse when removing this function.
+		skl->bones[i].globalBindInverse = tfInverse(skl->bones[i].globalBindInverse);
 		skl->bones[i].name = namePtr;
 		namePtr += strlen(namePtr)+1;
 	}
@@ -141,11 +150,21 @@ return_t sklLoad(skeleton *const __RESTRICT__ skl, const char *const __RESTRICT_
 						}
 					}
 
-					skl->bones[skl->boneNum].defaultState.position = vec3New(data[0][0], data[0][1], data[0][2]);
-					skl->bones[skl->boneNum].defaultState.orientation = quatNewEuler(data[1][0]*RADIAN_RATIO, data[1][1]*RADIAN_RATIO, data[1][2]*RADIAN_RATIO);
-					skl->bones[skl->boneNum].defaultState.scale = vec3New(data[2][0], data[2][1], data[2][2]);
+					skl->bones[skl->boneNum].localBind.position = vec3New(data[0][0], data[0][1], data[0][2]);
+					skl->bones[skl->boneNum].localBind.orientation = quatNewEuler(data[1][0]*RADIAN_RATIO, data[1][1]*RADIAN_RATIO, data[1][2]*RADIAN_RATIO);
+					skl->bones[skl->boneNum].localBind.shear = g_quatIdentity;
+					skl->bones[skl->boneNum].localBind.scale = vec3New(data[2][0], data[2][1], data[2][2]);
 
 					skl->bones[skl->boneNum].parent = parent;
+
+					// Accumulate the global bind poses; NOT the global inverse bind poses.
+					// We invert these later on in sklDefragment.
+					if(parent == skl->boneNum){
+						// The root just starts with the local bind pose.
+						skl->bones[skl->boneNum].globalBindInverse = skl->bones[skl->boneNum].localBind;
+					}else{
+						skl->bones[skl->boneNum].globalBindInverse = tfAppend(skl->bones[parent].globalBindInverse, skl->bones[skl->boneNum].localBind);
+					}
 
 					if(strrchr(token, '{')){
 						parent = skl->boneNum;
@@ -435,7 +454,7 @@ return_t sklaLoad(sklAnim *const __RESTRICT__ skla, const char *const __RESTRICT
 					// Initialize each bone.
 					if(skla->animData.frameNum == 0){
 						for(i = 0; i < skla->boneNum; ++i){
-							tfInit(&skla->frames[skla->animData.frameNum][i]);
+							skla->frames[skla->animData.frameNum][i] = g_tfIdentity;
 						}
 					}else{
 						for(i = 0; i < skla->boneNum; ++i){
@@ -483,6 +502,7 @@ return_t sklaLoad(sklAnim *const __RESTRICT__ skla, const char *const __RESTRICT
 
 						skla->frames[skla->animData.frameNum-1][boneID].position = vec3New(data[0][0], data[0][1], data[0][2]);
 						skla->frames[skla->animData.frameNum-1][boneID].orientation = quatNewEuler(data[1][0]*RADIAN_RATIO, data[1][1]*RADIAN_RATIO, data[1][2]*RADIAN_RATIO);
+						skla->frames[skla->animData.frameNum-1][boneID].shear = g_quatIdentity;
 						skla->frames[skla->animData.frameNum-1][boneID].scale = vec3New(data[2][0], data[2][1], data[2][2]);
 
 					}else{
@@ -704,26 +724,23 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *const __RES
 								z = strtod(tokPos, NULL);
 								currentState->orientation = quatNewEuler(x, y, z);
 
-								//The Source Engine uses Z as its up axis, so we need to fix that with the root bone.
-								if(boneID == 0 && invert){
-									transform rotateUp = {
-										.position.x = 0.f, .position.y = 0.f, .position.z = 0.f,
-										.orientation.w = 0.70710678118654752440084436210485f, .orientation.v.x = -0.70710678118654752440084436210485f, .orientation.v.y = 0.f, .orientation.v.z = 0.f,
-										.scale.x = 1.f, .scale.y = 1.f, .scale.z = 1.f
-									};
-									*currentState = tfAppend(rotateUp, *currentState);
-								}
-
 								//Set the bone's scale!
 								currentState->scale = vec3New(1.f, 1.f, 1.f);
+								currentState->shear = g_quatIdentity;
 
-								/** Some SMD animations are different to how I do animations. **/
-								/** See skliGenerateBoneState for more information. **/
-								if(invert){
-									/// Originally used the old tfInverse function.
-									transform thing = tfInverse(skl->bones[boneID].defaultState);
-									thing.position = quatRotateVec3FastApproximate(thing.orientation, thing.position);
-									*currentState = tfAppend(thing, *currentState);
+								//The Source Engine uses Z as its up axis, so we need to fix that with the root bone.
+								if(boneID == 0 && invert){
+									float y;
+									const quat rotateUp = {
+										.x = -0.70710678118654752440084436210485f,
+										.y = 0.f,
+										.z = 0.f,
+										.w = 0.70710678118654752440084436210485f
+									};
+									currentState->orientation = quatQMultQ(rotateUp, currentState->orientation);
+									y = currentState->position.y;
+									currentState->position.y = currentState->position.z;
+									currentState->position.z = -y;
 								}
 
 							}else{
@@ -977,7 +994,8 @@ return_t skliLoad(sklInstance *const __RESTRICT__ skli, const char *const __REST
 	skla->animData.frameDelays = memAllocate(skla->animData.frameNum*sizeof(float));
 
 	transform tempBoneRoot, tempBoneTop;
-	tfInit(&tempBoneRoot); tfInit(&tempBoneTop);
+	tempBoneRoot = g_tfIdentity;
+	tempBoneTop = g_tfIdentity;
 	//tempBoneRoot.position.y = -1.f;
 	//tempBoneTop.position.y = -1.f;
 
@@ -1048,14 +1066,18 @@ transform skliGenerateBoneState(const sklInstance *const __RESTRICT__ skli, cons
 					anim->animation->frames[anim->animator.nextFrame][animBoneID],
 					anim->animInterpT
 				);
+				// Remove the bind pose's "contribution" to the animation.
+				// We do this here rather than when loading animations so
+				// that we may use animations from other skeletons.
+				animationState = tfAppend(tfInverse(skli->skl->bones[id].localBind), animationState);
 
 				// Weight the animation by its intensity.
 				if(anim->intensity != 1.f){
-					animationState = tfInterpolate(tfIdentity(), animationState, anim->intensity);
+					animationState = tfInterpolate(g_tfIdentity, animationState, anim->intensity);
 				}
 
 			}else{
-				tfInit(&animationState);
+				animationState = g_tfIdentity;
 			}
 
 			if(anim->flags == SKELETON_ANIM_INSTANCE_OVERWRITE){

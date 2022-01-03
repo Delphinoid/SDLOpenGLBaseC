@@ -33,21 +33,22 @@ static const float v[8] = {
     1.90110745351730037f*(8.f/17.f)
 };
 
-__HINT_INLINE__ quat quatNew(const float w, const float x, const float y, const float z){
-	const quat r = {.w = w, .v.x = x, .v.y = y, .v.z = z};
-	return r;
+quat g_quatIdentity = {.x = 0.f, .y = 0.f, .z = 0.f, .w = 1.f};
+
+__HINT_INLINE__ void quatIdentityP(quat *const __RESTRICT__ q){
+	*q = g_quatIdentity;
 }
-__HINT_INLINE__ quat quatNewS(const float s){
-	const quat r = {.w = s, .v.x = s, .v.y = s, .v.z = s};
+__HINT_INLINE__ quat quatNew(const float w, const float x, const float y, const float z){
+	const quat r = {.x = x, .y = y, .z = z, .w = w};
 	return r;
 }
 __HINT_INLINE__ quat quatNewAxisAngle(const float angle, const float axisX, const float axisY, const float axisZ){
-	const float t = sinf(angle/2.f);
+	const float t = sinf(0.5f*angle);
 	const quat r = {
-		.w   = cosf(angle/2.f),
-		.v.x = axisX * t,
-		.v.y = axisY * t,
-		.v.z = axisZ * t
+		.x = axisX * t,
+		.y = axisY * t,
+		.z = axisZ * t,
+		.w = cosf(0.5f*angle)
 	};
 	return r;
 }
@@ -67,10 +68,10 @@ __HINT_INLINE__ quat quatNewEuler(const float x, const float y, const float z){
 	const float czsy = cz*sy;
 	const float szcy = sz*cy;
 	const quat r = {
-		.w   = czcy * cx + szsy * sx,
-		.v.x = czcy * sx - szsy * cx,
-		.v.y = czsy * cx + szcy * sx,
-		.v.z = szcy * cx - czsy * sx
+		.w = czcy * cx + szsy * sx,
+		.x = czcy * sx - szsy * cx,
+		.y = czsy * cx + szcy * sx,
+		.z = szcy * cx - czsy * sx
 	};
 	return r;
 }
@@ -80,9 +81,12 @@ __HINT_INLINE__ quat quatNewRotation(const vec3 v1, const vec3 v2){
 	// Handle the case where the vectors are
 	// antiparallel to avoid singularities.
 	if(d < -1.f + QUAT_SINGULARITY_THRESHOLD){
+		const vec3 v = vec3Orthonormal(v1);
 		const quat q = {
-			.w = 0.f,
-			.v = vec3Orthonormal(v1)
+			.x = v.x,
+			.y = v.y,
+			.z = v.z,
+			.w = 0
 		};
 		return q;
 	}else{
@@ -95,28 +99,24 @@ __HINT_INLINE__ quat quatNewRotation(const vec3 v1, const vec3 v2){
 __HINT_INLINE__ quat quatNewRotationFast(const vec3 v1, const vec3 v2){
 	// Rotation from v1 to v2.
 	// Doesn't check antiparallel vectors.
+	const vec3 v = vec3Cross(v1, v2);
 	const quat r = {
-		.w = 1.f + vec3Dot(v1, v2),
-		.v = vec3Cross(v1, v2)
+		.x = v.x,
+		.y = v.y,
+		.z = v.z,
+		.w = 1.f + vec3Dot(v1, v2)
 	};
 	return quatNormalizeFastAccurate(r);
 }
-quat quatZero(){
-	const quat r = {.w = 0.f, .v.x = 0.f, .v.y = 0.f, .v.z = 0.f};
-	return r;
-}
 __HINT_INLINE__ void quatSet(quat *const __RESTRICT__ q, const float w, const float x, const float y, const float z){
-	q->w = w; q->v.x = x; q->v.y = y; q->v.z = z;
-}
-__HINT_INLINE__ void quatSetS(quat *const __RESTRICT__ q, const float s){
-	q->w = s; q->v.x = s; q->v.y = s; q->v.z = s;
+	q->x = x; q->y = y; q->z = z; q->w = w;
 }
 __HINT_INLINE__ void quatSetAxisAngle(quat *const __RESTRICT__ q, const float angle, const float axisX, const float axisY, const float axisZ){
-	const float t = sinf(angle/2.f);
-	q->w = cosf(angle/2.f);
-	q->v.x = axisX * t;
-	q->v.y = axisY * t;
-	q->v.z = axisZ * t;
+	const float t = sinf(0.5f*angle);
+	q->x = axisX * t;
+	q->y = axisY * t;
+	q->z = axisZ * t;
+	q->w = cosf(0.5f*angle);
 }
 __HINT_INLINE__ void quatSetEuler(quat *const __RESTRICT__ q, const float x, const float y, const float z){
 	const float hx = x*0.5f;
@@ -128,235 +128,219 @@ __HINT_INLINE__ void quatSetEuler(quat *const __RESTRICT__ q, const float x, con
 	const float sx = sinf(hx);
 	const float sy = sinf(hy);
 	const float sz = sinf(hz);
-	q->w   = cx*cy*cz+sx*sy*sz;
-	q->v.x = sx*cy*cz-cx*sy*sz;
-	q->v.y = cx*sy*cz+sx*cy*sz;
-	q->v.z = cx*cy*sz-sx*sy*cz;
-}
-void quatZeroP(quat *const __RESTRICT__ q){
-	memset(q, 0, sizeof(quat));
+	q->x = sx*cy*cz-cx*sy*sz;
+	q->y = cx*sy*cz+sx*cy*sz;
+	q->z = cx*cy*sz-sx*sy*cz;
+	q->w = cx*cy*cz+sx*sy*sz;
 }
 
 __HINT_INLINE__ quat quatQAddQ(const quat q1, const quat q2){
-	const quat r = {.w   = q1.w   + q2.w,
-	                .v.x = q1.v.x + q2.v.x,
-	                .v.y = q1.v.y + q2.v.y,
-	                .v.z = q1.v.z + q2.v.z};
-	return r;
-}
-__HINT_INLINE__ quat quatQAddS(const quat q, const float s){
-	const quat r = {.w   = q.w   + s,
-	                .v.x = q.v.x + s,
-	                .v.y = q.v.y + s,
-	                .v.z = q.v.z + s};
-	return r;
-}
-__HINT_INLINE__ quat quatQAddW(const quat q, const float w){
-	const quat r = {.w   = q.w + w,
-	                .v.x = q.v.x,
-	                .v.y = q.v.y,
-	                .v.z = q.v.z};
+	const quat r = {
+		.x = q1.x + q2.x,
+		.y = q1.y + q2.y,
+		.z = q1.z + q2.z,
+		.w = q1.w + q2.w
+	};
 	return r;
 }
 __HINT_INLINE__ void quatQAddQP(quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2){
-	q1->w += q2->w; q1->v.x += q2->v.x; q1->v.y += q2->v.y; q1->v.z += q2->v.z;
+	q1->x += q2->x; q1->y += q2->y; q1->z += q2->z; q1->w += q2->w;
 }
 __HINT_INLINE__ void quatQAddQPR(const quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2, quat *const __RESTRICT__ r){
-	r->w = q1->w + q2->w; r->v.x = q1->v.x + q2->v.x; r->v.y = q1->v.y + q2->v.y; r->v.z = q1->v.z + q2->v.z;
-}
-__HINT_INLINE__ void quatQAddSP(quat *const __RESTRICT__ q, const float s){
-	q->w += s; q->v.x += s; q->v.y += s; q->v.z += s;
-}
-__HINT_INLINE__ void quatQAddWP(quat *const __RESTRICT__ q, const float w){
-	q->w += w;
+	r->x = q1->x + q2->x; r->y = q1->y + q2->y; r->z = q1->z + q2->z; r->w = q1->w + q2->w;
 }
 
 __HINT_INLINE__ quat quatQSubQ(const quat q1, const quat q2){
-	const quat r = {.w   = q1.w   - q2.w,
-	                .v.x = q1.v.x - q2.v.x,
-	                .v.y = q1.v.y - q2.v.y,
-	                .v.z = q1.v.z - q2.v.z};
-	return r;
-}
-__HINT_INLINE__ quat quatQSubS(const quat q, const float s){
-	const quat r = {.w   = q.w   - s,
-	                .v.x = q.v.x - s,
-	                .v.y = q.v.y - s,
-	                .v.z = q.v.z - s};
-	return r;
-}
-__HINT_INLINE__ quat quatQSubW(const quat q, const float w){
-	const quat r = {.w   = q.w - w,
-	                .v.x = q.v.x,
-	                .v.y = q.v.y,
-	                .v.z = q.v.z};
+	const quat r = {
+		.x = q1.x - q2.x,
+		.y = q1.y - q2.y,
+		.z = q1.z - q2.z,
+		.w = q1.w - q2.w
+	};
 	return r;
 }
 __HINT_INLINE__ void quatQSubQP1(quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2){
-	q1->w -= q2->w; q1->v.x -= q2->v.x; q1->v.y -= q2->v.y; q1->v.z -= q2->v.z;
+	q1->x -= q2->x; q1->y -= q2->y; q1->z -= q2->z; q1->w -= q2->w;
 }
 __HINT_INLINE__ void quatQSubQP2(const quat *const __RESTRICT__ q1, quat *const __RESTRICT__ q2){
-	q2->w = q1->w - q2->w; q2->v.x = q1->v.x - q2->v.x; q2->v.y = q1->v.y - q2->v.y; q2->v.z = q1->v.z - q2->v.z;
+	q2->x = q1->x - q2->x; q2->y = q1->y - q2->y; q2->z = q1->z - q2->z; q2->w = q1->w - q2->w;
 }
 __HINT_INLINE__ void quatQSubQPR(const quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2, quat *const __RESTRICT__ r){
-	r->w = q1->w - q2->w; r->v.x = q1->v.x - q2->v.x; r->v.y = q1->v.y - q2->v.y; r->v.z = q1->v.z - q2->v.z;
-}
-__HINT_INLINE__ void quatQSubSP(quat *const __RESTRICT__ q, const float s){
-	q->w -= s; q->v.x -= s; q->v.y -= s; q->v.z -= s;
-}
-__HINT_INLINE__ void quatQSubWP(quat *const __RESTRICT__ q, const float w){
-	q->w -= w;
+	r->x = q1->x - q2->x; r->y = q1->y - q2->y; r->z = q1->z - q2->z; r->w = q1->w - q2->w;
 }
 
 __HINT_INLINE__ quat quatQMultQ(const quat q1, const quat q2){
 	// Calculates the Grassmann product of two quaternions.
-	const quat r = {.w   = q1.w * q2.w   - q1.v.x * q2.v.x - q1.v.y * q2.v.y - q1.v.z * q2.v.z,
-	                .v.x = q1.w * q2.v.x + q1.v.x * q2.w   + q1.v.y * q2.v.z - q1.v.z * q2.v.y,
-	                .v.y = q1.w * q2.v.y + q1.v.y * q2.w   + q1.v.z * q2.v.x - q1.v.x * q2.v.z,
-	                .v.z = q1.w * q2.v.z + q1.v.z * q2.w   + q1.v.x * q2.v.y - q1.v.y * q2.v.x};
+	const quat r = {
+		.x = q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y,
+		.y = q1.w * q2.y + q1.y * q2.w + q1.z * q2.x - q1.x * q2.z,
+		.z = q1.w * q2.z + q1.z * q2.w + q1.x * q2.y - q1.y * q2.x,
+		.w = q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z
+	};
 	return r;
 }
 __HINT_INLINE__ quat quatQMultS(const quat q, const float s){
-	const quat r = {.w   = q.w   * s,
-	                .v.x = q.v.x * s,
-	                .v.y = q.v.y * s,
-	                .v.z = q.v.z * s};
+	const quat r = {
+		.x = q.x * s,
+		.y = q.y * s,
+		.z = q.z * s,
+		.w = q.w * s
+	};
 	return r;
 }
 __HINT_INLINE__ void quatQMultQP1(quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2){
 	// Calculates the Grassmann product of two quaternions.
-	const quat r = {.w   = q1->w * q2->w   - q1->v.x * q2->v.x - q1->v.y * q2->v.y - q1->v.z * q2->v.z,
-	                .v.x = q1->w * q2->v.x + q1->v.x * q2->w   + q1->v.y * q2->v.z - q1->v.z * q2->v.y,
-	                .v.y = q1->w * q2->v.y + q1->v.y * q2->w   + q1->v.z * q2->v.x - q1->v.x * q2->v.z,
-	                .v.z = q1->w * q2->v.z + q1->v.z * q2->w   + q1->v.x * q2->v.y - q1->v.y * q2->v.x};
+	const quat r = {
+		.x = q1->w * q2->x + q1->x * q2->w + q1->y * q2->z - q1->z * q2->y,
+		.y = q1->w * q2->y + q1->y * q2->w + q1->z * q2->x - q1->x * q2->z,
+		.z = q1->w * q2->z + q1->z * q2->w + q1->x * q2->y - q1->y * q2->x,
+		.w = q1->w * q2->w - q1->x * q2->x - q1->y * q2->y - q1->z * q2->z
+	};
 	*q1 = r;
 }
 __HINT_INLINE__ void quatQMultQP2(const quat *const __RESTRICT__ q1, quat *const __RESTRICT__ q2){
 	// Calculates the Grassmann product of two quaternions.
-	const quat r = {.w   = q1->w * q2->w   - q1->v.x * q2->v.x - q1->v.y * q2->v.y - q1->v.z * q2->v.z,
-	                .v.x = q1->w * q2->v.x + q1->v.x * q2->w   + q1->v.y * q2->v.z - q1->v.z * q2->v.y,
-	                .v.y = q1->w * q2->v.y + q1->v.y * q2->w   + q1->v.z * q2->v.x - q1->v.x * q2->v.z,
-	                .v.z = q1->w * q2->v.z + q1->v.z * q2->w   + q1->v.x * q2->v.y - q1->v.y * q2->v.x};
+	const quat r = {
+		.x = q1->w * q2->x + q1->x * q2->w + q1->y * q2->z - q1->z * q2->y,
+		.y = q1->w * q2->y + q1->y * q2->w + q1->z * q2->x - q1->x * q2->z,
+		.z = q1->w * q2->z + q1->z * q2->w + q1->x * q2->y - q1->y * q2->x,
+		.w = q1->w * q2->w - q1->x * q2->x - q1->y * q2->y - q1->z * q2->z
+	};
 	*q2 = r;
 }
 __HINT_INLINE__ void quatQMultQPR(const quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2, quat *const __RESTRICT__ r){
 	// Calculates the Grassmann product of two quaternions.
-	r->w   = q1->w * q2->w   - q1->v.x * q2->v.x - q1->v.y * q2->v.y - q1->v.z * q2->v.z;
-	r->v.x = q1->w * q2->v.x + q1->v.x * q2->w   + q1->v.y * q2->v.z - q1->v.z * q2->v.y;
-	r->v.y = q1->w * q2->v.y + q1->v.y * q2->w   + q1->v.z * q2->v.x - q1->v.x * q2->v.z;
-	r->v.z = q1->w * q2->v.z + q1->v.z * q2->w   + q1->v.x * q2->v.y - q1->v.y * q2->v.x;
+	r->x = q1->w * q2->x + q1->x * q2->w + q1->y * q2->z - q1->z * q2->y;
+	r->y = q1->w * q2->y + q1->y * q2->w + q1->z * q2->x - q1->x * q2->z;
+	r->z = q1->w * q2->z + q1->z * q2->w + q1->x * q2->y - q1->y * q2->x;
+	r->w = q1->w * q2->w - q1->x * q2->x - q1->y * q2->y - q1->z * q2->z;
 }
 __HINT_INLINE__ void quatQMultSP(quat *const __RESTRICT__ q, const float s){
+	q->x *= s;
+	q->y *= s;
+	q->z *= s;
 	q->w *= s;
-	vec3VMultSP(&q->v, s);
 }
 
-__HINT_INLINE__ quat quatQDivQ(const quat q1, const quat q2){
-	if(q2.w != 0.f && q2.v.x != 0.f && q2.v.y != 0.f && q2.v.z != 0.f){
-		const quat r = {.w   = q1.w   / q2.w,
-		                .v.x = q1.v.x / q2.v.x,
-		                .v.y = q1.v.y / q2.v.y,
-		                .v.z = q1.v.z / q2.v.z};
-		return r;
-	}
-	return quatNewS(0.f);
+__HINT_INLINE__ quat quatQConjugateMultQ(const quat q1, const quat q2){
+	// Calculates the Grassmann product of two quaternions.
+	const quat r = {
+		.x = q1.w * q2.x - q1.x * q2.w - q1.y * q2.z + q1.z * q2.y,
+		.y = q1.w * q2.y - q1.y * q2.w - q1.z * q2.x + q1.x * q2.z,
+		.z = q1.w * q2.z - q1.z * q2.w - q1.x * q2.y + q1.y * q2.x,
+		.w = q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z
+	};
+	return r;
 }
-__HINT_INLINE__ quat quatQDivS(const quat q, const float s){
-	if(s != 0.f){
-		const float invS = 1.f / s;
-		const quat r = {.w   = q.w   * invS,
-		                .v.x = q.v.x * invS,
-		                .v.y = q.v.y * invS,
-		                .v.z = q.v.z * invS};
-		return r;
-	}
-	return quatNewS(0.f);
+__HINT_INLINE__ void quatQConjugateMultQP1(quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2){
+	// Calculates the Grassmann product of two quaternions.
+	const quat r = {
+		.x = q1->w * q2->x - q1->x * q2->w - q1->y * q2->z + q1->z * q2->y,
+		.y = q1->w * q2->y - q1->y * q2->w - q1->z * q2->x + q1->x * q2->z,
+		.z = q1->w * q2->z - q1->z * q2->w - q1->x * q2->y + q1->y * q2->x,
+		.w = q1->w * q2->w + q1->x * q2->x + q1->y * q2->y + q1->z * q2->z
+	};
+	*q1 = r;
 }
-__HINT_INLINE__ void quatQDivQP1(quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2){
-	if(q2->w != 0.f && q2->v.x != 0.f && q2->v.y != 0.f && q2->v.z != 0.f){
-		q1->w   /= q2->w;
-		q1->v.x /= q2->v.x;
-		q1->v.y /= q2->v.y;
-		q1->v.z /= q2->v.z;
-	}else{
-		quatZeroP(q1);
-	}
+__HINT_INLINE__ void quatQConjugateMultQP2(const quat *const __RESTRICT__ q1, quat *const __RESTRICT__ q2){
+	// Calculates the Grassmann product of two quaternions.
+	const quat r = {
+		.x = q1->w * q2->x - q1->x * q2->w - q1->y * q2->z + q1->z * q2->y,
+		.y = q1->w * q2->y - q1->y * q2->w - q1->z * q2->x + q1->x * q2->z,
+		.z = q1->w * q2->z - q1->z * q2->w - q1->x * q2->y + q1->y * q2->x,
+		.w = q1->w * q2->w + q1->x * q2->x + q1->y * q2->y + q1->z * q2->z
+	};
+	*q2 = r;
 }
-__HINT_INLINE__ void quatQDivQP2(const quat *const __RESTRICT__ q1, quat *const __RESTRICT__ q2){
-	if(q2->w != 0.f && q2->v.x != 0.f && q2->v.y != 0.f && q2->v.z != 0.f){
-		q2->w   = q1->w   / q2->w;
-		q2->v.x = q1->v.x / q2->v.x;
-		q2->v.y = q1->v.y / q2->v.y;
-		q2->v.z = q1->v.z / q2->v.z;
-	}else{
-		quatZeroP(q2);
-	}
+__HINT_INLINE__ void quatQConjugateMultQPR(const quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2, quat *const __RESTRICT__ r){
+	// Calculates the Grassmann product of two quaternions.
+	r->x = q1->w * q2->x - q1->x * q2->w - q1->y * q2->z + q1->z * q2->y;
+	r->y = q1->w * q2->y - q1->y * q2->w - q1->z * q2->x + q1->x * q2->z;
+	r->z = q1->w * q2->z - q1->z * q2->w - q1->x * q2->y + q1->y * q2->x;
+	r->w = q1->w * q2->w + q1->x * q2->x + q1->y * q2->y + q1->z * q2->z;
 }
-__HINT_INLINE__ void quatQDivQPR(const quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2, quat *const __RESTRICT__ r){
-	if(q2->w != 0.f && q2->v.x != 0.f && q2->v.y != 0.f && q2->v.z != 0.f){
-		r->w   = q1->w   / q2->w;
-		r->v.x = q1->v.x / q2->v.x;
-		r->v.y = q1->v.y / q2->v.y;
-		r->v.z = q1->v.z / q2->v.z;
-	}else{
-		quatZeroP(r);
-	}
+
+__HINT_INLINE__ quat quatQMultQConjugate(const quat q1, const quat q2){
+	// Calculates the Grassmann product of two quaternions.
+	const quat r = {
+		.x = -q1.w * q2.x + q1.x * q2.w - q1.y * q2.z + q1.z * q2.y,
+		.y = -q1.w * q2.y + q1.y * q2.w - q1.z * q2.x + q1.x * q2.z,
+		.z = -q1.w * q2.z + q1.z * q2.w - q1.x * q2.y + q1.y * q2.x,
+		.w =  q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z
+	};
+	return r;
 }
-__HINT_INLINE__ void quatQDivSP(quat *const __RESTRICT__ q, const float s){
-	if(s != 0.f){
-		const float invS = 1.f / s;
-		q->w   *= invS;
-		q->v.x *= invS;
-		q->v.y *= invS;
-		q->v.z *= invS;
-	}else{
-		quatZeroP(q);
-	}
+__HINT_INLINE__ void quatQMultQConjugateP1(quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2){
+	// Calculates the Grassmann product of two quaternions.
+	const quat r = {
+		.x = -q1->w * q2->x + q1->x * q2->w - q1->y * q2->z + q1->z * q2->y,
+		.y = -q1->w * q2->y + q1->y * q2->w - q1->z * q2->x + q1->x * q2->z,
+		.z = -q1->w * q2->z + q1->z * q2->w - q1->x * q2->y + q1->y * q2->x,
+		.w =  q1->w * q2->w + q1->x * q2->x + q1->y * q2->y + q1->z * q2->z
+	};
+	*q1 = r;
+}
+__HINT_INLINE__ void quatQMultQConjugateP2(const quat *const __RESTRICT__ q1, quat *const __RESTRICT__ q2){
+	// Calculates the Grassmann product of two quaternions.
+	const quat r = {
+		.x = -q1->w * q2->x + q1->x * q2->w - q1->y * q2->z + q1->z * q2->y,
+		.y = -q1->w * q2->y + q1->y * q2->w - q1->z * q2->x + q1->x * q2->z,
+		.z = -q1->w * q2->z + q1->z * q2->w - q1->x * q2->y + q1->y * q2->x,
+		.w =  q1->w * q2->w + q1->x * q2->x + q1->y * q2->y + q1->z * q2->z
+	};
+	*q2 = r;
+}
+__HINT_INLINE__ void quatQMultQConjugatePR(const quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2, quat *const __RESTRICT__ r){
+	// Calculates the Grassmann product of two quaternions.
+	r->x = -q1->w * q2->x + q1->x * q2->w - q1->y * q2->z + q1->z * q2->y;
+	r->y = -q1->w * q2->y + q1->y * q2->w - q1->z * q2->x + q1->x * q2->z;
+	r->z = -q1->w * q2->z + q1->z * q2->w - q1->x * q2->y + q1->y * q2->x;
+	r->w =  q1->w * q2->w + q1->x * q2->x + q1->y * q2->y + q1->z * q2->z;
 }
 
 __HINT_INLINE__ float quatMagnitude(const quat q){
-	return sqrtf(q.w*q.w + q.v.x*q.v.x + q.v.y*q.v.y + q.v.z*q.v.z);
+	return sqrtf(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
 }
 __HINT_INLINE__ float quatMagnitudeP(const quat *const __RESTRICT__ q){
-	return sqrtf(q->w*q->w + q->v.x*q->v.x + q->v.y*q->v.y + q->v.z*q->v.z);
+	return sqrtf(q->x*q->x + q->y*q->y + q->z*q->z + q->w*q->w);
 }
 __HINT_INLINE__ float quatMagnitudeSquared(const quat q){
-	return q.w*q.w + q.v.x*q.v.x + q.v.y*q.v.y + q.v.z*q.v.z;
+	return q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w;
 }
 __HINT_INLINE__ float quatMagnitudeSquaredP(const quat *const __RESTRICT__ q){
-	return q->w*q->w + q->v.x*q->v.x + q->v.y*q->v.y + q->v.z*q->v.z;
+	return q->x*q->x + q->y*q->y + q->z*q->z + q->w*q->w;
 }
 __HINT_INLINE__ float quatMagnitudeInverse(const quat q){
-	return 1.f/sqrtf(q.w*q.w + q.v.x*q.v.x + q.v.y*q.v.y + q.v.z*q.v.z);
+	return 1.f/sqrtf(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
 }
 __HINT_INLINE__ float quatMagnitudeInverseP(const quat *const __RESTRICT__ q){
-	return 1.f/sqrtf(q->w*q->w + q->v.x*q->v.x + q->v.y*q->v.y + q->v.z*q->v.z);
+	return 1.f/sqrtf(q->x*q->x + q->y*q->y + q->z*q->z + q->w*q->w);
 }
 __HINT_INLINE__ float quatMagnitudeInverseFast(const quat q){
-	return rsqrt(q.w*q.w + q.v.x*q.v.x + q.v.y*q.v.y + q.v.z*q.v.z);
+	return rsqrt(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
 }
 __HINT_INLINE__ float quatMagnitudeInverseFastP(const quat *const __RESTRICT__ q){
-	return rsqrt(q->w*q->w + q->v.x*q->v.x + q->v.y*q->v.y + q->v.z*q->v.z);
+	return rsqrt(q->x*q->x + q->y*q->y + q->z*q->z + q->w*q->w);
 }
 __HINT_INLINE__ float quatMagnitudeInverseFastAccurate(const quat q){
-	return rsqrtAccurate(q.w*q.w + q.v.x*q.v.x + q.v.y*q.v.y + q.v.z*q.v.z);
+	return rsqrtAccurate(q.x*q.x + q.y*q.y + q.z*q.z + q.w*q.w);
 }
 __HINT_INLINE__ float quatMagnitudeInverseFastAccurateP(const quat *const __RESTRICT__ q){
-	return rsqrtAccurate(q->w*q->w + q->v.x*q->v.x + q->v.y*q->v.y + q->v.z*q->v.z);
+	return rsqrtAccurate(q->x*q->x + q->y*q->y + q->z*q->z + q->w*q->w);
 }
 
 __HINT_INLINE__ quat quatConjugate(const quat q){
-	return quatNew(q.w, -q.v.x, -q.v.y, -q.v.z);
+	return quatNew(q.w, -q.x, -q.y, -q.z);
 }
 __HINT_INLINE__ quat quatConjugateFast(const quat q){
 	// WARNING: This is technically incorrect, and may
 	// result in singularities during interpolation.
-	return quatNew(-q.w, q.v.x, q.v.y, q.v.z);
+	return quatNew(-q.w, q.x, q.y, q.z);
 }
 __HINT_INLINE__ void quatConjugateP(quat *const __RESTRICT__ q){
-	q->v.x = -q->v.x;
-	q->v.y = -q->v.y;
-	q->v.z = -q->v.z;
+	q->x = -q->x;
+	q->y = -q->y;
+	q->z = -q->z;
 }
 __HINT_INLINE__ void quatConjugateFastP(quat *const __RESTRICT__ q){
 	// WARNING: This is technically incorrect, and may
@@ -364,34 +348,34 @@ __HINT_INLINE__ void quatConjugateFastP(quat *const __RESTRICT__ q){
 	q->w = -q->w;
 }
 __HINT_INLINE__ void quatConjugatePR(const quat *const __RESTRICT__ q, quat *const __RESTRICT__ r){
-	r->w = q->w;
-	r->v.x = -q->v.x;
-	r->v.y = -q->v.y;
-	r->v.z = -q->v.z;
+	r->x = -q->x;
+	r->y = -q->y;
+	r->z = -q->z;
+	r->w =  q->w;
 }
 __HINT_INLINE__ void quatConjugateFastPR(const quat *const __RESTRICT__ q, quat *const __RESTRICT__ r){
 	// WARNING: This is technically incorrect, and may
 	// result in singularities during interpolation.
+	r->x =  q->x;
+	r->y =  q->y;
+	r->z =  q->z;
 	r->w = -q->w;
-	r->v.x = q->v.x;
-	r->v.y = q->v.y;
-	r->v.z = q->v.z;
 }
 
 __HINT_INLINE__ quat quatNegate(const quat q){
-	return quatNew(-q.w, -q.v.x, -q.v.y, -q.v.z);
+	return quatNew(-q.w, -q.x, -q.y, -q.z);
 }
 __HINT_INLINE__ void quatNegateP(quat *const __RESTRICT__ q){
+	q->x = -q->x;
+	q->y = -q->y;
+	q->z = -q->z;
 	q->w = -q->w;
-	q->v.x = -q->v.x;
-	q->v.y = -q->v.y;
-	q->v.z = -q->v.z;
 }
 __HINT_INLINE__ void quatNegatePR(const quat *const __RESTRICT__ q, quat *const __RESTRICT__ r){
+	r->x = -q->x;
+	r->y = -q->y;
+	r->z = -q->z;
 	r->w = -q->w;
-	r->v.x = -q->v.x;
-	r->v.y = -q->v.y;
-	r->v.z = -q->v.z;
 }
 
 __HINT_INLINE__ quat quatDifference(const quat q1, const quat q2){
@@ -421,91 +405,83 @@ __HINT_INLINE__ void quatNormalizeFastAccurateP(quat *const __RESTRICT__ q){
 	quatQMultSP(q, quatMagnitudeInverseFastAccurateP(q));
 }
 
-__HINT_INLINE__ quat quatIdentity(){
-	const quat r = {.w = 1.f, .v.x = 0.f, .v.y = 0.f, .v.z = 0.f};
-	return r;
-}
-__HINT_INLINE__ void quatSetIdentity(quat *const __RESTRICT__ q){
-	q->w = 1.f; q->v.x = 0.f; q->v.y = 0.f; q->v.z = 0.f;
-}
-
 __HINT_INLINE__ void quatAxisAngle(const quat q, float *angle, float *axisX, float *axisY, float *axisZ){
 	if(q.w != 1.f){  // We don't want to risk a potential divide-by-zero error.
 		const float scale = rsqrt(1.f-q.w*q.w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1.
 		*angle = 2.f*acosf(q.w);
-		*axisX = q.v.x*scale;
-		*axisY = q.v.y*scale;
-		*axisZ = q.v.z*scale;
+		*axisX = q.x*scale;
+		*axisY = q.y*scale;
+		*axisZ = q.z*scale;
 	}
 }
 __HINT_INLINE__ void quatAxisAngleUnsafe(const quat q, float *angle, float *axisX, float *axisY, float *axisZ){
 	const float scale = rsqrt(1.f-q.w*q.w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1.
 	*angle = 2.f*acosf(q.w);
-	*axisX = q.v.x*scale;
-	*axisY = q.v.y*scale;
-	*axisZ = q.v.z*scale;
+	*axisX = q.x*scale;
+	*axisY = q.y*scale;
+	*axisZ = q.z*scale;
 }
 __HINT_INLINE__ void quatAxisAngleP(const quat *const __RESTRICT__ q, float *angle, float *axisX, float *axisY, float *axisZ){
 	if(q->w != 1.f){  // We don't want to risk a potential divide-by-zero error.
 		const float scale = rsqrt(1.f-q->w*q->w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1.
 		*angle = 2.f*acosf(q->w);
-		*axisX = q->v.x*scale;
-		*axisY = q->v.y*scale;
-		*axisZ = q->v.z*scale;
+		*axisX = q->x*scale;
+		*axisY = q->y*scale;
+		*axisZ = q->z*scale;
 	}
 }
 __HINT_INLINE__ void quatAxisAngleUnsafeP(const quat *const __RESTRICT__ q, float *angle, float *axisX, float *axisY, float *axisZ){
 	const float scale = rsqrt(1.f-q->w*q->w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1.
 	*angle = 2.f*acosf(q->w);
-	*axisX = q->v.x*scale;
-	*axisY = q->v.y*scale;
-	*axisZ = q->v.z*scale;
+	*axisX = q->x*scale;
+	*axisY = q->y*scale;
+	*axisZ = q->z*scale;
 }
 
 __HINT_INLINE__ float quatDot(const quat q1, const quat q2){
-	return q1.w   * q2.w +
-	       q1.v.x * q2.v.x +
-	       q1.v.y * q2.v.y +
-	       q1.v.z * q2.v.z;
+	return q1.x * q2.x +
+	       q1.y * q2.y +
+	       q1.z * q2.z +
+	       q1.w * q2.w;
 }
 __HINT_INLINE__ float quatDotP(const quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2){
-	return q1->w   * q2->w +
-	       q1->v.x * q2->v.x +
-	       q1->v.y * q2->v.y +
-	       q1->v.z * q2->v.z;
+	return q1->x * q2->x +
+	       q1->y * q2->y +
+	       q1->z * q2->z +
+	       q1->w * q2->w;
 }
 
 __HINT_INLINE__ vec3 quatRotateVec3(const quat q, const vec3 v){
-	const float dotQV = vec3Dot(q.v, v);
+	const float dotQV = vec3Dot(*((vec3 *)&q), v);
 	return vec3VAddV(
-		vec3VMultS(v, q.w*q.w - vec3Dot(q.v, q.v)),
+		vec3VMultS(v, q.w*q.w - vec3Dot(*((vec3 *)&q), *((vec3 *)&q))),
 		vec3VAddV(
-			vec3VMultS(q.v, dotQV + dotQV),
-			vec3VMultS(vec3Cross(q.v, v), q.w + q.w)
+			vec3VMultS(*((vec3 *)&q), 2.f*dotQV),
+			vec3VMultS(vec3Cross(*((vec3 *)&q), v), 2.f*q.w)
 		)
 	);
 }
 __HINT_INLINE__ vec3 quatRotateVec3FastApproximate(const quat q, const vec3 v){
-	const vec3 crossQQV = vec3Cross(q.v, vec3VAddV(vec3Cross(q.v, v), vec3VMultS(v, q.w)));
+	const vec3 crossQQV = vec3Cross(*((vec3 *)&q), vec3VAddV(vec3Cross(*((vec3 *)&q), v), vec3VMultS(v, q.w)));
 	return vec3VAddV(crossQQV, vec3VAddV(crossQQV, v));
 }
 __HINT_INLINE__ void quatRotateVec3P(const quat *const __RESTRICT__ q, vec3 *const __RESTRICT__ v){
 
 	vec3 temp;
 
-	const float dotQV = vec3DotP(&q->v, v);
-	const float dotQQ = vec3DotP(&q->v, &q->v);
+	const float dotQV = vec3DotP((vec3 *)q, v);
+	const float dotQQ = vec3DotP((vec3 *)q, (vec3 *)q);
 	float m = q->w*q->w - dotQQ;
 	vec3 crossQV;
-	vec3CrossPR(&q->v, v, &crossQV);
+	vec3CrossPR((vec3 *)q, v, &crossQV);
 
 	vec3VMultSP(v, m);
 
-	m = dotQV + dotQV;
-	vec3VMultSPR(&q->v, m, &temp);
+	m = 2.f*dotQV;
+	vec3VMultSPR((vec3 *)q, m, &temp);
 	vec3VAddVP(v, &temp);
 
-	m = q->w + q->w;
+	m = 2.f*q->w;
 	vec3VMultSPR(&crossQV, m, &temp);
 	vec3VAddVP(v, &temp);
 
@@ -514,19 +490,19 @@ __HINT_INLINE__ void quatRotateVec3PR(const quat *const __RESTRICT__ q, const ve
 
 	vec3 temp;
 
-	const float dotQV = vec3DotP(&q->v, v);
-	const float dotQQ = vec3DotP(&q->v, &q->v);
+	const float dotQV = vec3DotP((vec3 *)q, v);
+	const float dotQQ = vec3DotP((vec3 *)q, (vec3 *)q);
 	float m = q->w*q->w - dotQQ;
 	vec3 crossQV;
-	vec3CrossPR(&q->v, v, &crossQV);
+	vec3CrossPR((vec3 *)q, v, &crossQV);
 
 	vec3VMultSPR(v, m, r);
 
-	m = dotQV + dotQV;
-	vec3VMultSPR(&q->v, m, &temp);
+	m = 2.f*dotQV;
+	vec3VMultSPR((vec3 *)q, m, &temp);
 	vec3VAddVP(r, &temp);
 
-	m = q->w + q->w;
+	m = 2.f*q->w;
 	vec3VMultSPR(&crossQV, m, &temp);
 	vec3VAddVP(r, &temp);
 
@@ -534,31 +510,118 @@ __HINT_INLINE__ void quatRotateVec3PR(const quat *const __RESTRICT__ q, const ve
 __HINT_INLINE__ void quatRotateVec3FastApproximateP(const quat *const __RESTRICT__ q, vec3 *const __RESTRICT__ v){
 
 	vec3 crossQV, crossQQV;
-	vec3CrossPR(&q->v, v, &crossQV);
+	vec3CrossPR((vec3 *)q, v, &crossQV);
 
 	crossQV.x += q->w * v->x;
 	crossQV.y += q->w * v->y;
 	crossQV.z += q->w * v->z;
-	vec3CrossPR(&q->v, &crossQV, &crossQQV);
+	vec3CrossPR((vec3 *)q, &crossQV, &crossQQV);
 
-	v->x = crossQQV.x + crossQQV.x + v->x;
-	v->y = crossQQV.y + crossQQV.y + v->y;
-	v->z = crossQQV.z + crossQQV.z + v->z;
+	v->x += 2.f*crossQQV.x;
+	v->y += 2.f*crossQQV.y;
+	v->z += 2.f*crossQQV.z;
 
 }
 __HINT_INLINE__ void quatRotateVec3FastApproximatePR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r){
 
 	vec3 crossQV, crossQQV;
-	vec3CrossPR(&q->v, v, &crossQV);
+	vec3CrossPR((vec3 *)q, v, &crossQV);
 
 	crossQV.x += q->w * v->x;
 	crossQV.y += q->w * v->y;
 	crossQV.z += q->w * v->z;
-	vec3CrossPR(&q->v, &crossQV, &crossQQV);
+	vec3CrossPR((vec3 *)q, &crossQV, &crossQQV);
 
-	r->x = crossQQV.x + crossQQV.x + v->x;
-	r->y = crossQQV.y + crossQQV.y + v->y;
-	r->z = crossQQV.z + crossQQV.z + v->z;
+	r->x += 2.f*crossQQV.x;
+	r->y += 2.f*crossQQV.y;
+	r->z += 2.f*crossQQV.z;
+
+}
+
+__HINT_INLINE__ vec3 quatConjugateRotateVec3(const quat q, const vec3 v){
+	const float dotQV = vec3Dot(*((vec3 *)&q), v);
+	return vec3VAddV(
+		vec3VMultS(v, q.w*q.w - vec3Dot(*((vec3 *)&q), *((vec3 *)&q))),
+		vec3VAddV(
+			vec3VMultS(*((vec3 *)&q), 2.f*dotQV),
+			vec3VMultS(vec3Cross(*((vec3 *)&q), v), -2.f*q.w)
+		)
+	);
+}
+__HINT_INLINE__ vec3 quatConjugateRotateVec3FastApproximate(const quat q, const vec3 v){
+	const vec3 crossQQV = vec3Cross(*((vec3 *)&q), vec3VAddV(vec3Cross(*((vec3 *)&q), v), vec3VMultS(v, -q.w)));
+	return vec3VAddV(crossQQV, vec3VAddV(crossQQV, v));
+}
+__HINT_INLINE__ void quatConjugateRotateVec3P(const quat *const __RESTRICT__ q, vec3 *const __RESTRICT__ v){
+
+	vec3 temp;
+
+	const float dotQV = vec3DotP((vec3 *)q, v);
+	const float dotQQ = vec3DotP((vec3 *)q, (vec3 *)q);
+	float m = q->w*q->w - dotQQ;
+	vec3 crossQV;
+	vec3CrossPR((vec3 *)q, v, &crossQV);
+
+	vec3VMultSP(v, m);
+
+	m = 2.f*dotQV;
+	vec3VMultSPR((vec3 *)q, m, &temp);
+	vec3VAddVP(v, &temp);
+
+	m = -2.f*q->w;
+	vec3VMultSPR(&crossQV, m, &temp);
+	vec3VAddVP(v, &temp);
+
+}
+__HINT_INLINE__ void quatConjugateRotateVec3PR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r){
+
+	vec3 temp;
+
+	const float dotQV = vec3DotP((vec3 *)q, v);
+	const float dotQQ = vec3DotP((vec3 *)q, (vec3 *)q);
+	float m = q->w*q->w - dotQQ;
+	vec3 crossQV;
+	vec3CrossPR((vec3 *)q, v, &crossQV);
+
+	vec3VMultSPR(v, m, r);
+
+	m = 2.f*dotQV;
+	vec3VMultSPR((vec3 *)q, m, &temp);
+	vec3VAddVP(r, &temp);
+
+	m = -2.f*q->w;
+	vec3VMultSPR(&crossQV, m, &temp);
+	vec3VAddVP(r, &temp);
+
+}
+__HINT_INLINE__ void quatConjugateRotateVec3FastApproximateP(const quat *const __RESTRICT__ q, vec3 *const __RESTRICT__ v){
+
+	vec3 crossQV, crossQQV;
+	vec3CrossPR((vec3 *)q, v, &crossQV);
+
+	crossQV.x -= q->w * v->x;
+	crossQV.y -= q->w * v->y;
+	crossQV.z -= q->w * v->z;
+	vec3CrossPR((vec3 *)q, &crossQV, &crossQQV);
+
+	v->x += 2.f*crossQQV.x;
+	v->y += 2.f*crossQQV.y;
+	v->z += 2.f*crossQQV.z;
+
+}
+__HINT_INLINE__ void quatConjugateRotateVec3FastApproximatePR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r){
+
+	vec3 crossQV, crossQQV;
+	vec3CrossPR((vec3 *)q, v, &crossQV);
+
+	crossQV.x -= q->w * v->x;
+	crossQV.y -= q->w * v->y;
+	crossQV.z -= q->w * v->z;
+	vec3CrossPR((vec3 *)q, &crossQV, &crossQQV);
+
+	r->x += 2.f*crossQQV.x;
+	r->y += 2.f*crossQQV.y;
+	r->z += 2.f*crossQQV.z;
 
 }
 
@@ -570,17 +633,18 @@ __HINT_INLINE__ quat quatLookAt(const vec3 eye, const vec3 target, const vec3 up
 
 		// Eye and target point in opposite directions,
 		// 180 degree rotation around up vector.
-		const quat r = {.w = M_PI, .v = up};
+		const quat r = {.x = up.x, .y = up.y, .z = up.z, .w = M_PI};
 		return r;
 
 	}else if(fabsf(dot - 1.f) < FLT_EPSILON){
 
 		// Eye and target are pointing in the same direction.
-		return quatIdentity();
+		return g_quatIdentity;
 
 	}else{
 
-		const quat r = {.w = acosf(dot), .v = vec3NormalizeFast(vec3Cross(eye, target))};
+		const vec3 v = vec3NormalizeFast(vec3Cross(eye, target));
+		const quat r = {.x = v.x, .y = v.y, .z = v.z, .w = acosf(dot)};
 		return r;
 
 	}
@@ -594,19 +658,19 @@ __HINT_INLINE__ void quatLookAtP(quat *const __RESTRICT__ q, const vec3 *const _
 
 		// Eye and target point in opposite directions,
 		// 180 degree rotation around up vector.
+		*((vec3 *)q) = *up;
 		q->w = M_PI;
-		q->v = *up;
 
 	}else if(fabsf(dot - 1.f) < FLT_EPSILON){
 
 		// Eye and target are pointing in the same direction.
-		quatSetIdentity(q);
+		quatIdentityP(q);
 
 	}else{
 
+		vec3CrossPR(eye, target, (vec3 *)q);
+		vec3NormalizeFastP((vec3 *)q);
 		q->w = acosf(dot);
-		vec3CrossPR(eye, target, &q->v);
-		vec3NormalizeFastP(&q->v);
 
 	}
 
@@ -616,36 +680,36 @@ __HINT_INLINE__ quat quatLerp(const quat q1, const quat q2, const float t){
 	//               ^
 	// r = (q1 + (q2 - q1) * t)
 	const quat r = {
-		.w   = floatLerp(q1.w, q2.w, t),
-		.v.x = floatLerp(q1.v.x, q2.v.x, t),
-		.v.y = floatLerp(q1.v.y, q2.v.y, t),
-		.v.z = floatLerp(q1.v.z, q2.v.z, t)
+		.x = floatLerp(q1.x, q2.x, t),
+		.y = floatLerp(q1.y, q2.y, t),
+		.z = floatLerp(q1.z, q2.z, t),
+		.w = floatLerp(q1.w, q2.w, t)
 	};
 	return r;
 }
 __HINT_INLINE__ void quatLerpP1(quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2, const float t){
 	//               ^
 	// r = (q1 + (q2 - q1) * t)
-	q1->w   = floatLerp(q1->w, q2->w, t);
-	q1->v.x = floatLerp(q1->v.x, q2->v.x, t);
-	q1->v.y = floatLerp(q1->v.y, q2->v.y, t);
-	q1->v.z = floatLerp(q1->v.z, q2->v.z, t);
+	q1->x = floatLerp(q1->x, q2->x, t);
+	q1->y = floatLerp(q1->y, q2->y, t);
+	q1->z = floatLerp(q1->z, q2->z, t);
+	q1->w = floatLerp(q1->w, q2->w, t);
 }
 __HINT_INLINE__ void quatLerpP2(const quat *const __RESTRICT__ q1, quat *const __RESTRICT__ q2, const float t){
 	//               ^
 	// r = (q1 + (q2 - q1) * t)
-	q2->w   = floatLerp(q1->w, q2->w, t);
-	q2->v.x = floatLerp(q1->v.x, q2->v.x, t);
-	q2->v.y = floatLerp(q1->v.y, q2->v.y, t);
-	q2->v.z = floatLerp(q1->v.z, q2->v.z, t);
+	q2->x = floatLerp(q1->x, q2->x, t);
+	q2->y = floatLerp(q1->y, q2->y, t);
+	q2->z = floatLerp(q1->z, q2->z, t);
+	q2->w = floatLerp(q1->w, q2->w, t);
 }
 __HINT_INLINE__ void quatLerpPR(const quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2, const float t, quat *const __RESTRICT__ r){
 	//               ^
 	// r = (q1 + (q2 - q1) * t)
-	r->w   = floatLerp(q1->w, q2->w, t);
-	r->v.x = floatLerp(q1->v.x, q2->v.x, t);
-	r->v.y = floatLerp(q1->v.y, q2->v.y, t);
-	r->v.z = floatLerp(q1->v.z, q2->v.z, t);
+	r->x = floatLerp(q1->x, q2->x, t);
+	r->y = floatLerp(q1->y, q2->y, t);
+	r->z = floatLerp(q1->z, q2->z, t);
+	r->w = floatLerp(q1->w, q2->w, t);
 }
 
 quat quatSlerp(const quat q1, const quat q2, const float t){
@@ -684,10 +748,10 @@ quat quatSlerp(const quat q1, const quat q2, const float t){
 		const float sinThetaT = sinf(theta * t) * sinThetaInv;
 
 		return quatNormalizeFast(quatNew(
-			q1.w   * sinThetaInvT + q2Corrected.w   * sinThetaT,
-			q1.v.x * sinThetaInvT + q2Corrected.v.x * sinThetaT,
-			q1.v.y * sinThetaInvT + q2Corrected.v.y * sinThetaT,
-			q1.v.z * sinThetaInvT + q2Corrected.v.z * sinThetaT
+			q1.w * sinThetaInvT + q2Corrected.w * sinThetaT,
+			q1.x * sinThetaInvT + q2Corrected.x * sinThetaT,
+			q1.y * sinThetaInvT + q2Corrected.y * sinThetaT,
+			q1.z * sinThetaInvT + q2Corrected.z * sinThetaT
 		));
 
 	}
@@ -726,10 +790,10 @@ void quatSlerpP1(quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2,
 		const float sinThetaInvT = sinf(theta * (1.f - t)) * sinThetaInv;
 		const float sinThetaT = sinf(theta * t) * sinThetaInv;
 
-		q1->w   = q1->w   * sinThetaInvT + q2Corrected.w   * sinThetaT;
-		q1->v.x = q1->v.x * sinThetaInvT + q2Corrected.v.x * sinThetaT;
-		q1->v.y = q1->v.y * sinThetaInvT + q2Corrected.v.y * sinThetaT;
-		q1->v.z = q1->v.z * sinThetaInvT + q2Corrected.v.z * sinThetaT;
+		q1->x = q1->x * sinThetaInvT + q2Corrected.x * sinThetaT;
+		q1->y = q1->y * sinThetaInvT + q2Corrected.y * sinThetaT;
+		q1->z = q1->z * sinThetaInvT + q2Corrected.z * sinThetaT;
+		q1->w = q1->w * sinThetaInvT + q2Corrected.w * sinThetaT;
 
 	}
 
@@ -768,10 +832,10 @@ void quatSlerpP2(const quat *const __RESTRICT__ q1, quat *const __RESTRICT__ q2,
 		const float sinThetaInvT = sinf(theta * (1.f - t)) * sinThetaInv;
 		const float sinThetaT = sinf(theta * t) * sinThetaInv;
 
-		q2->w   = q1->w   * sinThetaInvT + q2->w   * sinThetaT;
-		q2->v.x = q1->v.x * sinThetaInvT + q2->v.x * sinThetaT;
-		q2->v.y = q1->v.y * sinThetaInvT + q2->v.y * sinThetaT;
-		q2->v.z = q1->v.z * sinThetaInvT + q2->v.z * sinThetaT;
+		q2->x = q1->x * sinThetaInvT + q2->x * sinThetaT;
+		q2->y = q1->y * sinThetaInvT + q2->y * sinThetaT;
+		q2->z = q1->z * sinThetaInvT + q2->z * sinThetaT;
+		q2->w = q1->w * sinThetaInvT + q2->w * sinThetaT;
 
 	}
 
@@ -813,10 +877,10 @@ void quatSlerpPR(const quat *const __RESTRICT__ q1, const quat *const __RESTRICT
 		const float sinThetaInvT = sinf(theta * (1.f - t)) * sinThetaInv;
 		const float sinThetaT = sinf(theta * t) * sinThetaInv;
 
-		r->w   = q1->w   * sinThetaInvT + q2Corrected.w   * sinThetaT;
-		r->v.x = q1->v.x * sinThetaInvT + q2Corrected.v.x * sinThetaT;
-		r->v.y = q1->v.y * sinThetaInvT + q2Corrected.v.y * sinThetaT;
-		r->v.z = q1->v.z * sinThetaInvT + q2Corrected.v.z * sinThetaT;
+		r->x = q1->x * sinThetaInvT + q2Corrected.x * sinThetaT;
+		r->y = q1->y * sinThetaInvT + q2Corrected.y * sinThetaT;
+		r->z = q1->z * sinThetaInvT + q2Corrected.z * sinThetaT;
+		r->w = q1->w * sinThetaInvT + q2Corrected.w * sinThetaT;
 
 	}
 
@@ -871,10 +935,10 @@ quat quatSlerpFast(const quat q1, const quat q2, const float t){
 	);
 
 	return quatNormalizeFast(quatNew(
-		q1.w   * cD + q2.w   * cT,
-		q1.v.x * cD + q2.v.x * cT,
-		q1.v.y * cD + q2.v.y * cT,
-		q1.v.z * cD + q2.v.z * cT
+		q1.w * cD + q2.w * cT,
+		q1.x * cD + q2.x * cT,
+		q1.y * cD + q2.y * cT,
+		q1.z * cD + q2.z * cT
 	));
 
 }
@@ -924,10 +988,10 @@ void quatSlerpFastP1(quat *const __RESTRICT__ q1, const quat *const __RESTRICT__
 		1.0 + bT[4] * (1.0 + bT[5] * (1.0 + bT[6] * (1.0 + bT[7])))))))
 	);
 
-	q1->w   = q1->w   * cD + q2->w   * cT;
-	q1->v.x = q1->v.x * cD + q2->v.x * cT;
-	q1->v.y = q1->v.y * cD + q2->v.y * cT;
-	q1->v.z = q1->v.z * cD + q2->v.z * cT;
+	q1->x = q1->x * cD + q2->x * cT;
+	q1->y = q1->y * cD + q2->y * cT;
+	q1->z = q1->z * cD + q2->z * cT;
+	q1->w = q1->w * cD + q2->w * cT;
 
 	quatNormalizeFastP(q1);
 
@@ -978,10 +1042,10 @@ void quatSlerpFastP2(const quat *const __RESTRICT__ q1, quat *const __RESTRICT__
 		1.0 + bT[4] * (1.0 + bT[5] * (1.0 + bT[6] * (1.0 + bT[7])))))))
 	);
 
-	q2->w   = q1->w   * cD + q2->w   * cT;
-	q2->v.x = q1->v.x * cD + q2->v.x * cT;
-	q2->v.y = q1->v.y * cD + q2->v.y * cT;
-	q2->v.z = q1->v.z * cD + q2->v.z * cT;
+	q2->x = q1->x * cD + q2->x * cT;
+	q2->y = q1->y * cD + q2->y * cT;
+	q2->z = q1->z * cD + q2->z * cT;
+	q2->w = q1->w * cD + q2->w * cT;
 
 	quatNormalizeFastP(q2);
 
@@ -1032,19 +1096,22 @@ void quatSlerpFastPR(const quat *const __RESTRICT__ q1, const quat *const __REST
 		1.0 + bT[4] * (1.0 + bT[5] * (1.0 + bT[6] * (1.0 + bT[7])))))))
 	);
 
-	r->w   = q1->w   * cD + q2->w   * cT;
-	r->v.x = q1->v.x * cD + q2->v.x * cT;
-	r->v.y = q1->v.y * cD + q2->v.y * cT;
-	r->v.z = q1->v.z * cD + q2->v.z * cT;
+	r->x = q1->x * cD + q2->x * cT;
+	r->y = q1->y * cD + q2->y * cT;
+	r->z = q1->z * cD + q2->z * cT;
+	r->w = q1->w * cD + q2->w * cT;
 
 	quatNormalizeFastP(r);
 
 }
 
 __HINT_INLINE__ quat quatDifferentiate(const quat q, const vec3 w){
+	const vec3 v = vec3VMultS(w, 0.5f);
 	const quat r = {
-		.w = 0.f,
-		.v = vec3VMultS(w, 0.5f)
+		.x = v.x,
+		.y = v.y,
+		.z = v.z,
+		.w = 0.f
 	};
 	return quatQMultQ(r, q);
 }
@@ -1059,27 +1126,27 @@ __HINT_INLINE__ void quatDifferentiatePR(const quat *const __RESTRICT__ q, const
 }
 
 __HINT_INLINE__ quat quatIntegrate(const quat q, const vec3 w, float dt){
-	const quat r = {.w = 0.f, .v = w};
+	const quat r = {.x = w.x, .y = w.y, .z = w.z, .w = 0.f};
 	return quatQAddQ(q, quatQMultS(quatQMultQ(r, q), dt*0.5f));
 }
 __HINT_INLINE__ void quatIntegrateP(quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ w, float dt){
-	quat r = {.w = 0.f, .v = *w};
+	quat r = {.x = w->x, .y = w->y, .z = w->z, .w = 0.f};
 	quatQMultQP1(&r, q);
 	dt *= 0.5f;
-	q->w   = floatMA(q->w, r.w, dt);
-	q->v.x = floatMA(q->v.x, r.v.x, dt);
-	q->v.y = floatMA(q->v.y, r.v.y, dt);
-	q->v.z = floatMA(q->v.z, r.v.z, dt);
+	q->x = floatMA(q->x, r.x, dt);
+	q->y = floatMA(q->y, r.y, dt);
+	q->z = floatMA(q->z, r.z, dt);
+	q->w = floatMA(q->w, r.w, dt);
 }
 __HINT_INLINE__ void quatIntegratePR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ w, float dt, quat *const __RESTRICT__ r){
+	*((vec3 *)r) = *w;
 	r->w = 0.f;
-	r->v = *w;
 	quatQMultQP1(r, q);
 	dt *= 0.5f;
-	r->w   = floatMA(q->w, r->w, dt);
-	r->v.x = floatMA(q->v.x, r->v.x, dt);
-	r->v.y = floatMA(q->v.y, r->v.y, dt);
-	r->v.z = floatMA(q->v.z, r->v.z, dt);
+	r->x = floatMA(q->x, r->x, dt);
+	r->y = floatMA(q->y, r->y, dt);
+	r->z = floatMA(q->z, r->z, dt);
+	r->w = floatMA(q->w, r->w, dt);
 }
 
 __HINT_INLINE__ quat quatRotate(const quat q1, const quat q2, const float t){

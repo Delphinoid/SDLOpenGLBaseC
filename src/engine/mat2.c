@@ -1,19 +1,17 @@
 #include "mat2.h"
 #include <string.h>
 
-__HINT_INLINE__ mat2 mat2Identity(){
-	const mat2 r = {.m = {{1.f, 0.f},
-	                      {0.f, 1.f}}};
-	return r;
-}
+mat2 g_mat2Identity = {
+	.m = {{1.f, 0.f},
+	      {0.f, 1.f}}
+};
+mat2 g_mat2Zero = {
+	.m = {{0.f, 0.f},
+	      {0.f, 0.f}}
+};
+
 __HINT_INLINE__ void mat2IdentityP(mat2 *const __RESTRICT__ m){
-	m->m[0][0] = 1.f; m->m[0][1] = 0.f;
-	m->m[1][0] = 0.f; m->m[1][1] = 1.f;
-}
-__HINT_INLINE__ mat2 mat2Zero(){
-	const mat2 r = {.m = {{0.f, 0.f},
-	                      {0.f, 0.f}}};
-	return r;
+	*m = g_mat2Identity;
 }
 __HINT_INLINE__ void mat2ZeroP(mat2 *const __RESTRICT__ m){
 	memset(m->m, 0, sizeof(mat2));
@@ -175,7 +173,7 @@ __HINT_INLINE__ mat2 mat2Invert(const mat2 m){
 		r.m[1][1] = m.m[0][0] * invDet;
 		return r;
 	}
-	return mat2Zero();
+	return g_mat2Zero;
 }
 __HINT_INLINE__ return_t mat2InvertR(const mat2 m, mat2 *const __RESTRICT__ r){
 	float invDet = mat2Determinant(m);

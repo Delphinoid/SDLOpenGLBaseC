@@ -613,6 +613,8 @@ static void sklDefragmentSMD(skeleton *const __RESTRICT__ skl, const char *const
 	memFree(nameArray);
 
 	for(i = 0; i < skl->boneNum; ++i){
+		/// Fix comments referencing globalBindInverse when removing this function.
+		skl->bones[i].globalBindInverse = tfInverse(skl->bones[i].globalBindInverse);
 		skl->bones[i].name = namePtr;
 		namePtr += strlen(namePtr)+1;
 	}
@@ -779,20 +781,25 @@ return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **ver
 									float x = strtod(tokPos, &tokPos) * 0.05f;
 									float y = strtod(tokPos, &tokPos) * 0.05f;
 									float z = strtod(tokPos, &tokPos) * 0.05f;
-									vec3Set(&currentBone->defaultState.position, x, y, z);
+									vec3Set(&currentBone->localBind.position, x, y, z);
 
 									//Load the bone's rotation!
 									x = strtod(tokPos, &tokPos);
 									y = strtod(tokPos, &tokPos);
 									z = strtod(tokPos, NULL);
-									quatSetEuler(&currentBone->defaultState.orientation, x, y, z);
+									quatSetEuler(&currentBone->localBind.orientation, x, y, z);
 
 									//Set the bone's scale!
-									vec3Set(&currentBone->defaultState.scale, 1.f, 1.f, 1.f);
+									vec3Set(&currentBone->localBind.scale, 1.f, 1.f, 1.f);
+									currentBone->localBind.shear = g_quatIdentity;
 
-									//If this bone has a parent, append its state to its parent's state!
-									if(currentBone->parent != boneID){
-										//currentBone->defaultState = tfAppend(skl->bones[currentBone->parent].defaultState, currentBone->defaultState);
+									// Accumulate the global bind poses; NOT the global inverse bind poses.
+									// We invert these later on in sklDefragmentSMD.
+									if(currentBone->parent == boneID){
+										// The root just starts with the local bind pose.
+										currentBone->globalBindInverse = currentBone->localBind;
+									}else{
+										currentBone->globalBindInverse = tfAppend(skl->bones[currentBone->parent].globalBindInverse, currentBone->localBind);
 									}
 								}
 							}else{

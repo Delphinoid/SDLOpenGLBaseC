@@ -143,9 +143,9 @@ void iVec3Interpolate(const interpVec3 *const __RESTRICT__ iVec3, const float in
 
 // INTERPOLATED QUATERNION FUNCTIONS
 void iQuatInit(interpQuat *const __RESTRICT__ iQuat){
-	iQuat->previous = quatIdentity();
-	iQuat->value = quatIdentity();
-	iQuat->render = quatIdentity();
+	iQuat->previous = g_quatIdentity;
+	iQuat->value = g_quatIdentity;
+	iQuat->render = g_quatIdentity;
 }
 void iQuatResetInterp(interpQuat *const __RESTRICT__ iQuat){
 	iQuat->previous = iQuat->value;
@@ -153,23 +153,23 @@ void iQuatResetInterp(interpQuat *const __RESTRICT__ iQuat){
 return_t iQuatUpdate(interpQuat *const __RESTRICT__ iQuat, const float interpT){
 	if(interpT <= 0.f){
 		// If the value hasn't changed, there's nothing to interpolate.
-		if(iQuat->render.w   == iQuat->previous.w   &&
-		   iQuat->render.v.x == iQuat->previous.v.x &&
-		   iQuat->render.v.y == iQuat->previous.v.y &&
-		   iQuat->render.v.z == iQuat->previous.v.z){
+		if(iQuat->render.x == iQuat->previous.x &&
+		   iQuat->render.y == iQuat->previous.y &&
+		   iQuat->render.z == iQuat->previous.z &&
+		   iQuat->render.w == iQuat->previous.w){
 			return 0;
 		}
 		iQuat->render = iQuat->previous;
 	}else if(interpT >= 1.f ||
-			 (iQuat->previous.w   == iQuat->value.w   &&
-	          iQuat->previous.v.x == iQuat->value.v.x &&
-	          iQuat->previous.v.y == iQuat->value.v.y &&
-	          iQuat->previous.v.z == iQuat->value.v.z)){
+			 (iQuat->previous.x == iQuat->value.x &&
+	          iQuat->previous.y == iQuat->value.y &&
+	          iQuat->previous.z == iQuat->value.z &&
+	          iQuat->previous.w == iQuat->value.w)){
 		// If the value hasn't changed, there's nothing to interpolate.
-		if(iQuat->render.w   == iQuat->value.w   &&
-		   iQuat->render.v.x == iQuat->value.v.x &&
-		   iQuat->render.v.y == iQuat->value.v.y &&
-		   iQuat->render.v.z == iQuat->value.v.z){
+		if(iQuat->render.x == iQuat->value.x &&
+		   iQuat->render.y == iQuat->value.y &&
+		   iQuat->render.z == iQuat->value.z &&
+		   iQuat->render.w == iQuat->value.w){
 			return 0;
 		}
 		iQuat->render = iQuat->value;
@@ -180,10 +180,10 @@ return_t iQuatUpdate(interpQuat *const __RESTRICT__ iQuat, const float interpT){
 }
 /**
 void iQuatInterpolate(const interpQuat *const __RESTRICT__ iQuat, const float interpT, quat *const __RESTRICT__ r){
-	if(iQuat->previous.w   == iQuat->value.w   &&
-	   iQuat->previous.v.x == iQuat->value.v.x &&
+	if(iQuat->previous.v.x == iQuat->value.v.x &&
 	   iQuat->previous.v.y == iQuat->value.v.y &&
-	   iQuat->previous.v.z == iQuat->value.v.z){
+	   iQuat->previous.v.z == iQuat->value.v.z &&
+	   iQuat->previous.w   == iQuat->value.w){
 		*r = iQuat->value;
 	}else{
 		quatSlerpFastR(&iQuat->previous,

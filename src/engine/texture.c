@@ -3,6 +3,7 @@
 #include "texture.h"
 #include "memoryManager.h"
 #include "helpersFileIO.h"
+#include "helpersMath.h"
 #include <SDL2/SDL_image.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -294,7 +295,7 @@ return_t tLoad(texture *const __RESTRICT__ tex, const char *const __RESTRICT__ f
 		tex->height = image->h;
 		glTexImage2D(GL_TEXTURE_2D, 0, format, image->w, image->h, 0, format, GL_UNSIGNED_BYTE, image->pixels);
 		if(generate){
-			tex->mips = 1 + floor(log(fmax(tex->width, tex->height)));
+			tex->mips = 1 + floor(log(floatMax(tex->width, tex->height)));
 			glGenerateMipmap(GL_TEXTURE_2D);
 		}else{
 			tex->mips = 1;

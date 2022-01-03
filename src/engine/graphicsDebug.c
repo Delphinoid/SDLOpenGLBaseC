@@ -65,11 +65,13 @@ static void gfxDebugMeshDrawBuffers(
 	const gfxDebugMesh *const __RESTRICT__ dbgMesh, const gfxDebugInfo *const __RESTRICT__ info, const mat4 *const __RESTRICT__ vpMatrix
 ){
 	// Draw a debug mesh. This assumes the vertex array is bound.
+	glDisable(GL_CULL_FACE);
 	glPolygonMode(GL_FRONT_AND_BACK, info->fillMode);
 	glUniform3fv(shdrPrgDbg.colourID, 1, (GLfloat *)&info->colour);
 	glUniformMatrix4fv(shdrPrgDbg.vpMatrixID, 1, GL_FALSE, (GLfloat *)vpMatrix);
 	glDrawElements(dbgMesh->drawMode, dbgMesh->indexNum, GL_UNSIGNED_INT, NULL);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glEnable(GL_CULL_FACE);
 }
 
 static void gfxDebugMeshDelete(const gfxDebugMesh *const __RESTRICT__ dbgMesh){
@@ -100,10 +102,9 @@ void gfxDebugDrawSkeleton(
 	dbgMesh.drawMode = GL_LINES;
 	dbgMesh.indexNum = (boneNum - 1) * 2;
 	indices = memAllocate(dbgMesh.indexNum*sizeof(size_t));
-	i = 1;
 	for(i = 1; i < boneNum; ++i){
-		indices[(i<<1)-2] = i;
-		indices[(i<<1)-1] = parents[i];
+		indices[(i<<1)-2] = parents[i];
+		indices[(i<<1)-1] = i;
 	}
 
 	// Make sure we keep the current global state so we can restore it after drawing.

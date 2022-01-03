@@ -387,7 +387,7 @@ return_t objInstantiate(object *const __RESTRICT__ obj, const objectBase *const 
 
 		// Initialize each bone.
 		for(; b < (transform *)buffer; ++b){
-			tfInit(b);
+			*b = g_tfIdentity;
 		}
 
 		// Set up the current state skeleton.
@@ -613,52 +613,44 @@ void objPhysicsPrepare(object *const __RESTRICT__ obj){
 	physRigidBody *body = obj->skeletonBodies;
 
 	// Configuration and animated bone state accumulators.
-	/** Might have to use memAllocate here to prevent stack overflows, ~10 KB is a pretty significant chunk of the stack. **/
-	transform accumulators[SKELETON_MAX_BONE_NUM<<1];
-	transform *cAccumulator = &accumulators[0];
-	transform *sAccumulator = &accumulators[obj->skeletonData.skl->boneNum];
+	/** Might have to use memAllocate here to prevent stack overflows. **/
+	transform accumulators[SKELETON_MAX_BONE_NUM];
+	transform *sAccumulator = &accumulators[0];
 
 	// Update the object's skeleton.
-	for(i = 0; i < obj->skeletonData.skl->boneNum; ++i, ++sklBone, ++configuration, ++cAccumulator, ++sAccumulator){
+	for(i = 0; i < obj->skeletonData.skl->boneNum; ++i, ++sklBone, ++configuration, ++sAccumulator){
 
 		/** Split the root into a separate case. **/
 		const unsigned int isRoot = (i == sklBone->parent) || (sklBone->parent >= obj->skeletonData.skl->boneNum);
 
-		// Generate a new animated bone state.
-		*sAccumulator = skliGenerateBoneState(&obj->skeletonData, i, sklBone->name, sklBone->defaultState);
+		// Apply any external transformations provided by the user or the physics module.
+		*sAccumulator = tfAppend(sklBone->localBind, *configuration);
 
 		// Apply the parent's transformations to each bone.
 		// Only do this if we are not on the root bone, of course.
-		// We do, however, need to accumulate the configurations for every bone.
 		if(!isRoot){
-			*cAccumulator = tfAppend(accumulators[sklBone->parent], *configuration);
-			*sAccumulator = tfAppend(accumulators[obj->skeletonData.skl->boneNum+sklBone->parent], *sAccumulator);
-		}else{
-			*cAccumulator = *configuration;
+			*sAccumulator = tfAppend(accumulators[sklBone->parent], *sAccumulator);
 		}
 
+		// Generate a new animated bone state.
+		*sAccumulator = skliGenerateBoneState(
+			&obj->skeletonData, i, sklBone->name,
+			*sAccumulator
+		);
+
 		if(id < idLast && *id == i){
-
 			if(physRigidBodyIsSimulated(body)){
-
-				// Apply the accumulated bone state to the accumulated bone configurations.
-				// Accumulating the transformations allows us to do everything in one loop
-				// rather than splitting this into two separate ones.
-				body->configuration = tfAppend(*cAccumulator, *sAccumulator);
-
+				body->configuration = *sAccumulator;
 				// Initialize the body's moment of inertia and centroid.
 				physRigidBodyCentroidFromPosition(body);
-
 			}
 			if(physRigidBodyIsCollidable(body)){
 				// Remember to add the body's collider to the island.
 				body->flags |= PHYSICS_BODY_TRANSFORMED;
 			}
-
 			// Get the next body.
 			++id;
 			body = modulePhysicsRigidBodyNext(body);
-
 		}
 
 	}
@@ -785,12 +777,6 @@ return_t objTick(object *const __RESTRICT__ obj, const float dt_ms){
 	const boneIndex_t *const idLast = &id[obj->skeletonBodyNum];
 	physRigidBody *body = obj->skeletonBodies;
 
-	// Configuration and animated bone state accumulators.
-	/** Might have to use memAllocate here to prevent stack overflows, ~10 KB is a pretty significant chunk of the stack. **/
-	transform accumulators[SKELETON_MAX_BONE_NUM<<1];
-	transform *cAccumulator = &accumulators[0];
-	transform *sAccumulator = &accumulators[obj->skeletonData.skl->boneNum];
-
 	// If we can create a new previous state, do so.
 	if(obj->stateNum < obj->stateMax){
 		if(objStateAllocate(&obj->oldestStatePrevious, &obj->skeletonData) < 0){
@@ -803,7 +789,7 @@ return_t objTick(object *const __RESTRICT__ obj, const float dt_ms){
 	skliTick(&obj->skeletonData, dt_ms, 1.f);
 
 	// Update the object's skeleton.
-	for(i = 0; i < obj->skeletonData.skl->boneNum; ++i, ++sklBone, ++sklState, ++configuration, ++cAccumulator, ++sAccumulator){
+	for(i = 0; i < obj->skeletonData.skl->boneNum; ++i, ++sklBone, ++sklState, ++configuration){
 
 		// Update the previous states.
 		objStateCopyBone(&obj->state, i);
@@ -820,41 +806,29 @@ return_t objTick(object *const __RESTRICT__ obj, const float dt_ms){
 			*configuration = body->configuration;
 			*sklState = *configuration;
 
-			// Update the accumulators.
-			*cAccumulator = *configuration;
-			*sAccumulator = tfIdentity();
-
 			// Get the next body.
 			++id;
 			body = modulePhysicsRigidBodyNext(body);
 
 		}else{
 
-			// Apply animation transformations.
-
-			/** Split the root into a separate case. **/
+			/** Split the root into a separate case somehow. **/
 			const unsigned int isRoot = (i == sklBone->parent) || (sklBone->parent >= obj->skeletonData.skl->boneNum);
 
-			// Generate a new animated bone state.
-			*sAccumulator = skliGenerateBoneState(
-				&obj->skeletonData, i, sklBone->name,
-				sklBone->defaultState
-			);
+			// Apply any external transformations provided by the user or the physics module.
+			*sklState = tfAppend(sklBone->localBind, *configuration);
 
 			// Apply the parent's transformations to each bone.
 			// Only do this if we are not on the root bone, of course.
-			// We do, however, need to accumulate the configurations for every bone.
 			if(!isRoot){
-				*cAccumulator = tfAppend(accumulators[sklBone->parent], *configuration);
-				*sAccumulator = tfAppend(accumulators[obj->skeletonData.skl->boneNum+sklBone->parent], *sAccumulator);
-			}else{
-				*cAccumulator = *configuration;
+				*sklState = tfAppend(obj->state.configuration[sklBone->parent], *sklState);
 			}
 
-			// Apply the accumulated bone state to the accumulated bone configurations.
-			// Accumulating the transformations allows us to do everything in one loop
-			// rather than splitting this into two separate ones.
-			*sklState = tfAppend(*cAccumulator, *sAccumulator);
+			// Generate a new animated bone state.
+			*sklState = skliGenerateBoneState(
+				&obj->skeletonData, i, sklBone->name,
+				*sklState
+			);
 
 			if(id < idLast && *id == i){
 				// Copy the bone state over to the body.
@@ -1041,7 +1015,7 @@ void objRender(const object *const __RESTRICT__ obj, graphicsManager *const __RE
 	// to the shader.
 	if(boneNum > 0){
 
-		boneIndex_t i = 0;
+		boneIndex_t i;
 
 		mat4 *transformCurrent = gfxMngr->shdrData.skeletonTransformState;
 		const transform *bCurrent = obj->state.configuration;
@@ -1049,12 +1023,6 @@ void objRender(const object *const __RESTRICT__ obj, graphicsManager *const __RE
 
 		transform state;
 		sklNode *sklBone = obj->skeletonData.skl->bones;
-		transform *bAccumulator = gfxMngr->shdrData.skeletonBindAccumulator;
-
-		// Configuration and animated bone state accumulators.
-		/** Might have to use memAllocate here to prevent stack overflows, ~5 KB is a pretty significant chunk of the stack. **/
-		transform accumulators[SKELETON_MAX_BONE_NUM];
-		transform *cAccumulator = &accumulators[0];
 
 		///vec3 gfxDebugBonePositions[SKELETON_MAX_BONE_NUM];
 		///boneIndex_t gfxDebugBoneParents[SKELETON_MAX_BONE_NUM];
@@ -1062,57 +1030,21 @@ void objRender(const object *const __RESTRICT__ obj, graphicsManager *const __RE
 		// Handle the root separately.
 		state = tfInterpolate(*bPrevious, *bCurrent, interpT);
 		centroid = state.position;
+		*transformCurrent = tfMatrix4(tfAppend(state, sklBone->globalBindInverse));
 
-		///gfxDebugBonePositions[i] = state.position;
-		///gfxDebugBoneParents[i] = 0;
-
-		// Calculate the root inverse bind pose.
-		/// Originally used the old tfInverse function.
-		*bAccumulator = tfInverse(sklBone->defaultState);
-		bAccumulator->position = quatRotateVec3FastApproximate(bAccumulator->orientation, bAccumulator->position);
-
-		// Accumulate the object configurations and undo the configuration transformation.
-		// Bones cannot fully represent an arbitrary configuration state, so we need to
-		// use matrices. We still want the global bone positions during updates, though.
-		*cAccumulator = obj->configuration[i];
-		state = tfPrepend(tfInverse(*cAccumulator), state);
-
-		// Compute the global bone states. Then add the inverse bind offsets
-		// and convert it to a transformation matrix for the shader.
-		*transformCurrent = mat4MMultM(
-			mat4MMultM(tfMatrix(*cAccumulator), tfMatrix(state)),
-			tfMatrix(*bAccumulator)
-		);
+		///gfxDebugBonePositions[0] = state.position;
+		///gfxDebugBoneParents[0] = 0;
 
 		// Handle the rest of the bones.
-		while(i < boneNum){
+		for(i = 1; i < boneNum; ++i){
 
-			++bCurrent, ++bPrevious, ++transformCurrent, ++sklBone, ++bAccumulator, ++cAccumulator, ++i;
+			++bCurrent, ++bPrevious, ++transformCurrent, ++sklBone;
 
-			// Add the parent's inverse bind position.
-			/// Originally used the old tfInverse function.
-			state = tfInverse(sklBone->defaultState);
-			state.position = quatRotateVec3FastApproximate(state.orientation, state.position);
-			*bAccumulator = tfAppend(state, gfxMngr->shdrData.skeletonBindAccumulator[sklBone->parent]);
-
-			// Interpolate between bone states.
 			state = tfInterpolate(*bPrevious, *bCurrent, interpT);
+			*transformCurrent = tfMatrix4(tfAppend(state, sklBone->globalBindInverse));
 
 			///gfxDebugBonePositions[i] = state.position;
 			///gfxDebugBoneParents[i] = sklBone->parent;
-
-			// Accumulate the object configurations and undo the configuration transformation.
-			// Bones cannot fully represent an arbitrary configuration state, so we need to
-			// use matrices. We still want the global bone positions during updates, though.
-			*cAccumulator = tfAppend(accumulators[sklBone->parent], obj->configuration[i]);
-			state = tfPrepend(tfInverse(*cAccumulator), state);
-
-			// Compute the global bone states. Then add the inverse bind offsets
-			// and convert it to a transformation matrix for the shader.
-			*transformCurrent = mat4MMultM(
-				mat4MMultM(tfMatrix(*cAccumulator), tfMatrix(state)),
-				tfMatrix(*bAccumulator)
-			);
 
 		}
 

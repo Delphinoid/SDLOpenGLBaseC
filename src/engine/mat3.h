@@ -1,8 +1,15 @@
 #ifndef MAT3_H
 #define MAT3_H
 
-#include "quat.h"
 #include "return.h"
+#include "quat.h"
+
+// WARNING: Both quaternions and matrices often violate
+// strict-aliasing rules. That is, it is common for the
+// engine to cast adjacent floats in quaternion and matrix
+// structures to vectors, for instance. While this is not
+// an issue on most sensible compilers and platforms, it
+// is still technically undefined behaviour.
 
 /** Use an alias? **/
 // All matrices are stored in column-major
@@ -14,8 +21,9 @@ typedef struct {
 	float m[3][3];
 } mat3;
 
-mat3 mat3Identity();
-mat3 mat3Zero();
+extern mat3 g_mat3Identity;
+extern mat3 g_mat3Zero;
+
 void mat3IdentityP(mat3 *const __RESTRICT__ m);
 void mat3ZeroP(mat3 *const __RESTRICT__ m);
 
@@ -62,5 +70,16 @@ return_t mat3SolvePR(const mat3 *const __RESTRICT__ A, const vec3 *const __RESTR
 
 mat3 mat3Quaternion(const quat q);
 void mat3QuaternionP(mat3 *const __RESTRICT__ m, const quat *const __RESTRICT__ q);
+
+quat quatMat3(const mat3 m);
+void quatMat3PR(const mat3 *const __RESTRICT__ m, quat *const __RESTRICT__ r);
+
+mat3 mat3ShearMatrix(const quat q, const vec3 s);
+void mat3ShearMatrixPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ s, mat3 *const __RESTRICT__ r);
+
+void mat3DiagonalizeSymmetric(
+	float a00, float a01, float a02, float a11, float a12, float a22,
+	vec3 *const __RESTRICT__ evals, quat *const __RESTRICT__ Q
+);
 
 #endif

@@ -104,15 +104,15 @@ void *memSLinkAppend(memorySLink *const __RESTRICT__ array, void **const start){
 
 }
 
-void *memSLinkInsertBefore(memorySLink *const __RESTRICT__ array, void **const start, void *const element, const void *const previous){
+void *memSLinkInsertBefore(memorySLink *const __RESTRICT__ array, void **const start, const void *const previous){
 
-	// Inserts a new item before the specified element.
+	// Inserts a new item after "previous".
 
 	byte_t *const r = array->free;
 	if(r){
 		array->free = memSLinkDataGetNextFreeMasked(r);
 		// Set the new element's next pointer.
-		memSLinkDataGetNext(r) = element;
+		memSLinkDataGetNext(r) = memSLinkDataGetNext(previous);
 		if(previous == NULL){
 			*start = r;
 		}else{

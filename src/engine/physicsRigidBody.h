@@ -86,10 +86,10 @@ typedef struct physRigidBody {
 
 	// Space properties.
 	transform configuration;  // The current global configuration of the body.
-	vec3 linearVelocity;      // Current linear velocity.
-	vec3 angularVelocity;     // Current angular velocity.
-	vec3 netForce;            // Force accumulator.
-	vec3 netTorque;           // Torque accumulator.
+	vec3 linearVelocity;           // Current linear velocity.
+	vec3 angularVelocity;          // Current angular velocity.
+	vec3 netForce;                 // Force accumulator.
+	vec3 netTorque;                // Torque accumulator.
 
 	// Physical constraints.
 	// Each joint stores pointers to the previous and next joints for

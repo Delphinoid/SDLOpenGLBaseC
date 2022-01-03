@@ -205,25 +205,25 @@ __HINT_INLINE__ void vec2SDivVP(const float s, vec2 *const __RESTRICT__ v){
 
 __HINT_INLINE__ vec2 vec2Min(const vec2 v1, const vec2 v2){
 	const vec2 r = {
-		.x = v1.x <= v2.x ? v1.x : v2.x,
-		.y = v1.y <= v2.y ? v1.y : v2.y
+		.x = floatMin(v1.x, v2.x),
+		.y = floatMin(v1.y, v2.y)
 	};
 	return r;
 }
 __HINT_INLINE__ void vec2MinP(const vec2 *const __RESTRICT__ v1, const vec2 *const __RESTRICT__ v2, vec2 *const __RESTRICT__ r){
-	r->x = v1->x <= v2->x ? v1->x : v2->x;
-	r->y = v1->y <= v2->y ? v1->y : v2->y;
+	r->x = floatMin(v1->x, v2->x);
+	r->y = floatMin(v1->y, v2->y);
 }
 __HINT_INLINE__ vec2 vec2Max(const vec2 v1, const vec2 v2){
 	const vec2 r = {
-		.x = v1.x >= v2.x ? v1.x : v2.x,
-		.y = v1.y >= v2.y ? v1.y : v2.y
+		.x = floatMax(v1.x, v2.x),
+		.y = floatMax(v1.y, v2.y)
 	};
 	return r;
 }
 __HINT_INLINE__ void vec2MaxP(const vec2 *const __RESTRICT__ v1, const vec2 *const __RESTRICT__ v2, vec2 *const __RESTRICT__ r){
-	r->x = v1->x >= v2->x ? v1->x : v2->x;
-	r->y = v1->y >= v2->y ? v1->y : v2->y;
+	r->x = floatMax(v1->x, v2->x);
+	r->y = floatMax(v1->y, v2->y);
 }
 
 __HINT_INLINE__ vec2 vec2Negate(const vec2 v){

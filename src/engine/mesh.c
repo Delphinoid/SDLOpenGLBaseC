@@ -367,6 +367,55 @@ return_t meshBillboardInit(){
 
 }
 
+/**__FORCE_INLINE__ void mdlFindCurrentLOD(const mesh *const __RESTRICT__ m, vertexIndex_t *const __RESTRICT__ indexNum, const void **const __RESTRICT__ offset, const float distance, size_t bias){
+
+	if(m->lods == NULL){
+
+		*indexNum = m->indexNum;
+		*offset = 0;
+
+	}else{
+
+		// Find the current LOD based off the distance.
+		const mdlLOD *lod = m->lod;
+		const mdlLOD *const lodFirst = lod;
+		const mdlLOD *const lodLast = lod[m->lodNum];
+
+		// Loop through each LOD until one within
+		// the specified distance is found.
+		MDL_FIND_CURRENT_LOD_LOOP:
+		if((++lod)->distance <= distance){
+			if(lod < lodLast){
+				goto MDL_FIND_CURRENT_LOD_LOOP;
+			}
+		}else{
+			--lod;
+		}
+
+		// Apply the specified LOD bias.
+		if(bias != 0){
+			if(bias < 0){
+				// If the bias is negative, get some
+				// higher-detail LODs.
+				while(lod > lodFirst && bias != 0){
+					--lod; ++bias;
+				}
+			}else{
+				// If the bias is positive, get some
+				// lower-detail LODs.
+				while(lod < lodLast && bias != 0){
+					++lod; --bias;
+				}
+			}
+		}
+
+		*indexNum = lod->indexNum;
+		*offset = lod->offset;
+
+	}
+
+}**/
+
 void meshDelete(mesh *const __RESTRICT__ m){
 	if(m->vaoID != 0){
 		glDeleteBuffers(1, &m->vaoID);

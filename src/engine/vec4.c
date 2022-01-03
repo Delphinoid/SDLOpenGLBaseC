@@ -293,30 +293,34 @@ __HINT_INLINE__ void vec4SDivVP(const float s, vec4 *const __RESTRICT__ v){
 }
 
 __HINT_INLINE__ vec4 vec4Min(const vec4 v1, const vec4 v2){
-	const vec4 r = {.x = v1.x <= v2.x ? v1.x : v2.x,
-	                .y = v1.y <= v2.y ? v1.y : v2.y,
-	                .z = v1.z <= v2.z ? v1.z : v2.z,
-					.w = v1.w <= v2.w ? v1.w : v2.w};
+	const vec4 r = {
+		.x = floatMin(v1.x, v2.x),
+		.y = floatMin(v1.y, v2.y),
+		.z = floatMin(v1.z, v2.z),
+		.w = floatMin(v1.w, v2.w)
+	};
 	return r;
 }
 __HINT_INLINE__ void vec4MinP(const vec4 *const __RESTRICT__ v1, const vec4 *const __RESTRICT__ v2, vec4 *const __RESTRICT__ r){
-	r->x = v1->x <= v2->x ? v1->x : v2->x;
-	r->y = v1->y <= v2->y ? v1->y : v2->y;
-	r->z = v1->z <= v2->z ? v1->z : v2->z;
-	r->w = v1->w <= v2->w ? v1->w : v2->w;
+	r->x = floatMin(v1->x, v2->x);
+	r->y = floatMin(v1->y, v2->y);
+	r->z = floatMin(v1->z, v2->z);
+	r->w = floatMin(v1->z, v2->z);
 }
 __HINT_INLINE__ vec4 vec4Max(const vec4 v1, const vec4 v2){
-	const vec4 r = {.x = v1.x >= v2.x ? v1.x : v2.x,
-	                .y = v1.y >= v2.y ? v1.y : v2.y,
-	                .z = v1.z >= v2.z ? v1.z : v2.z,
-					.w = v1.w >= v2.w ? v1.w : v2.w};
+	const vec4 r = {
+		.x = floatMax(v1.x, v2.x),
+		.y = floatMax(v1.y, v2.y),
+		.z = floatMax(v1.z, v2.z),
+		.w = floatMax(v1.w, v2.w)
+	};
 	return r;
 }
 __HINT_INLINE__ void vec4MaxP(const vec4 *const __RESTRICT__ v1, const vec4 *const __RESTRICT__ v2, vec4 *const __RESTRICT__ r){
-	r->x = v1->x >= v2->x ? v1->x : v2->x;
-	r->y = v1->y >= v2->y ? v1->y : v2->y;
-	r->z = v1->z >= v2->z ? v1->z : v2->z;
-	r->w = v1->w >= v2->w ? v1->w : v2->w;
+	r->x = floatMax(v1->x, v2->x);
+	r->y = floatMax(v1->y, v2->y);
+	r->z = floatMax(v1->z, v2->z);
+	r->w = floatMax(v1->z, v2->z);
 }
 
 __HINT_INLINE__ vec4 vec4Negate(const vec4 v){

@@ -1,25 +1,38 @@
 #ifndef TRANSFORM_H
 #define TRANSFORM_H
 
-#include "mat4.h"
+#include "transformRigid.h"
+#include "mat3.h"
 
 // Represents an affine transformation.
+// To do this correctly without resorting to matrices,
+// which cannot be interpolated, we introduce a "stretch
+// rotation" in the form of another quaternion, "shear".
+// This is the rotation such that the standard x, y and
+// z axes correspond precisely to the shear basis.
+//
+// As a matrix A, this transformation may be written
+//     A = TRQSQ^T,
+// where T is a translation matrix, R is a rotation
+// matrix and QSQ^T is the full affine scale matrix.
+// Q here is the matrix corresponding to the stretch
+// rotation, while S the diagonal scale matrix.
 typedef struct {
 	vec3 position;
 	quat orientation;
 	vec3 scale;
+	quat shear;
 } transform;
 
-void tfInit(transform *const __RESTRICT__ tf);
-transform tfIdentity();
+extern transform g_tfIdentity;
 
-mat4 tfMatrix(const transform tf);
+void tfIdentityP(transform *const __RESTRICT__ tf);
+transformRigid tfRigid(const transform tf);
+transform tfrAffine(const transformRigid tf);
+mat4 tfMatrix4(const transform tf);
+mat3 tfMatrix3(const transform tf);
 
 vec3 tfTransform(const transform tf, const vec3 v);
-
-///transform tfInverse(const transform tf);
-///void tfInverseP(transform *const __RESTRICT__ tf);
-///void tfInversePR(const transform *const __RESTRICT__ tf, transform *const __RESTRICT__ r);
 
 transform tfInterpolate(const transform tf1, const transform tf2, const float t);
 void tfInterpolateP1(transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2, const float t);
@@ -30,35 +43,9 @@ transform tfInverse(const transform tf);
 void tfInverseP(transform *const __RESTRICT__ tf);
 void tfInversePR(const transform *const __RESTRICT__ tf, transform *const __RESTRICT__ r);
 
-vec3 tfAppendPosition1(const transform tf1, const transform tf2);
-vec3 tfAppendPosition2(const transform tf1, const transform tf2);
-void tfAppendPositionP1(transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2);
-void tfAppendPositionP2(const transform *const __RESTRICT__ tf1, transform *const __RESTRICT__ tf2);
-void tfAppendPositionPR(const transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2, transform *const __RESTRICT__ r);
-
-vec3 tfAppendPositionVec(const transform tf, const float x, const float y, const float z);
-void tfAppendPositionVecP(transform *const __RESTRICT__ tf, const float x, const float y, const float z);
-void tfAppendPositionVecPR(const transform *const __RESTRICT__ tf, const float x, const float y, const float z, vec3 *const __RESTRICT__ r);
-
-quat tfAppendOrientation(const transform tf1, const transform tf2);
-void tfAppendOrientationP1(transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2);
-void tfAppendOrientationP2(const transform *const __RESTRICT__ tf1, transform *const __RESTRICT__ tf2);
-void tfAppendOrientationPR(const transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2, transform *const __RESTRICT__ r);
-
-vec3 tfAppendScale(const transform tf1, const transform tf2);
-void tfAppendScaleP(transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2);
-void tfAppendScalePR(const transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2, transform *const __RESTRICT__ r);
-
 transform tfAppend(const transform tf1, const transform tf2);
 void tfAppendP1(transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2);
 void tfAppendP2(const transform *const __RESTRICT__ tf1, transform *const __RESTRICT__ tf2);
 void tfAppendPR(const transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2, transform *const __RESTRICT__ r);
-
-transform tfPrepend(const transform tf1, const transform tf2);
-
-transform tfCombine(const transform tf1, const transform tf2);
-void tfCombineP1(transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2);
-void tfCombineP2(const transform *const __RESTRICT__ tf1, transform *const __RESTRICT__ tf2);
-void tfCombinePR(const transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2, transform *const __RESTRICT__ r);
 
 #endif

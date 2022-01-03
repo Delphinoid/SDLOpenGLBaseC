@@ -7,13 +7,16 @@
 #include "flags.h"
 #include "return.h"
 
+///#define SKELETON_BONE_NO_PARENT ((boneIndex_t)(-1))
+
 #define SKELETON_ANIM_INSTANCE_ADDITIVE  0
 #define SKELETON_ANIM_INSTANCE_OVERWRITE 1
 
 // Skeleton node, containing a transform and the index of its parent.
 // Bone states are stored as offsets from their parents.
 typedef struct {
-	transform defaultState;
+	transform localBind;
+	transform globalBindInverse;
 	// If the node has no parent, this will be set to its own position in the array.
 	boneIndex_t parent;
 	char *name;

@@ -13,11 +13,14 @@ void guiTextTick(guiElement *const element, const float dt_ms){
 
 }**/
 
+__HINT_INLINE__ mat4 tempmat4Translate(const float x, const float y, const float z, const mat4 m){
+
+}
 void guiTextRender(const guiElement *const element, graphicsManager *const gfxMngr, const camera *const cam, const float distance, const float interpT){
 
 	const guiText text = element->data.text;
 	const transform root = (element->parent == NULL ? element->root : tfAppend(element->parent->root, element->root));
-	const mat4 rootTransform = tfMatrix(root);
+	const mat4 rootTransform = tfMatrix4(root);
 
 	txtFont font = *text.format.font;
 	const texture *atlas = NULL;
@@ -31,7 +34,7 @@ void guiTextRender(const guiElement *const element, graphicsManager *const gfxMn
 	const byte_t *currentCharacter = text.stream.offset;
 
 	// Scaled root transform.
-	mat4 transform = mat4Scale(rootTransform, text.format.size, text.format.size, text.format.size);
+	mat4 transform = mat4Scale(text.format.size, text.format.size, text.format.size, rootTransform);
 
 	// Initialize rendering state.
 	glBindVertexArray(g_meshSprite.vaoID);
@@ -137,8 +140,8 @@ void guiTextRender(const guiElement *const element, graphicsManager *const gfxMn
 
 			// Generate glyph transform and add it to the state buffer.
 			/// Temporary transformation. There must be a better way.
-			state->transformation = mat4Translate(transform, glyphX, glyphY, 0.f);
-			state->transformation = mat4Scale(state->transformation, glyphWidth, glyphHeight, 1.f);
+			state->transformation = mat4TranslatePre(transform, glyphX, glyphY, 0.f);
+			state->transformation = mat4Scale(glyphWidth, glyphHeight, 1.f, state->transformation);
 			state->frame = glyph.frame;
 			++state; ++bufferSize;
 

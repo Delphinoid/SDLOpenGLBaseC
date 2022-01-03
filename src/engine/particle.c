@@ -13,9 +13,9 @@ void particleBaseInit(particleBase *const __RESTRICT__ base){
 }
 
 void particleInit(particle *const __RESTRICT__ p){
-	tfInit(&p->configuration);
+	p->configuration = g_tfIdentity;
 	#ifdef PARTICLE_ALLOW_INTERPOLATION
-	tfInit(&p->previous);
+	p->previous = g_tfIdentity;
 	#endif
 	p->currentAnim = 0;
 	animInstInit(&p->animator);

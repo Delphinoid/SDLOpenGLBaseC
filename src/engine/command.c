@@ -12,6 +12,7 @@ static __HINT_INLINE__ void cmdTrieInit(cmdTrieNode *const __RESTRICT__ node, co
 	node->children = NULL;
 	node->cmd = 0;
 	node->value = c;
+	node->type = 0;
 }
 static __HINT_INLINE__ cmdTrieNode *cmdTrieNext(const cmdTrieNode *const node, const char c){
 	// Gets the next node when finding a command.
@@ -102,8 +103,9 @@ void cmdSystemInit(cmdSystem *const __RESTRICT__ cmdsys){
 	cmdsys->children = NULL;
 	cmdsys->cmd = 0;
 	cmdsys->value = 0;
+	cmdsys->type = 0;
 }
-return_t cmdSystemAdd(cmdSystem *node, const char *__RESTRICT__ name, const command cmd){
+return_t cmdSystemAdd(cmdSystem *node, const char *__RESTRICT__ name, const command cmd, const unsigned char type){
 
 	// Check if the command is valid before adding it.
 	if(cmdValid(name, cmd)){
@@ -123,6 +125,7 @@ return_t cmdSystemAdd(cmdSystem *node, const char *__RESTRICT__ name, const comm
 			// If a command is not already linked to
 			// this node, link one and return success.
 			node->cmd = cmd;
+			node->type = type;
 			return 1;
 		}
 
@@ -131,16 +134,16 @@ return_t cmdSystemAdd(cmdSystem *node, const char *__RESTRICT__ name, const comm
 	return 0;
 
 }
-command cmdSystemFind(const cmdSystem *node, const char *__RESTRICT__ name){
+const cmdTrieNode *const cmdSystemFind(const cmdSystem *node, const char *__RESTRICT__ name){
 	// Find the command in the trie.
 	while(node != NULL){
 		if(*name == '\0'){
-			return node->cmd;
+			return node;
 		}
 		node = cmdTrieNext(node, *name);
 		++name;
 	}
-	return 0;
+	return NULL;
 }
 void cmdSystemDelete(cmdSystem *const node){
 	/// Yikes... I really don't like using recursive functions.
@@ -154,9 +157,12 @@ void cmdSystemDelete(cmdSystem *const node){
 	if(node->children != NULL){
 		memFree(node->children);
 	}
-	if(cmdType(node->cmd)){
-		memFree((void *)cmdAddress(node->cmd));
+	if(node->type != COMMAND_TYPE_FUNCTION){
+		memFree((void *)node->cmd);
 	}
+	/**if(cmdType(node->cmd)){
+		memFree((void *)cmdAddress(node->cmd));
+	}**/
 }
 
 static __HINT_INLINE__ void cmdTokenizedInit(cmdTokenized *const __RESTRICT__ cmdtok){
@@ -394,13 +400,13 @@ return_t cmdBufferExecute(cmdBuffer *const __RESTRICT__ cmdbuf, cmdSystem *const
 		}else{
 
 			// Execute the command.
-			command cmd = cmdSystemFind(cmdsys, cmdtok->argv[0]);
-			if(cmd != 0){
-				if(cmdType(cmd) == 0){
+			const cmdTrieNode *const node = cmdSystemFind(cmdsys, cmdtok->argv[0]);
+			if(node != NULL){
+				if(node->type == 0){
 
 					// The command is valid! Execute it.
 					// Don't forget to skip the first argument!
-					((cmdFunction)cmd)(cmdsys, cmdtok->argc-1, &cmdtok->argv[1]);
+					((cmdFunction)node->cmd)(cmdsys, cmdtok->argc-1, &cmdtok->argv[1]);
 
 				}else{
 
@@ -409,8 +415,8 @@ return_t cmdBufferExecute(cmdBuffer *const __RESTRICT__ cmdbuf, cmdSystem *const
 					// We temporarily set the end of the
 					// linked list for faster insertions.
 					cmdbuf->cmdListEnd = cmdtok;
-					cmd = cmdAddress(cmd);
-					if(cmdBufferTokenize(cmdbuf, (const char *)cmd, strlen((const char *)cmd), cmdtok->timestamp, cmdtok->delay) < 0){
+					///cmd = cmdAddress(cmd);
+					if(cmdBufferTokenize(cmdbuf, (const char *)node->cmd, strlen((const char *)node->cmd), cmdtok->timestamp, cmdtok->delay) < 0){
 						/** Memory allocation failure. **/
 						return -1;
 					}

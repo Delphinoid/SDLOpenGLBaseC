@@ -114,23 +114,31 @@ void *memDLinkInsertBefore(memoryDLink *const __RESTRICT__ array, void **const s
 
 	// Inserts a new item before the specified element.
 
-	byte_t *const r = array->free;
-	if(r){
-		byte_t **const prev = memDLinkDataGetPrevPointer(element);
-		array->free = memDLinkDataGetNextFreeMasked(r);
-		// Set the new element's pointers.
-		memDLinkDataGetNext(r) = element;
-		memDLinkDataGetPrev(r) = *prev;
-		if(*prev != NULL){
-			// Set the previous element's next pointer.
-			memDLinkDataGetNext(*prev) = r;
-			// Set the next element's previous pointer.
-			*prev = r;
-		}else{
-			*start = r;
+	if(element == NULL){
+		// Weird situation - we're inserting before a NULL element.
+		// Append it to avoid losing the original list.
+		// We perform a prepend because this is the only thing
+		// that memDLinkInsertBefore() cannot otherwise perform.
+		return memDLinkAppend(array, start);
+	}else{
+		byte_t *const r = array->free;
+		if(r){
+			byte_t **const prev = memDLinkDataGetPrevPointer(element);
+			array->free = memDLinkDataGetNextFreeMasked(r);
+			// Set the new element's pointers.
+			memDLinkDataGetNext(r) = element;
+			memDLinkDataGetPrev(r) = *prev;
+			if(*prev != NULL){
+				// Set the previous element's next pointer.
+				memDLinkDataGetNext(*prev) = r;
+				// Set the next element's previous pointer.
+				*prev = r;
+			}else{
+				*start = r;
+			}
 		}
+		return r;
 	}
-	return r;
 
 }
 

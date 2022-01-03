@@ -1,27 +1,24 @@
 #include "mat4.h"
+#include "mat3.h"
 #include <stddef.h>
 #include <math.h>
 #include <string.h>
 
-__HINT_INLINE__ mat4 mat4Identity(){
-	const mat4 r = {.m = {{1.f, 0.f, 0.f, 0.f},
-	                      {0.f, 1.f, 0.f, 0.f},
-	                      {0.f, 0.f, 1.f, 0.f},
-	                      {0.f, 0.f, 0.f, 1.f}}};
-	return r;
-}
+mat4 g_mat4Identity = {
+	.m = {{1.f, 0.f, 0.f, 0.f},
+	      {0.f, 1.f, 0.f, 0.f},
+	      {0.f, 0.f, 1.f, 0.f},
+	      {0.f, 0.f, 0.f, 1.f}}
+};
+mat4 g_mat4Zero = {
+	.m = {{0.f, 0.f, 0.f, 0.f},
+	      {0.f, 0.f, 0.f, 0.f},
+	      {0.f, 0.f, 0.f, 0.f},
+	      {0.f, 0.f, 0.f, 0.f}}
+};
+
 __HINT_INLINE__ void mat4IdentityP(mat4 *const __RESTRICT__ m){
-	m->m[0][0] = 1.f; m->m[0][1] = 0.f; m->m[0][2] = 0.f; m->m[0][3] = 0.f;
-	m->m[1][0] = 0.f; m->m[1][1] = 1.f; m->m[1][2] = 0.f; m->m[1][3] = 0.f;
-	m->m[2][0] = 0.f; m->m[2][1] = 0.f; m->m[2][2] = 1.f; m->m[2][3] = 0.f;
-	m->m[3][0] = 0.f; m->m[3][1] = 0.f; m->m[3][2] = 0.f; m->m[3][3] = 1.f;
-}
-__HINT_INLINE__ mat4 mat4Zero(){
-	const mat4 r = {.m = {{0.f, 0.f, 0.f, 0.f},
-	                      {0.f, 0.f, 0.f, 0.f},
-	                      {0.f, 0.f, 0.f, 0.f},
-	                      {0.f, 0.f, 0.f, 0.f}}};
-	return r;
+	*m = g_mat4Identity;
 }
 __HINT_INLINE__ void mat4ZeroP(mat4 *const __RESTRICT__ m){
 	memset(m->m, 0, sizeof(mat4));
@@ -547,7 +544,25 @@ __HINT_INLINE__ void mat4TranslationMatrixP(mat4 *const __RESTRICT__ m, const fl
 	m->m[2][0] = 0.f; m->m[2][1] = 0.f; m->m[2][2] = 1.f; m->m[2][3] = 0.f;
 	m->m[3][0] = x;   m->m[3][1] = y;   m->m[3][2] = z;   m->m[3][3] = 1.f;
 }
-__HINT_INLINE__ mat4 mat4Translate(const mat4 m, const float x, const float y, const float z){
+__HINT_INLINE__ mat4 mat4Translate(const float x, const float y, const float z, const mat4 m){
+	const mat4 r = {.m = {{m.m[0][0],   m.m[0][1],   m.m[0][2],   m.m[0][3]},
+	                      {m.m[1][0],   m.m[1][1],   m.m[1][2],   m.m[1][3]},
+	                      {m.m[2][0],   m.m[2][1],   m.m[2][2],   m.m[2][3]},
+	                      {m.m[3][0]+x, m.m[3][1]+y, m.m[3][2]+z, m.m[3][3]}}};
+	return r;
+}
+__HINT_INLINE__ void mat4TranslateP(const float x, const float y, const float z, mat4 *const __RESTRICT__ m){
+	m->m[3][0] += x;
+	m->m[3][1] += y;
+	m->m[3][2] += z;
+}
+__HINT_INLINE__ void mat4TranslatePR(const float x, const float y, const float z, const mat4 *const __RESTRICT__ m, mat4 *const __RESTRICT__ r){
+	*r = *m;
+	r->m[3][0] += x;
+	r->m[3][1] += y;
+	r->m[3][2] += z;
+}
+__HINT_INLINE__ mat4 mat4TranslatePre(const mat4 m, const float x, const float y, const float z){
 	const mat4 r = {.m = {{m.m[0][0], m.m[0][1], m.m[0][2], m.m[0][3]},
 	                      {m.m[1][0], m.m[1][1], m.m[1][2], m.m[1][3]},
 	                      {m.m[2][0], m.m[2][1], m.m[2][2], m.m[2][3]},
@@ -557,29 +572,6 @@ __HINT_INLINE__ mat4 mat4Translate(const mat4 m, const float x, const float y, c
 	                       m.m[0][3] * x + m.m[1][3] * y + m.m[2][3] * z + m.m[3][3]}}};
 	return r;
 }
-__HINT_INLINE__ void mat4TranslateP(mat4 *const __RESTRICT__ m, const float x, const float y, const float z){
-	m->m[3][0] = m->m[0][0] * x + m->m[1][0] * y + m->m[2][0] * z + m->m[3][0];
-	m->m[3][1] = m->m[0][1] * x + m->m[1][1] * y + m->m[2][1] * z + m->m[3][1];
-	m->m[3][2] = m->m[0][2] * x + m->m[1][2] * y + m->m[2][2] * z + m->m[3][2];
-	m->m[3][3] = m->m[0][3] * x + m->m[1][3] * y + m->m[2][3] * z + m->m[3][3];
-}
-__HINT_INLINE__ void mat4TranslatePR(const mat4 *const __RESTRICT__ m, const float x, const float y, const float z, mat4 *const __RESTRICT__ r){
-	r->m[0][0] = m->m[0][0]; r->m[0][1] = m->m[0][1]; r->m[0][2] = m->m[0][2]; r->m[0][3] = m->m[0][3];
-	r->m[1][0] = m->m[1][0]; r->m[1][1] = m->m[1][1]; r->m[1][2] = m->m[1][2]; r->m[1][3] = m->m[1][3];
-	r->m[2][0] = m->m[2][0]; r->m[2][1] = m->m[2][1]; r->m[2][2] = m->m[2][2]; r->m[2][3] = m->m[2][3];
-	r->m[3][0] = m->m[0][0] * x + m->m[1][0] * y + m->m[2][0] * z + m->m[3][0];
-	r->m[3][1] = m->m[0][1] * x + m->m[1][1] * y + m->m[2][1] * z + m->m[3][1];
-	r->m[3][2] = m->m[0][2] * x + m->m[1][2] * y + m->m[2][2] * z + m->m[3][2];
-	r->m[3][3] = m->m[0][3] * x + m->m[1][3] * y + m->m[2][3] * z + m->m[3][3];
-}
-__HINT_INLINE__ mat4 mat4TranslatePre(const mat4 m, const float x, const float y, const float z){
-	//return mat4MMultM(mat4TranslationMatrix(x, y, z), m);
-	const mat4 r = {.m = {{m.m[0][0] + x * m.m[0][3], m.m[0][1] + y * m.m[0][3], m.m[0][2] + z * m.m[0][3], m.m[0][3]},
-	                      {m.m[1][0] + x * m.m[1][3], m.m[1][1] + y * m.m[1][3], m.m[1][2] + z * m.m[1][3], m.m[1][3]},
-	                      {m.m[2][0] + x * m.m[2][3], m.m[2][1] + y * m.m[2][3], m.m[2][2] + z * m.m[2][3], m.m[2][3]},
-	                      {m.m[3][0] + x * m.m[3][3], m.m[3][1] + y * m.m[3][3], m.m[3][2] + z * m.m[3][3], m.m[3][3]}}};
-	return r;
-}
 
 __HINT_INLINE__ mat4 mat4RotationMatrix(const quat q){
 	return mat4Quaternion(q);
@@ -587,17 +579,17 @@ __HINT_INLINE__ mat4 mat4RotationMatrix(const quat q){
 __HINT_INLINE__ void mat4RotationMatrixP(mat4 *const __RESTRICT__ m, const quat *const __RESTRICT__ q){
 	mat4QuaternionP(m, q);
 }
-__HINT_INLINE__ mat4 mat4Rotate(const mat4 m, const quat q){
-	return mat4MMultM(m, mat4Quaternion(q));
+__HINT_INLINE__ mat4 mat4Rotate(const quat q, const mat4 m){
+	return mat4MMultM(mat4Quaternion(q), m);
 }
-__HINT_INLINE__ void mat4RotateP(mat4 *const __RESTRICT__ m, const quat *const __RESTRICT__ q){
+__HINT_INLINE__ void mat4RotateP(const quat *const __RESTRICT__ q, mat4 *const __RESTRICT__ m){
 	mat4 r;
 	mat4QuaternionP(&r, q);
-	mat4MMultMP1(m, &r);
+	mat4MMultMP2(&r, m);
 }
-__HINT_INLINE__ void mat4RotatePR(const mat4 *const __RESTRICT__ m, const quat *const __RESTRICT__ q, mat4 *const __RESTRICT__ r){
+__HINT_INLINE__ void mat4RotatePR(const quat *const __RESTRICT__ q, const mat4 *const __RESTRICT__ m, mat4 *const __RESTRICT__ r){
 	mat4QuaternionP(r, q);
-	mat4MMultMP2(m, r);
+	mat4MMultMP1(r, m);
 }
 
 mat4 mat4ScaleMatrix(const float x, const float y, const float z){
@@ -613,19 +605,19 @@ __HINT_INLINE__ void mat4ScaleMatrixP(mat4 *const __RESTRICT__ m, const float x,
 	m->m[2][0] = 0.f; m->m[2][1] = 0.f; m->m[2][2] = z;   m->m[2][3] = 0.f;
 	m->m[3][0] = 0.f; m->m[3][1] = 0.f; m->m[3][2] = 0.f; m->m[3][3] = 1.f;
 }
-__HINT_INLINE__ mat4 mat4Scale(const mat4 m, const float x, const float y, const float z){
+__HINT_INLINE__ mat4 mat4Scale(const float x, const float y, const float z, const mat4 m){
 	const mat4 r = {.m = {{m.m[0][0] * x, m.m[0][1] * x, m.m[0][2] * x, m.m[0][3] * x},
 	                      {m.m[1][0] * y, m.m[1][1] * y, m.m[1][2] * y, m.m[1][3] * y},
 	                      {m.m[2][0] * z, m.m[2][1] * z, m.m[2][2] * z, m.m[2][3] * z},
 	                      {m.m[3][0],     m.m[3][1],     m.m[3][2],     m.m[3][3]}}};
 	return r;
 }
-__HINT_INLINE__ void mat4ScaleP(mat4 *const __RESTRICT__ m, const float x, const float y, const float z){
+__HINT_INLINE__ void mat4ScaleP(const float x, const float y, const float z, mat4 *const __RESTRICT__ m){
 	m->m[0][0] *= x; m->m[0][1] *= x; m->m[0][2] *= x; m->m[0][3] *= x;
 	m->m[1][0] *= y; m->m[1][1] *= y; m->m[1][2] *= y; m->m[1][3] *= y;
 	m->m[2][0] *= z; m->m[2][1] *= z; m->m[2][2] *= z; m->m[2][3] *= z;
 }
-__HINT_INLINE__ void mat4ScalePR(const mat4 *const __RESTRICT__ m, const float x, const float y, const float z, mat4 *r){
+__HINT_INLINE__ void mat4ScalePR(const float x, const float y, const float z, const mat4 *const __RESTRICT__ m, mat4 *r){
 	r->m[0][0] = m->m[0][0] * x; r->m[0][1] = m->m[0][1] * x; r->m[0][2] = m->m[0][2] * x; r->m[0][3] = m->m[0][3] * x;
 	r->m[1][0] = m->m[1][0] * y; r->m[1][1] = m->m[1][1] * y; r->m[1][2] = m->m[1][2] * y; r->m[1][3] = m->m[1][3] * y;
 	r->m[2][0] = m->m[2][0] * z; r->m[2][1] = m->m[2][1] * z; r->m[2][2] = m->m[2][2] * z; r->m[2][3] = m->m[2][3] * z;
@@ -639,19 +631,91 @@ __HINT_INLINE__ mat4 mat4ScalePre(const mat4 m, const float x, const float y, co
 	return r;
 }
 
+__HINT_INLINE__ mat4 mat4ShearMatrix(const quat q, const vec3 s){
+
+	// Given a quaternion q with matrix Q and a scale matrix S with
+	// diagonal s, determine the corresponding shear matrix m = QSQ^T.
+
+	mat4 r;
+
+	// Convert the quaternion to a rotation matrix.
+	const mat3 m = mat3Quaternion(q);
+
+	float cx = s.x*m.m[0][0];
+	float cy = s.y*m.m[1][0];
+	float cz = s.z*m.m[2][0];
+
+	r.m[0][0] = m.m[0][0]*cx + m.m[1][0]*cy + m.m[2][0]*cz;
+	r.m[0][1] = m.m[0][1]*cx + m.m[1][1]*cy + m.m[2][1]*cz;
+	r.m[0][2] = m.m[0][2]*cx + m.m[1][2]*cy + m.m[2][2]*cz;
+	r.m[0][3] = 0.f;
+	cx = s.x*m.m[0][1];
+	cy = s.y*m.m[1][1];
+	cz = s.z*m.m[2][1];
+	r.m[1][0] = r.m[0][1];
+	r.m[1][1] = m.m[0][1]*cx + m.m[1][1]*cy + m.m[2][1]*cz;
+	r.m[1][2] = m.m[0][2]*cx + m.m[1][2]*cy + m.m[2][2]*cz;
+	r.m[1][3] = 0.f;
+	r.m[2][0] = r.m[0][2];
+	r.m[2][1] = r.m[1][2];
+	r.m[2][2] = m.m[0][2]*s.x*m.m[0][2] +  m.m[1][2]*s.y*m.m[1][2] + m.m[2][2]*s.z*m.m[2][2];
+	r.m[2][3] = 0.f;
+	r.m[3][0] = 0.f;
+	r.m[3][1] = 0.f;
+	r.m[3][2] = 0.f;
+	r.m[3][3] = 1.f;
+
+	return r;
+
+}
+__HINT_INLINE__ void mat4ShearMatrixPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ s, mat4 *const __RESTRICT__ r){
+
+	// Given a quaternion q with matrix Q and a scale matrix S with
+	// diagonal s, determine the corresponding shear matrix m = QSQ^T.
+
+	// Convert the quaternion to a rotation matrix.
+	mat3 m;
+	mat3QuaternionP(&m, q);
+
+	float cx = s->x*m.m[0][0];
+	float cy = s->y*m.m[1][0];
+	float cz = s->z*m.m[2][0];
+
+	r->m[0][0] = m.m[0][0]*cx + m.m[1][0]*cy + m.m[2][0]*cz;
+	r->m[0][1] = m.m[0][1]*cx + m.m[1][1]*cy + m.m[2][1]*cz;
+	r->m[0][2] = m.m[0][2]*cx + m.m[1][2]*cy + m.m[2][2]*cz;
+	r->m[0][3] = 0.f;
+	cx = s->x*m.m[0][1];
+	cy = s->y*m.m[1][1];
+	cz = s->z*m.m[2][1];
+	r->m[1][0] = r->m[0][1];
+	r->m[1][1] = m.m[0][1]*cx + m.m[1][1]*cy + m.m[2][1]*cz;
+	r->m[1][2] = m.m[0][2]*cx + m.m[1][2]*cy + m.m[2][2]*cz;
+	r->m[1][3] = 0.f;
+	r->m[2][0] = r->m[0][2];
+	r->m[2][1] = r->m[1][2];
+	r->m[2][2] = m.m[0][2]*s->x*m.m[0][2] + m.m[1][2]*s->y*m.m[1][2] + m.m[2][2]*s->z*m.m[2][2];
+	r->m[2][3] = 0.f;
+	r->m[3][0] = 0.f;
+	r->m[3][1] = 0.f;
+	r->m[3][2] = 0.f;
+	r->m[3][3] = 1.f;
+
+}
+
 __HINT_INLINE__ mat4 mat4Quaternion(const quat q){
-	const float x2 = 2.f*q.v.x;
-	const float y2 = 2.f*q.v.y;
-	const float z2 = 2.f*q.v.z;
+	const float x2 = 2.f*q.x;
+	const float y2 = 2.f*q.y;
+	const float z2 = 2.f*q.z;
 	const float w2x = q.w*x2;
 	const float w2y = q.w*y2;
 	const float w2z = q.w*z2;
-	const float x2x = q.v.x*x2;
-	const float x2y = q.v.x*y2;
-	const float x2z = q.v.x*z2;
-	const float y2y = q.v.y*y2;
-	const float y2z = q.v.y*z2;
-	const float z2z = q.v.z*z2;
+	const float x2x = q.x*x2;
+	const float x2y = q.x*y2;
+	const float x2z = q.x*z2;
+	const float y2y = q.y*y2;
+	const float y2z = q.y*z2;
+	const float z2z = q.z*z2;
 	///if(isnan(yy)){exit(1);}
 	/**printf("%f %f %f %f\n", 1.f-y2y-z2z, x2y+w2z,     x2z-w2y,     0.f);
 	printf("%f %f %f %f\n", x2y-w2z,     1.f-x2x-z2z, y2z+w2x,     0.f);
@@ -664,18 +728,18 @@ __HINT_INLINE__ mat4 mat4Quaternion(const quat q){
 	return r;
 }
 __HINT_INLINE__ void mat4QuaternionP(mat4 *const __RESTRICT__ m, const quat *const __RESTRICT__ q){
-	const float x2 = 2.f*q->v.x;
-	const float y2 = 2.f*q->v.y;
-	const float z2 = 2.f*q->v.z;
+	const float x2 = 2.f*q->x;
+	const float y2 = 2.f*q->y;
+	const float z2 = 2.f*q->z;
 	const float w2x = q->w*x2;
 	const float w2y = q->w*y2;
 	const float w2z = q->w*z2;
-	const float x2x = q->v.x*x2;
-	const float x2y = q->v.x*y2;
-	const float x2z = q->v.x*z2;
-	const float y2y = q->v.y*y2;
-	const float y2z = q->v.y*z2;
-	const float z2z = q->v.z*z2;
+	const float x2x = q->x*x2;
+	const float x2y = q->x*y2;
+	const float x2z = q->x*z2;
+	const float y2y = q->y*y2;
+	const float y2z = q->y*z2;
+	const float z2z = q->z*z2;
 	m->m[0][0] = 1.f-y2y-z2z; m->m[0][1] = x2y+w2z;     m->m[0][2] = x2z-w2y;     m->m[0][3] = 0.f;
 	m->m[1][0] = x2y-w2z;     m->m[1][1] = 1.f-x2x-z2z; m->m[1][2] = y2z+w2x;     m->m[1][3] = 0.f;
 	m->m[2][0] = x2z+w2y;     m->m[2][1] = y2z-w2x;     m->m[2][2] = 1.f-x2x-y2y; m->m[2][3] = 0.f;

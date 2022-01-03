@@ -113,7 +113,7 @@ void *memSLinkCreateInit(memorySLink *const __RESTRICT__ array, void *const star
 void *memSLinkAllocate(memorySLink *const __RESTRICT__ array);
 void *memSLinkPrepend(memorySLink *const __RESTRICT__ array, void **const start);
 void *memSLinkAppend(memorySLink *const __RESTRICT__ array, void **const start);
-void *memSLinkInsertBefore(memorySLink *const __RESTRICT__ array, void **const start, void *const element, const void *const previous);
+void *memSLinkInsertBefore(memorySLink *const __RESTRICT__ array, void **const start, const void *const previous);
 void *memSLinkInsertAfter(memorySLink *const __RESTRICT__ array, void **const start, void *const element);
 void memSLinkFree(memorySLink *const __RESTRICT__ array, void **const start, void *const element, const void *const previous);
 void *memSLinkSetupMemory(void *start, const size_t bytes, const size_t length);

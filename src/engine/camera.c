@@ -10,9 +10,9 @@ void camInit(camera *const __RESTRICT__ cam){
 	iVec3Init(&cam->up, 0.f, 1.f, 0.f);
 	iFloatInit(&cam->fovy, 90.f);
 	gfxViewInit(&cam->view);
-	cam->viewMatrix = mat4Identity();
-	cam->projectionMatrix = mat4Identity();
-	cam->viewProjectionMatrix = mat4Identity();
+	cam->viewMatrix = g_mat4Identity;
+	cam->projectionMatrix = g_mat4Identity;
+	cam->viewProjectionMatrix = g_mat4Identity;
 	cam->flags = 0;
 }
 void camResetInterpolation(camera *const __RESTRICT__ cam){
@@ -50,7 +50,7 @@ void camUpdateProjectionMatrix(camera *const __RESTRICT__ cam, const float viewp
 		cam->projectionMatrix = mat4Ortho(-viewportWidth*0.5f + 0.5f, viewportWidth*0.5f - 0.5f, -viewportHeight*0.5f + 0.5f, viewportHeight*0.5f - 0.5f, CAM_Z_THRESHOLD, -CAM_Z_THRESHOLD);
 		//cam->projectionMatrix = mat4Ortho(0.f, viewportWidth, -viewportHeight, 0.f, CAM_Z_THRESHOLD, -CAM_Z_THRESHOLD);
 	}else{
-		cam->projectionMatrix = mat4Identity();
+		cam->projectionMatrix = g_mat4Identity;
 	}
 }
 void camUpdateViewProjectionMatrix(camera *const __RESTRICT__ cam, const unsigned int viewportModified, const float viewportWidth, const float viewportHeight, const float interpT){

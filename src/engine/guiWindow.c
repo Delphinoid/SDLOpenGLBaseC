@@ -185,7 +185,7 @@ void guiWindowRender(const guiElement *const element, graphicsManager *const gfx
 	// Draw the body.
 	state = &gfxMngr->shdrData.spriteTransformState[0];
 	// Transformation matrix.
-	state->transformation = tfMatrix(tf);
+	state->transformation = tfMatrix4(tf);
 	// Texture fragment.
 	state->frame.x = frameBody->subframe.x;
 	state->frame.y = frameBody->subframe.y;
