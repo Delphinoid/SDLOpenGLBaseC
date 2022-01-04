@@ -620,19 +620,14 @@ void objPhysicsPrepare(object *const __RESTRICT__ obj){
 	// Update the object's skeleton.
 	for(i = 0; i < obj->skeletonData.skl->boneNum; ++i, ++sklBone, ++configuration, ++sAccumulator){
 
+		// Apply any external transformations provided by the user or the physics module.
+		*sAccumulator = tfMultiply(sklBone->localBind, *configuration);
+
 		// Apply the parent's transformations to each bone.
 		// Only do this if we are not on the root bone, of course.
-		if(i == 0){
-			*sAccumulator = sklBone->localBind;
-		}else{
-			*sAccumulator = tfMultiply(obj->state.configuration[sklBone->parent], sklBone->localBind);
+		if(i != 0){
+			*sAccumulator = tfMultiply(obj->state.configuration[sklBone->parent], *sAccumulator);
 		}
-
-		// Apply any external transformations provided by the user or the physics module.
-		// We get the best results by left-multiplying the translation
-		// and right-multiplying all other transformations, hence the
-		// need for this rather odd "compose" function.
-		*sAccumulator = tfCompose(*sAccumulator, *configuration);
 
 		// Generate a new animated bone state.
 		*sAccumulator = skliGenerateBoneState(
@@ -814,19 +809,14 @@ return_t objTick(object *const __RESTRICT__ obj, const float dt_ms){
 
 		}else{
 
+			// Apply any external transformations provided by the user or the physics module.
+			*sklState = tfMultiply(sklBone->localBind, *configuration);
+
 			// Apply the parent's transformations to each bone.
 			// Only do this if we are not on the root bone, of course.
-			if(i == 0){
-				*sklState = sklBone->localBind;
-			}else{
-				*sklState = tfMultiply(obj->state.configuration[sklBone->parent], sklBone->localBind);
+			if(i != 0){
+				*sklState = tfMultiply(obj->state.configuration[sklBone->parent], *sklState);
 			}
-
-			// Apply any external transformations provided by the user or the physics module.
-			// We get the best results by left-multiplying the translation
-			// and right-multiplying all other transformations, hence the
-			// need for this rather odd "compose" function.
-			*sklState = tfCompose(*sklState, *configuration);
 
 			// Generate a new animated bone state.
 			*sklState = skliGenerateBoneState(

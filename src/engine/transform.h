@@ -48,9 +48,4 @@ void tfMultiplyP1(transform *const __RESTRICT__ tf1, const transform *const __RE
 void tfMultiplyP2(const transform *const __RESTRICT__ tf1, transform *const __RESTRICT__ tf2);
 void tfMultiplyPR(const transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2, transform *const __RESTRICT__ r);
 
-transform tfCompose(const transform tf1, const transform tf2);
-void tfComposeP1(transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2);
-void tfComposeP2(const transform *const __RESTRICT__ tf1, transform *const __RESTRICT__ tf2);
-void tfComposePR(const transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2, transform *const __RESTRICT__ r);
-
 #endif
