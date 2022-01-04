@@ -10,9 +10,8 @@
 static __HINT_INLINE__ void cmdTrieInit(cmdTrieNode *const __RESTRICT__ node, const char c){
 	node->childNum = 0;
 	node->children = NULL;
-	node->cmd = 0;
 	node->value = c;
-	node->type = 0;
+	node->type = COMMAND_TYPE_FREE;
 }
 static __HINT_INLINE__ cmdTrieNode *cmdTrieNext(const cmdTrieNode *const node, const char c){
 	// Gets the next node when finding a command.
@@ -81,8 +80,8 @@ static __HINT_INLINE__ cmdTrieNode *cmdTrieAddNode(cmdTrieNode *const node, cons
 	return n;
 
 }
-static __HINT_INLINE__ return_t cmdValid(const char *name, const command cmd){
-	if(cmd == 0 || name == NULL || *name == '\0'){
+static __HINT_INLINE__ return_t cmdValid(const char *name, const flags_t type){
+	if(name == NULL || type == COMMAND_TYPE_FREE || *name == '\0'){
 		return 0;
 	}else{
 		char c = *name;
@@ -101,27 +100,28 @@ static __HINT_INLINE__ return_t cmdValid(const char *name, const command cmd){
 void cmdSystemInit(cmdSystem *const __RESTRICT__ cmdsys){
 	cmdsys->childNum = 0;
 	cmdsys->children = NULL;
-	cmdsys->cmd = 0;
 	cmdsys->value = 0;
-	cmdsys->type = 0;
+	cmdsys->type = COMMAND_TYPE_FREE;
 }
-return_t cmdSystemAdd(cmdSystem *node, const char *__RESTRICT__ name, const command cmd, const unsigned char type){
+static __HINT_INLINE__ return_t cmdSystemAdd(cmdSystem *node, const char *__RESTRICT__ name, const command cmd, const flags_t type){
 
 	// Check if the command is valid before adding it.
-	if(cmdValid(name, cmd)){
+	if(cmdValid(name, type)){
 
 		// Go through each character in name, adding
 		// a node when we don't have a match.
+		char c = *name;
 		do {
-			if((node = cmdTrieAddNode(node, *name)) == NULL){
+			if((node = cmdTrieAddNode(node, c)) == NULL){
 				/** Memory allocation failure. **/
 				return -1;
 			}
 			++name;
-		} while(*name != '\0');
+			c = *name;
+		} while(c != '\0');
 
 		// We've reached the final node at the end of the command's name.
-		if(node->cmd == 0){
+		if(node->type == COMMAND_TYPE_FREE){
 			// If a command is not already linked to
 			// this node, link one and return success.
 			node->cmd = cmd;
@@ -133,6 +133,14 @@ return_t cmdSystemAdd(cmdSystem *node, const char *__RESTRICT__ name, const comm
 
 	return 0;
 
+}
+return_t cmdSystemAddFunction(cmdSystem *node, const char *__RESTRICT__ name, const cmdFunction f){
+	const command cmd = {.f = f};
+	return cmdSystemAdd(node, name, cmd, COMMAND_TYPE_FUNCTION);
+}
+return_t cmdSystemAddVariable(cmdSystem *node, const char *__RESTRICT__ name, const cmdVariable v){
+	const command cmd = {.v = v};
+	return cmdSystemAdd(node, name, cmd, COMMAND_TYPE_VARIABLE);
 }
 const cmdTrieNode *const cmdSystemFind(const cmdSystem *node, const char *__RESTRICT__ name){
 	// Find the command in the trie.
@@ -157,8 +165,8 @@ void cmdSystemDelete(cmdSystem *const node){
 	if(node->children != NULL){
 		memFree(node->children);
 	}
-	if(node->type != COMMAND_TYPE_FUNCTION){
-		memFree((void *)node->cmd);
+	if(node->type == COMMAND_TYPE_VARIABLE){
+		memFree(node->cmd.v);
 	}
 	/**if(cmdType(node->cmd)){
 		memFree((void *)cmdAddress(node->cmd));
@@ -402,13 +410,13 @@ return_t cmdBufferExecute(cmdBuffer *const __RESTRICT__ cmdbuf, cmdSystem *const
 			// Execute the command.
 			const cmdTrieNode *const node = cmdSystemFind(cmdsys, cmdtok->argv[0]);
 			if(node != NULL){
-				if(node->type == 0){
+				if(node->type == COMMAND_TYPE_FUNCTION){
 
 					// The command is valid! Execute it.
 					// Don't forget to skip the first argument!
-					((cmdFunction)node->cmd)(cmdsys, cmdtok->argc-1, &cmdtok->argv[1]);
+					(node->cmd.f)(cmdsys, cmdtok->argc-1, &cmdtok->argv[1]);
 
-				}else{
+				}else if(node->type == COMMAND_TYPE_VARIABLE){
 
 					// This is an alias.
 					// Tokenize it and insert it into the command buffer.
@@ -416,7 +424,7 @@ return_t cmdBufferExecute(cmdBuffer *const __RESTRICT__ cmdbuf, cmdSystem *const
 					// linked list for faster insertions.
 					cmdbuf->cmdListEnd = cmdtok;
 					///cmd = cmdAddress(cmd);
-					if(cmdBufferTokenize(cmdbuf, (const char *)node->cmd, strlen((const char *)node->cmd), cmdtok->timestamp, cmdtok->delay) < 0){
+					if(cmdBufferTokenize(cmdbuf, (const char *)node->cmd.v, strlen((const char *)node->cmd.v), cmdtok->timestamp, cmdtok->delay) < 0){
 						/** Memory allocation failure. **/
 						return -1;
 					}

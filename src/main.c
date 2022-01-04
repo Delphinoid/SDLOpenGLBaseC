@@ -101,23 +101,23 @@ int main(int argc, char **argv){
 	conInit(&con);
 
 	// Create commands.
-	cmdSystemAdd(&cmdsys, "mousemove", (command)&c_mousemove, COMMAND_TYPE_FUNCTION);
-	cmdSystemAdd(&cmdsys, "exit", (command)&c_exit, COMMAND_TYPE_FUNCTION);
-	cmdSystemAdd(&cmdsys, "+forward", (command)&c_forward1, COMMAND_TYPE_FUNCTION);
-	cmdSystemAdd(&cmdsys, "-forward", (command)&c_forward0, COMMAND_TYPE_FUNCTION);
-	cmdSystemAdd(&cmdsys, "+backward", (command)&c_backward1, COMMAND_TYPE_FUNCTION);
-	cmdSystemAdd(&cmdsys, "-backward", (command)&c_backward0, COMMAND_TYPE_FUNCTION);
-	cmdSystemAdd(&cmdsys, "+left", (command)&c_left1, COMMAND_TYPE_FUNCTION);
-	cmdSystemAdd(&cmdsys, "-left", (command)&c_left0, COMMAND_TYPE_FUNCTION);
-	cmdSystemAdd(&cmdsys, "+right", (command)&c_right1, COMMAND_TYPE_FUNCTION);
-	cmdSystemAdd(&cmdsys, "-right", (command)&c_right0, COMMAND_TYPE_FUNCTION);
-	cmdSystemAdd(&cmdsys, "+jump", (command)&c_jump1, COMMAND_TYPE_FUNCTION);
-	cmdSystemAdd(&cmdsys, "-jump", (command)&c_jump0, COMMAND_TYPE_FUNCTION);
-	cmdSystemAdd(&cmdsys, "+interact", (command)&c_interact1, COMMAND_TYPE_FUNCTION);
-	cmdSystemAdd(&cmdsys, "-interact", (command)&c_interact0, COMMAND_TYPE_FUNCTION);
-	cmdSystemAdd(&cmdsys, "firstperson", (command)&c_firstperson, COMMAND_TYPE_FUNCTION);
-	cmdSystemAdd(&cmdsys, "thirdperson", (command)&c_thirdperson, COMMAND_TYPE_FUNCTION);
-	cmdSystemAdd(&cmdsys, "-change", (command)&c_change1, COMMAND_TYPE_FUNCTION);
+	cmdSystemAddFunction(&cmdsys, "mousemove", &c_mousemove);
+	cmdSystemAddFunction(&cmdsys, "exit", &c_exit);
+	cmdSystemAddFunction(&cmdsys, "+forward", &c_forward1);
+	cmdSystemAddFunction(&cmdsys, "-forward", &c_forward0);
+	cmdSystemAddFunction(&cmdsys, "+backward", &c_backward1);
+	cmdSystemAddFunction(&cmdsys, "-backward", &c_backward0);
+	cmdSystemAddFunction(&cmdsys, "+left", &c_left1);
+	cmdSystemAddFunction(&cmdsys, "-left", &c_left0);
+	cmdSystemAddFunction(&cmdsys, "+right", &c_right1);
+	cmdSystemAddFunction(&cmdsys, "-right", &c_right0);
+	cmdSystemAddFunction(&cmdsys, "+jump", &c_jump1);
+	cmdSystemAddFunction(&cmdsys, "-jump", &c_jump0);
+	cmdSystemAddFunction(&cmdsys, "+interact", &c_interact1);
+	cmdSystemAddFunction(&cmdsys, "-interact", &c_interact0);
+	cmdSystemAddFunction(&cmdsys, "firstperson", &c_firstperson);
+	cmdSystemAddFunction(&cmdsys, "thirdperson", &c_thirdperson);
+	cmdSystemAddFunction(&cmdsys, "-change", &c_change1);
 
 	// Set up keybinds.
 	inMngrKeyboardBind(&inMngr, SDL_SCANCODE_W, "+forward", 8);
