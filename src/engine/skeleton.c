@@ -163,7 +163,7 @@ return_t sklLoad(skeleton *const __RESTRICT__ skl, const char *const __RESTRICT_
 						// The root just starts with the local bind pose.
 						skl->bones[skl->boneNum].globalBindInverse = skl->bones[skl->boneNum].localBind;
 					}else{
-						skl->bones[skl->boneNum].globalBindInverse = tfAppend(skl->bones[parent].globalBindInverse, skl->bones[skl->boneNum].localBind);
+						skl->bones[skl->boneNum].globalBindInverse = tfMultiply(skl->bones[parent].globalBindInverse, skl->bones[skl->boneNum].localBind);
 					}
 
 					if(strrchr(token, '{')){
@@ -1069,7 +1069,7 @@ transform skliGenerateBoneState(const sklInstance *const __RESTRICT__ skli, cons
 				// Remove the bind pose's "contribution" to the animation.
 				// We do this here rather than when loading animations so
 				// that we may use animations from other skeletons.
-				animationState = tfAppend(tfInverse(skli->skl->bones[id].localBind), animationState);
+				animationState = tfMultiply(tfInverse(skli->skl->bones[id].localBind), animationState);
 
 				// Weight the animation by its intensity.
 				if(anim->intensity != 1.f){
@@ -1083,10 +1083,10 @@ transform skliGenerateBoneState(const sklInstance *const __RESTRICT__ skli, cons
 			if(anim->flags == SKELETON_ANIM_INSTANCE_OVERWRITE){
 				// Set if the animation is not additive. Start from the
 				// base state so custom transformations aren't lost.
-				state = tfAppend(baseState, animationState);
+				state = tfMultiply(baseState, animationState);
 			}else{
 				// Add the changes in lastState to skeletonState if the animation is additive.
-				state = tfAppend(state, animationState);
+				state = tfMultiply(state, animationState);
 			}
 
 		}

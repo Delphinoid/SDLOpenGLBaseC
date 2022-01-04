@@ -799,7 +799,7 @@ return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **ver
 										// The root just starts with the local bind pose.
 										currentBone->globalBindInverse = currentBone->localBind;
 									}else{
-										currentBone->globalBindInverse = tfAppend(skl->bones[currentBone->parent].globalBindInverse, currentBone->localBind);
+										currentBone->globalBindInverse = tfMultiply(skl->bones[currentBone->parent].globalBindInverse, currentBone->localBind);
 									}
 								}
 							}else{

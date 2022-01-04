@@ -33,7 +33,7 @@ void guiWindowRender(const guiElement *const element, graphicsManager *const gfx
 	};
 	if(element->parent != NULL){
 		// Append to parent position.
-		tf = tfAppend(element->parent->root, tf);
+		tf = tfMultiply(element->parent->root, tf);
 	}
 	inverseWidthX = tf.scale.x/frameBorder->image->width;
 	inverseWidthY = tf.scale.y/frameBorder->image->width;

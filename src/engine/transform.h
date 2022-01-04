@@ -43,9 +43,14 @@ transform tfInverse(const transform tf);
 void tfInverseP(transform *const __RESTRICT__ tf);
 void tfInversePR(const transform *const __RESTRICT__ tf, transform *const __RESTRICT__ r);
 
-transform tfAppend(const transform tf1, const transform tf2);
-void tfAppendP1(transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2);
-void tfAppendP2(const transform *const __RESTRICT__ tf1, transform *const __RESTRICT__ tf2);
-void tfAppendPR(const transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2, transform *const __RESTRICT__ r);
+transform tfMultiply(const transform tf1, const transform tf2);
+void tfMultiplyP1(transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2);
+void tfMultiplyP2(const transform *const __RESTRICT__ tf1, transform *const __RESTRICT__ tf2);
+void tfMultiplyPR(const transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2, transform *const __RESTRICT__ r);
+
+transform tfCompose(const transform tf1, const transform tf2);
+void tfComposeP1(transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2);
+void tfComposeP2(const transform *const __RESTRICT__ tf1, transform *const __RESTRICT__ tf2);
+void tfComposePR(const transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2, transform *const __RESTRICT__ r);
 
 #endif

@@ -620,17 +620,19 @@ void objPhysicsPrepare(object *const __RESTRICT__ obj){
 	// Update the object's skeleton.
 	for(i = 0; i < obj->skeletonData.skl->boneNum; ++i, ++sklBone, ++configuration, ++sAccumulator){
 
-		/** Split the root into a separate case. **/
-		const unsigned int isRoot = (i == sklBone->parent) || (sklBone->parent >= obj->skeletonData.skl->boneNum);
-
-		// Apply any external transformations provided by the user or the physics module.
-		*sAccumulator = tfAppend(sklBone->localBind, *configuration);
-
 		// Apply the parent's transformations to each bone.
 		// Only do this if we are not on the root bone, of course.
-		if(!isRoot){
-			*sAccumulator = tfAppend(accumulators[sklBone->parent], *sAccumulator);
+		if(i == 0){
+			*sAccumulator = sklBone->localBind;
+		}else{
+			*sAccumulator = tfMultiply(obj->state.configuration[sklBone->parent], sklBone->localBind);
 		}
+
+		// Apply any external transformations provided by the user or the physics module.
+		// We get the best results by left-multiplying the translation
+		// and right-multiplying all other transformations, hence the
+		// need for this rather odd "compose" function.
+		*sAccumulator = tfCompose(*sAccumulator, *configuration);
 
 		// Generate a new animated bone state.
 		*sAccumulator = skliGenerateBoneState(
@@ -812,17 +814,19 @@ return_t objTick(object *const __RESTRICT__ obj, const float dt_ms){
 
 		}else{
 
-			/** Split the root into a separate case somehow. **/
-			const unsigned int isRoot = (i == sklBone->parent) || (sklBone->parent >= obj->skeletonData.skl->boneNum);
-
-			// Apply any external transformations provided by the user or the physics module.
-			*sklState = tfAppend(sklBone->localBind, *configuration);
-
 			// Apply the parent's transformations to each bone.
 			// Only do this if we are not on the root bone, of course.
-			if(!isRoot){
-				*sklState = tfAppend(obj->state.configuration[sklBone->parent], *sklState);
+			if(i == 0){
+				*sklState = sklBone->localBind;
+			}else{
+				*sklState = tfMultiply(obj->state.configuration[sklBone->parent], sklBone->localBind);
 			}
+
+			// Apply any external transformations provided by the user or the physics module.
+			// We get the best results by left-multiplying the translation
+			// and right-multiplying all other transformations, hence the
+			// need for this rather odd "compose" function.
+			*sklState = tfCompose(*sklState, *configuration);
 
 			// Generate a new animated bone state.
 			*sklState = skliGenerateBoneState(
@@ -1030,7 +1034,7 @@ void objRender(const object *const __RESTRICT__ obj, graphicsManager *const __RE
 		// Handle the root separately.
 		state = tfInterpolate(*bPrevious, *bCurrent, interpT);
 		centroid = state.position;
-		*transformCurrent = tfMatrix4(tfAppend(state, sklBone->globalBindInverse));
+		*transformCurrent = tfMatrix4(tfMultiply(state, sklBone->globalBindInverse));
 
 		///gfxDebugBonePositions[0] = state.position;
 		///gfxDebugBoneParents[0] = 0;
@@ -1041,7 +1045,7 @@ void objRender(const object *const __RESTRICT__ obj, graphicsManager *const __RE
 			++bCurrent, ++bPrevious, ++transformCurrent, ++sklBone;
 
 			state = tfInterpolate(*bPrevious, *bCurrent, interpT);
-			*transformCurrent = tfMatrix4(tfAppend(state, sklBone->globalBindInverse));
+			*transformCurrent = tfMatrix4(tfMultiply(state, sklBone->globalBindInverse));
 
 			///gfxDebugBonePositions[i] = state.position;
 			///gfxDebugBoneParents[i] = sklBone->parent;

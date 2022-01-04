@@ -5,7 +5,7 @@
 #include "qualifiers.h"
 #include <stddef.h>
 
-// Use 8 byte alignment for improved
+// Use 8-byte alignment for improved
 // memory access performance.
 #define MEMORY_ALIGNMENT 8
 

@@ -19,7 +19,7 @@ __HINT_INLINE__ mat4 tempmat4Translate(const float x, const float y, const float
 void guiTextRender(const guiElement *const element, graphicsManager *const gfxMngr, const camera *const cam, const float distance, const float interpT){
 
 	const guiText text = element->data.text;
-	const transform root = (element->parent == NULL ? element->root : tfAppend(element->parent->root, element->root));
+	const transform root = (element->parent == NULL ? element->root : tfMultiply(element->parent->root, element->root));
 	const mat4 rootTransform = tfMatrix4(root);
 
 	txtFont font = *text.format.font;

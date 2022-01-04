@@ -248,7 +248,7 @@ void tfInversePR(const transform *const __RESTRICT__ tf, transform *const __REST
 
 }
 
-transform tfAppend(const transform tf1, const transform tf2){
+transform tfMultiply(const transform tf1, const transform tf2){
 
 	// We wish to append tf1 to tf2. If we let A_1 and A_2 be the
 	// matrices for tf1 and tf2 respectively, this is equivalent
@@ -316,7 +316,7 @@ transform tfAppend(const transform tf1, const transform tf2){
 	return r;
 
 }
-void tfAppendP1(transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2){
+void tfMultiplyP1(transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2){
 
 	// We wish to append tf1 to tf2. If we let A_1 and A_2 be the
 	// matrices for tf1 and tf2 respectively, this is equivalent
@@ -378,7 +378,7 @@ void tfAppendP1(transform *const __RESTRICT__ tf1, const transform *const __REST
 	);
 
 }
-void tfAppendP2(const transform *const __RESTRICT__ tf1, transform *const __RESTRICT__ tf2){
+void tfMultiplyP2(const transform *const __RESTRICT__ tf1, transform *const __RESTRICT__ tf2){
 
 	// We wish to append tf1 to tf2. If we let A_1 and A_2 be the
 	// matrices for tf1 and tf2 respectively, this is equivalent
@@ -439,7 +439,7 @@ void tfAppendP2(const transform *const __RESTRICT__ tf1, transform *const __REST
 	);
 
 }
-void tfAppendPR(const transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2, transform *const __RESTRICT__ r){
+void tfMultiplyPR(const transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2, transform *const __RESTRICT__ r){
 
 	// We wish to append tf1 to tf2. If we let A_1 and A_2 be the
 	// matrices for tf1 and tf2 respectively, this is equivalent
@@ -483,6 +483,157 @@ void tfAppendPR(const transform *const __RESTRICT__ tf1, const transform *const 
 	vec3VAddVP(&r->position, &tf1->position);
 
 	// R = R_1 R_2
+	quatQMultQPR(&tf1->orientation, &tf2->orientation, &r->orientation);
+	quatNormalizeFastP(&r->orientation);
+
+	// QSQ^T = Q_2' S_2 Q_2'^T Q_1 S_1 Q_1^T
+	// The shear matrices are symmetric, so we
+	// do the multiplication here to save time.
+	mat3DiagonalizeSymmetric(
+		shear1.m[0][0]*shear2.m[0][0] + shear1.m[1][0]*shear2.m[0][1] + shear1.m[2][0]*shear2.m[0][2],
+		shear1.m[0][0]*shear2.m[1][0] + shear1.m[1][0]*shear2.m[1][1] + shear1.m[2][0]*shear2.m[1][2],
+		shear1.m[0][0]*shear2.m[2][0] + shear1.m[1][0]*shear2.m[2][1] + shear1.m[2][0]*shear2.m[2][2],
+		shear1.m[0][1]*shear2.m[1][0] + shear1.m[1][1]*shear2.m[1][1] + shear1.m[2][1]*shear2.m[1][2],
+		shear1.m[0][1]*shear2.m[2][0] + shear1.m[1][1]*shear2.m[2][1] + shear1.m[2][1]*shear2.m[2][2],
+		shear1.m[0][2]*shear2.m[2][0] + shear1.m[1][2]*shear2.m[2][1] + shear1.m[2][2]*shear2.m[2][2],
+		&r->scale, &r->shear
+	);
+
+}
+
+transform tfCompose(const transform tf1, const transform tf2){
+
+	// If our two transformations are of the form
+	//     A_k = T_k R_k Q_k S_k Q_k^T,
+	// for k in {1, 2}, then this function evaluates
+	//     A' = T_1 T_2 R_1 Q_1 S_1 Q_1^T R_2 Q_2 S_2 Q_2^T.
+	// This is used for non-invasively applying
+	// user-defined transformations to object bones.
+
+	transform r;
+
+	// Q_1' S_1 (Q_1')^T
+	const mat3 shear1 = mat3ShearMatrix(
+		// Q_1' = R_2^T Q_1
+		quatQConjugateMultQ(tf2.orientation, tf1.shear),
+		tf1.scale
+	);
+	// Q_2 S_2 Q_2^T
+	const mat3 shear2 = mat3ShearMatrix(tf2.shear, tf2.scale);
+
+	r.position = vec3VAddV(tf1.position, tf2.position);
+	r.orientation = quatNormalizeFast(quatQMultQ(tf1.orientation, tf2.orientation));
+
+	// QSQ^T = Q_1' S_1 Q_1'^T Q_2 S_2 Q_2^T
+	// The shear matrices are symmetric, so we
+	// do the multiplication here to save time.
+	mat3DiagonalizeSymmetric(
+		shear1.m[0][0]*shear2.m[0][0] + shear1.m[1][0]*shear2.m[0][1] + shear1.m[2][0]*shear2.m[0][2],
+		shear1.m[0][0]*shear2.m[1][0] + shear1.m[1][0]*shear2.m[1][1] + shear1.m[2][0]*shear2.m[1][2],
+		shear1.m[0][0]*shear2.m[2][0] + shear1.m[1][0]*shear2.m[2][1] + shear1.m[2][0]*shear2.m[2][2],
+		shear1.m[0][1]*shear2.m[1][0] + shear1.m[1][1]*shear2.m[1][1] + shear1.m[2][1]*shear2.m[1][2],
+		shear1.m[0][1]*shear2.m[2][0] + shear1.m[1][1]*shear2.m[2][1] + shear1.m[2][1]*shear2.m[2][2],
+		shear1.m[0][2]*shear2.m[2][0] + shear1.m[1][2]*shear2.m[2][1] + shear1.m[2][2]*shear2.m[2][2],
+		&r.scale, &r.shear
+	);
+
+	return r;
+
+}
+void tfComposeP1(transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2){
+
+	// If our two transformations are of the form
+	//     A_k = T_k R_k Q_k S_k Q_k^T,
+	// for k in {1, 2}, then this function evaluates
+	//     A' = T_1 T_2 R_1 Q_1 S_1 Q_1^T R_2 Q_2 S_2 Q_2^T.
+	// This is used for non-invasively applying
+	// user-defined transformations to object bones.
+
+	quat temp;
+	mat3 shear1, shear2;
+
+	// Q_1' = R_2^T Q_1
+	quatQConjugateMultQPR(&tf2->orientation, &tf1->shear, &temp);
+	// Q_1' S_1 (Q_1')^T
+	mat3ShearMatrixPR(&temp, &tf1->scale, &shear1);
+	// Q_2 S_2 Q_2^T
+	mat3ShearMatrixPR(&tf2->shear, &tf2->scale, &shear2);
+
+	vec3VAddVP(&tf1->position, &tf2->position);
+	quatQMultQP1(&tf1->orientation, &tf2->orientation);
+	quatNormalizeFastP(&tf1->orientation);
+
+	// QSQ^T = Q_1' S_1 Q_1'^T Q_2 S_2 Q_2^T
+	// The shear matrices are symmetric, so we
+	// do the multiplication here to save time.
+	mat3DiagonalizeSymmetric(
+		shear1.m[0][0]*shear2.m[0][0] + shear1.m[1][0]*shear2.m[0][1] + shear1.m[2][0]*shear2.m[0][2],
+		shear1.m[0][0]*shear2.m[1][0] + shear1.m[1][0]*shear2.m[1][1] + shear1.m[2][0]*shear2.m[1][2],
+		shear1.m[0][0]*shear2.m[2][0] + shear1.m[1][0]*shear2.m[2][1] + shear1.m[2][0]*shear2.m[2][2],
+		shear1.m[0][1]*shear2.m[1][0] + shear1.m[1][1]*shear2.m[1][1] + shear1.m[2][1]*shear2.m[1][2],
+		shear1.m[0][1]*shear2.m[2][0] + shear1.m[1][1]*shear2.m[2][1] + shear1.m[2][1]*shear2.m[2][2],
+		shear1.m[0][2]*shear2.m[2][0] + shear1.m[1][2]*shear2.m[2][1] + shear1.m[2][2]*shear2.m[2][2],
+		&tf1->scale, &tf1->shear
+	);
+
+}
+void tfComposeP2(const transform *const __RESTRICT__ tf1, transform *const __RESTRICT__ tf2){
+
+	// If our two transformations are of the form
+	//     A_k = T_k R_k Q_k S_k Q_k^T,
+	// for k in {1, 2}, then this function evaluates
+	//     A' = T_1 T_2 R_1 Q_1 S_1 Q_1^T R_2 Q_2 S_2 Q_2^T.
+	// This is used for non-invasively applying
+	// user-defined transformations to object bones.
+
+	quat temp;
+	mat3 shear1, shear2;
+
+	// Q_1' = R_2^T Q_1
+	quatQConjugateMultQPR(&tf2->orientation, &tf1->shear, &temp);
+	// Q_1' S_1 (Q_1')^T
+	mat3ShearMatrixPR(&temp, &tf1->scale, &shear1);
+	// Q_2 S_2 Q_2^T
+	mat3ShearMatrixPR(&tf2->shear, &tf2->scale, &shear2);
+
+	vec3VAddVP(&tf2->position, &tf1->position);
+	quatQMultQP2(&tf1->orientation, &tf2->orientation);
+	quatNormalizeFastP(&tf2->orientation);
+
+	// QSQ^T = Q_2' S_2 Q_2'^T Q_1 S_1 Q_1^T
+	// The shear matrices are symmetric, so we
+	// do the multiplication here to save time.
+	mat3DiagonalizeSymmetric(
+		shear1.m[0][0]*shear2.m[0][0] + shear1.m[1][0]*shear2.m[0][1] + shear1.m[2][0]*shear2.m[0][2],
+		shear1.m[0][0]*shear2.m[1][0] + shear1.m[1][0]*shear2.m[1][1] + shear1.m[2][0]*shear2.m[1][2],
+		shear1.m[0][0]*shear2.m[2][0] + shear1.m[1][0]*shear2.m[2][1] + shear1.m[2][0]*shear2.m[2][2],
+		shear1.m[0][1]*shear2.m[1][0] + shear1.m[1][1]*shear2.m[1][1] + shear1.m[2][1]*shear2.m[1][2],
+		shear1.m[0][1]*shear2.m[2][0] + shear1.m[1][1]*shear2.m[2][1] + shear1.m[2][1]*shear2.m[2][2],
+		shear1.m[0][2]*shear2.m[2][0] + shear1.m[1][2]*shear2.m[2][1] + shear1.m[2][2]*shear2.m[2][2],
+		&tf2->scale, &tf2->shear
+	);
+
+}
+void tfComposePR(const transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2, transform *const __RESTRICT__ r){
+
+	// If our two transformations are of the form
+	//     A_k = T_k R_k Q_k S_k Q_k^T,
+	// for k in {1, 2}, then this function evaluates
+	//     A' = T_1 T_2 R_1 Q_1 S_1 Q_1^T R_2 Q_2 S_2 Q_2^T.
+	// This is used for non-invasively applying
+	// user-defined transformations to object bones.
+
+	quat temp;
+	mat3 shear1, shear2;
+
+	// Q_1' = R_2^T Q_1
+	quatQConjugateMultQPR(&tf2->orientation, &tf1->shear, &temp);
+	// Q_1' S_1 (Q_1')^T
+	mat3ShearMatrixPR(&temp, &tf1->scale, &shear1);
+	// Q_2 S_2 Q_2^T
+	mat3ShearMatrixPR(&tf2->shear, &tf2->scale, &shear2);
+
+	vec3VAddVPR(&tf1->position, &tf2->position, &r->position);
 	quatQMultQPR(&tf1->orientation, &tf2->orientation, &r->orientation);
 	quatNormalizeFastP(&r->orientation);
 
