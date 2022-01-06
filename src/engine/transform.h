@@ -32,7 +32,13 @@ transform tfrAffine(const transformRigid tf);
 mat4 tfMatrix4(const transform tf);
 mat3 tfMatrix3(const transform tf);
 
-vec3 tfTransform(const transform tf, const vec3 v);
+vec3 tfTransformPoint(const transform tf, const vec3 v);
+void tfTransformPointP(const transform *const __RESTRICT__ tf, vec3 *const __RESTRICT__ v);
+void tfTransformPointPR(const transform *const __RESTRICT__ tf, const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r);
+
+vec3 tfTransformDirection(const transform tf, const vec3 v);
+void tfTransformDirectionP(const transform *const __RESTRICT__ tf, vec3 *const __RESTRICT__ v);
+void tfTransformDirectionPR(const transform *const __RESTRICT__ tf, const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r);
 
 transform tfInterpolate(const transform tf1, const transform tf2, const float t);
 void tfInterpolateP1(transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2, const float t);

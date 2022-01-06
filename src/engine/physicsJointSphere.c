@@ -182,27 +182,21 @@ static __FORCE_INLINE__ mat3 physJointSphereLinearEffectiveMass(const vec3 point
 static __FORCE_INLINE__ void physJointSpherePersist(physJointSphere *const __RESTRICT__ joint, const physRigidBody *const __RESTRICT__ bodyA, const physRigidBody *const __RESTRICT__ bodyB){
 
 	// Transform the anchor points.
-	joint->rA = quatRotateVec3FastApproximate(
-		bodyA->configuration.orientation,
-		vec3VMultV(
-			bodyA->configuration.scale,
-			#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
-			vec3VSubV(joint->anchorA, bodyA->centroidLocal)
-			#else
-			vec3VSubV(joint->anchorA, bodyA->base->centroid)
-			#endif
-		)
+	joint->rA = tfTransformDirection(
+		bodyA->configuration,
+		#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
+		vec3VSubV(joint->anchorA, bodyA->centroidLocal)
+		#else
+		vec3VSubV(joint->anchorA, bodyA->base->centroid)
+		#endif
 	);
-	joint->rB = quatRotateVec3FastApproximate(
-		bodyB->configuration.orientation,
-		vec3VMultV(
-			bodyB->configuration.scale,
-			#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
-			vec3VSubV(joint->anchorB, bodyB->centroidLocal)
-			#else
-			vec3VSubV(joint->anchorB, bodyB->base->centroid)
-			#endif
-		)
+	joint->rB = tfTransformDirection(
+		bodyB->configuration,
+		#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
+		vec3VSubV(joint->anchorB, bodyB->centroidLocal)
+		#else
+		vec3VSubV(joint->anchorB, bodyB->base->centroid)
+		#endif
 	);
 
 	// Calculate the linear effective mass matrix.
@@ -343,27 +337,21 @@ return_t physJointSphereSolveConfigurationConstraints(physJoint *const __RESTRIC
 	vec3 impulse;
 
 	// Retransform the anchor points.
-	const vec3 rA = quatRotateVec3FastApproximate(
-		bodyA->configuration.orientation,
-		vec3VMultV(
-			bodyA->configuration.scale,
-			#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
-			vec3VSubV(((physJointSphere *)joint)->anchorA, bodyA->centroidLocal)
-			#else
-			vec3VSubV(((physJointSphere *)joint)->anchorA, bodyA->base->centroid)
-			#endif
-		)
+	const vec3 rA = tfTransformDirection(
+		bodyA->configuration,
+		#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
+		vec3VSubV(((physJointSphere *)joint)->anchorA, bodyA->centroidLocal)
+		#else
+		vec3VSubV(((physJointSphere *)joint)->anchorA, bodyA->base->centroid)
+		#endif
 	);
-	const vec3 rB = quatRotateVec3FastApproximate(
-		bodyB->configuration.orientation,
-		vec3VMultV(
-			bodyB->configuration.scale,
-			#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
-			vec3VSubV(((physJointSphere *)joint)->anchorB, bodyB->centroidLocal)
-			#else
-			vec3VSubV(((physJointSphere *)joint)->anchorB, bodyB->base->centroid)
-			#endif
-		)
+	const vec3 rB = tfTransformDirection(
+		bodyB->configuration,
+		#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
+		vec3VSubV(((physJointSphere *)joint)->anchorB, bodyB->centroidLocal)
+		#else
+		vec3VSubV(((physJointSphere *)joint)->anchorB, bodyB->base->centroid)
+		#endif
 	);
 
 	// Find the bodies' relative positions.

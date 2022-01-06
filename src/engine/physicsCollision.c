@@ -147,8 +147,8 @@ __FORCE_INLINE__ void physContactInit(physContact *const __RESTRICT__ contact, c
 
 		// Get the relative contact points.
 		#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-		pPoint->pointA = quatRotateVec3FastApproximate(quatConjugateFast(bodyA->configuration.orientation), vec3VSubV(cPoint->pointA, bodyA->centroidGlobal));
-		pPoint->pointB = quatRotateVec3FastApproximate(quatConjugateFast(bodyB->configuration.orientation), vec3VSubV(cPoint->pointB, bodyB->centroidGlobal));
+		pPoint->pointA = quatConjugateRotateVec3FastApproximate(bodyA->configuration.orientation, vec3VSubV(cPoint->pointA, bodyA->centroidGlobal));
+		pPoint->pointB = quatConjugateRotateVec3FastApproximate(bodyB->configuration.orientation, vec3VSubV(cPoint->pointB, bodyB->centroidGlobal));
 		#else
 		// Get the penetration depth.
 		pPoint->separation = cPoint->separation;
@@ -192,7 +192,7 @@ __FORCE_INLINE__ void physContactInit(physContact *const __RESTRICT__ contact, c
 	//physContactTangent1(contact) = vec3Orthogonal(normal);
 	//physContactTangent2(contact) = vec3Cross(normal, physContactTangent1(contact));
 	#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-	contact->normalA = quatRotateVec3FastApproximate(quatConjugateFast(bodyA->configuration.orientation), normal);
+	contact->normalA = quatConjugateRotateVec3FastApproximate(bodyA->configuration.orientation, normal);
 	#endif
 
 	// Calculate the combined friction and restitution scalars.
@@ -305,7 +305,7 @@ __FORCE_INLINE__ void physContactPersist(physContact *const __RESTRICT__ contact
 	///physContactTangent1(contact) = vec3Orthogonal(normal);
 	///physContactTangent2(contact) = vec3Cross(normal, physContactTangent1(contact));
 	#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-	contact->normalA = quatRotateVec3FastApproximate(quatConjugateFast(bodyA->configuration.orientation), normal);
+	contact->normalA = quatConjugateRotateVec3FastApproximate(bodyA->configuration.orientation, normal);
 	#endif
 
 	// Calculate the combined friction and restitution scalars.
@@ -326,8 +326,8 @@ __FORCE_INLINE__ void physContactPersist(physContact *const __RESTRICT__ contact
 
 		// Get the relative contact points.
 		#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-		pcPoint->pointA = quatRotateVec3FastApproximate(quatConjugateFast(bodyA->configuration.orientation), vec3VSubV(cPoint->pointA, bodyA->centroidGlobal));
-		pcPoint->pointB = quatRotateVec3FastApproximate(quatConjugateFast(bodyB->configuration.orientation), vec3VSubV(cPoint->pointB, bodyB->centroidGlobal));
+		pcPoint->pointA = quatConjugateRotateVec3FastApproximate(bodyA->configuration.orientation, vec3VSubV(cPoint->pointA, bodyA->centroidGlobal));
+		pcPoint->pointB = quatConjugateRotateVec3FastApproximate(bodyB->configuration.orientation, vec3VSubV(cPoint->pointB, bodyB->centroidGlobal));
 		#else
 		// Get the penetration depth.
 		pcPoint->separation = cPoint->separation;

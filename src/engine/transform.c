@@ -94,7 +94,7 @@ void tfInterpolatePR(const transform *const __RESTRICT__ tf1, const transform *c
 	vec3LerpPR(&tf1->scale, &tf2->scale, t, &r->scale);
 }
 
-vec3 tfTransform(const transform tf, const vec3 v){
+vec3 tfTransformPoint(const transform tf, const vec3 v){
 	// v' = Av = (TRQSQ^T)v
 	return vec3VAddV(
 		tf.position,
@@ -110,7 +110,7 @@ vec3 tfTransform(const transform tf, const vec3 v){
 		)
 	);
 }
-void tfTransformP(const transform *const __RESTRICT__ tf, vec3 *const __RESTRICT__ v){
+void tfTransformPointP(const transform *const __RESTRICT__ tf, vec3 *const __RESTRICT__ v){
 	quat RQ;
 	// (Q^T)v
 	quatConjugateRotateVec3FastApproximateP(&tf->shear, v);
@@ -122,7 +122,7 @@ void tfTransformP(const transform *const __RESTRICT__ tf, vec3 *const __RESTRICT
 	// v' = Av = (TRQSQ^T)v
 	vec3VAddVP(v, &tf->position);
 }
-void tfTransformPR(const transform *const __RESTRICT__ tf, const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r){
+void tfTransformPointPR(const transform *const __RESTRICT__ tf, const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r){
 	quat RQ;
 	// (Q^T)v
 	quatConjugateRotateVec3FastApproximatePR(&tf->shear, v, r);
@@ -133,6 +133,39 @@ void tfTransformPR(const transform *const __RESTRICT__ tf, const vec3 *const __R
 	quatRotateVec3FastApproximateP(&RQ, r);
 	// v' = Av = (TRQSQ^T)v
 	vec3VAddVP(r, &tf->position);
+}
+
+vec3 tfTransformDirection(const transform tf, const vec3 v){
+	// v' = (RQSQ^T)v
+	return quatRotateVec3FastApproximate(
+		quatQMultQ(tf.orientation, tf.shear),
+		// (SQ^T)v
+		vec3VMultV(
+			// (Q^T)v
+			tf.scale,
+			quatConjugateRotateVec3FastApproximate(tf.shear, v)
+		)
+	);
+}
+void tfTransformDirectionP(const transform *const __RESTRICT__ tf, vec3 *const __RESTRICT__ v){
+	quat RQ;
+	// (Q^T)v
+	quatConjugateRotateVec3FastApproximateP(&tf->shear, v);
+	// (SQ^T)v
+	vec3VMultVP(v, &tf->scale);
+	// v' = (RQSQ^T)v
+	quatQMultQPR(&tf->orientation, &tf->shear, &RQ);
+	quatRotateVec3FastApproximateP(&RQ, v);
+}
+void tfTransformDirectionPR(const transform *const __RESTRICT__ tf, const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r){
+	quat RQ;
+	// (Q^T)v
+	quatConjugateRotateVec3FastApproximatePR(&tf->shear, v, r);
+	// (SQ^T)v
+	vec3VMultVP(r, &tf->scale);
+	// v' = (RQSQ^T)v
+	quatQMultQPR(&tf->orientation, &tf->shear, &RQ);
+	quatRotateVec3FastApproximateP(&RQ, r);
 }
 
 transform tfInverse(const transform tf){

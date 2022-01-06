@@ -154,27 +154,21 @@ static __FORCE_INLINE__ void physJointDistancePersist(physJointDistance *const _
 	float distance;
 
 	// Transform the anchor points.
-	joint->rA = quatRotateVec3FastApproximate(
-		bodyA->configuration.orientation,
-		vec3VMultV(
-			bodyA->configuration.scale,
-			#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
-			vec3VSubV(joint->anchorA, bodyA->centroidLocal)
-			#else
-			vec3VSubV(joint->anchorA, bodyA->base->centroid)
-			#endif
-		)
+	joint->rA = tfTransformDirection(
+		bodyA->configuration,
+		#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
+		vec3VSubV(joint->anchorA, bodyA->centroidLocal)
+		#else
+		vec3VSubV(joint->anchorA, bodyA->base->centroid)
+		#endif
 	);
-	joint->rB = quatRotateVec3FastApproximate(
-		bodyB->configuration.orientation,
-		vec3VMultV(
-			bodyB->configuration.scale,
-			#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
-			vec3VSubV(joint->anchorB, bodyB->centroidLocal)
-			#else
-			vec3VSubV(joint->anchorB, bodyB->base->centroid)
-			#endif
-		)
+	joint->rB = tfTransformDirection(
+		bodyB->configuration,
+		#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
+		vec3VSubV(joint->anchorB, bodyB->centroidLocal)
+		#else
+		vec3VSubV(joint->anchorB, bodyB->base->centroid)
+		#endif
 	);
 
 	// Find the bodies' relative positions.
@@ -274,27 +268,21 @@ return_t physJointDistanceSolveConfigurationConstraints(physJoint *const __RESTR
 	if(((physJointDistance *)joint)->angularFrequency == 0.f){
 
 		// Retransform the anchor points.
-		const vec3 rA = quatRotateVec3FastApproximate(
-			bodyA->configuration.orientation,
-			vec3VMultV(
-				bodyA->configuration.scale,
-				#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
-				vec3VSubV(((physJointDistance *)joint)->anchorA, bodyA->centroidLocal)
-				#else
-				vec3VSubV(((physJointDistance *)joint)->anchorA, bodyA->base->centroid)
-				#endif
-			)
+		const vec3 rA = tfTransformDirection(
+			bodyA->configuration,
+			#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
+			vec3VSubV(((physJointDistance *)joint)->anchorA, bodyA->centroidLocal)
+			#else
+			vec3VSubV(((physJointDistance *)joint)->anchorA, bodyA->base->centroid)
+			#endif
 		);
-		const vec3 rB = quatRotateVec3FastApproximate(
-			bodyB->configuration.orientation,
-			vec3VMultV(
-				bodyB->configuration.scale,
-				#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
-				vec3VSubV(((physJointDistance *)joint)->anchorB, bodyB->centroidLocal)
-				#else
-				vec3VSubV(((physJointDistance *)joint)->anchorB, bodyB->base->centroid)
-				#endif
-			)
+		const vec3 rB = tfTransformDirection(
+			bodyB->configuration,
+			#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
+			vec3VSubV(((physJointDistance *)joint)->anchorB, bodyB->centroidLocal)
+			#else
+			vec3VSubV(((physJointDistance *)joint)->anchorB, bodyB->base->centroid)
+			#endif
 		);
 
 		// Find the bodies' relative positions.

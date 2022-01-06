@@ -863,7 +863,7 @@ void objGenerateSprite(const object *const __RESTRICT__ obj, const model *const 
 	const float z      =  0.f;
 	const transform *const current  = obj->state.configuration;
 	const transform *const previous = (obj->state.previous == NULL ? current : obj->state.previous->configuration);
-	transform tf;
+	transform tf = tfInterpolate(*previous, *current, interpT);
 
 	// Create the top left vertex.
 	vertices[0].position.x = left;
@@ -918,15 +918,13 @@ void objGenerateSprite(const object *const __RESTRICT__ obj, const model *const 
 	memset(&vertices[0].bWeights[0], 0, sizeof(float)*VERTEX_MAX_BONES);
 
 	// Generate a transformation for the sprite and transform each vertex.
-	/** Optimize? **/
-	///tfInterpolate(&obj->skeletonState[1][0], &obj->skeletonState[0][0], interpT, &transform);
-	tf = tfInterpolate(*previous, *current, interpT);
+	/// Might need to call tfAppend.
 	tf.scale.x *= twiFrameWidth(&mdl->twi) * twiTextureWidth(&mdl->twi);
 	tf.scale.y *= twiFrameHeight(&mdl->twi) * twiTextureHeight(&mdl->twi);
-	vertTransform(&vertices[0], tf.position, tf.orientation, tf.scale);
-	vertTransform(&vertices[1], tf.position, tf.orientation, tf.scale);
-	vertTransform(&vertices[2], tf.position, tf.orientation, tf.scale);
-	vertTransform(&vertices[3], tf.position, tf.orientation, tf.scale);
+	vertices[0].position = tfTransformPoint(tf, vertices[0].position);
+	vertices[1].position = tfTransformPoint(tf, vertices[1].position);
+	vertices[2].position = tfTransformPoint(tf, vertices[2].position);
+	vertices[3].position = tfTransformPoint(tf, vertices[3].position);
 
 	// We can't pass unique textureFragment values for each individual sprite when batching. Therefore,
 	// we have to do the offset calculations for each vertex UV here instead of in the shader.

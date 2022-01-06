@@ -1,7 +1,7 @@
 #ifndef VERTEX_H
 #define VERTEX_H
 
-#include "quat.h"
+#include "transform.h"
 
 // WARNING: Changing this alone will not work,
 //          as the shader still expects 4 values.
@@ -15,7 +15,6 @@ typedef struct vertex {
 	float bWeights[VERTEX_MAX_BONES];
 } vertex;
 
-void vertInit(vertex *const __RESTRICT__ v);
-void vertTransform(vertex *const __RESTRICT__ v, const vec3 position, const quat orientation, const vec3 scale);
+void vInit(vertex *const __RESTRICT__ v);
 
 #endif

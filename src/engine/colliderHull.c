@@ -65,9 +65,9 @@ return_t cHullInstantiate(void *const __RESTRICT__ instance, const void *const _
 
 }
 
-__FORCE_INLINE__ void cHullCentroidFromPosition(cHull *const __RESTRICT__ c, const cHull *const __RESTRICT__ l, const vec3 position, const quat orientation, const vec3 scale){
+__FORCE_INLINE__ void cHullCentroidFromPosition(cHull *const __RESTRICT__ c, const cHull *const __RESTRICT__ l, const transform configuration){
 	// Extrapolate the mesh's centroid from a configuration.
-	c->centroid = vec3VAddV(vec3VMultV(quatRotateVec3FastApproximate(orientation, l->centroid), scale), position);
+	c->centroid = tfTransformPoint(configuration, l->centroid);
 }
 
 cAABB cHullTransform(void *const instance, const vec3 instanceCentroid, const void *const local, const vec3 localCentroid, const transform configuration){
@@ -85,7 +85,7 @@ cAABB cHullTransform(void *const instance, const vec3 instanceCentroid, const vo
 	cAABB tempAABB = {.min.x = 0.f, .min.y = 0.f, .min.z = 0.f, .max.x = 0.f, .max.y = 0.f, .max.z = 0.f};
 
 	// Determine the global collider's centroid by transforming the local (base) centroid.
-	cInstance->centroid = tfTransform(configuration, cLocal->centroid);
+	cInstance->centroid = tfTransformPoint(configuration, cLocal->centroid);
 
 	// Update the collider and find the total bounding box.
 	if(vGlobal < vLast){

@@ -1294,34 +1294,25 @@ __HINT_INLINE__ void physRigidBodyApplyConfigurationImpulseInverse(physRigidBody
 }
 
 __FORCE_INLINE__ void physRigidBodyCentroidFromPosition(physRigidBody *const __RESTRICT__ body){
-	body->centroidGlobal = vec3VAddV(
-		quatRotateVec3FastApproximate(
-			body->configuration.orientation,
-			vec3VMultV(
-				#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
-				body->centroidLocal,
-				#else
-				body->base->centroid,
-				#endif
-				body->configuration.scale
-			)
-		),
-		body->configuration.position
+	body->centroidGlobal = tfTransformPoint(
+		body->configuration,
+		#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
+		body->centroidLocal
+		#else
+		body->base->centroid
+		#endif
 	);
 }
 
 __FORCE_INLINE__ void physRigidBodyPositionFromCentroid(physRigidBody *const __RESTRICT__ body){
 	body->configuration.position = vec3VAddV(
-		quatRotateVec3FastApproximate(
-			body->configuration.orientation,
-			vec3VMultV(
-				#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
-				vec3Negate(body->centroidLocal),
-				#else
-				vec3Negate(body->base->centroid),
-				#endif
-				body->configuration.scale
-			)
+		tfTransformDirection(
+			body->configuration,
+			#ifdef PHYSICS_BODY_STORE_LOCAL_TENSORS
+			vec3Negate(body->centroidLocal)
+			#else
+			vec3Negate(body->base->centroid)
+			#endif
 		),
 		body->centroidGlobal
 	);
