@@ -11,7 +11,9 @@
 // is still technically undefined behaviour.
 
 typedef struct {
-	float x, y, z;
+	float x;
+	float y;
+	float z;
 	float w;
 } quat;
 

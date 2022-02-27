@@ -6,7 +6,11 @@
 	#define VC_EXTRALEAN
 	#include <Windows.h>
 #else
+	#define _GNU_SOURCE 1
 	#include <unistd.h>
+	#include <fcntl.h>
+	#include <sys/types.h>
+	#include <sys/mman.h>
 #endif
 
 #ifndef MEMORY_ALLOCATOR_USE_MALLOC

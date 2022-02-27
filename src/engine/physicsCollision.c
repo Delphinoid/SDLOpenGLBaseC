@@ -4,8 +4,8 @@
 #include "modulePhysics.h"
 #include "physicsConstraint.h"
 #include "aabbTree.h"
+#include "helpersMath.h"
 #include <string.h>
-#include <math.h>
 
 #ifdef PHYSICS_CONTACT_FRICTION_CONSTRAINT
 	#define physContactHalfwayA(c) c->frictionConstraint.rA
@@ -1014,7 +1014,7 @@ static __FORCE_INLINE__ float physContactPointSolveConfigurationNormal(physConta
 	const float separation = vec3Dot(vec3VSubV(pointGlobalB, pointGlobalA), normal) - PHYSICS_SEPARATION_BIAS_TOTAL;
 
 	// Apply a slop to the configuration constraint.
-	float constraint = PHYSICS_BAUMGARTE_TERM * (separation + PHYSICS_LINEAR_SLOP);
+	const float constraint = PHYSICS_BAUMGARTE_TERM * (separation + PHYSICS_LINEAR_SLOP);
 
 	// Make sure the magnitude is less than 0.
 	if(constraint < 0.f){
@@ -1033,13 +1033,9 @@ static __FORCE_INLINE__ float physContactPointSolveConfigurationNormal(physConta
 		// Make sure the effective mass is greater than 0.
 		if(effectiveMass > 0.f){
 
-			// Clamp the constraint to prevent large corrections.
-			if(constraint < -PHYSICS_MAXIMUM_LINEAR_CORRECTION){
-				constraint = -PHYSICS_MAXIMUM_LINEAR_CORRECTION;
-			}
-
-			// Calculate the normal impulse.
-			normal = vec3VMultS(normal, -constraint / effectiveMass);
+			// Clamp the constraint to prevent large corrections
+			// and calculate the normal impulse.
+			normal = vec3VMultS(normal, -floatMax(constraint, -PHYSICS_MAXIMUM_LINEAR_CORRECTION) / effectiveMass);
 
 			// Apply the normal impulse.
 			physRigidBodyApplyConfigurationImpulseInverse(bodyA, pointLocalA, normal);

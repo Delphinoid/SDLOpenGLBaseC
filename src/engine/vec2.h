@@ -4,7 +4,8 @@
 #include "qualifiers.h"
 
 typedef struct {
-	float x, y;
+	float x;
+	float y;
 } vec2;
 
 vec2 vec2New(const float x, const float y);

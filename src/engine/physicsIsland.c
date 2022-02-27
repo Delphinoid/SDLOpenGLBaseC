@@ -23,6 +23,7 @@ static void physIslandFreeNode(aabbNode *const __RESTRICT__ node, void *island){
 	if(AABB_TREE_NODE_IS_LEAF(node)){
 
 		physCollider *const c = (physCollider *)node->data.leaf.value;
+		aabbNode *prevNode = ((physIsland *)island)->tree.leaves;
 		physContactPair *contact;
 		physSeparationPair *separation;
 
@@ -47,6 +48,18 @@ static void physIslandFreeNode(aabbNode *const __RESTRICT__ node, void *island){
 				separation = separation->nextA;
 			}
 		}
+
+		/// Remove the node from the island's linked list.
+		/// Not sure if this is totally necessary.
+		if(prevNode == node){
+			((physIsland *)island)->tree.leaves = node->data.leaf.next;
+		}else{
+			while(prevNode->data.leaf.next != node){
+				prevNode = prevNode->data.leaf.next;
+			}
+			prevNode->data.leaf.next = node->data.leaf.next;
+		}
+		c->node = NULL;
 
 	}
 

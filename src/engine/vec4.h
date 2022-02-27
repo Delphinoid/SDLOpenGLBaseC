@@ -4,7 +4,10 @@
 #include "qualifiers.h"
 
 typedef struct {
-	float x, y, z, w;
+	float x;
+	float y;
+	float z;
+	float w;
 } vec4;
 
 vec4 vec4New(const float x, const float y, const float z, const float w);

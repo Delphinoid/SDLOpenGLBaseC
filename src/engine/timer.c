@@ -64,9 +64,9 @@ float timerElapsedTimeFloat(const timerVal_t start, const timerVal_t end){
 		return (float)(end.u.LowPart - start.u.LowPart)*rfreq;
 	#else
 		#if HAVE_CLOCK_GETTIME
-		return (float)((end.tv_sec - start.tv_sec)*1000) + (float)(end.tv_nsec - start.tv_nsec)/1000000.f);
+		return (float)((end.tv_sec - start.tv_sec)*1000) + (float)(end.tv_nsec - start.tv_nsec)/1000000.f;
 		#else
-		return (float)((end.tv_sec - start.tv_sec)*1000) + (float)(end.tv_usec - start.tv_usec)/1000.f);
+		return (float)((end.tv_sec - start.tv_sec)*1000) + (float)(end.tv_usec - start.tv_usec)/1000.f;
 		#endif
 	#endif
 }

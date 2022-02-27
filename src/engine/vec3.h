@@ -4,7 +4,9 @@
 #include "qualifiers.h"
 
 typedef struct {
-	float x, y, z;
+	float x;
+	float y;
+	float z;
 } vec3;
 
 vec3 vec3New(const float x, const float y, const float z);

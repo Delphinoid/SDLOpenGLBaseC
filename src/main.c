@@ -189,10 +189,10 @@ int main(int argc, char **argv){
 
 	// Texture Wrappers.
 	textureWrapper *tempTexWrap = moduleTextureWrapperAllocate();
-	twLoad(tempTexWrap, "Animated"FILE_PATH_DELIMITER_STRING"LunaSpr2.tdw", 21);
-	tempTexWrap = moduleTextureWrapperAllocate();
-	twLoad(tempTexWrap, "Static"FILE_PATH_DELIMITER_STRING"ntrance2.tdw", 19);
-	tempTexWrap = moduleTextureWrapperAllocate();
+	//twLoad(tempTexWrap, "Animated"FILE_PATH_DELIMITER_STRING"LunaSpr2.tdw", 21);
+	//tempTexWrap = moduleTextureWrapperAllocate();
+	//twLoad(tempTexWrap, "Static"FILE_PATH_DELIMITER_STRING"ntrance2.tdw", 19);
+	//tempTexWrap = moduleTextureWrapperAllocate();
 	twLoad(tempTexWrap, "Static"FILE_PATH_DELIMITER_STRING"KoboldStatic.tdw", 23);
 	tempTexWrap = moduleTextureWrapperAllocate();
 	twLoad(tempTexWrap, "gui"FILE_PATH_DELIMITER_STRING"body.tdw", 12);
