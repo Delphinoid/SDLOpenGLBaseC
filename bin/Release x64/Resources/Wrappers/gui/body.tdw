@@ -1,0 +1,5 @@
+animation {
+	loop -1
+	//frameEntire 0 "gui\body.tdt"
+	frameMacro 8/x 1/1 0/0/64/64 33.33 "gui\body.tdt"
+}

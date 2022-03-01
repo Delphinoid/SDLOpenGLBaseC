@@ -1,0 +1,3 @@
+image "Luna\Luna.png"
+filter BILINEAR
+//mip 0/0/9920/180

@@ -1,0 +1,3 @@
+renderable "soldier_reference.smd"
+skeletonPhysics "CubeTestPhysicsS.tdp"
+//skeletonHitboxes "path\to\hitboxes"

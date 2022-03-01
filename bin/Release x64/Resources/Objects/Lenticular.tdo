@@ -1,0 +1,3 @@
+skeleton "default"
+skeletonPhysics "Lenticular.tdp"
+renderable "Lenticular.obj"

@@ -1,0 +1,22 @@
+rigidbody "bonename" {
+	energyratio 1
+	collision 0
+	active 1
+	collider {
+		v x y z mass
+		v x y z mass
+		v x y z mass
+		v x y z mass
+		f 0 1 2
+		f 1 3 2
+	}
+	collider {
+		//
+	}
+	constraint "constraintbone" {
+		// Parent constraint
+		collision 0
+		offsetBounds x/y/z x/y/z
+		rotationBounds x/y/z x/y/z
+	}
+}

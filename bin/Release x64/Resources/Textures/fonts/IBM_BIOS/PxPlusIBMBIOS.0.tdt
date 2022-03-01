@@ -1,0 +1,3 @@
+image "fonts\IBM_BIOS\PxPlusIBMBIOS.0.png"
+filter LINEAR
+mip none

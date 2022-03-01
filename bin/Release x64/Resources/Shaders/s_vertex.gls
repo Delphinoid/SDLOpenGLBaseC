@@ -1,0 +1,63 @@
+#version 330 core
+
+// Maximum number of bones allowed per skeleton.
+#define SKELETON_MAX_BONE_NUM 128
+
+// Texture samplers.
+#define GFX_TEXTURE_SAMPLER_NUM 1
+
+// Affine transformation struct.
+struct transform {
+	vec3 position;
+	vec4 orientation;
+	vec3 scale;
+};
+
+// Per-vertex data.
+layout(location = 0) in vec3  vertexPosition;
+layout(location = 1) in vec2  vertexUV;
+layout(location = 2) in vec3  vertexNormals;
+layout(location = 3) in ivec4 vertexBoneIDs;
+layout(location = 4) in vec4  vertexBoneWeights;
+
+// Per-instance data (same as per-call for now since we're not using instancing).
+uniform mat4 vpMatrix;
+uniform vec4 textureFragmentArray[GFX_TEXTURE_SAMPLER_NUM];
+uniform mat4 boneArray[SKELETON_MAX_BONE_NUM];
+
+// Per-call data.
+uniform sampler2D textureSamplerArray[GFX_TEXTURE_SAMPLER_NUM];
+
+out vec2 UV;
+
+void main(){
+	
+	// Transform the vertex.
+	vec4 vertexPosition4 = vec4(vertexPosition, 1.f);
+	vec4 vertex = vertexPosition4;
+	
+	// Apply each bone transformation (array indices must be const, so no for loops).
+	if(vertexBoneIDs[0] >= 0 && vertexBoneIDs[0] < SKELETON_MAX_BONE_NUM && vertexBoneWeights[0] != 0.f){
+		vertex = boneArray[vertexBoneIDs[0]] * vertexPosition4 * vertexBoneWeights[0];
+	}
+	if(vertexBoneIDs[1] >= 0 && vertexBoneIDs[1] < SKELETON_MAX_BONE_NUM && vertexBoneWeights[1] != 0.f){
+		vertex = boneArray[vertexBoneIDs[1]] * vertexPosition4 * vertexBoneWeights[1] + vertex;
+	}
+	if(vertexBoneIDs[2] >= 0 && vertexBoneIDs[2] < SKELETON_MAX_BONE_NUM && vertexBoneWeights[2] != 0.f){
+		vertex = boneArray[vertexBoneIDs[2]] * vertexPosition4 * vertexBoneWeights[2] + vertex;
+	}
+	if(vertexBoneIDs[3] >= 0 && vertexBoneIDs[3] < SKELETON_MAX_BONE_NUM && vertexBoneWeights[3] != 0.f){
+		vertex = boneArray[vertexBoneIDs[3]] * vertexPosition4 * vertexBoneWeights[3] + vertex;
+	}
+	
+	// Finally, apply it all to the vertex position.
+	gl_Position = vpMatrix * vec4(vertex.xyz, 1.f);
+	
+	// Get the width and height of the texture.
+	ivec2 textureDimensions = textureSize(textureSamplerArray[0], 0);
+	
+	// Calculate UVs for the current vertex based on the texture fragment.
+	UV.x = vertexUV.x * textureFragmentArray[0][2] + textureFragmentArray[0][0];
+	UV.y = vertexUV.y * textureFragmentArray[0][3] + textureFragmentArray[0][1];
+
+}

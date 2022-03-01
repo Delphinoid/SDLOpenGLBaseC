@@ -1,0 +1,8 @@
+skeleton "default"
+skeletonPhysics "WallPhysics.tdp"
+//skeletonHitboxes "path\to\hitboxes"
+
+//animation "Animations\CubeTestAnimation.tda"
+//animationCapacity 1
+
+renderable "CubeTest.obj"

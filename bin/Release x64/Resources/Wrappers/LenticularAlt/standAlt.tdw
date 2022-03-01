@@ -1,0 +1,32 @@
+animation {
+	loop 0
+	frameEntire 0 "LenticularAlt\stand\0.tdt"
+}
+animation {
+	loop 0
+	frameEntire 0 "LenticularAlt\stand\1.tdt"
+}
+animation {
+	loop 0
+	frameEntire 0 "LenticularAlt\stand\2.tdt"
+}
+animation {
+	loop 0
+	frameEntire 0 "LenticularAlt\stand\3.tdt"
+}
+animation {
+	loop 0
+	frameEntire 0 "LenticularAlt\stand\4.tdt"
+}
+animation {
+	loop 0
+	frameEntire 0 "LenticularAlt\stand\5.tdt"
+}
+animation {
+	loop 0
+	frameEntire 0 "LenticularAlt\stand\6.tdt"
+}
+animation {
+	loop 0
+	frameEntire 0 "LenticularAlt\stand\7.tdt"
+}

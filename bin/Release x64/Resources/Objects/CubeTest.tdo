@@ -1,0 +1,8 @@
+skeleton "CubeTestSkeleton2.tds"
+skeletonPhysics "CubeTestPhysics.tdp"
+//skeletonHitboxes "path\to\hitboxes"
+
+animation "CubeTestAnimation.tda"
+animationCapacity 1
+
+renderable "CubeAnimated.obj"

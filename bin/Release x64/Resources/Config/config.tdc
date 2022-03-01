@@ -1,0 +1,1 @@
+bind 1073741906 2 "up; cout \"\\blah\;\"; bind 1 2 "left; cout hi""; cout Done parsing!
