@@ -40,6 +40,7 @@ typedef struct twInstance {
 } twInstance;
 
 extern textureWrapper g_twDefault;
+extern const textureWrapper *g_twDefaultP;
 
 /** twLoad() and twiAnimate() may need some tidying up. **/
 void twInit(textureWrapper *const __RESTRICT__ tw);

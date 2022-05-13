@@ -11,14 +11,18 @@ mesh g_meshDefault = {
 	.indexNum = 0,
 	.vaoID = 0,
 	.vboID = 0,
-	.iboID = 0
+	.iboID = 0,
+	///.lods = NULL,
+	///.lodNum = 0
 };
 mesh g_meshBillboard = {
 	///.vertexNum = 0,
 	.indexNum = 0,
 	.vaoID = 0,
 	.vboID = 0,
-	.iboID = 0
+	.iboID = 0,
+	///.lods = NULL,
+	///.lodNum = 0
 };
 
 void meshInit(mesh *const __RESTRICT__ m){
@@ -43,7 +47,7 @@ static void meshVertexAttributes(){
 	glEnableVertexAttribArray(4);
 }
 
-return_t meshGenerateBuffers(mesh *const __RESTRICT__ m, const vertexIndex_t vertexNum, const vertex *const __RESTRICT__ vertices, const vertexIndex_t indexNum, const vertexIndex_t *const __RESTRICT__ indices){
+return_t meshGenerateBuffers(mesh *const __RESTRICT__ m, const vertex *const __RESTRICT__ vertices, const vertexIndex_t vertexNum, const vertexIndex_t *const __RESTRICT__ indices, const vertexIndex_t indexNum){
 
 	if(vertexNum > 0){
 		if(indexNum > 0){
@@ -278,7 +282,7 @@ return_t meshDefaultInit(){
 	indices[34] = 21;
 	indices[35] = 23;
 
-	if(meshGenerateBuffers(&g_meshDefault, 24, vertices, 36, indices) <= 0){
+	if(meshGenerateBuffers(&g_meshDefault, vertices, 24, indices, 36) <= 0){
 		return 0;
 	}
 
@@ -359,7 +363,7 @@ return_t meshBillboardInit(){
 	indices[4] = 3;
 	indices[5] = 1;
 
-	if(meshGenerateBuffers(&g_meshBillboard, 4, vertices, 6, indices) <= 0){
+	if(meshGenerateBuffers(&g_meshBillboard, vertices, 4, indices, 6) <= 0){
 		return 0;
 	}
 

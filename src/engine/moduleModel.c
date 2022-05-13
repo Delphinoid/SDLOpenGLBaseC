@@ -16,7 +16,7 @@ return_t moduleModelResourcesInit(){
 	if(sprGenerateStateBuffer() < 0 || meshDefaultInit() < 0 || sprDefaultInit() < 0 || meshBillboardInit() < 0){
 		return -1;
 	}
-	mdlBaseDefaultInit(); mdlBaseSpriteInit(); mdlBaseBillboardInit();
+	///mdlBaseDefaultInit(); mdlBaseSpriteInit(); mdlBaseBillboardInit();
 	memory = memAllocate(
 		memPoolAllocationSize(
 			NULL,

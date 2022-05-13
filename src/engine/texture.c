@@ -145,13 +145,13 @@ return_t tLoad(texture *const __RESTRICT__ tex, const char *const __RESTRICT__ f
 
 	if(texInfo != NULL){
 
-		char lineFeed[FILE_MAX_LINE_LENGTH];
+		char lineBuffer[FILE_MAX_LINE_LENGTH];
 		char *line;
 		size_t lineLength;
 
 		fileLine_t currentLine = 0;  // Current file line being read.
 
-		while(fileParseNextLine(texInfo, lineFeed, sizeof(lineFeed), &line, &lineLength)){
+		while(fileParseNextLine(texInfo, lineBuffer, sizeof(lineBuffer), &line, &lineLength)){
 
 			++currentLine;
 

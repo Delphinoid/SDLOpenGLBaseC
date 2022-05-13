@@ -27,7 +27,7 @@ typedef struct modelBase {
 
 	// Skeleton associated with the model.
 	const skeleton *skl;
-	const textureWrapper *tw;
+	///const textureWrapper *tw;
 
 	/// Mesh and texture data for rendering.
 	///
@@ -36,10 +36,10 @@ typedef struct modelBase {
 	///
 	/// This array is allocated to include
 	/// the LOD and name arrays as well.
-	///mesh *meshes;
-	///const textureWrapper *textures;
-	///meshIndex_t meshNum;
-	mesh buffers;
+	mesh *meshes;
+	const textureWrapper **textures;
+	meshIndex_t meshNum;
+	///mesh buffers;
 
 	// Additional model LODs.
 	// The distance of the first LOD will be 0.
@@ -57,8 +57,8 @@ typedef struct modelBase {
 typedef struct model {
 	/// Array of twInstances, one for each mesh.
 	const modelBase *base;
-	///twInstance *twi;
-	twInstance twi;
+	twInstance *twi;
+	///twInstance twi;
 	mdlState state;
 	billboard billboardData;
 } model;
@@ -76,7 +76,7 @@ void mdlBaseSpriteInit();
 void mdlBaseBillboardInit();
 
 void mdlInit(model *const __RESTRICT__ mdl);
-void mdlInstantiate(model *const __RESTRICT__ mdl, const modelBase *const base);
+return_t mdlInstantiate(model *const __RESTRICT__ mdl, const modelBase *const base);
 void mdlTick(model *const __RESTRICT__ mdl, const float dt_ms);
 float mdlAlpha(const model *const __RESTRICT__ mdl, const float interpT);
 void mdlDelete(model *const __RESTRICT__ mdl);

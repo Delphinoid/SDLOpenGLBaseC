@@ -11,8 +11,8 @@
 #define TEXTURE_WRAPPER_RESOURCE_DIRECTORY_STRING FILE_PATH_RESOURCE_DIRECTORY_SHARED"Resources"FILE_PATH_DELIMITER_STRING"Wrappers"FILE_PATH_DELIMITER_STRING
 #define TEXTURE_WRAPPER_RESOURCE_DIRECTORY_LENGTH 21
 
-#define TEXTURE_WRAPPER_ANIMATION_START_CAPACITY       1  // 128
-#define TEXTURE_WRAPPER_ANIMATION_FRAME_START_CAPACITY 1  // 128
+#define TEXTURE_WRAPPER_ANIMATION_INITIAL_CAPACITY       1  // 128
+#define TEXTURE_WRAPPER_ANIMATION_FRAME_INITIAL_CAPACITY 1  // 128
 
 // Default texture wrapper.
 static twFrame g_twfDefault = {
@@ -37,6 +37,8 @@ textureWrapper g_twDefault = {
 	.animationNum = 1,
 	.animations = &g_twaDefault
 };
+// Some structures, such as models, store arrays of texture wrapper pointers.
+const textureWrapper *g_twDefaultP = &g_twDefault;
 
 /** Remove printf()s **/
 
@@ -161,7 +163,7 @@ return_t twLoad(textureWrapper *const __RESTRICT__ tw, const char *const __RESTR
 
 	twAnim tempAnim;
 	frameIndex_t frameCapacity = 0;
-	animIndex_t animationCapacity = TEXTURE_WRAPPER_ANIMATION_START_CAPACITY;
+	animIndex_t animationCapacity = TEXTURE_WRAPPER_ANIMATION_INITIAL_CAPACITY;
 
 	char fullPath[FILE_MAX_PATH_LENGTH];
 
@@ -174,7 +176,7 @@ return_t twLoad(textureWrapper *const __RESTRICT__ tw, const char *const __RESTR
 
 	if(texInfo != NULL){
 
-		char lineFeed[FILE_MAX_LINE_LENGTH];
+		char lineBuffer[FILE_MAX_LINE_LENGTH];
 		char *line;
 		size_t lineLength;
 
@@ -188,7 +190,7 @@ return_t twLoad(textureWrapper *const __RESTRICT__ tw, const char *const __RESTR
 		}
 		twaInit(&tempAnim);
 
-		while(fileParseNextLine(texInfo, lineFeed, sizeof(lineFeed), &line, &lineLength)){
+		while(fileParseNextLine(texInfo, lineBuffer, sizeof(lineBuffer), &line, &lineLength)){
 
 			++currentLine;
 
@@ -443,7 +445,7 @@ return_t twLoad(textureWrapper *const __RESTRICT__ tw, const char *const __RESTR
 				// Reset tempAnim.
 				if(strrchr(line+9, '{')){
 					twaInit(&tempAnim);
-					frameCapacity = TEXTURE_WRAPPER_ANIMATION_FRAME_START_CAPACITY;
+					frameCapacity = TEXTURE_WRAPPER_ANIMATION_FRAME_INITIAL_CAPACITY;
 					if(twaNew(&tempAnim, frameCapacity) < 0){
 						/** Memory allocation failure. **/
 						twDelete(tw);

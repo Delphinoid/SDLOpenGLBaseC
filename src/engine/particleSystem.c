@@ -221,15 +221,16 @@ __FORCE_INLINE__ static void particleSystemParticlesRender(const particleSystem 
 
 	spriteState *state = &gfxMngr->shdrData.spriteTransformState[0];
 
-	gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, mdl->tw->animations[p->currentAnim].frames[p->animator.currentFrame].image->diffuseID);
+	/** We need to loop here; we shouldn't just be using textures[0] and meshes[0]. **/
+	gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, mdl->textures[0]->animations[p->currentAnim].frames[p->animator.currentFrame].image->diffuseID);
 
 	// Generate state buffers.
 	for(; p < pLast; ++p, ++state){
 		state->transformation = tfMatrix4(p->configuration);
-		state->frame = twState(mdl->tw, &p->animator, p->currentAnim, interpT)->subframe;
+		state->frame = twState(mdl->textures[0], &p->animator, p->currentAnim, interpT)->subframe;
 	}
 
-	glBindVertexArray(mdl->buffers.vaoID);
+	glBindVertexArray(mdl->meshes[0].vaoID);
 
 	// Upload the state data to the shader.
 	glBindBuffer(GL_ARRAY_BUFFER, g_sprStateBufferID);
@@ -237,7 +238,7 @@ __FORCE_INLINE__ static void particleSystemParticlesRender(const particleSystem 
 
 	// Render the system.
 	if(mdl->lods == NULL){
-		indexNum = mdl->buffers.indexNum;
+		indexNum = mdl->meshes[0].indexNum;
 		offset = 0;
 	}else{
 		mdlFindCurrentLOD(mdl->lods, mdl->lodNum, &indexNum, &offset, distance, gfxMngr->shdrData.biasLOD);

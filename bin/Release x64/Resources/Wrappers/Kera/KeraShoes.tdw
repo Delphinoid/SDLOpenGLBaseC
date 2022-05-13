@@ -1,0 +1,4 @@
+animation {
+	loop 0
+	frameEntire 0 "Kera\KeraShoes.tdt"
+}

@@ -16,10 +16,10 @@
 #define SKELETON_ANIMATION_RESOURCE_DIRECTORY_STRING FILE_PATH_RESOURCE_DIRECTORY_SHARED"Resources"FILE_PATH_DELIMITER_STRING"Skeletons"FILE_PATH_DELIMITER_STRING"Animations"FILE_PATH_DELIMITER_STRING
 #define SKELETON_ANIMATION_RESOURCE_DIRECTORY_LENGTH 33
 
-#define SKELETON_ANIM_BONE_START_CAPACITY 1
-#define SKELETON_ANIM_FRAME_START_CAPACITY 1
+#define SKELETON_ANIM_BONE_INITIAL_CAPACITY 1
+#define SKELETON_ANIM_FRAME_INITIAL_CAPACITY 1
 
-#define SKELETON_ANIM_FRAGMENT_START_CAPACITY 1
+#define SKELETON_ANIM_FRAGMENT_INITIAL_CAPACITY 1
 
 // Default skeleton.
 static sklNode g_sklNodeDefault = {
@@ -85,7 +85,7 @@ return_t sklLoad(skeleton *const __RESTRICT__ skl, const char *const __RESTRICT_
 
 	if(sklInfo != NULL){
 
-		char lineFeed[1024];
+		char lineBuffer[1024];
 		char *line;
 		size_t lineLength;
 
@@ -102,7 +102,7 @@ return_t sklLoad(skeleton *const __RESTRICT__ skl, const char *const __RESTRICT_
 			return -1;
 		}
 
-		while(fileParseNextLine(sklInfo, lineFeed, sizeof(lineFeed), &line, &lineLength) && skl->boneNum < SKELETON_MAX_BONE_NUM){
+		while(fileParseNextLine(sklInfo, lineBuffer, sizeof(lineBuffer), &line, &lineLength) && skl->boneNum < SKELETON_MAX_BONE_NUM){
 
 			++currentLine;
 
@@ -313,8 +313,8 @@ static void sklaDefragment(sklAnim *const __RESTRICT__ skla, const char *const _
 }
 return_t sklaLoad(sklAnim *const __RESTRICT__ skla, const char *const __RESTRICT__ filePath, const size_t filePathLength){
 
-	boneIndex_t boneCapacity = SKELETON_ANIM_BONE_START_CAPACITY;
-	frameIndex_t frameCapacity = SKELETON_ANIM_FRAME_START_CAPACITY;
+	boneIndex_t boneCapacity = SKELETON_ANIM_BONE_INITIAL_CAPACITY;
+	frameIndex_t frameCapacity = SKELETON_ANIM_FRAME_INITIAL_CAPACITY;
 
 	char fullPath[FILE_MAX_PATH_LENGTH];
 
@@ -327,25 +327,25 @@ return_t sklaLoad(sklAnim *const __RESTRICT__ skla, const char *const __RESTRICT
 
 	if(sklaInfo != NULL){
 
-		char lineFeed[FILE_MAX_LINE_LENGTH];
+		char lineBuffer[FILE_MAX_LINE_LENGTH];
 		char *line;
 		size_t lineLength;
 
 		int currentCommand = -1;     // The current multiline command type (-1 = none, 0 = bones, 1 = frame).
 		fileLine_t currentLine = 0;  // Current file line being read.
 
-		skla->bones = memAllocate(SKELETON_ANIM_BONE_START_CAPACITY*sizeof(char *));
+		skla->bones = memAllocate(SKELETON_ANIM_BONE_INITIAL_CAPACITY*sizeof(char *));
 		if(skla->bones == NULL){
 			/** Memory allocation failure. **/
 			return -1;
 		}
-		skla->frames = memAllocate(SKELETON_ANIM_FRAME_START_CAPACITY*sizeof(transform *));
+		skla->frames = memAllocate(SKELETON_ANIM_FRAME_INITIAL_CAPACITY*sizeof(transform *));
 		if(skla->frames == NULL){
 			/** Memory allocation failure. **/
 			memFree(skla->bones);
 			return -1;
 		}
-		skla->animData.frameDelays = memAllocate(SKELETON_ANIM_FRAME_START_CAPACITY*sizeof(float));
+		skla->animData.frameDelays = memAllocate(SKELETON_ANIM_FRAME_INITIAL_CAPACITY*sizeof(float));
 		if(skla->animData.frameDelays == NULL){
 			/** Memory allocation failure. **/
 			memFree(skla->animData.frameDelays);
@@ -353,7 +353,7 @@ return_t sklaLoad(sklAnim *const __RESTRICT__ skla, const char *const __RESTRICT
 			return -1;
 		}
 
-		while(fileParseNextLine(sklaInfo, lineFeed, sizeof(lineFeed), &line, &lineLength)){
+		while(fileParseNextLine(sklaInfo, lineBuffer, sizeof(lineBuffer), &line, &lineLength)){
 
 			++currentLine;
 
@@ -640,8 +640,7 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *const __RES
 						//Make sure a bone with this ID actually exists.
 						if(boneID == tempBonesSize){
 							//Get the bone's name.
-							size_t boneNameLength;
-							getDelimitedString(tokPos, line + lineLength - tokPos, "\" ", &tokPos, &boneNameLength);
+							const size_t boneNameLength = getDelimitedString(tokPos, line + lineLength - tokPos, "\" ", &tokPos);
 							tempBone.name = memAllocate(boneNameLength + 1);
 							memcpy(tempBone.name, tokPos, boneNameLength);
 							tempBone.name[boneNameLength] = '\0';
@@ -713,9 +712,9 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *const __RES
 								transform *currentState = &skla->frames[skla->animData.frameNum - 1][boneID];
 
 								// Load the bone's position!
-								float x = strtod(tokPos, &tokPos) * 0.05f;
-								float y = strtod(tokPos, &tokPos) * 0.05f;
-								float z = strtod(tokPos, &tokPos) * 0.05f;
+								float x = strtod(tokPos, &tokPos);
+								float y = strtod(tokPos, &tokPos);
+								float z = strtod(tokPos, &tokPos);
 								currentState->position = vec3New(x, y, z);
 
 								// Load the bone's rotation!

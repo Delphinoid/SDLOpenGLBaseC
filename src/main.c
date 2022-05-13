@@ -224,10 +224,12 @@ int main(int argc, char **argv){
 	objBaseLoad(tempObj, "CubeTest2.tdo", 13);
 	tempObj->stateMax = 1;
 	tempObj = moduleObjectBaseAllocate();
+	objBaseLoad(tempObj, "Kera.tdo", 8);
+	tempObj = moduleObjectBaseAllocate();
 	objBaseLoad(tempObj, "Lenticular.tdo", 14);
 	tempObj->stateMax = 1;
-	tempObj = moduleObjectBaseAllocate();
-	/*bjBaseLoad(tempObj, "soldier.tdo", 11);
+	/*tempObj = moduleObjectBaseAllocate();
+	bjBaseLoad(tempObj, "soldier.tdo", 11);
 	tempObj->skl = tempObj->models[0]->skl;
 	tempObj->animationNum = 2;
 	tempObj->animations = memAllocate(2*sizeof(sklAnim *));
@@ -413,6 +415,14 @@ int main(int argc, char **argv){
 	tempObji->skeletonBodies->flags &= ~(0x06);
 	scnInsertObject(scnMain, tempObji);
 	//
+	tempObji = moduleObjectAllocate();
+	objInstantiate(tempObji, moduleObjectBaseFind("Kera.tdo", 8));
+	vec3SetS(&tempObji->configuration[0].scale, 1.25f);
+	tempObji->configuration[0].position.x += 0.f;
+	tempObji->configuration[0].position.y -= 2.9f;
+	tempObji->configuration[0].position.z += 5.f;
+	scnInsertObject(scnMain, tempObji);
+	//
 	/*tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("soldier.tdo", 11));
 	skliAnimationNew(&tempObji->skeletonData, tempObji->base->animations[0], 1.f, SKELETON_ANIM_INSTANCE_ADDITIVE);
@@ -527,7 +537,7 @@ int main(int argc, char **argv){
 
 	particleBase a; particleBaseInit(&a);
 	modelBase *particleMdl = moduleModelBaseAllocate(); mdlBaseInit(particleMdl);
-	particleMdl->buffers = g_meshSprite; particleMdl->tw = &g_twDefault;
+	particleMdl->meshes = &g_meshSprite; particleMdl->textures = &g_twDefaultP;
 	a.mdl = particleMdl;
 	particleSystemBase b; particleSystemBaseInit(&b); b.properties = a;
 	b.initializers = memAllocate(sizeof(particleInitializer));
@@ -686,10 +696,10 @@ int main(int argc, char **argv){
 				}
 			}
 			if(CVAR_CHANGE){
-				if(strncmp(p.obj->models[0].twi.tw->name, "Lenticular"FILE_PATH_DELIMITER_STRING"Lenticular.tdw", 25) == 0){
-					p.obj->models[0].twi.tw = moduleTextureWrapperFind("LenticularAlt"FILE_PATH_DELIMITER_STRING"LenticularAlt.tdw", 31);
+				if(strncmp(p.obj->models[0].twi[0].tw->name, "Lenticular"FILE_PATH_DELIMITER_STRING"Lenticular.tdw", 25) == 0){
+					p.obj->models[0].twi[0].tw = moduleTextureWrapperFind("LenticularAlt"FILE_PATH_DELIMITER_STRING"LenticularAlt.tdw", 31);
 				}else{
-					p.obj->models[0].twi.tw = moduleTextureWrapperFind("Lenticular"FILE_PATH_DELIMITER_STRING"Lenticular.tdw", 25);
+					p.obj->models[0].twi[0].tw = moduleTextureWrapperFind("Lenticular"FILE_PATH_DELIMITER_STRING"Lenticular.tdw", 25);
 				}
 				CVAR_CHANGE = 0;
 			}
@@ -707,15 +717,15 @@ int main(int argc, char **argv){
 			if(flagsAreSet(p.movement.state, PLAYER_MOVEMENT_JUMPING)){
 				if(p.movement.velocity.y >= 0.f){
 					// Jumping up.
-					p.obj->models[0].twi.currentAnim = 16;
+					p.obj->models[0].twi[0].currentAnim = 16;
 				}else{
 					// Falling down.
-					p.obj->models[0].twi.currentAnim = 24;
+					p.obj->models[0].twi[0].currentAnim = 24;
 				}
 			}else if(flagsAreSet(p.movement.state, PLAYER_MOVEMENT_WALKING)){
-				p.obj->models[0].twi.currentAnim = 8;
+				p.obj->models[0].twi[0].currentAnim = 8;
 			}else{
-				p.obj->models[0].twi.currentAnim = 0;
+				p.obj->models[0].twi[0].currentAnim = 0;
 			}
 			if(CVAR_INTERACT){
 				if(p.obj->models[0].state.alpha == 0.f){

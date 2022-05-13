@@ -87,7 +87,7 @@ size_t ltostr(long n, char *const __RESTRICT__ s){
 }
 
 /** TEMPORARY **/
-void getDelimitedString(char *const __RESTRICT__ line, const size_t lineLength, const char *__RESTRICT__ delims, char **const __RESTRICT__ strStart, size_t *const __RESTRICT__ strLength){
+size_t getDelimitedString(char *const __RESTRICT__ line, const size_t lineLength, const char *__RESTRICT__ delims, char **const __RESTRICT__ strStart){
 	// Temporary function by 8426THMY.
 	char *tempStart = NULL;
 	//Find the beginning of the string!
@@ -111,12 +111,12 @@ void getDelimitedString(char *const __RESTRICT__ line, const size_t lineLength, 
 
 		//Get the string between our delimiters!
 		*strStart = tempStart;
-		*strLength = tempEnd - tempStart;
+		return tempEnd - tempStart;
 
 		//If we couldn't find any delimiters, use the whole string!
 	}else{
 		*strStart = line;
-		*strLength = lineLength;
+		return lineLength;
 	}
 }
 

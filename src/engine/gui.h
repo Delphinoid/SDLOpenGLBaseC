@@ -4,7 +4,6 @@
 #include "guiText.h"
 #include "guiWindow.h"
 #include "guiContainer.h"
-#include "model.h"
 #include "text.h"
 #include "transform.h"
 #include "vec2.h"
@@ -16,7 +15,7 @@
 #define GUI_ELEMENT_TYPE_TEXT       0x01
 #define GUI_ELEMENT_TYPE_WINDOW     0x02
 #define GUI_ELEMENT_TYPE_CONTAINER  0x03
-#define GUI_ELEMENT_TYPE_RENDERABLE 0x04
+#define GUI_ELEMENT_TYPE_RENDERABLE 0x04  /// No longer used.
 #define GUI_ELEMENT_TYPE_OBJECT     0x05
 
 typedef struct object object;
@@ -33,7 +32,6 @@ typedef struct guiElement {
 		guiText text;
 		guiWindow window;
 		guiContainer container;
-		model mdl;
 		object *obj;  /// Replace with struct containing void pointer and function pointers?
 	} data;
 	transform root;

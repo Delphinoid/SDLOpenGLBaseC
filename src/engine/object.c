@@ -42,7 +42,7 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 
 	if(objInfo != NULL){
 
-		char lineFeed[FILE_MAX_LINE_LENGTH];
+		char lineBuffer[FILE_MAX_LINE_LENGTH];
 		char *line;
 		size_t lineLength;
 
@@ -51,7 +51,7 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 		char loadPath[FILE_MAX_PATH_LENGTH];
 		size_t loadPathLength;
 
-		while(fileParseNextLine(objInfo, lineFeed, sizeof(lineFeed), &line, &lineLength)){
+		while(fileParseNextLine(objInfo, lineBuffer, sizeof(lineBuffer), &line, &lineLength)){
 
 			++currentLine;
 
@@ -242,8 +242,11 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 		return 0;
 	}
 
-	// If no skeleton was loaded, load the default one.
-	if(base->skl == NULL){
+	// If no skeleton was loaded, use the one for the
+	// first model, otherwise just use the default one.
+	if(base->skl == NULL && base->modelNum > 0){
+		base->skl = base->models[0]->skl;
+	}else{
 		//printf("Error loading object: No skeleton was loaded.\n");
 		base->skl = &g_sklDefault;
 	}
@@ -919,8 +922,8 @@ void objGenerateSprite(const object *const __RESTRICT__ obj, const model *const 
 
 	// Generate a transformation for the sprite and transform each vertex.
 	/// Might need to call tfAppend.
-	tf.scale.x *= twiFrameWidth(&mdl->twi) * twiTextureWidth(&mdl->twi);
-	tf.scale.y *= twiFrameHeight(&mdl->twi) * twiTextureHeight(&mdl->twi);
+	tf.scale.x *= twiFrameWidth((const twInstance *const)&mdl->twi) * twiTextureWidth((const twInstance *const)&mdl->twi);
+	tf.scale.y *= twiFrameHeight((const twInstance *const)&mdl->twi) * twiTextureHeight((const twInstance *const)&mdl->twi);
 	vertices[0].position = tfTransformPoint(tf, vertices[0].position);
 	vertices[1].position = tfTransformPoint(tf, vertices[1].position);
 	vertices[2].position = tfTransformPoint(tf, vertices[2].position);
@@ -949,7 +952,7 @@ gfxRenderGroup_t objRenderGroup(const object *const __RESTRICT__ obj, const floa
 
 	while(i != NULL){
 
-		if(twiTranslucent(&i->twi)){
+		if(twiTranslucent((const twInstance *const)&i->twi)){
 
 			// The object contains translucency.
 			return GFX_RNDR_GROUP_TRANSLUCENT;

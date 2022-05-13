@@ -231,7 +231,7 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 
 	if(rbInfo != NULL){
 
-		char lineFeed[FILE_MAX_LINE_LENGTH];
+		char lineBuffer[FILE_MAX_LINE_LENGTH];
 		char *line;
 		size_t lineLength;
 
@@ -249,7 +249,7 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 		physCollider *currentCollider = NULL;
 		size_t currentBodyColliderNum = 0;
 
-		while(fileParseNextLine(rbInfo, lineFeed, sizeof(lineFeed), &line, &lineLength)){
+		while(fileParseNextLine(rbInfo, lineBuffer, sizeof(lineBuffer), &line, &lineLength)){
 
 			++currentLine;
 

@@ -10,54 +10,51 @@
 #include "helpersFileIO.h"
 #include <string.h>
 
-#define MODEL_RESOURCE_DIRECTORY_STRING FILE_PATH_RESOURCE_DIRECTORY_SHARED"Resources"FILE_PATH_DELIMITER_STRING"Models"FILE_PATH_DELIMITER_STRING
-#define MODEL_RESOURCE_DIRECTORY_LENGTH 19
-
-return_t mdlWavefrontObjLoad(const char *const __RESTRICT__ filePath, vertexIndex_t *const vertexNum, vertex **const vertices, vertexIndex_t *const __RESTRICT__ indexNum, vertexIndex_t **const indices, size_t *const __RESTRICT__ lodNum, mdlLOD **const lods, int *const __RESTRICT__ sprite, char *const __RESTRICT__ sklPath, size_t *const __RESTRICT__ sklPathLength, char *const __RESTRICT__ twPath, size_t *const __RESTRICT__ twPathLength);
-return_t mdlSMDLoad(const char *filePath, vertexIndex_t *vertexNum, vertex **vertices, vertexIndex_t *indexNum, vertexIndex_t **indices, skeleton *const skl, char *const __RESTRICT__ twPath, size_t *const __RESTRICT__ twPathLength);
+return_t mdlWavefrontObjLoad(modelBase *const __RESTRICT__ base, const char *const __RESTRICT__ filePath, const size_t filePathLength);
+return_t mdlSMDLoad(modelBase *const __RESTRICT__ base, const char *const __RESTRICT__ filePath, const size_t filePathLength);
 
 // Default models.
 modelBase g_mdlDefault = {
 	.skl = &g_sklDefault,
-	.tw = &g_twDefault,
-	.buffers.indexNum = 0,
-	.buffers.vaoID = 0,
-	.buffers.vboID = 0,
-	.buffers.iboID = 0,
-	///.meshes = &g_meshDefault,
-	///.textures = NULL,
-	///.meshNum = 1,
-	.name = "default",
+	///.tw = &g_twDefault,
+	///.buffers.indexNum = 0,
+	///.buffers.vaoID = 0,
+	///.buffers.vboID = 0,
+	///.buffers.iboID = 0,
+	.meshes = &g_meshDefault,
+	.textures = (const textureWrapper **)&g_twDefaultP,
+	.meshNum = 1,
 	.lods = NULL,
-	.lodNum = 0
+	.lodNum = 0,
+	.name = "default"
 };
 modelBase g_mdlSprite = {
 	.skl = NULL,
-	.tw = &g_twDefault,
-	.buffers.indexNum = 0,
-	.buffers.vaoID = 0,
-	.buffers.vboID = 0,
-	.buffers.iboID = 0,
-	///.meshes = &g_meshSprite,
-	///.textures = NULL,
-	///.meshNum = 1,
-	.name = "sprite",
+	///.tw = &g_twDefault,
+	///.buffers.indexNum = 0,
+	///.buffers.vaoID = 0,
+	///.buffers.vboID = 0,
+	///.buffers.iboID = 0,
+	.meshes = &g_meshSprite,
+	.textures = (const textureWrapper **)&g_twDefaultP,
+	.meshNum = 1,
 	.lods = NULL,
-	.lodNum = 0
+	.lodNum = 0,
+	.name = "sprite"
 };
 modelBase g_mdlBillboard = {
 	.skl = &g_sklDefault,
-	.tw = &g_twDefault,
-	.buffers.indexNum = 0,
-	.buffers.vaoID = 0,
-	.buffers.vboID = 0,
-	.buffers.iboID = 0,
-	///.meshes = &g_meshBillboard,
-	///.textures = NULL,
-	///.meshNum = 1,
-	.name = "billboard",
+	///.tw = &g_twDefault,
+	///.buffers.indexNum = 0,
+	///.buffers.vaoID = 0,
+	///.buffers.vboID = 0,
+	///.buffers.iboID = 0,
+	.meshes = &g_meshBillboard,
+	.textures = (const textureWrapper **)&g_twDefaultP,
+	.meshNum = 1,
 	.lods = NULL,
-	.lodNum = 0
+	.lodNum = 0,
+	.name = "billboard"
 };
 
 void mdlBaseInit(modelBase *const __RESTRICT__ base){
@@ -65,7 +62,19 @@ void mdlBaseInit(modelBase *const __RESTRICT__ base){
 }
 return_t mdlBaseLoad(modelBase *const __RESTRICT__ base, const char *const __RESTRICT__ filePath, const size_t filePathLength){
 
-	/** Create a proper model file that loads a specified mesh, a name and a skeleton. **/
+	/** This sucks. **/
+	switch(filePath[filePathLength-1]){
+		case 'd':
+			return mdlSMDLoad(base, filePath, filePathLength);
+		case 'j':
+			return mdlWavefrontObjLoad(base, filePath, filePathLength);
+	}
+	return 0;
+
+}
+/**return_t mdlBaseLoad(modelBase *const __RESTRICT__ base, const char *const __RESTRICT__ filePath, const size_t filePathLength){
+
+	/** Create a proper model file that loads a specified mesh, a name and a skeleton. **
 	return_t r;
 
 	vertexIndex_t vertexNum;
@@ -86,7 +95,7 @@ return_t mdlBaseLoad(modelBase *const __RESTRICT__ base, const char *const __RES
 
 	mdlBaseInit(base);
 
-	/** This sucks. **/
+	/** This sucks. **
 	if(filePath[filePathLength-1] != 'd'){
 		r = mdlWavefrontObjLoad(fullPath, &vertexNum, &vertices, &indexNum, &indices, &lodNum, &lods, &sprite, sklPath, &sklPathLength, twPath, &twPathLength);
 	}else{
@@ -95,12 +104,12 @@ return_t mdlBaseLoad(modelBase *const __RESTRICT__ base, const char *const __RES
 		base->skl = tempSkl;
 		sprite = 0;
 	}
-	/** Replace and move the loading function here. **/
+	/** Replace and move the loading function here. **
 	if(r <= 0){
 		return r;
 	}
 
-	/** Should mdlGenerateBuffers() be here? **/
+	/** Should mdlGenerateBuffers() be here? **
 	//if(sprite){
 		//sprPackVertexBuffer(vertexNum, vertices);
 		//r = sprGenerateBuffers(&base->buffers, vertexNum, vertices, indexNum, indices);
@@ -114,7 +123,7 @@ return_t mdlBaseLoad(modelBase *const __RESTRICT__ base, const char *const __RES
 		// Use the default skeleton.
 		base->skl = &g_sklDefault;
 	}else{
-		/** Check if the skeleton already exists. If not, load it. **/
+		/** Check if the skeleton already exists. If not, load it. **
 		skeleton *const tempSkl = moduleSkeletonAllocate();
 		if(tempSkl != NULL){
 			const return_t r2 = sklLoad(tempSkl, sklPath, sklPathLength);
@@ -122,7 +131,7 @@ return_t mdlBaseLoad(modelBase *const __RESTRICT__ base, const char *const __RES
 				// The load failed. Clean up.
 				moduleSkeletonFree(tempSkl);
 				if(r2 < 0){
-					/** Memory allocation failure. **/
+					/** Memory allocation failure. **
 					mdlBaseDelete(base);
 					return -1;
 				}
@@ -131,17 +140,19 @@ return_t mdlBaseLoad(modelBase *const __RESTRICT__ base, const char *const __RES
 				base->skl = tempSkl;
 			}
 		}else{
-			/** Memory allocation failure. **/
-			memFree(lods);
+			/** Memory allocation failure. **
+			if(lods != NULL){
+				memFree(lods);
+			}
 			mdlBaseDelete(base);
 			return -1;
 		}
 	}}
-	if(base->tw == NULL){if(twPathLength == 0){
+	if(tw == NULL){if(twPathLength == 0){
 		// Use the default texture wrapper.
-		base->tw = &g_twDefault;
+		tw = &g_twDefault;
 	}else{
-		/** Check if the texture wrapper already exists. If not, load it. **/
+		/** Check if the texture wrapper already exists. If not, load it. **
 		textureWrapper *const tempTw = moduleTextureWrapperAllocate();
 		if(tempTw != NULL){
 			const return_t r2 = twLoad(tempTw, twPath, twPathLength);
@@ -149,17 +160,19 @@ return_t mdlBaseLoad(modelBase *const __RESTRICT__ base, const char *const __RES
 				// The load failed. Clean up.
 				moduleTextureWrapperFree(tempTw);
 				if(r2 < 0){
-					/** Memory allocation failure. **/
+					/** Memory allocation failure. **
 					mdlBaseDelete(base);
 					return -1;
 				}
-				base->tw = &g_twDefault;
+				tw = &g_twDefault;
 			}else{
-				base->tw = tempTw;
+				tw = tempTw;
 			}
 		}else{
-			/** Memory allocation failure. **/
-			memFree(lods);
+			/** Memory allocation failure. **
+			if(lods != NULL){
+				memFree(lods);
+			}
 			mdlBaseDelete(base);
 			return -1;
 		}
@@ -168,20 +181,20 @@ return_t mdlBaseLoad(modelBase *const __RESTRICT__ base, const char *const __RES
 	if(r > 0){
 
 		// Generate a name based off the file path.
-		base->name = memAllocate((filePathLength/**-extension**/+1)*sizeof(char) + base->lodNum*sizeof(mdlLOD));
+		base->name = memAllocate((filePathLength/**-extension**+1)*sizeof(char) + base->lodNum*sizeof(mdlLOD));
 		if(base->name == NULL){
-			/** Memory allocation failure. **/
+			/** Memory allocation failure. **
 			mdlBaseDelete(base);
 			return -1;
 		}
-		memcpy(base->name, filePath, filePathLength/**-extension**/);
-		base->name[filePathLength/**-extension**/] = '\0';
+		memcpy(base->name, filePath, filePathLength/**-extension**);
+		base->name[filePathLength/**-extension**] = '\0';
 		/**base->name = fileGenerateResourceName(filePath, filePathLength);
 		if(base->name == NULL){
 			** Memory allocation failure. **
 			mdlBaseDelete(base);
 			return -1;
-		}**/
+		}**
 
 		if(lods != NULL){
 			memcpy(&base->name[filePathLength+1], lods, base->lodNum*sizeof(mdlLOD));
@@ -194,38 +207,38 @@ return_t mdlBaseLoad(modelBase *const __RESTRICT__ base, const char *const __RES
 
 	return r;
 
-}
+}**/
 void mdlBaseDelete(modelBase *const __RESTRICT__ base){
-	/**if(base->meshes != NULL){
+	if(base->meshes != NULL){
 		mesh *m = base->meshes;
-		const mesh *const mLast = &m[base->meshNum];
-		while(m < mLast){
-			// Set the LOD array pointer to NULL.
-			// These are included in the same
-			// allocation block as the mesh array.
-			meshDelete(m);
-			++m;
-		}
-		if(base->meshes != &g_meshDefault && base->meshes != &g_meshSprite && base->meshes != &g_meshBillboard){
+		if(m != &g_meshDefault && m != &g_meshSprite && m != &g_meshBillboard){
+			const mesh *const mLast = &m[base->meshNum];
+			while(m < mLast){
+				// Set the LOD array pointer to NULL.
+				// These are included in the same
+				// allocation block as the mesh array.
+				meshDelete(m);
+				++m;
+			}
 			// Also frees textures, lods and the name.
 			memFree(base->meshes);
 		}
-	}**/
-	if(base->name != NULL && base->name != g_mdlDefault.name && base->name != g_mdlSprite.name && base->name != g_mdlBillboard.name){
+	}
+	/**if(base->name != NULL && base->name != g_mdlDefault.name && base->name != g_mdlSprite.name && base->name != g_mdlBillboard.name){
 		// Also frees the lods.
 		memFree(base->name);
-	}
+	}**/
 }
 
-void mdlBaseDefaultInit(){
-	g_mdlDefault.buffers = g_meshDefault;
+/**void mdlBaseDefaultInit(){
+	g_mdlDefault.meshes = &g_meshDefault;
 }
 void mdlBaseSpriteInit(){
-	g_mdlSprite.buffers = g_meshSprite;
+	g_mdlSprite.meshes = &g_meshSprite;
 }
 void mdlBaseBillboardInit(){
-	g_mdlBillboard.buffers = g_meshBillboard;
-}
+	g_mdlBillboard.meshes = &g_meshBillboard;
+}**/
 
 __FORCE_INLINE__ void mdlFindCurrentLOD(const mdlLOD *lods, const size_t lodNum, vertexIndex_t *const __RESTRICT__ indexNum, const void **const __RESTRICT__ offset, const float distance, size_t bias){
 
@@ -267,35 +280,42 @@ __FORCE_INLINE__ void mdlFindCurrentLOD(const mdlLOD *lods, const size_t lodNum,
 }
 
 void mdlInit(model *const __RESTRICT__ mdl){
-	twiInit(&mdl->twi, &g_twDefault);
+	///twiInit(&mdl->twi, &g_twDefault);
+	mdl->twi = NULL;
 	mdlStateInit(&mdl->state);
 	billboardInit(&mdl->billboardData);
 	mdl->base = NULL;
 }
-void mdlInstantiate(model *const __RESTRICT__ mdl, const modelBase *const base){
-	/**mdl->twi = memAllocate(base->meshNum*sizeof(twInstance));
+return_t mdlInstantiate(model *const __RESTRICT__ mdl, const modelBase *const base){
+	mdl->twi = memAllocate(base->meshNum*sizeof(twInstance));
 	if(mdl->twi == NULL){
-		** Memory allocation failure. **
+		/** Memory allocation failure. **/
 		return -1;
 	}else{
 		twInstance *twi = mdl->twi;
-		const textureWrapper *tw = base->textures;
+		const textureWrapper **tw = base->textures;
 		const twInstance *const twiLast = &twi[base->meshNum];
 		while(twi < twiLast){
-			twiInit(twi, tw);
+			twiInit(twi, *tw);
 			++twi; ++tw;
 		}
 		mdlStateInit(&mdl->state);
 		billboardInit(&mdl->billboardData);
 		mdl->base = base;
-	}**/
-	twiInit(&mdl->twi, base->tw);
-	mdlStateInit(&mdl->state);
-	billboardInit(&mdl->billboardData);
-	mdl->base = base;
+		return 1;
+	}
+	///twiInit(&mdl->twi, base->tw);
+	///mdlStateInit(&mdl->state);
+	///billboardInit(&mdl->billboardData);
+	///mdl->base = base;
 }
 __FORCE_INLINE__ void mdlTick(model *const __RESTRICT__ mdl, const float dt_ms){
-	twiTick(&mdl->twi, dt_ms);
+	twInstance *twi = mdl->twi;
+	const twInstance *const twiLast = &twi[mdl->base->meshNum];
+	while(twi < twiLast){
+		twiTick(twi, dt_ms);
+		++twi;
+	}
 	mdl->state.alphaPrevious = mdl->state.alphaCurrent;
 	mdl->state.alphaCurrent = mdl->state.alpha;
 }
@@ -306,9 +326,10 @@ void mdlRender(const model *const __RESTRICT__ mdl, const skeleton *const __REST
 
 	if(alpha != 0.f && mdl->base->skl != NULL){
 
-		/**const mesh *m = mdl->base->meshes;
+		const twInstance *twi = mdl->twi;
+		const mesh *m = mdl->base->meshes;
 		const mdlLOD *l = mdl->base->lods;
-		const mesh *const mLast = &m[mdl->base->meshNum];**/
+		const mesh *const mLast = &m[mdl->base->meshNum];
 
 		vertexIndex_t indexNum;
 		const void *offset;
@@ -317,20 +338,6 @@ void mdlRender(const model *const __RESTRICT__ mdl, const skeleton *const __REST
 		boneIndex_t boneNum = mdl->base->skl->boneNum;
 		sklNode *nLayout = mdl->base->skl->bones;
 		boneIndex_t i;
-
-		// Get texture information for rendering and feed it to the shader.
-		// Add an offset to the current animation for lenticular billboards.
-		const twFrame *const frame = twiStateOffset(
-			&mdl->twi, billboardLenticular(mdl->billboardData, cam, *gfxMngr->shdrData.skeletonTransformState), interpT
-		);
-
-		// Bind the texture (if needed).
-		gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, frame->image->diffuseID);
-		// Feed the texture coordinates to the shader.
-		glUniform4fv(gfxMngr->shdrPrgObj.textureFragmentArrayID, 1, (const GLfloat *)&frame->subframe);
-		// Feed the translucency multiplier to the shader.
-		// Negative alpha values indicate dithering.
-		glUniform1f(gfxMngr->shdrPrgObj.alphaID, alpha);
 
 		// If there is a valid animated skeleton,
 		// apply animation transformations and feed
@@ -356,28 +363,45 @@ void mdlRender(const model *const __RESTRICT__ mdl, const skeleton *const __REST
 		}
 
 		// Render each of the meshes associated with the model.
-		///while(m < mLast){
-			glBindVertexArray(mdl->base->buffers.vaoID);
+		while(m < mLast){
+
+			// Get texture information for rendering and feed it to the shader.
+			// Add an offset to the current animation for lenticular billboards.
+			const twFrame *const frame = twiStateOffset(
+				twi, billboardLenticular(mdl->billboardData, cam, *gfxMngr->shdrData.skeletonTransformState), interpT
+			);
+
+			// Bind the texture (if needed).
+			gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, frame->image->diffuseID);
+			// Feed the texture coordinates to the shader.
+			glUniform4fv(gfxMngr->shdrPrgObj.textureFragmentArrayID, 1, (const GLfloat *)&frame->subframe);
+			// Feed the translucency multiplier to the shader.
+			// Negative alpha values indicate dithering.
+			glUniform1f(gfxMngr->shdrPrgObj.alphaID, alpha);
+
+			glBindVertexArray(m->vaoID);
 			// Find the right LOD.
 			if(mdl->base->lods == NULL){
-				indexNum = mdl->base->buffers.indexNum;
+				indexNum = m->indexNum;
 				offset = 0;
 			}else{
-				mdlFindCurrentLOD(mdl->base->lods, mdl->base->lodNum, &indexNum, &offset, distance, gfxMngr->shdrData.biasLOD);
+				mdlFindCurrentLOD(l, mdl->base->lodNum, &indexNum, &offset, distance, gfxMngr->shdrData.biasLOD);
 			}
 			// Draw the mesh.
 			if(indexNum){
 				glDrawElements(GL_TRIANGLES, indexNum, GL_UNSIGNED_INT, offset);
 			}
-			///++m;
-			///l += mdl->base->meshNum;
-		///}
+
+			++twi; ++m;
+			l += mdl->base->meshNum;
+
+		}
 
 	}
 
 }
 void mdlDelete(model *const __RESTRICT__ mdl){
-	///if(mdl->twi == NULL){
-	///	memFree(mdl->twi);
-	///}
+	if(mdl->twi != NULL){
+		memFree(mdl->twi);
+	}
 }
