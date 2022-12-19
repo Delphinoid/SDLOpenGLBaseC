@@ -96,7 +96,7 @@ void scnRemoveRigidBody(scene *const __RESTRICT__ scn, physRigidBody *const body
 void scnInsertObject(scene *const __RESTRICT__ scn, object *const obj);
 void scnRemoveObject(scene *const __RESTRICT__ scn, object *const obj);
 
-#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 return_t scnTick(scene *const __RESTRICT__ scn, const float dt_ms, const float dt_s, const float frequency);
 #else
 return_t scnTick(scene *const __RESTRICT__ scn, const float dt_ms, const float dt_s);

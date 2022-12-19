@@ -11,15 +11,30 @@
 #ifndef PHYSICS_CONTACT_PAIR_MAX_INACTIVE_STEPS
 	#define PHYSICS_CONTACT_PAIR_MAX_INACTIVE_STEPS 0
 #endif
-
 #ifndef PHYSICS_SEPARATION_PAIR_MAX_INACTIVE_STEPS
 	#define PHYSICS_SEPARATION_PAIR_MAX_INACTIVE_STEPS 0
 #endif
 
-#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+#ifndef PHYSICS_SEPARATION_BIAS
+	#define PHYSICS_SEPARATION_BIAS 0.f
+#endif
+#ifndef PHYSICS_CONTACT_LINEAR_SLOP
+	#define PHYSICS_CONTACT_LINEAR_SLOP 0.05f
+#endif
+#ifndef PHYSICS_CONTACT_RESTITUTION_THRESHOLD
+	#define PHYSICS_CONTACT_RESTITUTION_THRESHOLD 1.f
+#endif
+#ifndef PHYSICS_CONTACT_BAUMGARTE_BIAS
+	#define PHYSICS_CONTACT_BAUMGARTE_BIAS 0.1f
+#endif
+#ifdef PHYSICS_CONTACT_STABILIZER_GAUSS_SEIDEL
 	// Error threshold for NGS configuration solving.
 	#ifndef PHYSICS_CONTACT_ERROR_THRESHOLD
-		#define PHYSICS_CONTACT_ERROR_THRESHOLD (-3.f * PHYSICS_LINEAR_SLOP)
+		#define PHYSICS_CONTACT_ERROR_THRESHOLD (-3.f * PHYSICS_CONTACT_LINEAR_SLOP)
+	#endif
+	// Maximum linear correction for NGS configuration solving.
+	#ifndef PHYSICS_CONTACT_MAXIMUM_LINEAR_CORRECTION
+		#define PHYSICS_CONTACT_MAXIMUM_LINEAR_CORRECTION 0.2f
 	#endif
 #endif
 
@@ -46,22 +61,21 @@ typedef struct physContactPoint {
 	vec3 rA;
 	vec3 rB;
 
-	#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-
+	#ifdef PHYSICS_CONTACT_STABILIZER_GAUSS_SEIDEL
 	// Contact point in both colliders' local spaces.
 	// "Untransforms" them using the conjugates of their
 	// colliders' orientations, as they will need to be
 	// transformed into global space later when solving.
 	vec3 pointA;
 	vec3 pointB;
-
-	#else
-
-	// Penetration depth. Always negative.
-	/** Rename to separation, as it's a negative quantity. **/
-	float separation;
-
 	#endif
+
+	#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
+	// Penetration depth. Always negative.
+	float separation;
+	#endif
+
+
 
 	// Normal impulse magnitude denominator.
 	float normalInverseEffectiveMass;
@@ -72,12 +86,10 @@ typedef struct physContactPoint {
 	#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
 
 	// Friction inverse effective mass.
-	float tangentInverseEffectiveMass1;
-	float tangentInverseEffectiveMass2;
+	float tangentInverseEffectiveMass[2];
 
 	// Impulse magnitude accumulators for friction.
-	float tangentImpulseAccumulator1;
-	float tangentImpulseAccumulator2;
+	float tangentImpulseAccumulator[2];
 
 	#endif
 
@@ -106,7 +118,7 @@ typedef struct physContact {
 
 	#endif
 
-	#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+	#ifdef PHYSICS_CONTACT_STABILIZER_GAUSS_SEIDEL
 
 	// The "untransformed" average normal relative to the average pointA.
 	vec3 normalA;
@@ -121,8 +133,7 @@ typedef struct physContact {
 	#else
 
 	// Contact tangents for simulating friction.
-	vec3 tangent1;
-	vec3 tangent2;
+	vec3 tangent[2];
 
 	// Coefficient of friction.
 	float friction;
@@ -154,7 +165,7 @@ typedef struct physContactPair {
 
 	// Previous and next pointers for collider A's
 	// and collider B's contact pair arrays.
-	#ifndef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+	#ifndef PHYSICS_CONTACT_USE_ALLOCATOR
 	physContactPair *prevA, *nextA;
 	physContactPair *prevB, *nextB;
 	#endif
@@ -180,7 +191,7 @@ typedef struct physSeparationPair {
 
 	// Previous and next pointers for collider A's
 	// and collider B's separation pair arrays.
-	#ifndef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+	#ifndef PHYSICS_CONTACT_USE_ALLOCATOR
 	physSeparationPair *prevA, *nextA;
 	physSeparationPair *prevB, *nextB;
 	#endif
@@ -190,7 +201,7 @@ typedef struct physSeparationPair {
 void physContactInit(physContact *const __RESTRICT__ contact, const cContact *const __RESTRICT__ manifold, const physRigidBody *const __RESTRICT__ bodyA, const physRigidBody *const __RESTRICT__ bodyB, const physCollider *const __RESTRICT__ colliderA, const physCollider *const __RESTRICT__ colliderB);
 void physContactPersist(physContact *const __RESTRICT__ contact, const cContact *const __RESTRICT__ manifold, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, const physCollider *const __RESTRICT__ colliderA, const physCollider *const __RESTRICT__ colliderB);
 
-#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 void physContactPresolveConstraints(physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, const float frequency);
 #else
 void physContactPresolveConstraints(physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB);
@@ -206,7 +217,7 @@ void physContactPairDelete(physContactPair *const pair);
 void physSeparationPairDelete(physSeparationPair *const pair);
 
 void physContactSolveVelocityConstraints(physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB);
-#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+#ifdef PHYSICS_CONTACT_STABILIZER_GAUSS_SEIDEL
 float physContactSolveConfigurationConstraints(physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, float separation);
 #endif
 

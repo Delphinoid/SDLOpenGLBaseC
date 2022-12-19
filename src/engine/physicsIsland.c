@@ -1,8 +1,7 @@
 #include "physicsIsland.h"
-#include "physicsCollision.h"
+#include "physicsContact.h"
 #include "physicsCollider.h"
 #include "physicsRigidBody.h"
-#include "physicsConstraint.h"
 #include "physicsJoint.h"
 #include "modulePhysics.h"
 
@@ -412,7 +411,7 @@ return_t physIslandCollisionQuery(aabbNode *const n1, aabbNode *const n2, void *
 
 }
 
-#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 static __FORCE_INLINE__ void physIslandUpdateColliderContacts(physIsland *const __RESTRICT__ island, physCollider *const c, const float frequency){
 #else
 static __FORCE_INLINE__ void physIslandUpdateColliderContacts(physIsland *const __RESTRICT__ island, physCollider *const c){
@@ -423,7 +422,7 @@ static __FORCE_INLINE__ void physIslandUpdateColliderContacts(physIsland *const 
 	physContactPair *i = c->contactCache;
 
 	while(i != NULL && i->colliderA == c){
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 		physContactPair *const next = (physContactPair *)memQLinkNextA(i);
 		#else
 		physContactPair *const next = i->nextA;
@@ -437,7 +436,7 @@ static __FORCE_INLINE__ void physIslandUpdateColliderContacts(physIsland *const 
 			}
 		}else{
 			// Update the contact.
-			#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+			#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 			physContactPresolveConstraints(&i->data, i->colliderA->body, i->colliderB->body, frequency);
 			#else
 			physContactPresolveConstraints(&i->data, i->colliderA->body, i->colliderB->body);
@@ -455,7 +454,7 @@ static __FORCE_INLINE__ void physIslandUpdateColliderSeparations(physIsland *con
 	physSeparationPair *i = c->separationCache;
 
 	while(i != NULL && i->colliderA == c){
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 		physSeparationPair *const next = (physSeparationPair *)memQLinkNextA(i);
 		#else
 		physSeparationPair *const next = i->nextA;
@@ -470,7 +469,7 @@ static __FORCE_INLINE__ void physIslandUpdateColliderSeparations(physIsland *con
 	}
 
 }
-#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 static __FORCE_INLINE__ return_t physIslandQuery(physIsland *const __RESTRICT__ island, const float frequency){
 #else
 static __FORCE_INLINE__ return_t physIslandQuery(physIsland *const __RESTRICT__ island){
@@ -490,7 +489,7 @@ static __FORCE_INLINE__ return_t physIslandQuery(physIsland *const __RESTRICT__ 
 		}
 
 		// Remove any outdated contacts and separations and update what's left.
-		#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+		#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 		physIslandUpdateColliderContacts(island, node->data.leaf.value, frequency);
 		#else
 		physIslandUpdateColliderContacts(island, node->data.leaf.value);
@@ -554,7 +553,7 @@ static __FORCE_INLINE__ void physIslandSolveConstraints(const physIsland *const 
 
 
 	// Iteratively solve joint and contact velocity constraints.
-	i = PHYSICS_VELOCITY_SOLVER_ITERATIONS;
+	i = PHYSICS_ISLAND_VELOCITY_SOLVER_ITERATIONS;
 	while(i > 0){
 
 		// Solve joint velocity constraints.
@@ -584,31 +583,50 @@ static __FORCE_INLINE__ void physIslandSolveConstraints(const physIsland *const 
 		body = (physRigidBody *)memDLinkNext(body);
 	}
 
-	#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+	#if defined(PHYSICS_JOINT_STABILIZER_GAUSS_SEIDEL) || defined(PHYSICS_CONTACT_STABILIZER_GAUSS_SEIDEL)
 
 	// Iteratively solve joint and contact configuration constraints.
-	i = PHYSICS_CONFIGURATION_SOLVER_ITERATIONS;
+	i = PHYSICS_ISLAND_CONFIGURATION_SOLVER_ITERATIONS;
 	while(i > 0){
 
+		#ifdef PHYSICS_JOINT_STABILIZER_GAUSS_SEIDEL
 		return_t solved = 1;
+		#endif
+		#ifdef PHYSICS_CONTACT_STABILIZER_GAUSS_SEIDEL
 		float separation = 0.f;
+		#endif
 
+		#ifdef PHYSICS_JOINT_STABILIZER_GAUSS_SEIDEL
 		// Solve joint configuration constraints.
 		joint = island->joints;
 		while(joint != NULL){
 			solved &= physJointSolveConfigurationConstraints(joint);
 			joint = (physJoint *)memDLinkNext(joint);
 		}
+		#endif
 
+		#ifdef PHYSICS_CONTACT_STABILIZER_GAUSS_SEIDEL
 		// Solve contact configuration constraints.
 		contact = island->contacts;
 		while(contact != NULL){
 			separation = physContactSolveConfigurationConstraints(&contact->data, contact->colliderA->body, contact->colliderB->body, separation);
 			contact = (physContactPair *)memDLinkNext(contact);
 		}
+		#endif
 
 		// Exit if the errors are small.
-		if(solved && separation >= PHYSICS_CONTACT_ERROR_THRESHOLD){
+		// if(solved && separation >= PHYSICS_CONTACT_ERROR_THRESHOLD){
+		if(
+		#ifdef PHYSICS_JOINT_STABILIZER_GAUSS_SEIDEL
+			solved
+			#ifdef PHYSICS_CONTACT_STABILIZER_GAUSS_SEIDEL
+			&&
+			#endif
+		#endif
+		#ifdef PHYSICS_CONTACT_STABILIZER_GAUSS_SEIDEL
+			separation >= PHYSICS_CONTACT_ERROR_THRESHOLD
+		#endif
+		){
 			return;
 		}else{
 			--i;
@@ -620,7 +638,7 @@ static __FORCE_INLINE__ void physIslandSolveConstraints(const physIsland *const 
 
 }
 
-#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 return_t physIslandTick(physIsland *const __RESTRICT__ island, const float dt_s, const float frequency){
 #else
 return_t physIslandTick(physIsland *const __RESTRICT__ island, const float dt_s){
@@ -632,7 +650,7 @@ return_t physIslandTick(physIsland *const __RESTRICT__ island, const float dt_s)
 	}
 
 	// Query broadphase and presolve contact constraints.
-	#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+	#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 	physIslandQuery(island, frequency);
 	#else
 	physIslandQuery(island);

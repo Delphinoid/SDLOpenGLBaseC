@@ -9,9 +9,10 @@ typedef struct {
 	float z;
 } vec3;
 
+extern vec3 g_vec3Zero;
+
 vec3 vec3New(const float x, const float y, const float z);
 vec3 vec3NewS(const float s);
-vec3 vec3Zero();
 void vec3Set(vec3 *const __RESTRICT__ v, const float x, const float y, const float z);
 void vec3SetS(vec3 *const __RESTRICT__ v, const float s);
 void vec3ZeroP(vec3 *const __RESTRICT__ v);
@@ -64,6 +65,10 @@ void vec3NDivVP(const float x, const float y, const float z, vec3 *const __RESTR
 void vec3NDivVPR(const float x, const float y, const float z, const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r);
 void vec3SDivVP(const float s, vec3 *const __RESTRICT__ v);
 void vec3SDivVPR(const float s, const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r);
+
+vec3 vec3fmaf(const float x, const vec3 u, const vec3 v);
+void vec3fmafP(const float x, const vec3 *const __RESTRICT__ u, vec3 *const __RESTRICT__ v);
+void vec3fmafPR(const float x, const vec3 *const __RESTRICT__ u, const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r);
 
 vec3 vec3Min(const vec3 v1, const vec3 v2);
 void vec3MinP(const vec3 *const __RESTRICT__ v1, const vec3 *const __RESTRICT__ v2, vec3 *const __RESTRICT__ r);

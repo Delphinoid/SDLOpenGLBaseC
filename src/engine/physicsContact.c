@@ -1,25 +1,24 @@
-#include "physicsCollision.h"
+#include "physicsContact.h"
 #include "physicsCollider.h"
 #include "physicsRigidBody.h"
 #include "modulePhysics.h"
-#include "physicsConstraint.h"
 #include "aabbTree.h"
 #include "helpersMath.h"
 #include <string.h>
+
+#define PHYSICS_SEPARATION_BIAS_TOTAL (2.f * PHYSICS_SEPARATION_BIAS)
 
 #ifdef PHYSICS_CONTACT_FRICTION_CONSTRAINT
 	#define physContactHalfwayA(c) c->frictionConstraint.rA
 	#define physContactHalfwayB(c) c->frictionConstraint.rB
 	#define physContactNormal(c)   c->frictionConstraint.normal
-	#define physContactTangent1(c) c->frictionConstraint.tangent1
-	#define physContactTangent2(c) c->frictionConstraint.tangent2
+	#define physContactTangent(c)  c->frictionConstraint.tangent
 	#define physContactFriction(c) c->frictionConstraint.friction
 #else
 	#define physContactHalfwayA(c) c->rA
 	#define physContactHalfwayB(c) c->rB
 	#define physContactNormal(c)   c->normal
-	#define physContactTangent1(c) c->tangent1
-	#define physContactTangent2(c) c->tangent2
+	#define physContactTangent(c)  c->tangent
 	#define physContactFriction(c) c->friction
 #endif
 
@@ -31,7 +30,7 @@
 //
 // ----------------------------------------------------------------------
 //
-// Contact constraint equation:
+// Contact constraint inequality:
 //
 // C : (pB - pA) . n >= 0.
 //
@@ -129,12 +128,9 @@ __FORCE_INLINE__ void physContactInit(physContact *const __RESTRICT__ contact, c
 	const cContactPoint *cPoint = &manifold->contacts[0];
 	const cContactPoint *const cPointLast = &cPoint[manifold->contactNum];
 
-	const float pReciprocal = 1.f/manifold->contactNum;
-
 	// Combined contact normal.
-	vec3 normal, halfway;
-	vec3ZeroP(&normal);
-	vec3ZeroP(&halfway);
+	vec3 normal = g_vec3Zero;
+	vec3 halfway = g_vec3Zero;
 
 	// Initialize each contact.
 	for(; cPoint < cPointLast; ++cPoint, ++pPoint){
@@ -145,11 +141,12 @@ __FORCE_INLINE__ void physContactInit(physContact *const __RESTRICT__ contact, c
 		pPoint->rB = vec3VSubV(pHalfway, bodyB->centroidGlobal);
 		halfway = vec3VAddV(halfway, pHalfway);
 
+		#ifdef PHYSICS_CONTACT_STABILIZER_GAUSS_SEIDEL
 		// Get the relative contact points.
-		#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 		pPoint->pointA = quatConjugateRotateVec3FastApproximate(bodyA->configuration.orientation, vec3VSubV(cPoint->pointA, bodyA->centroidGlobal));
 		pPoint->pointB = quatConjugateRotateVec3FastApproximate(bodyB->configuration.orientation, vec3VSubV(cPoint->pointB, bodyB->centroidGlobal));
-		#else
+		#endif
+		#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 		// Get the penetration depth.
 		pPoint->separation = cPoint->separation;
 		#endif
@@ -160,8 +157,8 @@ __FORCE_INLINE__ void physContactInit(physContact *const __RESTRICT__ contact, c
 		// Initialize the accumulator.
 		pPoint->normalImpulseAccumulator = 0.f;
 		#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
-		pPoint->tangentImpulseAccumulator1 = 0.f;
-		pPoint->tangentImpulseAccumulator2 = 0.f;
+		pPoint->tangentImpulseAccumulator[0] = 0.f;
+		pPoint->tangentImpulseAccumulator[1] = 0.f;
 		#endif
 
 		// Add up the combined contact normal.
@@ -171,12 +168,12 @@ __FORCE_INLINE__ void physContactInit(physContact *const __RESTRICT__ contact, c
 
 	#ifdef PHYSICS_CONTACT_FRICTION_CONSTRAINT
 	// Initialize the friction accumulators.
-	vec2ZeroP(&contact->frictionConstraint.tangentImpulseAccumulator);
+	contact->frictionConstraint.tangentImpulseAccumulator = g_vec2Zero;
 	contact->frictionConstraint.angularImpulseAccumulator = 0.f;
 	#endif
 
 	// Get the average halfway point, used for friction.
-	halfway = vec3VMultS(halfway, pReciprocal);
+	halfway = vec3VDivS(halfway, manifold->contactNum);
 	physContactHalfwayA(contact) = vec3VSubV(halfway, bodyA->centroidGlobal);
 	physContactHalfwayB(contact) = vec3VSubV(halfway, bodyB->centroidGlobal);
 
@@ -184,14 +181,14 @@ __FORCE_INLINE__ void physContactInit(physContact *const __RESTRICT__ contact, c
 	normal = vec3NormalizeFastAccurate(normal);
 	physContactNormal(contact) = normal;
 	#ifdef PHYSICS_CONTACT_FRICTION_DELAY
-	vec3ZeroP(&physContactTangent1(contact));
-	vec3ZeroP(&physContactTangent2(contact));
+	physContactTangent(contact)[0] = g_vec3Zero;
+	physContactTangent(contact)[1] = g_vec3Zero;
 	#else
-	vec3OrthonormalBasis(normal, &physContactTangent1(contact), &physContactTangent2(contact));
+	vec3OrthonormalBasis(normal, &physContactTangent(contact)[0], &physContactTangent(contact)[1]);
 	#endif
 	//physContactTangent1(contact) = vec3Orthogonal(normal);
 	//physContactTangent2(contact) = vec3Cross(normal, physContactTangent1(contact));
-	#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+	#ifdef PHYSICS_CONTACT_STABILIZER_GAUSS_SEIDEL
 	contact->normalA = quatConjugateRotateVec3FastApproximate(bodyA->configuration.orientation, normal);
 	#endif
 
@@ -203,7 +200,7 @@ __FORCE_INLINE__ void physContactInit(physContact *const __RESTRICT__ contact, c
 
 }
 
-#ifdef PHYSICS_CONSTRAINT_WARM_START
+#ifdef PHYSICS_CONTACT_WARM_START
 static __FORCE_INLINE__ void physContactPointWarmStart(physContactPoint *const __RESTRICT__ point, const physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB){
 
 	// Warm-start the persistent contact point.
@@ -214,9 +211,9 @@ static __FORCE_INLINE__ void physContactPointWarmStart(physContactPoint *const _
 	const vec3 impulse = vec3VAddV(
 		vec3VAddV(
 			vec3VMultS(physContactNormal(contact), point->normalImpulseAccumulator),
-			vec3VMultS(physContactTangent1(contact), point->tangentImpulseAccumulator1)
+			vec3VMultS(physContactTangent(contact)[0], point->tangentImpulseAccumulator[0])
 		),
-		vec3VMultS(physContactTangent2(contact), point->tangentImpulseAccumulator2)
+		vec3VMultS(physContactTangent(contact)[1], point->tangentImpulseAccumulator[1])
 	);
 	#endif
 
@@ -242,12 +239,9 @@ __FORCE_INLINE__ void physContactPersist(physContact *const __RESTRICT__ contact
 	unsigned int persistent[COLLISION_MANIFOLD_MAX_CONTACT_POINTS];
 	unsigned int *flag = persistent;
 
-	const float pReciprocal = 1.f/manifold->contactNum;
-
 	// Combined contact normal.
-	vec3 normal, halfway;
-	vec3ZeroP(&normal);
-	vec3ZeroP(&halfway);
+	vec3 normal = g_vec3Zero;
+	vec3 halfway = g_vec3Zero;
 
 	memset(persistent, 0, sizeof(unsigned int)*COLLISION_MANIFOLD_MAX_CONTACT_POINTS);
 
@@ -275,13 +269,13 @@ __FORCE_INLINE__ void physContactPersist(physContact *const __RESTRICT__ contact
 					pPoint->normalImpulseAccumulator = tempAccumulator;
 
 					#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
-					tempAccumulator = pcPoint->tangentImpulseAccumulator1;
-					pcPoint->tangentImpulseAccumulator1 = pPoint->tangentImpulseAccumulator1;
-					pPoint->tangentImpulseAccumulator1 = tempAccumulator;
+					tempAccumulator = pcPoint->tangentImpulseAccumulator[0];
+					pcPoint->tangentImpulseAccumulator[0] = pPoint->tangentImpulseAccumulator[0];
+					pPoint->tangentImpulseAccumulator[0] = tempAccumulator;
 
-					tempAccumulator = pcPoint->tangentImpulseAccumulator2;
-					pcPoint->tangentImpulseAccumulator2 = pPoint->tangentImpulseAccumulator2;
-					pPoint->tangentImpulseAccumulator2 = tempAccumulator;
+					tempAccumulator = pcPoint->tangentImpulseAccumulator[1];
+					pcPoint->tangentImpulseAccumulator[1] = pPoint->tangentImpulseAccumulator[1];
+					pPoint->tangentImpulseAccumulator[1] = tempAccumulator;
 					#endif
 
 				}
@@ -301,10 +295,10 @@ __FORCE_INLINE__ void physContactPersist(physContact *const __RESTRICT__ contact
 	// Normalize the new total normal and generate tangents.
 	normal = vec3NormalizeFastAccurate(normal);
 	physContactNormal(contact) = normal;
-	vec3OrthonormalBasis(normal, &physContactTangent1(contact), &physContactTangent2(contact));
+	vec3OrthonormalBasis(normal, &physContactTangent(contact)[0], &physContactTangent(contact)[1]);
 	///physContactTangent1(contact) = vec3Orthogonal(normal);
 	///physContactTangent2(contact) = vec3Cross(normal, physContactTangent1(contact));
-	#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+	#ifdef PHYSICS_CONTACT_STABILIZER_GAUSS_SEIDEL
 	contact->normalA = quatConjugateRotateVec3FastApproximate(bodyA->configuration.orientation, normal);
 	#endif
 
@@ -324,11 +318,12 @@ __FORCE_INLINE__ void physContactPersist(physContact *const __RESTRICT__ contact
 		pcPoint->rB = vec3VSubV(pHalfway, bodyB->centroidGlobal);
 		halfway = vec3VAddV(halfway, pHalfway);
 
+		#ifdef PHYSICS_CONTACT_STABILIZER_GAUSS_SEIDEL
 		// Get the relative contact points.
-		#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 		pcPoint->pointA = quatConjugateRotateVec3FastApproximate(bodyA->configuration.orientation, vec3VSubV(cPoint->pointA, bodyA->centroidGlobal));
 		pcPoint->pointB = quatConjugateRotateVec3FastApproximate(bodyB->configuration.orientation, vec3VSubV(cPoint->pointB, bodyB->centroidGlobal));
-		#else
+		#endif
+		#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 		// Get the penetration depth.
 		pcPoint->separation = cPoint->separation;
 		#endif
@@ -337,13 +332,13 @@ __FORCE_INLINE__ void physContactPersist(physContact *const __RESTRICT__ contact
 			// Initialize the accumulator for non-persistent contacts.
 			pcPoint->normalImpulseAccumulator = 0.f;
 			#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
-			pcPoint->tangentImpulseAccumulator1 = 0.f;
-			pcPoint->tangentImpulseAccumulator2 = 0.f;
+			pcPoint->tangentImpulseAccumulator[0] = 0.f;
+			pcPoint->tangentImpulseAccumulator[1] = 0.f;
 			#endif
 			pcPoint->key = cPoint->key;
 		}else{
 			// Warm-start persistent contact points.
-			#ifdef PHYSICS_CONSTRAINT_WARM_START
+			#ifdef PHYSICS_CONTACT_WARM_START
 			physContactPointWarmStart(pcPoint, contact, bodyA, bodyB);
 			#endif
 		}
@@ -351,12 +346,12 @@ __FORCE_INLINE__ void physContactPersist(physContact *const __RESTRICT__ contact
 	}
 
 	// Get the average halfway point, used for friction.
-	halfway = vec3VMultS(halfway, pReciprocal);
+	halfway = vec3VDivS(halfway, manifold->contactNum);
 	physContactHalfwayA(contact) = vec3VSubV(halfway, bodyA->centroidGlobal);
 	physContactHalfwayB(contact) = vec3VSubV(halfway, bodyB->centroidGlobal);
 
 	// Warm-start the contact.
-	#if defined(PHYSICS_CONTACT_FRICTION_CONSTRAINT) && defined(PHYSICS_CONSTRAINT_WARM_START)
+	#if defined(PHYSICS_CONTACT_FRICTION_CONSTRAINT) && defined(PHYSICS_CONTACT_WARM_START)
 	physJointFrictionWarmStart(&contact->frictionConstraint, bodyA, bodyB);
 	#endif
 
@@ -364,7 +359,7 @@ __FORCE_INLINE__ void physContactPersist(physContact *const __RESTRICT__ contact
 
 }
 
-static __FORCE_INLINE__ float physContactEffectiveMass(const vec3 normalA, const vec3 pointA, const mat3 inverseInertiaTensorA, const vec3 normalB, const vec3 pointB, const mat3 inverseInertiaTensorB, const float inverseMassTotal){
+static __FORCE_INLINE__ float physContactGenerateEffectiveMass(const vec3 normalA, const vec3 pointA, const mat3 inverseInertiaTensorA, const vec3 normalB, const vec3 pointB, const mat3 inverseInertiaTensorB, const float inverseMassTotal){
 
 	// Effective mass:
 	// (JM^{-1})J^T = mA^{-1} + mB^{-1} + ((rA X n) . (IA^{-1} * (rA X n))) + ((rB X n) . (IB^{-1} * (rB X n)))
@@ -380,7 +375,7 @@ static __FORCE_INLINE__ void physContactPointGenerateInverseEffectiveMass(physCo
 
 	// Calculate the inverse effective mass for the normal constraint.
 
-	float effectiveMass = physContactEffectiveMass(
+	float effectiveMass = physContactGenerateEffectiveMass(
 		physContactNormal(contact), point->rA, bodyA->inverseInertiaTensorGlobal,
 		physContactNormal(contact), point->rB, bodyB->inverseInertiaTensorGlobal,
 		inverseMassTotal
@@ -388,24 +383,24 @@ static __FORCE_INLINE__ void physContactPointGenerateInverseEffectiveMass(physCo
 	point->normalInverseEffectiveMass = (effectiveMass > 0.f ? 1.f/effectiveMass : 0.f);
 
 	#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
-	effectiveMass = physContactEffectiveMass(
-		physContactTangent1(contact), point->rA, bodyA->inverseInertiaTensorGlobal,
-		physContactTangent1(contact), point->rB, bodyB->inverseInertiaTensorGlobal,
+	effectiveMass = physContactGenerateEffectiveMass(
+		physContactTangent(contact)[0], point->rA, bodyA->inverseInertiaTensorGlobal,
+		physContactTangent(contact)[0], point->rB, bodyB->inverseInertiaTensorGlobal,
 		inverseMassTotal
 	);
-	point->tangentInverseEffectiveMass1 = (effectiveMass > 0.f ? 1.f/effectiveMass : 0.f);
+	point->tangentInverseEffectiveMass[0] = (effectiveMass > 0.f ? 1.f/effectiveMass : 0.f);
 
-	effectiveMass = physContactEffectiveMass(
-		physContactTangent2(contact), point->rA, bodyA->inverseInertiaTensorGlobal,
-		physContactTangent2(contact), point->rB, bodyB->inverseInertiaTensorGlobal,
+	effectiveMass = physContactGenerateEffectiveMass(
+		physContactTangent(contact)[1], point->rA, bodyA->inverseInertiaTensorGlobal,
+		physContactTangent(contact)[1], point->rB, bodyB->inverseInertiaTensorGlobal,
 		inverseMassTotal
 	);
-	point->tangentInverseEffectiveMass2 = (effectiveMass > 0.f ? 1.f/effectiveMass : 0.f);
+	point->tangentInverseEffectiveMass[1] = (effectiveMass > 0.f ? 1.f/effectiveMass : 0.f);
 	#endif
 
 }
 
-#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *const __RESTRICT__ point, const physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, const float frequency){
 #else
 static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *const __RESTRICT__ point, const physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB){
@@ -413,45 +408,42 @@ static __FORCE_INLINE__ void physContactPointGenerateBias(physContactPoint *cons
 
 	// Generate the constraint bias. Used in the
 	// constraint's Lagrange multiplier, i.e.:
-	//
-	// -(JV + b)/((JM^{-1})J^T)
+	// lambda = -(JV + b)/((JM^{-1})J^T)
+	//        = -((v_relative . n) + b)/K
 
 	float temp;
 
-	#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
-
+	#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 	// Calculate potential slop.
-	temp = point->separation + PHYSICS_LINEAR_SLOP;
-
+	temp = point->separation + PHYSICS_CONTACT_LINEAR_SLOP;
 	// Calculate the bias term.
-	point->bias = PHYSICS_BAUMGARTE_TERM * frequency * (temp < 0.f ? temp : 0.f);
-
-	#else
-	point->bias = 0.f;
+	point->bias = temp < 0.f ? PHYSICS_CONTACT_BAUMGARTE_BIAS*frequency*temp : 0.f;
 	#endif
 
 	// Apply restitution bias if JV is within a particular threshold.
-	// JV = (((wB x rB) + vB) - ((wA x rA) + vA)) . n
+	// JV = v_relative . n = (((wB x rB) + vB) - ((wA x rA) + vA)) . n
 	temp = vec3Dot(
 		vec3VSubV(
-			vec3VSubV(
-				vec3VAddV(
-					vec3Cross(bodyB->angularVelocity, point->rB),
-					bodyB->linearVelocity
-				),
-				bodyA->linearVelocity
-			),
-			vec3Cross(bodyA->angularVelocity, point->rA)
+			vec3VAddV(vec3Cross(bodyB->angularVelocity, point->rB), bodyB->linearVelocity),
+			vec3VAddV(vec3Cross(bodyA->angularVelocity, point->rA), bodyA->linearVelocity)
 		),
 		physContactNormal(contact)
 	);
-	if(temp < -PHYSICS_RESTITUTION_THRESHOLD){
+	if(temp < -PHYSICS_CONTACT_RESTITUTION_THRESHOLD){
+	#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 		point->bias += contact->restitution * temp;
+	#else
+		point->bias = contact->restitution * temp;
+	}else{
+		// If the relative velocity is parallel to the normal,
+		// the bodies are moving away, so ignore restitution.
+		point->bias = 0.f;
+	#endif
 	}
 
 }
 
-#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 __FORCE_INLINE__ void physContactPresolveConstraints(physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, const float frequency){
 #else
 __FORCE_INLINE__ void physContactPresolveConstraints(physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB){
@@ -472,7 +464,7 @@ __FORCE_INLINE__ void physContactPresolveConstraints(physContact *const __RESTRI
 		physContactPointGenerateInverseEffectiveMass(pPoint, contact, bodyA, bodyB, inverseMassTotal);
 
 		// Generate bias term.
-		#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+		#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 		physContactPointGenerateBias(pPoint, contact, bodyA, bodyB, frequency);
 		#else
 		physContactPointGenerateBias(pPoint, contact, bodyA, bodyB);
@@ -495,8 +487,8 @@ __FORCE_INLINE__ void physContactReset(physContact *const __RESTRICT__ contact){
 	for(; pPoint < pPointLast; ++pPoint){
 		pPoint->normalImpulseAccumulator = 0.f;
 		#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
-		pPoint->tangentImpulseAccumulator1 = 0.f;
-		pPoint->tangentImpulseAccumulator2 = 0.f;
+		pPoint->tangentImpulseAccumulator[0] = 0.f;
+		pPoint->tangentImpulseAccumulator[1] = 0.f;
 		#endif
 		pPoint->key.inEdgeR  = (cEdgeIndex_t)-1;
 		pPoint->key.outEdgeR = (cEdgeIndex_t)-1;
@@ -506,355 +498,8 @@ __FORCE_INLINE__ void physContactReset(physContact *const __RESTRICT__ contact){
 
 }
 
-
-__FORCE_INLINE__ void physContactPairRefresh(physContactPair *const __RESTRICT__ pair){
-	pair->inactive = 0;
-}
-__FORCE_INLINE__ void physSeparationPairRefresh(physSeparationPair *const __RESTRICT__ pair){
-	pair->inactive = 0;
-}
-
-void physContactPairInit(physContactPair *const pair, physCollider *const c1, physCollider *const c2, physContactPair *previous, physContactPair *next){
-
-	// Initializes a pair using an insertion point.
-
-	if(previous != NULL){
-		// Insert between the previous pair and its next pair.
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-		memQLinkNextA(previous) = (byte_t *)pair;
-		#else
-		previous->nextA = pair;
-		#endif
-	}else{
-		// Insert directly before the first pair.
-		c1->contactCache = pair;
-	}
-	if(next != NULL){
-		if(next->colliderA == c1){
-			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-			memQLinkPrevA(next) = (byte_t *)pair;
-			#else
-			next->prevA = pair;
-			#endif
-		}else{
-			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-			memQLinkPrevB(next) = (byte_t *)pair;
-			#else
-			next->prevB = pair;
-			#endif
-		}
-	}
-	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-	memQLinkPrevA(pair) = (byte_t *)previous;
-	memQLinkNextA(pair) = (byte_t *)next;
-	#else
-	pair->prevA = previous;
-	pair->nextA = next;
-	#endif
-
-	// Find the previous and next nodes for the second collider.
-	previous = NULL;
-	next = c2->contactCache;
-	while(next != NULL && next->colliderA == c2){
-		previous = next;
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-		next = (physContactPair *)memQLinkNextA(next);
-		#else
-		next = next->nextA;
-		#endif
-	}
-
-	if(previous != NULL){
-		// Insert between the previous pair and its next pair.
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-		memQLinkNextA(previous) = (byte_t *)pair;
-		#else
-		previous->nextA = pair;
-		#endif
-	}else{
-		// Insert directly before the first pair.
-		c2->contactCache = pair;
-	}
-	if(next != NULL){
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-		memQLinkPrevB(next) = (byte_t *)pair;
-		#else
-		next->prevB = pair;
-		#endif
-	}
-	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-	memQLinkPrevB(pair) = (byte_t *)previous;
-	memQLinkNextB(pair) = (byte_t *)next;
-	#else
-	pair->prevB = previous;
-	pair->nextB = next;
-	#endif
-
-	// Set the pair's miscellaneous variables.
-	pair->colliderA = c1;
-	pair->colliderB = c2;
-	pair->inactive = 0;
-
-}
-void physSeparationPairInit(physSeparationPair *const pair, physCollider *const c1, physCollider *const c2, physSeparationPair *previous, physSeparationPair *next){
-
-	// Initializes a pair using an insertion point.
-
-	if(previous != NULL){
-		// Insert between the previous pair and its next pair.
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-		memQLinkNextA(previous) = (byte_t *)pair;
-		#else
-		previous->nextA = pair;
-		#endif
-	}else{
-		// Insert directly before the first pair.
-		c1->separationCache = pair;
-	}
-	if(next != NULL){
-		if(next->colliderA == c1){
-			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-			memQLinkPrevA(next) = (byte_t *)pair;
-			#else
-			next->prevA = pair;
-			#endif
-		}else{
-			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-			memQLinkPrevB(next) = (byte_t *)pair;
-			#else
-			next->prevB = pair;
-			#endif
-		}
-	}
-	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-	memQLinkPrevA(pair) = (byte_t *)previous;
-	memQLinkNextA(pair) = (byte_t *)next;
-	#else
-	pair->prevA = previous;
-	pair->nextA = next;
-	#endif
-
-	// Find the previous and next nodes for the second collider.
-	previous = NULL;
-	next = c2->separationCache;
-	while(next != NULL && next->colliderA == c2){
-		previous = next;
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-		next = (physSeparationPair *)memQLinkNextA(next);
-		#else
-		next = next->nextA;
-		#endif
-	}
-
-	if(previous != NULL){
-		// Insert between the previous pair and its next pair.
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-		memQLinkNextA(previous) = (byte_t *)pair;
-		#else
-		previous->nextA = pair;
-		#endif
-	}else{
-		// Insert directly before the first pair.
-		c2->separationCache = pair;
-	}
-	if(next != NULL){
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-		memQLinkPrevB(next) = (byte_t *)pair;
-		#else
-		next->prevB = pair;
-		#endif
-	}
-	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-	memQLinkPrevB(pair) = (byte_t *)previous;
-	memQLinkNextB(pair) = (byte_t *)next;
-	#else
-	pair->prevB = previous;
-	pair->nextB = next;
-	#endif
-
-	// Set the pair's miscellaneous variables.
-	pair->colliderA = c1;
-	pair->colliderB = c2;
-	pair->inactive = 0;
-
-}
-void physContactPairDelete(physContactPair *const pair){
-
-	// Removes a pair from its linked lists.
-
-	physContactPair *temp;
-
-	// Remove references from the previous pairs.
-	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-	temp = (physContactPair *)memQLinkPrevA(pair);
-	#else
-	temp = pair->prevA;
-	#endif
-	if(temp != NULL){
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-		memQLinkNextA(temp) = memQLinkNextA(pair);
-		#else
-		temp->nextA = pair->nextA;
-		#endif
-	}else{
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-		pair->colliderA->contactCache = (physContactPair *)memQLinkNextA(pair);
-		#else
-		pair->colliderA->contactCache = pair->nextA;
-		#endif
-	}
-	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-	temp = (physContactPair *)memQLinkPrevB(pair);
-	#else
-	temp = pair->prevB;
-	#endif
-	if(temp != NULL){
-		if(temp->colliderA == pair->colliderB){
-			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-			memQLinkNextA(temp) = memQLinkNextB(pair);
-			#else
-			temp->nextA = pair->nextB;
-			#endif
-		}else{
-			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-			memQLinkNextB(temp) = memQLinkNextB(pair);
-			#else
-			temp->nextB = pair->nextB;
-			#endif
-		}
-	}else{
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-		pair->colliderB->contactCache = (physContactPair *)memQLinkNextB(pair);
-		#else
-		pair->colliderB->contactCache = pair->nextB;
-		#endif
-	}
-
-	// Remove references from the next pairs.
-	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-	temp = (physContactPair *)memQLinkNextA(pair);
-	#else
-	temp = pair->nextA;
-	#endif
-	if(temp != NULL){
-		if(temp->colliderA == pair->colliderA){
-			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-			memQLinkPrevA(temp) = memQLinkPrevA(pair);
-			#else
-			temp->prevA = pair->prevA;
-			#endif
-		}else{
-			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-			memQLinkPrevB(temp) = memQLinkPrevA(pair);
-			#else
-			temp->prevB = pair->prevA;
-			#endif
-		}
-	}
-	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-	temp = (physContactPair *)memQLinkNextB(pair);
-	#else
-	temp = pair->nextB;
-	#endif
-	if(temp != NULL){
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-		memQLinkPrevB(temp) = memQLinkPrevB(pair);
-		#else
-		temp->prevB = pair->prevB;
-		#endif
-	}
-
-}
-void physSeparationPairDelete(physSeparationPair *const pair){
-
-	// Removes a pair from its linked lists.
-
-	physSeparationPair *temp;
-
-	// Remove references from the previous pairs.
-	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-	temp = (physSeparationPair *)memQLinkPrevA(pair);
-	#else
-	temp = pair->prevA;
-	#endif
-	if(temp != NULL){
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-		memQLinkNextA(temp) = memQLinkNextA(pair);
-		#else
-		temp->nextA = pair->nextA;
-		#endif
-	}else{
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-		pair->colliderA->separationCache = (physSeparationPair *)memQLinkNextA(pair);
-		#else
-		pair->colliderA->separationCache = pair->nextA;
-		#endif
-	}
-	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-	temp = (physSeparationPair *)memQLinkPrevB(pair);
-	#else
-	temp = pair->prevB;
-	#endif
-	if(temp != NULL){
-		if(temp->colliderA == pair->colliderB){
-			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-			memQLinkNextA(temp) = memQLinkNextB(pair);
-			#else
-			temp->nextA = pair->nextB;
-			#endif
-		}else{
-			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-			memQLinkNextB(temp) = memQLinkNextB(pair);
-			#else
-			temp->nextB = pair->nextB;
-			#endif
-		}
-	}else{
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-		pair->colliderB->separationCache = (physSeparationPair *)memQLinkNextB(pair);
-		#else
-		pair->colliderB->separationCache = pair->nextB;
-		#endif
-	}
-
-	// Remove references from the next pairs.
-	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-	temp = (physSeparationPair *)memQLinkNextA(pair);
-	#else
-	temp = pair->nextA;
-	#endif
-	if(temp != NULL){
-		if(temp->colliderA == pair->colliderA){
-			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-			memQLinkPrevA(temp) = memQLinkPrevA(pair);
-			#else
-			temp->prevA = pair->prevA;
-			#endif
-		}else{
-			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-			memQLinkPrevB(temp) = memQLinkPrevA(pair);
-			#else
-			temp->prevB = pair->prevA;
-			#endif
-		}
-	}
-	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-	temp = (physSeparationPair *)memQLinkNextB(pair);
-	#else
-	temp = pair->nextB;
-	#endif
-	if(temp != NULL){
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
-		memQLinkPrevB(temp) = memQLinkPrevB(pair);
-		#else
-		temp->prevB = pair->prevB;
-		#endif
-	}
-
-}
-
 #ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
-static __FORCE_INLINE__ void physContactPointSolveVelocityTangents(physContactPoint *const __RESTRICT__ point, physContact *const __RESTRICT__ contact, physRigidBody *const bodyA, physRigidBody *const bodyB){
+static __FORCE_INLINE__ void physContactPointSolveTangentImpulses(physContactPoint *const __RESTRICT__ point, physContact *const __RESTRICT__ contact, physRigidBody *const bodyA, physRigidBody *const bodyB){
 
 	// Solves the tangent impulses.
 
@@ -864,53 +509,33 @@ static __FORCE_INLINE__ void physContactPointSolveVelocityTangents(physContactPo
 	const float lambdaClamp = contact->friction * point->normalImpulseAccumulator;
 
 	// Calculate the contact velocity.
-	// ((wB X rB) + vB) - ((wA X rA) + vA)
+	// v_relative = ((wB X rB) + vB) - ((wA X rA) + vA)
 	v = vec3VSubV(
-		vec3VSubV(
-			vec3VAddV(
-				vec3Cross(bodyB->angularVelocity, point->rB),
-				bodyB->linearVelocity
-			),
-			bodyA->linearVelocity
-		),
-		vec3Cross(bodyA->angularVelocity, point->rA)
+		vec3VAddV(vec3Cross(bodyB->angularVelocity, point->rB), bodyB->linearVelocity),
+		vec3VAddV(vec3Cross(bodyA->angularVelocity, point->rA), bodyA->linearVelocity)
 	);
 
 	// Tangent 1.
-
 	// Calculate the frictional impulse magnitude.
-	lambda = -vec3Dot(v, physContactTangent1(contact)) * point->tangentInverseEffectiveMass1;
-
+	lambda = -vec3Dot(v, physContactTangent(contact)[0]) * point->tangentInverseEffectiveMass[0];
 	// Clamp the frictional impulse magnitude.
-	tangentImpulseAccumulatorNew = point->tangentImpulseAccumulator1 + lambda;
-	if(tangentImpulseAccumulatorNew <= -lambdaClamp){
-		tangentImpulseAccumulatorNew = -lambdaClamp;
-	}else if(tangentImpulseAccumulatorNew > lambdaClamp){
-		tangentImpulseAccumulatorNew = lambdaClamp;
-	}
-	lambda = tangentImpulseAccumulatorNew - point->tangentImpulseAccumulator1;
-	point->tangentImpulseAccumulator1 = tangentImpulseAccumulatorNew;
-
+	tangentImpulseAccumulatorNew = point->tangentImpulseAccumulator[0] + lambda;
+	tangentImpulseAccumulatorNew = floatClamp(tangentImpulseAccumulatorNew, -lambdaClamp, lambdaClamp);
+	lambda = tangentImpulseAccumulatorNew - point->tangentImpulseAccumulator[0];
+	point->tangentImpulseAccumulator[0] = tangentImpulseAccumulatorNew;
 	// Calculate the frictional impulse.
-	impulse = vec3VMultS(physContactTangent1(contact), lambda);
+	impulse = vec3VMultS(physContactTangent(contact)[0], lambda);
 
 	// Tangent 2.
-
 	// Calculate the frictional impulse magnitude.
-	lambda = -vec3Dot(v, physContactTangent2(contact)) * point->tangentInverseEffectiveMass2;
-
+	lambda = -vec3Dot(v, physContactTangent(contact)[1]) * point->tangentInverseEffectiveMass[1];
 	// Clamp the frictional impulse magnitude.
-	tangentImpulseAccumulatorNew = point->tangentImpulseAccumulator2 + lambda;
-	if(tangentImpulseAccumulatorNew <= -lambdaClamp){
-		tangentImpulseAccumulatorNew = -lambdaClamp;
-	}else if(tangentImpulseAccumulatorNew > lambdaClamp){
-		tangentImpulseAccumulatorNew = lambdaClamp;
-	}
-	lambda = tangentImpulseAccumulatorNew - point->tangentImpulseAccumulator2;
-	point->tangentImpulseAccumulator2 = tangentImpulseAccumulatorNew;
-
+	tangentImpulseAccumulatorNew = point->tangentImpulseAccumulator[1] + lambda;
+	tangentImpulseAccumulatorNew = floatClamp(tangentImpulseAccumulatorNew, -lambdaClamp, lambdaClamp);
+	lambda = tangentImpulseAccumulatorNew - point->tangentImpulseAccumulator[1];
+	point->tangentImpulseAccumulator[1] = tangentImpulseAccumulatorNew;
 	// Calculate the frictional impulse.
-	impulse = vec3VAddV(impulse, vec3VMultS(physContactTangent2(contact), lambda));
+	impulse = vec3VAddV(impulse, vec3VMultS(physContactTangent(contact)[1], lambda));
 
 	// Apply both of the frictional impulses.
 	physRigidBodyApplyVelocityImpulseInverse(bodyA, point->rA, impulse);
@@ -919,7 +544,7 @@ static __FORCE_INLINE__ void physContactPointSolveVelocityTangents(physContactPo
 }
 #endif
 
-static __FORCE_INLINE__ void physContactPointSolveVelocity(physContactPoint *const __RESTRICT__ point, physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB){
+static __FORCE_INLINE__ void physContactPointSolveNormalImpulse(physContactPoint *const __RESTRICT__ point, physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB){
 
 	// Solves the normal impulse.
 
@@ -928,31 +553,28 @@ static __FORCE_INLINE__ void physContactPointSolveVelocity(physContactPoint *con
 
 	// Evaluate the constraint expression, JV.
 	// C = (pB - pA) . n >= 0
-	// C' = dC/dt = (((wB X rB) + vB) - ((wA X rA) + vA)) . n >= 0
+	// C' = dC/dt = v_relative . n = (((wB x rB) + vB) - ((wA x rA) + vA)) . n >= 0
 	// JV = C'
 	lambda = vec3Dot(
 		vec3VSubV(
-			vec3VSubV(
-				vec3VAddV(
-					vec3Cross(bodyB->angularVelocity, point->rB),
-					bodyB->linearVelocity
-				),
-				vec3Cross(bodyA->angularVelocity, point->rA)
-			),
-			bodyA->linearVelocity
+			vec3VAddV(vec3Cross(bodyB->angularVelocity, point->rB), bodyB->linearVelocity),
+			vec3VAddV(vec3Cross(bodyA->angularVelocity, point->rA), bodyA->linearVelocity)
 		),
 		physContactNormal(contact)
 	);
 
 	// Calculate the normal impulse magnitude,
 	// i.e. the constraint's Lagrange multiplier.
-	// -(JV + b)/((JM^{-1})J^T)
+	// lambda = -(JV + b)/((JM^{-1})J^T)
+	//        = -((v_relative . n) + b)/K
 	lambda = -point->normalInverseEffectiveMass * (lambda + point->bias);
 
 	// Clamp the normal impulse magnitude.
-	// The constraint equation states that impulse magnitude >= 0.
+	// The constraint inequality states that we must
+	// have non-negative impulse magnitude, i.e.
+	// C' >= 0
 	normalImpulseAccumulatorNew = point->normalImpulseAccumulator + lambda;
-	normalImpulseAccumulatorNew = normalImpulseAccumulatorNew > 0.f ? normalImpulseAccumulatorNew : 0.f;
+	normalImpulseAccumulatorNew = floatMax(normalImpulseAccumulatorNew, 0.f);
 	lambda = normalImpulseAccumulatorNew - point->normalImpulseAccumulator;
 	point->normalImpulseAccumulator = normalImpulseAccumulatorNew;
 
@@ -980,10 +602,10 @@ void physContactSolveVelocityConstraints(physContact *const __RESTRICT__ contact
 	for(; point < pLast; ++point){
 		// Solve frictional impulses.
 		#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
-		physContactPointSolveVelocityTangents(point, contact, bodyA, bodyB);
+		physContactPointSolveTangentImpulses(point, contact, bodyA, bodyB);
 		#endif
 		// Solve normal impulses.
-		physContactPointSolveVelocity(point, contact, bodyA, bodyB);
+		physContactPointSolveNormalImpulse(point, contact, bodyA, bodyB);
 		#ifdef PHYSICS_CONTACT_FRICTION_CONSTRAINT
 		normalImpulseTotal += point->normalImpulseAccumulator;
 		#endif
@@ -996,7 +618,7 @@ void physContactSolveVelocityConstraints(physContact *const __RESTRICT__ contact
 
 }
 
-#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+#ifdef PHYSICS_CONTACT_STABILIZER_GAUSS_SEIDEL
 static __FORCE_INLINE__ float physContactPointSolveConfigurationNormal(physContactPoint *const __RESTRICT__ point, physContact *const __RESTRICT__ contact, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB){
 
 	// Solves the normal constraint.
@@ -1014,7 +636,7 @@ static __FORCE_INLINE__ float physContactPointSolveConfigurationNormal(physConta
 	const float separation = vec3Dot(vec3VSubV(pointGlobalB, pointGlobalA), normal) - PHYSICS_SEPARATION_BIAS_TOTAL;
 
 	// Apply a slop to the configuration constraint.
-	const float constraint = PHYSICS_BAUMGARTE_TERM * (separation + PHYSICS_LINEAR_SLOP);
+	const float constraint = PHYSICS_CONTACT_BAUMGARTE_BIAS * (separation + PHYSICS_CONTACT_LINEAR_SLOP);
 
 	// Make sure the magnitude is less than 0.
 	if(constraint < 0.f){
@@ -1024,7 +646,7 @@ static __FORCE_INLINE__ float physContactPointSolveConfigurationNormal(physConta
 		const vec3 pointLocalB = vec3VSubV(halfway, bodyB->centroidGlobal);
 
 		// Calculate the new effective mass.
-		const float effectiveMass = physContactEffectiveMass(
+		const float effectiveMass = physContactGenerateEffectiveMass(
 			normal, pointLocalA, bodyA->inverseInertiaTensorGlobal,
 			normal, pointLocalB, bodyB->inverseInertiaTensorGlobal,
 			bodyA->inverseMass + bodyB->inverseMass
@@ -1035,7 +657,7 @@ static __FORCE_INLINE__ float physContactPointSolveConfigurationNormal(physConta
 
 			// Clamp the constraint to prevent large corrections
 			// and calculate the normal impulse.
-			normal = vec3VMultS(normal, -floatMax(constraint, -PHYSICS_MAXIMUM_LINEAR_CORRECTION) / effectiveMass);
+			normal = vec3VMultS(normal, -floatMax(constraint, -PHYSICS_CONTACT_MAXIMUM_LINEAR_CORRECTION) / effectiveMass);
 
 			// Apply the normal impulse.
 			physRigidBodyApplyConfigurationImpulseInverse(bodyA, pointLocalA, normal);
@@ -1066,3 +688,350 @@ float physContactSolveConfigurationConstraints(physContact *const __RESTRICT__ c
 
 }
 #endif
+
+
+__FORCE_INLINE__ void physContactPairRefresh(physContactPair *const __RESTRICT__ pair){
+	pair->inactive = 0;
+}
+__FORCE_INLINE__ void physSeparationPairRefresh(physSeparationPair *const __RESTRICT__ pair){
+	pair->inactive = 0;
+}
+
+void physContactPairInit(physContactPair *const pair, physCollider *const c1, physCollider *const c2, physContactPair *previous, physContactPair *next){
+
+	// Initializes a pair using an insertion point.
+
+	if(previous != NULL){
+		// Insert between the previous pair and its next pair.
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+		memQLinkNextA(previous) = (byte_t *)pair;
+		#else
+		previous->nextA = pair;
+		#endif
+	}else{
+		// Insert directly before the first pair.
+		c1->contactCache = pair;
+	}
+	if(next != NULL){
+		if(next->colliderA == c1){
+			#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+			memQLinkPrevA(next) = (byte_t *)pair;
+			#else
+			next->prevA = pair;
+			#endif
+		}else{
+			#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+			memQLinkPrevB(next) = (byte_t *)pair;
+			#else
+			next->prevB = pair;
+			#endif
+		}
+	}
+	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+	memQLinkPrevA(pair) = (byte_t *)previous;
+	memQLinkNextA(pair) = (byte_t *)next;
+	#else
+	pair->prevA = previous;
+	pair->nextA = next;
+	#endif
+
+	// Find the previous and next nodes for the second collider.
+	previous = NULL;
+	next = c2->contactCache;
+	while(next != NULL && next->colliderA == c2){
+		previous = next;
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+		next = (physContactPair *)memQLinkNextA(next);
+		#else
+		next = next->nextA;
+		#endif
+	}
+
+	if(previous != NULL){
+		// Insert between the previous pair and its next pair.
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+		memQLinkNextA(previous) = (byte_t *)pair;
+		#else
+		previous->nextA = pair;
+		#endif
+	}else{
+		// Insert directly before the first pair.
+		c2->contactCache = pair;
+	}
+	if(next != NULL){
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+		memQLinkPrevB(next) = (byte_t *)pair;
+		#else
+		next->prevB = pair;
+		#endif
+	}
+	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+	memQLinkPrevB(pair) = (byte_t *)previous;
+	memQLinkNextB(pair) = (byte_t *)next;
+	#else
+	pair->prevB = previous;
+	pair->nextB = next;
+	#endif
+
+	// Set the pair's miscellaneous variables.
+	pair->colliderA = c1;
+	pair->colliderB = c2;
+	pair->inactive = 0;
+
+}
+void physSeparationPairInit(physSeparationPair *const pair, physCollider *const c1, physCollider *const c2, physSeparationPair *previous, physSeparationPair *next){
+
+	// Initializes a pair using an insertion point.
+
+	if(previous != NULL){
+		// Insert between the previous pair and its next pair.
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+		memQLinkNextA(previous) = (byte_t *)pair;
+		#else
+		previous->nextA = pair;
+		#endif
+	}else{
+		// Insert directly before the first pair.
+		c1->separationCache = pair;
+	}
+	if(next != NULL){
+		if(next->colliderA == c1){
+			#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+			memQLinkPrevA(next) = (byte_t *)pair;
+			#else
+			next->prevA = pair;
+			#endif
+		}else{
+			#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+			memQLinkPrevB(next) = (byte_t *)pair;
+			#else
+			next->prevB = pair;
+			#endif
+		}
+	}
+	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+	memQLinkPrevA(pair) = (byte_t *)previous;
+	memQLinkNextA(pair) = (byte_t *)next;
+	#else
+	pair->prevA = previous;
+	pair->nextA = next;
+	#endif
+
+	// Find the previous and next nodes for the second collider.
+	previous = NULL;
+	next = c2->separationCache;
+	while(next != NULL && next->colliderA == c2){
+		previous = next;
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+		next = (physSeparationPair *)memQLinkNextA(next);
+		#else
+		next = next->nextA;
+		#endif
+	}
+
+	if(previous != NULL){
+		// Insert between the previous pair and its next pair.
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+		memQLinkNextA(previous) = (byte_t *)pair;
+		#else
+		previous->nextA = pair;
+		#endif
+	}else{
+		// Insert directly before the first pair.
+		c2->separationCache = pair;
+	}
+	if(next != NULL){
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+		memQLinkPrevB(next) = (byte_t *)pair;
+		#else
+		next->prevB = pair;
+		#endif
+	}
+	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+	memQLinkPrevB(pair) = (byte_t *)previous;
+	memQLinkNextB(pair) = (byte_t *)next;
+	#else
+	pair->prevB = previous;
+	pair->nextB = next;
+	#endif
+
+	// Set the pair's miscellaneous variables.
+	pair->colliderA = c1;
+	pair->colliderB = c2;
+	pair->inactive = 0;
+
+}
+void physContactPairDelete(physContactPair *const pair){
+
+	// Removes a pair from its linked lists.
+
+	physContactPair *temp;
+
+	// Remove references from the previous pairs.
+	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+	temp = (physContactPair *)memQLinkPrevA(pair);
+	#else
+	temp = pair->prevA;
+	#endif
+	if(temp != NULL){
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+		memQLinkNextA(temp) = memQLinkNextA(pair);
+		#else
+		temp->nextA = pair->nextA;
+		#endif
+	}else{
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+		pair->colliderA->contactCache = (physContactPair *)memQLinkNextA(pair);
+		#else
+		pair->colliderA->contactCache = pair->nextA;
+		#endif
+	}
+	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+	temp = (physContactPair *)memQLinkPrevB(pair);
+	#else
+	temp = pair->prevB;
+	#endif
+	if(temp != NULL){
+		if(temp->colliderA == pair->colliderB){
+			#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+			memQLinkNextA(temp) = memQLinkNextB(pair);
+			#else
+			temp->nextA = pair->nextB;
+			#endif
+		}else{
+			#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+			memQLinkNextB(temp) = memQLinkNextB(pair);
+			#else
+			temp->nextB = pair->nextB;
+			#endif
+		}
+	}else{
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+		pair->colliderB->contactCache = (physContactPair *)memQLinkNextB(pair);
+		#else
+		pair->colliderB->contactCache = pair->nextB;
+		#endif
+	}
+
+	// Remove references from the next pairs.
+	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+	temp = (physContactPair *)memQLinkNextA(pair);
+	#else
+	temp = pair->nextA;
+	#endif
+	if(temp != NULL){
+		if(temp->colliderA == pair->colliderA){
+			#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+			memQLinkPrevA(temp) = memQLinkPrevA(pair);
+			#else
+			temp->prevA = pair->prevA;
+			#endif
+		}else{
+			#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+			memQLinkPrevB(temp) = memQLinkPrevA(pair);
+			#else
+			temp->prevB = pair->prevA;
+			#endif
+		}
+	}
+	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+	temp = (physContactPair *)memQLinkNextB(pair);
+	#else
+	temp = pair->nextB;
+	#endif
+	if(temp != NULL){
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+		memQLinkPrevB(temp) = memQLinkPrevB(pair);
+		#else
+		temp->prevB = pair->prevB;
+		#endif
+	}
+
+}
+void physSeparationPairDelete(physSeparationPair *const pair){
+
+	// Removes a pair from its linked lists.
+
+	physSeparationPair *temp;
+
+	// Remove references from the previous pairs.
+	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+	temp = (physSeparationPair *)memQLinkPrevA(pair);
+	#else
+	temp = pair->prevA;
+	#endif
+	if(temp != NULL){
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+		memQLinkNextA(temp) = memQLinkNextA(pair);
+		#else
+		temp->nextA = pair->nextA;
+		#endif
+	}else{
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+		pair->colliderA->separationCache = (physSeparationPair *)memQLinkNextA(pair);
+		#else
+		pair->colliderA->separationCache = pair->nextA;
+		#endif
+	}
+	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+	temp = (physSeparationPair *)memQLinkPrevB(pair);
+	#else
+	temp = pair->prevB;
+	#endif
+	if(temp != NULL){
+		if(temp->colliderA == pair->colliderB){
+			#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+			memQLinkNextA(temp) = memQLinkNextB(pair);
+			#else
+			temp->nextA = pair->nextB;
+			#endif
+		}else{
+			#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+			memQLinkNextB(temp) = memQLinkNextB(pair);
+			#else
+			temp->nextB = pair->nextB;
+			#endif
+		}
+	}else{
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+		pair->colliderB->separationCache = (physSeparationPair *)memQLinkNextB(pair);
+		#else
+		pair->colliderB->separationCache = pair->nextB;
+		#endif
+	}
+
+	// Remove references from the next pairs.
+	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+	temp = (physSeparationPair *)memQLinkNextA(pair);
+	#else
+	temp = pair->nextA;
+	#endif
+	if(temp != NULL){
+		if(temp->colliderA == pair->colliderA){
+			#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+			memQLinkPrevA(temp) = memQLinkPrevA(pair);
+			#else
+			temp->prevA = pair->prevA;
+			#endif
+		}else{
+			#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+			memQLinkPrevB(temp) = memQLinkPrevA(pair);
+			#else
+			temp->prevB = pair->prevA;
+			#endif
+		}
+	}
+	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+	temp = (physSeparationPair *)memQLinkNextB(pair);
+	#else
+	temp = pair->nextB;
+	#endif
+	if(temp != NULL){
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+		memQLinkPrevB(temp) = memQLinkPrevB(pair);
+		#else
+		temp->prevB = pair->prevB;
+		#endif
+	}
+
+}

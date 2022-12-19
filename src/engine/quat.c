@@ -6,6 +6,7 @@
 
 // Antiparallel threshold for rotating between two vectors.
 #define QUAT_SINGULARITY_THRESHOLD 0.0001f
+#define QUAT_SINGULARITY_THRESHOLD_SQUARED (QUAT_SINGULARITY_THRESHOLD*QUAT_SINGULARITY_THRESHOLD)
 
 // The LERP threshold is the cosine of 1 radian.
 // Try 1/2 radians if spherical lerp results are bad: 0.99996192306417128873735516482698
@@ -405,37 +406,55 @@ __HINT_INLINE__ void quatNormalizeFastAccurateP(quat *const __RESTRICT__ q){
 	quatQMultSP(q, quatMagnitudeInverseFastAccurateP(q));
 }
 
-__HINT_INLINE__ void quatAxisAngle(const quat q, float *angle, float *axisX, float *axisY, float *axisZ){
-	if(q.w != 1.f){  // We don't want to risk a potential divide-by-zero error.
-		const float scale = rsqrt(1.f-q.w*q.w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1.
-		*angle = 2.f*acosf(q.w);
-		*axisX = q.x*scale;
-		*axisY = q.y*scale;
-		*axisZ = q.z*scale;
+__HINT_INLINE__ vec3 quatAxis(const quat q){
+	// We don't want to risk a potential divide-by-zero error.
+	if(q.w == 1.f){
+		return g_vec3Zero;
+	}else{
+		// Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1.
+		const float scale = rsqrt(1.f-q.w*q.w);
+		const vec3 r = {
+			.x = q.x*scale,
+			.y = q.y*scale,
+			.z = q.z*scale
+		};
+		return r;
 	}
 }
-__HINT_INLINE__ void quatAxisAngleUnsafe(const quat q, float *angle, float *axisX, float *axisY, float *axisZ){
-	const float scale = rsqrt(1.f-q.w*q.w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1.
-	*angle = 2.f*acosf(q.w);
-	*axisX = q.x*scale;
-	*axisY = q.y*scale;
-	*axisZ = q.z*scale;
-}
-__HINT_INLINE__ void quatAxisAngleP(const quat *const __RESTRICT__ q, float *angle, float *axisX, float *axisY, float *axisZ){
-	if(q->w != 1.f){  // We don't want to risk a potential divide-by-zero error.
-		const float scale = rsqrt(1.f-q->w*q->w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1.
-		*angle = 2.f*acosf(q->w);
-		*axisX = q->x*scale;
-		*axisY = q->y*scale;
-		*axisZ = q->z*scale;
+__HINT_INLINE__ void quatAxisPR(const quat *const __RESTRICT__ q, vec3 *const __RESTRICT__ r){
+	// We don't want to risk a potential divide-by-zero error.
+	if(q->w != 1.f){
+		vec3ZeroP(r);
+	}else{
+		// Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1.
+		const float scale = rsqrt(1.f-q->w*q->w);
+		r->x = q->x*scale;
+		r->y = q->y*scale;
+		r->z = q->z*scale;
 	}
 }
-__HINT_INLINE__ void quatAxisAngleUnsafeP(const quat *const __RESTRICT__ q, float *angle, float *axisX, float *axisY, float *axisZ){
-	const float scale = rsqrt(1.f-q->w*q->w);  // Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1.
-	*angle = 2.f*acosf(q->w);
-	*axisX = q->x*scale;
-	*axisY = q->y*scale;
-	*axisZ = q->z*scale;
+__HINT_INLINE__ vec3 quatAxisUnsafe(const quat q){
+	// Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1.
+	const float scale = rsqrt(1.f-q.w*q.w);
+	const vec3 r = {
+		.x = q.x*scale,
+		.y = q.y*scale,
+		.z = q.z*scale
+	};
+	return r;
+}
+__HINT_INLINE__ void quatAxisUnsafePR(const quat *const __RESTRICT__ q, vec3 *const __RESTRICT__ r){
+	// Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1.
+	const float scale = rsqrt(1.f-q->w*q->w);
+	r->x = q->x*scale;
+	r->y = q->y*scale;
+	r->z = q->z*scale;
+}
+__HINT_INLINE__ float quatAngle(const quat q){
+	return 2.f*acosf(q.w);
+}
+__HINT_INLINE__ float quatAngleP(const quat *const __RESTRICT__ q){
+	return 2.f*acosf(q->w);
 }
 
 __HINT_INLINE__ float quatDot(const quat q1, const quat q2){
@@ -1157,6 +1176,256 @@ __HINT_INLINE__ void quatRotatePR(const quat *const __RESTRICT__ q1, const quat 
 	quatQMultQPR(q1, q2, &temp);
 	// *r = temp;
 	quatSlerpFastPR(q1, &temp, t, r);
+}
+
+vec3 quatBasisX(const quat q){
+	// Rotate a (1, 0, 0)^T vector by the quaternion.
+	const float x2 = 2.f * q.x;
+	const float w2 = 2.f * q.w;
+	const vec3 r = {
+		.x = q.x * x2 + q.w * w2 - 1.f,
+		.y = q.y * x2 + q.z * w2,
+		.z = q.z * x2 - q.y * w2
+	};
+	return r;
+}
+void quatBasisXPR(const quat *const __RESTRICT__ q, vec3 *const __RESTRICT__ r){
+	// Rotate a (1, 0, 0)^T vector by the quaternion.
+	const float x2 = 2.f * q->x;
+	const float w2 = 2.f * q->w;
+	r->x = q->x * x2 + q->w * w2 - 1.f;
+	r->y = q->y * x2 + q->z * w2;
+	r->z = q->z * x2 - q->y * w2;
+}
+
+vec3 quatBasisY(const quat q){
+	// Rotate a (0, 1, 0)^T vector by the quaternion.
+	const float y2 = 2.f * q.y;
+	const float w2 = 2.f * q.w;
+	const vec3 r = {
+		.x = q.x * y2 - q.z * w2,
+		.y = q.y * y2 + q.w * w2 - 1.f,
+		.z = q.z * y2 + q.x * w2
+	};
+	return r;
+}
+void quatBasisYPR(const quat *const __RESTRICT__ q, vec3 *const __RESTRICT__ r){
+	// Rotate a (0, 1, 0)^T vector by the quaternion.
+	const float y2 = 2.f * q->y;
+	const float w2 = 2.f * q->w;
+	r->x = q->x * y2 - q->z * w2;
+	r->y = q->y * y2 + q->w * w2 - 1.f;
+	r->z = q->z * y2 + q->x * w2;
+}
+
+vec3 quatBasisZ(const quat q){
+	// Rotate a (0, 0, 1)^T vector by the quaternion.
+	const float z2 = 2.f * q.z;
+	const float w2 = 2.f * q.w;
+	const vec3 r = {
+		.x = q.x * z2 + q.y * w2,
+		.y = q.y * z2 - q.x * w2,
+		.z = q.z * z2 + q.w * w2 - 1.f
+	};
+	return r;
+}
+void quatBasisZPR(const quat *const __RESTRICT__ q, vec3 *const __RESTRICT__ r){
+	// Rotate a (0, 0, 1)^T vector by the quaternion.
+	const float z2 = 2.f * q->z;
+	const float w2 = 2.f * q->w;
+	r->x = q->x * z2 + q->y * w2;
+	r->y = q->y * z2 - q->x * w2;
+	r->z = q->z * z2 + q->w * w2 - 1.f;
+}
+
+void quatSwingTwist(const quat q, const vec3 v, quat *const __RESTRICT__ t, quat *const __RESTRICT__ s){
+
+	// Decompose a quaternion into its swing and twist components.
+	// This results in a swing quaternion "s" and twist quaternion
+	// "t" such that q = s*t. We also assume that the twist axis
+	// "v" has been normalized.
+	//
+	// This implementation negates twist when the dot product is
+	// negative to ensure that it points in the same direction as "v".
+	// We also check for and handle the singularity.
+	//
+	// Based off Przemyslaw Dobrowolski's implementation given
+	// in Swing-Twist Decomposition in Clifford Algebra (2015).
+
+	// Project the q's rotation axis onto the twist axis "v".
+	float u = vec3Dot(v, *((const vec3 *)&q.x));
+	// Quickly compute the inverse magnitude of the projection.
+	float l = q.w*q.w + u*u;
+
+	// Handle the singularity at twist rotations close to pi.
+	if(l < QUAT_SINGULARITY_THRESHOLD_SQUARED){
+		*t = g_quatIdentity;
+	}else{
+		l = fastInvSqrt(l);
+		u *= l;
+		quatSet(t, q.w*l, v.x*u, v.y*u, v.z*u);
+	}
+
+	// By construction, q = s*t. We have "t", so to find
+	// "s" we can just multiply "q" by the conjugate of "t".
+	*s = quatQMultQConjugate(q, *t);
+
+	// Note that if the dot product is negative, we need to invert
+	// the twist quaternion to keep the direction consistent.
+	if(u < 0.f){
+		quatNegateP(t);
+	}
+
+}
+void quatSwingTwistPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ v, quat *const __RESTRICT__ t, quat *const __RESTRICT__ s){
+
+	// Decompose a quaternion into its swing and twist components.
+	// This results in a swing quaternion "s" and twist quaternion
+	// "t" such that q = s*t. We also assume that the twist axis
+	// "v" has been normalized.
+	//
+	// This implementation negates twist when the dot product is
+	// negative to ensure that it points in the same direction as "v".
+	// We also check for and handle the singularity.
+	//
+	// Based off Przemyslaw Dobrowolski's implementation given
+	// in Swing-Twist Decomposition in Clifford Algebra (2015).
+
+	// Project the q's rotation axis onto the twist axis "v".
+	float u = vec3DotP(v, (const vec3 *)&q->x);
+	// Quickly compute the inverse magnitude of the projection.
+	float l = q->w*q->w + u*u;
+
+	// Handle the singularity at twist rotations close to pi.
+	if(l < QUAT_SINGULARITY_THRESHOLD_SQUARED){
+		quatIdentityP(t);
+	}else{
+		l = fastInvSqrt(l);
+		u *= l;
+		quatSet(t, q->w*l, v->x*u, v->y*u, v->z*u);
+	}
+
+	// By construction, q = s*t. We have "t", so to find
+	// "s" we can just multiply "q" by the conjugate of "t".
+	quatQMultQConjugatePR(q, t, s);
+
+	// Note that if the dot product is negative, we need to invert
+	// the twist quaternion to keep the direction consistent.
+	if(u < 0.f){
+		quatNegateP(t);
+	}
+
+}
+
+void quatSwingTwistFast(const quat q, const vec3 v, quat *const __RESTRICT__ t, quat *const __RESTRICT__ s){
+
+	// Decompose a quaternion into its swing and twist components.
+	// This results in a swing quaternion "s" and twist quaternion
+	// "t" such that q = s*t. We also assume that the twist axis
+	// "v" has been normalized.
+	//
+	// This implementation negates twist when the dot product is
+	// negative to ensure that it points in the same direction as "v".
+	//
+	// Based off Przemyslaw Dobrowolski's implementation given
+	// in Swing-Twist Decomposition in Clifford Algebra (2015).
+
+	// Project the q's rotation axis onto the twist axis "v".
+	float u = vec3Dot(v, *((const vec3 *)&q.x));
+	// Quickly compute the inverse magnitude of the projection.
+	const float l = fastInvSqrt(q.w*q.w + u*u);
+	u *= l;
+
+	// Set the twist quaternion.
+	quatSet(t, q.w*l, v.x*u, v.y*u, v.z*u);
+	// By construction, q = s*t. We have "t", so to find
+	// "s" we can just multiply "q" by the conjugate of "t".
+	*s = quatQMultQConjugate(q, *t);
+
+	// Note that if the dot product is negative, we need to invert
+	// the twist quaternion to keep the direction consistent.
+	if(u < 0.f){
+		quatNegateP(t);
+	}
+
+}
+void quatSwingTwistFastPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ v, quat *const __RESTRICT__ t, quat *const __RESTRICT__ s){
+
+	// Decompose a quaternion into its swing and twist components.
+	// This results in a swing quaternion "s" and twist quaternion
+	// "t" such that q = s*t. We also assume that the twist axis
+	// "v" has been normalized.
+	//
+	// This implementation negates twist when the dot product is
+	// negative to ensure that it points in the same direction as "v".
+	//
+	// Based off Przemyslaw Dobrowolski's implementation given
+	// in Swing-Twist Decomposition in Clifford Algebra (2015).
+
+	// Project the q's rotation axis onto the twist axis "v".
+	float u = vec3DotP(v, (const vec3 *)&q->x);
+	// Quickly compute the inverse magnitude of the projection.
+	const float l = fastInvSqrt(q->w*q->w + u*u);
+	u *= l;
+
+	// Set the twist quaternion.
+	quatSet(t, q->w*l, v->x*u, v->y*u, v->z*u);
+	// By construction, q = s*t. We have "t", so to find
+	// "s" we can just multiply "q" by the conjugate of "t".
+	quatQMultQConjugatePR(q, t, s);
+
+	// Note that if the dot product is negative, we need to invert
+	// the twist quaternion to keep the direction consistent.
+	if(u < 0.f){
+		quatNegateP(t);
+	}
+}
+
+void quatSwingTwistFaster(const quat q, const vec3 v, quat *const __RESTRICT__ t, quat *const __RESTRICT__ s){
+
+	// Decompose a quaternion into its swing and twist components.
+	// This results in a swing quaternion "s" and twist quaternion
+	// "t" such that q = s*t. We also assume that the twist axis
+	// "v" has been normalized.
+	//
+	// Based off Przemyslaw Dobrowolski's implementation given
+	// in Swing-Twist Decomposition in Clifford Algebra (2015).
+
+	// Project the q's rotation axis onto the twist axis "v".
+	float u = vec3Dot(v, *((const vec3 *)&q.x));
+	// Quickly compute the inverse magnitude of the projection.
+	const float l = fastInvSqrt(q.w*q.w + u*u);
+	u *= l;
+
+	// Set the twist quaternion.
+	quatSet(t, q.w*l, v.x*u, v.y*u, v.z*u);
+	// By construction, q = s*t. We have "t", so to find
+	// "s" we can just multiply "q" by the conjugate of "t".
+	*s = quatQMultQConjugate(q, *t);
+
+}
+void quatSwingTwistFasterPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ v, quat *const __RESTRICT__ t, quat *const __RESTRICT__ s){
+
+	// Decompose a quaternion into its swing and twist components.
+	// This results in a swing quaternion "s" and twist quaternion
+	// "t" such that q = s*t. We also assume that the twist axis
+	// "v" has been normalized.
+	//
+	// Based off Przemyslaw Dobrowolski's implementation given
+	// in Swing-Twist Decomposition in Clifford Algebra (2015).
+
+	// Project the q's rotation axis onto the twist axis "v".
+	float u = vec3DotP(v, (const vec3 *)&q->x);
+	// Quickly compute the inverse magnitude of the projection.
+	const float l = fastInvSqrt(q->w*q->w + u*u);
+	u *= l;
+
+	// Set the twist quaternion.
+	quatSet(t, q->w*l, v->x*u, v->y*u, v->z*u);
+	// By construction, q = s*t. We have "t", so to find
+	// "s" we can just multiply "q" by the conjugate of "t".
+	quatQMultQConjugatePR(q, t, s);
+
 }
 
 /*__HINT_INLINE__ quat quatMat4(const mat4 m){

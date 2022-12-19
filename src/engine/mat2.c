@@ -247,7 +247,7 @@ __HINT_INLINE__ vec2 mat2Solve(const mat2 A, const vec2 b){
 
 	}
 
-	return vec2Zero();
+	return g_vec2Zero;
 
 }
 

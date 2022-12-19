@@ -3,8 +3,7 @@
 #include "physicsRigidBody.h"
 #include "physicsCollider.h"
 #include "physicsJoint.h"
-#include "physicsCollision.h"
-#include "physicsConstraint.h"
+#include "physicsContact.h"
 #include "aabbTree.h"
 #include "memoryManager.h"
 
@@ -20,7 +19,7 @@ memorySLink __g_PhysicsRigidBodyBaseResourceArray;   // Contains physRigidBodyBa
 memoryDLink __g_PhysicsRigidBodyResourceArray;       // Contains physRigidBodies.
 memorySLink __g_PhysicsColliderResourceArray;        // Contains physColliders.
 memoryDLink __g_PhysicsJointResourceArray;           // Contains physJoints.
-#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 memoryQLink __g_PhysicsContactPairResourceArray;     // Contains physContactPairs.
 memoryQLink __g_PhysicsSeparationPairResourceArray;  // Contains physSeparationPairs.
 #else
@@ -70,7 +69,7 @@ return_t modulePhysicsResourcesInit(){
 	if(memDLinkCreate(&__g_PhysicsJointResourceArray, memory, RESOURCE_DEFAULT_JOINT_SIZE, RESOURCE_DEFAULT_JOINT_NUM) == NULL){
 		return -1;
 	}
-	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 	memory = memAllocate(
 		memQLinkAllocationSize(
 			NULL,
@@ -619,7 +618,7 @@ void modulePhysicsJointClear(){
 
 }
 
-#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 
 __HINT_INLINE__ physContactPair *modulePhysicsContactPairAllocateStatic(){
 	return memQLinkAllocate(&__g_PhysicsContactPairResourceArray);

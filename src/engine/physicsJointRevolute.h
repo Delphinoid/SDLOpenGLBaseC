@@ -9,6 +9,13 @@
 
 typedef struct physRigidBody physRigidBody;
 typedef struct physJoint physJoint;
+
+typedef struct {
+
+	//
+
+} physJointRevoluteBase;
+
 typedef struct {
 
 	//
@@ -18,8 +25,6 @@ typedef struct {
 void physJointRevoluteInit(physJointRevolute *const __RESTRICT__ joint);
 void physJointRevolutePresolveConstraints(physJoint *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, const float dt_s);
 void physJointRevoluteSolveVelocityConstraints(physJoint *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB);
-#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 return_t physJointRevoluteSolveConfigurationConstraints(physJoint *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB);
-#endif
 
 #endif

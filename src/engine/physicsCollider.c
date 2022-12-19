@@ -1,5 +1,5 @@
 #include "physicsCollider.h"
-#include "physicsCollision.h"
+#include "physicsContact.h"
 #include "physicsRigidBody.h"
 #include "modulePhysics.h"
 #include "memoryManager.h"
@@ -308,7 +308,7 @@ physContactPair *physColliderFindContact(const physCollider *const c1, const phy
 			return i;
 		}
 		p = i;
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 		i = (physContactPair *)memQLinkNextA(p);
 		#else
 		i = i->nextA;
@@ -341,7 +341,7 @@ physSeparationPair *physColliderFindSeparation(const physCollider *const c1, con
 			return i;
 		}
 		p = i;
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 		i = (physSeparationPair *)memQLinkNextA(p);
 		#else
 		i = i->nextA;
@@ -354,7 +354,7 @@ physSeparationPair *physColliderFindSeparation(const physCollider *const c1, con
 
 }
 
-/**#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+/**#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 void physColliderUpdateContacts(physCollider *const c, const float frequency){
 #else
 void physColliderUpdateContacts(physCollider *const c){
@@ -365,7 +365,7 @@ void physColliderUpdateContacts(physCollider *const c){
 	physContactPair *i = c->contactCache;
 
 	while(i != NULL && i->colliderA == c){
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 		physContactPair *const next = (physContactPair *)memQLinkNextA(i);
 		#else
 		physContactPair *const next = i->nextA;
@@ -373,7 +373,7 @@ void physColliderUpdateContacts(physCollider *const c){
 		if(i->inactive > 0){
 			if(i->inactive > PHYSICS_CONTACT_PAIR_MAX_INACTIVE_STEPS){
 				// Remove the contact.
-				#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+				#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 				modulePhysicsContactPairFree(i);
 				#else
 				modulePhysicsContactPairFree(NULL, i);
@@ -383,7 +383,7 @@ void physColliderUpdateContacts(physCollider *const c){
 			}
 		}else{
 			// Update the contact.
-			#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+			#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 			physContactPresolveConstraints(&i->data, i->colliderA, i->colliderB, frequency);
 			#else
 			physContactPresolveConstraints(&i->data, i->colliderA, i->colliderB);
@@ -402,14 +402,14 @@ void physColliderUpdateSeparations(physCollider *const c){
 	physSeparationPair *i = c->separationCache;
 
 	while(i != NULL && i->colliderA == c){
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 		physSeparationPair *const next = (physSeparationPair *)memQLinkNextA(i);
 		#else
 		physSeparationPair *const next = i->nextA;
 		#endif
 		if(i->inactive > PHYSICS_SEPARATION_PAIR_MAX_INACTIVE_STEPS){
 			// Remove the separation.
-			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+			#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 			modulePhysicsSeparationPairFree(i);
 			#else
 			modulePhysicsSeparationPairFree(NULL, i);
@@ -429,7 +429,7 @@ void physColliderDelete(physCollider *const __RESTRICT__ c){
 		flagsSet(c->c.flags, COLLIDER_INSTANCE);
 	}
 	cDelete(&c->c);
-	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 	while(c->contactCache != NULL){
 		modulePhysicsContactPairFree(c->contactCache);
 	}

@@ -2,17 +2,14 @@
 #include "helpersMath.h"
 #include <string.h>
 
+vec2 g_vec2Zero = {.x = 0.f, .y = 0.f};
+
 __HINT_INLINE__ vec2 vec2New(const float x, const float y){
 	const vec2 r = {.x = x, .y = y};
 	return r;
 }
 __HINT_INLINE__ vec2 vec2NewS(const float s){
 	const vec2 r = {.x = s, .y = s};
-	return r;
-}
-__HINT_INLINE__ vec2 vec2Zero(){
-	const vec2 r = {.x = 0.f,
-	                .y = 0.f};
 	return r;
 }
 __HINT_INLINE__ void vec2Set(vec2 *const __RESTRICT__ v, const float x, const float y){
@@ -203,6 +200,39 @@ __HINT_INLINE__ void vec2SDivVP(const float s, vec2 *const __RESTRICT__ v){
 	v->y = s / v->y;
 }
 
+__HINT_INLINE__ vec2 vec2fmaf(const float x, const vec2 u, const vec2 v){
+	const vec2 r = {
+	#ifdef FP_FAST_FMAF
+		.x = fmaf(x, u.x, v.x),
+		.y = fmaf(x, u.y, v.y)
+	#else
+		.x = x*u.x + v.x,
+		.y = x*u.y + v.y
+	#endif
+	};
+	return r;
+}
+
+__HINT_INLINE__ void vec2fmafP(const float x, const vec2 *const __RESTRICT__ u, vec2 *const __RESTRICT__ v){
+	#ifdef FP_FAST_FMAF
+	v->x = fmaf(x, u->x, v->x);
+	v->y = fmaf(x, u->y, v->y);
+	#else
+	v->x = x*u->x + v->x;
+	v->y = x*u->y + v->y;
+	#endif
+}
+
+__HINT_INLINE__ void vec2fmafPR(const float x, const vec2 *const __RESTRICT__ u, const vec2 *const __RESTRICT__ v, vec2 *const __RESTRICT__ r){
+	#ifdef FP_FAST_FMAF
+	r->x = fmaf(x, u->x, v->x);
+	r->y = fmaf(x, u->y, v->y);
+	#else
+	r->x = x*u->x + v->x;
+	r->y = x*u->y + v->y;
+	#endif
+}
+
 __HINT_INLINE__ vec2 vec2Min(const vec2 v1, const vec2 v2){
 	const vec2 r = {
 		.x = floatMin(v1.x, v2.x),
@@ -263,6 +293,9 @@ __HINT_INLINE__ float vec2MagnitudeInverseP(const vec2 *const __RESTRICT__ v){
 __HINT_INLINE__ float vec2MagnitudeInverseFast(const vec2 v){
 	return rsqrt(v.x*v.x + v.y*v.y);
 }
+__HINT_INLINE__ float vec2MagnitudeInverseFastS(const float x, const float y){
+	return rsqrt(x*x + y*y);
+}
 __HINT_INLINE__ float vec2MagnitudeInverseFastP(const vec2 *const __RESTRICT__ v){
 	return rsqrt(v->x*v->x + v->y*v->y);
 }
@@ -278,6 +311,11 @@ __HINT_INLINE__ vec2 vec2Normalize(const vec2 v){
 }
 __HINT_INLINE__ vec2 vec2NormalizeFast(const vec2 v){
 	return vec2VMultS(v, vec2MagnitudeInverseFast(v));
+}
+__HINT_INLINE__ vec2 vec2NormalizeFastS(const float x, const float y){
+	const float magnitude = vec2MagnitudeInverseFastS(x, y);
+	const vec2 r = {.x = magnitude*x, .y = magnitude*y};
+	return r;
 }
 __HINT_INLINE__ vec2 vec2NormalizeFastAccurate(const vec2 v){
 	return vec2VMultS(v, vec2MagnitudeInverseFastAccurate(v));

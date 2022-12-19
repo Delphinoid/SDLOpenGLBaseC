@@ -378,7 +378,7 @@ __HINT_INLINE__ vec3 mat3Solve(const mat3 A, const vec3 b){
 
 	}
 
-	return vec3Zero();
+	return g_vec3Zero;
 
 }
 

@@ -19,7 +19,7 @@ void particleInit(particle *const __RESTRICT__ p){
 	#endif
 	p->currentAnim = 0;
 	animInstInit(&p->animator);
-	vec3ZeroP(&p->velocity);
+	p->velocity = g_vec3Zero;
 	p->lifetime = 0.f;
 }
 

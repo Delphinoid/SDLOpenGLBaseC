@@ -84,7 +84,7 @@ mat4 billboardState(const billboard data, const camera *const __RESTRICT__ cam, 
 
 		// Translate the transformation to the "origin".
 		configuration = mat4Translate(-centroid.x, -centroid.y, -centroid.z, configuration);
-		///vec3ZeroP((vec3 *)&configuration.m[3][0]);
+		///*((vec3 *)&configuration.m[3][0]) = g_vec3Zero;
 
 		// Scale based on distance if necessary.
 		if(flagsAreSet(data.flags, BILLBOARD_SCALE)){

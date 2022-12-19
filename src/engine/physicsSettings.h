@@ -16,12 +16,21 @@
 // coefficients, rather than the square root of their product.
 #define PHYSICS_CONTACT_FRICTION_GEOMETRIC_AVERAGE
 
+// Use Baumgarte stabilization for constraints.
+#define PHYSICS_CONTACT_STABILIZER_BAUMGARTE
+#define PHYSICS_JOINT_DISTANCE_STABILIZER_BAUMGARTE
+
 // Use a Gauss Seidel positional solver for constraints.
 // This is slower, but should make constraints significantly
 // more stable.
-#define PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+#define PHYSICS_CONTACT_STABILIZER_GAUSS_SEIDEL
+#define PHYSICS_JOINT_DISTANCE_STABILIZER_GAUSS_SEIDEL
+#define PHYSICS_JOINT_SPHERE_STABILIZER_GAUSS_SEIDEL
 
 // Warm start all constraints.
-#define PHYSICS_CONSTRAINT_WARM_START
+#define PHYSICS_CONTACT_WARM_START
+#define PHYSICS_JOINT_FRICTION_WARM_START
+#define PHYSICS_JOINT_DISTANCE_WARM_START
+#define PHYSICS_JOINT_SPHERE_WARM_START
 
 #endif

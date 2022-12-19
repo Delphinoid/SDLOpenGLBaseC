@@ -273,10 +273,10 @@ static __HINT_INLINE__ void cHullClipEdgeContact(const cHull *const reference, c
 		// point in the very center.
 		const float m1 = denom == 0.f ? 0.5f : (d13 * d32 - d12 * d33) / denom;
 		const float m2 = (d13 + m1 * d32) / d33;
-		// Calculate the point on the first line segment.
-		referencePoint = vec3VAddV(referenceEdgeStart, vec3VMultS(v2, m1));
-		// Calculate the point on the second line segment.
-		incidentPoint = vec3VAddV(incidentEdgeStart, vec3VMultS(v3, m2));
+		// Calculate the point on the first line segment (m1*v2 + referenceEdgeStart).
+		referencePoint = vec3fmaf(m1, v2, referenceEdgeStart);
+		// Calculate the point on the second line segment (m2*v3 + incidentEdgeStart).
+		incidentPoint = vec3fmaf(m2, v3, incidentEdgeStart);
 	}
 
 	// Get the offset of the incident contact from

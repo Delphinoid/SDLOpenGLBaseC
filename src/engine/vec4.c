@@ -2,6 +2,8 @@
 #include "helpersMath.h"
 #include <string.h>
 
+vec4 g_vec4Zero = {.x = 0.f, .y = 0.f, .z = 0.f, .w = 0.f};
+
 __HINT_INLINE__ vec4 vec4New(const float x, const float y, const float z, const float w){
 	const vec4 r = {.x = x,
 	                .y = y,
@@ -14,13 +16,6 @@ __HINT_INLINE__ vec4 vec4NewS(const float s){
 	                .y = s,
 	                .z = s,
 	                .w = s};
-	return r;
-}
-__HINT_INLINE__ vec4 vec4Zero(){
-	const vec4 r = {.x = 0.f,
-	                .y = 0.f,
-	                .z = 0.f,
-	                .w = 0.f};
 	return r;
 }
 __HINT_INLINE__ void vec4Set(vec4 *const __RESTRICT__ v, const float x, const float y, const float z, const float w){
@@ -290,6 +285,51 @@ __HINT_INLINE__ void vec4SDivVP(const float s, vec4 *const __RESTRICT__ v){
 	v->y = s / v->y;
 	v->z = s / v->z;
 	v->w = s / v->w;
+}
+
+__HINT_INLINE__ vec4 vec4fmaf(const float x, const vec4 u, const vec4 v){
+	const vec4 r = {
+	#ifdef FP_FAST_FMAF
+		.x = fmaf(x, u.x, v.x),
+		.y = fmaf(x, u.y, v.y),
+		.z = fmaf(x, u.z, v.z),
+		.w = fmaf(x, u.w, v.w)
+	#else
+		.x = x*u.x + v.x,
+		.y = x*u.y + v.y,
+		.z = x*u.z + v.z,
+		.w = x*u.w + v.w
+	#endif
+	};
+	return r;
+}
+
+__HINT_INLINE__ void vec4fmafP(const float x, const vec4 *const __RESTRICT__ u, vec4 *const __RESTRICT__ v){
+	#ifdef FP_FAST_FMAF
+	v->x = fmaf(x, u->x, v->x);
+	v->y = fmaf(x, u->y, v->y);
+	v->z = fmaf(x, u->z, v->z);
+	v->w = fmaf(x, u->w, v->w);
+	#else
+	v->x = x*u->x + v->x;
+	v->y = x*u->y + v->y;
+	v->z = x*u->z + v->z;
+	v->w = x*u->w + v->w;
+	#endif
+}
+
+__HINT_INLINE__ void vec4fmafPR(const float x, const vec4 *const __RESTRICT__ u, const vec4 *const __RESTRICT__ v, vec4 *const __RESTRICT__ r){
+	#ifdef FP_FAST_FMAF
+	r->x = fmaf(x, u->x, v->x);
+	r->y = fmaf(x, u->y, v->y);
+	r->z = fmaf(x, u->z, v->z);
+	r->w = fmaf(x, u->w, v->w);
+	#else
+	r->x = x*u->x + v->x;
+	r->y = x*u->y + v->y;
+	r->z = x*u->z + v->z;
+	r->w = x*u->w + v->w;
+	#endif
 }
 
 __HINT_INLINE__ vec4 vec4Min(const vec4 v1, const vec4 v2){

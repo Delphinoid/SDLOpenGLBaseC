@@ -148,7 +148,7 @@ return_t mdlWavefrontObjLoad(modelBase *const __RESTRICT__ base, const char *con
 		if(generatePhysProperties){
 			*mass = 0.f;
 			*area = 0.f;
-			vec3ZeroP(centroid);
+			centroid = g_vec3Zero;
 		}**/
 		vertexNum = 0;
 		indexNum = 0;
@@ -463,7 +463,7 @@ return_t mdlWavefrontObjLoad(modelBase *const __RESTRICT__ base, const char *con
 						tempVert.position.y = tempPositions[pos+1];
 						tempVert.position.z = tempPositions[pos+2];
 					}else{
-						vec3ZeroP(&tempVert.position);
+						tempVert.position = g_vec3Zero;
 					}
 					// Vertex UV data
 					pos = uvIndex[i]<<1;
@@ -482,7 +482,7 @@ return_t mdlWavefrontObjLoad(modelBase *const __RESTRICT__ base, const char *con
 						tempVert.normal.y = tempNormals[pos+1];
 						tempVert.normal.z = tempNormals[pos+2];
 					}else{
-						vec3ZeroP(&tempVert.normal);
+						tempVert.normal = g_vec3Zero;
 					}
 					/****/
 					pos = positionIndex[i]*4;
@@ -1360,7 +1360,7 @@ return_t mdlSMDLoad(modelBase *const __RESTRICT__ base, const char *const __REST
 		if(generatePhysProperties){
 			*mass = 0.f;
 			*area = 0.f;
-			vec3ZeroP(centroid);
+			centroid = g_vec3Zero;
 		}**
 		*vertexNum = 0;
 		*indexNum = 0;
@@ -1675,7 +1675,7 @@ return_t mdlSMDLoad(modelBase *const __RESTRICT__ base, const char *const __REST
 						tempVert.position.y = tempPositions[pos+1];
 						tempVert.position.z = tempPositions[pos+2];
 					}else{
-						vec3ZeroP(&tempVert.position);
+						tempVert.position = g_vec3Zero;
 					}
 					// Vertex UV data
 					pos = uvIndex[i]<<1;
@@ -1694,7 +1694,7 @@ return_t mdlSMDLoad(modelBase *const __RESTRICT__ base, const char *const __REST
 						tempVert.normal.y = tempNormals[pos+1];
 						tempVert.normal.z = tempNormals[pos+2];
 					}else{
-						vec3ZeroP(&tempVert.normal);
+						tempVert.normal = g_vec3Zero;
 					}
 					/****
 					pos = positionIndex[i]*4;

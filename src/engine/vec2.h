@@ -8,9 +8,10 @@ typedef struct {
 	float y;
 } vec2;
 
+extern vec2 g_vec2Zero;
+
 vec2 vec2New(const float x, const float y);
 vec2 vec2NewS(const float s);
-vec2 vec2Zero();
 void vec2Set(vec2 *const __RESTRICT__ v, const float x, const float y);
 void vec2SetS(vec2 *const __RESTRICT__ v, const float s);
 void vec2ZeroP(vec2 *const __RESTRICT__ v);
@@ -57,6 +58,10 @@ void vec2VDivSP(vec2 *const __RESTRICT__ v, const float s);
 void vec2NDivVP(const float x, const float y, vec2 *const __RESTRICT__ v);
 void vec2SDivVP(const float s, vec2 *const __RESTRICT__ v);
 
+vec2 vec2fmaf(const float x, const vec2 u, const vec2 v);
+void vec2fmafP(const float x, const vec2 *const __RESTRICT__ u, vec2 *const __RESTRICT__ v);
+void vec2fmafPR(const float x, const vec2 *const __RESTRICT__ u, const vec2 *const __RESTRICT__ v, vec2 *const __RESTRICT__ r);
+
 vec2 vec2Min(const vec2 v1, const vec2 v2);
 void vec2MinP(const vec2 *const __RESTRICT__ v1, const vec2 *const __RESTRICT__ v2, vec2 *const __RESTRICT__ r);
 vec2 vec2Max(const vec2 v1, const vec2 v2);
@@ -73,12 +78,14 @@ float vec2MagnitudeSquaredP(const vec2 *const __RESTRICT__ v);
 float vec2MagnitudeInverse(const vec2 v);
 float vec2MagnitudeInverseP(const vec2 *const __RESTRICT__ v);
 float vec2MagnitudeInverseFast(const vec2 v);
+float vec2MagnitudeInverseFastS(const float x, const float y);
 float vec2MagnitudeInverseFastP(const vec2 *const __RESTRICT__ v);
 float vec2MagnitudeInverseFastAccurate(const vec2 v);
 float vec2MagnitudeInverseFastAccurateP(const vec2 *const __RESTRICT__ v);
 
 vec2 vec2Normalize(const vec2 v);
 vec2 vec2NormalizeFast(const vec2 v);
+vec2 vec2NormalizeFastS(const float x, const float y);
 vec2 vec2NormalizeFastAccurate(const vec2 v);
 float vec2NormalizeP(vec2 *const __RESTRICT__ v);
 void vec2NormalizeFastP(vec2 *const __RESTRICT__ v);

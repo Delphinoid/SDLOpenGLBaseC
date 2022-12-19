@@ -18,14 +18,14 @@
 //
 // ----------------------------------------------------------------------
 //
-// Differentiated tangential friction constraint equations:
+// Differentiated tangential friction constraint expressions:
 //
 // C1' : ((vB + wB X rB) - (vA + wA X rA)) . t1,
 // C2' : ((vB + wB X rB) - (vA + wA X rA)) . t2,
 //
 // where t1, t2 are the contact tangents.
 //
-// Differentiated angular friction constraint equation:
+// Differentiated angular friction constraint expression:
 //
 // C3' : (wB - wA) . n,
 //
@@ -73,7 +73,7 @@
 //
 // Expanding results in
 //
-//                [mA^{-1} + mB^{-1} + (IA^{-1} * (rA X t1) . (rA X t1)) + (IB^{-1} * (rB X t1) . (rB X t1)),                 (IA^{-1} * (rA X t1) . (rA X t2)) + (IB^{-1} * (rB X t1) . (rB X t2))]
+//                  [mA^{-1} + mB^{-1} + (IA^{-1} * (rA X t1) . (rA X t1)) + (IB^{-1} * (rB X t1) . (rB X t1)),                 (IA^{-1} * (rA X t1) . (rA X t2)) + (IB^{-1} * (rB X t1) . (rB X t2))]
 // (JtM^{-1})Jt^T = [                (IA^{-1} * (rA X t1) . (rA X t2)) + (IB^{-1} * (rB X t1) . (rB X t2)), mA^{-1} + mB^{-1} + (IA^{-1} * (rA X t2) . (rA X t2)) + (IB^{-1} * (rB X t2) . (rB X t2))].
 //
 // The effective mass for the angular constraint is given by
@@ -110,14 +110,14 @@
 	#define PHYSICS_JOINT_FRICTION_EPSILON 0.000001f
 #endif
 
-#ifdef PHYSICS_CONSTRAINT_WARM_START
+#ifdef PHYSICS_JOINT_FRICTION_WARM_START
 __FORCE_INLINE__ void physJointFrictionWarmStart(const physJointFriction *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB){
 
 	// Warm-start the persistent friction constraints.
 
 	const vec3 impulseTangent = vec3VAddV(
-		vec3VMultS(joint->tangent1, joint->tangentImpulseAccumulator.x),
-		vec3VMultS(joint->tangent2, joint->tangentImpulseAccumulator.y)
+		vec3VMultS(joint->tangent[0], joint->tangentImpulseAccumulator.x),
+		vec3VMultS(joint->tangent[1], joint->tangentImpulseAccumulator.y)
 	);
 	const vec3 impulseAngular = vec3VMultS(joint->normal, joint->angularImpulseAccumulator);
 
@@ -144,8 +144,8 @@ __FORCE_INLINE__ void physJointFrictionGenerateInverseEffectiveMass(physJointFri
 		joint->normal
 	);
 
-	const vec3 tangent1 = joint->tangent1;
-	const vec3 tangent2 = joint->tangent2;
+	const vec3 tangent1 = joint->tangent[0];
+	const vec3 tangent2 = joint->tangent[1];
 
 	const vec3 rAt1 = vec3Cross(joint->rA, tangent1);
 	const vec3 rBt1 = vec3Cross(joint->rB, tangent1);
@@ -176,12 +176,15 @@ __FORCE_INLINE__ void physJointFrictionSolveVelocityConstraints(physJointFrictio
 	vec2 tangentImpulseAccumulatorNew, lambdaTangent;
 	vec3 v, impulseTangent, impulseAngular;
 
-
 	// Calculate the constraint velocity, i.e. the
 	// difference in the velocities of the points on
 	// both bodies.
 	// ((wB x rB) + vB) - ((wA x rA) + vA)
 	v = vec3VSubV(
+		vec3VAddV(vec3Cross(bodyB->angularVelocity, joint->rB), bodyB->linearVelocity),
+		vec3VAddV(vec3Cross(bodyA->angularVelocity, joint->rA), bodyA->linearVelocity)
+	);
+	/*v = vec3VSubV(
 		vec3VSubV(
 			vec3VAddV(
 				vec3Cross(bodyB->angularVelocity, joint->rB),
@@ -190,14 +193,13 @@ __FORCE_INLINE__ void physJointFrictionSolveVelocityConstraints(physJointFrictio
 			vec3Cross(bodyA->angularVelocity, joint->rA)
 		),
 		bodyA->linearVelocity
-	);
+	);*/
 
 	// Calculate the tangent friction impulse magnitude,
 	// i.e. the constraint's Lagrange multiplier.
 	// (-JV)((JM^{-1})J^T)^{-1}
-	lambdaTangent = mat2MMultV(joint->tangentInverseEffectiveMass, vec2New(-vec3Dot(v, joint->tangent1), -vec3Dot(v, joint->tangent2)));
+	lambdaTangent = mat2MMultV(joint->tangentInverseEffectiveMass, vec2New(-vec3Dot(v, joint->tangent[0]), -vec3Dot(v, joint->tangent[1])));
 	tangentImpulseAccumulatorNew = vec2VAddV(joint->tangentImpulseAccumulator, lambdaTangent);
-
 	// Clamp the tangent friction impulse magnitude.
 	// C' <= mu * lambda_total
 	{
@@ -208,9 +210,8 @@ __FORCE_INLINE__ void physJointFrictionSolveVelocityConstraints(physJointFrictio
 	}
 	lambdaTangent = vec2VSubV(tangentImpulseAccumulatorNew, joint->tangentImpulseAccumulator);
 	joint->tangentImpulseAccumulator = tangentImpulseAccumulatorNew;
-
 	// Calculate the tangent friction impulse.
-	impulseTangent = vec3VAddV(vec3VMultS(joint->tangent1, lambdaTangent.x), vec3VMultS(joint->tangent2, lambdaTangent.y));
+	impulseTangent = vec3VAddV(vec3VMultS(joint->tangent[0], lambdaTangent.x), vec3VMultS(joint->tangent[1], lambdaTangent.y));
 
 
 	// Calculate the angular friction impulse magnitude,
@@ -218,20 +219,13 @@ __FORCE_INLINE__ void physJointFrictionSolveVelocityConstraints(physJointFrictio
 	// -JV/((JM^{-1})J^T)
 	lambdaAngular = vec3Dot(joint->normal, vec3VSubV(bodyA->angularVelocity, bodyB->angularVelocity)) * joint->angularInverseEffectiveMass;
 	angularImpulseAccumulatorNew = joint->angularImpulseAccumulator + lambdaAngular;
-
 	// Clamp the angular friction impulse magnitude.
 	// C' <= mu * lambda_total
-	if(angularImpulseAccumulatorNew <= -lambdaClamp){
-		angularImpulseAccumulatorNew = -lambdaClamp;
-	}else if(angularImpulseAccumulatorNew > lambdaClamp){
-		angularImpulseAccumulatorNew = lambdaClamp;
-	}
+	angularImpulseAccumulatorNew = floatClamp(angularImpulseAccumulatorNew, -lambdaClamp, lambdaClamp);
 	lambdaAngular = angularImpulseAccumulatorNew - joint->angularImpulseAccumulator;
 	joint->angularImpulseAccumulator = angularImpulseAccumulatorNew;
-
 	// Calculate the angular friction impulse.
 	impulseAngular = vec3VMultS(joint->normal, lambdaAngular);
-
 
 	// Apply both of the frictional impulses.
 	physRigidBodyApplyVelocityImpulseAngularInverse(bodyA, joint->rA, impulseTangent, impulseAngular);

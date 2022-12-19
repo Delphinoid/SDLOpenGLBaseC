@@ -93,10 +93,12 @@ void quatNormalizeP(quat *const __RESTRICT__ q);
 void quatNormalizeFastP(quat *const __RESTRICT__ q);
 void quatNormalizeFastAccurateP(quat *const __RESTRICT__ q);
 
-void quatAxisAngle(const quat q, float *angle, float *axisX, float *axisY, float *axisZ);
-void quatAxisAngleUnsafe(const quat q, float *angle, float *axisX, float *axisY, float *axisZ);
-void quatAxisAngleP(const quat *const __RESTRICT__ q, float *angle, float *axisX, float *axisY, float *axisZ);
-void quatAxisAngleUnsafeP(const quat *const __RESTRICT__ q, float *angle, float *axisX, float *axisY, float *axisZ);
+vec3 quatAxis(const quat q);
+void quatAxisPR(const quat *const __RESTRICT__ q, vec3 *const __RESTRICT__ r);
+vec3 quatAxisUnsafe(const quat q);
+void quatAxisUnsafePR(const quat *const __RESTRICT__ q, vec3 *const __RESTRICT__ r);
+float quatAngle(const quat q);
+float quatAngleP(const quat *const __RESTRICT__ q);
 
 float quatDot(const quat q1, const quat q2);
 float quatDotP(const quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2);
@@ -143,5 +145,19 @@ void quatIntegratePR(const quat *const __RESTRICT__ q, const vec3 *const __RESTR
 
 quat quatRotate(const quat q1, const quat q2, const float t);
 void quatRotatePR(const quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2, const float t, quat *const __RESTRICT__ r);
+
+vec3 quatBasisX(const quat q);
+void quatBasisXPR(const quat *const __RESTRICT__ q, vec3 *const __RESTRICT__ r);
+vec3 quatBasisY(const quat q);
+void quatBasisYPR(const quat *const __RESTRICT__ q, vec3 *const __RESTRICT__ r);
+vec3 quatBasisZ(const quat q);
+void quatBasisZPR(const quat *const __RESTRICT__ q, vec3 *const __RESTRICT__ r);
+
+void quatSwingTwist(const quat q, const vec3 v, quat *const __RESTRICT__ t, quat *const __RESTRICT__ s);
+void quatSwingTwistPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ v, quat *const __RESTRICT__ t, quat *const __RESTRICT__ s);
+void quatSwingTwistFast(const quat q, const vec3 v, quat *const __RESTRICT__ t, quat *const __RESTRICT__ s);
+void quatSwingTwistFastPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ v, quat *const __RESTRICT__ t, quat *const __RESTRICT__ s);
+void quatSwingTwistFaster(const quat q, const vec3 v, quat *const __RESTRICT__ t, quat *const __RESTRICT__ s);
+void quatSwingTwistFasterPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ v, quat *const __RESTRICT__ t, quat *const __RESTRICT__ s);
 
 #endif

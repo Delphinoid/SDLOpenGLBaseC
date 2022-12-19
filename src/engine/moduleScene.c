@@ -82,7 +82,7 @@ void moduleSceneClear(){
 
 }
 
-#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 void moduleSceneTick(const float dt_ms, const float dt_s, const float frequency){
 #else
 void moduleSceneTick(const float dt_ms, const float dt_s){
@@ -90,7 +90,7 @@ void moduleSceneTick(const float dt_ms, const float dt_s){
 
 	MEMORY_POOL_LOOP_BEGIN(__g_SceneResourceArray, i, scene *);
 
-		#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+		#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 		scnTick(i, dt_ms, dt_s, frequency);
 		#else
 		scnTick(i, dt_ms, dt_s);

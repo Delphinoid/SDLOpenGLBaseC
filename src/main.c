@@ -221,10 +221,16 @@ int main(int argc, char **argv){
 	tempObj = moduleObjectBaseAllocate();
 	objBaseLoad(tempObj, "Wall.tdo", 8);
 	tempObj = moduleObjectBaseAllocate();
+	objBaseLoad(tempObj, "Wall2.tdo", 9);
+	tempObj = moduleObjectBaseAllocate();
 	objBaseLoad(tempObj, "CubeTest2.tdo", 13);
 	tempObj->stateMax = 1;
 	tempObj = moduleObjectBaseAllocate();
 	objBaseLoad(tempObj, "Kera.tdo", 8);
+	tempObj->animationNum = 1;
+	tempObj->animations = memAllocate(sizeof(sklAnim *));
+	tempObj->animations[0] = moduleSkeletonAnimationAllocate();
+	sklaLoadSMD(tempObj->animations[0], tempObj->skl, "Resources"FILE_PATH_DELIMITER_STRING"Skeletons"FILE_PATH_DELIMITER_STRING"KeraAction.smd", 34, 0);
 	tempObj = moduleObjectBaseAllocate();
 	objBaseLoad(tempObj, "Lenticular.tdo", 14);
 	tempObj->stateMax = 1;
@@ -278,7 +284,7 @@ int main(int argc, char **argv){
 	scnInsertObject(scnMain, tempObji);
 	//
 	tempObji = moduleObjectAllocate();
-	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest2.tdo", 13));
+	objInstantiate(tempObji, moduleObjectBaseFind("Wall2.tdo", 13));
 	//objInstantiate(objGetState(&gameStateManager, tempID, 0), (object *)cvGet(&allObjects, 0));
 	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
 	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
@@ -289,7 +295,7 @@ int main(int argc, char **argv){
 	quatSetEuler(&tempObji->configuration[0].orientation, 0.f, 0.f, 45.6f*RADIAN_RATIO);
 	objPhysicsPrepare(tempObji);
 	tempObji->skeletonBodies->hull->restitution = 0.f;
-	tempObji->skeletonBodies->flags &= ~(0x06);
+	///tempObji->skeletonBodies->flags &= ~(0x06);  /// Currently not working! See physicsRigidBody.h.
 	//physRigidBodyIgnoreLinear(tempObji->skeletonBodies);
 	tempObji4 = tempObji;
 	//tempObji->configuration[0].scale.x = 8.f;
@@ -304,7 +310,7 @@ int main(int argc, char **argv){
 	//objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
 	//objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
 	//objInitPhysics(objGetState(&gameStateManager, tempID, 0));
-	tempObji->configuration[0].position.y = 10.f;
+	tempObji->configuration[0].position.y = 9.f;
 	//tempObji->configuration[0].position = vec3New(6.013734, -1.933293, -6.431198);
 	//tempObji->configuration[0].orientation = quatNew(1.000000, 0.000000, 0.000000, 0.000000);
 	objPhysicsPrepare(tempObji);
@@ -378,7 +384,7 @@ int main(int argc, char **argv){
 	scnInsertObject(scnMain, tempObji);
 	//
 	tempObji = moduleObjectAllocate();
-	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest2.tdo", 13));
+	objInstantiate(tempObji, moduleObjectBaseFind("Wall2.tdo", 13));
 	tempObji->configuration[0].scale.x = 30.f;//-0.65f;
 	tempObji->configuration[0].scale.y = 0.01f;
 	tempObji->configuration[0].scale.z = 10.f;//-0.65f;
@@ -387,11 +393,11 @@ int main(int argc, char **argv){
 	quatSetEuler(&tempObji->configuration[0].orientation, 45.6f*RADIAN_RATIO, 0.f, -30.f*RADIAN_RATIO);
 	objPhysicsPrepare(tempObji);
 	tempObji->skeletonBodies->hull->restitution = 0.f;
-	tempObji->skeletonBodies->flags &= ~(0x06);
+	///tempObji->skeletonBodies->flags &= ~(0x06);  /// Currently not working! See physicsRigidBody.h.
 	scnInsertObject(scnMain, tempObji);
 	//
 	tempObji = moduleObjectAllocate();
-	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest2.tdo", 13));
+	objInstantiate(tempObji, moduleObjectBaseFind("Wall2.tdo", 13));
 	tempObji->configuration[0].scale.x = 100.f;//-0.65f;
 	tempObji->configuration[0].scale.y = 0.01f;
 	tempObji->configuration[0].scale.z = 10.f;//-0.65f;
@@ -400,11 +406,11 @@ int main(int argc, char **argv){
 	quatSetEuler(&tempObji->configuration[0].orientation, 45.6f*RADIAN_RATIO, 0.f, 0.f*RADIAN_RATIO);
 	objPhysicsPrepare(tempObji);
 	tempObji->skeletonBodies->hull->restitution = 0.f;
-	tempObji->skeletonBodies->flags &= ~(0x06);
+	///tempObji->skeletonBodies->flags &= ~(0x06);  /// Currently not working! See physicsRigidBody.h.
 	scnInsertObject(scnMain, tempObji);
 	//
 	tempObji = moduleObjectAllocate();
-	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest2.tdo", 13));
+	objInstantiate(tempObji, moduleObjectBaseFind("Wall2.tdo", 13));
 	tempObji->configuration[0].scale.x = 75.f;//-0.65f;
 	tempObji->configuration[0].scale.y = 50.f;
 	tempObji->configuration[0].scale.z = 5.f;//-0.65f;
@@ -412,11 +418,12 @@ int main(int argc, char **argv){
 	tempObji->configuration[0].position.z = -75.f;//-0.65f;
 	objPhysicsPrepare(tempObji);
 	tempObji->skeletonBodies->hull->restitution = 0.f;
-	tempObji->skeletonBodies->flags &= ~(0x06);
+	///tempObji->skeletonBodies->flags &= ~(0x06);  /// Currently not working! See physicsRigidBody.h.
 	scnInsertObject(scnMain, tempObji);
 	//
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("Kera.tdo", 8));
+	skliAnimationNew(&tempObji->skeletonData, tempObji->base->animations[0], 1.f, SKELETON_ANIM_INSTANCE_ADDITIVE);
 	vec3SetS(&tempObji->configuration[0].scale, 1.25f);
 	tempObji->configuration[0].position.x += 0.f;
 	tempObji->configuration[0].position.y -= 2.9f;
@@ -466,7 +473,7 @@ int main(int argc, char **argv){
 		&joint->data.sphere, tempObji3->skeletonBodies, tempObji4->skeletonBodies, vec3Zero(), vec3Zero(),
 		PHYSICS_JOINT_SPHERE_CONE_LIMIT_ENABLED, vec3New(1.f, 0.f, 0.f), 45.f*RADIAN_RATIO
 	);*/
-	physJointDistanceInit(&joint->data.distance, vec3Zero(), vec3Zero(), 4.f, 0.f, 0.f);
+	physJointDistanceInit(&joint->data.distance, g_vec3Zero, g_vec3Zero, 4.f, 0.f, 0.f);
 	scnInsertJoint(scnMain, joint);
 
 	physJoint *joint_carry = modulePhysicsJointAllocate();
@@ -740,7 +747,7 @@ int main(int argc, char **argv){
 						if(vec3Magnitude(v) <= 5.f && vec3Dot(vec3NormalizeFast(target), vec3NormalizeFast(v)) >= 0.9f){
 							physJointInit(joint_carry, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_DISTANCE);
 							physJointAdd(joint_carry, tempObji2->skeletonBodies, p.obj->skeletonBodies);
-							physJointDistanceInit(&joint_carry->data.distance, vec3Zero(), vec3Zero(), 0.f, 0.f, 0.f);
+							physJointDistanceInit(&joint_carry->data.distance, g_vec3Zero, g_vec3Zero, 0.f, 0.f, 0.f);
 							carry = 1;
 						}
 					}

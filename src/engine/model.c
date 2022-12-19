@@ -4,6 +4,7 @@
 #include "sprite.h"
 #include "vertex.h"
 #include "skeleton.h"
+#include "camera.h"
 #include "moduleSkeleton.h"
 #include "moduleTextureWrapper.h"
 #include "memoryManager.h"
@@ -388,7 +389,7 @@ void mdlRender(const model *const __RESTRICT__ mdl, const skeleton *const __REST
 				mdlFindCurrentLOD(l, mdl->base->lodNum, &indexNum, &offset, distance, gfxMngr->shdrData.biasLOD);
 			}
 			// Draw the mesh.
-			if(indexNum){
+			if(indexNum > 0){
 				glDrawElements(GL_TRIANGLES, indexNum, GL_UNSIGNED_INT, offset);
 			}
 

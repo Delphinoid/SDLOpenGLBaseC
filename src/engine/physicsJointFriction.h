@@ -21,8 +21,7 @@ typedef struct {
 	vec3 normal;
 
 	// Contact tangents for simulating friction.
-	vec3 tangent1;
-	vec3 tangent2;
+	vec3 tangent[2];
 
 	// Friction inverse effective mass.
 	mat2 tangentInverseEffectiveMass;
@@ -37,7 +36,7 @@ typedef struct {
 
 } physJointFriction;
 
-#ifdef PHYSICS_CONSTRAINT_WARM_START
+#ifdef PHYSICS_JOINT_FRICTION_WARM_START
 void physJointFrictionWarmStart(const physJointFriction *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB);
 #endif
 void physJointFrictionGenerateInverseEffectiveMass(physJointFriction *const __RESTRICT__ joint, const physRigidBody *const __RESTRICT__ bodyA, const physRigidBody *const __RESTRICT__ bodyB, const float inverseMassTotal);

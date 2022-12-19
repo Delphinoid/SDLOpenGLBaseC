@@ -6,14 +6,43 @@
 
 /** Velocity seems to be exploding under certain circumstances. Investigate? **/
 
+#ifndef PHYSICS_JOINT_DISTANCE_LINEAR_SLOP
+	#define PHYSICS_JOINT_DISTANCE_LINEAR_SLOP 0.005f
+#endif
+#ifdef PHYSICS_JOINT_DISTANCE_STABILIZER_BAUMGARTE
+	#ifndef PHYSICS_JOINT_DISTANCE_BAUMGARTE_BIAS
+		#define PHYSICS_JOINT_DISTANCE_BAUMGARTE_BIAS 0.1f
+	#endif
+#endif
+#ifdef PHYSICS_JOINT_DISTANCE_STABILIZER_GAUSS_SEIDEL
+	// Error threshold for NGS configuration solving.
+	#ifndef PHYSICS_JOINT_DISTANCE_LINEAR_ERROR_THRESHOLD
+		#define PHYSICS_JOINT_DISTANCE_LINEAR_ERROR_THRESHOLD (3.f * PHYSICS_JOINT_DISTANCE_LINEAR_SLOP)
+	#endif
+#endif
+
 // Constrains two bodies so that they
 // stay at a certain distance from each
 // other. Can be rigid (by setting the
-// angular frequency to 0) or soft and
-// "springy".
+// stiffness to 0) or soft and "springy".
 
 typedef struct physRigidBody physRigidBody;
 typedef struct physJoint physJoint;
+
+typedef struct {
+	// Application points in both bodies' local spaces.
+	vec3 anchorA;
+	vec3 anchorB;
+	// The distance that the joint attempts to maintain.
+	float distance;
+	// Spring stiffness coefficient, k.
+	// The natural frequency of the joint is omega = sqrt(k/m).
+	float stiffness;
+	// Spring damping coefficient, c.
+	// Critical damping occurs at c = 2*sqrt(km).
+	float damping;
+} physJointDistanceBase;
+
 typedef struct {
 
 	// Application points in both bodies' local spaces.
@@ -23,20 +52,12 @@ typedef struct {
 	// The distance that the joint attempts to maintain.
 	float distance;
 
-	// The natural (angular) frequency of the mass-spring-damper
-	// system in radians per second. A value of 0 disables
-	// spring softening.
-	//     omega = 2 * pi * f
-	//     f = frequency in hertz
-	// Ideally, this frequency f should be less than half the
-	// time step (the Nyquist frequency) to avoid introducing
-	// errors.
-	float angularFrequency;
+	// Spring stiffness coefficient, k.
+	// The natural frequency of the joint is omega = sqrt(k/m).
+	float stiffness;
 
-	// Spring damping coefficient.
-	//     d = 2 * omega * zeta
-	//     omega = angular frequency
-	//     zeta = damping ratio
+	// Spring damping coefficient, c.
+	// Critical damping occurs at c = 2*sqrt(km).
 	float damping;
 
 	// "Magic" constants from Erin Catto's GDC 2011 presentation
@@ -44,11 +65,11 @@ typedef struct {
 	// term with a special value for beta.
 	//     gamma = 1/(h(hk + c))
 	//     beta  = hk/(hk + c)
-	//     bias  = beta/h * C
-	//           = C * h * k * gamma
-	//     h = time step
-	//     k = spring stiffness
-	//     c = damping coefficient
+	//     bias  = (beta/h)*C = C*h*k*gamma,
+	// where h is the time step, k is the spring stiffness and
+	// c is the damping coefficient. Note that the extra h in
+	// the denominator for gamma is because we're using impulses
+	// rather than forces.
 	float gamma;
 	float bias;
 
@@ -65,13 +86,9 @@ typedef struct {
 
 } physJointDistance;
 
-void physJointDistanceInit(physJointDistance *const __RESTRICT__ joint, const vec3 anchorA, const vec3 anchorB, const float distance, const float frequency, const float damping);
+void physJointDistanceInit(physJointDistance *const __RESTRICT__ joint, const vec3 anchorA, const vec3 anchorB, const float distance, const float stiffness, const float damping);
 void physJointDistancePresolveConstraints(physJoint *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB, const float dt_s);
 void physJointDistanceSolveVelocityConstraints(physJoint *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB);
-#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
 return_t physJointDistanceSolveConfigurationConstraints(physJoint *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB);
-#endif
-void physJointDistanceSetFrequency(physJointDistance *const __RESTRICT__ joint, const float frequency);
-void physJointDistanceSetDamping(physJointDistance *const __RESTRICT__ joint, const float damping);
 
 #endif

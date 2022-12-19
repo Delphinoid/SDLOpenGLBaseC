@@ -57,13 +57,12 @@ __FORCE_INLINE__ void physJointSolveVelocityConstraints(physJoint *const __RESTR
 	}
 }
 
-#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+#ifdef PHYSICS_JOINT_STABILIZER_GAUSS_SEIDEL
 
 /** The lines below should eventually be removed. **/
 #define physJointFixedSolveConfigurationConstraints     NULL
 #define physJointPrismaticSolveConfigurationConstraints NULL
 #define physJointRevoluteSolveConfigurationConstraints  NULL
-#define physJointSphereSolveConfigurationConstraints    NULL
 
 return_t (* const physJointSolveConfigurationConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM])(
 	physJoint *const __RESTRICT__ joint,
@@ -107,7 +106,7 @@ void physJointAdd(physJoint *const joint, physRigidBody *bodyA, physRigidBody *b
 	physJoint *next = bodyA->joints;
 	while(next != NULL && bodyB > next->bodyB){
 		previous = next;
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 		next = (physJoint *)memQLinkNextA(next);
 		#else
 		next = next->nextA;
@@ -116,7 +115,7 @@ void physJointAdd(physJoint *const joint, physRigidBody *bodyA, physRigidBody *b
 
 	if(previous != NULL){
 		// Insert between the previous joint and its next joint.
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 		memQLinkNextA(previous) = (byte_t *)joint;
 		#else
 		previous->nextA = joint;
@@ -127,20 +126,20 @@ void physJointAdd(physJoint *const joint, physRigidBody *bodyA, physRigidBody *b
 	}
 	if(next != NULL){
 		if(next->bodyA == bodyA){
-			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+			#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 			memQLinkPrevA(next) = (byte_t *)joint;
 			#else
 			next->prevA = joint;
 			#endif
 		}else{
-			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+			#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 			memQLinkPrevB(next) = (byte_t *)joint;
 			#else
 			next->prevB = joint;
 			#endif
 		}
 	}
-	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 	memQLinkPrevA(joint) = (byte_t *)previous;
 	memQLinkNextA(joint) = (byte_t *)next;
 	#else
@@ -155,7 +154,7 @@ void physJointAdd(physJoint *const joint, physRigidBody *bodyA, physRigidBody *b
 	next = bodyB->joints;
 	while(next != NULL && next->bodyA == bodyB){
 		previous = next;
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 		next = (physJoint *)memQLinkNextA(next);
 		#else
 		next = next->nextA;
@@ -164,7 +163,7 @@ void physJointAdd(physJoint *const joint, physRigidBody *bodyA, physRigidBody *b
 
 	if(previous != NULL){
 		// Insert between the previous joint and its next joint.
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 		memQLinkNextA(previous) = (byte_t *)joint;
 		#else
 		previous->nextA = joint;
@@ -174,13 +173,13 @@ void physJointAdd(physJoint *const joint, physRigidBody *bodyA, physRigidBody *b
 		bodyB->joints = joint;
 	}
 	if(next != NULL){
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 		memQLinkPrevB(next) = (byte_t *)joint;
 		#else
 		next->prevB = joint;
 		#endif
 	}
-	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 	memQLinkPrevB(joint) = (byte_t *)previous;
 	memQLinkNextB(joint) = (byte_t *)next;
 	#else
@@ -197,45 +196,45 @@ void physJointDelete(physJoint *const joint){
 	physJoint *temp;
 
 	// Remove references from the previous joints.
-	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 	temp = (physJoint *)memQLinkPrevA(joint);
 	#else
 	temp = joint->prevA;
 	#endif
 	if(temp != NULL){
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 		memQLinkNextA(temp) = memQLinkNextA(joint);
 		#else
 		temp->nextA = joint->nextA;
 		#endif
 	}else if(joint->bodyA != NULL){
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 		joint->bodyA->joints = (physJoint *)memQLinkNextA(joint);
 		#else
 		joint->bodyA->joints = joint->nextA;
 		#endif
 	}
-	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 	temp = (physJoint *)memQLinkPrevB(joint);
 	#else
 	temp = joint->prevB;
 	#endif
 	if(temp != NULL){
 		if(temp->bodyA == joint->bodyB){
-			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+			#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 			memQLinkNextA(temp) = memQLinkNextB(joint);
 			#else
 			temp->nextA = joint->nextB;
 			#endif
 		}else{
-			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+			#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 			memQLinkNextB(temp) = memQLinkNextB(joint);
 			#else
 			temp->nextB = joint->nextB;
 			#endif
 		}
 	}else if(joint->bodyB != NULL){
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 		joint->bodyB->joints = (physJoint *)memQLinkNextB(joint);
 		#else
 		joint->bodyB->joints = joint->nextB;
@@ -243,33 +242,33 @@ void physJointDelete(physJoint *const joint){
 	}
 
 	// Remove references from the next joints.
-	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 	temp = (physJoint *)memQLinkNextA(joint);
 	#else
 	temp = joint->nextA;
 	#endif
 	if(temp != NULL){
 		if(temp->bodyA == joint->bodyA){
-			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+			#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 			memQLinkPrevA(temp) = memQLinkPrevA(joint);
 			#else
 			temp->prevA = joint->prevA;
 			#endif
 		}else{
-			#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+			#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 			memQLinkPrevB(temp) = memQLinkPrevA(joint);
 			#else
 			temp->prevB = joint->prevA;
 			#endif
 		}
 	}
-	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 	temp = (physJoint *)memQLinkNextB(joint);
 	#else
 	temp = joint->nextB;
 	#endif
 	if(temp != NULL){
-		#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 		memQLinkPrevB(temp) = memQLinkPrevB(joint);
 		#else
 		temp->prevB = joint->prevB;

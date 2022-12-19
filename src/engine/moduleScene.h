@@ -27,7 +27,7 @@ scene *moduleSceneAllocate();
 void moduleSceneFree(scene *const __RESTRICT__ resource);
 void moduleSceneClear();
 
-#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 void moduleSceneTick(const float dt_ms, const float dt_s, const float frequency);
 #else
 void moduleSceneTick(const float dt_ms, const float dt_s);

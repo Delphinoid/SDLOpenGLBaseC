@@ -85,7 +85,7 @@ void scnRemoveObject(scene *const __RESTRICT__ scn, object *const __RESTRICT__ o
 
 }
 
-#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 return_t scnTick(scene *const __RESTRICT__ scn, const float dt_ms, const float dt_s, const float frequency){
 #else
 return_t scnTick(scene *const __RESTRICT__ scn, const float dt_ms, const float dt_s){
@@ -103,7 +103,7 @@ return_t scnTick(scene *const __RESTRICT__ scn, const float dt_ms, const float d
 	}
 
 	// Update the physics system.
-	#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+	#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 	return physIslandTick(&scn->island, dt_s, frequency);
 	#else
 	return physIslandTick(&scn->island, dt_s);

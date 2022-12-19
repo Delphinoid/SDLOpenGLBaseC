@@ -1,7 +1,6 @@
 #ifndef MODULEPHYSICS_H
 #define MODULEPHYSICS_H
 
-#include "physicsConstraint.h"
 #include "skeletonSettings.h"
 #include "memoryList.h"
 #include "memorySLink.h"
@@ -22,7 +21,7 @@ extern memorySLink __g_PhysicsRigidBodyBaseResourceArray;   // Contains physRigi
 extern memoryDLink __g_PhysicsRigidBodyResourceArray;       // Contains physRigidBodies.
 extern memorySLink __g_PhysicsColliderResourceArray;        // Contains physColliders.
 extern memoryDLink __g_PhysicsJointResourceArray;           // Contains physJoints.
-#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 extern memoryQLink __g_PhysicsContactPairResourceArray;     // Contains physContactPairs.
 extern memoryQLink __g_PhysicsSeparationPairResourceArray;  // Contains physSeparationPairs.
 #else
@@ -94,7 +93,7 @@ void modulePhysicsJointFree(physJoint **const __RESTRICT__ array, physJoint *con
 void modulePhysicsJointFreeArray(physJoint **const __RESTRICT__ array);
 void modulePhysicsJointClear();
 
-#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 
 physContactPair *modulePhysicsContactPairAllocateStatic();
 physContactPair *modulePhysicsContactPairAllocate();

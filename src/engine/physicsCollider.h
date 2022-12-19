@@ -77,7 +77,7 @@ void physColliderTransform(physCollider *const __RESTRICT__ c);
 physContactPair *physColliderFindContact(const physCollider *const c1, const physCollider *const c2, physContactPair **const previous, physContactPair **const next);
 physSeparationPair *physColliderFindSeparation(const physCollider *const c1, const physCollider *const c2, physSeparationPair **const previous, physSeparationPair **const next);
 
-#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 void physColliderUpdateContacts(physCollider *const c, const float frequency);
 #else
 void physColliderUpdateContacts(physCollider *const c);

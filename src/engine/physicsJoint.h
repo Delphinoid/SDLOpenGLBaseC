@@ -7,6 +7,13 @@
 #include "physicsJointRevolute.h"
 #include "physicsJointSphere.h"
 
+#if \
+defined(PHYSICS_JOINT_FIXED_STABILIZER_GAUSS_SEIDEL)     || defined(PHYSICS_JOINT_DISTANCE_STABILIZER_GAUSS_SEIDEL) || \
+defined(PHYSICS_JOINT_PRISMATIC_STABILIZER_GAUSS_SEIDEL) || defined(PHYSICS_JOINT_REVOLUTE_STABILIZER_GAUSS_SEIDEL) || \
+defined(PHYSICS_JOINT_SPHERE_STABILIZER_GAUSS_SEIDEL)
+	#define PHYSICS_JOINT_STABILIZER_GAUSS_SEIDEL
+#endif
+
 #ifndef PHYSICS_JOINT_VELOCITY_SOLVER_ITERATIONS
 	#define PHYSICS_JOINT_VELOCITY_SOLVER_ITERATIONS 4
 #endif
@@ -29,6 +36,21 @@
 typedef uint_least8_t physJointType_t;
 
 typedef struct physRigidBody physRigidBody;
+
+typedef struct physJointBase {
+	// Calculate the size of the largest joint type.
+	union {
+		physJointFixedBase fixed;
+		physJointDistanceBase distance;
+		physJointPrismaticBase prismatic;
+		physJointRevoluteBase revolute;
+		physJointSphereBase sphere;
+	} data;
+	physJointType_t type;
+	// Fits in for free next to physJointType_t.
+	flags_t flags;
+} physJointBase;
+
 typedef struct physJoint {
 
 	// Calculate the size of the largest joint type.
@@ -52,7 +74,7 @@ typedef struct physJoint {
 
 	// Previous and next pointers for
 	// body A's and body B's joint arrays.
-	#ifndef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+	#ifndef PHYSICS_CONTACT_USE_ALLOCATOR
 	physJoint *prevA, *nextA;
 	physJoint *prevB, *nextB;
 	#endif
@@ -70,7 +92,7 @@ extern void (* const physJointSolveVelocityConstraintsJumpTable[PHYSICS_JOINT_TY
 	physRigidBody *const __RESTRICT__ bodyA,
 	physRigidBody *const __RESTRICT__ bodyB
 );
-#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+#ifdef PHYSICS_JOINT_STABILIZER_GAUSS_SEIDEL
 extern return_t (* const physJointSolveConfigurationConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM])(
 	physJoint *const __RESTRICT__ joint,
 	physRigidBody *const __RESTRICT__ bodyA,
@@ -81,7 +103,7 @@ extern return_t (* const physJointSolveConfigurationConstraintsJumpTable[PHYSICS
 void physJointInit(physJoint *const __RESTRICT__ joint, const flags_t flags, const physJointType_t type);
 void physJointPresolveConstraints(physJoint *const __RESTRICT__ joint, const float dt_s);
 void physJointSolveVelocityConstraints(physJoint *const __RESTRICT__ joint);
-#ifdef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+#ifdef PHYSICS_JOINT_STABILIZER_GAUSS_SEIDEL
 return_t physJointSolveConfigurationConstraints(physJoint *const __RESTRICT__ joint);
 #endif
 void physJointAdd(physJoint *const joint, physRigidBody *bodyA, physRigidBody *bodyB);

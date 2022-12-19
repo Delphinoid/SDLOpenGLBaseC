@@ -15,6 +15,13 @@
 	#define PHYSICS_ISLAND_QUERY_STACK_SIZE AABB_TREE_QUERY_STACK_SIZE
 #endif
 
+#ifndef PHYSICS_ISLAND_VELOCITY_SOLVER_ITERATIONS
+	#define PHYSICS_ISLAND_VELOCITY_SOLVER_ITERATIONS 4
+#endif
+#ifndef PHYSICS_ISLAND_CONFIGURATION_SOLVER_ITERATIONS
+	#define PHYSICS_ISLAND_CONFIGURATION_SOLVER_ITERATIONS 4
+#endif
+
 typedef struct physRigidBody physRigidBody;
 typedef struct physCollider physCollider;
 typedef struct physJoint physJoint;
@@ -30,7 +37,7 @@ typedef struct physIsland {
 	// All of these are stored in doubly-linked lists.
 	physRigidBody *bodies;
 	physJoint *joints;
-	#ifdef PHYSICS_CONSTRAINT_USE_ALLOCATOR
+	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 	memQLink *contacts;
 	memQLink *separations;
 	#else
@@ -51,7 +58,7 @@ void physIslandRemoveRigidBody(physIsland *const __RESTRICT__ island, physRigidB
 void physIslandInsertRigidBodies(physIsland *const __RESTRICT__ island, physRigidBody *const bodies, physicsBodyIndex_t bodyNum);
 void physIslandRemoveRigidBodies(physIsland *const __RESTRICT__ island, physRigidBody *const bodies, physicsBodyIndex_t bodyNum);
 
-#ifndef PHYSICS_CONSTRAINT_SOLVER_GAUSS_SEIDEL
+#ifdef PHYSICS_CONTACT_STABILIZER_BAUMGARTE
 return_t physIslandTick(physIsland *const __RESTRICT__ island, const float dt_s, const float frequency);
 #else
 return_t physIslandTick(physIsland *const __RESTRICT__ island, const float dt_s);

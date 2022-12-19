@@ -10,9 +10,10 @@ typedef struct {
 	float w;
 } vec4;
 
+extern vec4 g_vec4Zero;
+
 vec4 vec4New(const float x, const float y, const float z, const float w);
 vec4 vec4NewS(const float s);
-vec4 vec4Zero();
 void vec4Set(vec4 *const __RESTRICT__ v, const float x, const float y, const float z, const float w);
 void vec4SetS(vec4 *const __RESTRICT__ v, const float s);
 void vec4ZeroP(vec4 *const __RESTRICT__ v);
@@ -58,6 +59,10 @@ void vec4VDivNP(vec4 *const __RESTRICT__ v, const float x, const float y, const 
 void vec4VDivSP(vec4 *const __RESTRICT__ v, const float s);
 void vec4NDivVP(const float x, const float y, const float z, const float w, vec4 *const __RESTRICT__ v);
 void vec4SDivVP(const float s, vec4 *const __RESTRICT__ v);
+
+vec4 vec4fmaf(const float x, const vec4 u, const vec4 v);
+void vec4fmafP(const float x, const vec4 *const __RESTRICT__ u, vec4 *const __RESTRICT__ v);
+void vec4fmafPR(const float x, const vec4 *const __RESTRICT__ u, const vec4 *const __RESTRICT__ v, vec4 *const __RESTRICT__ r);
 
 vec4 vec4Min(const vec4 v1, const vec4 v2);
 void vec4MinP(const vec4 *const __RESTRICT__ v1, const vec4 *const __RESTRICT__ v2, vec4 *const __RESTRICT__ r);

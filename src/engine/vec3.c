@@ -1,6 +1,8 @@
 #include "helpersMath.h"
 #include <string.h>
 
+vec3 g_vec3Zero = {.x = 0.f, .y = 0.f, .z = 0.f};
+
 __HINT_INLINE__ vec3 vec3New(const float x, const float y, const float z){
 	const vec3 r = {.x = x, .y = y, .z = z};
 	return r;
@@ -276,6 +278,45 @@ __HINT_INLINE__ void vec3SDivVPR(const float s, const vec3 *const __RESTRICT__ v
 	r->x = s / v->x;
 	r->y = s / v->y;
 	r->z = s / v->z;
+}
+
+__HINT_INLINE__ vec3 vec3fmaf(const float x, const vec3 u, const vec3 v){
+	const vec3 r = {
+	#ifdef FP_FAST_FMAF
+		.x = fmaf(x, u.x, v.x),
+		.y = fmaf(x, u.y, v.y),
+		.z = fmaf(x, u.z, v.z)
+	#else
+		.x = x*u.x + v.x,
+		.y = x*u.y + v.y,
+		.z = x*u.z + v.z
+	#endif
+	};
+	return r;
+}
+
+__HINT_INLINE__ void vec3fmafP(const float x, const vec3 *const __RESTRICT__ u, vec3 *const __RESTRICT__ v){
+	#ifdef FP_FAST_FMAF
+	v->x = fmaf(x, u->x, v->x);
+	v->y = fmaf(x, u->y, v->y);
+	v->z = fmaf(x, u->z, v->z);
+	#else
+	v->x = x*u->x + v->x;
+	v->y = x*u->y + v->y;
+	v->z = x*u->z + v->z;
+	#endif
+}
+
+__HINT_INLINE__ void vec3fmafPR(const float x, const vec3 *const __RESTRICT__ u, const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r){
+	#ifdef FP_FAST_FMAF
+	r->x = fmaf(x, u->x, v->x);
+	r->y = fmaf(x, u->y, v->y);
+	r->z = fmaf(x, u->z, v->z);
+	#else
+	r->x = x*u->x + v->x;
+	r->y = x*u->y + v->y;
+	r->z = x*u->z + v->z;
+	#endif
 }
 
 __HINT_INLINE__ vec3 vec3Min(const vec3 v1, const vec3 v2){

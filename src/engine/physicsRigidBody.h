@@ -22,6 +22,9 @@
 // this and manually invoking the physRigidBodyScale()
 // function instead.
 
+/// Note that PHYSICS_BODY_SIMULATE_LINEAR (and potentially PHYSICS_BODY_SIMULATE_ANGULAR)
+/// do not seem to work properly. For massive objects, impulses will change their velocities,
+/// which will affect contact and constraint solving.
 #define PHYSICS_BODY_UNINITIALIZED      0x01  // Whether or not the simulation has just begun on this frame. Currently unused.
 #define PHYSICS_BODY_SIMULATE_LINEAR    0x02  // Simulate linear velocity.
 #define PHYSICS_BODY_SIMULATE_ANGULAR   0x04  // Simulate angular velocity. Disabling this is useful for certain entities, such as players.
@@ -148,6 +151,18 @@ void physRigidBodyApplyVelocityImpulseAngularInverse(physRigidBody *const __REST
 
 void physRigidBodyApplyConfigurationImpulse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J);
 void physRigidBodyApplyConfigurationImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J);
+
+void physRigidBodyApplyAngularConfigurationImpulse(physRigidBody *const __RESTRICT__ body, const vec3 J);
+void physRigidBodyApplyAngularConfigurationImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 J);
+
+void physRigidBodyApplyImpulse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p);
+void physRigidBodyApplyImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p);
+
+void physRigidBodyApplyBoostImpulse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p, const vec3 a);
+void physRigidBodyApplyBoostImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p, const vec3 a);
+
+void physRigidBodyApplyAngularImpulse(physRigidBody *const __RESTRICT__ body, vec3 J);
+void physRigidBodyApplyAngularImpulseInverse(physRigidBody *const __RESTRICT__ body, vec3 J);
 
 #if defined(PHYSICS_BODY_STORE_LOCAL_TENSORS) && defined(PHYSICS_BODY_SCALE_INERTIA_TENSORS)
 void physRigidBodyScale(physRigidBody *const __RESTRICT__ body, const vec3 scale);
