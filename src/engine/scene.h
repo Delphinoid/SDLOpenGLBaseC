@@ -74,8 +74,17 @@ typedef struct scene {
 	// Objects in the scene.
 	// We store the number of objects to allow
 	// easier preallocations when rendering.
-	object *objects;   // Contains object pointers.
+	object *objects;   // Contains object pointers (DLink).
 	size_t objectNum;  // The number of objects in the scene.
+
+	/**
+	*** Particle systems should use an SLink
+	*** similarly to physics islands. That is,
+	*** the scene / module uses an SLink, and
+	*** objects storing arrays of particle
+	*** systems update it so that the particles
+	*** in their own arrays are all adjacent.
+	**/
 
 	// SLink of scene zones.
 	///scnZone *zones;

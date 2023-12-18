@@ -1657,8 +1657,8 @@ void physRigidBodyIntegrateConfiguration(physRigidBody *const __RESTRICT__ body,
 			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR)// &&
 			///(body->angularVelocity.y != 0.f || body->angularVelocity.z != 0.f || body->angularVelocity.x != 0.f)
 		){
-			body->configuration.orientation = quatNormalizeFastAccurate(quatIntegrate(body->configuration.orientation, body->angularVelocity, dt_s));
-			flagsSet(body->flags, PHYSICS_BODY_ROTATED);
+		    body->configuration.orientation = quatNormalizeFastAccurate(quatIntegrate(body->configuration.orientation, body->angularVelocity, dt_s));
+		    flagsSet(body->flags, PHYSICS_BODY_ROTATED);
 		}else{
 			flagsUnset(body->flags, PHYSICS_BODY_ROTATED);
 		}

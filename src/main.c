@@ -467,13 +467,14 @@ int main(int argc, char **argv){
 	//
 
 	physJoint *joint = modulePhysicsJointAllocate();
-	physJointInit(joint, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_DISTANCE);
+	//physJointInit(joint, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_DISTANCE);
+	physJointInit(joint, PHYSICS_JOINT_COLLISION_IGNORE, PHYSICS_JOINT_TYPE_SPHERE);
 	physJointAdd(joint, tempObji4->skeletonBodies, tempObji3->skeletonBodies);
-	/*physJointSphereInit(
-		&joint->data.sphere, tempObji3->skeletonBodies, tempObji4->skeletonBodies, vec3Zero(), vec3Zero(),
-		PHYSICS_JOINT_SPHERE_CONE_LIMIT_ENABLED, vec3New(1.f, 0.f, 0.f), 45.f*RADIAN_RATIO
-	);*/
-	physJointDistanceInit(&joint->data.distance, g_vec3Zero, g_vec3Zero, 4.f, 0.f, 0.f);
+	physJointSphereInit(
+		&joint->data.sphere, g_vec3Zero, vec3New(-5.f, 0.f, 0.f), g_quatIdentity, g_quatIdentity,
+		0.f, -M_PI, M_PI, -M_PI/2.f, M_PI/2.f, -M_PI, M_PI
+	);
+	//physJointDistanceInit(&joint->data.distance, g_vec3Zero, g_vec3Zero, 4.f, 0.f, 0.f);
 	scnInsertJoint(scnMain, joint);
 
 	physJoint *joint_carry = modulePhysicsJointAllocate();

@@ -423,7 +423,7 @@ __HINT_INLINE__ vec3 quatAxis(const quat q){
 }
 __HINT_INLINE__ void quatAxisPR(const quat *const __RESTRICT__ q, vec3 *const __RESTRICT__ r){
 	// We don't want to risk a potential divide-by-zero error.
-	if(q->w != 1.f){
+	if(q->w == 1.f){
 		vec3ZeroP(r);
 	}else{
 		// Optimization of x^2 + y^2 + z^2, as x^2 + y^2 + z^2 + w^2 = 1.

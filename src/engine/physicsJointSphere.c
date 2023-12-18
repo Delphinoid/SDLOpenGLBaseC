@@ -163,8 +163,8 @@ void physJointSphereInit(
 ){
 
 	// The inputs for initializing the ball-and-socket joint shouldn't be too mysterious:
-	//     anchorA          - Vector from rigid body A's point of reference to the socket.
-	//     anchorB          - Vector from rigid body B's point of reference to the ball.
+	//     anchorA          - Vector from rigid body A's point of reference to the ball and socket.
+	//     anchorB          - Vector from rigid body B's point of reference to the ball and socket.
 	//     {min,max}{X,Y,Z} - Angles used to clamp the relative orientation of body B.
 	// Note that the minimum and maximum angles are given in radians.
 	// The axes are taken relative to rigid body A's frame of reference.
@@ -209,7 +209,7 @@ static __FORCE_INLINE__ vec3 physJointSphereSwingImpulseRemoveTwist(const vec3 t
 #ifdef PHYSICS_JOINT_SPHERE_WARM_START
 static __FORCE_INLINE__ void physJointSphereWarmStart(physJointSphere *const __RESTRICT__ joint, physRigidBody *const __RESTRICT__ bodyA, physRigidBody *const __RESTRICT__ bodyB){
 
-	vec3 angularImpulse;
+	vec3 angularImpulse = g_vec3Zero;
 
 	// The angular impulse is the sum of the swing and twist impulses.
 	// We recalculate them here because we need the new swing and twist axes.
@@ -218,8 +218,6 @@ static __FORCE_INLINE__ void physJointSphereWarmStart(physJointSphere *const __R
 		#ifdef PHYSJOINTSPHERE_SWING_USE_ELLIPSE_NORMAL
 		angularImpulse = physJointSphereSwingImpulseRemoveTwist(joint->twistAxis, angularImpulse);
 		#endif
-	}else{
-		angularImpulse = g_vec3Zero;
 	}
 	if(flagsAreSet(((physJointSphere *)joint)->limitStates, PHYSICS_JOINT_SPHERE_LIMITS_TWIST)){
 		angularImpulse = vec3fmaf(joint->twistImpulse, joint->twistAxis, angularImpulse);
@@ -675,9 +673,10 @@ void physJointSphereSolveVelocityConstraints(physJoint *const __RESTRICT__ joint
 		// v_socket   = vA + wA X rA
 		// v_ball     = vB + wB X rB
 		// v_relative = v_ball - v_socket
+		// We first calculate the negative relative velocity.
 		impulse = vec3VSubV(
-			vec3VAddV(vec3Cross(bodyB->angularVelocity, ((physJointSphere *)joint)->rB), bodyB->linearVelocity),
-			vec3VAddV(vec3Cross(bodyA->angularVelocity, ((physJointSphere *)joint)->rA), bodyA->linearVelocity)
+			vec3VAddV(vec3Cross(bodyA->angularVelocity, ((physJointSphere *)joint)->rA), bodyA->linearVelocity),
+			vec3VAddV(vec3Cross(bodyB->angularVelocity, ((physJointSphere *)joint)->rB), bodyB->linearVelocity)
 		);
 		// Subtract the bias term from the negative relative velocity.
 		impulse = vec3VSubV(impulse, ((physJointSphere *)joint)->linearBias);

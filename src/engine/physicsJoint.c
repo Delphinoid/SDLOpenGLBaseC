@@ -14,7 +14,6 @@ void physJointInit(physJoint *const __RESTRICT__ joint, const flags_t flags, con
 #define physJointFixedPresolveConstraints     NULL
 #define physJointPrismaticPresolveConstraints NULL
 #define physJointRevolutePresolveConstraints  NULL
-#define physJointSpherePresolveConstraints    NULL
 
 void (* const physJointPresolveConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM])(
 	physJoint *const __RESTRICT__ joint,
@@ -38,7 +37,6 @@ __FORCE_INLINE__ void physJointPresolveConstraints(physJoint *const __RESTRICT__
 #define physJointFixedSolveVelocityConstraints     NULL
 #define physJointPrismaticSolveVelocityConstraints NULL
 #define physJointRevoluteSolveVelocityConstraints  NULL
-#define physJointSphereSolveVelocityConstraints    NULL
 
 void (* const physJointSolveVelocityConstraintsJumpTable[PHYSICS_JOINT_TYPE_NUM])(
 	physJoint *const __RESTRICT__ joint,
