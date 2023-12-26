@@ -13,14 +13,11 @@ void guiTextTick(guiElement *const element, const float dt_ms){
 
 }**/
 
-__HINT_INLINE__ mat4 tempmat4Translate(const float x, const float y, const float z, const mat4 m){
-
-}
 void guiTextRender(const guiElement *const element, graphicsManager *const gfxMngr, const camera *const cam, const float distance, const float interpT){
 
 	const guiText text = element->data.text;
 	const transform root = (element->parent == NULL ? element->root : tfMultiply(element->parent->root, element->root));
-	const mat4 rootTransform = tfMatrix4(root);
+	const mat3x4 rootTransform = tfMatrix3x4(root);
 
 	txtFont font = *text.format.font;
 	const texture *atlas = NULL;
@@ -34,7 +31,7 @@ void guiTextRender(const guiElement *const element, graphicsManager *const gfxMn
 	const byte_t *currentCharacter = text.stream.offset;
 
 	// Scaled root transform.
-	mat4 transform = mat4Scale(text.format.size, text.format.size, text.format.size, rootTransform);
+	mat3x4 rootTransformScaled = mat3x4Scale(text.format.size, text.format.size, text.format.size, rootTransform);
 
 	// Initialize rendering state.
 	glBindVertexArray(g_meshSprite.vaoID);
@@ -82,7 +79,7 @@ void guiTextRender(const guiElement *const element, graphicsManager *const gfxMn
 					///gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, atlas->diffuseID);
 				}
 				if(flagsAreSet(text.format.style, TEXT_FORMAT_SIZE_UPDATED)){
-					transform = mat4Scale(rootTransform, text.format.size, text.format.size, text.format.size);
+					rootTransformScaled = mat3x4Scale(rootTransform, text.format.size, text.format.size, text.format.size);
 				}
 				if(flagsAreSet(text.format.style, TEXT_FORMAT_STYLE_UPDATED)){
 					/// Send SDF style changes to the shader.
@@ -140,8 +137,8 @@ void guiTextRender(const guiElement *const element, graphicsManager *const gfxMn
 
 			// Generate glyph transform and add it to the state buffer.
 			/// Temporary transformation. There must be a better way.
-			state->transformation = mat4TranslatePre(transform, glyphX, glyphY, 0.f);
-			state->transformation = mat4Scale(glyphWidth, glyphHeight, 1.f, state->transformation);
+			state->transformation = mat3x4TranslatePre(rootTransformScaled, glyphX, glyphY, 0.f);
+			state->transformation = mat3x4Scale(glyphWidth, glyphHeight, 1.f, state->transformation);
 			state->frame = glyph.frame;
 			++state; ++bufferSize;
 

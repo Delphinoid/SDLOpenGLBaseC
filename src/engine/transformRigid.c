@@ -9,15 +9,15 @@ transformRigid g_tfrIdentity = {
 void tfrInit(transformRigid *const __RESTRICT__ tf){
 	*tf = g_tfrIdentity;
 }
-mat4 tfrMatrix(const transformRigid tf){
+mat3x4 tfrMatrix(const transformRigid tf){
 	// Translate, rotate and scale.
 	// It looks a bit weird because it's ultra optimized.
-	// Note that mat4Scale is a right multiplication.
-	return mat4Translate(
+	// Note that mat3x4Scale is a right multiplication.
+	return mat3x4Translate(
 		tf.position.x, tf.position.y, tf.position.z,
-		mat4Scale(
+		mat3x4Scale(
 			tf.scale.x, tf.scale.y, tf.scale.z,
-			mat4RotationMatrix(tf.orientation)
+			mat3x4RotationMatrix(tf.orientation)
 		)
 	);
 }

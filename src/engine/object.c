@@ -1012,7 +1012,7 @@ void objRender(const object *const __RESTRICT__ obj, graphicsManager *const __RE
 
 		boneIndex_t i;
 
-		mat4 *transformCurrent = gfxMngr->shdrData.skeletonTransformState;
+		mat3x4 *transformCurrent = gfxMngr->shdrData.skeletonTransformState;
 		const transform *bCurrent = obj->state.configuration;
 		const transform *bPrevious = (obj->state.previous == NULL ? bCurrent : obj->state.previous->configuration);
 
@@ -1025,7 +1025,7 @@ void objRender(const object *const __RESTRICT__ obj, graphicsManager *const __RE
 		// Handle the root separately.
 		state = tfInterpolate(*bPrevious, *bCurrent, interpT);
 		centroid = state.position;
-		*transformCurrent = tfMatrix4(tfMultiply(state, sklBone->globalBindInverse));
+		*transformCurrent = tfMatrix3x4(tfMultiply(state, sklBone->globalBindInverse));
 
 		///gfxDebugBonePositions[0] = state.position;
 		///gfxDebugBoneParents[0] = 0;
@@ -1036,7 +1036,7 @@ void objRender(const object *const __RESTRICT__ obj, graphicsManager *const __RE
 			++bCurrent, ++bPrevious, ++transformCurrent, ++sklBone;
 
 			state = tfInterpolate(*bPrevious, *bCurrent, interpT);
-			*transformCurrent = tfMatrix4(tfMultiply(state, sklBone->globalBindInverse));
+			*transformCurrent = tfMatrix3x4(tfMultiply(state, sklBone->globalBindInverse));
 
 			///gfxDebugBonePositions[i] = state.position;
 			///gfxDebugBoneParents[i] = sklBone->parent;

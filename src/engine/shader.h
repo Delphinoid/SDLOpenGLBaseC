@@ -52,15 +52,12 @@ typedef struct {
 
 	// Buffer data.
 	///transform skeletonBindAccumulator[SKELETON_MAX_BONE_NUM];  // Accumulates bind states for bones before rendering.
-	mat4 skeletonTransformState[SKELETON_MAX_BONE_NUM];   // Stores the renderable's transform state before rendering.
+	mat3x4 skeletonTransformState[SKELETON_MAX_BONE_NUM];   // Stores the renderable's transform state before rendering.
 	spriteState spriteTransformState[SPRITE_STATE_BUFFER_SIZE];
 
 	// Current MIP and LODs biases.
 	float biasMIP;
 	size_t biasLOD;
-
-	// Identity matrix.
-	mat4 identityMatrix;
 
 } shaderData;
 

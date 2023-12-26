@@ -23,7 +23,7 @@ layout(location = 4) in vec4  vertexBoneWeights;
 // Per-instance data (same as per-call for now since we're not using instancing).
 uniform mat4 vpMatrix;
 uniform vec4 textureFragmentArray[GFX_TEXTURE_SAMPLER_NUM];
-uniform mat4 boneArray[SKELETON_MAX_BONE_NUM];
+uniform mat4x3 boneArray[SKELETON_MAX_BONE_NUM];
 
 // Per-call data.
 uniform sampler2D textureSamplerArray[GFX_TEXTURE_SAMPLER_NUM];
@@ -34,7 +34,7 @@ void main(){
 	
 	// Transform the vertex.
 	vec4 vertexPosition4 = vec4(vertexPosition, 1.f);
-	vec4 vertex = vec4(0.f, 0.f, 0.f, 1.f);
+	vec3 vertex = vec3(0.f, 0.f, 0.f);
 	
 	// Apply each bone transformation (array indices must be const, so no for loops).
 	if(vertexBoneIDs[0] >= 0 && vertexBoneWeights[0] != 0.f){

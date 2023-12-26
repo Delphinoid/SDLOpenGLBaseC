@@ -2,6 +2,7 @@
 #define TRANSFORM_H
 
 #include "transformRigid.h"
+#include "mat4.h"
 #include "mat3.h"
 
 // Represents an affine transformation.
@@ -30,6 +31,7 @@ void tfIdentityP(transform *const __RESTRICT__ tf);
 transformRigid tfRigid(const transform tf);
 transform tfrAffine(const transformRigid tf);
 mat4 tfMatrix4(const transform tf);
+mat3x4 tfMatrix3x4(const transform tf);
 mat3 tfMatrix3(const transform tf);
 
 vec3 tfTransformPoint(const transform tf, const vec3 v);

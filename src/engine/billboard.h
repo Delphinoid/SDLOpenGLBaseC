@@ -1,7 +1,7 @@
 #ifndef BILLBOARD_H
 #define BILLBOARD_H
 
-#include "mat4.h"
+#include "mat3x4.h"
 #include "flags.h"
 
 #define BILLBOARD_DISABLED           0x0000
@@ -33,7 +33,7 @@ typedef struct {
 } billboard;
 
 void billboardInit(billboard *const __RESTRICT__ data);
-mat4 billboardState(const billboard data, const camera *const __RESTRICT__ cam, const vec3 centroid, mat4 configuration);
-unsigned int billboardLenticular(const billboard data, const camera *const __RESTRICT__ cam, const mat4 configuration);
+mat3x4 billboardState(const billboard data, const camera *const __RESTRICT__ cam, const vec3 centroid, mat3x4 configuration);
+unsigned int billboardLenticular(const billboard data, const camera *const __RESTRICT__ cam, const mat3x4 configuration);
 
 #endif

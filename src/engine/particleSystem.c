@@ -226,7 +226,7 @@ __FORCE_INLINE__ static void particleSystemParticlesRender(const particleSystem 
 
 	// Generate state buffers.
 	for(; p < pLast; ++p, ++state){
-		state->transformation = tfMatrix4(p->configuration);
+		state->transformation = tfMatrix3x4(p->configuration);
 		state->frame = twState(mdl->textures[0], &p->animator, p->currentAnim, interpT)->subframe;
 	}
 

@@ -1,7 +1,7 @@
 #ifndef TRANSFORMRIGID_H
 #define TRANSFORMRIGID_H
 
-#include "mat4.h"
+#include "mat3x4.h"
 
 // Represents a rigid transformation.
 typedef struct {
@@ -13,7 +13,7 @@ typedef struct {
 extern transformRigid g_tfrIdentity;
 
 void tfrIdentityP(transformRigid *const __RESTRICT__ tf);
-mat4 tfrMatrix(const transformRigid tf);
+mat3x4 tfrMatrix(const transformRigid tf);
 
 vec3 tfrTransform(const transformRigid tf, const vec3 v);
 void tfrTransformP(const transformRigid *const __RESTRICT__ tf, vec3 *const __RESTRICT__ v);

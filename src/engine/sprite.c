@@ -64,19 +64,19 @@ static void sprVertexAttributes(){
 
 static void sprStateAttributes(){
 	// First transformation state column offset.
-	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(spriteState), (GLvoid *)offsetof(spriteState, transformation.m[0]));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(spriteState), (GLvoid *)offsetof(spriteState, transformation.m[0]));
 	glEnableVertexAttribArray(2);
 	glVertexAttribDivisor(2, 1);
 	// Second transformation state column offset.
-	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(spriteState), (GLvoid *)offsetof(spriteState, transformation.m[1]));
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(spriteState), (GLvoid *)offsetof(spriteState, transformation.m[1]));
 	glEnableVertexAttribArray(3);
 	glVertexAttribDivisor(3, 1);
 	// Third transformation state column offset.
-	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(spriteState), (GLvoid *)offsetof(spriteState, transformation.m[2]));
+	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(spriteState), (GLvoid *)offsetof(spriteState, transformation.m[2]));
 	glEnableVertexAttribArray(4);
 	glVertexAttribDivisor(4, 1);
 	// Fourth transformation state column offset.
-	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(spriteState), (GLvoid *)offsetof(spriteState, transformation.m[3]));
+	glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, sizeof(spriteState), (GLvoid *)offsetof(spriteState, transformation.m[3]));
 	glEnableVertexAttribArray(5);
 	glVertexAttribDivisor(5, 1);
 	// Animated UV offset.

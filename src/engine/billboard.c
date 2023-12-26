@@ -11,7 +11,7 @@ void billboardInit(billboard *const __RESTRICT__ data){
 	data->scale = 1.f/BILLBOARD_SCALE_CALIBRATION_DISTANCE;
 }
 
-mat4 billboardState(const billboard data, const camera *const __RESTRICT__ cam, const vec3 centroid, mat4 configuration){
+mat3x4 billboardState(const billboard data, const camera *const __RESTRICT__ cam, const vec3 centroid, mat3x4 configuration){
 
 	// Generates a billboard transformation matrix.
 	// If no flags are set, returns the identity matrix.
@@ -28,21 +28,21 @@ mat4 billboardState(const billboard data, const camera *const __RESTRICT__ cam, 
 
 		// Use the camera's X, Y and Z axes for cheap sprite billboarding.
 		// This is technically an inverse matrix, so we need rows rather than columns.
-		*((vec4 *)&configuration.m[0][0]) = vec4New(cam->viewMatrix.m[0][0], cam->viewMatrix.m[1][0], cam->viewMatrix.m[2][0], 0.f);
+		*((vec3 *)&configuration.m[0][0]) = vec3New(cam->viewMatrix.m[0][0], cam->viewMatrix.m[1][0], cam->viewMatrix.m[2][0]);
 
 		if(data.axis != NULL){
 			*((vec3 *)&configuration.m[1][0]) = *data.axis;
-			configuration.m[1][3] = 0.f;
+			///configuration.m[1][3] = 0.f;
 		}else{
-			*((vec4 *)&configuration.m[1][0]) = vec4New(cam->viewMatrix.m[0][1], cam->viewMatrix.m[1][1], cam->viewMatrix.m[2][1], 0.f);
+			*((vec3 *)&configuration.m[1][0]) = vec3New(cam->viewMatrix.m[0][1], cam->viewMatrix.m[1][1], cam->viewMatrix.m[2][1]);
 		}
 
-		*((vec4 *)&configuration.m[2][0]) = vec4New(cam->viewMatrix.m[0][2], cam->viewMatrix.m[1][2], cam->viewMatrix.m[2][2], 0.f);
+		*((vec3 *)&configuration.m[2][0]) = vec3New(cam->viewMatrix.m[0][2], cam->viewMatrix.m[1][2], cam->viewMatrix.m[2][2]);
 		///configuration.m[3][3] = 1.f;
 
 		if(flagsAreSet(data.flags, BILLBOARD_SCALE)){
 			const float distance = camDistance(cam, centroid) * data.scale;
-			configuration = mat4ScalePre(configuration, distance, distance, distance);
+			configuration = mat3x4ScalePre(configuration, distance, distance, distance);
 		}
 
 	}else if(flagsAreSet(data.flags, BILLBOARD_LOCK_XYZ)){
@@ -83,20 +83,20 @@ mat4 billboardState(const billboard data, const camera *const __RESTRICT__ cam, 
 		}
 
 		// Translate the transformation to the "origin".
-		configuration = mat4Translate(-centroid.x, -centroid.y, -centroid.z, configuration);
+		configuration = mat3x4Translate(-centroid.x, -centroid.y, -centroid.z, configuration);
 		///*((vec3 *)&configuration.m[3][0]) = g_vec3Zero;
 
 		// Scale based on distance if necessary.
 		if(flagsAreSet(data.flags, BILLBOARD_SCALE)){
 			const float distance = camDistance(cam, centroid) * data.scale;
-			configuration = mat4ScalePre(configuration, distance, distance, distance);
+			configuration = mat3x4ScalePre(configuration, distance, distance, distance);
 		}
 
 		// Rotate to face and translate back.
-		configuration = mat4Translate(
+		configuration = mat3x4Translate(
 			centroid.x, centroid.y, centroid.z,
-			mat4MMultM(
-				mat4RotateToFace(eye, target, up),
+			mat3x4MMultM(
+				mat3x4RotateToFace(eye, target, up),
 				configuration
 			)
 		);
@@ -108,7 +108,7 @@ mat4 billboardState(const billboard data, const camera *const __RESTRICT__ cam, 
 
 		if(flagsAreSet(data.flags, BILLBOARD_SCALE)){
 			const float distance = camDistance(cam, centroid) * data.scale;
-			configuration = mat4ScalePre(configuration, distance, distance, distance);
+			configuration = mat3x4ScalePre(configuration, distance, distance, distance);
 		}
 
 	}
@@ -117,7 +117,7 @@ mat4 billboardState(const billboard data, const camera *const __RESTRICT__ cam, 
 
 }
 
-unsigned int billboardLenticular(const billboard data, const camera *const __RESTRICT__ cam, const mat4 configuration){
+unsigned int billboardLenticular(const billboard data, const camera *const __RESTRICT__ cam, const mat3x4 configuration){
 
 	if(data.sectors > 1){
 

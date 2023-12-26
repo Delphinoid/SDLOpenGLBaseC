@@ -38,6 +38,16 @@ mat4 tfMatrix4(const transform tf){
 		)
 	);
 }
+mat3x4 tfMatrix3x4(const transform tf){
+	// Translate, rotate and scale.
+	return mat3x4Translate(
+		tf.position.x, tf.position.y, tf.position.z,
+		mat3x4Rotate(
+			tf.orientation,
+			mat3x4ShearMatrix(tf.shear, tf.scale)
+		)
+	);
+}
 mat3 tfMatrix3(const transform tf){
 	// Rotate and scale.
 	return mat3MMultM(

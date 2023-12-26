@@ -334,7 +334,7 @@ void mdlRender(const model *const __RESTRICT__ mdl, const skeleton *const __REST
 
 		vertexIndex_t indexNum;
 		const void *offset;
-		mat4 transform;
+		mat3x4 transformState;
 		GLuint bArray = gfxMngr->shdrPrgObj.boneArrayID;
 		boneIndex_t boneNum = mdl->base->skl->boneNum;
 		sklNode *nLayout = mdl->base->skl->bones;
@@ -355,12 +355,13 @@ void mdlRender(const model *const __RESTRICT__ mdl, const skeleton *const __REST
 			// Apply billboarding transformations if required.
 			if(mdl->billboardData.flags != BILLBOARD_DISABLED){
 				// Use the root bone's global position as the centroid for billboarding.
-				transform = billboardState(mdl->billboardData, cam, centroid, gfxMngr->shdrData.skeletonTransformState[rndrBone]);
+				transformState = billboardState(mdl->billboardData, cam, centroid, gfxMngr->shdrData.skeletonTransformState[rndrBone]);
 			}else{
-				transform = gfxMngr->shdrData.skeletonTransformState[rndrBone];
+				transformState = gfxMngr->shdrData.skeletonTransformState[rndrBone];
 			}
 			// Feed the bone configuration to the shader.
-			glUniformMatrix4fv(bArray, 1, GL_FALSE, &transform.m[0][0]);
+			// OpenGL uses column-major order for matrix dimensions, unlike us!
+			glUniformMatrix4x3fv(bArray, 1, GL_FALSE, &transformState.m[0][0]);
 		}
 
 		// Render each of the meshes associated with the model.
