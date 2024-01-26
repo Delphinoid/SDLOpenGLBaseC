@@ -21,7 +21,8 @@ typedef struct {
 	float density;
 	float friction;
 	float restitution;
-	colliderMask_t layers;
+	colliderMask_t layer;
+	colliderMask_t mask;
 
 } particleBase;
 

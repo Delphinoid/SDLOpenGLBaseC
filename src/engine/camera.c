@@ -75,9 +75,18 @@ void camUpdateViewProjectionMatrix(camera *const __RESTRICT__ cam, const unsigne
 }
 
 float camDistance(const camera *const __RESTRICT__ cam, const vec3 target){
-	return sqrt(fabsf((target.x - cam->position.render.x) * (target.x - cam->position.render.x) +
-	                  (target.y - cam->position.render.y) * (target.y - cam->position.render.y) +
-	                  (target.z - cam->position.render.z) * (target.z - cam->position.render.z)));
+	return vec3Magnitude(vec3VSubV(target, cam->position.render));
+}
+float camDistanceSquared(const camera *const __RESTRICT__ cam, const vec3 target){
+	return vec3MagnitudeSquared(vec3VSubV(target, cam->position.render));
+}
+float camSignedDistance(const camera *const __RESTRICT__ cam, const vec3 target){
+	const vec3 displacement = vec3VSubV(target, cam->position.render);
+	return copySign(vec3Magnitude(displacement), vec3Dot(displacement, vec3New(cam->viewMatrix.m[0][2], cam->viewMatrix.m[1][2], cam->viewMatrix.m[2][2])));
+}
+float camSignedDistanceSquared(const camera *const __RESTRICT__ cam, const vec3 target){
+	const vec3 displacement = vec3VSubV(target, cam->position.render);
+	return copySign(vec3MagnitudeSquared(displacement), vec3Dot(displacement, vec3New(cam->viewMatrix.m[0][2], cam->viewMatrix.m[1][2], cam->viewMatrix.m[2][2])));
 }
 
 void camDelete(camera *const __RESTRICT__ cam){

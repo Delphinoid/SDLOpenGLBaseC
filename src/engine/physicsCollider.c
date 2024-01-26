@@ -12,7 +12,8 @@ void physColliderInit(physCollider *const __RESTRICT__ c, const colliderType_t t
 	c->density = 0.f;
 	c->friction = 1.f;
 	c->restitution = 1.f;
-	c->layers = ~((colliderMask_t)0);
+	c->layer = ~((colliderMask_t)0);
+	c->mask = ~((colliderMask_t)0);
 	c->node = NULL;
 	c->contactCache = NULL;
 	c->separationCache = NULL;
@@ -25,7 +26,8 @@ void physColliderInstantiate(physCollider *const __RESTRICT__ instance, physColl
 	instance->density = local->density;
 	instance->friction = local->friction;
 	instance->restitution = local->restitution;
-	instance->layers = local->layers;
+	instance->layer = local->layer;
+	instance->mask = local->mask;
 	instance->node = NULL;
 	instance->contactCache = NULL;
 	instance->separationCache = NULL;
@@ -37,7 +39,7 @@ return_t physColliderPermitCollision(const physCollider *const c1, const physCol
 	// Prioritize contacts where the first
 	// collider has the larger address and
 	// make sure the collision masks overlap.
-	return c1 > c2 && (c1->layers & c2->layers) > 0;
+	return c1 > c2 && ((c1->layer & c2->mask) | (c1->mask & c2->layer)) > 0;
 }
 
 

@@ -865,11 +865,12 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 					}else{
 						flagsUnset(currentBody->flags, PHYSICS_BODY_COLLIDE);
 					}
-				}else if(currentCommand == 1){
-					currentCollider->layers = strtoul(line+10, NULL, 0);
+				}else if(currentCommand > 0){
+					printf("Error loading rigid bodies \"%s\": Rigid body sub-command \"collision\" at line %u does not belong "
+					       "in any other multiline command.\n", fullPath, currentLine);
 				}else{
-					printf("Error loading rigid bodies \"%s\": Rigid body and collider sub-command \"collision\" invoked on line %u without "
-					       "specifying a rigid body or collider.\n", fullPath, currentLine);
+					printf("Error loading rigid bodies \"%s\": Rigid body sub-command \"collision\" invoked on line %u without "
+					       "specifying a rigid body.\n", fullPath, currentLine);
 				}
 
 
@@ -888,6 +889,31 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 					printf("Error loading rigid bodies \"%s\": Rigid body sub-command \"active\" invoked on line %u without "
 					       "specifying a rigid body.\n", fullPath, currentLine);
 				}
+
+			// Collision layer
+			}else if(lineLength >= 7 && strncmp(line, "layer ", 6) == 0){
+				if(currentCommand == 1){
+					currentCollider->layer = strtoul(line+6, NULL, 0);
+				}else if(currentCommand <= 0){
+					printf("Error loading rigid bodies \"%s\": Collider sub-command \"layer\" at line %u does not belong "
+					       "in any other multiline command.\n", fullPath, currentLine);
+				}else{
+					printf("Error loading rigid bodies \"%s\": Collider sub-command \"layer\" invoked on line %u without "
+					       "specifying a collider.\n", fullPath, currentLine);
+				}
+
+			// Collision mask
+			}else if(lineLength >= 6 && strncmp(line, "mask ", 5) == 0){
+				if(currentCommand == 1){
+					currentCollider->mask = strtoul(line+5, NULL, 0);
+				}else if(currentCommand <= 0){
+					printf("Error loading rigid bodies \"%s\": Collider sub-command \"mask\" at line %u does not belong "
+					       "in any other multiline command.\n", fullPath, currentLine);
+				}else{
+					printf("Error loading rigid bodies \"%s\": Collider sub-command \"mask\" invoked on line %u without "
+					       "specifying a collider.\n", fullPath, currentLine);
+				}
+
 			}
 
 			if(lineLength > 0 && line[lineLength-1] == '}'){
@@ -1841,7 +1867,7 @@ void physRigidBodyAddCollider(physRigidBody *const __RESTRICT__ body, physCollid
 #endif
 
 return_t physRigidBodyCheckContact(
-	const physRigidBody *const __RESTRICT__ body, const colliderMask_t layer,
+	const physRigidBody *const __RESTRICT__ body, const colliderMask_t mask,
 	const physCollider **lastCollider, const physContactPair **lastContact
 ){
 
@@ -1880,7 +1906,7 @@ return_t physRigidBodyCheckContact(
 			while(i != NULL){
 				// Check if the incident collider is the same.
 				if(c == i->colliderA){
-					if((i->colliderB->layers | layer) > 0){
+					if((i->colliderB->layer & mask) > 0){
 						if(lastCollider != NULL){
 							*lastCollider = c;
 						}
@@ -1891,7 +1917,7 @@ return_t physRigidBodyCheckContact(
 					}
 					i = i->nextA;
 				}else if(c == i->colliderB){
-					if((i->colliderA->layers | layer) > 0){
+					if((i->colliderA->layer & mask) > 0){
 						if(lastCollider != NULL){
 							*lastCollider = c;
 						}

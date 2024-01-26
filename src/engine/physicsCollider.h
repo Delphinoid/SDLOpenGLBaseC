@@ -43,8 +43,11 @@ typedef struct physCollider {
 	void *body;      // Owner rigid body or rigid body base.
 	collider *base;  // Convex collider in local space.
 
-	// Collision layer bitmask.
-	colliderMask_t layers;
+	// Collision layer and mask.
+	// Each bit of the layer refers to a collision layer that the collider is
+	// on, while the mask contains the set of layers it permits collisions with.
+	colliderMask_t layer;
+	colliderMask_t mask;
 
 } physCollider;
 

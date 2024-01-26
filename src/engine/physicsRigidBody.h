@@ -191,7 +191,7 @@ void physRigidBodyAddCollider(physRigidBody *const __RESTRICT__ body, physCollid
 return_t physRigidBodyAddJoint(physRigidBody *const body, physJoint *const joint);
 
 return_t physRigidBodyCheckContact(
-	const physRigidBody *const __RESTRICT__ body, const colliderMask_t layer,
+	const physRigidBody *const __RESTRICT__ body, const colliderMask_t mask,
 	const physCollider **lastCollider, const physContactPair **lastContact
 );
 

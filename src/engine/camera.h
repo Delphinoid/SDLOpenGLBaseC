@@ -49,6 +49,9 @@ void camUpdateProjectionMatrix(camera *const __RESTRICT__ cam, const float viewp
 void camUpdateViewProjectionMatrix(camera *const __RESTRICT__ cam, const unsigned int viewportModified, const float viewportWidth, const float viewportHeight, const float interpT);
 
 float camDistance(const camera *const __RESTRICT__ cam, const vec3 target);
+float camDistanceSquared(const camera *const __RESTRICT__ cam, const vec3 target);
+float camSignedDistance(const camera *const __RESTRICT__ cam, const vec3 target);
+float camSignedDistanceSquared(const camera *const __RESTRICT__ cam, const vec3 target);
 
 void camDelete(camera *const __RESTRICT__ cam);
 

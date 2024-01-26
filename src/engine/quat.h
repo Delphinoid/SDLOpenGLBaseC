@@ -153,6 +153,16 @@ void quatBasisYPR(const quat *const __RESTRICT__ q, vec3 *const __RESTRICT__ r);
 vec3 quatBasisZ(const quat q);
 void quatBasisZPR(const quat *const __RESTRICT__ q, vec3 *const __RESTRICT__ r);
 
+quat quatTwist(const quat q, const vec3 v);
+void quatTwistP(const quat q, const vec3 v, quat *const __RESTRICT__ t);
+void quatTwistPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ v, quat *const __RESTRICT__ t);
+quat quatTwistFast(const quat q, const vec3 v);
+void quatTwistFastP(const quat q, const vec3 v, quat *const __RESTRICT__ t);
+void quatTwistFastPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ v, quat *const __RESTRICT__ t);
+quat quatTwistFaster(const quat q, const vec3 v);
+void quatTwistFasterP(const quat q, const vec3 v, quat *const __RESTRICT__ t);
+void quatTwistFasterPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ v, quat *const __RESTRICT__ t);
+
 void quatSwingTwist(const quat q, const vec3 v, quat *const __RESTRICT__ t, quat *const __RESTRICT__ s);
 void quatSwingTwistPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ v, quat *const __RESTRICT__ t, quat *const __RESTRICT__ s);
 void quatSwingTwistFast(const quat q, const vec3 v, quat *const __RESTRICT__ t, quat *const __RESTRICT__ s);

@@ -9,7 +9,8 @@ void particleBaseInit(particleBase *const __RESTRICT__ base){
 	base->density = 0.f;
 	base->friction = 1.f;
 	base->restitution = 1.f;
-	base->layers = 0;
+	base->layer = 0;
+	base->mask = 0;
 }
 
 void particleInit(particle *const __RESTRICT__ p){

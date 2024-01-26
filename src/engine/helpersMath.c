@@ -6,6 +6,7 @@ typedef union {
 } bitFloat;
 
 __HINT_INLINE__ float copySign(const float x, const float y){
+	// Returns the float x with the sign of y.
 	const bitFloat i = {.f = x}; const bitFloat j = {.f = y};
 	const bitFloat k = {.l = (i.l & 0x7FFFFFFF) | (j.l & 0x80000000)};
 	return k.f;

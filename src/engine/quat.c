@@ -1238,6 +1238,277 @@ void quatBasisZPR(const quat *const __RESTRICT__ q, vec3 *const __RESTRICT__ r){
 	r->z = q->z * z2 + q->w * w2 - 1.f;
 }
 
+quat quatTwist(const quat q, const vec3 v){
+
+	// Decompose a quaternion into its twist component.
+	//
+	// This implementation negates twist when the dot product is
+	// negative to ensure that it points in the same direction as "v".
+	// We also check for and handle the singularity.
+	//
+	// Based off Przemyslaw Dobrowolski's implementation given
+	// in Swing-Twist Decomposition in Clifford Algebra (2015).
+
+	quat t;
+
+	// Project the q's rotation axis onto the twist axis "v".
+	float u = vec3Dot(v, *((const vec3 *)&q.x));
+	// Quickly compute the inverse magnitude of the projection.
+	float l = q.w*q.w + u*u;
+
+	// Handle the singularity at twist rotations close to pi.
+	if(l < QUAT_SINGULARITY_THRESHOLD_SQUARED){
+		t = g_quatIdentity;
+	}else{
+		l = fastInvSqrt(l);
+		u *= l;
+		t.w = q.w*l;
+		t.x = v.x*u;
+		t.y = v.y*u;
+		t.z = v.z*u;
+	}
+
+	// Note that if the dot product is negative, we need to invert
+	// the twist quaternion to keep the direction consistent.
+	///if(u < 0.f){
+		///quatNegateP(t);
+	///}
+	t.w = copySign(t.w, u);
+	t.x = copySign(t.x, u);
+	t.y = copySign(t.y, u);
+	t.z = copySign(t.z, u);
+
+	return t;
+
+}
+void quatTwistP(const quat q, const vec3 v, quat *const __RESTRICT__ t){
+
+	// Decompose a quaternion into its twist component.
+	//
+	// This implementation negates twist when the dot product is
+	// negative to ensure that it points in the same direction as "v".
+	// We also check for and handle the singularity.
+	//
+	// Based off Przemyslaw Dobrowolski's implementation given
+	// in Swing-Twist Decomposition in Clifford Algebra (2015).
+
+	// Project the q's rotation axis onto the twist axis "v".
+	float u = vec3Dot(v, *((const vec3 *)&q.x));
+	// Quickly compute the inverse magnitude of the projection.
+	float l = q.w*q.w + u*u;
+
+	// Handle the singularity at twist rotations close to pi.
+	if(l < QUAT_SINGULARITY_THRESHOLD_SQUARED){
+		*t = g_quatIdentity;
+	}else{
+		l = fastInvSqrt(l);
+		u *= l;
+		quatSet(t, q.w*l, v.x*u, v.y*u, v.z*u);
+	}
+
+	// Note that if the dot product is negative, we need to invert
+	// the twist quaternion to keep the direction consistent.
+	///if(u < 0.f){
+		///quatNegateP(t);
+	///}
+	t->w = copySign(t->w, u);
+	t->x = copySign(t->x, u);
+	t->y = copySign(t->y, u);
+	t->z = copySign(t->z, u);
+
+}
+void quatTwistPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ v, quat *const __RESTRICT__ t){
+
+	// Decompose a quaternion into its twist component.
+	//
+	// This implementation negates twist when the dot product is
+	// negative to ensure that it points in the same direction as "v".
+	// We also check for and handle the singularity.
+	//
+	// Based off Przemyslaw Dobrowolski's implementation given
+	// in Swing-Twist Decomposition in Clifford Algebra (2015).
+
+	// Project the q's rotation axis onto the twist axis "v".
+	float u = vec3DotP(v, (const vec3 *)&q->x);
+	// Quickly compute the inverse magnitude of the projection.
+	float l = q->w*q->w + u*u;
+
+	// Handle the singularity at twist rotations close to pi.
+	if(l < QUAT_SINGULARITY_THRESHOLD_SQUARED){
+		quatIdentityP(t);
+	}else{
+		l = fastInvSqrt(l);
+		u *= l;
+		quatSet(t, q->w*l, v->x*u, v->y*u, v->z*u);
+	}
+
+	// Note that if the dot product is negative, we need to invert
+	// the twist quaternion to keep the direction consistent.
+	///if(u < 0.f){
+		///quatNegateP(t);
+	///}
+	t->w = copySign(t->w, u);
+	t->x = copySign(t->x, u);
+	t->y = copySign(t->y, u);
+	t->z = copySign(t->z, u);
+
+}
+quat quatTwistFast(const quat q, const vec3 v){
+
+	// Decompose a quaternion into its twist component.
+	//
+	// This implementation negates twist when the dot product is
+	// negative to ensure that it points in the same direction as "v".
+	//
+	// Based off Przemyslaw Dobrowolski's implementation given
+	// in Swing-Twist Decomposition in Clifford Algebra (2015).
+
+	quat t;
+
+	// Project the q's rotation axis onto the twist axis "v".
+	float u = vec3Dot(v, *((const vec3 *)&q.x));
+	// Quickly compute the inverse magnitude of the projection.
+	const float l = fastInvSqrt(q.w*q.w + u*u);
+	u *= l;
+
+	// Set the twist quaternion.
+	t.w = q.w*l;
+	t.x = v.x*u;
+	t.y = v.y*u;
+	t.z = v.z*u;
+
+	// Note that if the dot product is negative, we need to invert
+	// the twist quaternion to keep the direction consistent.
+	///if(u < 0.f){
+		///quatNegateP(t);
+	///}
+	t.w = copySign(t.w, u);
+	t.x = copySign(t.x, u);
+	t.y = copySign(t.y, u);
+	t.z = copySign(t.z, u);
+
+	return t;
+
+}
+void quatTwistFastP(const quat q, const vec3 v, quat *const __RESTRICT__ t){
+
+	// Decompose a quaternion into its twist component.
+	//
+	// This implementation negates twist when the dot product is
+	// negative to ensure that it points in the same direction as "v".
+	//
+	// Based off Przemyslaw Dobrowolski's implementation given
+	// in Swing-Twist Decomposition in Clifford Algebra (2015).
+
+	// Project the q's rotation axis onto the twist axis "v".
+	float u = vec3Dot(v, *((const vec3 *)&q.x));
+	// Quickly compute the inverse magnitude of the projection.
+	const float l = fastInvSqrt(q.w*q.w + u*u);
+	u *= l;
+
+	// Set the twist quaternion.
+	quatSet(t, q.w*l, v.x*u, v.y*u, v.z*u);
+
+	// Note that if the dot product is negative, we need to invert
+	// the twist quaternion to keep the direction consistent.
+	///if(u < 0.f){
+		///quatNegateP(t);
+	///}
+	t->w = copySign(t->w, u);
+	t->x = copySign(t->x, u);
+	t->y = copySign(t->y, u);
+	t->z = copySign(t->z, u);
+
+}
+void quatTwistFastPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ v, quat *const __RESTRICT__ t){
+
+	// Decompose a quaternion into its twist component.
+	//
+	// This implementation negates twist when the dot product is
+	// negative to ensure that it points in the same direction as "v".
+	//
+	// Based off Przemyslaw Dobrowolski's implementation given
+	// in Swing-Twist Decomposition in Clifford Algebra (2015).
+
+	// Project the q's rotation axis onto the twist axis "v".
+	float u = vec3DotP(v, (const vec3 *)&q->x);
+	// Quickly compute the inverse magnitude of the projection.
+	const float l = fastInvSqrt(q->w*q->w + u*u);
+	u *= l;
+
+	// Set the twist quaternion.
+	quatSet(t, q->w*l, v->x*u, v->y*u, v->z*u);
+
+	// Note that if the dot product is negative, we need to invert
+	// the twist quaternion to keep the direction consistent.
+	///if(u < 0.f){
+		///quatNegateP(t);
+	///}
+	t->w = copySign(t->w, u);
+	t->x = copySign(t->x, u);
+	t->y = copySign(t->y, u);
+	t->z = copySign(t->z, u);
+
+}
+quat quatTwistFaster(const quat q, const vec3 v){
+
+	// Decompose a quaternion into its twist component.
+	//
+	// Based off Przemyslaw Dobrowolski's implementation given
+	// in Swing-Twist Decomposition in Clifford Algebra (2015).
+
+	quat t;
+
+	// Project the q's rotation axis onto the twist axis "v".
+	float u = vec3Dot(v, *((const vec3 *)&q.x));
+	// Quickly compute the inverse magnitude of the projection.
+	const float l = fastInvSqrt(q.w*q.w + u*u);
+	u *= l;
+
+	// Set the twist quaternion.
+	t.w = q.w*l;
+	t.x = v.x*u;
+	t.y = v.y*u;
+	t.z = v.z*u;
+
+	return t;
+
+}
+void quatTwistFasterP(const quat q, const vec3 v, quat *const __RESTRICT__ t){
+
+	// Decompose a quaternion into its twist component.
+	//
+	// Based off Przemyslaw Dobrowolski's implementation given
+	// in Swing-Twist Decomposition in Clifford Algebra (2015).
+
+	// Project the q's rotation axis onto the twist axis "v".
+	float u = vec3Dot(v, *((const vec3 *)&q.x));
+	// Quickly compute the inverse magnitude of the projection.
+	const float l = fastInvSqrt(q.w*q.w + u*u);
+	u *= l;
+
+	// Set the twist quaternion.
+	quatSet(t, q.w*l, v.x*u, v.y*u, v.z*u);
+
+}
+void quatTwistFasterPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ v, quat *const __RESTRICT__ t){
+
+	// Decompose a quaternion into its twist component.
+	//
+	// Based off Przemyslaw Dobrowolski's implementation given
+	// in Swing-Twist Decomposition in Clifford Algebra (2015).
+
+	// Project the q's rotation axis onto the twist axis "v".
+	float u = vec3DotP(v, (const vec3 *)&q->x);
+	// Quickly compute the inverse magnitude of the projection.
+	const float l = fastInvSqrt(q->w*q->w + u*u);
+	u *= l;
+
+	// Set the twist quaternion.
+	quatSet(t, q->w*l, v->x*u, v->y*u, v->z*u);
+
+}
+
 void quatSwingTwist(const quat q, const vec3 v, quat *const __RESTRICT__ t, quat *const __RESTRICT__ s){
 
 	// Decompose a quaternion into its swing and twist components.
@@ -1272,9 +1543,13 @@ void quatSwingTwist(const quat q, const vec3 v, quat *const __RESTRICT__ t, quat
 
 	// Note that if the dot product is negative, we need to invert
 	// the twist quaternion to keep the direction consistent.
-	if(u < 0.f){
-		quatNegateP(t);
-	}
+	///if(u < 0.f){
+		///quatNegateP(t);
+	///}
+	t->w = copySign(t->w, u);
+	t->x = copySign(t->x, u);
+	t->y = copySign(t->y, u);
+	t->z = copySign(t->z, u);
 
 }
 void quatSwingTwistPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ v, quat *const __RESTRICT__ t, quat *const __RESTRICT__ s){
@@ -1311,12 +1586,15 @@ void quatSwingTwistPR(const quat *const __RESTRICT__ q, const vec3 *const __REST
 
 	// Note that if the dot product is negative, we need to invert
 	// the twist quaternion to keep the direction consistent.
-	if(u < 0.f){
-		quatNegateP(t);
-	}
+	///if(u < 0.f){
+		///quatNegateP(t);
+	///}
+	t->w = copySign(t->w, u);
+	t->x = copySign(t->x, u);
+	t->y = copySign(t->y, u);
+	t->z = copySign(t->z, u);
 
 }
-
 void quatSwingTwistFast(const quat q, const vec3 v, quat *const __RESTRICT__ t, quat *const __RESTRICT__ s){
 
 	// Decompose a quaternion into its swing and twist components.
@@ -1344,9 +1622,13 @@ void quatSwingTwistFast(const quat q, const vec3 v, quat *const __RESTRICT__ t, 
 
 	// Note that if the dot product is negative, we need to invert
 	// the twist quaternion to keep the direction consistent.
-	if(u < 0.f){
-		quatNegateP(t);
-	}
+	///if(u < 0.f){
+		///quatNegateP(t);
+	///}
+	t->w = copySign(t->w, u);
+	t->x = copySign(t->x, u);
+	t->y = copySign(t->y, u);
+	t->z = copySign(t->z, u);
 
 }
 void quatSwingTwistFastPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ v, quat *const __RESTRICT__ t, quat *const __RESTRICT__ s){
@@ -1376,11 +1658,15 @@ void quatSwingTwistFastPR(const quat *const __RESTRICT__ q, const vec3 *const __
 
 	// Note that if the dot product is negative, we need to invert
 	// the twist quaternion to keep the direction consistent.
-	if(u < 0.f){
-		quatNegateP(t);
-	}
-}
+	///if(u < 0.f){
+		///quatNegateP(t);
+	///}
+	t->w = copySign(t->w, u);
+	t->x = copySign(t->x, u);
+	t->y = copySign(t->y, u);
+	t->z = copySign(t->z, u);
 
+}
 void quatSwingTwistFaster(const quat q, const vec3 v, quat *const __RESTRICT__ t, quat *const __RESTRICT__ s){
 
 	// Decompose a quaternion into its swing and twist components.

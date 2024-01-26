@@ -72,10 +72,18 @@ static __HINT_INLINE__ void pMoveAccelerate(
 	pMove *const __RESTRICT__ movement, const vec2 wishdir, const float wishspeed, const float accel, const float friction, const float dt_s
 ){
 
+	// Subtract the dot product of the velocity vector with the (normalized) wish direction.
+	// This is just the magnitude of the projection of the velocity vector onto the
+	// wish direction; thus addspeed represents the difference between how much we want to
+	// move in the wish direction and how much we're already moving in the wish direction,
+	// and hence the maximum amount of speed we can add before we breach the max speed limit.
 	const float addspeed = wishspeed - movement->velocity.x*wishdir.x - movement->velocity.z*wishdir.y;
+
+	// If addspeed is zero or negative, we're moving at max or greater than max speed.
 	if(addspeed > 0.f){
+		// We multiply by wishspeed here to overcome multiplying by control in pMoveFriction.
 		float accelspeed = accel * wishspeed * friction * dt_s;
-		if(accelspeed > addspeed){
+		if(addspeed < accelspeed){
 			accelspeed = addspeed;
 		}
 		movement->velocity.x += wishdir.x * accelspeed;
@@ -91,27 +99,32 @@ static __HINT_INLINE__ void pMoveFriction(pMove *const __RESTRICT__ movement, co
 		.y = movement->velocity.z
 	};
 	const float speed = vec2Magnitude(velocity);
-	float newSpeed = speed;
 
-	// Only apply friction when grounded.
-	if(!movement->airborne){
-		const float control = speed < PLAYER_GROUND_DECELERATION ? PLAYER_GROUND_DECELERATION : speed;
-		if(movement->fwish != 0.f || movement->rwish != 0.f){
-			newSpeed -= control * t * PLAYER_FRICTION_WISH * dt_s;
+	if(speed > 0.f){
+
+		float newSpeed = speed;
+
+		// Only apply friction when grounded.
+		// This function is only called when we're grounded, so it's fine.
+		//if(!movement->airborne){
+			const float control = floatMax(speed, PLAYER_GROUND_DECELERATION);
+			if(movement->fwish != 0.f || movement->rwish != 0.f){
+				newSpeed -= control * t * PLAYER_FRICTION_WISH * dt_s;
+			}else{
+				newSpeed -= control * t * PLAYER_FRICTION * dt_s;
+			}
+		//}
+
+		if(newSpeed < 0.f){
+			movement->velocity.x = 0.f;
+			movement->velocity.z = 0.f;
 		}else{
-			newSpeed -= control * t * PLAYER_FRICTION * dt_s;
-		}
-	}
-
-	if(newSpeed < 0.f){
-		movement->velocity.x = 0.f;
-		movement->velocity.z = 0.f;
-	}else{
-		if(speed > 0.f){
+			// Normalize the velocity and scale it by newSpeed.
 			newSpeed /= speed;
+			movement->velocity.x *= newSpeed;
+			movement->velocity.z *= newSpeed;
 		}
-		movement->velocity.x *= newSpeed;
-		movement->velocity.z *= newSpeed;
+
 	}
 
 }
@@ -157,7 +170,7 @@ static __HINT_INLINE__ void pMoveGround(pMove *const __RESTRICT__ movement, cons
 		.x = movement->rwish*movement->rbasis.x + movement->fwish*movement->fbasis.x,
 		.y = movement->rwish*movement->rbasis.y + movement->fwish*movement->fbasis.y,
 	};
-	// Calculate the speed.
+	// Divides wishdir*PLAYER_GROUND_MAX_SPEED by the magnitude of (rwish, fwish).
 	const float wishspeed = vec2Magnitude(wishdir) * pMoveScale(movement, PLAYER_GROUND_MAX_SPEED);
 
 	//if(wishspeed > 0.f){
@@ -188,6 +201,7 @@ static __HINT_INLINE__ void pMoveAir(pMove *const __RESTRICT__ movement, const f
 		wishdir = vec2NormalizeFastAccurate(wishdir);
 		movement->direction = wishdir;
 
+		// If we're trying to move in the opposite direction we're already moving in, decelerate.
 		if(movement->velocity.x*wishdir.x + movement->velocity.z*wishdir.y < 0.f){
 			accel = PLAYER_AIR_DECELERATION;
 		}else{

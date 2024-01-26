@@ -78,6 +78,8 @@
 // ----------------------------------------------------------------------
 
 void physJointDistanceInit(physJointDistance *const __RESTRICT__ joint, const vec3 anchorA, const vec3 anchorB, const float distance, const float stiffness, const float damping){
+	joint->anchorA = anchorA;
+	joint->anchorB = anchorB;
 	joint->distance = distance;
 	joint->stiffness = stiffness;
 	joint->damping = damping;
