@@ -347,6 +347,9 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 	if(maximum_normal.y >= PLAYER_STEEPEST_SLOPE_ANGLE){
 		p->movement.airborne = 0;
 	}else if(p->movement.airborne != (tick_t)-1){
+		// We set CVAR_JUMP to 0 here rather than when we
+		// execute a jump to prevent jumps from being eaten
+		// while the player is still moving out of the ground.
 		if(p->movement.airborne == 1){
 			CVAR_JUMP = 0;
 		}
