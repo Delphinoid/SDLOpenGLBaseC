@@ -1177,72 +1177,62 @@ __HINT_INLINE__ void physRigidBodyApplyForce(physRigidBody *const __RESTRICT__ b
 	// r is where the force F is applied, in global space.
 
 	// Accumulate torque.
-	physRigidBodyApplyAngularForce(body, F, r);
+	//physRigidBodyApplyAngularForce(body, F, r);
+	body->netForce = vec3VAddV(body->netForce, F);
 
 	// Accumulate force.
-	physRigidBodyApplyLinearForce(body, F);
+	//physRigidBodyApplyLinearForce(body, F);
+	body->netTorque = vec3VAddV(body->netTorque, vec3Cross(vec3VSubV(r, body->centroidGlobal), F));
 
 }
 
-__HINT_INLINE__ void physRigidBodyApplyVelocityImpulse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J){
-
-	// Applies an impulse J at point x in global space.
-
-	///if(body->inverseMass > 0.f){
-
-		// Linear impulse.
-		body->linearVelocity = vec3fmaf(body->inverseMass, J, body->linearVelocity);
-		// Angular impulse.
-		body->angularVelocity = vec3VAddV(body->angularVelocity, mat3MMultV(body->inverseInertiaTensorGlobal, vec3Cross(x, J)));
-
-	///}
-
+__HINT_INLINE__ void physRigidBodyApplyImpulse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p){
+	// Linear velocity.
+	vec3fmafP(body->inverseMass, &p, &body->linearVelocity);
+	// Angular velocity.
+	body->angularVelocity = vec3VAddV(body->angularVelocity, mat3MMultV(body->inverseInertiaTensorGlobal, vec3Cross(r, p)));
 }
-__HINT_INLINE__ void physRigidBodyApplyVelocityImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J){
-
-	// Applies an impulse -J at point x in global space.
-
-	///if(body->inverseMass > 0.f){
-
-		// Linear impulse.
-		body->linearVelocity = vec3fmaf(-body->inverseMass, J, body->linearVelocity);
-		// Angular impulse.
-		body->angularVelocity = vec3VSubV(body->angularVelocity, mat3MMultV(body->inverseInertiaTensorGlobal, vec3Cross(x, J)));
-
-	///}
-
+__HINT_INLINE__ void physRigidBodyApplyImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p){
+	// Linear velocity.
+	vec3fmafP(-body->inverseMass, &p, &body->linearVelocity);
+	// Angular velocity.
+	body->angularVelocity = vec3VSubV(body->angularVelocity, mat3MMultV(body->inverseInertiaTensorGlobal, vec3Cross(r, p)));
 }
 
-__HINT_INLINE__ void physRigidBodyApplyVelocityImpulseAngular(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J, const vec3 a){
-
-	// Applies an impulse J at point x in global space.
-
-	///if(body->inverseMass > 0.f){
-
-		// Linear impulse.
-		body->linearVelocity = vec3fmaf(body->inverseMass, J, body->linearVelocity);
-		// Angular impulse.
-		body->angularVelocity = vec3VAddV(body->angularVelocity, mat3MMultV(body->inverseInertiaTensorGlobal, vec3VAddV(vec3Cross(x, J), a)));
-
-	///}
-
+__HINT_INLINE__ void physRigidBodyApplyLinearImpulse(physRigidBody *const __RESTRICT__ body, const vec3 p){
+	// Linear velocity.
+	vec3fmafP(body->inverseMass, &p, &body->linearVelocity);
 }
-__HINT_INLINE__ void physRigidBodyApplyVelocityImpulseAngularInverse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J, const vec3 a){
-
-	// Applies an impulse -J at point x in global space.
-
-	///if(body->inverseMass > 0.f){
-
-		// Linear impulse.
-		body->linearVelocity = vec3fmaf(-body->inverseMass, J, body->linearVelocity);
-		// Angular impulse.
-		body->angularVelocity = vec3VSubV(body->angularVelocity, mat3MMultV(body->inverseInertiaTensorGlobal, vec3VAddV(vec3Cross(x, J), a)));
-
-	///}
-
+__HINT_INLINE__ void physRigidBodyApplyLinearImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 p){
+	// Linear velocity.
+	vec3fmafP(-body->inverseMass, &p, &body->linearVelocity);
 }
 
-__HINT_INLINE__ void physRigidBodyApplyConfigurationImpulse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J){
+__HINT_INLINE__ void physRigidBodyApplyAngularImpulse(physRigidBody *const __RESTRICT__ body, vec3 J){
+	// Angular velocity.
+	J = mat3MMultV(body->inverseInertiaTensorGlobal, J);
+	body->angularVelocity = vec3VAddV(body->angularVelocity, J);
+}
+__HINT_INLINE__ void physRigidBodyApplyAngularImpulseInverse(physRigidBody *const __RESTRICT__ body, vec3 J){
+	// Angular velocity.
+	J = mat3MMultV(body->inverseInertiaTensorGlobal, J);
+	body->angularVelocity = vec3VSubV(body->angularVelocity, J);
+}
+
+__HINT_INLINE__ void physRigidBodyApplyBoostImpulse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p, const vec3 a){
+	// Linear impulse.
+	body->linearVelocity = vec3fmaf(body->inverseMass, p, body->linearVelocity);
+	// Angular impulse.
+	body->angularVelocity = vec3VAddV(body->angularVelocity, mat3MMultV(body->inverseInertiaTensorGlobal, vec3VAddV(vec3Cross(r, p), a)));
+}
+__HINT_INLINE__ void physRigidBodyApplyBoostImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p, const vec3 a){
+	// Linear impulse.
+	body->linearVelocity = vec3fmaf(-body->inverseMass, p, body->linearVelocity);
+	// Angular impulse.
+	body->angularVelocity = vec3VSubV(body->angularVelocity, mat3MMultV(body->inverseInertiaTensorGlobal, vec3VAddV(vec3Cross(r, p), a)));
+}
+
+__HINT_INLINE__ void physRigidBodyApplyConfigurationImpulse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p){
 
 	// Applies an impulse J at point x in global space.
 
@@ -1253,7 +1243,7 @@ __HINT_INLINE__ void physRigidBodyApplyConfigurationImpulse(physRigidBody *const
 			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR)// &&
 			///(body->linearVelocity.y != 0.f || body->linearVelocity.x != 0.f || body->linearVelocity.z != 0.f)
 		){
-			body->centroidGlobal = vec3fmaf(body->inverseMass, J, body->centroidGlobal);
+			body->centroidGlobal = vec3fmaf(body->inverseMass, p, body->centroidGlobal);
 			flagsSet(body->flags, PHYSICS_BODY_TRANSLATED);
 		}
 		// Angular impulse.
@@ -1268,7 +1258,7 @@ __HINT_INLINE__ void physRigidBodyApplyConfigurationImpulse(physRigidBody *const
 						body->configuration.orientation,
 						mat3MMultV(
 							body->inverseInertiaTensorGlobal,
-							vec3Cross(x, J)
+							vec3Cross(r, p)
 						)
 					)
 				)
@@ -1280,7 +1270,7 @@ __HINT_INLINE__ void physRigidBodyApplyConfigurationImpulse(physRigidBody *const
 	///}
 
 }
-__HINT_INLINE__ void physRigidBodyApplyConfigurationImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J){
+__HINT_INLINE__ void physRigidBodyApplyConfigurationImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p){
 
 	// Applies an impulse -J at point x in global space.
 
@@ -1291,7 +1281,7 @@ __HINT_INLINE__ void physRigidBodyApplyConfigurationImpulseInverse(physRigidBody
 			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR)// &&
 			///(body->linearVelocity.y != 0.f || body->linearVelocity.x != 0.f || body->linearVelocity.z != 0.f)
 		){
-			body->centroidGlobal = vec3fmaf(-body->inverseMass, J, body->centroidGlobal);
+			body->centroidGlobal = vec3fmaf(-body->inverseMass, p, body->centroidGlobal);
 			flagsSet(body->flags, PHYSICS_BODY_TRANSLATED);
 		}
 		// Angular impulse.
@@ -1306,13 +1296,50 @@ __HINT_INLINE__ void physRigidBodyApplyConfigurationImpulseInverse(physRigidBody
 						body->configuration.orientation,
 						mat3MMultV(
 							body->inverseInertiaTensorGlobal,
-							vec3Cross(x, J)
+							vec3Cross(r, p)
 						)
 					)
 				)
 			);
 			physRigidBodyGenerateGlobalInertia(body);
 			flagsSet(body->flags, PHYSICS_BODY_ROTATED);
+		}
+
+	///}
+
+}
+
+__HINT_INLINE__ void physRigidBodyApplyLinearConfigurationImpulse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p){
+
+	// Applies an impulse J at point x in global space.
+
+	///if(body->inverseMass > 0.f){
+
+		// Linear impulse.
+		if(
+			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR)// &&
+			///(body->linearVelocity.y != 0.f || body->linearVelocity.x != 0.f || body->linearVelocity.z != 0.f)
+		){
+			body->centroidGlobal = vec3fmaf(body->inverseMass, p, body->centroidGlobal);
+			flagsSet(body->flags, PHYSICS_BODY_TRANSLATED);
+		}
+
+	///}
+
+}
+__HINT_INLINE__ void physRigidBodyApplyLinearConfigurationImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p){
+
+	// Applies an impulse -J at point x in global space.
+
+	///if(body->inverseMass > 0.f){
+
+		// Linear impulse.
+		if(
+			flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR)// &&
+			///(body->linearVelocity.y != 0.f || body->linearVelocity.x != 0.f || body->linearVelocity.z != 0.f)
+		){
+			body->centroidGlobal = vec3fmaf(-body->inverseMass, p, body->centroidGlobal);
+			flagsSet(body->flags, PHYSICS_BODY_TRANSLATED);
 		}
 
 	///}
@@ -1376,43 +1403,6 @@ __HINT_INLINE__ void physRigidBodyApplyAngularConfigurationImpulseInverse(physRi
 
 	///}
 
-}
-
-__HINT_INLINE__ void physRigidBodyApplyImpulse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p){
-	// Linear velocity.
-	vec3fmafP(body->inverseMass, &p, &body->linearVelocity);
-	// Angular velocity.
-	body->angularVelocity = vec3VAddV(body->angularVelocity, mat3MMultV(body->inverseInertiaTensorGlobal, vec3Cross(r, p)));
-}
-__HINT_INLINE__ void physRigidBodyApplyImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p){
-	// Linear velocity.
-	vec3fmafP(-body->inverseMass, &p, &body->linearVelocity);
-	// Angular velocity.
-	body->angularVelocity = vec3VSubV(body->angularVelocity, mat3MMultV(body->inverseInertiaTensorGlobal, vec3Cross(r, p)));
-}
-
-__HINT_INLINE__ void physRigidBodyApplyBoostImpulse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p, const vec3 a){
-	// Linear impulse.
-	body->linearVelocity = vec3fmaf(body->inverseMass, p, body->linearVelocity);
-	// Angular impulse.
-	body->angularVelocity = vec3VAddV(body->angularVelocity, mat3MMultV(body->inverseInertiaTensorGlobal, vec3VAddV(vec3Cross(r, p), a)));
-}
-__HINT_INLINE__ void physRigidBodyApplyBoostImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p, const vec3 a){
-	// Linear impulse.
-	body->linearVelocity = vec3fmaf(-body->inverseMass, p, body->linearVelocity);
-	// Angular impulse.
-	body->angularVelocity = vec3VSubV(body->angularVelocity, mat3MMultV(body->inverseInertiaTensorGlobal, vec3VAddV(vec3Cross(r, p), a)));
-}
-
-__HINT_INLINE__ void physRigidBodyApplyAngularImpulse(physRigidBody *const __RESTRICT__ body, vec3 J){
-	// Angular velocity.
-	J = mat3MMultV(body->inverseInertiaTensorGlobal, J);
-	body->angularVelocity = vec3VAddV(body->angularVelocity, J);
-}
-__HINT_INLINE__ void physRigidBodyApplyAngularImpulseInverse(physRigidBody *const __RESTRICT__ body, vec3 J){
-	// Angular velocity.
-	J = mat3MMultV(body->inverseInertiaTensorGlobal, J);
-	body->angularVelocity = vec3VSubV(body->angularVelocity, J);
 }
 
 __FORCE_INLINE__ void physRigidBodyCentroidFromPosition(physRigidBody *const __RESTRICT__ body){

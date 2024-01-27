@@ -217,8 +217,8 @@ static __FORCE_INLINE__ void physContactPointWarmStart(physContactPoint *const _
 	);
 	#endif
 
-	physRigidBodyApplyVelocityImpulseInverse(bodyA, point->rA, impulse);
-	physRigidBodyApplyVelocityImpulse(bodyB, point->rB, impulse);
+	physRigidBodyApplyImpulseInverse(bodyA, point->rA, impulse);
+	physRigidBodyApplyImpulse(bodyB, point->rB, impulse);
 
 }
 #endif
@@ -538,8 +538,8 @@ static __FORCE_INLINE__ void physContactPointSolveTangentImpulses(physContactPoi
 	impulse = vec3VAddV(impulse, vec3VMultS(physContactTangent(contact)[1], lambda));
 
 	// Apply both of the frictional impulses.
-	physRigidBodyApplyVelocityImpulseInverse(bodyA, point->rA, impulse);
-	physRigidBodyApplyVelocityImpulse(bodyB, point->rB, impulse);
+	physRigidBodyApplyImpulseInverse(bodyA, point->rA, impulse);
+	physRigidBodyApplyImpulse(bodyB, point->rB, impulse);
 
 }
 #endif
@@ -582,8 +582,8 @@ static __FORCE_INLINE__ void physContactPointSolveNormalImpulse(physContactPoint
 	impulse = vec3VMultS(physContactNormal(contact), lambda);
 
 	// Apply the normal impulse.
-	physRigidBodyApplyVelocityImpulseInverse(bodyA, point->rA, impulse);
-	physRigidBodyApplyVelocityImpulse(bodyB, point->rB, impulse);
+	physRigidBodyApplyImpulseInverse(bodyA, point->rA, impulse);
+	physRigidBodyApplyImpulse(bodyB, point->rB, impulse);
 
 }
 

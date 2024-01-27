@@ -749,7 +749,7 @@ __FORCE_INLINE__ void objApplyAngularForceGlobal(object *obj, const boneIndex_t 
 }
 
 __FORCE_INLINE__ void objApplyForceGlobal(object *obj, const boneIndex_t boneID, const vec3 *F, const vec3 *r){
-	physRigidBodyApplyForceGlobal(&obj->skeletonBodies[boneID], F, r);
+	physRigidBodyApplyForce(&obj->skeletonBodies[boneID], F, r);
 }
 
 void objApplyForceAtGlobalPoint(object *obj, const size_t boneID, const vec3 *F, const vec3 *r){

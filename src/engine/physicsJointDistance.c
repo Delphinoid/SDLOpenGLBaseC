@@ -99,8 +99,8 @@ static __FORCE_INLINE__ void physJointDistanceWarmStart(physJointDistance *const
 
 	// Apply the accumulated impulse.
 	// This helps the constraint converge to a solution faster.
-	physRigidBodyApplyVelocityImpulseInverse(bodyA, joint->rA, impulse);
-	physRigidBodyApplyVelocityImpulse(bodyB, joint->rB, impulse);
+	physRigidBodyApplyImpulseInverse(bodyA, joint->rA, impulse);
+	physRigidBodyApplyImpulse(bodyB, joint->rB, impulse);
 
 }
 #endif
@@ -242,8 +242,8 @@ void physJointDistanceSolveVelocityConstraints(physJoint *const __RESTRICT__ joi
 	impulse = vec3VMultS(((physJointDistance *)joint)->rAB, lambda);
 
 	// Apply the normal impulse.
-	physRigidBodyApplyVelocityImpulseInverse(bodyA, ((physJointDistance *)joint)->rA, impulse);
-	physRigidBodyApplyVelocityImpulse(bodyB, ((physJointDistance *)joint)->rB, impulse);
+	physRigidBodyApplyImpulseInverse(bodyA, ((physJointDistance *)joint)->rA, impulse);
+	physRigidBodyApplyImpulse(bodyB, ((physJointDistance *)joint)->rB, impulse);
 
 }
 

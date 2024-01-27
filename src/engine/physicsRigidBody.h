@@ -141,28 +141,23 @@ return_t physRigidBodyWasInitialized(const physRigidBody *const __RESTRICT__ bod
 
 void physRigidBodyApplyLinearForce(physRigidBody *const __RESTRICT__ body, const vec3 F);
 void physRigidBodyApplyAngularForceGlobal(physRigidBody *const __RESTRICT__ body, const vec3 F, const vec3 r);
-void physRigidBodyApplyForceGlobal(physRigidBody *const __RESTRICT__ body, const vec3 F, const vec3 r);
-
-void physRigidBodyApplyVelocityImpulse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J);
-void physRigidBodyApplyVelocityImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J);
-
-void physRigidBodyApplyVelocityImpulseAngular(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J, const vec3 a);
-void physRigidBodyApplyVelocityImpulseAngularInverse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J, const vec3 a);
-
-void physRigidBodyApplyConfigurationImpulse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J);
-void physRigidBodyApplyConfigurationImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 x, const vec3 J);
-
-void physRigidBodyApplyAngularConfigurationImpulse(physRigidBody *const __RESTRICT__ body, const vec3 J);
-void physRigidBodyApplyAngularConfigurationImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 J);
+void physRigidBodyApplyForce(physRigidBody *const __RESTRICT__ body, const vec3 F, const vec3 r);
 
 void physRigidBodyApplyImpulse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p);
 void physRigidBodyApplyImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p);
-
+void physRigidBodyApplyLinearImpulse(physRigidBody *const __RESTRICT__ body, const vec3 p);
+void physRigidBodyApplyLinearImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 p);
+void physRigidBodyApplyAngularImpulse(physRigidBody *const __RESTRICT__ body, vec3 J);
+void physRigidBodyApplyAngularImpulseInverse(physRigidBody *const __RESTRICT__ body, vec3 J);
 void physRigidBodyApplyBoostImpulse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p, const vec3 a);
 void physRigidBodyApplyBoostImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p, const vec3 a);
 
-void physRigidBodyApplyAngularImpulse(physRigidBody *const __RESTRICT__ body, vec3 J);
-void physRigidBodyApplyAngularImpulseInverse(physRigidBody *const __RESTRICT__ body, vec3 J);
+void physRigidBodyApplyConfigurationImpulse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p);
+void physRigidBodyApplyConfigurationImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p);
+void physRigidBodyApplyLinearConfigurationImpulse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p);
+void physRigidBodyApplyLinearConfigurationImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 r, const vec3 p);
+void physRigidBodyApplyAngularConfigurationImpulse(physRigidBody *const __RESTRICT__ body, const vec3 J);
+void physRigidBodyApplyAngularConfigurationImpulseInverse(physRigidBody *const __RESTRICT__ body, const vec3 J);
 
 #if defined(PHYSICS_BODY_STORE_LOCAL_TENSORS) && defined(PHYSICS_BODY_SCALE_INERTIA_TENSORS)
 void physRigidBodyScale(physRigidBody *const __RESTRICT__ body, const vec3 scale);
