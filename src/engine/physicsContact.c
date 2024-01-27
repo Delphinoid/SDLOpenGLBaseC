@@ -104,7 +104,7 @@
 // ----------------------------------------------------------------------
 
 static __FORCE_INLINE__ float physContactCalculateRestitution(const float r1, const float r2){
-	return r1 >= r2 ? r1 : r2;
+	return floatMax(r1, r2);
 }
 
 static __FORCE_INLINE__ float physContactCalculateFriction(const float f1, const float f2){

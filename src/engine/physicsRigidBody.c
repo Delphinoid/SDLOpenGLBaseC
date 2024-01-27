@@ -18,7 +18,7 @@
 /** Use Parallel Axis Theorem for loading colliders. **/
 
 void physRigidBodyBaseInit(physRigidBodyBase *const __RESTRICT__ local){
-	local->flags = PHYSICS_BODY_ASLEEP;
+	local->flags = PHYSICS_BODY_DEFAULT_STATE;
 	local->hull = NULL;
 	local->mass = 0.f;
 	local->inverseMass = 0.f;
@@ -406,7 +406,6 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 					physRigidBodyBaseInit(currentBody);
 					(*bodyIDs)[*bodyNum] = currentBodyID;
 					currentBodyColliderNum = 0;
-					currentBody->flags = PHYSICS_BODY_DEFAULT_STATE;
 					currentCommand = 0;
 					++(*bodyNum);
 
@@ -1107,16 +1106,16 @@ return_t physRigidBodyInstantiate(physRigidBody *const __RESTRICT__ body, const 
 
 }
 
-__FORCE_INLINE__ void physRigidBodySetUninitialized(physRigidBody *const __RESTRICT__ body){
-	flagsSet(body->flags, PHYSICS_BODY_UNINITIALIZED);
-}
+///__FORCE_INLINE__ void physRigidBodySetUninitialized(physRigidBody *const __RESTRICT__ body){
+///	flagsSet(body->flags, PHYSICS_BODY_UNINITIALIZED);
+///}
 __FORCE_INLINE__ void physRigidBodySetInitialized(physRigidBody *const __RESTRICT__ body){
-	flagsUnset(body->flags, PHYSICS_BODY_UNINITIALIZED);
+	///flagsUnset(body->flags, PHYSICS_BODY_UNINITIALIZED);
 	flagsSet(body->flags, PHYSICS_BODY_INITIALIZED);
 }
-__FORCE_INLINE__ void physRigidBodySetInitializedFull(physRigidBody *const __RESTRICT__ body){
-	flagsUnset(body->flags, PHYSICS_BODY_UNINITIALIZED);
-}
+///__FORCE_INLINE__ void physRigidBodySetInitializedFull(physRigidBody *const __RESTRICT__ body){
+///	flagsUnset(body->flags, PHYSICS_BODY_UNINITIALIZED);
+///}
 __FORCE_INLINE__ void physRigidBodySetAsleep(physRigidBody *const __RESTRICT__ body){
 	body->flags &= PHYSICS_BODY_ASLEEP;
 }
@@ -1124,29 +1123,36 @@ __FORCE_INLINE__ void physRigidBodySetAwake(physRigidBody *const __RESTRICT__ bo
 	body->flags = flags;
 }
 
-__FORCE_INLINE__ void physRigidBodySimulateCollisions(physRigidBody *const __RESTRICT__ body){
-	flagsSet(body->flags, PHYSICS_BODY_COLLIDE | PHYSICS_BODY_COLLISION_MODIFIED);
-}
 __FORCE_INLINE__ void physRigidBodySimulateLinear(physRigidBody *const __RESTRICT__ body){
 	flagsSet(body->flags, PHYSICS_BODY_SIMULATE_LINEAR);
 }
 __FORCE_INLINE__ void physRigidBodySimulateAngular(physRigidBody *const __RESTRICT__ body){
 	flagsSet(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR);
 }
-
-__FORCE_INLINE__ void physRigidBodyIgnoreCollisions(physRigidBody *const __RESTRICT__ body){
-	flagsUnset(body->flags, PHYSICS_BODY_COLLIDE);
-	flagsSet(body->flags, PHYSICS_BODY_COLLISION_MODIFIED);
+__FORCE_INLINE__ void physRigidBodySimulateCollision(physRigidBody *const __RESTRICT__ body){
+	flagsSet(body->flags, PHYSICS_BODY_COLLIDE | PHYSICS_BODY_COLLISION_MODIFIED);
 }
+__FORCE_INLINE__ void physRigidBodySimulateFriction(physRigidBody *const __RESTRICT__ body){
+	flagsSet(body->flags, PHYSICS_BODY_FRICTION);
+}
+
 __FORCE_INLINE__ void physRigidBodyIgnoreLinear(physRigidBody *const __RESTRICT__ body){
 	flagsUnset(body->flags, PHYSICS_BODY_SIMULATE_LINEAR);
 }
 __FORCE_INLINE__ void physRigidBodyIgnoreAngular(physRigidBody *const __RESTRICT__ body){
 	flagsUnset(body->flags, PHYSICS_BODY_SIMULATE_ANGULAR);
 }
-__FORCE_INLINE__ return_t physRigidBodyIsUninitialized(const physRigidBody *const __RESTRICT__ body){
-	return flagsAreSet(body->flags, PHYSICS_BODY_UNINITIALIZED);
+__FORCE_INLINE__ void physRigidBodyIgnoreCollision(physRigidBody *const __RESTRICT__ body){
+	flagsUnset(body->flags, PHYSICS_BODY_COLLIDE);
+	flagsSet(body->flags, PHYSICS_BODY_COLLISION_MODIFIED);
 }
+__FORCE_INLINE__ void physRigidBodyIgnoreFriction(physRigidBody *const __RESTRICT__ body){
+	flagsUnset(body->flags, PHYSICS_BODY_FRICTION);
+}
+
+///__FORCE_INLINE__ return_t physRigidBodyIsUninitialized(const physRigidBody *const __RESTRICT__ body){
+///	return flagsAreSet(body->flags, PHYSICS_BODY_UNINITIALIZED);
+///}
 __FORCE_INLINE__ return_t physRigidBodyIsSimulated(const physRigidBody *const __RESTRICT__ body){
 	return flagsAreSet(body->flags, PHYSICS_BODY_SIMULATE);
 }
@@ -1718,7 +1724,7 @@ __FORCE_INLINE__ void physRigidBodyIntegrateLeapfrogTest(physRigidBody *const __
 		// Remove the body's "just initialized" flag.
 		flagsUnset(body->flags, PHYSICS_BODY_INITIALIZED);
 
-	}else if(!physRigidBodyIsUninitialized(body)){
+	}else{/// if(!physRigidBodyIsUninitialized(body)){  This was removed to make way for PHYSICS_BODY_FRICTION.
 
 		// "Drift".
 		physRigidBodyIntegrateConfiguration(body, dt_s);

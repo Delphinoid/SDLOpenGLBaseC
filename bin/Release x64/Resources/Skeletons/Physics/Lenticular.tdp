@@ -18,7 +18,7 @@ rigidbody "root" {
 		f 5 7 3 1
 		f 6 5 1 2
 		f 4 3 7 8
-		friction 0
+		friction 1
 		restitution 0
 	}
 }

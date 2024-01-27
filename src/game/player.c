@@ -14,8 +14,8 @@
 #define	PLAYER_MOVE_STOP_EPSILON 0.001f
 
 // Physics engine friction for different states.
-#define PLAYER_PHYSICS_GROUND_FRICTION 0.f
-#define PLAYER_PHYSICS_AIR_FRICTION    0.f
+///#define PLAYER_PHYSICS_GROUND_FRICTION 1.f
+///#define PLAYER_PHYSICS_AIR_FRICTION    1.f
 
 // Note that these friction values do not account for
 // the added friction from the physics simulation.
@@ -40,6 +40,9 @@
 #define PLAYER_AIR_ACCELERATION 1.f
 #define PLAYER_AIR_DECELERATION 2.5f
 
+/// Currently unimplemented.
+#define PLAYER_COYOTE_TIME 0
+
 // A low air strafe speed and high acceleration allows for good
 // air control while stopping the player from easily climbing
 // slopes that are much too steep for them, like in Quake. It
@@ -59,13 +62,18 @@ static __HINT_INLINE__ float pMoveScale(const pMove *const __RESTRICT__ movement
 	}
 }
 
-static __HINT_INLINE__ void pMoveClipVelocity(pMove *const __RESTRICT__ movement, const vec3 normal){
+static __HINT_INLINE__ void pMoveClipVelocity(pMove *const __RESTRICT__ movement, const vec3 normal, const float restitution){
 	// Clip the player velocity such
-	// that it stays out of contacts.
-	const float backoff = vec3Dot(movement->velocity, normal);
-	movement->velocity.x -= normal.x*backoff;
-	movement->velocity.y -= normal.y*backoff;
-	movement->velocity.z -= normal.z*backoff;
+	// that it stays out of contacts
+	// and doesn't bounce when landing.
+	float backoff = vec3Dot(movement->velocity, normal);
+	if(restitution == 0.f || backoff < 0.f){
+		// If the restitution is 0, always clip to prevent bouncing.
+		// We also always clip if we're moving into the contact.
+		movement->velocity.x -= normal.x*backoff;
+		movement->velocity.y -= normal.y*backoff;
+		movement->velocity.z -= normal.z*backoff;
+	}
 }
 
 static __HINT_INLINE__ void pMoveAccelerate(
@@ -226,7 +234,7 @@ static __HINT_INLINE__ void pMoveAir(pMove *const __RESTRICT__ movement, const f
 
 }
 
-static __HINT_INLINE__ void pSetPhysicsFriction(player *const __RESTRICT__ p, const float friction){
+/**static __HINT_INLINE__ void pSetPhysicsFriction(player *const __RESTRICT__ p, const float friction){
 	// Set the friction of the player's physics colliders.
 	// This value depends on the current state of the player.
 	physCollider *c = p->obj->skeletonBodies->hull;
@@ -234,7 +242,7 @@ static __HINT_INLINE__ void pSetPhysicsFriction(player *const __RESTRICT__ p, co
 		c->friction = friction;
 		c = (physCollider *)memSLinkNext(c);
 	}
-}
+}**/
 
 void pRotateWish(player *const __RESTRICT__ p){
 	// Rotate the player based off their wish direction.
@@ -319,8 +327,9 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 	const physContactPair *lastContact = NULL;
 	vec3 maximum_normal = {.x = 0.f, .y = 0.f, .z = 0.f};
 	float contact_friction = 1.f;
+	float contact_restitution = 0.f;
 	while(physRigidBodyCheckContact(p->obj->skeletonBodies, 0xFFFF, &lastCollider, &lastContact)){
-		float friction;
+		float friction, restitution;
 		#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
 		vec3 normal = lastContact->data.normal;
 		#else
@@ -333,12 +342,15 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 			// will be negative: make them positive.
 			normal = vec3Negate(normal);
 			friction = lastContact->colliderB->friction;
+			restitution = lastContact->colliderB->restitution;
 		}else{
 			friction = lastContact->colliderA->friction;
+			restitution = lastContact->colliderA->restitution;
 		}
 		if(normal.y > maximum_normal.y){
 			maximum_normal = normal;
 			contact_friction = friction;
+			contact_restitution = restitution;
 		}
 	}
 	// Check the greatest contact normal to determine
@@ -374,16 +386,24 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 				// Move along the ground.
 				flagsSet(p->movement.state, PLAYER_MOVEMENT_WALKING);
 				pMoveGround(&p->movement, contact_friction, dt_s);
-				pMoveClipVelocity(&p->movement, maximum_normal);
+				///pMoveClipVelocity(&p->movement, maximum_normal);
 			}else{
 				flagsUnset(p->movement.state, PLAYER_MOVEMENT_WALKING);
 			}
+			// We do this regardless of whether the player is
+			// moving or stationary to account for bouncing.
+			pMoveClipVelocity(&p->movement, maximum_normal, floatMax(p->obj->skeletonBodies->hull->restitution, contact_restitution));
 
 		}else{
 
 			// A jump has been input.
 			p->movement.airborne = 1;
-			p->movement.velocity.y = PLAYER_JUMP;
+			// Only overwrite the velocity if we wouldn't
+			// otherwise bounce higher, for instance due to
+			// a particularly bouncy surface.
+			if(p->movement.velocity.y < PLAYER_JUMP){
+				p->movement.velocity.y = PLAYER_JUMP;
+			}
 			flagsSet(p->movement.state, PLAYER_MOVEMENT_JUMPING);
 			pMoveAir(&p->movement, dt_s);
 
@@ -395,10 +415,10 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 	p->obj->skeletonBodies->linearVelocity = p->movement.velocity;
 
 	// Handle physics friction.
-	if(!p->movement.airborne){
+	/**if(!p->movement.airborne){
 		pSetPhysicsFriction(p, PLAYER_PHYSICS_GROUND_FRICTION);
 	}else{
 		pSetPhysicsFriction(p, PLAYER_PHYSICS_AIR_FRICTION);
-	}
+	}**/
 
 }

@@ -316,7 +316,7 @@ int main(int argc, char **argv){
 	objPhysicsPrepare(tempObji);
 	tempObji->skeletonBodies->mass = 24.f;
 	tempObji->skeletonBodies->hull->friction = 1.f;
-	tempObji->skeletonBodies->flags &= ~(0x04);
+	tempObji->skeletonBodies->flags &= ~(PHYSICS_BODY_SIMULATE_ANGULAR);
 	tempObji->skeletonBodies->hull->restitution = 0.f;
 	tempObji->models->state.alpha = 0.75f;
 	tempObji->models->state.flags = MODEL_STATE_ALPHA_DITHER;
@@ -449,7 +449,7 @@ int main(int argc, char **argv){
 	tempObji5->configuration[0].position.x = 6.f;
 	tempObji5->configuration[0].position.y = -2.9f;
 	tempObji5->configuration[0].position.z = 3.f;
-	tempObji5->skeletonBodies->flags &= ~(0x04);
+	tempObji5->skeletonBodies->flags &= ~(PHYSICS_BODY_SIMULATE_ANGULAR | PHYSICS_BODY_FRICTION);
 	tempObji5->models->billboardData.flags = BILLBOARD_TARGET_SPRITE | BILLBOARD_INVERT_ORIENTATION | BILLBOARD_LOCK_Y;
 	tempObji5->models->billboardData.sectors = 8;
 	objPhysicsPrepare(tempObji5);

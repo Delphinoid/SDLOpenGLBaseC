@@ -25,21 +25,22 @@
 /// Note that PHYSICS_BODY_SIMULATE_LINEAR (and potentially PHYSICS_BODY_SIMULATE_ANGULAR)
 /// do not seem to work properly. For massive objects, impulses will change their velocities,
 /// which will affect contact and constraint solving.
-#define PHYSICS_BODY_UNINITIALIZED      0x01  // Whether or not the simulation has just begun on this frame. Currently unused.
-#define PHYSICS_BODY_SIMULATE_LINEAR    0x02  // Simulate linear velocity.
-#define PHYSICS_BODY_SIMULATE_ANGULAR   0x04  // Simulate angular velocity. Disabling this is useful for certain entities, such as players.
-#define PHYSICS_BODY_SIMULATE           0x06  // Simulate both linear and angular velocity.
-#define PHYSICS_BODY_COLLIDE            0x08  // Permit collisions.
-#define PHYSICS_BODY_AWAKE              0x0E  // Whether or not the body is asleep.
-#define PHYSICS_BODY_ASLEEP             0xF1  // Whether or not the body is asleep.
+///#define PHYSICS_BODY_UNINITIALIZED      0x01  // Whether or not the simulation has just begun on this frame. Currently unused.
+#define PHYSICS_BODY_SIMULATE_LINEAR    0x01  // Simulate linear velocity.
+#define PHYSICS_BODY_SIMULATE_ANGULAR   0x02  // Simulate angular velocity. Disabling this is useful for certain entities, such as players.
+#define PHYSICS_BODY_SIMULATE           0x03  // Simulate both linear and angular velocity.
+#define PHYSICS_BODY_COLLIDE            0x04  // Permit collisions.
+#define PHYSICS_BODY_FRICTION           0x08  // Permit friction. Only works when PHYSICS_CONTACT_FRICTION_CONSTRAINT is defined.
+#define PHYSICS_BODY_AWAKE              0x07  // Whether or not the body is awake.
+#define PHYSICS_BODY_ASLEEP             0x79  // Whether or not the body is asleep.
 #define PHYSICS_BODY_COLLISION_MODIFIED 0x10  // The collision flag was modified.
 #define PHYSICS_BODY_TRANSLATED         0x20  // The body was translated this frame.
 #define PHYSICS_BODY_ROTATED            0x40  // The body was rotated this frame.
 #define PHYSICS_BODY_TRANSFORMED        0x60  // The body was transformed this frame.
-#define PHYSICS_BODY_INITIALIZED        0x80  // The body was initialized on this frame. Currently unused.
+#define PHYSICS_BODY_INITIALIZED        0x80  // The body was initialized on this frame. Currently unused, except for physRigidBodyIntegrateLeapfrogTest.
 
 #ifndef PHYSICS_BODY_DEFAULT_STATE
-	#define PHYSICS_BODY_DEFAULT_STATE PHYSICS_BODY_UNINITIALIZED | PHYSICS_BODY_SIMULATE | PHYSICS_BODY_COLLIDE | PHYSICS_BODY_COLLISION_MODIFIED
+	#define PHYSICS_BODY_DEFAULT_STATE PHYSICS_BODY_SIMULATE | PHYSICS_BODY_COLLIDE | PHYSICS_BODY_FRICTION | PHYSICS_BODY_COLLISION_MODIFIED
 #endif
 
 typedef struct physCollider physCollider;
@@ -119,21 +120,23 @@ void physRigidBodyBaseDelete(physRigidBodyBase *const __RESTRICT__ local);
 void physRigidBodyInit(physRigidBody *const __RESTRICT__ body);
 return_t physRigidBodyInstantiate(physRigidBody *const __RESTRICT__ body, const physRigidBodyBase *const __RESTRICT__ local);
 
-void physRigidBodySetUninitialized(physRigidBody *const __RESTRICT__ body);
+///void physRigidBodySetUninitialized(physRigidBody *const __RESTRICT__ body);
 void physRigidBodySetInitialized(physRigidBody *const __RESTRICT__ body);
-void physRigidBodySetInitializedFull(physRigidBody *const __RESTRICT__ body);
+///void physRigidBodySetInitializedFull(physRigidBody *const __RESTRICT__ body);
 void physRigidBodySetAsleep(physRigidBody *const __RESTRICT__ body);
 void physRigidBodySetAwake(physRigidBody *const __RESTRICT__ body, const flags_t flags);
 
-void physRigidBodySimulateCollisions(physRigidBody *const __RESTRICT__ body);
 void physRigidBodySimulateLinear(physRigidBody *const __RESTRICT__ body);
 void physRigidBodySimulateAngular(physRigidBody *const __RESTRICT__ body);
+void physRigidBodySimulateCollision(physRigidBody *const __RESTRICT__ body);
+void physRigidBodySimulateFriction(physRigidBody *const __RESTRICT__ body);
 
-void physRigidBodyIgnoreCollisions(physRigidBody *const __RESTRICT__ body);
 void physRigidBodyIgnoreLinear(physRigidBody *const __RESTRICT__ body);
 void physRigidBodyIgnoreAngular(physRigidBody *const __RESTRICT__ body);
+void physRigidBodyIgnoreCollision(physRigidBody *const __RESTRICT__ body);
+void physRigidBodyIgnoreFriction(physRigidBody *const __RESTRICT__ body);
 
-return_t physRigidBodyIsUninitialized(const physRigidBody *const __RESTRICT__ body);
+///return_t physRigidBodyIsUninitialized(const physRigidBody *const __RESTRICT__ body);
 return_t physRigidBodyIsSimulated(const physRigidBody *const __RESTRICT__ body);
 return_t physRigidBodyIsCollidable(const physRigidBody *const __RESTRICT__ body);
 return_t physRigidBodyIsAwake(physRigidBody *const __RESTRICT__ body);

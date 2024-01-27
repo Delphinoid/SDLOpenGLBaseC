@@ -121,8 +121,12 @@ __FORCE_INLINE__ void physJointFrictionWarmStart(const physJointFriction *const 
 	);
 	const vec3 impulseAngular = vec3VMultS(joint->normal, joint->angularImpulseAccumulator);
 
-	physRigidBodyApplyBoostImpulseInverse(bodyA, joint->rA, impulseTangent, impulseAngular);
-	physRigidBodyApplyBoostImpulse(bodyB, joint->rB, impulseTangent, impulseAngular);
+	if(flagsAreSet(bodyA->flags, PHYSICS_BODY_FRICTION)){
+		physRigidBodyApplyBoostImpulseInverse(bodyA, joint->rA, impulseTangent, impulseAngular);
+	}
+	if(flagsAreSet(bodyB->flags, PHYSICS_BODY_FRICTION)){
+		physRigidBodyApplyBoostImpulse(bodyB, joint->rB, impulseTangent, impulseAngular);
+	}
 
 }
 #endif
@@ -228,7 +232,11 @@ __FORCE_INLINE__ void physJointFrictionSolveVelocityConstraints(physJointFrictio
 	impulseAngular = vec3VMultS(joint->normal, lambdaAngular);
 
 	// Apply both of the frictional impulses.
-	physRigidBodyApplyBoostImpulseInverse(bodyA, joint->rA, impulseTangent, impulseAngular);
-	physRigidBodyApplyBoostImpulse(bodyB, joint->rB, impulseTangent, impulseAngular);
+	if(flagsAreSet(bodyA->flags, PHYSICS_BODY_FRICTION)){
+		physRigidBodyApplyBoostImpulseInverse(bodyA, joint->rA, impulseTangent, impulseAngular);
+	}
+	if(flagsAreSet(bodyB->flags, PHYSICS_BODY_FRICTION)){
+		physRigidBodyApplyBoostImpulse(bodyB, joint->rB, impulseTangent, impulseAngular);
+	}
 
 }
