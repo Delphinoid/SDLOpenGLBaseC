@@ -85,51 +85,67 @@ __FORCE_INLINE__ return_t physJointSolveConfigurationConstraints(physJoint *cons
 void physJointAdd(physJoint *const joint, physRigidBody *bodyA, physRigidBody *bodyB){
 
 	// Sort a new joint into its bodies.
+	// A body's joint array first contains the joints
+	// it owns, followed by joints that it does not own.
+	// We assume that the owner of the joint is bodyA.
 
-	// Set the joint's miscellaneous variables.
-	// bodyA must be the body with the greater address.
-	if(bodyA < bodyB){
-		joint->bodyA = bodyB;
-		joint->bodyB = bodyA;
-		bodyA = bodyB;
-		bodyB = joint->bodyB;
-	}else{
-		joint->bodyA = bodyA;
-		joint->bodyB = bodyB;
-	}
+	joint->bodyA = bodyA;
+	joint->bodyB = bodyB;
 
-	// Find an insertion point for the joint in bodyA's joint array.
-	// Joints are sorted from smallest partner address to largest.
-	physJoint *previous = NULL;
-	physJoint *next = bodyA->joints;
-	while(next != NULL && bodyB > next->bodyB){
-		previous = next;
+
+	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+	memQLinkPrevA(joint) = (byte_t *)NULL;
+	memQLinkNextA(joint) = (byte_t *)bodyA->joints;
+	#else
+	joint->prevA = NULL;
+	joint->nextA = bodyA->joints;
+	#endif
+	// Since bodyA owns the joint, we can insert
+	// it at the beginning of its joint array.
+	if(bodyA->joints != NULL){
 		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
-		next = (physJoint *)memQLinkNextA(next);
+		memQLinkPrevA(bodyA->joints) = (byte_t *)joint;
 		#else
-		next = next->nextA;
+		bodyA->joints->prevA = joint;
 		#endif
-	}
+    }
+    bodyA->joints = joint;
 
-	if(previous != NULL){
-		// Insert between the previous joint and its next joint.
-		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
-		memQLinkNextA(previous) = (byte_t *)joint;
-		#else
-		previous->nextA = joint;
-		#endif
-	}else{
-		// Insert directly before the first joint.
-		bodyA->joints = joint;
-	}
-	if(next != NULL){
-		if(next->bodyA == bodyA){
+	{
+		// Find an insertion point for the joint in bodyB's joint array.
+		physJoint *prev = NULL;
+		physJoint *next = bodyB->joints;
+		while(next != NULL && next->bodyA == bodyB){
+			prev = next;
 			#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
-			memQLinkPrevA(next) = (byte_t *)joint;
+			next = (physJoint *)memQLinkNextA(next);
 			#else
-			next->prevA = joint;
+			next = next->nextA;
+			#endif
+		}
+		// We've found the first joint not owned by bodyB.
+		// Insert this joint before it.
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+		memQLinkPrevB(joint) = (byte_t *)prev;
+		memQLinkNextB(joint) = (byte_t *)next;
+		#else
+		joint->prevB = prev;
+		joint->nextB = next;
+		#endif
+		// If a joint exists before the insertion point, then
+		// our bodyB is the same as this other joint's bodyA.
+		if(prev != NULL){
+			#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+			memQLinkNextA(prev) = (byte_t *)joint;
+			#else
+			prev->nextA = joint;
 			#endif
 		}else{
+			bodyB->joints = joint;
+		}
+		// If a joint exists after the insertion point, then
+		// our bodyB is the same as this other joint's bodyB.
+		if(next != NULL){
 			#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
 			memQLinkPrevB(next) = (byte_t *)joint;
 			#else
@@ -137,53 +153,6 @@ void physJointAdd(physJoint *const joint, physRigidBody *bodyA, physRigidBody *b
 			#endif
 		}
 	}
-	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
-	memQLinkPrevA(joint) = (byte_t *)previous;
-	memQLinkNextA(joint) = (byte_t *)next;
-	#else
-	joint->prevA = previous;
-	joint->nextA = next;
-	#endif
-
-
-	// Find an insertion point for the joint in bodyB's joint array.
-	// Joints are sorted from smallest partner address to largest.
-	previous = NULL;
-	next = bodyB->joints;
-	while(next != NULL && next->bodyA == bodyB){
-		previous = next;
-		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
-		next = (physJoint *)memQLinkNextA(next);
-		#else
-		next = next->nextA;
-		#endif
-	}
-
-	if(previous != NULL){
-		// Insert between the previous joint and its next joint.
-		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
-		memQLinkNextA(previous) = (byte_t *)joint;
-		#else
-		previous->nextA = joint;
-		#endif
-	}else{
-		// Insert directly before the first joint.
-		bodyB->joints = joint;
-	}
-	if(next != NULL){
-		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
-		memQLinkPrevB(next) = (byte_t *)joint;
-		#else
-		next->prevB = joint;
-		#endif
-	}
-	#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
-	memQLinkPrevB(joint) = (byte_t *)previous;
-	memQLinkNextB(joint) = (byte_t *)next;
-	#else
-	joint->prevB = previous;
-	joint->nextB = next;
-	#endif
 
 }
 

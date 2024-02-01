@@ -167,7 +167,7 @@ static __FORCE_INLINE__ return_t physIslandUpdateRigidBody(physIsland *const __R
 }
 __HINT_INLINE__ void physIslandInsertRigidBody(physIsland *const __RESTRICT__ island, physRigidBody *const body){
 
-	physJoint *joint;
+	physJoint *j;
 
 	// Prepend the body to the linked list.
 	if(island->bodies != NULL){
@@ -178,11 +178,18 @@ __HINT_INLINE__ void physIslandInsertRigidBody(physIsland *const __RESTRICT__ is
 	island->bodies = body;
 
 	// Insert joints.
-	joint = body->joints;
-	while(joint != NULL && joint->bodyA == body){
+	j = body->joints;
+	while(j != NULL && j->bodyA == body){
 		// Only insert joints that this body owns.
-		physIslandInsertJoint(island, joint);
-		joint = joint->nextA;
+		// Recall that these joint arrays are sorted
+		// by first containing joints that the body owns
+		// (that is, for which j->bodyA == body).
+		physIslandInsertJoint(island, j);
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+		j = (physJoint *)memQLinkNextA(j);
+		#else
+		j = j->nextA;
+		#endif
 	}
 
 }
@@ -207,13 +214,17 @@ __HINT_INLINE__ void physIslandRemoveRigidBody(physIsland *const __RESTRICT__ is
 
 	// Remove joints.
 	j = body->joints;
-	while(j != NULL){
+	while(j != NULL && j->bodyA == body){
+		// Only remove joints that this body owns.
+		// Recall that these joint arrays are sorted
+		// by first containing joints that the body owns
+		// (that is, for which j->bodyA == body).
 		physIslandRemoveJoint(island, j);
-		if(j->bodyA != body){
-			j = j->nextB;
-		}else{
-			j = j->nextA;
-		}
+		#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+		j = (physJoint *)memQLinkNextA(j);
+		#else
+		j = j->nextA;
+		#endif
 	}
 
 	// Remove colliders.
@@ -237,13 +248,17 @@ __HINT_INLINE__ void physIslandInsertRigidBodies(physIsland *const __RESTRICT__ 
 
 				// Insert joints.
 				physJoint *j = last->joints;
-				while(j != NULL){
+				while(j != NULL && j->bodyA == last){
+					// Only insert joints that this body owns.
+					// Recall that these joint arrays are sorted
+					// by first containing joints that the body owns
+					// (that is, for which j->bodyA == last).
 					physIslandInsertJoint(island, j);
-					if(j->bodyA != last){
-						j = j->nextB;
-					}else{
-						j = j->nextA;
-					}
+					#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+					j = (physJoint *)memQLinkNextA(j);
+					#else
+					j = j->nextA;
+					#endif
 				}
 
 				--bodyNum;
@@ -281,13 +296,17 @@ __HINT_INLINE__ void physIslandRemoveRigidBodies(physIsland *const __RESTRICT__ 
 
 			// Remove joints.
 			j = last->joints;
-			while(j != NULL){
+			while(j != NULL && j->bodyA == last){
+				// Only remove joints that this body owns.
+				// Recall that these joint arrays are sorted
+				// by first containing joints that the body owns
+				// (that is, for which j->bodyA == body).
 				physIslandRemoveJoint(island, j);
-				if(j->bodyA != last){
-					j = j->nextB;
-				}else{
-					j = j->nextA;
-				}
+				#ifdef PHYSICS_CONTACT_USE_ALLOCATOR
+				j = (physJoint *)memQLinkNextA(j);
+				#else
+				j = j->nextA;
+				#endif
 			}
 
 			// Remove colliders.

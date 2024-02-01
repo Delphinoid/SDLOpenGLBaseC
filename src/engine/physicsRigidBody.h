@@ -98,8 +98,8 @@ typedef struct physRigidBody {
 	// Physical constraints.
 	// Each joint stores pointers to the previous and next joints for
 	// both bodies it is attached to. At the beginning of the list is
-	// all of the joints where this body is the one with the larger
-	// address, similar to collider contacts and separations.
+	// all of the joints that this body "owns"; that is, the joints
+	// for which this body is bodyA.
 	physJoint *joints;
 
 	// The rigid body this instance is derived from, in local space.

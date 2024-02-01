@@ -747,7 +747,7 @@ int main(int argc, char **argv){
 						const vec3 v = vec3VSubV(tempObji2->configuration->position, pos);
 						if(vec3Magnitude(v) <= 5.f && vec3Dot(vec3NormalizeFast(target), vec3NormalizeFast(v)) >= 0.9f){
 							physJointInit(joint_carry, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_DISTANCE);
-							physJointAdd(joint_carry, tempObji2->skeletonBodies, p.obj->skeletonBodies);
+							physJointAdd(joint_carry, p.obj->skeletonBodies, tempObji2->skeletonBodies);
 							physJointDistanceInit(&joint_carry->data.distance, g_vec3Zero, g_vec3Zero, 0.f, 0.f, 0.f);
 							carry = 1;
 						}
