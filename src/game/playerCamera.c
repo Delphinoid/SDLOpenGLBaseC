@@ -3,7 +3,7 @@
 #include <math.h>
 #include <string.h>
 
-#define PLAYER_CAMERA_PITCH_EPSILON 0.00001
+#define PLAYER_CAMERA_PITCH_EPSILON 0.0001
 #define PLAYER_CAMERA_MAX_PITCH (M_PI_2 - PLAYER_CAMERA_PITCH_EPSILON)
 
 /// Move sensitivity, yaw and pitch into a mouse event handler.

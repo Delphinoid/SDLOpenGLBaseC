@@ -277,6 +277,7 @@ void pRotateCamera(player *const __RESTRICT__ p, const playerCamera *const __RES
 void pInit(player *const __RESTRICT__ p, object *const obj){
 	memset(p, 0, sizeof(player));
 	p->obj = obj;
+	p->movement.frame = g_vec3Zero;
 	p->movement.direction = vec2New(0.f, 1.f);
 }
 
@@ -325,11 +326,13 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 	// this is greater than some maximum slope threshold.
 	const physCollider *lastCollider = NULL;
 	const physContactPair *lastContact = NULL;
-	vec3 maximum_normal = {.x = 0.f, .y = 0.f, .z = 0.f};
-	float contact_friction = 1.f;
-	float contact_restitution = 0.f;
+	vec3 maxNormal = {.x = 0.f, .y = 0.f, .z = 0.f};
+	float maxFriction = 1.f;
+	float maxRestitution = 0.f;
+	vec3 maxVelocity = g_vec3Zero;
 	while(physRigidBodyCheckContact(p->obj->skeletonBodies, 0xFFFF, &lastCollider, &lastContact)){
 		float friction, restitution;
+		vec3 velocity;
 		#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
 		vec3 normal = lastContact->data.normal;
 		#else
@@ -343,21 +346,28 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 			normal = vec3Negate(normal);
 			friction = lastContact->colliderB->friction;
 			restitution = lastContact->colliderB->restitution;
+			velocity = ((const physRigidBody *)lastContact->colliderB->body)->linearVelocity;
 		}else{
 			friction = lastContact->colliderA->friction;
 			restitution = lastContact->colliderA->restitution;
+			velocity = ((const physRigidBody *)lastContact->colliderB->body)->linearVelocity;
 		}
-		if(normal.y > maximum_normal.y){
-			maximum_normal = normal;
-			contact_friction = friction;
-			contact_restitution = restitution;
+		if(normal.y > maxNormal.y){
+			maxNormal = normal;
+			maxFriction = friction;
+			maxRestitution = restitution;
+			maxVelocity = velocity;
 		}
 	}
+
 	// Check the greatest contact normal to determine
 	// whether or not we're in the air. We should also
 	// change the physics friction accordingly!
-	if(maximum_normal.y >= PLAYER_STEEPEST_SLOPE_ANGLE){
+	if(maxNormal.y >= PLAYER_STEEPEST_SLOPE_ANGLE){
 		p->movement.airborne = 0;
+		// This reference frame represents the linear velocity of any
+		// moving platform that the player is currently standing on.
+		p->movement.frame = maxVelocity;
 	}else if(p->movement.airborne != (tick_t)-1){
 		// We set CVAR_JUMP to 0 here rather than when we
 		// execute a jump to prevent jumps from being eaten
@@ -374,25 +384,25 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 	///p->movement.jump = CVAR_JUMP;
 
 	// Handle movement related input.
-	p->movement.velocity = p->obj->skeletonBodies->linearVelocity;
+	p->movement.velocity = vec3VSubV(p->obj->skeletonBodies->linearVelocity, p->movement.frame);
 	if(!p->movement.airborne){
 		if(CVAR_JUMP == 0){
 
 			// Handle friction.
-			pMoveFriction(&p->movement, contact_friction, dt_s);
+			pMoveFriction(&p->movement, maxFriction, dt_s);
 			flagsUnset(p->movement.state, PLAYER_MOVEMENT_JUMPING);
 
 			if(p->movement.fwish != 0.f || p->movement.rwish != 0.f){
 				// Move along the ground.
 				flagsSet(p->movement.state, PLAYER_MOVEMENT_WALKING);
-				pMoveGround(&p->movement, contact_friction, dt_s);
-				///pMoveClipVelocity(&p->movement, maximum_normal);
+				pMoveGround(&p->movement, maxFriction, dt_s);
+				///pMoveClipVelocity(&p->movement, maxNormal);
 			}else{
 				flagsUnset(p->movement.state, PLAYER_MOVEMENT_WALKING);
 			}
 			// We do this regardless of whether the player is
 			// moving or stationary to account for bouncing.
-			pMoveClipVelocity(&p->movement, maximum_normal, floatMax(p->obj->skeletonBodies->hull->restitution, contact_restitution));
+			pMoveClipVelocity(&p->movement, maxNormal, floatMax(p->obj->skeletonBodies->hull->restitution, maxRestitution));
 
 		}else{
 
@@ -412,7 +422,7 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 		pMoveAir(&p->movement, dt_s);
 	}
 	p->movement.velocity.y -= PLAYER_GRAVITY * dt_s;
-	p->obj->skeletonBodies->linearVelocity = p->movement.velocity;
+	p->obj->skeletonBodies->linearVelocity = vec3VAddV(p->movement.velocity, p->movement.frame);
 
 	// Handle physics friction.
 	/**if(!p->movement.airborne){
