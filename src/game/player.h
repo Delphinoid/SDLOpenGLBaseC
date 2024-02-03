@@ -32,8 +32,6 @@ typedef struct {
 
 	// Player velocity this tick.
 	vec3 velocity;
-	// The velocity of the reference frame.
-	vec3 frame;
 
 	// Normalized movement direction.
 	vec2 direction;

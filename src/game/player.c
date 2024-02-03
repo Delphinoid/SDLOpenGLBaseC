@@ -277,7 +277,6 @@ void pRotateCamera(player *const __RESTRICT__ p, const playerCamera *const __RES
 void pInit(player *const __RESTRICT__ p, object *const obj){
 	memset(p, 0, sizeof(player));
 	p->obj = obj;
-	p->movement.frame = g_vec3Zero;
 	p->movement.direction = vec2New(0.f, 1.f);
 }
 
@@ -330,6 +329,7 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 	float maxFriction = 1.f;
 	float maxRestitution = 0.f;
 	vec3 maxVelocity = g_vec3Zero;
+	vec3 frame = g_vec3Zero;
 	while(physRigidBodyCheckContact(p->obj->skeletonBodies, 0xFFFF, &lastCollider, &lastContact)){
 		float friction, restitution;
 		vec3 velocity;
@@ -367,7 +367,7 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 		p->movement.airborne = 0;
 		// This reference frame represents the linear velocity of any
 		// moving platform that the player is currently standing on.
-		p->movement.frame = maxVelocity;
+		frame = maxVelocity;
 	}else if(p->movement.airborne != (tick_t)-1){
 		// We set CVAR_JUMP to 0 here rather than when we
 		// execute a jump to prevent jumps from being eaten
@@ -384,7 +384,7 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 	///p->movement.jump = CVAR_JUMP;
 
 	// Handle movement related input.
-	p->movement.velocity = vec3VSubV(p->obj->skeletonBodies->linearVelocity, p->movement.frame);
+	p->movement.velocity = vec3VSubV(p->obj->skeletonBodies->linearVelocity, frame);
 	if(!p->movement.airborne){
 		if(CVAR_JUMP == 0){
 
@@ -422,7 +422,7 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 		pMoveAir(&p->movement, dt_s);
 	}
 	p->movement.velocity.y -= PLAYER_GRAVITY * dt_s;
-	p->obj->skeletonBodies->linearVelocity = vec3VAddV(p->movement.velocity, p->movement.frame);
+	p->obj->skeletonBodies->linearVelocity = vec3VAddV(p->movement.velocity, frame);
 
 	// Handle physics friction.
 	/**if(!p->movement.airborne){
