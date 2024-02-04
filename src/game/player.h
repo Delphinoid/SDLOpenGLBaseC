@@ -46,6 +46,9 @@ typedef struct {
 	// How the player appears.
 	// You can toggle this from rendering
 	// by changing the alpha of the renderables.
+	// The root bone should contain a rigid body
+	// that serves as the player's "physics shadow"
+	// for interacting with the physical world.
 	object *obj;
 
 	// Movement controller.

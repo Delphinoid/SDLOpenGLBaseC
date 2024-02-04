@@ -325,49 +325,57 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 	// this is greater than some maximum slope threshold.
 	const physCollider *lastCollider = NULL;
 	const physContactPair *lastContact = NULL;
-	vec3 maxNormal = {.x = 0.f, .y = 0.f, .z = 0.f};
-	float maxFriction = 1.f;
-	float maxRestitution = 0.f;
-	vec3 maxVelocity = g_vec3Zero;
+	vec3 groundNormal = {.x = 0.f, .y = 0.f, .z = 0.f};
+	const physCollider *groundCollider;
+	vec3 groundContact;
 	vec3 frame = g_vec3Zero;
 	while(physRigidBodyCheckContact(p->obj->skeletonBodies, 0xFFFF, &lastCollider, &lastContact)){
-		float friction, restitution;
-		vec3 velocity;
 		#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
 		vec3 normal = lastContact->data.normal;
 		#else
 		vec3 normal = lastContact->data.frictionConstraint.normal;
 		#endif
+		physCollider *collider;
+		vec3 contact;
 		if(lastContact->colliderA == lastCollider){
 			// The contact normal is taken from
 			// collider A to collider B. If the
 			// player is collider A, valid normals
 			// will be negative: make them positive.
 			normal = vec3Negate(normal);
-			friction = lastContact->colliderB->friction;
-			restitution = lastContact->colliderB->restitution;
-			velocity = ((const physRigidBody *)lastContact->colliderB->body)->linearVelocity;
+			collider = lastContact->colliderB;
+			#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
+			contact = lastContact->data.rB;
+			#else
+			contact = lastContact->data.frictionConstraint.rB;
+			#endif
 		}else{
-			friction = lastContact->colliderA->friction;
-			restitution = lastContact->colliderA->restitution;
-			velocity = ((const physRigidBody *)lastContact->colliderB->body)->linearVelocity;
+			collider = lastContact->colliderA;
+			#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
+			contact = lastContact->data.rA;
+			#else
+			contact = lastContact->data.frictionConstraint.rA;
+			#endif
 		}
-		if(normal.y > maxNormal.y){
-			maxNormal = normal;
-			maxFriction = friction;
-			maxRestitution = restitution;
-			maxVelocity = velocity;
+		if(normal.y > groundNormal.y){
+			groundNormal = normal;
+			groundCollider = collider;
+			groundContact = contact;
 		}
 	}
 
 	// Check the greatest contact normal to determine
 	// whether or not we're in the air. We should also
 	// change the physics friction accordingly!
-	if(maxNormal.y >= PLAYER_STEEPEST_SLOPE_ANGLE){
+	if(groundNormal.y >= PLAYER_STEEPEST_SLOPE_ANGLE){
 		p->movement.airborne = 0;
-		// This reference frame represents the linear velocity of any
+		// This reference frame represents the velocity of any
 		// moving platform that the player is currently standing on.
-		frame = maxVelocity;
+		// We retrieve both the linear and angular component.
+		frame = vec3VAddV(
+			((const physRigidBody *)groundCollider->body)->linearVelocity,
+			vec3Cross(((const physRigidBody *)groundCollider->body)->angularVelocity, groundContact)
+		);
 	}else if(p->movement.airborne != (tick_t)-1){
 		// We set CVAR_JUMP to 0 here rather than when we
 		// execute a jump to prevent jumps from being eaten
@@ -389,20 +397,20 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 		if(CVAR_JUMP == 0){
 
 			// Handle friction.
-			pMoveFriction(&p->movement, maxFriction, dt_s);
+			pMoveFriction(&p->movement, groundCollider->friction, dt_s);
 			flagsUnset(p->movement.state, PLAYER_MOVEMENT_JUMPING);
 
 			if(p->movement.fwish != 0.f || p->movement.rwish != 0.f){
 				// Move along the ground.
 				flagsSet(p->movement.state, PLAYER_MOVEMENT_WALKING);
-				pMoveGround(&p->movement, maxFriction, dt_s);
-				///pMoveClipVelocity(&p->movement, maxNormal);
+				pMoveGround(&p->movement, groundCollider->friction, dt_s);
+				///pMoveClipVelocity(&p->movement, groundNormal);
 			}else{
 				flagsUnset(p->movement.state, PLAYER_MOVEMENT_WALKING);
 			}
 			// We do this regardless of whether the player is
 			// moving or stationary to account for bouncing.
-			pMoveClipVelocity(&p->movement, maxNormal, floatMax(p->obj->skeletonBodies->hull->restitution, maxRestitution));
+			pMoveClipVelocity(&p->movement, groundNormal, floatMax(p->obj->skeletonBodies->hull->restitution, groundCollider->restitution));
 
 		}else{
 
