@@ -490,10 +490,10 @@ __FORCE_INLINE__ void physContactReset(physContact *const __RESTRICT__ contact){
 		pPoint->tangentImpulseAccumulator[0] = 0.f;
 		pPoint->tangentImpulseAccumulator[1] = 0.f;
 		#endif
-		pPoint->key.inEdgeR  = (cEdgeIndex_t)-1;
-		pPoint->key.outEdgeR = (cEdgeIndex_t)-1;
-		pPoint->key.inEdgeI  = (cEdgeIndex_t)-1;
-		pPoint->key.outEdgeI = (cEdgeIndex_t)-1;
+		pPoint->key.inEdgeA  = (cEdgeIndex_t)-1;
+		pPoint->key.outEdgeA = (cEdgeIndex_t)-1;
+		pPoint->key.inEdgeB  = (cEdgeIndex_t)-1;
+		pPoint->key.outEdgeB = (cEdgeIndex_t)-1;
 	}
 
 }

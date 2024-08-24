@@ -301,10 +301,10 @@ static __HINT_INLINE__ void cHullClipEdgeContact(const cHull *const reference, c
 	contact->key.edgeA = edges.edge1;
 	contact->key.edgeB = edges.edge2;
 	#else
-	contact->key.inEdgeR = edges.edge1;
-	contact->key.outEdgeR = edges.edge1;
-	contact->key.inEdgeI = edges.edge2;
-	contact->key.outEdgeI = edges.edge2;
+	contact->key.inEdgeA = edges.edge1;
+	contact->key.outEdgeA = edges.edge1;
+	contact->key.inEdgeB = edges.edge2;
+	contact->key.outEdgeB = edges.edge2;
 	#endif
 
 	cm->contactNum = 1;
@@ -347,7 +347,7 @@ static __HINT_INLINE__ const cHullFace *cHullFindIncidentClipFace(const cHull *c
 }
 
 static __HINT_INLINE__ void cHullReduceManifold(const cHullClipVertex *const vertices, const cHullClipVertex *const verticesLast, const cHullProjectVertex *const projections,
-                                                const vec3 planeNormal, const int offset, cHullContact *const __RESTRICT__ cm){
+                                                const vec3 planeNormal, const int hullsSwapped, cHullContact *const __RESTRICT__ cm){
 
 	// Reduce the manifold to the combination of
 	// contacts that provides the greatest area.
@@ -402,7 +402,7 @@ static __HINT_INLINE__ void cHullReduceManifold(const cHullClipVertex *const ver
 	first = projectionBest;
 	second = projectionWorst;
 
-	if(offset == 0){
+	if(hullsSwapped == 0){
 
 		// Add the first two contact points.
 		contact->pointA = projectionBest->v;
@@ -422,32 +422,32 @@ static __HINT_INLINE__ void cHullReduceManifold(const cHullClipVertex *const ver
 	}else{
 
 		// Add the first two contact points.
-		contact->pointA = projectionBest->v;
-		contact->pointB = pointBest->v;
+		contact->pointA = pointBest->v;
+		contact->pointB = projectionBest->v;
 		contact->separation = projectionBest->depth;
 		#ifdef COLLISION_MANIFOLD_SIMPLE_CONTACT_KEYS
-		contact->key.edgeA = pointBest->key.edgeA;
-		contact->key.edgeB = pointBest->key.edgeB;
+		contact->key.edgeA = pointBest->key.edgeB;
+		contact->key.edgeB = pointBest->key.edgeA;
 		#else
-		contact->key.inEdgeR  = pointBest->key.inEdgeR;
-		contact->key.outEdgeR = pointBest->key.outEdgeR;
-		contact->key.inEdgeI  = pointBest->key.inEdgeI;
-		contact->key.outEdgeI = pointBest->key.outEdgeI;
+		contact->key.inEdgeA  = pointBest->key.inEdgeB;
+		contact->key.outEdgeA = pointBest->key.outEdgeB;
+		contact->key.inEdgeB  = pointBest->key.inEdgeA;
+		contact->key.outEdgeB = pointBest->key.outEdgeA;
 		#endif
 		contact->normal = vec3Negate(planeNormal);
 		++contact;
 
-		contact->pointA = projectionWorst->v;
-		contact->pointB = pointWorst->v;
+		contact->pointA = pointWorst->v;
+		contact->pointB = projectionWorst->v;
 		contact->separation = projectionWorst->depth;
 		#ifdef COLLISION_MANIFOLD_SIMPLE_CONTACT_KEYS
-		contact->key.edgeA = pointWorst->key.edgeA;
-		contact->key.edgeB = pointWorst->key.edgeB;
+		contact->key.edgeA = pointWorst->key.edgeB;
+		contact->key.edgeB = pointWorst->key.edgeA;
 		#else
-		contact->key.inEdgeR  = pointWorst->key.inEdgeR;
-		contact->key.outEdgeR = pointWorst->key.outEdgeR;
-		contact->key.inEdgeI  = pointWorst->key.inEdgeI;
-		contact->key.outEdgeI = pointWorst->key.outEdgeI;
+		contact->key.inEdgeA  = pointWorst->key.inEdgeB;
+		contact->key.outEdgeA = pointWorst->key.outEdgeB;
+		contact->key.inEdgeB  = pointWorst->key.inEdgeA;
+		contact->key.outEdgeB = pointWorst->key.outEdgeA;
 		#endif
 		contact->normal = vec3Negate(planeNormal);
 		++contact;
@@ -489,7 +489,7 @@ static __HINT_INLINE__ void cHullReduceManifold(const cHullClipVertex *const ver
 	}
 
 	// Add the last two contact points.
-	if(offset == 0){
+	if(hullsSwapped == 0){
 
 		// Add the first two contact points.
 		contact->pointA = projectionBest->v;
@@ -509,32 +509,32 @@ static __HINT_INLINE__ void cHullReduceManifold(const cHullClipVertex *const ver
 	}else{
 
 		// Add the first two contact points.
-		contact->pointA = projectionBest->v;
-		contact->pointB = pointBest->v;
+		contact->pointA = pointBest->v;
+		contact->pointB = projectionBest->v;
 		contact->separation = projectionBest->depth;
 		#ifdef COLLISION_MANIFOLD_SIMPLE_CONTACT_KEYS
-		contact->key.edgeA = pointBest->key.edgeA;
-		contact->key.edgeB = pointBest->key.edgeB;
+		contact->key.edgeA = pointBest->key.edgeB;
+		contact->key.edgeB = pointBest->key.edgeA;
 		#else
-		contact->key.inEdgeR  = pointBest->key.inEdgeR;
-		contact->key.outEdgeR = pointBest->key.outEdgeR;
-		contact->key.inEdgeI  = pointBest->key.inEdgeI;
-		contact->key.outEdgeI = pointBest->key.outEdgeI;
+		contact->key.inEdgeA  = pointBest->key.inEdgeB;
+		contact->key.outEdgeA = pointBest->key.outEdgeB;
+		contact->key.inEdgeB  = pointBest->key.inEdgeA;
+		contact->key.outEdgeB = pointBest->key.outEdgeA;
 		#endif
 		contact->normal = vec3Negate(planeNormal);
 		++contact;
 
-		contact->pointA = projectionWorst->v;
-		contact->pointB = pointWorst->v;
+		contact->pointA = pointWorst->v;
+		contact->pointB = projectionWorst->v;
 		contact->separation = projectionWorst->depth;
 		#ifdef COLLISION_MANIFOLD_SIMPLE_CONTACT_KEYS
-		contact->key.edgeA = pointWorst->key.edgeA;
-		contact->key.edgeB = pointWorst->key.edgeB;
+		contact->key.edgeA = pointWorst->key.edgeB;
+		contact->key.edgeB = pointWorst->key.edgeA;
 		#else
-		contact->key.inEdgeR  = pointWorst->key.inEdgeR;
-		contact->key.outEdgeR = pointWorst->key.outEdgeR;
-		contact->key.inEdgeI  = pointWorst->key.inEdgeI;
-		contact->key.outEdgeI = pointWorst->key.outEdgeI;
+		contact->key.inEdgeA  = pointWorst->key.inEdgeB;
+		contact->key.outEdgeA = pointWorst->key.outEdgeB;
+		contact->key.inEdgeB  = pointWorst->key.inEdgeA;
+		contact->key.outEdgeB = pointWorst->key.outEdgeA;
 		#endif
 		contact->normal = vec3Negate(planeNormal);
 
@@ -544,14 +544,14 @@ static __HINT_INLINE__ void cHullReduceManifold(const cHullClipVertex *const ver
 
 static __HINT_INLINE__ void cHullClipFaceContact(const cHull *const reference, const cHull *const incident,
                                                  const cFaceIndex_t referenceFaceIndex, cFaceIndex_t incidentFaceIndex,
-                                                 const int offset, cHullContact *const __RESTRICT__ cm){
+                                                 const int hullsSwapped, cHullContact *const __RESTRICT__ cm){
 
 	// Generates a contact manifold by clipping the edges of
 	// the incident face against the faces adjacent to the
 	// reference face.
 	//
-	// Offset is used to swap the positions of the points in
-	// the contact manifold when, for example, the first
+	// hullsSwapped is used to swap the positions of the points
+	// in the contact manifold when, for example, the first
 	// mesh is the incident collider and the second is the
 	// reference collider.
 	//
@@ -619,10 +619,10 @@ static __HINT_INLINE__ void cHullClipFaceContact(const cHull *const reference, c
 			vertexLast->key.edgeA = inEdgeIndex;
 			vertexLast->key.edgeB = outEdgeIndex;
 			#else
-			vertexLast->key.inEdgeR = (cEdgeIndex_t)-1;
-			vertexLast->key.outEdgeR = (cEdgeIndex_t)-1;
-			vertexLast->key.inEdgeI = inEdgeIndex;
-			vertexLast->key.outEdgeI = outEdgeIndex;
+			vertexLast->key.inEdgeA = (cEdgeIndex_t)-1;
+			vertexLast->key.outEdgeA = (cEdgeIndex_t)-1;
+			vertexLast->key.inEdgeB = inEdgeIndex;
+			vertexLast->key.outEdgeB = outEdgeIndex;
 			#endif
 
 			inEdgeIndex = outEdgeIndex;
@@ -653,7 +653,7 @@ static __HINT_INLINE__ void cHullClipFaceContact(const cHull *const reference, c
 		#ifdef COLLISION_MANIFOLD_SIMPLE_CONTACT_KEYS
 		vertexArray->key.edgeA = inEdgeIndex;
 		#else
-		vertexArray->key.inEdgeI = inEdgeIndex;
+		vertexArray->key.inEdgeB = inEdgeIndex;
 		#endif
 
 
@@ -715,10 +715,10 @@ static __HINT_INLINE__ void cHullClipFaceContact(const cHull *const reference, c
 						vertexClip->key.edgeA = vertex->key.edgeA;
 						vertexClip->key.edgeB = inEdgeIndex;  // Reference edge index.
 						#else
-						vertexClip->key.inEdgeR  = (cEdgeIndex_t)-1;
-						vertexClip->key.outEdgeR = inEdgeIndex;  // Reference edge index.
-						vertexClip->key.inEdgeI  = vertex->key.inEdgeI;
-						vertexClip->key.outEdgeI = (cEdgeIndex_t)-1;
+						vertexClip->key.inEdgeA  = (cEdgeIndex_t)-1;
+						vertexClip->key.outEdgeA = inEdgeIndex;  // Reference edge index.
+						vertexClip->key.inEdgeB  = vertex->key.inEdgeB;
+						vertexClip->key.outEdgeB = (cEdgeIndex_t)-1;
 						#endif
 					}else{
 						*vertexClip = *vertex;
@@ -733,10 +733,10 @@ static __HINT_INLINE__ void cHullClipFaceContact(const cHull *const reference, c
 					vertexClip->key.edgeA = inEdgeIndex;  // Reference edge index.
 					vertexClip->key.edgeB = vertexPrevious->key.edgeB;
 					#else
-					vertexClip->key.inEdgeR  = inEdgeIndex;  // Reference edge index.
-					vertexClip->key.outEdgeR = (cEdgeIndex_t)-1;
-					vertexClip->key.inEdgeI  = (cEdgeIndex_t)-1;
-					vertexClip->key.outEdgeI = vertex->key.outEdgeI;
+					vertexClip->key.inEdgeA  = inEdgeIndex;  // Reference edge index.
+					vertexClip->key.outEdgeA = (cEdgeIndex_t)-1;
+					vertexClip->key.inEdgeB  = (cEdgeIndex_t)-1;
+					vertexClip->key.outEdgeB = vertex->key.outEdgeB;
 					#endif
 					++vertexClip;
 					// Now that the clipped starting vertex has been
@@ -795,13 +795,13 @@ static __HINT_INLINE__ void cHullClipFaceContact(const cHull *const reference, c
 			// Perform manifold reduction if we have too
 			// many valid contact points. Calculates the
 			// contact tangents during reduction.
-			cHullReduceManifold(vertexArray, vertexNext, clipArray.projections, referenceFaceNormal, offset, cm);
+			cHullReduceManifold(vertexArray, vertexNext, clipArray.projections, referenceFaceNormal, hullsSwapped, cm);
 			cm->contactNum = COLLISION_MANIFOLD_MAX_CONTACT_POINTS;
 		}else{
 			// Otherwise add each contact to the manifold.
 			for(; vertexArray < vertexNext; ++vertexArray, ++clipArray.projections, ++contact){
 				contact->separation = clipArray.projections->depth;
-				if(offset == 0){
+				if(hullsSwapped == 0){
 					contact->pointA = clipArray.projections->v;
 					contact->pointB = vertexArray->v;
 					contact->normal = referenceFaceNormal;
@@ -814,10 +814,10 @@ static __HINT_INLINE__ void cHullClipFaceContact(const cHull *const reference, c
 					contact->key.edgeA = vertexArray->key.edgeB;
 					contact->key.edgeB = vertexArray->key.edgeA;
 					#else
-					contact->key.inEdgeR  = vertexArray->key.inEdgeI;
-					contact->key.outEdgeR = vertexArray->key.outEdgeI;
-					contact->key.inEdgeI  = vertexArray->key.inEdgeR;
-					contact->key.outEdgeI = vertexArray->key.outEdgeR;
+					contact->key.inEdgeA  = vertexArray->key.inEdgeB;
+					contact->key.outEdgeA = vertexArray->key.outEdgeB;
+					contact->key.inEdgeB  = vertexArray->key.inEdgeA;
+					contact->key.outEdgeB = vertexArray->key.outEdgeA;
 					#endif
 				}
 			}
@@ -831,7 +831,7 @@ static __HINT_INLINE__ void cHullClipFaceContact(const cHull *const reference, c
 			const float separation = pointPlaneDistance(referenceFaceNormal, referenceFaceVertex, vertexArray->v);
 			if(separation <= 0.f){
 				contact->separation = separation;
-				if(offset == 0){
+				if(hullsSwapped == 0){
 					contact->pointA = pointPlaneProject(referenceFaceNormal, referenceFaceVertex, vertexArray->v);
 					contact->pointB = vertexArray->v;
 					contact->normal = referenceFaceNormal;
@@ -844,10 +844,10 @@ static __HINT_INLINE__ void cHullClipFaceContact(const cHull *const reference, c
 					contact->key.edgeA = vertexArray->key.edgeB;
 					contact->key.edgeB = vertexArray->key.edgeA;
 					#else
-					contact->key.inEdgeR  = vertexArray->key.inEdgeI;
-					contact->key.outEdgeR = vertexArray->key.outEdgeI;
-					contact->key.inEdgeI  = vertexArray->key.inEdgeR;
-					contact->key.outEdgeI = vertexArray->key.outEdgeR;
+					contact->key.inEdgeA  = vertexArray->key.inEdgeB;
+					contact->key.outEdgeA = vertexArray->key.outEdgeB;
+					contact->key.inEdgeB  = vertexArray->key.inEdgeA;
+					contact->key.outEdgeB = vertexArray->key.outEdgeA;
 					#endif
 				}
 				++cm->contactNum;

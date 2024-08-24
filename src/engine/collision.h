@@ -15,15 +15,17 @@ typedef uint_least8_t cSeparationFeature_t;
 // Stores the indices of the edges involved
 // in clipping a particular contact point.
 // Allows for the identification of persistent contact points.
+// Note that A corresponds to the reference collider,
+// while B corresponds to the incident collider.
 typedef struct {
 	#ifdef COLLISION_MANIFOLD_SIMPLE_CONTACT_KEYS
 	cEdgeIndex_t edgeA;
 	cEdgeIndex_t edgeB;
 	#else
-	cEdgeIndex_t inEdgeR;
-	cEdgeIndex_t outEdgeR;
-	cEdgeIndex_t inEdgeI;
-	cEdgeIndex_t outEdgeI;
+	cEdgeIndex_t inEdgeA;
+	cEdgeIndex_t outEdgeA;
+	cEdgeIndex_t inEdgeB;
+	cEdgeIndex_t outEdgeB;
 	#endif
 } cContactKey;
 
