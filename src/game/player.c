@@ -36,6 +36,10 @@
 #define PLAYER_GROUND_ACCELERATION 15.f
 #define PLAYER_GROUND_DECELERATION 8.f
 
+// When the player has a vertical speed above this
+// threshold, they will be assumed to be airborne.
+#define PLAYER_VERTICAL_SPEED_THRESHOLD 10.f
+
 #define PLAYER_AIR_MAX_SPEED    10.f
 #define PLAYER_AIR_ACCELERATION 1.f
 #define PLAYER_AIR_DECELERATION 2.5f
@@ -329,38 +333,40 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 	const physCollider *groundCollider;
 	vec3 groundContact;
 	vec3 frame = g_vec3Zero;
-	while(physRigidBodyCheckContact(p->obj->skeletonBodies, 0xFFFF, &lastCollider, &lastContact)){
-		#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
-		vec3 normal = lastContact->data.normal;
-		#else
-		vec3 normal = lastContact->data.frictionConstraint.normal;
-		#endif
-		physCollider *collider;
-		vec3 contact;
-		if(lastContact->colliderA == lastCollider){
-			// The contact normal is taken from
-			// collider A to collider B. If the
-			// player is collider A, valid normals
-			// will be negative: make them positive.
-			normal = vec3Negate(normal);
-			collider = lastContact->colliderB;
+	if(p->movement.velocity.y < PLAYER_VERTICAL_SPEED_THRESHOLD){
+		while(physRigidBodyCheckContact(p->obj->skeletonBodies, 0xFFFF, &lastCollider, &lastContact)){
 			#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
-			contact = lastContact->data.rB;
+			vec3 normal = lastContact->data.normal;
 			#else
-			contact = lastContact->data.frictionConstraint.rB;
+			vec3 normal = lastContact->data.frictionConstraint.normal;
 			#endif
-		}else{
-			collider = lastContact->colliderA;
-			#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
-			contact = lastContact->data.rA;
-			#else
-			contact = lastContact->data.frictionConstraint.rA;
-			#endif
-		}
-		if(normal.y > groundNormal.y){
-			groundNormal = normal;
-			groundCollider = collider;
-			groundContact = contact;
+			physCollider *collider;
+			vec3 contact;
+			if(lastContact->colliderA == lastCollider){
+				// The contact normal is taken from
+				// collider A to collider B. If the
+				// player is collider A, valid normals
+				// will be negative: make them positive.
+				normal = vec3Negate(normal);
+				collider = lastContact->colliderB;
+				#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
+				contact = lastContact->data.rB;
+				#else
+				contact = lastContact->data.frictionConstraint.rB;
+				#endif
+			}else{
+				collider = lastContact->colliderA;
+				#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
+				contact = lastContact->data.rA;
+				#else
+				contact = lastContact->data.frictionConstraint.rA;
+				#endif
+			}
+			if(normal.y > groundNormal.y){
+				groundNormal = normal;
+				groundCollider = collider;
+				groundContact = contact;
+			}
 		}
 	}
 
