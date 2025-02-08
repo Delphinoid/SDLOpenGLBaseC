@@ -38,7 +38,7 @@
 
 // When the player has a vertical speed above this
 // threshold, they will be assumed to be airborne.
-#define PLAYER_VERTICAL_SPEED_THRESHOLD 10.f
+#define PLAYER_VERTICAL_SPEED_THRESHOLD 12.f
 
 #define PLAYER_AIR_MAX_SPEED    10.f
 #define PLAYER_AIR_ACCELERATION 1.f
@@ -333,7 +333,7 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 	const physCollider *groundCollider;
 	vec3 groundContact;
 	vec3 frame = g_vec3Zero;
-	if(p->movement.velocity.y < PLAYER_VERTICAL_SPEED_THRESHOLD){
+	if(p->movement.velocity.y <= PLAYER_VERTICAL_SPEED_THRESHOLD){
 		while(physRigidBodyCheckContact(p->obj->skeletonBodies, 0xFFFF, &lastCollider, &lastContact)){
 			#ifndef PHYSICS_CONTACT_FRICTION_CONSTRAINT
 			vec3 normal = lastContact->data.normal;
