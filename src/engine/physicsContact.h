@@ -1,7 +1,7 @@
 #ifndef PHYSICSCOLLISION_H
 #define PHYSICSCOLLISION_H
 
-#include "physicsSettings.h"
+#include "settingsPhysics.h"
 #ifdef PHYSICS_CONTACT_FRICTION_CONSTRAINT
 #include "physicsJointFriction.h"
 #endif

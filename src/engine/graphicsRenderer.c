@@ -1,5 +1,5 @@
+#include "settingsGraphicsRenderer.h"
 #include "graphicsRenderer.h"
-#include "graphicsRendererSettings.h"
 #include "memoryManager.h"
 #include "camera.h"
 #include "scene.h"

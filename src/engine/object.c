@@ -922,8 +922,13 @@ void objGenerateSprite(const object *const __RESTRICT__ obj, const model *const 
 
 	// Generate a transformation for the sprite and transform each vertex.
 	/// Might need to call tfAppend.
+	#ifdef TRANSFORM_MATRIX_SHEAR
+	tf.scale.m[0][0] *= twiFrameWidth((const twInstance *const)&mdl->twi) * twiTextureWidth((const twInstance *const)&mdl->twi);
+	tf.scale.m[1][1] *= twiFrameHeight((const twInstance *const)&mdl->twi) * twiTextureHeight((const twInstance *const)&mdl->twi);
+	#else
 	tf.scale.x *= twiFrameWidth((const twInstance *const)&mdl->twi) * twiTextureWidth((const twInstance *const)&mdl->twi);
 	tf.scale.y *= twiFrameHeight((const twInstance *const)&mdl->twi) * twiTextureHeight((const twInstance *const)&mdl->twi);
+	#endif
 	vertices[0].position = tfTransformPoint(tf, vertices[0].position);
 	vertices[1].position = tfTransformPoint(tf, vertices[1].position);
 	vertices[2].position = tfTransformPoint(tf, vertices[2].position);

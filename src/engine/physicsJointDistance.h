@@ -1,7 +1,7 @@
 #ifndef PHYSICSJOINTDISTANCE_H
 #define PHYSICSJOINTDISTANCE_H
 
-#include "physicsSettings.h"
+#include "settingsPhysics.h"
 #include "vec3.h"
 
 /** Velocity seems to be exploding under certain circumstances. Investigate? **/

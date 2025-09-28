@@ -1,7 +1,7 @@
 #ifndef MEMORYSHARED_H
 #define MEMORYSHARED_H
 
-#include "memorySettings.h"
+#include "settingsMemory.h"
 #include "qualifiers.h"
 #include <stddef.h>
 

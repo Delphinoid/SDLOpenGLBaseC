@@ -22,7 +22,7 @@
 // updated.
 //
 // MEMORY_MANAGER_ENFORCE_STATIC_VIRTUAL_HEAP
-// may be defined in memorySettings.h to
+// may be defined in settingsMemory.h to
 // prevent the automatic allocation of new
 // virtual heaps.
 

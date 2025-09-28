@@ -1,5 +1,5 @@
+#include "settingsGraphicsManager.h"
 #include "graphicsManager.h"
-#include "graphicsManagerSettings.h"
 #include "sprite.h"
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>

@@ -4,7 +4,7 @@
 #include "particleEmitter.h"
 #include "particleOperator.h"
 #include "particleConstraint.h"
-#include "spriteSettings.h"
+#include "settingsSprite.h"
 #include "sprite.h"
 #include "texture.h"
 #include "model.h"

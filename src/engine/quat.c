@@ -699,36 +699,36 @@ __HINT_INLINE__ quat quatLerp(const quat q1, const quat q2, const float t){
 	//               ^
 	// r = (q1 + (q2 - q1) * t)
 	const quat r = {
-		.x = floatLerp(q1.x, q2.x, t),
-		.y = floatLerp(q1.y, q2.y, t),
-		.z = floatLerp(q1.z, q2.z, t),
-		.w = floatLerp(q1.w, q2.w, t)
+		.x = floatLerpFast(q1.x, q2.x, t),
+		.y = floatLerpFast(q1.y, q2.y, t),
+		.z = floatLerpFast(q1.z, q2.z, t),
+		.w = floatLerpFast(q1.w, q2.w, t)
 	};
 	return r;
 }
 __HINT_INLINE__ void quatLerpP1(quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2, const float t){
 	//               ^
 	// r = (q1 + (q2 - q1) * t)
-	q1->x = floatLerp(q1->x, q2->x, t);
-	q1->y = floatLerp(q1->y, q2->y, t);
-	q1->z = floatLerp(q1->z, q2->z, t);
-	q1->w = floatLerp(q1->w, q2->w, t);
+	q1->x = floatLerpFast(q1->x, q2->x, t);
+	q1->y = floatLerpFast(q1->y, q2->y, t);
+	q1->z = floatLerpFast(q1->z, q2->z, t);
+	q1->w = floatLerpFast(q1->w, q2->w, t);
 }
 __HINT_INLINE__ void quatLerpP2(const quat *const __RESTRICT__ q1, quat *const __RESTRICT__ q2, const float t){
 	//               ^
 	// r = (q1 + (q2 - q1) * t)
-	q2->x = floatLerp(q1->x, q2->x, t);
-	q2->y = floatLerp(q1->y, q2->y, t);
-	q2->z = floatLerp(q1->z, q2->z, t);
-	q2->w = floatLerp(q1->w, q2->w, t);
+	q2->x = floatLerpFast(q1->x, q2->x, t);
+	q2->y = floatLerpFast(q1->y, q2->y, t);
+	q2->z = floatLerpFast(q1->z, q2->z, t);
+	q2->w = floatLerpFast(q1->w, q2->w, t);
 }
 __HINT_INLINE__ void quatLerpPR(const quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2, const float t, quat *const __RESTRICT__ r){
 	//               ^
 	// r = (q1 + (q2 - q1) * t)
-	r->x = floatLerp(q1->x, q2->x, t);
-	r->y = floatLerp(q1->y, q2->y, t);
-	r->z = floatLerp(q1->z, q2->z, t);
-	r->w = floatLerp(q1->w, q2->w, t);
+	r->x = floatLerpFast(q1->x, q2->x, t);
+	r->y = floatLerpFast(q1->y, q2->y, t);
+	r->z = floatLerpFast(q1->z, q2->z, t);
+	r->w = floatLerpFast(q1->w, q2->w, t);
 }
 
 quat quatSlerp(const quat q1, const quat q2, const float t){

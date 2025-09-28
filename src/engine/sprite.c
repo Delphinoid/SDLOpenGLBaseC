@@ -1,8 +1,8 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
+#include "settingsSprite.h"
 #include "sprite.h"
 #include "spriteState.h"
-#include "spriteSettings.h"
 #include "vertex.h"
 #include <stdio.h>
 #include <string.h>

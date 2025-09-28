@@ -559,11 +559,11 @@ static __FORCE_INLINE__ void physJointSphereGenerateBias(physJointSphere *const 
 	// to the limits. This helps prevent jittering when resting
 	// at the limit points.
 	#ifdef PHYSICS_JOINT_SPHERE_STABILIZER_BAUMGARTE
-		joint->swingBias = floatMax(
+		joint->swingBias = floatMaxFast(
 			PHYSICS_JOINT_SPHERE_BAUMGARTE_BIAS * frequency * (joint->swingBias - PHYSICS_ANGULAR_SLOP),
 			0.f
 		);
-		joint->twistBias = floatMax(
+		joint->twistBias = floatMaxFast(
 			PHYSICS_JOINT_SPHERE_BAUMGARTE_BIAS * frequency * (joint->twistBias - PHYSICS_ANGULAR_SLOP),
 			0.f
 		);
@@ -626,7 +626,7 @@ static __FORCE_INLINE__ void physJointSphereAngularVelocityImpulse(
 
 	// Clamp the accumulated impulse magnitude.
 	const float impulseOld = *impulseAccumulator;
-	*impulseAccumulator = floatMin(impulseOld + lambda, 0.f);
+	*impulseAccumulator = floatMinFast(impulseOld + lambda, 0.f);
 
 	// Calculate the total impulse.
 	vec3fmafP(*impulseAccumulator - impulseOld, &axis, impulse);

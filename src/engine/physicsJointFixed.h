@@ -1,7 +1,7 @@
 #ifndef PHYSICSJOINTFIXED_H
 #define PHYSICSJOINTFIXED_H
 
-#include "physicsSettings.h"
+#include "settingsPhysics.h"
 #include "return.h"
 #include "qualifiers.h"
 

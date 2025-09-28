@@ -1,7 +1,7 @@
 #ifndef PHYSICSJOINTSPHERE_H
 #define PHYSICSJOINTSPHERE_H
 
-#include "physicsSettings.h"
+#include "settingsPhysics.h"
 #include "constantsMath.h"
 #include "mat3.h"
 #include "flags.h"

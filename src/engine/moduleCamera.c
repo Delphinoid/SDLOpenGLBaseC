@@ -1,5 +1,5 @@
+#include "settingsModule.h"
 #include "moduleCamera.h"
-#include "moduleSettings.h"
 #include "camera.h"
 #include "memoryManager.h"
 #include <string.h>

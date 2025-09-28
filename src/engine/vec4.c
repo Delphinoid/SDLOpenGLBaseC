@@ -334,33 +334,33 @@ __HINT_INLINE__ void vec4fmafPR(const float x, const vec4 *const __RESTRICT__ u,
 
 __HINT_INLINE__ vec4 vec4Min(const vec4 v1, const vec4 v2){
 	const vec4 r = {
-		.x = floatMin(v1.x, v2.x),
-		.y = floatMin(v1.y, v2.y),
-		.z = floatMin(v1.z, v2.z),
-		.w = floatMin(v1.w, v2.w)
+		.x = floatMinFast(v1.x, v2.x),
+		.y = floatMinFast(v1.y, v2.y),
+		.z = floatMinFast(v1.z, v2.z),
+		.w = floatMinFast(v1.w, v2.w)
 	};
 	return r;
 }
 __HINT_INLINE__ void vec4MinP(const vec4 *const __RESTRICT__ v1, const vec4 *const __RESTRICT__ v2, vec4 *const __RESTRICT__ r){
-	r->x = floatMin(v1->x, v2->x);
-	r->y = floatMin(v1->y, v2->y);
-	r->z = floatMin(v1->z, v2->z);
-	r->w = floatMin(v1->z, v2->z);
+	r->x = floatMinFast(v1->x, v2->x);
+	r->y = floatMinFast(v1->y, v2->y);
+	r->z = floatMinFast(v1->z, v2->z);
+	r->w = floatMinFast(v1->z, v2->z);
 }
 __HINT_INLINE__ vec4 vec4Max(const vec4 v1, const vec4 v2){
 	const vec4 r = {
-		.x = floatMax(v1.x, v2.x),
-		.y = floatMax(v1.y, v2.y),
-		.z = floatMax(v1.z, v2.z),
-		.w = floatMax(v1.w, v2.w)
+		.x = floatMaxFast(v1.x, v2.x),
+		.y = floatMaxFast(v1.y, v2.y),
+		.z = floatMaxFast(v1.z, v2.z),
+		.w = floatMaxFast(v1.w, v2.w)
 	};
 	return r;
 }
 __HINT_INLINE__ void vec4MaxP(const vec4 *const __RESTRICT__ v1, const vec4 *const __RESTRICT__ v2, vec4 *const __RESTRICT__ r){
-	r->x = floatMax(v1->x, v2->x);
-	r->y = floatMax(v1->y, v2->y);
-	r->z = floatMax(v1->z, v2->z);
-	r->w = floatMax(v1->z, v2->z);
+	r->x = floatMaxFast(v1->x, v2->x);
+	r->y = floatMaxFast(v1->y, v2->y);
+	r->z = floatMaxFast(v1->z, v2->z);
+	r->w = floatMaxFast(v1->z, v2->z);
 }
 
 __HINT_INLINE__ vec4 vec4Negate(const vec4 v){
@@ -444,30 +444,30 @@ __HINT_INLINE__ float vec4DotP(const vec4 *const __RESTRICT__ v1, const vec4 *co
 
 __HINT_INLINE__ vec4 vec4Lerp(const vec4 v1, const vec4 v2, const float t){
 	// r = v1 + (v2 - v1) * t
-	const vec4 r = {.x = floatLerp(v1.x, v2.x, t),
-	                .y = floatLerp(v1.y, v2.y, t),
-	                .z = floatLerp(v1.z, v2.z, t),
-	                .w = floatLerp(v1.w, v2.w, t)};
+	const vec4 r = {.x = floatLerpFast(v1.x, v2.x, t),
+	                .y = floatLerpFast(v1.y, v2.y, t),
+	                .z = floatLerpFast(v1.z, v2.z, t),
+	                .w = floatLerpFast(v1.w, v2.w, t)};
 	return r;
 }
 __HINT_INLINE__ void vec4LerpP1(vec4 *const __RESTRICT__ v1, const vec4 *const __RESTRICT__ v2, const float t){
 	// r = v1 + (v2 - v1) * t
-	v1->x = floatLerp(v1->x, v2->x, t);
-	v1->y = floatLerp(v1->y, v2->y, t);
-	v1->z = floatLerp(v1->z, v2->z, t);
-	v1->w = floatLerp(v1->w, v2->w, t);
+	v1->x = floatLerpFast(v1->x, v2->x, t);
+	v1->y = floatLerpFast(v1->y, v2->y, t);
+	v1->z = floatLerpFast(v1->z, v2->z, t);
+	v1->w = floatLerpFast(v1->w, v2->w, t);
 }
 __HINT_INLINE__ void vec4LerpP2(const vec4 *const __RESTRICT__ v1, vec4 *const __RESTRICT__ v2, const float t){
 	// r = v1 + (v2 - v1) * t
-	v2->x = floatLerp(v1->x, v2->x, t);
-	v2->y = floatLerp(v1->y, v2->y, t);
-	v2->z = floatLerp(v1->z, v2->z, t);
-	v2->w = floatLerp(v1->w, v2->w, t);
+	v2->x = floatLerpFast(v1->x, v2->x, t);
+	v2->y = floatLerpFast(v1->y, v2->y, t);
+	v2->z = floatLerpFast(v1->z, v2->z, t);
+	v2->w = floatLerpFast(v1->w, v2->w, t);
 }
 __HINT_INLINE__ void vec4LerpPR(const vec4 *const __RESTRICT__ v1, const vec4 *const __RESTRICT__ v2, const float t, vec4 *const __RESTRICT__ r){
 	// r = v1 + (v2 - v1) * t
-	r->x = floatLerp(v1->x, v2->x, t);
-	r->y = floatLerp(v1->y, v2->y, t);
-	r->z = floatLerp(v1->z, v2->z, t);
-	r->w = floatLerp(v1->w, v2->w, t);
+	r->x = floatLerpFast(v1->x, v2->x, t);
+	r->y = floatLerpFast(v1->y, v2->y, t);
+	r->z = floatLerpFast(v1->z, v2->z, t);
+	r->w = floatLerpFast(v1->w, v2->w, t);
 }

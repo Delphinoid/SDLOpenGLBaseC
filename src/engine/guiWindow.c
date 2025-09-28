@@ -24,8 +24,13 @@ void guiWindowRender(const guiElement *const element, graphicsManager *const gfx
 	transform tf = {
 		.position = {
 			// Move the origin to the top left corner.
+			#ifdef TRANSFORM_MATRIX_SHEAR
+			.x = root.position.x + root.scale.m[0][0]*0.5f + offsets->w * frameBorder->image->width,
+			.y = root.position.y - root.scale.m[1][1]*0.5f - offsets->h * frameBorder->image->height,
+			#else
 			.x = root.position.x + root.scale.x*0.5f + offsets->w * frameBorder->image->width,
 			.y = root.position.y - root.scale.y*0.5f - offsets->h * frameBorder->image->height,
+			#endif
 			.z = root.position.z
 		},
 		.orientation = root.orientation,
@@ -35,8 +40,13 @@ void guiWindowRender(const guiElement *const element, graphicsManager *const gfx
 		// Append to parent position.
 		tf = tfMultiply(element->parent->root, tf);
 	}
+	#ifdef TRANSFORM_MATRIX_SHEAR
+	inverseWidthX = tf.scale.m[0][0]/frameBorder->image->width;
+	inverseWidthY = tf.scale.m[1][1]/frameBorder->image->width;
+	#else
 	inverseWidthX = tf.scale.x/frameBorder->image->width;
 	inverseWidthY = tf.scale.y/frameBorder->image->width;
+	#endif
 
 	spriteState *state = &gfxMngr->shdrData.spriteTransformState[0];
 
@@ -51,8 +61,13 @@ void guiWindowRender(const guiElement *const element, graphicsManager *const gfx
 	size.y = offsets->h * frameBorder->image->height;
 	// Transformation matrix.
 	// Consists of a scale and a translation.
+	#ifdef TRANSFORM_MATRIX_SHEAR
+	state->transformation.m[0][0] = size.x; state->transformation.m[1][0] = 0.f;    state->transformation.m[2][0] = 0.f; state->transformation.m[3][0] = tf.position.x + 0.5f * (tf.scale.m[0][0] + size.x);
+	state->transformation.m[0][1] = 0.f;    state->transformation.m[1][1] = size.y; state->transformation.m[2][1] = 0.f; state->transformation.m[3][1] = tf.position.y - 0.5f * (tf.scale.m[1][1] + size.y);
+	#else
 	state->transformation.m[0][0] = size.x; state->transformation.m[1][0] = 0.f;    state->transformation.m[2][0] = 0.f; state->transformation.m[3][0] = tf.position.x + 0.5f * (tf.scale.x + size.x);
 	state->transformation.m[0][1] = 0.f;    state->transformation.m[1][1] = size.y; state->transformation.m[2][1] = 0.f; state->transformation.m[3][1] = tf.position.y - 0.5f * (tf.scale.y + size.y);
+	#endif
 	state->transformation.m[0][2] = 0.f;    state->transformation.m[1][2] = 0.f;    state->transformation.m[2][2] = 1.f; state->transformation.m[3][2] = tf.position.z;
 	// Texture fragment.
 	state->frame.x = frameBorder->subframe.x + offsets->x;
@@ -67,8 +82,13 @@ void guiWindowRender(const guiElement *const element, graphicsManager *const gfx
 	size.y = offsets->h * frameBorder->image->height;
 	// Transformation matrix.
 	// Consists of a scale and a translation.
+	#ifdef TRANSFORM_MATRIX_SHEAR
+	state->transformation.m[0][0] = size.x; state->transformation.m[1][0] = 0.f;    state->transformation.m[2][0] = 0.f; state->transformation.m[3][0] = tf.position.x + 0.5f * (tf.scale.m[0][0] + size.x);
+	state->transformation.m[0][1] = 0.f;    state->transformation.m[1][1] = size.y; state->transformation.m[2][1] = 0.f; state->transformation.m[3][1] = tf.position.y + 0.5f * (tf.scale.m[1][1] + size.y);
+	#else
 	state->transformation.m[0][0] = size.x; state->transformation.m[1][0] = 0.f;    state->transformation.m[2][0] = 0.f; state->transformation.m[3][0] = tf.position.x + 0.5f * (tf.scale.x + size.x);
 	state->transformation.m[0][1] = 0.f;    state->transformation.m[1][1] = size.y; state->transformation.m[2][1] = 0.f; state->transformation.m[3][1] = tf.position.y + 0.5f * (tf.scale.y + size.y);
+	#endif
 	state->transformation.m[0][2] = 0.f;    state->transformation.m[1][2] = 0.f;    state->transformation.m[2][2] = 1.f; state->transformation.m[3][2] = tf.position.z;
 	// Texture fragment.
 	state->frame.x = frameBorder->subframe.x + offsets->x;
@@ -83,8 +103,13 @@ void guiWindowRender(const guiElement *const element, graphicsManager *const gfx
 	size.y = offsets->h * frameBorder->image->height;
 	// Transformation matrix.
 	// Consists of a scale and a translation.
+	#ifdef TRANSFORM_MATRIX_SHEAR
+	state->transformation.m[0][0] = size.x; state->transformation.m[1][0] = 0.f;    state->transformation.m[2][0] = 0.f; state->transformation.m[3][0] = tf.position.x - 0.5f * (tf.scale.m[0][0] + size.x);
+	state->transformation.m[0][1] = 0.f;    state->transformation.m[1][1] = size.y; state->transformation.m[2][1] = 0.f; state->transformation.m[3][1] = tf.position.y + 0.5f * (tf.scale.m[1][1] + size.y);
+	#else
 	state->transformation.m[0][0] = size.x; state->transformation.m[1][0] = 0.f;    state->transformation.m[2][0] = 0.f; state->transformation.m[3][0] = tf.position.x - 0.5f * (tf.scale.x + size.x);
 	state->transformation.m[0][1] = 0.f;    state->transformation.m[1][1] = size.y; state->transformation.m[2][1] = 0.f; state->transformation.m[3][1] = tf.position.y + 0.5f * (tf.scale.y + size.y);
+	#endif
 	state->transformation.m[0][2] = 0.f;    state->transformation.m[1][2] = 0.f;    state->transformation.m[2][2] = 1.f; state->transformation.m[3][2] = tf.position.z;
 	// Texture fragment.
 	state->frame.x = frameBorder->subframe.x + offsets->x;
@@ -99,8 +124,13 @@ void guiWindowRender(const guiElement *const element, graphicsManager *const gfx
 	size.y = offsets->h * frameBorder->image->height;
 	// Transformation matrix.
 	// Consists of a scale and a translation.
+	#ifdef TRANSFORM_MATRIX_SHEAR
+	state->transformation.m[0][0] = size.x; state->transformation.m[1][0] = 0.f;    state->transformation.m[2][0] = 0.f; state->transformation.m[3][0] = tf.position.x - 0.5f * (tf.scale.m[0][0] + size.x);
+	state->transformation.m[0][1] = 0.f;    state->transformation.m[1][1] = size.y; state->transformation.m[2][1] = 0.f; state->transformation.m[3][1] = tf.position.y - 0.5f * (tf.scale.m[1][1] + size.y);
+	#else
 	state->transformation.m[0][0] = size.x; state->transformation.m[1][0] = 0.f;    state->transformation.m[2][0] = 0.f; state->transformation.m[3][0] = tf.position.x - 0.5f * (tf.scale.x + size.x);
 	state->transformation.m[0][1] = 0.f;    state->transformation.m[1][1] = size.y; state->transformation.m[2][1] = 0.f; state->transformation.m[3][1] = tf.position.y - 0.5f * (tf.scale.y + size.y);
+	#endif
 	state->transformation.m[0][2] = 0.f;    state->transformation.m[1][2] = 0.f;    state->transformation.m[2][2] = 1.f; state->transformation.m[3][2] = tf.position.z;
 	// Texture fragment.
 	state->frame.x = frameBorder->subframe.x + offsets->x;
@@ -114,8 +144,13 @@ void guiWindowRender(const guiElement *const element, graphicsManager *const gfx
 	size.x = offsets->h * frameBorder->image->height;
 	// Transformation matrix.
 	// Consists of a scale, a rotation and a translation.
+	#ifdef TRANSFORM_MATRIX_SHEAR
+	state->transformation.m[0][0] = 0.f;               state->transformation.m[1][0] = size.x; state->transformation.m[2][0] = 0.f; state->transformation.m[3][0] = tf.position.x + 0.5f * (tf.scale.m[0][0] + size.x);
+	state->transformation.m[0][1] = -tf.scale.m[1][1]; state->transformation.m[1][1] = 0.f;    state->transformation.m[2][1] = 0.f; state->transformation.m[3][1] = tf.position.y;
+	#else
 	state->transformation.m[0][0] = 0.f;         state->transformation.m[1][0] = size.x; state->transformation.m[2][0] = 0.f; state->transformation.m[3][0] = tf.position.x + 0.5f * (tf.scale.x + size.x);
 	state->transformation.m[0][1] = -tf.scale.y; state->transformation.m[1][1] = 0.f;    state->transformation.m[2][1] = 0.f; state->transformation.m[3][1] = tf.position.y;
+	#endif
 	state->transformation.m[0][2] = 0.f;         state->transformation.m[1][2] = 0.f;    state->transformation.m[2][2] = 1.f; state->transformation.m[3][2] = tf.position.z;
 	// Texture fragment.
 	state->frame.x = frameBorder->subframe.x + offsets->x;
@@ -129,8 +164,13 @@ void guiWindowRender(const guiElement *const element, graphicsManager *const gfx
 	size.x = offsets->h * frameBorder->image->height;
 	// Transformation matrix.
 	// Consists of a scale, a rotation and a translation.
+	#ifdef TRANSFORM_MATRIX_SHEAR
+	state->transformation.m[0][0] = tf.scale.m[0][0]; state->transformation.m[1][0] = 0.f;    state->transformation.m[2][0] = 0.f; state->transformation.m[3][0] = tf.position.x;
+	state->transformation.m[0][1] = 0.f;              state->transformation.m[1][1] = size.x; state->transformation.m[2][1] = 0.f; state->transformation.m[3][1] = tf.position.y + 0.5f * (tf.scale.m[1][1] + size.x);
+	#else
 	state->transformation.m[0][0] = tf.scale.x; state->transformation.m[1][0] = 0.f;    state->transformation.m[2][0] = 0.f; state->transformation.m[3][0] = tf.position.x;
 	state->transformation.m[0][1] = 0.f;        state->transformation.m[1][1] = size.x; state->transformation.m[2][1] = 0.f; state->transformation.m[3][1] = tf.position.y + 0.5f * (tf.scale.y + size.x);
+	#endif
 	state->transformation.m[0][2] = 0.f;        state->transformation.m[1][2] = 0.f;    state->transformation.m[2][2] = 1.f; state->transformation.m[3][2] = tf.position.z;
 	// Texture fragment.
 	state->frame.x = frameBorder->subframe.x + offsets->x;
@@ -144,8 +184,13 @@ void guiWindowRender(const guiElement *const element, graphicsManager *const gfx
 	size.x = offsets->h * frameBorder->image->height;
 	// Transformation matrix.
 	// Consists of a scale, a rotation and a translation.
+	#ifdef TRANSFORM_MATRIX_SHEAR
+	state->transformation.m[0][0] = 0.f;               state->transformation.m[1][0] = size.x; state->transformation.m[2][0] = 0.f; state->transformation.m[3][0] = tf.position.x - 0.5f * (tf.scale.m[0][0] + size.x);
+	state->transformation.m[0][1] = -tf.scale.m[1][1]; state->transformation.m[1][1] = 0.f;    state->transformation.m[2][1] = 0.f; state->transformation.m[3][1] = tf.position.y;
+	#else
 	state->transformation.m[0][0] = 0.f;         state->transformation.m[1][0] = size.x; state->transformation.m[2][0] = 0.f; state->transformation.m[3][0] = tf.position.x - 0.5f * (tf.scale.x + size.x);
 	state->transformation.m[0][1] = -tf.scale.y; state->transformation.m[1][1] = 0.f;    state->transformation.m[2][1] = 0.f; state->transformation.m[3][1] = tf.position.y;
+	#endif
 	state->transformation.m[0][2] = 0.f;         state->transformation.m[1][2] = 0.f;    state->transformation.m[2][2] = 1.f; state->transformation.m[3][2] = tf.position.z;
 	// Texture fragment.
 	state->frame.x = frameBorder->subframe.x + offsets->x;
@@ -159,8 +204,13 @@ void guiWindowRender(const guiElement *const element, graphicsManager *const gfx
 	size.x = offsets->h * frameBorder->image->height;
 	// Transformation matrix.
 	// Consists of a scale, a rotation and a translation.
+	#ifdef TRANSFORM_MATRIX_SHEAR
+	state->transformation.m[0][0] = tf.scale.m[0][0]; state->transformation.m[1][0] = 0.f;    state->transformation.m[2][0] = 0.f; state->transformation.m[3][0] = tf.position.x;
+	state->transformation.m[0][1] = 0.f;              state->transformation.m[1][1] = size.x; state->transformation.m[2][1] = 0.f; state->transformation.m[3][1] = tf.position.y - 0.5f * (tf.scale.m[1][1] + size.x);
+	#else
 	state->transformation.m[0][0] = tf.scale.x; state->transformation.m[1][0] = 0.f;    state->transformation.m[2][0] = 0.f; state->transformation.m[3][0] = tf.position.x;
 	state->transformation.m[0][1] = 0.f;        state->transformation.m[1][1] = size.x; state->transformation.m[2][1] = 0.f; state->transformation.m[3][1] = tf.position.y - 0.5f * (tf.scale.y + size.x);
+	#endif
 	state->transformation.m[0][2] = 0.f;        state->transformation.m[1][2] = 0.f;    state->transformation.m[2][2] = 1.f; state->transformation.m[3][2] = tf.position.z;
 	// Texture fragment.
 	state->frame.x = frameBorder->subframe.x + offsets->x;
@@ -185,8 +235,13 @@ void guiWindowRender(const guiElement *const element, graphicsManager *const gfx
 		state->frame.w = frameBody->subframe.w;
 		state->frame.h = frameBody->subframe.h;
 	}else{
+		#ifdef TRANSFORM_MATRIX_SHEAR
+		state->frame.w = tf.scale.m[0][0]/frameBody->image->width;
+		state->frame.h = tf.scale.m[1][1]/frameBody->image->height;
+		#else
 		state->frame.w = tf.scale.x/frameBody->image->width;
 		state->frame.h = tf.scale.y/frameBody->image->height;
+		#endif
 	}
 	// Bind the texture.
 	gfxMngrBindTexture(gfxMngr, GL_TEXTURE0, frameBody->image->diffuseID);

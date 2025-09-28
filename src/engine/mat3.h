@@ -48,6 +48,16 @@ vec3 mat3MMultV(const mat3 m, const vec3 v);
 void mat3MMultVP(const mat3 *const __RESTRICT__ m, vec3 *const __RESTRICT__ v);
 void mat3MMultVPR(const mat3 *const __RESTRICT__ m, const vec3 *const __RESTRICT__ v, vec3 *const __RESTRICT__ r);
 
+mat3 mat3MTMultM(const mat3 m1, const mat3 m2);
+void mat3MTMultMP1(mat3 *const __RESTRICT__ m1, const mat3 *const __RESTRICT__ m2);
+void mat3MTMultMP2(const mat3 *const __RESTRICT__ m1, mat3 *const __RESTRICT__ m2);
+void mat3MTMultMPR(const mat3 *const __RESTRICT__ m1, const mat3 *const __RESTRICT__ m2, mat3 *const __RESTRICT__ r);
+
+mat3 mat3MMultMT(const mat3 m1, const mat3 m2);
+void mat3MMultMTP1(mat3 *const __RESTRICT__ m1, const mat3 *const __RESTRICT__ m2);
+void mat3MMultMTP2(const mat3 *const __RESTRICT__ m1, mat3 *const __RESTRICT__ m2);
+void mat3MMultMTPR(const mat3 *const __RESTRICT__ m1, const mat3 *const __RESTRICT__ m2, mat3 *const __RESTRICT__ r);
+
 mat3 mat3MAddM(const mat3 m1, const mat3 m2);
 void mat3MAddMP(mat3 *const __RESTRICT__ m1, const mat3 *const __RESTRICT__ m2);
 void mat3MAddMPR(const mat3 *const __RESTRICT__ m1, const mat3 *const __RESTRICT__ m2, mat3 *const __RESTRICT__ r);
@@ -69,7 +79,12 @@ return_t mat3SolveR(const mat3 A, const vec3 b, vec3 *const __RESTRICT__ r);
 return_t mat3SolvePR(const mat3 *const __RESTRICT__ A, const vec3 *const __RESTRICT__ b, vec3 *const __RESTRICT__ r);
 
 mat3 mat3Quaternion(const quat q);
-void mat3QuaternionP(mat3 *const __RESTRICT__ m, const quat *const __RESTRICT__ q);
+void mat3QuaternionPR(const quat *const __RESTRICT__ q, mat3 *const __RESTRICT__ r);
+
+mat3 mat3Lerp(const mat3 m1, const mat3 m2, const float t);
+void mat3LerpP1(mat3 *const __RESTRICT__ m1, const mat3 *const __RESTRICT__ m2, const float t);
+void mat3LerpP2(const mat3 *const __RESTRICT__ m1, mat3 *const __RESTRICT__ m2, const float t);
+void mat3LerpPR(const mat3 *const __RESTRICT__ m1, const mat3 *const __RESTRICT__ m2, const float t, mat3 *const __RESTRICT__ r);
 
 quat quatMat3(const mat3 m);
 void quatMat3PR(const mat3 *const __RESTRICT__ m, quat *const __RESTRICT__ r);

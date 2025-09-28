@@ -1,5 +1,5 @@
+#include "settingsModule.h"
 #include "moduleTextureWrapper.h"
-#include "moduleSettings.h"
 #include "textureWrapper.h"
 #include "memoryManager.h"
 #include <string.h>

@@ -28,14 +28,26 @@ static sklNode g_sklNodeDefault = {
 	.localBind = {
 		.position.x    = 0.f, .position.y    = 0.f, .position.z    = 0.f,
 		.orientation.x = 0.f, .orientation.y = 0.f, .orientation.z = 0.f, .orientation.w = 1.f,
-		.shear.x       = 0.f, .shear.y       = 0.f, .shear.z       = 0.f, .shear.w       = 1.f,
-		.scale.x       = 1.f, .scale.y       = 1.f, .scale.z       = 1.f
+		#ifdef TRANSFORM_MATRIX_SHEAR
+		.scale.m = {{1.f, 0.f, 0.f},
+		            {0.f, 1.f, 0.f},
+		            {0.f, 0.f, 1.f}}
+		#else
+		.scale.x       = 1.f, .scale.y       = 1.f, .scale.z       = 1.f,
+		.shear.x       = 0.f, .shear.y       = 0.f, .shear.z       = 0.f, .shear.w       = 1.f
+		#endif
 	},
 	.globalBindInverse = {
 		.position.x    = 0.f, .position.y    = 0.f, .position.z    = 0.f,
 		.orientation.x = 0.f, .orientation.y = 0.f, .orientation.z = 0.f, .orientation.w = 1.f,
-		.shear.x       = 0.f, .shear.y       = 0.f, .shear.z       = 0.f, .shear.w       = 1.f,
-		.scale.x       = 1.f, .scale.y       = 1.f, .scale.z       = 1.f
+		#ifdef TRANSFORM_MATRIX_SHEAR
+		.scale.m = {{1.f, 0.f, 0.f},
+		            {0.f, 1.f, 0.f},
+		            {0.f, 0.f, 1.f}}
+		#else
+		.scale.x       = 1.f, .scale.y       = 1.f, .scale.z       = 1.f,
+		.shear.x       = 0.f, .shear.y       = 0.f, .shear.z       = 0.f, .shear.w       = 1.f
+		#endif
 	}
 };
 skeleton g_sklDefault = {
@@ -56,7 +68,7 @@ static void sklDefragment(skeleton *const __RESTRICT__ skl, const char *const __
 
 	for(i = 0; i < skl->boneNum; ++i){
 		/// Fix comments referencing globalBindInverse when removing this function.
-		skl->bones[i].globalBindInverse = tfInverse(skl->bones[i].globalBindInverse);
+		skl->bones[i].globalBindInverse = tfInvert(skl->bones[i].globalBindInverse);
 		skl->bones[i].name = namePtr;
 		namePtr += strlen(namePtr)+1;
 	}
@@ -152,8 +164,12 @@ return_t sklLoad(skeleton *const __RESTRICT__ skl, const char *const __RESTRICT_
 
 					skl->bones[skl->boneNum].localBind.position = vec3New(data[0][0], data[0][1], data[0][2]);
 					skl->bones[skl->boneNum].localBind.orientation = quatNewEuler(data[1][0]*RADIAN_RATIO, data[1][1]*RADIAN_RATIO, data[1][2]*RADIAN_RATIO);
-					skl->bones[skl->boneNum].localBind.shear = g_quatIdentity;
+					#ifdef TRANSFORM_MATRIX_SHEAR
+					skl->bones[skl->boneNum].localBind.scale = mat3DiagonalN(data[2][0], data[2][1], data[2][2]);
+					#else
 					skl->bones[skl->boneNum].localBind.scale = vec3New(data[2][0], data[2][1], data[2][2]);
+					skl->bones[skl->boneNum].localBind.shear = g_quatIdentity;
+					#endif
 
 					skl->bones[skl->boneNum].parent = parent;
 
@@ -502,8 +518,12 @@ return_t sklaLoad(sklAnim *const __RESTRICT__ skla, const char *const __RESTRICT
 
 						skla->frames[skla->animData.frameNum-1][boneID].position = vec3New(data[0][0], data[0][1], data[0][2]);
 						skla->frames[skla->animData.frameNum-1][boneID].orientation = quatNewEuler(data[1][0]*RADIAN_RATIO, data[1][1]*RADIAN_RATIO, data[1][2]*RADIAN_RATIO);
-						skla->frames[skla->animData.frameNum-1][boneID].shear = g_quatIdentity;
+						#ifdef TRANSFORM_MATRIX_SHEAR
+						skla->frames[skla->animData.frameNum-1][boneID].scale = mat3DiagonalN(data[2][0], data[2][1], data[2][2]);
+						#else
 						skla->frames[skla->animData.frameNum-1][boneID].scale = vec3New(data[2][0], data[2][1], data[2][2]);
+						skla->frames[skla->animData.frameNum-1][boneID].shear = g_quatIdentity;
+						#endif
 
 					}else{
 						printf("Error loading skeletal animation \"%s\": Frame sub-command \"transform\" at line %u does not specify a bone ID.\n", fullPath, currentLine);
@@ -724,8 +744,12 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *const __RES
 								currentState->orientation = quatNewEuler(x, y, z);
 
 								//Set the bone's scale!
+								#ifdef TRANSFORM_MATRIX_SHEAR
+								currentState->scale = g_mat3Identity;
+								#else
 								currentState->scale = vec3New(1.f, 1.f, 1.f);
 								currentState->shear = g_quatIdentity;
+								#endif
 
 								//The Source Engine uses Z as its up axis, so we need to fix that with the root bone.
 								if(boneID == 0 && invert){
@@ -1068,7 +1092,7 @@ transform skliGenerateBoneState(const sklInstance *const __RESTRICT__ skli, cons
 				// Remove the bind pose's "contribution" to the animation.
 				// We do this here rather than when loading animations so
 				// that we may use animations from other skeletons.
-				animationState = tfMultiply(tfInverse(skli->skl->bones[id].localBind), animationState);
+				animationState = tfMultiply(tfInvert(skli->skl->bones[id].localBind), animationState);
 
 				// Weight the animation by its intensity.
 				if(anim->intensity != 1.f){

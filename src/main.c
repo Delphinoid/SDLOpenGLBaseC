@@ -360,9 +360,9 @@ int main(int argc, char **argv){
 	//objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_COLLIDE);
 	//objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
 	tempObji->configuration[0].position.y = -3.f;
-	tempObji->configuration[0].scale.x = 100.f;
-	tempObji->configuration[0].scale.y = 0.1f;
-	tempObji->configuration[0].scale.z = 100.f;
+	tempObji->configuration[0].scale.m[0][0] = 100.f;
+	tempObji->configuration[0].scale.m[1][1] = 0.1f;
+	tempObji->configuration[0].scale.m[2][2] = 100.f;
 	objPhysicsPrepare(tempObji);
 	tempObji->skeletonBodies->hull->friction = 1.f;
 	scnInsertObject(scnMain, tempObji);
@@ -377,17 +377,17 @@ int main(int argc, char **argv){
 	//objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
 	tempObji->configuration[0].position.x = -200.f;
 	tempObji->configuration[0].position.y = 140.f;
-	tempObji->configuration[0].scale.x = 20.f;
-	tempObji->configuration[0].scale.y = 0.1f;
-	tempObji->configuration[0].scale.z = 20.f;
+	tempObji->configuration[0].scale.m[0][0] = 20.f;
+	tempObji->configuration[0].scale.m[1][1] = 0.1f;
+	tempObji->configuration[0].scale.m[2][2] = 20.f;
 	objPhysicsPrepare(tempObji);
 	scnInsertObject(scnMain, tempObji);
 	//
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("Wall2.tdo", 13));
-	tempObji->configuration[0].scale.x = 30.f;//-0.65f;
-	tempObji->configuration[0].scale.y = 0.01f;
-	tempObji->configuration[0].scale.z = 10.f;//-0.65f;
+	tempObji->configuration[0].scale.m[0][0] = 30.f;//-0.65f;
+	tempObji->configuration[0].scale.m[1][1] = 0.01f;
+	tempObji->configuration[0].scale.m[2][2] = 10.f;//-0.65f;
 	tempObji->configuration[0].position.x = -100.f;//-0.65f;
 	tempObji->configuration[0].position.y = 70.f;//-0.65f;
 	quatSetEuler(&tempObji->configuration[0].orientation, 45.6f*RADIAN_RATIO, 0.f, -30.f*RADIAN_RATIO);
@@ -398,9 +398,9 @@ int main(int argc, char **argv){
 	//
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("Wall2.tdo", 13));
-	tempObji->configuration[0].scale.x = 100.f;//-0.65f;
-	tempObji->configuration[0].scale.y = 0.01f;
-	tempObji->configuration[0].scale.z = 10.f;//-0.65f;
+	tempObji->configuration[0].scale.m[0][0] = 100.f;//-0.65f;
+	tempObji->configuration[0].scale.m[1][1] = 0.01f;
+	tempObji->configuration[0].scale.m[2][2] = 10.f;//-0.65f;
 	tempObji->configuration[0].position.x = 0.f;//-0.65f;
 	tempObji->configuration[0].position.y = 20.f;//-0.65f;
 	quatSetEuler(&tempObji->configuration[0].orientation, 45.6f*RADIAN_RATIO, 0.f, 0.f*RADIAN_RATIO);
@@ -411,9 +411,9 @@ int main(int argc, char **argv){
 	//
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("Wall2.tdo", 13));
-	tempObji->configuration[0].scale.x = 75.f;//-0.65f;
-	tempObji->configuration[0].scale.y = 50.f;
-	tempObji->configuration[0].scale.z = 5.f;//-0.65f;
+	tempObji->configuration[0].scale.m[0][0] = 75.f;//-0.65f;
+	tempObji->configuration[0].scale.m[1][1] = 50.f;
+	tempObji->configuration[0].scale.m[2][2] = 5.f;//-0.65f;
 	tempObji->configuration[0].position.x = 0.f;//-0.65f;
 	tempObji->configuration[0].position.z = -75.f;//-0.65f;
 	objPhysicsPrepare(tempObji);
@@ -424,7 +424,7 @@ int main(int argc, char **argv){
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("Kera.tdo", 8));
 	skliAnimationNew(&tempObji->skeletonData, tempObji->base->animations[0], 1.f, SKELETON_ANIM_INSTANCE_ADDITIVE);
-	vec3SetS(&tempObji->configuration[0].scale, 1.25f);
+	mat3DiagonalSP(&tempObji->configuration[0].scale, 1.25f);
 	tempObji->configuration[0].position.x += 0.f;
 	tempObji->configuration[0].position.y -= 2.9f;
 	tempObji->configuration[0].position.z += 5.f;
@@ -511,8 +511,8 @@ int main(int argc, char **argv){
 	gEl->data.window.offsets[7].x = 0.f; gEl->data.window.offsets[7].y = 3.f/5.f; gEl->data.window.offsets[7].w = 1.f; gEl->data.window.offsets[7].h = 1.f/5.f;
 	gEl->root.position.x = 0.f;//-(float)(gfxMngr.viewport.width>>1);
 	gEl->root.position.y = 0.f;//(float)(gfxMngr.viewport.height>>1);
-	gEl->root.scale.x = 0.45f*(float)(gfxMngr.viewport.width>>1);
-	gEl->root.scale.y = 40.f;
+	gEl->root.scale.m[0][0] = 0.45f*(float)(gfxMngr.viewport.width>>1);
+	gEl->root.scale.m[1][1] = 40.f;
 
 	txtFont testFont;
 	gTxt = guiNewChild(&gui);
@@ -617,7 +617,7 @@ int main(int argc, char **argv){
 
 		gEl->root.position.x = -(float)(gfxMngr.viewport.width>>1);
 		gEl->root.position.y = (float)(gfxMngr.viewport.height>>1);
-		gEl->root.scale.x = 0.45f*(float)(gfxMngr.viewport.width>>1);
+		gEl->root.scale.m[0][0] = 0.45f*(float)(gfxMngr.viewport.width>>1);
 		gTxt->root.position.x = -((float)(gfxMngr.viewport.width>>1))+24;
 		gTxt->root.position.y = (float)(gfxMngr.viewport.height>>1)-24;
 		gTxt->data.text.width = (float)(gfxMngr.viewport.width>>1);

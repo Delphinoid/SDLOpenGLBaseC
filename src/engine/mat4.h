@@ -1,7 +1,7 @@
 #ifndef MAT4_H
 #define MAT4_H
 
-#include "vec3.h"
+#include "mat3.h"
 #include "vec4.h"
 #include "quat.h"
 #include "return.h"
@@ -40,6 +40,10 @@ mat4 mat4MMultM(const mat4 m1, const mat4 m2);
 void mat4MMultMP1(mat4 *const __RESTRICT__ m1, const mat4 *const __RESTRICT__ m2);
 void mat4MMultMP2(const mat4 *const __RESTRICT__ m1, mat4 *const __RESTRICT__ m2);
 void mat4MMultMPR(const mat4 *const __RESTRICT__ m1, const mat4 *const __RESTRICT__ m2, mat4 *const __RESTRICT__ r);
+
+mat4 mat4MMultM3(const mat4 m1, const mat3 m2);
+void mat4MMultM3P(mat4 *const __RESTRICT__ m1, const mat3 *const __RESTRICT__ m2);
+void mat4MMultM3PR(const mat4 *const __RESTRICT__ m1, const mat3 *const __RESTRICT__ m2, mat4 *const __RESTRICT__ r);
 
 ///void mat4TransformVP(const mat4 *const __RESTRICT__ m, vec3 *const __RESTRICT__ v);
 
@@ -102,7 +106,7 @@ void mat4TranslatePR(const float x, const float y, const float z, const mat4 *co
 mat4 mat4TranslatePre(const mat4 m, const float x, const float y, const float z);
 
 mat4 mat4RotationMatrix(const quat q);
-void mat4RotationMatrixP(mat4 *const __RESTRICT__ m, const quat *const __RESTRICT__ q);
+void mat4RotationMatrixPR(const quat *const __RESTRICT__ q, mat4 *const __RESTRICT__ r);
 mat4 mat4Rotate(const quat q, const mat4 m);
 void mat4RotateP(const quat *const __RESTRICT__ q, mat4 *const __RESTRICT__ m);
 void mat4RotatePR(const quat *const __RESTRICT__ q, const mat4 *const __RESTRICT__ m, mat4 *const __RESTRICT__ r);
@@ -118,6 +122,6 @@ mat4 mat4ShearMatrix(const quat q, const vec3 s);
 void mat4ShearMatrixPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ s, mat4 *const __RESTRICT__ r);
 
 mat4 mat4Quaternion(const quat q);
-void mat4QuaternionP(mat4 *const __RESTRICT__ m, const quat *const __RESTRICT__ q);
+void mat4QuaternionPR(const quat *const __RESTRICT__ q, mat4 *const __RESTRICT__ r);
 
 #endif

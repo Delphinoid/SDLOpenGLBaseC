@@ -1,7 +1,7 @@
 #ifndef SCENE_H
 #define SCENE_H
 
-#include "sceneSettings.h"
+#include "settingsScene.h"
 #include "collider.h"
 #include "physicsIsland.h"
 #include "memoryDLink.h"

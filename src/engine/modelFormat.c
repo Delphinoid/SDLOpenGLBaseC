@@ -700,7 +700,7 @@ static void sklDefragmentSMD(skeleton *const __RESTRICT__ skl, const char *const
 
 	for(i = 0; i < tempBonesSize; ++i){
 		/// Fix comments referencing globalBindInverse when removing this function.
-		skl->bones[i].globalBindInverse = tfInverse(skl->bones[i].globalBindInverse);
+		skl->bones[i].globalBindInverse = tfInvert(skl->bones[i].globalBindInverse);
 		skl->bones[i].name = namePtr;
 		namePtr += strlen(namePtr)+1;
 	}
@@ -874,8 +874,12 @@ return_t mdlSMDLoad(modelBase *const __RESTRICT__ base, const char *const __REST
 									quatSetEuler(&currentBone->localBind.orientation, x, y, z);
 
 									// Set the bone's scale!
+									#ifdef TRANSFORM_MATRIX_SHEAR
+									currentBone->localBind.scale = g_mat3Identity;
+									#else
 									vec3Set(&currentBone->localBind.scale, 1.f, 1.f, 1.f);
 									currentBone->localBind.shear = g_quatIdentity;
+									#endif
 
 									// Accumulate the global bind poses; NOT the global inverse bind poses.
 									// We invert these later on in sklDefragmentSMD.

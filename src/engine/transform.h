@@ -1,6 +1,7 @@
 #ifndef TRANSFORM_H
 #define TRANSFORM_H
 
+#include "settingsMath.h"
 #include "transformRigid.h"
 #include "mat4.h"
 #include "mat3.h"
@@ -18,21 +19,37 @@
 // matrix and QSQ^T is the full affine scale matrix.
 // Q here is the matrix corresponding to the stretch
 // rotation, while S the diagonal scale matrix.
+//
+// When TRANSFORM_MATRIX_SHEAR is set, we use a matrix
+// for scaling and shearing. This is faster than using
+// a vector and quaternion and can give nicer results
+// during interpolation.
 typedef struct {
 	vec3 position;
 	quat orientation;
+	#ifdef TRANSFORM_MATRIX_SHEAR
+	mat3 scale;
+	#else
 	vec3 scale;
 	quat shear;
+	#endif
 } transform;
 
 extern transform g_tfIdentity;
 
 void tfIdentityP(transform *const __RESTRICT__ tf);
+
 transformRigid tfRigid(const transform tf);
-transform tfrAffine(const transformRigid tf);
+void tfRigidPR(const transform *const __RESTRICT__ tf, transformRigid *const __RESTRICT__ r);
+transform tfrAffine(const transformRigid tfr);
+void tfrAffinePR(const transformRigid *const __RESTRICT__ tfr, transform *const __RESTRICT__ r);
+
 mat4 tfMatrix4(const transform tf);
+void tfMatrix4PR(const transform *const __RESTRICT__ tf, mat4 *const __RESTRICT__ r);
 mat3x4 tfMatrix3x4(const transform tf);
+void tfMatrix3x4PR(const transform *const __RESTRICT__ tf, mat3x4 *const __RESTRICT__ r);
 mat3 tfMatrix3(const transform tf);
+void tfMatrix3PR(const transform *const __RESTRICT__ tf, mat3 *const __RESTRICT__ r);
 
 vec3 tfTransformPoint(const transform tf, const vec3 v);
 void tfTransformPointP(const transform *const __RESTRICT__ tf, vec3 *const __RESTRICT__ v);
@@ -47,9 +64,9 @@ void tfInterpolateP1(transform *const __RESTRICT__ tf1, const transform *const _
 void tfInterpolateP2(const transform *const __RESTRICT__ tf1, transform *const __RESTRICT__ tf2, const float t);
 void tfInterpolatePR(const transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2, const float t, transform *const __RESTRICT__ r);
 
-transform tfInverse(const transform tf);
-void tfInverseP(transform *const __RESTRICT__ tf);
-void tfInversePR(const transform *const __RESTRICT__ tf, transform *const __RESTRICT__ r);
+transform tfInvert(const transform tf);
+void tfInvertP(transform *const __RESTRICT__ tf);
+void tfInvertPR(const transform *const __RESTRICT__ tf, transform *const __RESTRICT__ r);
 
 transform tfMultiply(const transform tf1, const transform tf2);
 void tfMultiplyP1(transform *const __RESTRICT__ tf1, const transform *const __RESTRICT__ tf2);

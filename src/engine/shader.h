@@ -3,9 +3,9 @@
 
 #define GLEW_STATIC
 #include <GL/glew.h>
-#include "shaderSettings.h"
-#include "skeletonSettings.h"
-#include "spriteSettings.h"
+#include "settingsShader.h"
+#include "settingsSkeleton.h"
+#include "settingsSprite.h"
 #include "spriteState.h"
 #include "transform.h"
 #include "return.h"

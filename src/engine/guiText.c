@@ -126,7 +126,11 @@ void guiTextRender(const guiElement *const element, graphicsManager *const gfxMn
 			}
 
 			// Check if the glyph will fit.
+			#ifdef TRANSFORM_MATRIX_SHEAR
+			if((cursor.x + glyphWidth + glyph.kerningX)*text.format.size*root.scale.m[0][0] > text.width){
+			#else
 			if((cursor.x + glyphWidth + glyph.kerningX)*text.format.size*root.scale.x > text.width){
+			#endif
 				// New line.
 				glyphX -= cursor.x;
 				cursor.x = 0.f;

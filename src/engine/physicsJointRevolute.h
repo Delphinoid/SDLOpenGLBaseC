@@ -1,7 +1,7 @@
 #ifndef PHYSICSJOINTREVOLUTE_H
 #define PHYSICSJOINTREVOLUTE_H
 
-#include "physicsSettings.h"
+#include "settingsPhysics.h"
 
 // Keeps the bodies at a fixed distance
 // and allows rotation along only one axis.

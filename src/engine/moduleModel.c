@@ -1,5 +1,5 @@
+#include "settingsModule.h"
 #include "moduleModel.h"
-#include "moduleSettings.h"
 #include "model.h"
 #include "sprite.h"
 #include "memoryManager.h"

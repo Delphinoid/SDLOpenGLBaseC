@@ -164,6 +164,82 @@ __HINT_INLINE__ void mat4MMultMPR(const mat4 *const __RESTRICT__ m1, const mat4 
 
 }
 
+__HINT_INLINE__ mat4 mat4MMultM3(const mat4 m1, const mat3 m2){
+
+	/**size_t i, j;
+	for(i = 0; i < 4; ++i){
+		for(j = 0; j < 4; ++j){
+			r.m[i][j] = (m2->m[i][0] * m1->m[0][j]) +
+			            (m2->m[i][1] * m1->m[1][j]) +
+			            (m2->m[i][2] * m1->m[2][j]) +
+			            (m2->m[i][3] * m1->m[3][j]);
+		}
+	}**/
+
+	const mat4 r = {.m = {{m1.m[0][0]*m2.m[0][0] + m1.m[1][0]*m2.m[0][1] + m1.m[2][0]*m2.m[0][2],
+	                       m1.m[0][1]*m2.m[0][0] + m1.m[1][1]*m2.m[0][1] + m1.m[2][1]*m2.m[0][2],
+	                       m1.m[0][2]*m2.m[0][0] + m1.m[1][2]*m2.m[0][1] + m1.m[2][2]*m2.m[0][2],
+	                       m1.m[0][3]*m2.m[0][0] + m1.m[1][3]*m2.m[0][1] + m1.m[2][3]*m2.m[0][2]},
+	                      {m1.m[0][0]*m2.m[1][0] + m1.m[1][0]*m2.m[1][1] + m1.m[2][0]*m2.m[1][2],
+	                       m1.m[0][1]*m2.m[1][0] + m1.m[1][1]*m2.m[1][1] + m1.m[2][1]*m2.m[1][2],
+	                       m1.m[0][2]*m2.m[1][0] + m1.m[1][2]*m2.m[1][1] + m1.m[2][2]*m2.m[1][2],
+	                       m1.m[0][3]*m2.m[1][0] + m1.m[1][3]*m2.m[1][1] + m1.m[2][3]*m2.m[1][2]},
+	                      {m1.m[0][0]*m2.m[2][0] + m1.m[1][0]*m2.m[2][1] + m1.m[2][0]*m2.m[2][2],
+	                       m1.m[0][1]*m2.m[2][0] + m1.m[1][1]*m2.m[2][1] + m1.m[2][1]*m2.m[2][2],
+	                       m1.m[0][2]*m2.m[2][0] + m1.m[1][2]*m2.m[2][1] + m1.m[2][2]*m2.m[2][2],
+	                       m1.m[0][3]*m2.m[2][0] + m1.m[1][3]*m2.m[2][1] + m1.m[2][3]*m2.m[2][2]},
+	                      {m1.m[0][0]*m2.m[3][0] + m1.m[1][0]*m2.m[3][1] + m1.m[2][0]*m2.m[3][2] + m1.m[3][0],
+	                       m1.m[0][1]*m2.m[3][0] + m1.m[1][1]*m2.m[3][1] + m1.m[2][1]*m2.m[3][2] + m1.m[3][1],
+	                       m1.m[0][2]*m2.m[3][0] + m1.m[1][2]*m2.m[3][1] + m1.m[2][2]*m2.m[3][2] + m1.m[3][2],
+	                       m1.m[0][3]*m2.m[3][0] + m1.m[1][3]*m2.m[3][1] + m1.m[2][3]*m2.m[3][2] + m1.m[3][3]}}};
+	return r;
+
+}
+__HINT_INLINE__ void mat4MMultM3P(mat4 *const __RESTRICT__ m1, const mat3 *const __RESTRICT__ m2){
+
+	const mat4 r = {.m = {{m1->m[0][0]*m2->m[0][0] + m1->m[1][0]*m2->m[0][1] + m1->m[2][0]*m2->m[0][2],
+	                       m1->m[0][1]*m2->m[0][0] + m1->m[1][1]*m2->m[0][1] + m1->m[2][1]*m2->m[0][2],
+	                       m1->m[0][2]*m2->m[0][0] + m1->m[1][2]*m2->m[0][1] + m1->m[2][2]*m2->m[0][2],
+	                       m1->m[0][3]*m2->m[0][0] + m1->m[1][3]*m2->m[0][1] + m1->m[2][3]*m2->m[0][2]},
+	                      {m1->m[0][0]*m2->m[1][0] + m1->m[1][0]*m2->m[1][1] + m1->m[2][0]*m2->m[1][2],
+	                       m1->m[0][1]*m2->m[1][0] + m1->m[1][1]*m2->m[1][1] + m1->m[2][1]*m2->m[1][2],
+	                       m1->m[0][2]*m2->m[1][0] + m1->m[1][2]*m2->m[1][1] + m1->m[2][2]*m2->m[1][2],
+	                       m1->m[0][3]*m2->m[1][0] + m1->m[1][3]*m2->m[1][1] + m1->m[2][3]*m2->m[1][2]},
+	                      {m1->m[0][0]*m2->m[2][0] + m1->m[1][0]*m2->m[2][1] + m1->m[2][0]*m2->m[2][2],
+	                       m1->m[0][1]*m2->m[2][0] + m1->m[1][1]*m2->m[2][1] + m1->m[2][1]*m2->m[2][2],
+	                       m1->m[0][2]*m2->m[2][0] + m1->m[1][2]*m2->m[2][1] + m1->m[2][2]*m2->m[2][2],
+	                       m1->m[0][3]*m2->m[2][0] + m1->m[1][3]*m2->m[2][1] + m1->m[2][3]*m2->m[2][2]},
+	                      {m1->m[0][0]*m2->m[3][0] + m1->m[1][0]*m2->m[3][1] + m1->m[2][0]*m2->m[3][2] + m1->m[3][0],
+	                       m1->m[0][1]*m2->m[3][0] + m1->m[1][1]*m2->m[3][1] + m1->m[2][1]*m2->m[3][2] + m1->m[3][1],
+	                       m1->m[0][2]*m2->m[3][0] + m1->m[1][2]*m2->m[3][1] + m1->m[2][2]*m2->m[3][2] + m1->m[3][2],
+	                       m1->m[0][3]*m2->m[3][0] + m1->m[1][3]*m2->m[3][1] + m1->m[2][3]*m2->m[3][2] + m1->m[3][3]}}};
+	*m1 = r;
+
+}
+__HINT_INLINE__ void mat4MMultM3PR(const mat4 *const __RESTRICT__ m1, const mat3 *const __RESTRICT__ m2, mat4 *const __RESTRICT__ r){
+
+	r->m[0][0] = m1->m[0][0]*m2->m[0][0] + m1->m[1][0]*m2->m[0][1] + m1->m[2][0]*m2->m[0][2];
+	r->m[0][1] = m1->m[0][1]*m2->m[0][0] + m1->m[1][1]*m2->m[0][1] + m1->m[2][1]*m2->m[0][2];
+	r->m[0][2] = m1->m[0][2]*m2->m[0][0] + m1->m[1][2]*m2->m[0][1] + m1->m[2][2]*m2->m[0][2];
+	r->m[0][3] = m1->m[0][3]*m2->m[0][0] + m1->m[1][3]*m2->m[0][1] + m1->m[2][3]*m2->m[0][2];
+
+	r->m[1][0] = m1->m[0][0]*m2->m[1][0] + m1->m[1][0]*m2->m[1][1] + m1->m[2][0]*m2->m[1][2];
+	r->m[1][1] = m1->m[0][1]*m2->m[1][0] + m1->m[1][1]*m2->m[1][1] + m1->m[2][1]*m2->m[1][2];
+	r->m[1][2] = m1->m[0][2]*m2->m[1][0] + m1->m[1][2]*m2->m[1][1] + m1->m[2][2]*m2->m[1][2];
+	r->m[1][3] = m1->m[0][3]*m2->m[1][0] + m1->m[1][3]*m2->m[1][1] + m1->m[2][3]*m2->m[1][2];
+
+	r->m[2][0] = m1->m[0][0]*m2->m[2][0] + m1->m[1][0]*m2->m[2][1] + m1->m[2][0]*m2->m[2][2];
+	r->m[2][1] = m1->m[0][1]*m2->m[2][0] + m1->m[1][1]*m2->m[2][1] + m1->m[2][1]*m2->m[2][2];
+	r->m[2][2] = m1->m[0][2]*m2->m[2][0] + m1->m[1][2]*m2->m[2][1] + m1->m[2][2]*m2->m[2][2];
+	r->m[2][3] = m1->m[0][3]*m2->m[2][0] + m1->m[1][3]*m2->m[2][1] + m1->m[2][3]*m2->m[2][2];
+
+	r->m[3][0] = m1->m[0][0]*m2->m[3][0] + m1->m[1][0]*m2->m[3][1] + m1->m[2][0]*m2->m[3][2] + m1->m[3][0];
+	r->m[3][1] = m1->m[0][1]*m2->m[3][0] + m1->m[1][1]*m2->m[3][1] + m1->m[2][1]*m2->m[3][2] + m1->m[3][1];
+	r->m[3][2] = m1->m[0][2]*m2->m[3][0] + m1->m[1][2]*m2->m[3][1] + m1->m[2][2]*m2->m[3][2] + m1->m[3][2];
+	r->m[3][3] = m1->m[0][3]*m2->m[3][0] + m1->m[1][3]*m2->m[3][1] + m1->m[2][3]*m2->m[3][2] + m1->m[3][3];
+
+}
+
 __HINT_INLINE__ vec4 mat4VMultM(const vec4 v, const mat4 m){
 	const vec4 r = {.x = v.x * m.m[0][0] + v.y * m.m[0][1] + v.z * m.m[0][2] + v.w * m.m[0][3],
 	                .y = v.x * m.m[1][0] + v.y * m.m[1][1] + v.z * m.m[1][2] + v.w * m.m[1][3],
@@ -576,19 +652,19 @@ __HINT_INLINE__ mat4 mat4TranslatePre(const mat4 m, const float x, const float y
 __HINT_INLINE__ mat4 mat4RotationMatrix(const quat q){
 	return mat4Quaternion(q);
 }
-__HINT_INLINE__ void mat4RotationMatrixP(mat4 *const __RESTRICT__ m, const quat *const __RESTRICT__ q){
-	mat4QuaternionP(m, q);
+__HINT_INLINE__ void mat4RotationMatrixPR(const quat *const __RESTRICT__ q, mat4 *const __RESTRICT__ r){
+	mat4QuaternionPR(q, r);
 }
 __HINT_INLINE__ mat4 mat4Rotate(const quat q, const mat4 m){
 	return mat4MMultM(mat4Quaternion(q), m);
 }
 __HINT_INLINE__ void mat4RotateP(const quat *const __RESTRICT__ q, mat4 *const __RESTRICT__ m){
 	mat4 r;
-	mat4QuaternionP(&r, q);
+	mat4QuaternionPR(&r, q);
 	mat4MMultMP2(&r, m);
 }
 __HINT_INLINE__ void mat4RotatePR(const quat *const __RESTRICT__ q, const mat4 *const __RESTRICT__ m, mat4 *const __RESTRICT__ r){
-	mat4QuaternionP(r, q);
+	mat4QuaternionPR(r, q);
 	mat4MMultMP1(r, m);
 }
 
@@ -675,7 +751,7 @@ __HINT_INLINE__ void mat4ShearMatrixPR(const quat *const __RESTRICT__ q, const v
 
 	// Convert the quaternion to a rotation matrix.
 	mat3 m;
-	mat3QuaternionP(&m, q);
+	mat3QuaternionPR(&m, q);
 
 	float cx = s->x*m.m[0][0];
 	float cy = s->y*m.m[1][0];
@@ -727,7 +803,7 @@ __HINT_INLINE__ mat4 mat4Quaternion(const quat q){
 	                      {0.f,         0.f,         0.f,         1.f}}};
 	return r;
 }
-__HINT_INLINE__ void mat4QuaternionP(mat4 *const __RESTRICT__ m, const quat *const __RESTRICT__ q){
+__HINT_INLINE__ void mat4QuaternionPR(const quat *const __RESTRICT__ q, mat4 *const __RESTRICT__ r){
 	const float x2 = 2.f*q->x;
 	const float y2 = 2.f*q->y;
 	const float z2 = 2.f*q->z;
@@ -740,8 +816,8 @@ __HINT_INLINE__ void mat4QuaternionP(mat4 *const __RESTRICT__ m, const quat *con
 	const float y2y = q->y*y2;
 	const float y2z = q->y*z2;
 	const float z2z = q->z*z2;
-	m->m[0][0] = 1.f-y2y-z2z; m->m[0][1] = x2y+w2z;     m->m[0][2] = x2z-w2y;     m->m[0][3] = 0.f;
-	m->m[1][0] = x2y-w2z;     m->m[1][1] = 1.f-x2x-z2z; m->m[1][2] = y2z+w2x;     m->m[1][3] = 0.f;
-	m->m[2][0] = x2z+w2y;     m->m[2][1] = y2z-w2x;     m->m[2][2] = 1.f-x2x-y2y; m->m[2][3] = 0.f;
-	m->m[3][0] = 0.f;         m->m[3][1] = 0.f;         m->m[3][2] = 0.f;         m->m[3][3] = 1.f;
+	r->m[0][0] = 1.f-y2y-z2z; r->m[0][1] = x2y+w2z;     r->m[0][2] = x2z-w2y;     r->m[0][3] = 0.f;
+	r->m[1][0] = x2y-w2z;     r->m[1][1] = 1.f-x2x-z2z; r->m[1][2] = y2z+w2x;     r->m[1][3] = 0.f;
+	r->m[2][0] = x2z+w2y;     r->m[2][1] = y2z-w2x;     r->m[2][2] = 1.f-x2x-y2y; r->m[2][3] = 0.f;
+	r->m[3][0] = 0.f;         r->m[3][1] = 0.f;         r->m[3][2] = 0.f;         r->m[3][3] = 1.f;
 }

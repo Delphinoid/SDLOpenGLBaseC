@@ -135,6 +135,120 @@ __HINT_INLINE__ void mat3MMultMPR(const mat3 *const __RESTRICT__ m1, const mat3 
 	r->m[2][2] = m1->m[0][2]*m2->m[2][0] + m1->m[1][2]*m2->m[2][1] + m1->m[2][2]*m2->m[2][2];
 
 }
+__HINT_INLINE__ mat3 mat3MTMultM(const mat3 m1, const mat3 m2){
+
+	const mat3 r = {.m = {{m1.m[0][0]*m2.m[0][0] + m1.m[0][1]*m2.m[0][1] + m1.m[0][2]*m2.m[0][2],
+	                       m1.m[1][0]*m2.m[0][0] + m1.m[1][1]*m2.m[0][1] + m1.m[1][2]*m2.m[0][2],
+	                       m1.m[2][0]*m2.m[0][0] + m1.m[2][1]*m2.m[0][1] + m1.m[2][2]*m2.m[0][2]},
+	                      {m1.m[0][0]*m2.m[1][0] + m1.m[0][1]*m2.m[1][1] + m1.m[0][2]*m2.m[1][2],
+	                       m1.m[1][0]*m2.m[1][0] + m1.m[1][1]*m2.m[1][1] + m1.m[1][2]*m2.m[1][2],
+	                       m1.m[2][0]*m2.m[1][0] + m1.m[2][1]*m2.m[1][1] + m1.m[2][2]*m2.m[1][2]},
+	                      {m1.m[0][0]*m2.m[2][0] + m1.m[0][1]*m2.m[2][1] + m1.m[0][2]*m2.m[2][2],
+	                       m1.m[1][0]*m2.m[2][0] + m1.m[1][1]*m2.m[2][1] + m1.m[1][2]*m2.m[2][2],
+	                       m1.m[2][0]*m2.m[2][0] + m1.m[2][1]*m2.m[2][1] + m1.m[2][2]*m2.m[2][2]}}};
+	return r;
+
+}
+__HINT_INLINE__ void mat3MTMultMP1(mat3 *const __RESTRICT__ m1, const mat3 *const __RESTRICT__ m2){
+
+	const mat3 r = {.m = {{m1->m[0][0]*m2->m[0][0] + m1->m[0][1]*m2->m[0][1] + m1->m[0][2]*m2->m[0][2],
+	                       m1->m[1][0]*m2->m[0][0] + m1->m[1][1]*m2->m[0][1] + m1->m[1][2]*m2->m[0][2],
+	                       m1->m[2][0]*m2->m[0][0] + m1->m[2][1]*m2->m[0][1] + m1->m[2][2]*m2->m[0][2]},
+	                      {m1->m[0][0]*m2->m[1][0] + m1->m[0][1]*m2->m[1][1] + m1->m[0][2]*m2->m[1][2],
+	                       m1->m[1][0]*m2->m[1][0] + m1->m[1][1]*m2->m[1][1] + m1->m[1][2]*m2->m[1][2],
+	                       m1->m[2][0]*m2->m[1][0] + m1->m[2][1]*m2->m[1][1] + m1->m[2][2]*m2->m[1][2]},
+	                      {m1->m[0][0]*m2->m[2][0] + m1->m[0][1]*m2->m[2][1] + m1->m[0][2]*m2->m[2][2],
+	                       m1->m[1][0]*m2->m[2][0] + m1->m[1][1]*m2->m[2][1] + m1->m[1][2]*m2->m[2][2],
+	                       m1->m[2][0]*m2->m[2][0] + m1->m[2][1]*m2->m[2][1] + m1->m[2][2]*m2->m[2][2]}}};
+	*m1 = r;
+
+}
+__HINT_INLINE__ void mat3MTMultMP2(const mat3 *const __RESTRICT__ m1, mat3 *const __RESTRICT__ m2){
+
+	const mat3 r = {.m = {{m1->m[0][0]*m2->m[0][0] + m1->m[0][1]*m2->m[0][1] + m1->m[0][2]*m2->m[0][2],
+	                       m1->m[1][0]*m2->m[0][0] + m1->m[1][1]*m2->m[0][1] + m1->m[1][2]*m2->m[0][2],
+	                       m1->m[2][0]*m2->m[0][0] + m1->m[2][1]*m2->m[0][1] + m1->m[2][2]*m2->m[0][2]},
+	                      {m1->m[0][0]*m2->m[1][0] + m1->m[0][1]*m2->m[1][1] + m1->m[0][2]*m2->m[1][2],
+	                       m1->m[1][0]*m2->m[1][0] + m1->m[1][1]*m2->m[1][1] + m1->m[1][2]*m2->m[1][2],
+	                       m1->m[2][0]*m2->m[1][0] + m1->m[2][1]*m2->m[1][1] + m1->m[2][2]*m2->m[1][2]},
+	                      {m1->m[0][0]*m2->m[2][0] + m1->m[0][1]*m2->m[2][1] + m1->m[0][2]*m2->m[2][2],
+	                       m1->m[1][0]*m2->m[2][0] + m1->m[1][1]*m2->m[2][1] + m1->m[1][2]*m2->m[2][2],
+	                       m1->m[2][0]*m2->m[2][0] + m1->m[2][1]*m2->m[2][1] + m1->m[2][2]*m2->m[2][2]}}};
+	*m2 = r;
+
+}
+__HINT_INLINE__ void mat3MTMultMPR(const mat3 *const __RESTRICT__ m1, const mat3 *const __RESTRICT__ m2, mat3 *const __RESTRICT__ r){
+
+	r->m[0][0] = m1->m[0][0]*m2->m[0][0] + m1->m[0][1]*m2->m[0][1] + m1->m[0][2]*m2->m[0][2];
+	r->m[0][1] = m1->m[1][0]*m2->m[0][0] + m1->m[1][1]*m2->m[0][1] + m1->m[1][2]*m2->m[0][2];
+	r->m[0][2] = m1->m[2][0]*m2->m[0][0] + m1->m[2][1]*m2->m[0][1] + m1->m[2][2]*m2->m[0][2];
+
+	r->m[1][0] = m1->m[0][0]*m2->m[1][0] + m1->m[0][1]*m2->m[1][1] + m1->m[0][2]*m2->m[1][2];
+	r->m[1][1] = m1->m[1][0]*m2->m[1][0] + m1->m[1][1]*m2->m[1][1] + m1->m[1][2]*m2->m[1][2];
+	r->m[1][2] = m1->m[2][0]*m2->m[1][0] + m1->m[2][1]*m2->m[1][1] + m1->m[2][2]*m2->m[1][2];
+
+	r->m[2][0] = m1->m[0][0]*m2->m[2][0] + m1->m[0][1]*m2->m[2][1] + m1->m[0][2]*m2->m[2][2];
+	r->m[2][1] = m1->m[1][0]*m2->m[2][0] + m1->m[1][1]*m2->m[2][1] + m1->m[1][2]*m2->m[2][2];
+	r->m[2][2] = m1->m[2][0]*m2->m[2][0] + m1->m[2][1]*m2->m[2][1] + m1->m[2][2]*m2->m[2][2];
+
+}
+__HINT_INLINE__ mat3 mat3MMultMT(const mat3 m1, const mat3 m2){
+
+	const mat3 r = {.m = {{m1.m[0][0]*m2.m[0][0] + m1.m[1][0]*m2.m[1][0] + m1.m[2][0]*m2.m[2][0],
+	                       m1.m[0][1]*m2.m[0][0] + m1.m[1][1]*m2.m[1][0] + m1.m[2][1]*m2.m[2][0],
+	                       m1.m[0][2]*m2.m[0][0] + m1.m[1][2]*m2.m[1][0] + m1.m[2][2]*m2.m[2][0]},
+	                      {m1.m[0][0]*m2.m[0][1] + m1.m[1][0]*m2.m[1][1] + m1.m[2][0]*m2.m[2][1],
+	                       m1.m[0][1]*m2.m[0][1] + m1.m[1][1]*m2.m[1][1] + m1.m[2][1]*m2.m[2][1],
+	                       m1.m[0][2]*m2.m[0][1] + m1.m[1][2]*m2.m[1][1] + m1.m[2][2]*m2.m[2][1]},
+	                      {m1.m[0][0]*m2.m[0][2] + m1.m[1][0]*m2.m[1][2] + m1.m[2][0]*m2.m[2][2],
+	                       m1.m[0][1]*m2.m[0][2] + m1.m[1][1]*m2.m[1][2] + m1.m[2][1]*m2.m[2][2],
+	                       m1.m[0][2]*m2.m[0][2] + m1.m[1][2]*m2.m[1][2] + m1.m[2][2]*m2.m[2][2]}}};
+	return r;
+
+}
+__HINT_INLINE__ void mat3MMultMTP1(mat3 *const __RESTRICT__ m1, const mat3 *const __RESTRICT__ m2){
+
+	const mat3 r = {.m = {{m1->m[0][0]*m2->m[0][0] + m1->m[1][0]*m2->m[1][0] + m1->m[2][0]*m2->m[2][0],
+	                       m1->m[0][1]*m2->m[0][0] + m1->m[1][1]*m2->m[1][0] + m1->m[2][1]*m2->m[2][0],
+	                       m1->m[0][2]*m2->m[0][0] + m1->m[1][2]*m2->m[1][0] + m1->m[2][2]*m2->m[2][0]},
+	                      {m1->m[0][0]*m2->m[0][1] + m1->m[1][0]*m2->m[1][1] + m1->m[2][0]*m2->m[2][1],
+	                       m1->m[0][1]*m2->m[0][1] + m1->m[1][1]*m2->m[1][1] + m1->m[2][1]*m2->m[2][1],
+	                       m1->m[0][2]*m2->m[0][1] + m1->m[1][2]*m2->m[1][1] + m1->m[2][2]*m2->m[2][1]},
+	                      {m1->m[0][0]*m2->m[0][2] + m1->m[1][0]*m2->m[1][2] + m1->m[2][0]*m2->m[2][2],
+	                       m1->m[0][1]*m2->m[0][2] + m1->m[1][1]*m2->m[1][2] + m1->m[2][1]*m2->m[2][2],
+	                       m1->m[0][2]*m2->m[0][2] + m1->m[1][2]*m2->m[1][2] + m1->m[2][2]*m2->m[2][2]}}};
+	*m1 = r;
+
+}
+__HINT_INLINE__ void mat3MMultMTP2(const mat3 *const __RESTRICT__ m1, mat3 *const __RESTRICT__ m2){
+
+	const mat3 r = {.m = {{m1->m[0][0]*m2->m[0][0] + m1->m[1][0]*m2->m[1][0] + m1->m[2][0]*m2->m[2][0],
+	                       m1->m[0][1]*m2->m[0][0] + m1->m[1][1]*m2->m[1][0] + m1->m[2][1]*m2->m[2][0],
+	                       m1->m[0][2]*m2->m[0][0] + m1->m[1][2]*m2->m[1][0] + m1->m[2][2]*m2->m[2][0]},
+	                      {m1->m[0][0]*m2->m[0][1] + m1->m[1][0]*m2->m[1][1] + m1->m[2][0]*m2->m[2][1],
+	                       m1->m[0][1]*m2->m[0][1] + m1->m[1][1]*m2->m[1][1] + m1->m[2][1]*m2->m[2][1],
+	                       m1->m[0][2]*m2->m[0][1] + m1->m[1][2]*m2->m[1][1] + m1->m[2][2]*m2->m[2][1]},
+	                      {m1->m[0][0]*m2->m[0][2] + m1->m[1][0]*m2->m[1][2] + m1->m[2][0]*m2->m[2][2],
+	                       m1->m[0][1]*m2->m[0][2] + m1->m[1][1]*m2->m[1][2] + m1->m[2][1]*m2->m[2][2],
+	                       m1->m[0][2]*m2->m[0][2] + m1->m[1][2]*m2->m[1][2] + m1->m[2][2]*m2->m[2][2]}}};
+	*m2 = r;
+
+}
+__HINT_INLINE__ void mat3MMultMTPR(const mat3 *const __RESTRICT__ m1, const mat3 *const __RESTRICT__ m2, mat3 *const __RESTRICT__ r){
+
+	r->m[0][0] = m1->m[0][0]*m2->m[0][0] + m1->m[1][0]*m2->m[1][0] + m1->m[2][0]*m2->m[2][0];
+	r->m[0][1] = m1->m[0][1]*m2->m[0][0] + m1->m[1][1]*m2->m[1][0] + m1->m[2][1]*m2->m[2][0];
+	r->m[0][2] = m1->m[0][2]*m2->m[0][0] + m1->m[1][2]*m2->m[1][0] + m1->m[2][2]*m2->m[2][0];
+
+	r->m[1][0] = m1->m[0][0]*m2->m[0][1] + m1->m[1][0]*m2->m[1][1] + m1->m[2][0]*m2->m[2][1];
+	r->m[1][1] = m1->m[0][1]*m2->m[0][1] + m1->m[1][1]*m2->m[1][1] + m1->m[2][1]*m2->m[2][1];
+	r->m[1][2] = m1->m[0][2]*m2->m[0][1] + m1->m[1][2]*m2->m[1][1] + m1->m[2][2]*m2->m[2][1];
+
+	r->m[2][0] = m1->m[0][0]*m2->m[0][2] + m1->m[1][0]*m2->m[1][2] + m1->m[2][0]*m2->m[2][2];
+	r->m[2][1] = m1->m[0][1]*m2->m[0][2] + m1->m[1][1]*m2->m[1][2] + m1->m[2][1]*m2->m[2][2];
+	r->m[2][2] = m1->m[0][2]*m2->m[0][2] + m1->m[1][2]*m2->m[1][2] + m1->m[2][2]*m2->m[2][2];
+
+}
 __HINT_INLINE__ vec3 mat3VMultM(const vec3 v, const mat3 m){
 	const vec3 r = {.x = v.x * m.m[0][0] + v.y * m.m[0][1] + v.z * m.m[0][2],
 	                .y = v.x * m.m[1][0] + v.y * m.m[1][1] + v.z * m.m[1][2],
@@ -482,7 +596,7 @@ __HINT_INLINE__ mat3 mat3Quaternion(const quat q){
 	                      {x2z+w2y,     y2z-w2x,     1.f-x2x-y2y}}};
 	return r;
 }
-__HINT_INLINE__ void mat3QuaternionP(mat3 *const __RESTRICT__ m, const quat *const __RESTRICT__ q){
+__HINT_INLINE__ void mat3QuaternionPR(const quat *const __RESTRICT__ q, mat3 *const __RESTRICT__ r){
 	const float x2 = 2.f*q->x;
 	const float y2 = 2.f*q->y;
 	const float z2 = 2.f*q->z;
@@ -495,9 +609,61 @@ __HINT_INLINE__ void mat3QuaternionP(mat3 *const __RESTRICT__ m, const quat *con
 	const float y2y = q->y*y2;
 	const float y2z = q->y*z2;
 	const float z2z = q->z*z2;
-	m->m[0][0] = 1.f-y2y-z2z; m->m[0][1] = x2y+w2z;     m->m[0][2] = x2z-w2y;
-	m->m[1][0] = x2y-w2z;     m->m[1][1] = 1.f-x2x-z2z; m->m[1][2] = y2z+w2x;
-	m->m[2][0] = x2z+w2y;     m->m[2][1] = y2z-w2x;     m->m[2][2] = 1.f-x2x-y2y;
+	r->m[0][0] = 1.f-y2y-z2z; r->m[0][1] = x2y+w2z;     r->m[0][2] = x2z-w2y;
+	r->m[1][0] = x2y-w2z;     r->m[1][1] = 1.f-x2x-z2z; r->m[1][2] = y2z+w2x;
+	r->m[2][0] = x2z+w2y;     r->m[2][1] = y2z-w2x;     r->m[2][2] = 1.f-x2x-y2y;
+}
+
+mat3 mat3Lerp(const mat3 m1, const mat3 m2, const float t){
+	const mat3 r = {.m = {{floatLerpFast(m1.m[0][0], m2.m[0][0], t), floatLerpFast(m1.m[0][1], m2.m[0][1], t), floatLerpFast(m1.m[0][2], m2.m[0][2], t)},
+	                      {floatLerpFast(m1.m[1][0], m2.m[1][0], t), floatLerpFast(m1.m[1][1], m2.m[1][1], t), floatLerpFast(m1.m[1][2], m2.m[1][2], t)},
+	                      {floatLerpFast(m1.m[2][0], m2.m[2][0], t), floatLerpFast(m1.m[2][1], m2.m[2][1], t), floatLerpFast(m1.m[2][2], m2.m[2][2], t)}}};
+	return r;
+}
+void mat3LerpP1(mat3 *const __RESTRICT__ m1, const mat3 *const __RESTRICT__ m2, const float t){
+
+	m1->m[0][0] = floatLerpFast(m1->m[0][0], m2->m[0][0], t);
+	m1->m[0][1] = floatLerpFast(m1->m[0][1], m2->m[0][1], t);
+	m1->m[0][2] = floatLerpFast(m1->m[0][2], m2->m[0][2], t);
+
+	m1->m[1][0] = floatLerpFast(m1->m[1][0], m2->m[1][0], t);
+	m1->m[1][1] = floatLerpFast(m1->m[1][1], m2->m[1][1], t);
+	m1->m[1][2] = floatLerpFast(m1->m[1][2], m2->m[1][2], t);
+
+	m1->m[2][0] = floatLerpFast(m1->m[2][0], m2->m[2][0], t);
+	m1->m[2][1] = floatLerpFast(m1->m[2][1], m2->m[2][1], t);
+	m1->m[2][2] = floatLerpFast(m1->m[2][2], m2->m[2][2], t);
+
+}
+void mat3LerpP2(const mat3 *const __RESTRICT__ m1, mat3 *const __RESTRICT__ m2, const float t){
+
+	m2->m[0][0] = floatLerpFast(m1->m[0][0], m2->m[0][0], t);
+	m2->m[0][1] = floatLerpFast(m1->m[0][1], m2->m[0][1], t);
+	m2->m[0][2] = floatLerpFast(m1->m[0][2], m2->m[0][2], t);
+
+	m2->m[1][0] = floatLerpFast(m1->m[1][0], m2->m[1][0], t);
+	m2->m[1][1] = floatLerpFast(m1->m[1][1], m2->m[1][1], t);
+	m2->m[1][2] = floatLerpFast(m1->m[1][2], m2->m[1][2], t);
+
+	m2->m[2][0] = floatLerpFast(m1->m[2][0], m2->m[2][0], t);
+	m2->m[2][1] = floatLerpFast(m1->m[2][1], m2->m[2][1], t);
+	m2->m[2][2] = floatLerpFast(m1->m[2][2], m2->m[2][2], t);
+
+}
+void mat3LerpPR(const mat3 *const __RESTRICT__ m1, const mat3 *const __RESTRICT__ m2, const float t, mat3 *const __RESTRICT__ r){
+
+	r->m[0][0] = floatLerpFast(m1->m[0][0], m2->m[0][0], t);
+	r->m[0][1] = floatLerpFast(m1->m[0][1], m2->m[0][1], t);
+	r->m[0][2] = floatLerpFast(m1->m[0][2], m2->m[0][2], t);
+
+	r->m[1][0] = floatLerpFast(m1->m[1][0], m2->m[1][0], t);
+	r->m[1][1] = floatLerpFast(m1->m[1][1], m2->m[1][1], t);
+	r->m[1][2] = floatLerpFast(m1->m[1][2], m2->m[1][2], t);
+
+	r->m[2][0] = floatLerpFast(m1->m[2][0], m2->m[2][0], t);
+	r->m[2][1] = floatLerpFast(m1->m[2][1], m2->m[2][1], t);
+	r->m[2][2] = floatLerpFast(m1->m[2][2], m2->m[2][2], t);
+
 }
 
 __HINT_INLINE__ quat quatMat3(const mat3 m){
@@ -587,7 +753,7 @@ __HINT_INLINE__ void mat3ShearMatrixPR(const quat *const __RESTRICT__ q, const v
 
 	// Convert the quaternion to a rotation matrix.
 	mat3 m;
-	mat3QuaternionP(&m, q);
+	mat3QuaternionPR(&m, q);
 
 	float cx = s->x*m.m[0][0];
 	float cy = s->y*m.m[1][0];
@@ -745,10 +911,10 @@ void mat3DiagonalizeSymmetric(
 
 	// Factor out the maximum absolute value of the matrix entries to
 	// prevent floating-point overflow when computing the eigenvalues.
-	const float max0 = floatMax(fabsf(a00), fabsf(a01));
-	const float max1 = floatMax(fabsf(a02), fabsf(a11));
-	const float max2 = floatMax(fabsf(a12), fabsf(a22));
-	const float maxAbsElement = floatMax(floatMax(max0, max1), max2);
+	const float max0 = floatMaxFast(fabsf(a00), fabsf(a01));
+	const float max1 = floatMaxFast(fabsf(a02), fabsf(a11));
+	const float max2 = floatMaxFast(fabsf(a12), fabsf(a22));
+	const float maxAbsElement = floatMaxFast(floatMaxFast(max0, max1), max2);
 
 	// If the maximum is 0, A is the zero matrix.
 	if(maxAbsElement <= MAT3_EPSILON){

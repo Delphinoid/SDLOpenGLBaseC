@@ -321,29 +321,29 @@ __HINT_INLINE__ void vec3fmafPR(const float x, const vec3 *const __RESTRICT__ u,
 
 __HINT_INLINE__ vec3 vec3Min(const vec3 v1, const vec3 v2){
 	const vec3 r = {
-		.x = floatMin(v1.x, v2.x),
-		.y = floatMin(v1.y, v2.y),
-		.z = floatMin(v1.z, v2.z)
+		.x = floatMinFast(v1.x, v2.x),
+		.y = floatMinFast(v1.y, v2.y),
+		.z = floatMinFast(v1.z, v2.z)
 	};
 	return r;
 }
 __HINT_INLINE__ void vec3MinP(const vec3 *const __RESTRICT__ v1, const vec3 *const __RESTRICT__ v2, vec3 *const __RESTRICT__ r){
-	r->x = floatMin(v1->x, v2->x);
-	r->y = floatMin(v1->y, v2->y);
-	r->z = floatMin(v1->z, v2->z);
+	r->x = floatMinFast(v1->x, v2->x);
+	r->y = floatMinFast(v1->y, v2->y);
+	r->z = floatMinFast(v1->z, v2->z);
 }
 __HINT_INLINE__ vec3 vec3Max(const vec3 v1, const vec3 v2){
 	const vec3 r = {
-		.x = floatMax(v1.x, v2.x),
-		.y = floatMax(v1.y, v2.y),
-		.z = floatMax(v1.z, v2.z)
+		.x = floatMaxFast(v1.x, v2.x),
+		.y = floatMaxFast(v1.y, v2.y),
+		.z = floatMaxFast(v1.z, v2.z)
 	};
 	return r;
 }
 __HINT_INLINE__ void vec3MaxP(const vec3 *const __RESTRICT__ v1, const vec3 *const __RESTRICT__ v2, vec3 *const __RESTRICT__ r){
-	r->x = floatMax(v1->x, v2->x);
-	r->y = floatMax(v1->y, v2->y);
-	r->z = floatMax(v1->z, v2->z);
+	r->x = floatMaxFast(v1->x, v2->x);
+	r->y = floatMaxFast(v1->y, v2->y);
+	r->z = floatMaxFast(v1->z, v2->z);
 }
 
 __HINT_INLINE__ vec3 vec3Negate(const vec3 v){
@@ -541,28 +541,28 @@ __HINT_INLINE__ void vec3OrthonormalBasisP(const vec3 *const __RESTRICT__ v1, ve
 
 __HINT_INLINE__ vec3 vec3Lerp(const vec3 v1, const vec3 v2, const float t){
 	// r = v1 + (v2 - v1) * t
-	const vec3 r = {.x = floatLerp(v1.x, v2.x, t),
-	                .y = floatLerp(v1.y, v2.y, t),
-	                .z = floatLerp(v1.z, v2.z, t)};
+	const vec3 r = {.x = floatLerpFast(v1.x, v2.x, t),
+	                .y = floatLerpFast(v1.y, v2.y, t),
+	                .z = floatLerpFast(v1.z, v2.z, t)};
 	return r;
 }
 __HINT_INLINE__ void vec3LerpP1(vec3 *const __RESTRICT__ v1, const vec3 *const __RESTRICT__ v2, const float t){
 	// r = v1 + (v2 - v1) * t
-	v1->x = floatLerp(v1->x, v2->x, t);
-	v1->y = floatLerp(v1->y, v2->y, t);
-	v1->z = floatLerp(v1->z, v2->z, t);
+	v1->x = floatLerpFast(v1->x, v2->x, t);
+	v1->y = floatLerpFast(v1->y, v2->y, t);
+	v1->z = floatLerpFast(v1->z, v2->z, t);
 }
 __HINT_INLINE__ void vec3LerpP2(const vec3 *const __RESTRICT__ v1, vec3 *const __RESTRICT__ v2, const float t){
 	// r = v1 + (v2 - v1) * t
-	v2->x = floatLerp(v1->x, v2->x, t);
-	v2->y = floatLerp(v1->y, v2->y, t);
-	v2->z = floatLerp(v1->z, v2->z, t);
+	v2->x = floatLerpFast(v1->x, v2->x, t);
+	v2->y = floatLerpFast(v1->y, v2->y, t);
+	v2->z = floatLerpFast(v1->z, v2->z, t);
 }
 __HINT_INLINE__ void vec3LerpPR(const vec3 *const __RESTRICT__ v1, const vec3 *const __RESTRICT__ v2, const float t, vec3 *const __RESTRICT__ r){
 	// r = v1 + (v2 - v1) * t
-	r->x = floatLerp(v1->x, v2->x, t);
-	r->y = floatLerp(v1->y, v2->y, t);
-	r->z = floatLerp(v1->z, v2->z, t);
+	r->x = floatLerpFast(v1->x, v2->x, t);
+	r->y = floatLerpFast(v1->y, v2->y, t);
+	r->z = floatLerpFast(v1->z, v2->z, t);
 }
 
 __HINT_INLINE__ vec3 vec3LinearCombination(const vec3 v1, const vec3 v2, const vec3 v3, const float a, const float b, const float c){

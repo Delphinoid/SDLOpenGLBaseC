@@ -21,6 +21,14 @@ mat3x4 tfrMatrix(const transformRigid tf){
 		)
 	);
 }
+void tfrMatrixPR(const transformRigid *const __RESTRICT__ tf, mat3x4 *const __RESTRICT__ r){
+	// Translate, rotate and scale.
+	// It looks a bit weird because it's ultra optimized.
+	// Note that mat3x4Scale is a right multiplication.
+	mat3x4RotationMatrixPR(&tf->orientation, r);
+	mat3x4ScaleP(tf->position.x, tf->position.y, tf->position.z, r);
+	mat3x4TranslateP(tf->position.x, tf->position.y, tf->position.z, r);
+}
 
 transformRigid tfrInterpolate(const transformRigid tf1, const transformRigid tf2, const float t){
 	// Interpolate between two transformed states.
@@ -244,7 +252,7 @@ void tfrAppendPR(const transformRigid *const __RESTRICT__ tf1, const transformRi
 transformRigid tfrPrepend(const transformRigid tf1, const transformRigid tf2){
 	// Just performs the reverse of tfrAppend,
 	// such that the following equality holds:
-	//     tf = tfPrepend(tfInverse(T), tfAppend(T, tf)),
+	//     tf = tfPrepend(tfInvert(T), tfAppend(T, tf)),
 	// for some matrix T.
 	const transformRigid r = {
 		.position = vec3VMultV(quatRotateVec3FastApproximate(tf1.orientation, vec3VAddV(tf1.position, tf2.position)), tf1.scale),

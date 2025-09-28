@@ -1,5 +1,5 @@
+#include "settingsModule.h"
 #include "moduleTexture.h"
-#include "moduleSettings.h"
 #include "texture.h"
 #include "memoryManager.h"
 #include <string.h>

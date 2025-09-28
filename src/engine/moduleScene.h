@@ -1,7 +1,7 @@
 #ifndef MODULESCENE_H
 #define MODULESCENE_H
 
-#include "physicsSettings.h"
+#include "settingsPhysics.h"
 #include "memoryPool.h"
 #include "memorySLink.h"
 #include "return.h"

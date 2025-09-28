@@ -1,5 +1,5 @@
+#include "settingsModule.h"
 #include "moduleGUI.h"
-#include "moduleSettings.h"
 #include "gui.h"
 #include "memoryManager.h"
 #include <string.h>

@@ -1,7 +1,7 @@
 #ifndef MODULEPHYSICS_H
 #define MODULEPHYSICS_H
 
-#include "skeletonSettings.h"
+#include "settingsSkeleton.h"
 #include "memoryList.h"
 #include "memorySLink.h"
 #include "memoryDLink.h"

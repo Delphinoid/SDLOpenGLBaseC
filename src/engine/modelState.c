@@ -1,5 +1,5 @@
+#include "settingsModel.h"
 #include "modelState.h"
-#include "modelSettings.h"
 #include "helpersMath.h"
 
 void mdlStateInit(mdlState *const __RESTRICT__ state){
@@ -10,13 +10,13 @@ void mdlStateInit(mdlState *const __RESTRICT__ state){
 }
 
 __FORCE_INLINE__ float mdlStateAlpha(const mdlState *const __RESTRICT__ state, const float interpT){
-	return floatLerp(state->alphaPrevious, state->alpha, interpT);
+	return floatLerpFast(state->alphaPrevious, state->alpha, interpT);
 }
 
 __FORCE_INLINE__ float mdlStateAlphaRender(const mdlState *const __RESTRICT__ state, const float interpT){
 	if(flagsAreSet(state->flags, MODEL_STATE_ALPHA_DITHER)){
 		// Negative alpha values indicate dithering.
-		return -floatLerp(state->alphaPrevious, state->alpha, interpT);
+		return -floatLerpFast(state->alphaPrevious, state->alpha, interpT);
 	}
-	return floatLerp(state->alphaPrevious, state->alpha, interpT);
+	return floatLerpFast(state->alphaPrevious, state->alpha, interpT);
 }

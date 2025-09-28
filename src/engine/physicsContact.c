@@ -104,7 +104,7 @@
 // ----------------------------------------------------------------------
 
 static __FORCE_INLINE__ float physContactCalculateRestitution(const float r1, const float r2){
-	return floatMax(r1, r2);
+	return floatMaxFast(r1, r2);
 }
 
 static __FORCE_INLINE__ float physContactCalculateFriction(const float f1, const float f2){
@@ -574,7 +574,7 @@ static __FORCE_INLINE__ void physContactPointSolveNormalImpulse(physContactPoint
 	// have non-negative impulse magnitude, i.e.
 	// C' >= 0
 	normalImpulseAccumulatorNew = point->normalImpulseAccumulator + lambda;
-	normalImpulseAccumulatorNew = floatMax(normalImpulseAccumulatorNew, 0.f);
+	normalImpulseAccumulatorNew = floatMaxFast(normalImpulseAccumulatorNew, 0.f);
 	lambda = normalImpulseAccumulatorNew - point->normalImpulseAccumulator;
 	point->normalImpulseAccumulator = normalImpulseAccumulatorNew;
 
@@ -657,7 +657,7 @@ static __FORCE_INLINE__ float physContactPointSolveConfigurationNormal(physConta
 
 			// Clamp the constraint to prevent large corrections
 			// and calculate the normal impulse.
-			normal = vec3VMultS(normal, -floatMax(constraint, -PHYSICS_CONTACT_MAXIMUM_LINEAR_CORRECTION) / effectiveMass);
+			normal = vec3VMultS(normal, -floatMaxFast(constraint, -PHYSICS_CONTACT_MAXIMUM_LINEAR_CORRECTION) / effectiveMass);
 
 			// Apply the normal impulse.
 			physRigidBodyApplyConfigurationImpulseInverse(bodyA, pointLocalA, normal);

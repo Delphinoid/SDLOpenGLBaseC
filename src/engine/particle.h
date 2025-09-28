@@ -3,7 +3,7 @@
 
 #define GLEW_STATIC
 #include <GL/glew.h>
-#include "particleSettings.h"
+#include "settingsParticle.h"
 #include "colliderShared.h"
 #include "transform.h"
 #include "model.h"

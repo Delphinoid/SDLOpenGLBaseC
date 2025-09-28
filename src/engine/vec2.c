@@ -235,25 +235,25 @@ __HINT_INLINE__ void vec2fmafPR(const float x, const vec2 *const __RESTRICT__ u,
 
 __HINT_INLINE__ vec2 vec2Min(const vec2 v1, const vec2 v2){
 	const vec2 r = {
-		.x = floatMin(v1.x, v2.x),
-		.y = floatMin(v1.y, v2.y)
+		.x = floatMinFast(v1.x, v2.x),
+		.y = floatMinFast(v1.y, v2.y)
 	};
 	return r;
 }
 __HINT_INLINE__ void vec2MinP(const vec2 *const __RESTRICT__ v1, const vec2 *const __RESTRICT__ v2, vec2 *const __RESTRICT__ r){
-	r->x = floatMin(v1->x, v2->x);
-	r->y = floatMin(v1->y, v2->y);
+	r->x = floatMinFast(v1->x, v2->x);
+	r->y = floatMinFast(v1->y, v2->y);
 }
 __HINT_INLINE__ vec2 vec2Max(const vec2 v1, const vec2 v2){
 	const vec2 r = {
-		.x = floatMax(v1.x, v2.x),
-		.y = floatMax(v1.y, v2.y)
+		.x = floatMaxFast(v1.x, v2.x),
+		.y = floatMaxFast(v1.y, v2.y)
 	};
 	return r;
 }
 __HINT_INLINE__ void vec2MaxP(const vec2 *const __RESTRICT__ v1, const vec2 *const __RESTRICT__ v2, vec2 *const __RESTRICT__ r){
-	r->x = floatMax(v1->x, v2->x);
-	r->y = floatMax(v1->y, v2->y);
+	r->x = floatMaxFast(v1->x, v2->x);
+	r->y = floatMaxFast(v1->y, v2->y);
 }
 
 __HINT_INLINE__ vec2 vec2Negate(const vec2 v){
@@ -342,23 +342,23 @@ __HINT_INLINE__ float vec2DotP(const vec2 *const __RESTRICT__ v1, const vec2 *co
 __HINT_INLINE__ vec2 vec2Lerp(const vec2 v1, const vec2 v2, const float t){
 	// r = v1 + (v2 - v1) * t
 	const vec2 r = {
-		.x = floatLerp(v1.x, v2.x, t),
-		.y = floatLerp(v1.y, v2.y, t)
+		.x = floatLerpFast(v1.x, v2.x, t),
+		.y = floatLerpFast(v1.y, v2.y, t)
 	};
 	return r;
 }
 __HINT_INLINE__ void vec2LerpP1(vec2 *const __RESTRICT__ v1, const vec2 *const __RESTRICT__ v2, const float t){
 	// r = v1 + (v2 - v1) * t
-	v1->x = floatLerp(v1->x, v2->x, t);
-	v1->y = floatLerp(v1->y, v2->y, t);
+	v1->x = floatLerpFast(v1->x, v2->x, t);
+	v1->y = floatLerpFast(v1->y, v2->y, t);
 }
 __HINT_INLINE__ void vec2LerpP2(const vec2 *const __RESTRICT__ v1, vec2 *const __RESTRICT__ v2, const float t){
 	// r = v1 + (v2 - v1) * t
-	v2->x = floatLerp(v1->x, v2->x, t);
-	v2->y = floatLerp(v1->y, v2->y, t);
+	v2->x = floatLerpFast(v1->x, v2->x, t);
+	v2->y = floatLerpFast(v1->y, v2->y, t);
 }
 __HINT_INLINE__ void vec2LerpPR(const vec2 *const __RESTRICT__ v1, const vec2 *const __RESTRICT__ v2, const float t, vec2 *const __RESTRICT__ r){
 	// r = v1 + (v2 - v1) * t
-	r->x = floatLerp(v1->x, v2->x, t);
-	r->y = floatLerp(v1->y, v2->y, t);
+	r->x = floatLerpFast(v1->x, v2->x, t);
+	r->y = floatLerpFast(v1->y, v2->y, t);
 }

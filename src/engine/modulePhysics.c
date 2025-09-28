@@ -1,5 +1,5 @@
+#include "settingsModule.h"
 #include "modulePhysics.h"
-#include "moduleSettings.h"
 #include "physicsRigidBody.h"
 #include "physicsCollider.h"
 #include "physicsJoint.h"

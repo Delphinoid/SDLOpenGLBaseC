@@ -1,5 +1,5 @@
+#include "settingsModule.h"
 #include "moduleSkeleton.h"
-#include "moduleSettings.h"
 #include "skeleton.h"
 #include "memoryManager.h"
 #include <string.h>

@@ -1,0 +1,6 @@
+#ifndef SETTINGSMATH_H
+#define SETTINGSMATH_H
+
+#define TRANSFORM_MATRIX_SHEAR
+
+#endif
