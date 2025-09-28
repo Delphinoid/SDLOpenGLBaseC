@@ -14,13 +14,13 @@ typedef struct physJoint physJoint;
 
 typedef struct {
 
-	//
+	///
 
 } physJointFixedBase;
 
 typedef struct {
 
-	//
+	///
 
 } physJointFixed;
 

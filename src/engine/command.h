@@ -31,10 +31,10 @@ typedef unsigned char cmdNodeIndex_t;
 // Commands are a little weird. They're not strictly
 // commands, per se: they may refer to either function
 // pointers or addresses on the heap.
-//
+///
 // This allows the creation of regular commands, as
 // well as aliases, registers and so on.
-//
+///
 // To separate these two cases, a '1' is stored in the
 // LSB of the address if it is to refer to a location
 // on the heap.

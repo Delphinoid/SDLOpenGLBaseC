@@ -549,7 +549,7 @@ transform tfMultiply(const transform tf1, const transform tf2){
 	// We wish to append tf1 to tf2. If we let A_1 and A_2 be the
 	// matrices for tf1 and tf2 respectively, this is equivalent
 	// to evaluating the matrix product A = A_1 A_2.
-	//
+	///
 	// As matrices, we may write our affine transformations as
 	//     A_k = T_k R_k Q_k S_k Q_k^T,
 	// for k in {1, 2}. By expanding A = A_1 A_2, we find that
@@ -656,7 +656,7 @@ void tfMultiplyP1(transform *const __RESTRICT__ tf1, const transform *const __RE
 	// We wish to append tf1 to tf2. If we let A_1 and A_2 be the
 	// matrices for tf1 and tf2 respectively, this is equivalent
 	// to evaluating the matrix product A = A_1 A_2.
-	//
+	///
 	// As matrices, we may write our affine transformations as
 	//     A_k = T_k R_k Q_k S_k Q_k^T,
 	// for k in {1, 2}. By expanding A = A_1 A_2, we find that
@@ -752,7 +752,7 @@ void tfMultiplyP2(const transform *const __RESTRICT__ tf1, transform *const __RE
 	// We wish to append tf1 to tf2. If we let A_1 and A_2 be the
 	// matrices for tf1 and tf2 respectively, this is equivalent
 	// to evaluating the matrix product A = A_1 A_2.
-	//
+	///
 	// As matrices, we may write our affine transformations as
 	//     A_k = T_k R_k Q_k S_k Q_k^T,
 	// for k in {1, 2}. By expanding A = A_1 A_2, we find that
@@ -846,7 +846,7 @@ void tfMultiplyPR(const transform *const __RESTRICT__ tf1, const transform *cons
 	// We wish to append tf1 to tf2. If we let A_1 and A_2 be the
 	// matrices for tf1 and tf2 respectively, this is equivalent
 	// to evaluating the matrix product A = A_1 A_2.
-	//
+	///
 	// As matrices, we may write our affine transformations as
 	//     A_k = T_k R_k Q_k S_k Q_k^T,
 	// for k in {1, 2}. By expanding A = A_1 A_2, we find that

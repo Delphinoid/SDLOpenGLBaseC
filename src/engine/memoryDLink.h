@@ -5,19 +5,19 @@
 #include <stdint.h>
 
 // Doubly-linked list allocator.
-//
+///
 // Effectively a free-list allocator
 // but each block has pointers to the
 // next and previous elements in the
 // array it is a part of, contained
 // in a header.
-//
+///
 // Free-list pointers point to the
 // data, not the beginning of the block.
-//
+///
 // It can also be treated as an object
 // pool if necessary.
-//
+///
 // Block format:
 // [ Next block pointer + active flag ][ Previous block pointer ][ Data (or free-list pointer) ]
 
@@ -97,7 +97,7 @@ typedef struct {
 #define memDLinkAllocationSize(start, bytes, length) \
 	(memDLinkBlockSize(bytes) * length + (uintptr_t)memDLinkAlignStartBlock(start) - (uintptr_t)start)
 	// The following can save small amounts of memory but can't be predicted as easily:
-	//(memDLinkBlockSize(bytes) * (length - 1) + memDLinkBlockSizeUnaligned(bytes) + (uintptr_t)memDLinkAlignStartBlock(start) - (uintptr_t)start)
+	///(memDLinkBlockSize(bytes) * (length - 1) + memDLinkBlockSizeUnaligned(bytes) + (uintptr_t)memDLinkAlignStartBlock(start) - (uintptr_t)start)
 
 #define memDLinkFirst(region)           ((void *)memDLinkAlignStartData((region)->start))
 #define memDLinkPrev(i)                 memDLinkDataGetPrev(i)

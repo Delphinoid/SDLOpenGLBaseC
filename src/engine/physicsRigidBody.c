@@ -216,7 +216,7 @@ static return_t physColliderDefragment(physCollider *const __RESTRICT__ local){
 return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, physicsBodyIndex_t **bodyIDs, physicsBodyIndex_t *const bodyNum, const skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ filePath, const size_t filePathLength){
 
 	// Loads a series of rigid bodies.
-	//
+	///
 	// If skeleton is not NULL, it constrains them using
 	// the specified bone names.
 
@@ -795,7 +795,7 @@ return_t physRigidBodyBaseLoad(physRigidBodyBase **const __RESTRICT__ bodies, ph
 						}
 						hull->normals[hull->faceNum] = vec3NormalizeFastAccurate(vec3Cross(BsA, CsA));
 
-						//hull->faces[hull->faceNum].edgeNum = addNum;
+						///hull->faces[hull->faceNum].edgeNum = addNum;
 						if(addNum > hull->edgeMax){
 							// Update the maximum edge num.
 							hull->edgeMax = addNum;
@@ -1183,11 +1183,11 @@ __HINT_INLINE__ void physRigidBodyApplyForce(physRigidBody *const __RESTRICT__ b
 	// r is where the force F is applied, in global space.
 
 	// Accumulate torque.
-	//physRigidBodyApplyAngularForce(body, F, r);
+	///physRigidBodyApplyAngularForce(body, F, r);
 	body->netForce = vec3VAddV(body->netForce, F);
 
 	// Accumulate force.
-	//physRigidBodyApplyLinearForce(body, F);
+	///physRigidBodyApplyLinearForce(body, F);
 	body->netTorque = vec3VAddV(body->netTorque, vec3Cross(vec3VSubV(r, body->centroidGlobal), F));
 
 }
@@ -1452,12 +1452,12 @@ __FORCE_INLINE__ static mat3 physRigidBodyScaleInertia(mat3 I, const vec3 scale)
 	// I[0][0] = J[0] = y^2 + z^2
 	// I[1][1] = J[1] = x^2 + z^2
 	// I[2][2] = J[2] = x^2 + y^2
-	//
+	///
 	// Therefore:
 	// x^2 = (J[1] - J[0] + J[2])/2
 	// y^2 = (J[0] - J[1] + J[2])/2
 	// z^2 = (J[0] - J[2] + J[1])/2
-	//
+	///
 	// To scale, multiply by the scale coefficient squared.
 	I.m[0][0] = sqrY + sqrZ;
 	I.m[1][1] = sqrX + sqrZ;
@@ -1466,7 +1466,7 @@ __FORCE_INLINE__ static mat3 physRigidBodyScaleInertia(mat3 I, const vec3 scale)
 	// I[0][1] = I[1][0] = J[3] -= x * y;
 	// I[0][2] = I[2][0] = J[4] -= x * z;
 	// I[1][2] = I[2][1] = J[5] -= y * z;
-	//
+	///
 	// To scale, just multiply each element by the
 	// product of the two scale coefficients.
 	I.m[0][1] *= xy;
@@ -1498,12 +1498,12 @@ void physRigidBodyScale(physRigidBody *const __RESTRICT__ body, const vec3 scale
 	// I[0][0] = J[0] = y^2 + z^2
 	// I[1][1] = J[1] = x^2 + z^2
 	// I[2][2] = J[2] = x^2 + y^2
-	//
+	///
 	// Therefore:
 	// x^2 = (J[1] - J[0] + J[2])/2
 	// y^2 = (J[0] - J[1] + J[2])/2
 	// z^2 = (J[0] - J[2] + J[1])/2
-	//
+	///
 	// To scale, multiply by the scale coefficient squared.
 	I.m[0][0] = sqrY + sqrZ;
 	I.m[1][1] = sqrX + sqrZ;
@@ -1512,7 +1512,7 @@ void physRigidBodyScale(physRigidBody *const __RESTRICT__ body, const vec3 scale
 	// I[0][1] = I[1][0] = J[3] -= x * y;
 	// I[0][2] = I[2][0] = J[4] -= x * z;
 	// I[1][2] = I[2][1] = J[5] -= y * z;
-	//
+	///
 	// To scale, just multiply each element by the
 	// product of the two scale coefficients.
 	I.m[0][1] *= xy;
@@ -1545,12 +1545,12 @@ void physRigidBodySetScale(physRigidBody *const __RESTRICT__ body, const vec3 sc
 	// I[0][0] = J[0] = y^2 + z^2
 	// I[1][1] = J[1] = x^2 + z^2
 	// I[2][2] = J[2] = x^2 + y^2
-	//
+	///
 	// Therefore:
 	// x^2 = (J[1] - J[0] + J[2])/2
 	// y^2 = (J[0] - J[1] + J[2])/2
 	// z^2 = (J[0] - J[2] + J[1])/2
-	//
+	///
 	// To scale, multiply by the scale coefficient squared.
 	I.m[0][0] = sqrY + sqrZ;
 	I.m[1][1] = sqrX + sqrZ;
@@ -1559,7 +1559,7 @@ void physRigidBodySetScale(physRigidBody *const __RESTRICT__ body, const vec3 sc
 	// I[0][1] = I[1][0] = J[3] -= x * y;
 	// I[0][2] = I[2][0] = J[4] -= x * z;
 	// I[1][2] = I[2][1] = J[5] -= y * z;
-	//
+	///
 	// To scale, just multiply each element by the
 	// product of the two scale coefficients.
 	I.m[0][1] *= xy;

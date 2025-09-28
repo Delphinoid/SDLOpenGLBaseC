@@ -9,7 +9,7 @@ void memTreeInit(memoryTree *const __RESTRICT__ tree){
 void *memTreeCreate(memoryTree *const __RESTRICT__ tree, void *const start, const size_t bytes, const size_t length){
 
 	// Initialize a general purpose memory allocator.
-	//
+	///
 	// If "length" is specified, it will optimize the size for
 	// "length"-many allocations of size "bytes", otherwise
 	// the total allocated size will be "bytes".
@@ -489,7 +489,7 @@ void *memTreeAllocate(memoryTree *const __RESTRICT__ tree, const size_t bytes){
 					nextSize = block + blockSize - next;
 
 					// Remove the block from the red-black tree.
-					//memTreeRemove(tree, block);
+					///memTreeRemove(tree, block);
 
 					if(nextSize >= MEMORY_TREE_BLOCK_TOTAL_SIZE){
 						// There's enough room for a split.
@@ -538,7 +538,7 @@ void *memTreeAllocate(memoryTree *const __RESTRICT__ tree, const size_t bytes){
 					nextSize = block + blockSize - next;
 
 					// Remove the block from the red-black tree.
-					//memTreeRemove(tree, block);
+					///memTreeRemove(tree, block);
 
 					if(nextSize >= MEMORY_TREE_BLOCK_TOTAL_SIZE){
 						// There's enough room for a split.
@@ -578,7 +578,7 @@ void *memTreeAllocate(memoryTree *const __RESTRICT__ tree, const size_t bytes){
 				block = current;
 				blockSize = currentSize;
 				// Remove the block from the red-black tree.
-				//memTreeRemove(tree, block);
+				///memTreeRemove(tree, block);
 				break;
 			}
 
@@ -602,7 +602,7 @@ void memTreeFree(memoryTree *const __RESTRICT__ tree, void *const __RESTRICT__ b
 
 	// Frees a block of memory from the general
 	// purpose allocator.
-	//
+	///
 	// Coalesces the previous and next blocks
 	// if they are free.
 
@@ -663,7 +663,7 @@ void *memTreeReallocate(memoryTree *const __RESTRICT__ tree, void *const block, 
 	// Reallocates a block of memory. Can potentially
 	// be called to try and "defragment" a particular
 	// block.
-	//
+	///
 	// If no defragmentation is possible, this function
 	// is effectively the same as an alloc + copy + free.
 

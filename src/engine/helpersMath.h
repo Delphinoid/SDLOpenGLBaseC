@@ -32,7 +32,7 @@
 
 // According to Mark Harris in his 2015 blog "GPU Pro Tip: Lerp Faster in C++",
 // we can achieve better performance and accuracy by using two fmas here.
-//
+///
 // Note that these are prone to double evaluation,
 // so the equivalent functions should be used to prevent this.
 #ifdef FP_FAST_FMAF

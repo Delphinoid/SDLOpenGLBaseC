@@ -5,21 +5,21 @@
 #include <stdint.h>
 
 // Singly-linked list allocator.
-//
+///
 // Effectively a free-list allocator
 // but each block has a pointer to the
 // next element in the array it is a
 // part of, contained in a header.
-//
+///
 // If the block is inactive, the pointer
 // will contain a 1 in its LSB.
-//
+///
 // Free-list pointers point to the
 // data, not the beginning of the block.
-//
+///
 // It can also be treated as an object
 // pool if necessary.
-//
+///
 // Block format:
 // [ Next block pointer + active flag ][ Data (or free-list pointer) ]
 
@@ -96,7 +96,7 @@ typedef struct {
 #define memSLinkAllocationSize(start, bytes, length) \
 	(memSLinkBlockSize(bytes) * length + (uintptr_t)memSLinkAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 	// The following can save small amounts of memory but can't be predicted as easily:
-	//(memSLinkBlockSize(bytes) * (length - 1) + memSLinkBlockSizeUnaligned(bytes) + (uintptr_t)memSLinkAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
+	///(memSLinkBlockSize(bytes) * (length - 1) + memSLinkBlockSizeUnaligned(bytes) + (uintptr_t)memSLinkAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 
 #ifdef MEMORY_SLINK_ALIGN_HEADER
 	#define memSLinkFirst(region) ((void *)(region)->start)

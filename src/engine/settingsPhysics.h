@@ -2,7 +2,7 @@
 #define PHYSICSSETTINGS_H
 
 // Costly inertia tensor scaling based on the object's scale.
-//#define PHYSICS_BODY_SCALE_INERTIA_TENSORS
+///#define PHYSICS_BODY_SCALE_INERTIA_TENSORS
 
 // Delay the application of friction by one tick; that is,
 // only apply friction to persistent contacts. No effect on

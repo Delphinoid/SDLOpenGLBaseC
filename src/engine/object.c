@@ -247,7 +247,7 @@ return_t objBaseLoad(objectBase *const __RESTRICT__ base, const char *const __RE
 	if(base->skl == NULL && base->modelNum > 0){
 		base->skl = base->models[0]->skl;
 	}else{
-		//printf("Error loading object: No skeleton was loaded.\n");
+		///printf("Error loading object: No skeleton was loaded.\n");
 		base->skl = &g_sklDefault;
 	}
 
@@ -853,7 +853,7 @@ return_t objTick(object *const __RESTRICT__ obj, const float dt_ms){
 }
 
 void objBoneLastState(object *const __RESTRICT__ obj, const float dt_s){
-	//
+	///
 }
 
 void objGenerateSprite(const object *const __RESTRICT__ obj, const model *const __RESTRICT__ mdl, const float interpT, const float *const __RESTRICT__ texFrag, vertex *const __RESTRICT__ vertices){
@@ -1001,10 +1001,10 @@ void objRender(const object *const __RESTRICT__ obj, graphicsManager *const __RE
 	//     2. Interpolate between the previous and current animation frames.
 	//     3. Apply the accumulated inverse bind offsets.
 	//     4. Write to the transform state array.
-	//
+	///
 	// The inverse bind offsets are used to convert the global skeleton state
 	// used in updates to the local model space in preparation for rendering.
-	//
+	///
 	// Consider a rigged model in some reference position. When the bone
 	// transformations are identity transforms, the model will maintain this
 	// reference position correctly. However, we don't want the configuration

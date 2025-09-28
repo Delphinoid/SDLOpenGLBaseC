@@ -1,7 +1,7 @@
 #ifndef TRANSFORM_H
 #define TRANSFORM_H
 
-#include "settingsMath.h"
+#include "settingsTransform.h"
 #include "transformRigid.h"
 #include "mat4.h"
 #include "mat3.h"
@@ -12,14 +12,14 @@
 // rotation" in the form of another quaternion, "shear".
 // This is the rotation such that the standard x, y and
 // z axes correspond precisely to the shear basis.
-//
+///
 // As a matrix A, this transformation may be written
 //     A = TRQSQ^T,
 // where T is a translation matrix, R is a rotation
 // matrix and QSQ^T is the full affine scale matrix.
 // Q here is the matrix corresponding to the stretch
 // rotation, while S the diagonal scale matrix.
-//
+///
 // When TRANSFORM_MATRIX_SHEAR is set, we use a matrix
 // for scaling and shearing. This is faster than using
 // a vector and quaternion and can give nicer results

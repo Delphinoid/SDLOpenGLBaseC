@@ -549,12 +549,12 @@ static __HINT_INLINE__ void cHullClipFaceContact(const cHull *const reference, c
 	// Generates a contact manifold by clipping the edges of
 	// the incident face against the faces adjacent to the
 	// reference face.
-	//
+	///
 	// hullsSwapped is used to swap the positions of the points
 	// in the contact manifold when, for example, the first
 	// mesh is the incident collider and the second is the
 	// reference collider.
-	//
+	///
 	// This method is capable of performing manifold reduction.
 
 	// Allocate two arrays of vertices for each edge on the face.
@@ -986,11 +986,11 @@ static __FORCE_INLINE__ return_t cHullCollisionSATMinkowskiFace(const vec3 A, co
 
 	// Tests if the specified edges overlap
 	// when projected onto a unit sphere.
-	//
+	///
 	// Overlapping arcs on the Gauss map create
 	// a face on the Minkowski sum of the
 	// polyhedras.
-	//
+	///
 	// Because we want the Minkowski difference,
 	// we negate the normals of the second edge.
 
@@ -1003,7 +1003,7 @@ static __FORCE_INLINE__ return_t cHullCollisionSATMinkowskiFace(const vec3 A, co
 	// Check if the arcs are overlapping by testing
 	// if the vertices of one arc are on opposite
 	// sides of the plane intersecting the other arc.
-	//
+	///
 	// ADC * BDC
 	if(vec3Dot(A, DxC) * BDC < 0.f){
 
@@ -1017,7 +1017,7 @@ static __FORCE_INLINE__ return_t cHullCollisionSATMinkowskiFace(const vec3 A, co
 		// vertex of the other arc and checking
 		// if the two remaining vertices are on
 		// the same side of the plane.
-		//
+		///
 		// Because we want to check a face on the
 		// Minkowski difference rather than the
 		// Minkowski sum, we can either invert CBA
@@ -1028,7 +1028,7 @@ static __FORCE_INLINE__ return_t cHullCollisionSATMinkowskiFace(const vec3 A, co
 			// Final check to see if the vertices are overlapping.
 			// We don't need to change the signs of CBA or DBA, as
 			// they will cancel each other out.
-			//
+			///
 			// CBA * DBA
 
 			return CBA * vec3Dot(D, BxA) < 0.f;
@@ -1134,7 +1134,7 @@ return_t cHullCollisionSAT(const cHull *const __RESTRICT__ c1, const cHull *cons
 
 	// Implementation of the separating axis theorem
 	// using Minkowski space and Gauss map optimizations.
-	//
+	///
 	// Credit to Dirk Gregorius for his amazing GDC presentation
 	// entitled "Physics for Game Programmers: The Separating
 	// Axis Test between Convex Polyhedra" (2013). I would
@@ -1224,7 +1224,7 @@ static __FORCE_INLINE__ void cHullEPAEdgeInit(cHullEPAEdgeHelper *const __RESTRI
 static __FORCE_INLINE__ void cHullCollisionMinkowskiSupport(const cHull *const __RESTRICT__ c1, const cHull *const __RESTRICT__ c2, const vec3 axis, cHullSupportVertex *const __RESTRICT__ r){
 	// Returns a point in Minkowski space on the edge of
 	// the polygons' "Minkowski difference".
-	//
+	///
 	// For the first polygon, find the vertex that is
 	// farthest in the direction of axis. Use a
 	// negative axis for the second polygon; this will
@@ -1534,7 +1534,7 @@ return_t cHullCollisionGJK(const cHull *const __RESTRICT__ c1, const cHull *cons
 	// loop, so we can set this to 2 preemptively.
 	// If vertex D is uninitialized, we will have 3 vertices in the
 	// main loop, otherwise we will have 4.
-	simplex[3].s1 = NULL;  //int simplexVertices = 2;
+	simplex[3].s1 = NULL;  ///int simplexVertices = 2;
 
 	// The first direction to check in is the direction of body2 from body1.
 	vec3 axis = vec3VSubV(c2->centroid, c1->centroid);
@@ -1580,7 +1580,7 @@ return_t cHullCollisionGJK(const cHull *const __RESTRICT__ c1, const cHull *cons
 		}
 
 		// Check if the origin is enclosed in our simplex.
-		if(simplex[3].s1 == NULL){  //++simplexVertices == 3
+		if(simplex[3].s1 == NULL){  ///++simplexVertices == 3
 			// We only have a triangle right now, find which
 			// direction to search for our next vertex in.
 			cHullCollisionGJKTriangle(simplex, &axis);

@@ -524,11 +524,11 @@ __HINT_INLINE__ mat3x4 mat3x4Rotate(const quat q, const mat3x4 m){
 }
 __HINT_INLINE__ void mat3x4RotateP(const quat *const __RESTRICT__ q, mat3x4 *const __RESTRICT__ m){
 	mat3x4 r;
-	mat3x4QuaternionPR(&r, q);
+	mat3x4QuaternionPR(q, &r);
 	mat3x4MMultMP2(&r, m);
 }
 __HINT_INLINE__ void mat3x4RotatePR(const quat *const __RESTRICT__ q, const mat3x4 *const __RESTRICT__ m, mat3x4 *const __RESTRICT__ r){
-	mat3x4QuaternionPR(r, q);
+	mat3x4QuaternionPR(q, r);
 	mat3x4MMultMP1(r, m);
 }
 
@@ -563,7 +563,7 @@ __HINT_INLINE__ void mat3x4ScalePR(const float x, const float y, const float z, 
 	r->m[2][0] = m->m[2][0] * z; r->m[2][1] = m->m[2][1] * z; r->m[2][2] = m->m[2][2] * z;
 }
 __HINT_INLINE__ mat3x4 mat3x4ScalePre(const mat3x4 m, const float x, const float y, const float z){
-	//return mat3x4MMultM(mat3x4ScaleMatrix(x, y, z), m);
+	///return mat3x4MMultM(mat3x4ScaleMatrix(x, y, z), m);
 	const mat3x4 r = {.m = {{x * m.m[0][0], y * m.m[0][1], z * m.m[0][2]},
 	                        {x * m.m[1][0], y * m.m[1][1], z * m.m[1][2]},
 	                        {x * m.m[2][0], y * m.m[2][1], z * m.m[2][2]},
@@ -611,7 +611,7 @@ __HINT_INLINE__ void mat3x4ShearMatrixPR(const quat *const __RESTRICT__ q, const
 
 	// Convert the quaternion to a rotation matrix.
 	mat3 m;
-	mat3QuaternionPR(&m, q);
+	mat3QuaternionPR(q, &m);
 
 	float cx = s->x*m.m[0][0];
 	float cy = s->y*m.m[1][0];

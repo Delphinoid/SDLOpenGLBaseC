@@ -754,11 +754,11 @@ quat quatSlerp(const quat q1, const quat q2, const float t){
 		// sin(x)^2 + cos(x)^2 = 1
 		// sin(x)^2 = 1 - cos(x)^2
 		// 1 / sin(x) = rsqrt(1 - cos(x)^2)
-		//
+		///
 		// Calculating the reciprocal of sin(x) allows us to do
 		// multiplications instead of divisions below, as the
 		// following holds:
-		//
+		///
 		// x * (1 / y) = x / y
 
 		const float theta = acosf(cosTheta);
@@ -797,11 +797,11 @@ void quatSlerpP1(quat *const __RESTRICT__ q1, const quat *const __RESTRICT__ q2,
 		// sin(x)^2 + cos(x)^2 = 1
 		// sin(x)^2 = 1 - cos(x)^2
 		// 1 / sin(x) = rsqrt(1 - cos(x)^2)
-		//
+		///
 		// Calculating the reciprocal of sin(x) allows us to do
 		// multiplications instead of divisions below, as the
 		// following holds:
-		//
+		///
 		// x * (1 / y) = x / y
 
 		const float theta = acosf(cosTheta);
@@ -839,11 +839,11 @@ void quatSlerpP2(const quat *const __RESTRICT__ q1, quat *const __RESTRICT__ q2,
 		// sin(x)^2 + cos(x)^2 = 1
 		// sin(x)^2 = 1 - cos(x)^2
 		// 1 / sin(x) = rsqrt(1 - cos(x)^2)
-		//
+		///
 		// Calculating the reciprocal of sin(x) allows us to do
 		// multiplications instead of divisions below, as the
 		// following holds:
-		//
+		///
 		// x * (1 / y) = x / y
 
 		const float theta = acosf(cosTheta);
@@ -884,11 +884,11 @@ void quatSlerpPR(const quat *const __RESTRICT__ q1, const quat *const __RESTRICT
 		// sin(x)^2 + cos(x)^2 = 1
 		// sin(x)^2 = 1 - cos(x)^2
 		// 1 / sin(x) = rsqrt(1 - cos(x)^2)
-		//
+		///
 		// Calculating the reciprocal of sin(x) allows us to do
 		// multiplications instead of divisions below, as the
 		// following holds:
-		//
+		///
 		// x * (1 / y) = x / y
 
 		const float theta = acosf(cosTheta);
@@ -1241,11 +1241,11 @@ void quatBasisZPR(const quat *const __RESTRICT__ q, vec3 *const __RESTRICT__ r){
 quat quatTwist(const quat q, const vec3 v){
 
 	// Decompose a quaternion into its twist component.
-	//
+	///
 	// This implementation negates twist when the dot product is
 	// negative to ensure that it points in the same direction as "v".
 	// We also check for and handle the singularity.
-	//
+	///
 	// Based off Przemyslaw Dobrowolski's implementation given
 	// in Swing-Twist Decomposition in Clifford Algebra (2015).
 
@@ -1284,11 +1284,11 @@ quat quatTwist(const quat q, const vec3 v){
 void quatTwistP(const quat q, const vec3 v, quat *const __RESTRICT__ t){
 
 	// Decompose a quaternion into its twist component.
-	//
+	///
 	// This implementation negates twist when the dot product is
 	// negative to ensure that it points in the same direction as "v".
 	// We also check for and handle the singularity.
-	//
+	///
 	// Based off Przemyslaw Dobrowolski's implementation given
 	// in Swing-Twist Decomposition in Clifford Algebra (2015).
 
@@ -1320,11 +1320,11 @@ void quatTwistP(const quat q, const vec3 v, quat *const __RESTRICT__ t){
 void quatTwistPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ v, quat *const __RESTRICT__ t){
 
 	// Decompose a quaternion into its twist component.
-	//
+	///
 	// This implementation negates twist when the dot product is
 	// negative to ensure that it points in the same direction as "v".
 	// We also check for and handle the singularity.
-	//
+	///
 	// Based off Przemyslaw Dobrowolski's implementation given
 	// in Swing-Twist Decomposition in Clifford Algebra (2015).
 
@@ -1356,10 +1356,10 @@ void quatTwistPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT_
 quat quatTwistFast(const quat q, const vec3 v){
 
 	// Decompose a quaternion into its twist component.
-	//
+	///
 	// This implementation negates twist when the dot product is
 	// negative to ensure that it points in the same direction as "v".
-	//
+	///
 	// Based off Przemyslaw Dobrowolski's implementation given
 	// in Swing-Twist Decomposition in Clifford Algebra (2015).
 
@@ -1393,10 +1393,10 @@ quat quatTwistFast(const quat q, const vec3 v){
 void quatTwistFastP(const quat q, const vec3 v, quat *const __RESTRICT__ t){
 
 	// Decompose a quaternion into its twist component.
-	//
+	///
 	// This implementation negates twist when the dot product is
 	// negative to ensure that it points in the same direction as "v".
-	//
+	///
 	// Based off Przemyslaw Dobrowolski's implementation given
 	// in Swing-Twist Decomposition in Clifford Algebra (2015).
 
@@ -1423,10 +1423,10 @@ void quatTwistFastP(const quat q, const vec3 v, quat *const __RESTRICT__ t){
 void quatTwistFastPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ v, quat *const __RESTRICT__ t){
 
 	// Decompose a quaternion into its twist component.
-	//
+	///
 	// This implementation negates twist when the dot product is
 	// negative to ensure that it points in the same direction as "v".
-	//
+	///
 	// Based off Przemyslaw Dobrowolski's implementation given
 	// in Swing-Twist Decomposition in Clifford Algebra (2015).
 
@@ -1453,7 +1453,7 @@ void quatTwistFastPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTR
 quat quatTwistFaster(const quat q, const vec3 v){
 
 	// Decompose a quaternion into its twist component.
-	//
+	///
 	// Based off Przemyslaw Dobrowolski's implementation given
 	// in Swing-Twist Decomposition in Clifford Algebra (2015).
 
@@ -1477,7 +1477,7 @@ quat quatTwistFaster(const quat q, const vec3 v){
 void quatTwistFasterP(const quat q, const vec3 v, quat *const __RESTRICT__ t){
 
 	// Decompose a quaternion into its twist component.
-	//
+	///
 	// Based off Przemyslaw Dobrowolski's implementation given
 	// in Swing-Twist Decomposition in Clifford Algebra (2015).
 
@@ -1494,7 +1494,7 @@ void quatTwistFasterP(const quat q, const vec3 v, quat *const __RESTRICT__ t){
 void quatTwistFasterPR(const quat *const __RESTRICT__ q, const vec3 *const __RESTRICT__ v, quat *const __RESTRICT__ t){
 
 	// Decompose a quaternion into its twist component.
-	//
+	///
 	// Based off Przemyslaw Dobrowolski's implementation given
 	// in Swing-Twist Decomposition in Clifford Algebra (2015).
 
@@ -1515,11 +1515,11 @@ void quatSwingTwist(const quat q, const vec3 v, quat *const __RESTRICT__ t, quat
 	// This results in a swing quaternion "s" and twist quaternion
 	// "t" such that q = s*t. We also assume that the twist axis
 	// "v" has been normalized.
-	//
+	///
 	// This implementation negates twist when the dot product is
 	// negative to ensure that it points in the same direction as "v".
 	// We also check for and handle the singularity.
-	//
+	///
 	// Based off Przemyslaw Dobrowolski's implementation given
 	// in Swing-Twist Decomposition in Clifford Algebra (2015).
 
@@ -1558,11 +1558,11 @@ void quatSwingTwistPR(const quat *const __RESTRICT__ q, const vec3 *const __REST
 	// This results in a swing quaternion "s" and twist quaternion
 	// "t" such that q = s*t. We also assume that the twist axis
 	// "v" has been normalized.
-	//
+	///
 	// This implementation negates twist when the dot product is
 	// negative to ensure that it points in the same direction as "v".
 	// We also check for and handle the singularity.
-	//
+	///
 	// Based off Przemyslaw Dobrowolski's implementation given
 	// in Swing-Twist Decomposition in Clifford Algebra (2015).
 
@@ -1601,10 +1601,10 @@ void quatSwingTwistFast(const quat q, const vec3 v, quat *const __RESTRICT__ t, 
 	// This results in a swing quaternion "s" and twist quaternion
 	// "t" such that q = s*t. We also assume that the twist axis
 	// "v" has been normalized.
-	//
+	///
 	// This implementation negates twist when the dot product is
 	// negative to ensure that it points in the same direction as "v".
-	//
+	///
 	// Based off Przemyslaw Dobrowolski's implementation given
 	// in Swing-Twist Decomposition in Clifford Algebra (2015).
 
@@ -1637,10 +1637,10 @@ void quatSwingTwistFastPR(const quat *const __RESTRICT__ q, const vec3 *const __
 	// This results in a swing quaternion "s" and twist quaternion
 	// "t" such that q = s*t. We also assume that the twist axis
 	// "v" has been normalized.
-	//
+	///
 	// This implementation negates twist when the dot product is
 	// negative to ensure that it points in the same direction as "v".
-	//
+	///
 	// Based off Przemyslaw Dobrowolski's implementation given
 	// in Swing-Twist Decomposition in Clifford Algebra (2015).
 
@@ -1673,7 +1673,7 @@ void quatSwingTwistFaster(const quat q, const vec3 v, quat *const __RESTRICT__ t
 	// This results in a swing quaternion "s" and twist quaternion
 	// "t" such that q = s*t. We also assume that the twist axis
 	// "v" has been normalized.
-	//
+	///
 	// Based off Przemyslaw Dobrowolski's implementation given
 	// in Swing-Twist Decomposition in Clifford Algebra (2015).
 
@@ -1696,7 +1696,7 @@ void quatSwingTwistFasterPR(const quat *const __RESTRICT__ q, const vec3 *const 
 	// This results in a swing quaternion "s" and twist quaternion
 	// "t" such that q = s*t. We also assume that the twist axis
 	// "v" has been normalized.
-	//
+	///
 	// Based off Przemyslaw Dobrowolski's implementation given
 	// in Swing-Twist Decomposition in Clifford Algebra (2015).
 
@@ -1714,7 +1714,7 @@ void quatSwingTwistFasterPR(const quat *const __RESTRICT__ q, const vec3 *const 
 
 }
 
-/*__HINT_INLINE__ quat quatMat4(const mat4 m){
+/**__HINT_INLINE__ quat quatMat4(const mat4 m){
     quat q;
     float t;
     if(m.m[2][2] < 0.f){
@@ -1744,4 +1744,4 @@ __HINT_INLINE__ quat quatMat4Alt(const mat4 m){
         .v.z = copySignZero(0.5f * sqrtf(-m.m[0][0] - m.m[1][1] + m.m[2][2] + 1.f), m.m[0][1] - m.m[1][0])
     };
     return q;
-}*/
+}**/

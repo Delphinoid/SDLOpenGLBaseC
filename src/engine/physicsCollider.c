@@ -292,10 +292,10 @@ __FORCE_INLINE__ void physColliderTransform(physCollider *const __RESTRICT__ c){
 physContactPair *physColliderFindContact(const physCollider *const c1, const physCollider *const c2, physContactPair **const previous, physContactPair **const next){
 
 	// Find a pair from a previous successful narrowphase collision check.
-	//
+	///
 	// Pairs are cached in increasing order of colliderB address, so once we find
 	// an address greater than the supplied address we can perform an early exit.
-	//
+	///
 	// We also need to return the pair directly before it in the SLink
 	// so we can perform an insertion or removal later on if we need to.
 
@@ -325,10 +325,10 @@ physContactPair *physColliderFindContact(const physCollider *const c1, const phy
 physSeparationPair *physColliderFindSeparation(const physCollider *const c1, const physCollider *const c2, physSeparationPair **const previous, physSeparationPair **const next){
 
 	// Find a pair from a previous failed narrowphase collision check.
-	//
+	///
 	// Pairs are cached in increasing order of colliderB address, so once we find
 	// an address greater than the supplied address we can perform an early exit.
-	//
+	///
 	// We also need to return the pair directly before it in the SLink
 	// so we can perform an insertion or removal later on if we need to.
 

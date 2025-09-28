@@ -76,7 +76,7 @@ int main(int argc, char **argv){
 	gfxDebugLoadShaderProgram();
 
 	/** Configs should be loaded here. **/
-	//
+	///
 
 	/** Most of the code below this comment will be removed eventually. **/
 	moduleCommandResourcesInit();
@@ -134,16 +134,16 @@ int main(int argc, char **argv){
 	// Cameras.
 	camera *camMain = moduleCameraAllocate();
 	camInit(camMain);
-	//camMain->orientation.value = quatNewEuler(0.f, 0.f, 45.f*RADIAN_RATIO);
+	///camMain->orientation.value = quatNewEuler(0.f, 0.f, 45.f*RADIAN_RATIO);
 	camMain->position.value = vec3New(0.f, 1.f, 7.f);
 	camMain->target.value = vec3New(0.f, 1.f, 2.f);
 	flagsSet(camMain->flags, CAM_PROJECTION_FRUSTUM);
-	//
+	///
 	camera *camHUD = moduleCameraAllocate();
 	camInit(camHUD);
 	camHUD->position.value = vec3New(0.f, 0.f, 0.f);
 	flagsSet(camHUD->flags, CAM_PROJECTION_ORTHOGRAPHIC);
-	//
+	///
 	camera *camGUI = moduleCameraAllocate();
 	camInit(camGUI);
 	camGUI->position.value = vec3New(0.f, 0.f, 0.f);
@@ -160,20 +160,20 @@ int main(int argc, char **argv){
 	*scnAllocateObject(scnMain) = moduleObjectIndex(5);
 	*scnAllocateObject(scnMain) = moduleObjectIndex(6);
 	///*scnAllocateObject(scnMain) = moduleObjectIndex(7);*/
-	//
+	///
 	scene *scnHUD = moduleSceneAllocate();
 	scnInit(scnHUD);
 
 	// Textures.
 	texture *tempTex = moduleTextureAllocate();
-	//tLoad(tempTex, prgPath, "Luna"FILE_PATH_DELIMITER_STRING"Luna.tdt");
-	//tempTex = moduleTextureAllocate();
-	//tLoad(tempTex, prgPath, "Misc"FILE_PATH_DELIMITER_STRING"ntrance.tdt");
-	//tempTex = moduleTextureAllocate();
-	//tLoad(tempTex, prgPath, "Misc"FILE_PATH_DELIMITER_STRING"ntrance.tdt");
-	//tempTex = moduleTextureAllocate();
+	///tLoad(tempTex, prgPath, "Luna"FILE_PATH_DELIMITER_STRING"Luna.tdt");
+	///tempTex = moduleTextureAllocate();
+	///tLoad(tempTex, prgPath, "Misc"FILE_PATH_DELIMITER_STRING"ntrance.tdt");
+	///tempTex = moduleTextureAllocate();
+	///tLoad(tempTex, prgPath, "Misc"FILE_PATH_DELIMITER_STRING"ntrance.tdt");
+	///tempTex = moduleTextureAllocate();
 	tLoad(tempTex, "Misc"FILE_PATH_DELIMITER_STRING"Kobold.tdt", 15);
-	/*texture *tempTex;
+	/**texture *tempTex;
 	resMngrPushResource(&resMngr, &memMngr, RESOURCE_TEXTURE, (byte_t **)&tempTex);
 	tDefault(tempTex, &memMngr);
 	resMngrPushResource(&resMngr, &memMngr, RESOURCE_TEXTURE, (byte_t **)&tempTex);
@@ -181,7 +181,7 @@ int main(int argc, char **argv){
 	resMngrPushResource(&resMngr, &memMngr, RESOURCE_TEXTURE, (byte_t **)&tempTex);
 	tLoad(tempTex, &memMngr, prgPath, "Resources"FILE_PATH_DELIMITER_STRING"Images"FILE_PATH_DELIMITER_STRING"Luna"FILE_PATH_DELIMITER_STRING"Luna2.png");
 	resMngrPushResource(&resMngr, &memMngr, RESOURCE_TEXTURE, (byte_t **)&tempTex);
-	tLoad(tempTex, &memMngr, prgPath, "Resources"FILE_PATH_DELIMITER_STRING"Images"FILE_PATH_DELIMITER_STRING"Misc"FILE_PATH_DELIMITER_STRING"ntrance.png");*/
+	tLoad(tempTex, &memMngr, prgPath, "Resources"FILE_PATH_DELIMITER_STRING"Images"FILE_PATH_DELIMITER_STRING"Misc"FILE_PATH_DELIMITER_STRING"ntrance.png");**/
 
 	// Skeletons.
 	skeleton *tempSkl = moduleSkeletonAllocate();
@@ -189,10 +189,10 @@ int main(int argc, char **argv){
 
 	// Texture Wrappers.
 	textureWrapper *tempTexWrap = moduleTextureWrapperAllocate();
-	//twLoad(tempTexWrap, "Animated"FILE_PATH_DELIMITER_STRING"LunaSpr2.tdw", 21);
-	//tempTexWrap = moduleTextureWrapperAllocate();
-	//twLoad(tempTexWrap, "Static"FILE_PATH_DELIMITER_STRING"ntrance2.tdw", 19);
-	//tempTexWrap = moduleTextureWrapperAllocate();
+	///twLoad(tempTexWrap, "Animated"FILE_PATH_DELIMITER_STRING"LunaSpr2.tdw", 21);
+	///tempTexWrap = moduleTextureWrapperAllocate();
+	///twLoad(tempTexWrap, "Static"FILE_PATH_DELIMITER_STRING"ntrance2.tdw", 19);
+	///tempTexWrap = moduleTextureWrapperAllocate();
 	twLoad(tempTexWrap, "Static"FILE_PATH_DELIMITER_STRING"KoboldStatic.tdw", 23);
 	tempTexWrap = moduleTextureWrapperAllocate();
 	twLoad(tempTexWrap, "gui"FILE_PATH_DELIMITER_STRING"body.tdw", 12);
@@ -200,19 +200,19 @@ int main(int argc, char **argv){
 	twLoad(tempTexWrap, "gui"FILE_PATH_DELIMITER_STRING"border.tdw", 14);
 	tempTexWrap = moduleTextureWrapperAllocate();
 	twLoad(tempTexWrap, "LenticularAlt"FILE_PATH_DELIMITER_STRING"LenticularAlt.tdw", 31);
-	/*textureWrapper tempTexWrap;
+	/**textureWrapper tempTexWrap;
 	g_twDefault(&tempTexWrap, &resMngr, &memMngr);
 	cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));
 	//twLoad(&tempTexWrap, prgPath, "Animated"FILE_PATH_DELIMITER_STRING"LunaSpr2.tdt", &allTextures);
 	//cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));
 	twLoad(&tempTexWrap, &resMngr, &memMngr, prgPath, "Static"FILE_PATH_DELIMITER_STRING"ntrance2.tdt");
-	cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));*/
+	cvPush(&allTexWrappers, (void *)&tempTexWrap, sizeof(tempTexWrap));**/
 
 	// Models.
 	modelBase *tempMdl = moduleModelBaseAllocate();
 	mdlBaseLoad(tempMdl, "CubeAnimated.obj\0", 16);
-	//mdlLoad(&tempMdl, prgPath, "ntrance.obj", &allSkeletons);
-	//cvPush(&allModels, (void *)&tempMdl, sizeof(tempMdl));
+	///mdlLoad(&tempMdl, prgPath, "ntrance.obj", &allSkeletons);
+	///cvPush(&allModels, (void *)&tempMdl, sizeof(tempMdl));
 
 	// Objects.
 	objectBase *tempObj = moduleObjectBaseAllocate();
@@ -234,7 +234,7 @@ int main(int argc, char **argv){
 	tempObj = moduleObjectBaseAllocate();
 	objBaseLoad(tempObj, "Lenticular.tdo", 14);
 	tempObj->stateMax = 1;
-	/*tempObj = moduleObjectBaseAllocate();
+	/**tempObj = moduleObjectBaseAllocate();
 	bjBaseLoad(tempObj, "soldier.tdo", 11);
 	tempObj->skl = tempObj->models[0]->skl;
 	tempObj->animationNum = 2;
@@ -242,77 +242,77 @@ int main(int argc, char **argv){
 	tempObj->animations[0] = moduleSkeletonAnimationAllocate();
 	tempObj->animations[1] = moduleSkeletonAnimationAllocate();
 	sklaLoadSMD(tempObj->animations[0], tempObj->skl, "Resources"FILE_PATH_DELIMITER_STRING"Skeletons"FILE_PATH_DELIMITER_STRING"layer_taunt07.smd", 37, 1);
-	sklaLoadSMD(tempObj->animations[1], tempObj->skl, "Resources"FILE_PATH_DELIMITER_STRING"Skeletons"FILE_PATH_DELIMITER_STRING"a_runN_MELEE.smd", 36, 1);*/
-	/*tempObj = moduleObjectBaseAllocate();
+	sklaLoadSMD(tempObj->animations[1], tempObj->skl, "Resources"FILE_PATH_DELIMITER_STRING"Skeletons"FILE_PATH_DELIMITER_STRING"a_runN_MELEE.smd", 36, 1);**/
+	/**tempObj = moduleObjectBaseAllocate();
 	objBaseLoad(tempObj, "scout.tdo", 9);
 	tempObj->skl = tempObj->models[0]->skl;
 	tempObj->animationNum = 2;
 	tempObj->animations = memAllocate(2*sizeof(sklAnim *));
 	tempObj->animations[0] = moduleObjectBaseFind("soldier.tdo", 11)->animations[0];
-	tempObj->animations[1] = moduleObjectBaseFind("soldier.tdo", 11)->animations[1];*/
-	/*tempObj->animations[0] = moduleSkeletonAnimationAllocate();
+	tempObj->animations[1] = moduleObjectBaseFind("soldier.tdo", 11)->animations[1];**/
+	/**tempObj->animations[0] = moduleSkeletonAnimationAllocate();
 	tempObj->animations[1] = moduleSkeletonAnimationAllocate();
 	sklaLoadSMD(tempObj->animations[0], tempObj->skl, prgPath, "Resources"FILE_PATH_DELIMITER_STRING"Skeletons"FILE_PATH_DELIMITER_STRING"stand_MELEE.smd", 1);
-	sklaLoadSMD(tempObj->animations[1], tempObj->skl, prgPath, "Resources"FILE_PATH_DELIMITER_STRING"Skeletons"FILE_PATH_DELIMITER_STRING"a_runN_MELEE.smd", 1);*/
-	//objLoad(&tempObj, prgPath, "ntrance.tdo");
-	//cvPush(&allObjects, (void *)&tempObj, sizeof(tempObj));
+	sklaLoadSMD(tempObj->animations[1], tempObj->skl, prgPath, "Resources"FILE_PATH_DELIMITER_STRING"Skeletons"FILE_PATH_DELIMITER_STRING"a_runN_MELEE.smd", 1);**/
+	///objLoad(&tempObj, prgPath, "ntrance.tdo");
+	///cvPush(&allObjects, (void *)&tempObj, sizeof(tempObj));
 
 	// Object Instances.
 	object *tempObji2, *tempObji3, *tempObji4, *tempObji5;
 	object *tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest.tdo", 12));
-	//sklaiChange(skliAnimationNew(&tempObji->skeletonData, 0), tempObji->skeletonData.skl, tempObji->base->animations[0], 1.f, 0, 0.f);
-	//objInitSkeleton(objGetState(&gameStateManager, tempID, 0), (skeleton *)cvGet(&allSkeletons, 1));
-	//objNewRenderable(objGetState(&gameStateManager, tempID, 0), (model *)cvGet(&allModels, 1), (textureWrapper *)cvGet(&allTexWrappers, 1));
-	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
-	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
-	//objInitSkeleton(objGetState(&gameStateManager, tempID, 0), (skeleton *)cvGet(&allSkeletons, 1));
-	//objInitPhysics(objGetState(&gameStateManager, tempID, 0));
-	//objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
-	//objGetState(&gameStateManager, tempID, 0)->configuration[0].position.y = 9.5f;
-	//objGetState(&gameStateManager, tempID, 0)->configuration[0].position.x = 9.f;
-	//objGetState(&gameStateManager, tempID, 0)->configuration[0].position.y = -3.f;
-	//quatSetEuler(&tempObji->configuration[0].orientation, 45.f*RADIAN_RATIO, 0.f, 45.f*RADIAN_RATIO);
+	///sklaiChange(skliAnimationNew(&tempObji->skeletonData, 0), tempObji->skeletonData.skl, tempObji->base->animations[0], 1.f, 0, 0.f);
+	///objInitSkeleton(objGetState(&gameStateManager, tempID, 0), (skeleton *)cvGet(&allSkeletons, 1));
+	///objNewRenderable(objGetState(&gameStateManager, tempID, 0), (model *)cvGet(&allModels, 1), (textureWrapper *)cvGet(&allTexWrappers, 1));
+	///objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
+	///objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
+	///objInitSkeleton(objGetState(&gameStateManager, tempID, 0), (skeleton *)cvGet(&allSkeletons, 1));
+	///objInitPhysics(objGetState(&gameStateManager, tempID, 0));
+	///objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
+	///objGetState(&gameStateManager, tempID, 0)->configuration[0].position.y = 9.5f;
+	///objGetState(&gameStateManager, tempID, 0)->configuration[0].position.x = 9.f;
+	///objGetState(&gameStateManager, tempID, 0)->configuration[0].position.y = -3.f;
+	///quatSetEuler(&tempObji->configuration[0].orientation, 45.f*RADIAN_RATIO, 0.f, 45.f*RADIAN_RATIO);
 	///skliLoad(&tempObji->skeletonData, NULL, NULL);
-	//tempObji->configuration[0].position.x = 1.5f;
+	///tempObji->configuration[0].position.x = 1.5f;
 	tempObji->configuration[0].position.y = -1.9f;
 	objPhysicsPrepare(tempObji);
 	tempObji->skeletonBodies->hull->restitution = 0.f;
 	tempObji3 = tempObji;
-	//tempObji->configuration[0].position = vec3New(6.032421, -1.907336, -6.143989);
-	//tempObji->configuration[0].orientation = quatNew(-0.537948, 0.455196, 0.453047, -0.541063);
+	///tempObji->configuration[0].position = vec3New(6.032421, -1.907336, -6.143989);
+	///tempObji->configuration[0].orientation = quatNew(-0.537948, 0.455196, 0.453047, -0.541063);
 	scnInsertObject(scnMain, tempObji);
 	//
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("Wall2.tdo", 13));
-	//objInstantiate(objGetState(&gameStateManager, tempID, 0), (object *)cvGet(&allObjects, 0));
-	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
-	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
-	//objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
-	//objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
-	//objInitPhysics(objGetState(&gameStateManager, tempID, 0));
+	///objInstantiate(objGetState(&gameStateManager, tempID, 0), (object *)cvGet(&allObjects, 0));
+	///objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
+	///objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
+	///objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
+	///objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
+	///objInitPhysics(objGetState(&gameStateManager, tempID, 0));
 	tempObji->configuration[0].position.y = 4.f-1.9f;//-0.65f;
 	quatSetEuler(&tempObji->configuration[0].orientation, 0.f, 0.f, 45.6f*RADIAN_RATIO);
 	objPhysicsPrepare(tempObji);
 	tempObji->skeletonBodies->hull->restitution = 0.f;
 	///tempObji->skeletonBodies->flags &= ~(0x06);  /// Currently not working! See physicsRigidBody.h.
-	//physRigidBodyIgnoreLinear(tempObji->skeletonBodies);
+	///physRigidBodyIgnoreLinear(tempObji->skeletonBodies);
 	tempObji4 = tempObji;
-	//tempObji->configuration[0].scale.x = 8.f;
-	//tempObji->configuration[0].scale.y = 0.25f;
+	///tempObji->configuration[0].scale.x = 8.f;
+	///tempObji->configuration[0].scale.y = 0.25f;
 	scnInsertObject(scnMain, tempObji);
-	//
+	///
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest.tdo", 12));
-	//objInstantiate(objGetState(&gameStateManager, tempID, 0), (object *)cvGet(&allObjects, 0));
-	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
-	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
-	//objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
-	//objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
-	//objInitPhysics(objGetState(&gameStateManager, tempID, 0));
+	///objInstantiate(objGetState(&gameStateManager, tempID, 0), (object *)cvGet(&allObjects, 0));
+	///objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
+	///objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
+	///objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
+	///objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
+	///objInitPhysics(objGetState(&gameStateManager, tempID, 0));
 	tempObji->configuration[0].position.y = 9.f;
-	//tempObji->configuration[0].position = vec3New(6.013734, -1.933293, -6.431198);
-	//tempObji->configuration[0].orientation = quatNew(1.000000, 0.000000, 0.000000, 0.000000);
+	///tempObji->configuration[0].position = vec3New(6.013734, -1.933293, -6.431198);
+	///tempObji->configuration[0].orientation = quatNew(1.000000, 0.000000, 0.000000, 0.000000);
 	objPhysicsPrepare(tempObji);
 	tempObji->skeletonBodies->mass = 24.f;
 	tempObji->skeletonBodies->hull->friction = 1.f;
@@ -322,43 +322,43 @@ int main(int argc, char **argv){
 	tempObji->models->state.flags = MODEL_STATE_ALPHA_DITHER;
 	tempObji2 = tempObji;
 	scnInsertObject(scnMain, tempObji);
-	//
+	///
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest.tdo", 12));
-	//objInstantiate(objGetState(&gameStateManager, tempID, 0), (object *)cvGet(&allObjects, 0));
-	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
-	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
-	//objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
-	//objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
-	//objInitPhysics(objGetState(&gameStateManager, tempID, 0));
+	///objInstantiate(objGetState(&gameStateManager, tempID, 0), (object *)cvGet(&allObjects, 0));
+	///objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
+	///objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
+	///objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
+	///objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
+	///objInitPhysics(objGetState(&gameStateManager, tempID, 0));
 	tempObji->configuration[0].position.x = 11.f;
 	tempObji->configuration[0].position.y = 28.f;
-	//tempObji->skeletonBodies->hull->restitution = 1.f;
+	///tempObji->skeletonBodies->hull->restitution = 1.f;
 	objPhysicsPrepare(tempObji);
 	tempObji->skeletonBodies->hull->restitution = 0.f;
 	scnInsertObject(scnMain, tempObji);
-	//
+	///
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("CubeTest.tdo", 12));
-	//objInstantiate(objGetState(&gameStateManager, tempID, 0), (object *)cvGet(&allObjects, 0));
-	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
-	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
-	//objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
-	//objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
-	//objInitPhysics(objGetState(&gameStateManager, tempID, 0));
+	///objInstantiate(objGetState(&gameStateManager, tempID, 0), (object *)cvGet(&allObjects, 0));
+	///objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
+	///objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 0);
+	///objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
+	///objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
+	///objInitPhysics(objGetState(&gameStateManager, tempID, 0));
 	tempObji->configuration[0].position.y = 6.f;
 	objPhysicsPrepare(tempObji);
 	tempObji->skeletonBodies->hull->restitution = 0.f;
-	////scnInsertObject(scnMain, tempObji);
-	//
+	///scnInsertObject(scnMain, tempObji);
+	///
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("Wall.tdo", 8));
-	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
-	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 1);
-	//objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
-	//objInitPhysics(objGetState(&gameStateManager, tempID, 0));
-	//objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_COLLIDE);
-	//objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
+	///objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
+	///objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 1);
+	///objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
+	///objInitPhysics(objGetState(&gameStateManager, tempID, 0));
+	///objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_COLLIDE);
+	///objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
 	tempObji->configuration[0].position.y = -3.f;
 	tempObji->configuration[0].scale.m[0][0] = 100.f;
 	tempObji->configuration[0].scale.m[1][1] = 0.1f;
@@ -366,15 +366,15 @@ int main(int argc, char **argv){
 	objPhysicsPrepare(tempObji);
 	tempObji->skeletonBodies->hull->friction = 1.f;
 	scnInsertObject(scnMain, tempObji);
-	//
+	///
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("Wall.tdo", 8));
-	//objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
-	//objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 1);
-	//objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
-	//objInitPhysics(objGetState(&gameStateManager, tempID, 0));
-	//objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_COLLIDE);
-	//objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
+	///objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl = (model *)cvGet(&allModels, 1);
+	///objGetState(&gameStateManager, tempID, 0)->renderables[0].twi.tw = (textureWrapper *)cvGet(&allTexWrappers, 1);
+	///objInitSkeleton(objGetState(&gameStateManager, tempID, 0), objGetState(&gameStateManager, tempID, 0)->renderables[0].mdl->skl);
+	///objInitPhysics(objGetState(&gameStateManager, tempID, 0));
+	///objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_COLLIDE);
+	///objBoneSetPhysicsFlags(objGetState(&gameStateManager, tempID, 0), 0, PHYSICS_BODY_INITIALIZE | PHYSICS_BODY_COLLIDE);
 	tempObji->configuration[0].position.x = -200.f;
 	tempObji->configuration[0].position.y = 140.f;
 	tempObji->configuration[0].scale.m[0][0] = 20.f;
@@ -382,33 +382,33 @@ int main(int argc, char **argv){
 	tempObji->configuration[0].scale.m[2][2] = 20.f;
 	objPhysicsPrepare(tempObji);
 	scnInsertObject(scnMain, tempObji);
-	//
+	///
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("Wall2.tdo", 13));
-	tempObji->configuration[0].scale.m[0][0] = 30.f;//-0.65f;
+	tempObji->configuration[0].scale.m[0][0] = 30.f;///-0.65f;
 	tempObji->configuration[0].scale.m[1][1] = 0.01f;
-	tempObji->configuration[0].scale.m[2][2] = 10.f;//-0.65f;
-	tempObji->configuration[0].position.x = -100.f;//-0.65f;
-	tempObji->configuration[0].position.y = 70.f;//-0.65f;
+	tempObji->configuration[0].scale.m[2][2] = 10.f;///-0.65f;
+	tempObji->configuration[0].position.x = -100.f;///-0.65f;
+	tempObji->configuration[0].position.y = 70.f;///-0.65f;
 	quatSetEuler(&tempObji->configuration[0].orientation, 45.6f*RADIAN_RATIO, 0.f, -30.f*RADIAN_RATIO);
 	objPhysicsPrepare(tempObji);
 	tempObji->skeletonBodies->hull->restitution = 0.f;
 	///tempObji->skeletonBodies->flags &= ~(0x06);  /// Currently not working! See physicsRigidBody.h.
 	scnInsertObject(scnMain, tempObji);
-	//
+	///
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("Wall2.tdo", 13));
-	tempObji->configuration[0].scale.m[0][0] = 100.f;//-0.65f;
+	tempObji->configuration[0].scale.m[0][0] = 100.f;///-0.65f;
 	tempObji->configuration[0].scale.m[1][1] = 0.01f;
-	tempObji->configuration[0].scale.m[2][2] = 10.f;//-0.65f;
-	tempObji->configuration[0].position.x = 0.f;//-0.65f;
-	tempObji->configuration[0].position.y = 20.f;//-0.65f;
+	tempObji->configuration[0].scale.m[2][2] = 10.f;///-0.65f;
+	tempObji->configuration[0].position.x = 0.f;///-0.65f;
+	tempObji->configuration[0].position.y = 20.f;///-0.65f;
 	quatSetEuler(&tempObji->configuration[0].orientation, 45.6f*RADIAN_RATIO, 0.f, 0.f*RADIAN_RATIO);
 	objPhysicsPrepare(tempObji);
 	tempObji->skeletonBodies->hull->restitution = 0.f;
 	///tempObji->skeletonBodies->flags &= ~(0x06);  /// Currently not working! See physicsRigidBody.h.
 	scnInsertObject(scnMain, tempObji);
-	//
+	///
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("Wall2.tdo", 13));
 	tempObji->configuration[0].scale.m[0][0] = 75.f;//-0.65f;
@@ -420,7 +420,7 @@ int main(int argc, char **argv){
 	tempObji->skeletonBodies->hull->restitution = 0.f;
 	///tempObji->skeletonBodies->flags &= ~(0x06);  /// Currently not working! See physicsRigidBody.h.
 	scnInsertObject(scnMain, tempObji);
-	//
+	///
 	tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("Kera.tdo", 8));
 	skliAnimationNew(&tempObji->skeletonData, tempObji->base->animations[0], 1.f, SKELETON_ANIM_INSTANCE_ADDITIVE);
@@ -429,8 +429,8 @@ int main(int argc, char **argv){
 	tempObji->configuration[0].position.y -= 2.9f;
 	tempObji->configuration[0].position.z += 5.f;
 	scnInsertObject(scnMain, tempObji);
-	//
-	/*tempObji = moduleObjectAllocate();
+	///
+	/**tempObji = moduleObjectAllocate();
 	objInstantiate(tempObji, moduleObjectBaseFind("soldier.tdo", 11));
 	skliAnimationNew(&tempObji->skeletonData, tempObji->base->animations[0], 1.f, SKELETON_ANIM_INSTANCE_ADDITIVE);
 	skliAnimationNew(&tempObji->skeletonData, tempObji->base->animations[1], 0.f, SKELETON_ANIM_INSTANCE_ADDITIVE);
@@ -441,8 +441,8 @@ int main(int argc, char **argv){
 	///tempObji->configuration[1].scale.z = 0.01f;
 	tempObji->configuration[6].position.y = 1.f;
 	///tempObji->renderables->billboardData.flags = BILLBOARD_TARGET_CAMERA | BILLBOARD_LOCK_XYZ;
-	scnInsertObject(scnMain, tempObji);*/
-	//
+	scnInsertObject(scnMain, tempObji);**/
+	///
 	tempObji5 = moduleObjectAllocate();
 	objInstantiate(tempObji5, moduleObjectBaseFind("Lenticular.tdo", 14));
 	tempObji5->configuration[0].orientation = quatNewEuler(0.f, 0.f*RADIAN_RATIO, 0.f);
@@ -464,17 +464,17 @@ int main(int argc, char **argv){
 	pcLook(&pc, vec3New(0.f, 0.f, 5.f), vec3New(0.f, 0.f, -5.f));
 
 	// Sprite Object Instances.
-	//
+	///
 
 	physJoint *joint = modulePhysicsJointAllocate();
-	//physJointInit(joint, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_DISTANCE);
+	///physJointInit(joint, PHYSICS_JOINT_COLLISION, PHYSICS_JOINT_TYPE_DISTANCE);
 	physJointInit(joint, PHYSICS_JOINT_COLLISION_IGNORE, PHYSICS_JOINT_TYPE_SPHERE);
 	physJointAdd(joint, tempObji4->skeletonBodies, tempObji3->skeletonBodies);
 	physJointSphereInit(
 		&joint->data.sphere, g_vec3Zero, vec3New(-5.f, 0.f, 0.f), g_quatIdentity, g_quatIdentity,
 		0.f, -M_PI, M_PI, -M_PI/2.f, M_PI/2.f, -M_PI, M_PI
 	);
-	//physJointDistanceInit(&joint->data.distance, g_vec3Zero, g_vec3Zero, 4.f, 0.f, 0.f);
+	///physJointDistanceInit(&joint->data.distance, g_vec3Zero, g_vec3Zero, 4.f, 0.f, 0.f);
 	scnInsertJoint(scnMain, joint);
 
 	physJoint *joint_carry = modulePhysicsJointAllocate();
@@ -483,21 +483,21 @@ int main(int argc, char **argv){
 
 	guiElement gui, *gEl, *gTxt;
 	guiInit(&gui, GUI_ELEMENT_TYPE_CONTROLLER);
-	/*vec2ZeroP(&gEl.data.panel.configuration[0]);
+	/**vec2ZeroP(&gEl.data.panel.configuration[0]);
 	vec2ZeroP(&gEl.data.panel.configuration[1]);
 	vec2ZeroP(&gEl.data.panel.configuration[2]);
-	vec2ZeroP(&gEl.data.panel.configuration[3]);*/
-	/*rectangle areas[4] = {
+	vec2ZeroP(&gEl.data.panel.configuration[3]);**/
+	/**rectangle areas[4] = {
 		{.x = 0.f, .y = 0.f, .w = 1.f/3.f, .h = 1.f/3.f},
 		{.x = 2.f/3.f, .y = 0.f, .w = 1.f/3.f, .h = 1.f/3.f},
 		{.x = 0.f, .y = 2.f/3.f, .w = 1.f/3.f, .h = 1.f/3.f},
 		{.x = 2.f/3.f, .y = 2.f/3.f, .w = 1.f/3.f, .h = 1.f/3.f}
-	};*/
+	};**/
 	gEl = guiNewChild(&gui);
 	guiInit(gEl, GUI_ELEMENT_TYPE_WINDOW);
 	gEl->root.position.z = -1.f;
-	//guiPanelInit(&gEl, areas);
-	//rndrStateInit(&gEl.data.panel.rndr.state);
+	///guiPanelInit(&gEl, areas);
+	///rndrStateInit(&gEl.data.panel.rndr.state);
 	gEl->data.window.flags = 0;
 	twiInit(&gEl->data.window.body, moduleTextureWrapperFind("gui"FILE_PATH_DELIMITER_STRING"body.tdw", 12));
 	twiInit(&gEl->data.window.border, moduleTextureWrapperFind("gui"FILE_PATH_DELIMITER_STRING"border.tdw", 14));
@@ -509,8 +509,8 @@ int main(int argc, char **argv){
 	gEl->data.window.offsets[5].x = 0.f; gEl->data.window.offsets[5].y = 0.f; gEl->data.window.offsets[5].w = 1.f; gEl->data.window.offsets[5].h = 1.f/5.f;
 	gEl->data.window.offsets[6].x = 0.f; gEl->data.window.offsets[6].y = 1.f/5.f; gEl->data.window.offsets[6].w = 1.f; gEl->data.window.offsets[6].h = 1.f/5.f;
 	gEl->data.window.offsets[7].x = 0.f; gEl->data.window.offsets[7].y = 3.f/5.f; gEl->data.window.offsets[7].w = 1.f; gEl->data.window.offsets[7].h = 1.f/5.f;
-	gEl->root.position.x = 0.f;//-(float)(gfxMngr.viewport.width>>1);
-	gEl->root.position.y = 0.f;//(float)(gfxMngr.viewport.height>>1);
+	gEl->root.position.x = 0.f;///-(float)(gfxMngr.viewport.width>>1);
+	gEl->root.position.y = 0.f;///(float)(gfxMngr.viewport.height>>1);
 	gEl->root.scale.m[0][0] = 0.45f*(float)(gfxMngr.viewport.width>>1);
 	gEl->root.scale.m[1][1] = 40.f;
 
@@ -562,10 +562,10 @@ int main(int argc, char **argv){
 
 
 
-	//memPrintAllBlocks();
-	//memPrintFreeBlocks(0);
+	///memPrintAllBlocks();
+	///memPrintFreeBlocks(0);
 
-	/*uint32_t blahstart = SDL_GetTicks();
+	/**uint32_t blahstart = SDL_GetTicks();
 	uint32_t blahend;
 	uint32_t count;
 	hbCollisionInfo separationInfo;
@@ -578,7 +578,7 @@ int main(int argc, char **argv){
 	}
 
 	blahend = SDL_GetTicks();
-	printf("%u - %u\n%u\n", blahstart, blahend, blahend-blahstart);*/
+	printf("%u - %u\n%u\n", blahstart, blahend, blahend-blahstart);**/
 
 	float timeMod = 1.f;
 	float updateMod = 1.f;
@@ -835,7 +835,7 @@ int main(int argc, char **argv){
 			SDL_GL_SwapWindow(gfxMngr.window);
 
 			// Next frame.
-			//nextRender = startTick + framerate;
+			///nextRender = startTick + framerate;
 			nextRender += framerate;
 			++renders;
 
@@ -847,7 +847,7 @@ int main(int argc, char **argv){
 			// Having applications like Discord open
 			// can mess up the timer resolution.
 			sleepAccurate((time32_t)sleepTime);
-			//sleepResolution((time32_t)sleepTime, 0);
+			///sleepResolution((time32_t)sleepTime, 0);
 		}
 
 		if(timerGetTime() - lastPrint > 1000){

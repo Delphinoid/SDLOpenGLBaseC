@@ -805,7 +805,7 @@ return_t mdlSMDLoad(modelBase *const __RESTRICT__ base, const char *const __REST
 							nameArray[nameArrayLength] = '\0';
 							++nameArrayLength;
 
-							//Get the ID of this bone's parent.
+							///Get the ID of this bone's parent.
 							tempBone.parent = strtoul(tokPos + boneNameLength + 1, NULL, 10);
 							if(tempBone.parent == 255){
 								tempBone.parent = boneID;

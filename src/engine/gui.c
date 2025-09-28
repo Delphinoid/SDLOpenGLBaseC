@@ -118,5 +118,5 @@ __FORCE_INLINE__ void guiRender(const guiElement *const element, graphicsManager
 }
 
 void guiDelete(guiElement *element){
-	//
+	///
 }

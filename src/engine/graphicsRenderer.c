@@ -32,12 +32,12 @@ static __FORCE_INLINE__ void gfxRenderQueueInit(gfxRenderQueue *const __RESTRICT
 /** This should be done by the scene using a spatial partitioning system. **/
 static __FORCE_INLINE__ void gfxRenderQueueDepthSort(gfxRenderQueue *const __RESTRICT__ queue){
 
-	//
+	///
 
 }
 static __FORCE_INLINE__ void gfxRenderQueueDepthSortReverse(gfxRenderQueue *const __RESTRICT__ queue){
 
-	//
+	///
 
 }
 
@@ -213,7 +213,7 @@ return_t gfxRendererDrawScene(graphicsManager *const __RESTRICT__ gfxMngr, camer
 		++queue;
 	}
 
-	//glClear(GL_DEPTH_BUFFER_BIT);
+	///glClear(GL_DEPTH_BUFFER_BIT);
 
 	gfxRendererDelete(&renderer);
 	return 1;

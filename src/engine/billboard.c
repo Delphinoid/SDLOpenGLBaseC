@@ -134,7 +134,7 @@ unsigned int billboardLenticular(const billboard data, const camera *const __RES
 		// given by the specified configuration's up basis vector and
 		// parallel vector given by the specified configuration's forward
 		// basis vector.
-		//
+		///
 		// We do this because we can't guarantee that objects will always
 		// be axis-aligned.
 		const vec3 projection = vec3NormalizeFast(

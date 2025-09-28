@@ -4,7 +4,7 @@
 #include "memoryShared.h"
 
 // Stack allocator.
-//
+///
 // Relies on user remembering how much memory
 // they've allocated if they wish to make a
 // deallocation. In my opinion it's good
@@ -28,7 +28,7 @@ void memStackInit(memoryStack *const __RESTRICT__ stack);
 void *memStackCreate(memoryStack *const __RESTRICT__ stack, void *const start, const size_t bytes, const size_t length);
 void *memStackPush(memoryStack *const __RESTRICT__ stack, const size_t bytes);
 void memStackPop(memoryStack *const __RESTRICT__ stack, const size_t bytes);
-//void memStackShrink(memoryStack *const __RESTRICT__ stack, const size_t bytes);
+///void memStackShrink(memoryStack *const __RESTRICT__ stack, const size_t bytes);
 void memStackClear(memoryStack *const __RESTRICT__ stack);
 void *memStackExtend(memoryStack *const __RESTRICT__ stack, void *const start, const size_t bytes, const size_t length);
 void memStackDelete(memoryStack *const __RESTRICT__ stack);

@@ -33,7 +33,7 @@
 // maintaining their relative orientations, similarly to
 // a ball-and-socket joint. An angular constraint may
 // also be specified, such as a conic constraint.
-//
+///
 // In practice, this is similar to a distance joint with
 // an additional angular constraint, although a different
 // point-to-point constraint is used. This is because the
@@ -58,7 +58,7 @@ typedef struct {
 
 	// Stores the minimum and maximum angular
 	// limits (in that order) for each axis.
-	//
+	///
 	// For Euler angle constraints, we use the
 	// order XYZ for rotations. Therefore, to
 	// guarantee a unique representation for any
@@ -93,7 +93,7 @@ typedef struct {
 
 	// Stores the minimum and maximum angular
 	// limits (in that order) for each axis.
-	//
+	///
 	// For Euler angle constraints, we use the
 	// order XYZ for rotations. Therefore, to
 	// guarantee a unique representation for any

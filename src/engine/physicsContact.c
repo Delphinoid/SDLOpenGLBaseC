@@ -23,76 +23,76 @@
 #endif
 
 // ----------------------------------------------------------------------
-//
+///
 // Contacts involve solving both a contact constraint and a
 // friction constraint. For more information on friction
 // constraints, please see physicsJointFriction.c.
-//
+///
 // ----------------------------------------------------------------------
-//
+///
 // Contact constraint inequality:
-//
+///
 // C : (pB - pA) . n >= 0.
-//
+///
 // Differentiating so we can solve w.r.t. velocity:
-//
+///
 // C' : dC/dt = (((wB X rB) + vB) - ((wA X rA) + vA)) . n >= 0,
-//
+///
 // where n is the contact normal and the p terms are the
 // contact points in global space.
-//
+///
 // ----------------------------------------------------------------------
-//
+///
 // Given the velocity vector
-//
+///
 //     [vA]
 //     [wA]
 // V = [vB]
 //     [wB]
-//
+///
 // and the identity JV = C', we can solve for the Jacobian J:
-//
+///
 // J = [-n, -(rA X n), n, (rB X n)].
-//
+///
 // Finally, adding a potential bias term, we have
-//
+///
 // C' : JV + b >= 0.
-//
+///
 // ----------------------------------------------------------------------
-//
+///
 // The effective mass for the constraint is given by (JM^{-1})J^T,
 // where M^{-1} is the inverse mass matrix and J^T is the transposed
 // Jacobian.
-//
+///
 //          [mA^{-1}   0      0      0   ]
 //          [   0   IA^{-1}   0      0   ]
 // M^{-1} = [   0      0   mB^{-1}   0   ]
 //          [   0      0      0   IB^{-1}],
-//
+///
 //       [    -n   ]
 //       [-(rA X n)]
 // J^T = [     n   ]
 //       [ (rB X n)].
-//
+///
 // Expanding results in
-//
+///
 // (JM^{-1})J^T = mA^{-1} + mB^{-1} + ((rA X n) . (IA^{-1} * (rA X n))) + ((rB X n) . (IB^{-1} * (rB X n))).
-//
+///
 // ----------------------------------------------------------------------
-//
+///
 // Semi-implicit Euler:
-//
+///
 // V   = V_i + dt * M^{-1} * F,
 // V_f = V   + dt * M^{-1} * P.
-//
+///
 // Where V_i is the initial velocity vector, V_f is the final
 // velocity vector, F is the external force on the body (e.g.
 // gravity), P is the constraint force and dt is the timestep.
-//
+///
 // Using P = J^T * lambda and lambda' = dt * lambda, we can
 // solve for the impulse magnitude (constraint Lagrange
 // multiplier) lambda':
-//
+///
 // JV_f + b = 0
 // J(V + dt * M^{-1} * P) + b = 0
 // JV + dt * (JM^{-1})P + b = 0
@@ -100,7 +100,7 @@
 // dt * (JM^{-1})J^T . lambda = -(JV + b)
 // dt * lambda = -(JV + b)/((JM^{-1})J^T)
 // lambda' = -(JV + b)/((JM^{-1})J^T).
-//
+///
 // ----------------------------------------------------------------------
 
 static __FORCE_INLINE__ float physContactCalculateRestitution(const float r1, const float r2){
@@ -121,7 +121,7 @@ __FORCE_INLINE__ void physContactInit(physContact *const __RESTRICT__ contact, c
 
 	// Sets the incident and reference bodies
 	// and reset the impulse accumulators.
-	//
+	///
 	// Also generates a global normal and tangents.
 
 	physContactPoint *pPoint = &contact->contacts[0];
@@ -186,8 +186,8 @@ __FORCE_INLINE__ void physContactInit(physContact *const __RESTRICT__ contact, c
 	#else
 	vec3OrthonormalBasis(normal, &physContactTangent(contact)[0], &physContactTangent(contact)[1]);
 	#endif
-	//physContactTangent1(contact) = vec3Orthogonal(normal);
-	//physContactTangent2(contact) = vec3Cross(normal, physContactTangent1(contact));
+	///physContactTangent1(contact) = vec3Orthogonal(normal);
+	///physContactTangent2(contact) = vec3Cross(normal, physContactTangent1(contact));
 	#ifdef PHYSICS_CONTACT_STABILIZER_GAUSS_SEIDEL
 	contact->normalA = quatConjugateRotateVec3FastApproximate(bodyA->configuration.orientation, normal);
 	#endif
@@ -227,7 +227,7 @@ __FORCE_INLINE__ void physContactPersist(physContact *const __RESTRICT__ contact
 
 	// Copies the accumulators for persisting contacts
 	// and resets non-persisting accumulators.
-	//
+	///
 	// Also generates a global normal and tangents.
 
 	const cContactPoint *cPoint = manifold->contacts;
@@ -630,7 +630,7 @@ static __FORCE_INLINE__ float physContactPointSolveConfigurationNormal(physConta
 	// Calculate the transformed normal and a point
 	// halfway between both transformed contact points.
 	vec3 normal = quatRotateVec3FastApproximate(bodyA->configuration.orientation, contact->normalA);
-	const vec3 halfway = pointGlobalB;//vec3VMultS(vec3VAddV(pointGlobalA, pointGlobalB), 0.5f);
+	const vec3 halfway = pointGlobalB;///vec3VMultS(vec3VAddV(pointGlobalA, pointGlobalB), 0.5f);
 
 	// Calculate the separation.
 	const float separation = vec3Dot(vec3VSubV(pointGlobalB, pointGlobalA), normal) - PHYSICS_SEPARATION_BIAS_TOTAL;

@@ -17,7 +17,7 @@
 /** Scene / zone update rate? **/
 /** Scene transformation (translation, scale, rotation for updating)? **/
 
-//typedef uint_least32_t objectIndex_t;
+///typedef uint_least32_t objectIndex_t;
 
 typedef struct object object;
 typedef struct physRigidBody physRigidBody;

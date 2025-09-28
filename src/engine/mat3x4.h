@@ -12,7 +12,7 @@
 // in practice, the final row of 4x4 matrices
 // will often be (0 0 0 1). Thus using 3x4
 // matrices saves a lot of memory and CPU time.
-//
+///
 // One should therefore keep in mind that
 // many of these functions do not really apply
 // to 3x4 matrices so much as they are reduced

@@ -118,14 +118,14 @@ static __HINT_INLINE__ void pMoveFriction(pMove *const __RESTRICT__ movement, co
 
 		// Only apply friction when grounded.
 		// This function is only called when we're grounded, so it's fine.
-		//if(!movement->airborne){
-			const float control = floatMax(speed, PLAYER_GROUND_DECELERATION);
+		///if(!movement->airborne){
+			const float control = floatMaxFast(speed, PLAYER_GROUND_DECELERATION);
 			if(movement->fwish != 0.f || movement->rwish != 0.f){
 				newSpeed -= control * t * PLAYER_FRICTION_WISH * dt_s;
 			}else{
 				newSpeed -= control * t * PLAYER_FRICTION * dt_s;
 			}
-		//}
+		///}
 
 		if(newSpeed < 0.f){
 			movement->velocity.x = 0.f;
@@ -185,11 +185,11 @@ static __HINT_INLINE__ void pMoveGround(pMove *const __RESTRICT__ movement, cons
 	// Divides wishdir*PLAYER_GROUND_MAX_SPEED by the magnitude of (rwish, fwish).
 	const float wishspeed = vec2Magnitude(wishdir) * pMoveScale(movement, PLAYER_GROUND_MAX_SPEED);
 
-	//if(wishspeed > 0.f){
+	///if(wishspeed > 0.f){
 		wishdir = vec2NormalizeFastAccurate(wishdir);
 		movement->direction = wishdir;
 		pMoveAccelerate(movement, wishdir, wishspeed, PLAYER_GROUND_ACCELERATION, friction, dt_s);
-	//}
+	///}
 
 }
 
@@ -416,7 +416,7 @@ void pTick(player *const __RESTRICT__ p, const float dt_s){
 			}
 			// We do this regardless of whether the player is
 			// moving or stationary to account for bouncing.
-			pMoveClipVelocity(&p->movement, groundNormal, floatMax(p->obj->skeletonBodies->hull->restitution, groundCollider->restitution));
+			pMoveClipVelocity(&p->movement, groundNormal, floatMaxFast(p->obj->skeletonBodies->hull->restitution, groundCollider->restitution));
 
 		}else{
 

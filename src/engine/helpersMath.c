@@ -140,7 +140,7 @@ __HINT_INLINE__ float pointPlaneDistanceP(const vec3 *const __RESTRICT__ normal,
 }
 __HINT_INLINE__ vec3 pointPlaneProject(const vec3 normal, const vec3 vertex, const vec3 point){
 	// Projects a point onto a plane.
-	//return vec3VSubV(point, vec3VMultS(normal, vec3Dot(vec3VSubV(point, vertex), normal)));
+	///return vec3VSubV(point, vec3VMultS(normal, vec3Dot(vec3VSubV(point, vertex), normal)));
 	return vec3fmaf(vec3Dot(vec3VSubV(vertex, point), normal), normal, point);
 }
 __HINT_INLINE__ void pointPlaneProjectP(const vec3 *const __RESTRICT__ normal, const vec3 *const __RESTRICT__ vertex, vec3 *const __RESTRICT__ point){
@@ -372,25 +372,25 @@ __FORCE_INLINE__ float floatClamp(const float x, const float min, const float ma
 __HINT_INLINE__ float clampEllipseDistanceFast(const float Ex, const float Ey, const float Ea, const float Eb){
 
 	// Clamp a quaternion's swing to an ellipse.
-	//
+	///
 	// Given a point P = (Ex, Ey) and an ellipse with radii Ea, Eb, return
 	// the distance from P to the closest point on the ellipse using a fast,
 	// approximate algorithm. That is, rather than finding the actual closest
 	// point, we take the point of intersection along the line from the origin.
-	//
+	///
 	// This function returns the distance of this closest point from the ellipse's
 	// centre. This distance is the maximum allowable angle about the swing axis.
-	//
+	///
 	// Note that we assume that Ea and Eb are non-negative. Furthermore, this
 	// method generally gives poor results when Ea and Eb differ significantly.
 
 	if(Ex != 0.f){
 		// Consider the ellipse "x^2/a^2 + y^2/b^2 = 1",
 		// and let (x0, y0) be a point satisfying
-		//
+		///
 		// x0^2/a^2 + y0^2/b^2 = L^2,
 		// 1/L = ab/sqrt(b^2*x0^2 + a^2*y0^2).
-		//
+		///
 		// Then the closest point on the ellipse to (x0, y0)
 		// is given by (1/L)(x0, y0). The distance is then
 		// given simply by d = ||(x0, y0)||/L.
@@ -416,10 +416,10 @@ __HINT_INLINE__ float clampEllipseDistanceNormalFast(const float Ex, const float
 	if(Ex != 0.f){
 		// Consider the ellipse "x^2/a^2 + y^2/b^2 = 1",
 		// and let (x0, y0) be a point satisfying
-		//
+		///
 		// x0^2/a^2 + y0^2/b^2 = L^2,
 		// 1/L = ab/sqrt(b^2*x0^2 + a^2*y0^2).
-		//
+		///
 		// Then the closest point on the ellipse to (x0, y0)
 		// is given by (1/L)(x0, y0). The distance is then
 		// given simply by d = ||(x0, y0)||/L.
@@ -433,7 +433,7 @@ __HINT_INLINE__ float clampEllipseDistanceNormalFast(const float Ex, const float
 		}
 		// Using the formulae above, we can show that the
 		// normal at the intersection point is given by
-		//
+		///
 		// (b^2*t_x, a^2*t_y).
 		*normal = vec2NormalizeFastS(Eb*Ebx, Ea*Eay);
 		return (Ea*Eb) * sqrtf((Ex*Ex + Ey*Ey)/(Ebx*Ebx + Eay*Eay));

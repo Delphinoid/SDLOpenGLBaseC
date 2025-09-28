@@ -188,10 +188,10 @@ __HINT_INLINE__ mat4 mat4MMultM3(const mat4 m1, const mat3 m2){
 	                       m1.m[0][1]*m2.m[2][0] + m1.m[1][1]*m2.m[2][1] + m1.m[2][1]*m2.m[2][2],
 	                       m1.m[0][2]*m2.m[2][0] + m1.m[1][2]*m2.m[2][1] + m1.m[2][2]*m2.m[2][2],
 	                       m1.m[0][3]*m2.m[2][0] + m1.m[1][3]*m2.m[2][1] + m1.m[2][3]*m2.m[2][2]},
-	                      {m1.m[0][0]*m2.m[3][0] + m1.m[1][0]*m2.m[3][1] + m1.m[2][0]*m2.m[3][2] + m1.m[3][0],
-	                       m1.m[0][1]*m2.m[3][0] + m1.m[1][1]*m2.m[3][1] + m1.m[2][1]*m2.m[3][2] + m1.m[3][1],
-	                       m1.m[0][2]*m2.m[3][0] + m1.m[1][2]*m2.m[3][1] + m1.m[2][2]*m2.m[3][2] + m1.m[3][2],
-	                       m1.m[0][3]*m2.m[3][0] + m1.m[1][3]*m2.m[3][1] + m1.m[2][3]*m2.m[3][2] + m1.m[3][3]}}};
+	                      {m1.m[3][0],
+	                       m1.m[3][1],
+	                       m1.m[3][2],
+	                       m1.m[3][3]}}};
 	return r;
 
 }
@@ -209,10 +209,10 @@ __HINT_INLINE__ void mat4MMultM3P(mat4 *const __RESTRICT__ m1, const mat3 *const
 	                       m1->m[0][1]*m2->m[2][0] + m1->m[1][1]*m2->m[2][1] + m1->m[2][1]*m2->m[2][2],
 	                       m1->m[0][2]*m2->m[2][0] + m1->m[1][2]*m2->m[2][1] + m1->m[2][2]*m2->m[2][2],
 	                       m1->m[0][3]*m2->m[2][0] + m1->m[1][3]*m2->m[2][1] + m1->m[2][3]*m2->m[2][2]},
-	                      {m1->m[0][0]*m2->m[3][0] + m1->m[1][0]*m2->m[3][1] + m1->m[2][0]*m2->m[3][2] + m1->m[3][0],
-	                       m1->m[0][1]*m2->m[3][0] + m1->m[1][1]*m2->m[3][1] + m1->m[2][1]*m2->m[3][2] + m1->m[3][1],
-	                       m1->m[0][2]*m2->m[3][0] + m1->m[1][2]*m2->m[3][1] + m1->m[2][2]*m2->m[3][2] + m1->m[3][2],
-	                       m1->m[0][3]*m2->m[3][0] + m1->m[1][3]*m2->m[3][1] + m1->m[2][3]*m2->m[3][2] + m1->m[3][3]}}};
+	                      {m1->m[3][0],
+	                       m1->m[3][1],
+	                       m1->m[3][2],
+	                       m1->m[3][3]}}};
 	*m1 = r;
 
 }
@@ -233,10 +233,10 @@ __HINT_INLINE__ void mat4MMultM3PR(const mat4 *const __RESTRICT__ m1, const mat3
 	r->m[2][2] = m1->m[0][2]*m2->m[2][0] + m1->m[1][2]*m2->m[2][1] + m1->m[2][2]*m2->m[2][2];
 	r->m[2][3] = m1->m[0][3]*m2->m[2][0] + m1->m[1][3]*m2->m[2][1] + m1->m[2][3]*m2->m[2][2];
 
-	r->m[3][0] = m1->m[0][0]*m2->m[3][0] + m1->m[1][0]*m2->m[3][1] + m1->m[2][0]*m2->m[3][2] + m1->m[3][0];
-	r->m[3][1] = m1->m[0][1]*m2->m[3][0] + m1->m[1][1]*m2->m[3][1] + m1->m[2][1]*m2->m[3][2] + m1->m[3][1];
-	r->m[3][2] = m1->m[0][2]*m2->m[3][0] + m1->m[1][2]*m2->m[3][1] + m1->m[2][2]*m2->m[3][2] + m1->m[3][2];
-	r->m[3][3] = m1->m[0][3]*m2->m[3][0] + m1->m[1][3]*m2->m[3][1] + m1->m[2][3]*m2->m[3][2] + m1->m[3][3];
+	r->m[3][0] = m1->m[3][0];
+	r->m[3][1] = m1->m[3][1];
+	r->m[3][2] = m1->m[3][2];
+	r->m[3][3] = m1->m[3][3];
 
 }
 
@@ -660,11 +660,11 @@ __HINT_INLINE__ mat4 mat4Rotate(const quat q, const mat4 m){
 }
 __HINT_INLINE__ void mat4RotateP(const quat *const __RESTRICT__ q, mat4 *const __RESTRICT__ m){
 	mat4 r;
-	mat4QuaternionPR(&r, q);
+	mat4QuaternionPR(q, &r);
 	mat4MMultMP2(&r, m);
 }
 __HINT_INLINE__ void mat4RotatePR(const quat *const __RESTRICT__ q, const mat4 *const __RESTRICT__ m, mat4 *const __RESTRICT__ r){
-	mat4QuaternionPR(r, q);
+	mat4QuaternionPR(q, r);
 	mat4MMultMP1(r, m);
 }
 
@@ -699,7 +699,7 @@ __HINT_INLINE__ void mat4ScalePR(const float x, const float y, const float z, co
 	r->m[2][0] = m->m[2][0] * z; r->m[2][1] = m->m[2][1] * z; r->m[2][2] = m->m[2][2] * z; r->m[2][3] = m->m[2][3] * z;
 }
 __HINT_INLINE__ mat4 mat4ScalePre(const mat4 m, const float x, const float y, const float z){
-	//return mat4MMultM(mat4ScaleMatrix(x, y, z), m);
+	///return mat4MMultM(mat4ScaleMatrix(x, y, z), m);
 	const mat4 r = {.m = {{x * m.m[0][0], y * m.m[0][1], z * m.m[0][2], m.m[0][3]},
 	                      {x * m.m[1][0], y * m.m[1][1], z * m.m[1][2], m.m[1][3]},
 	                      {x * m.m[2][0], y * m.m[2][1], z * m.m[2][2], m.m[2][3]},
@@ -751,7 +751,7 @@ __HINT_INLINE__ void mat4ShearMatrixPR(const quat *const __RESTRICT__ q, const v
 
 	// Convert the quaternion to a rotation matrix.
 	mat3 m;
-	mat3QuaternionPR(&m, q);
+	mat3QuaternionPR(q, &m);
 
 	float cx = s->x*m.m[0][0];
 	float cy = s->y*m.m[1][0];

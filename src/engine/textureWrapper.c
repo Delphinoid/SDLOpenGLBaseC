@@ -589,29 +589,29 @@ __FORCE_INLINE__ void twiTick(twInstance *const __RESTRICT__ twi, const float dt
 
 __FORCE_INLINE__ GLuint twiTextureWidth(const twInstance *const __RESTRICT__ twi){
 	// Make sure the current animation and frame are valid (within proper bounds)
-	//if(twi->currentAnim < twi->tw->animationNum &&
+	///if(twi->currentAnim < twi->tw->animationNum &&
 	//   twi->animator.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum){
 		return twAnimationFrame(twi->tw, twi->currentAnim, twi->animator.currentFrame)->image->width;
-	//}
-	//return 0;
+	///}
+	///return 0;
 }
 
 __FORCE_INLINE__ GLuint twiTextureHeight(const twInstance *const __RESTRICT__ twi){
 	// Make sure the current animation and frame are valid (within proper bounds)
-	//if(twi->currentAnim < twi->tw->animationNum &&
+	///if(twi->currentAnim < twi->tw->animationNum &&
 	//   twi->animator.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum){
 		return twAnimationFrame(twi->tw, twi->currentAnim, twi->animator.currentFrame)->image->height;
-	//}
-	//return 0;
+	///}
+	///return 0;
 }
 
 __FORCE_INLINE__ const texture *twiTexture(const twInstance *const __RESTRICT__ twi){
 	// Make sure the current animation and frame are valid (within proper bounds)
-	//if(twi->currentAnim < twi->tw->animationNum &&
+	///if(twi->currentAnim < twi->tw->animationNum &&
 	//   twi->animator.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum){
 		return twAnimationFrame(twi->tw, twi->currentAnim, twi->animator.currentFrame)->image;
-	//}
-	//return 0;
+	///}
+	///return 0;
 }
 
 __FORCE_INLINE__ float twiFrameWidth(const twInstance *const __RESTRICT__ twi){
@@ -625,48 +625,48 @@ __FORCE_INLINE__ float twiFrameHeight(const twInstance *const __RESTRICT__ twi){
 const twFrame *twiState(const twInstance *const __RESTRICT__ twi, const float interpT){
 
 	// Make sure the current animation and frame are valid (within proper bounds)
-	//if(
-	//	twi->currentAnim < twi->tw->animationNum &&
-	//	twi->animator.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum
-	//){
+	///if(
+	///	twi->currentAnim < twi->tw->animationNum &&
+	///	twi->animator.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum
+	///){
 
 		frameIndex_t frame;
 		animState(&twi->animator, &twAnimation(twi->tw, twi->currentAnim)->animData, interpT, &frame, NULL, NULL);
 		return &twi->tw->animations[twi->currentAnim].frames[frame];
 
-	//}else{
+	///}else{
 
-	//	*x = 0.f;
-	//	*y = 0.f;
-	//	*w = 0.f;
-	//	*h = 0.f;
-	//	*frameTexID = 0;
+	///	*x = 0.f;
+	///	*y = 0.f;
+	///	*w = 0.f;
+	///	*h = 0.f;
+	///	*frameTexID = 0;
 
-	//}
+	///}
 
 }
 
 const twFrame *twiStateOffset(const twInstance *const __RESTRICT__ twi, const unsigned int offset, const float interpT){
 
 	// Make sure the current animation and frame are valid (within proper bounds)
-	//if(
-	//	twi->currentAnim < twi->tw->animationNum &&
-	//	twi->animator.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum
-	//){
+	///if(
+	///	twi->currentAnim < twi->tw->animationNum &&
+	///	twi->animator.currentFrame < twGetAnim(twi->tw, twi->currentAnim)->animData.frameNum
+	///){
 
 		frameIndex_t frame;
 		animState(&twi->animator, &twAnimation(twi->tw, twi->currentAnim+offset)->animData, interpT, &frame, NULL, NULL);
 		return &twi->tw->animations[twi->currentAnim+offset].frames[frame];
 
-	//}else{
+	///}else{
 
-	//	*x = 0.f;
-	//	*y = 0.f;
-	//	*w = 0.f;
-	//	*h = 0.f;
-	//	*frameTexID = 0;
+	///	*x = 0.f;
+	///	*y = 0.f;
+	///	*w = 0.f;
+	///	*h = 0.f;
+	///	*frameTexID = 0;
 
-	//}
+	///}
 
 }
 

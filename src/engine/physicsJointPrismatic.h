@@ -11,13 +11,13 @@ typedef struct physJoint physJoint;
 
 typedef struct {
 
-	//
+	///
 
 } physJointPrismaticBase;
 
 typedef struct {
 
-	//
+	///
 
 } physJointPrismatic;
 

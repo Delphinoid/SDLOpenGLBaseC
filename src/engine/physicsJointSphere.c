@@ -16,140 +16,140 @@
 #define PHYSICS_JOINT_SPHERE_LIMITS_TWIST       (PHYSICS_JOINT_SPHERE_LIMITS_TWIST_LOWER | PHYSICS_JOINT_SPHERE_LIMITS_TWIST_UPPER)
 
 // ----------------------------------------------------------------------
-//
+///
 // Spherical constraints involve a "point-to-point" constraint and
 // a cone constraint that limits one rigid body's relative position
 // and orientation to a cone about some user-specified axis.
 // This constraint is similar to a ball and socket joint.
-//
+///
 // ----------------------------------------------------------------------
-//
+///
 // For the point-to-point constraint, we define rA and rB to be
 // the offsets of the "socket" and "ball" from the rigid bodies
 // respectively. Of course, these two points should coincide, so
-//
+///
 // C1 : (pB + rB) - (pA + rA) = 0.
-//
+///
 // Differentiate with respect to time to get a velocity constraint:
-//
+///
 // C1' : 0 = (vB +   wB X rB) - (vA +   wA X rA)
 //         = (vB -   rB X wB) - (vA -   rA X wA)
 //         = (vB - [rB]_X*wB) - (vA - [rA]_X*wA),
-//
+///
 // where "[.]_X" denotes the skew-symmetric "cross product" matrix.
-//
-//
+///
+///
 // We also need to impose constraints on the relative orientation of the
 // rigid bodies, so if "theta(a)" represents the angle of the relative
 // orientation "((qB*RB) * conj(qA*RA))" along the axis a, then we require
-//
+///
 // C2 : theta(s) - s_limit <= 0,
 // C3 : theta(t) - t_upper <= 0,
 // C4 : theta(t) - t_lower >= 0.
-//
+///
 // where s denotes the swing axis, t denotes the twist axis,
 // and s_limit, t_upper and t_lower are the swing and twist
 // axis limits. The twist axis is chosen as body B's x-axis.
-//
+///
 // The velocity constraints for these are
-//
+///
 // C2' : (wB - wA) . s <= 0,
 // C3' : (wB - wA) . t <= 0,
 // C4' : (wB - wA) . t >= 0.
-//
+///
 // Note that constraints C3' and C4' appear to conflict.
 // This is fine, as we only solve these constraints when
 // they're broken, and it's impossible to break both the
 // upper and lower limits simultaneously.
-//
+///
 // ----------------------------------------------------------------------
-//
+///
 // Given the velocity vector
-//
+///
 //     [vA]
 //     [wA]
 // V = [vB]
 //     [wB]
-//
+///
 // and the identity C' = JV, we can solve for the Jacobian J.
 // We will use three separate Jacobians, J1, J2 and J3, for
 // C1', C2' and C3'.
-//
+///
 // J1 = [-I_3, [rA]_X, I_3, -[rB]_X],
 // J2 = [   0,     -s,   0,       s],
 // J3 = [   0,     -t,   0,       t] = J4.
-//
+///
 // Note that "I_3" is the 3x3 identity matrix.
-//
+///
 // ----------------------------------------------------------------------
-//
+///
 // The effective mass for the constraint is given by JM^{-1}J^T,
 // where M^{-1} is the inverse mass matrix and J^T is the transposed
 // Jacobian.
-//
+///
 //          [mA^{-1}    0       0       0   ]
 //          [   0    IA^{-1}    0       0   ]
 // M^{-1} = [   0       0    mB^{-1}    0   ],
 //          [   0       0       0    IB^{-1}]
-//
+///
 // Note that transposing the Jacobian transposes [rA]_X.
 // As it's skew-symmetric, we need to flip its sign.
-//
+///
 //        [ -I_3  ]
 //        [-[rA]_X]
 // J1^T = [  I_3  ].
 //        [ [rB]_X]
-//
-//
+///
+///
 // Evaluating this expression gives us the following matrix for our
 // point-to-point constraint:
-//
+///
 //               [-mA^{-1} * I_3   ]
 //               [-IA^{-1} * [rA]_X]
 // M^{-1}*J1^T = [ mB^{-1} * I_3   ],
 //               [ IB^{-1} * [rB]_X]
-//
+///
 // K1 = J1*M^{-1}*J1^T
 //    = (mA^{-1} + mB^{-1})*I_3 - [rA]_X*IA^{-1}*[rA]_X - [rB]_X*IB^{-1}*[rB]_X,
-//
+///
 // For our angular constraints, we simply get:
-//
+///
 //               [     0    ]
 //               [-IA^{-1}*s]
 // M^{-1}*J2^T = [     0    ],
 //               [ IB^{-1}*s]
-//
+///
 // K2 = J2*M^{-1}*J2^T = s . (IA^{-1} + IB^{-1})*s,
-//
+///
 // and similarly for K3 = K4. Note that K1 is a 3x3 matrix,
 // but K2, K3 and K4 are simply scalars.
-//
+///
 // ----------------------------------------------------------------------
-//
+///
 // To limit the relative orientation of rigid body B with
 // respect to rigid body A, we use swing-twist decomposition
 // and constrain the swing and twist axes individually.
-//
+///
 // Note that if a_limit is the axis limit and "theta(a)" is the angle of
 // the relative orientation "((qB*RB) * conj(qA*RA))" along the axis a, then
-//
+///
 // b = (theta(a) - a_limit)/dt = C/dt
-//
+///
 // is the angular velocity required for the limit to be reached.
 // Note that to prevent all rotation along a, we apply the impulse
-//
+///
 // lambda = -JV/K <= 0.
-//
+///
 // To prevent rotation along a only when the limit has
 // been exceeded, we should instead apply the impulse
-//
+///
 // lambda = -(JV + C/dt)/K = -(JV + b)/K.
-//
+///
 // Note that it is generally unstable to add all of b back into the
 // impulse, so we multiply it by a Baumgarte constant B in [0, 1]:
-//
+///
 // b = B/dt * C.
-//
+///
 // ----------------------------------------------------------------------
 
 void physJointSphereInit(
@@ -263,7 +263,7 @@ static flags_t physJointSphereGenerateSwingLimit(
 		// As rigid body B rotates around the y-axis of rigid
 		// body A, the z-component of the constraint axis decreases.
 		// Conversely, the y-component increases as we rotate about z.
-		//
+		///
 		// Note that we use different limits depending
 		// on which quadrant of the ellispse we're in.
 		#ifdef PHYSICS_JOINT_SPHERE_SWING_USE_ELLIPSE_NORMAL

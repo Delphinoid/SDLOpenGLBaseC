@@ -7,11 +7,11 @@
 // The memory manager maintains a linked
 // list of "virtual heaps", which contain
 // their own collections of memory arenas.
-//
+///
 // Each arena is assigned to a specific
 // module and data type, e.g. physics
 // rigid bodies.
-//
+///
 // When an allocation that will not fit
 // into the virtual heap is requested,
 // it will check for room in each of
@@ -20,7 +20,7 @@
 // a new virtual heap is created and
 // the memory manager's "heap" member is
 // updated.
-//
+///
 // MEMORY_MANAGER_ENFORCE_STATIC_VIRTUAL_HEAP
 // may be defined in settingsMemory.h to
 // prevent the automatic allocation of new
@@ -32,7 +32,7 @@
 	// memory should be the heap size so
 	// that only a single heap is necessary
 	// for the entire application.
-	//
+	///
 	// For more demanding applications,
 	// however, this may not be possible,
 	// as a large, contiguous block of
@@ -83,21 +83,21 @@ typedef struct {
 
 #else
 
-	//#ifdef MEMORY_DEBUG
-		//extern memoryManager __memmngr;
-	//#endif
+	///#ifdef MEMORY_DEBUG
+		///extern memoryManager __memmngr;
+	///#endif
 
-	//#define memAllocateStatic(bytes)         memTreeAllocate(&__memmngr.allocator, bytes)
-	//#define memReallocateFixed(data, bytes) memTreeReallocate(&__memmngr.allocator, data, bytes)
-	//#define memFree(data)                   memTreeFree(&__memmngr.allocator, data)
+	///#define memAllocateStatic(bytes)         memTreeAllocate(&__memmngr.allocator, bytes)
+	///#define memReallocateFixed(data, bytes) memTreeReallocate(&__memmngr.allocator, data, bytes)
+	///#define memFree(data)                   memTreeFree(&__memmngr.allocator, data)
 
-	//#ifdef MEMORY_DEBUG
-	//	#define memPrintFreeBlocks(recursions)  memTreePrintFreeBlocks(&__memmngr.allocator, recursions)
-	//	#define memPrintAllBlocks()             memTreePrintAllBlocks(&__memmngr.allocator)
-	//#else
-	//	#define memPrintFreeBlocks(recursions)
-	//	#define memPrintAllBlocks()
-	//#endif
+	///#ifdef MEMORY_DEBUG
+	///	#define memPrintFreeBlocks(recursions)  memTreePrintFreeBlocks(&__memmngr.allocator, recursions)
+	///	#define memPrintAllBlocks()             memTreePrintAllBlocks(&__memmngr.allocator)
+	///#else
+	///	#define memPrintFreeBlocks(recursions)
+	///	#define memPrintAllBlocks()
+	///#endif
 
 	extern memoryManager __memmngr;
 

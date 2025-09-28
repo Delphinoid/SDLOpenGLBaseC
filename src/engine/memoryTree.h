@@ -5,35 +5,35 @@
 #include <stdint.h>
 
 // General purpose allocator.
-//
+///
 // Implements a red-black tree for
 // O(log n) worst-case insertions
 // and deletions.
-//
+///
 // Uses best-fit.
-//
+///
 // Activeness of each block is
 // stored in the LSB of the
 // "previous" size.
-//
+///
 // Whether or not the block is
 // the first or last in the tree
 // is also stored in the 3rd and
 // 2nd bits of the "previous" size.
-//
+///
 // Colour information for each
 // block is stored in the LSB of
 // the "parent" pointer.
-//
+///
 // In order to guarantee that the
 // sizes are always divisible by 8,
 // blocks may be assigned extra
 // padding of up to 7 bytes.
-//
+///
 // MEMORY_TREE_FORCE_MOVE_ON_REALLOC
 // may be specified to force best
 // fits on reallocations.
-//
+///
 // Block format:
 // [ Current block size ][Previous block size + active flag ][ Data (or [ Left child pointer ][ Right child pointer ][ Parent pointer + colour flag ]) ]
 

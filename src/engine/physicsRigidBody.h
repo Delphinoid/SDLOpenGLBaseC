@@ -9,10 +9,10 @@
 #include <stddef.h>
 
 // physRigidBody defines a physical rigid body.
-//
+///
 // Note: the definition of the rigid body may change
 // depending on the preprocessor directives.
-//
+///
 // If PHYSICS_BODY_SCALE_INERTIA_TENSORS is defined, rigid
 // bodies and rigid body bases will store regular inertia
 // tensors rather than inverses to make scaling more

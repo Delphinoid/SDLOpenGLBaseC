@@ -144,7 +144,7 @@ void memQLinkFreeSorted(memoryQLink *const __RESTRICT__ array, void **const star
 	}
 	temp = memQLinkPrevB(element);
 	if(temp != NULL){
-		//if(temp->dataA == element->dataB){
+		///if(temp->dataA == element->dataB){
 		if(memQLinkNextA(temp) == element){
 			memQLinkNextA(temp) = memQLinkNextB(element);
 		}else{
@@ -157,7 +157,7 @@ void memQLinkFreeSorted(memoryQLink *const __RESTRICT__ array, void **const star
 	// Remove references from the next pairs.
 	temp = memQLinkNextA(element);
 	if(temp != NULL){
-		//if(temp->dataA == element->dataA){
+		///if(temp->dataA == element->dataA){
 		if(memQLinkPrevA(temp) == element){
 			memQLinkPrevA(temp) = memQLinkPrevA(element);
 		}else{

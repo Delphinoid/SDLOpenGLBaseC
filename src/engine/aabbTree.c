@@ -189,8 +189,8 @@ static __FORCE_INLINE__ void aabbTreeInsertLeaf(aabbTree *const __RESTRICT__ tre
 		// Calculate the total increase in surface area from combining
 		// the node with the current sibling's right child.
 		rightCost = cAABBSurfaceAreaHalfCombined(&node->aabb, &right->aabb);
-		//If the child is a leaf node, the cost must
-		//include the creation of a new branch node.
+		///If the child is a leaf node, the cost must
+		///include the creation of a new branch node.
 		if(AABB_TREE_NODE_IS_LEAF(right)){
 			rightCost += inheritedCost - cAABBSurfaceAreaHalf(&right->aabb);
 		}

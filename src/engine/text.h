@@ -9,19 +9,19 @@
 
 // Text strings can invoke the following commands, which
 // will be processed during rendering / texture generation.
-//
+///
 //     <sn> - Change the size of the text that follows,
 //            where 'n' is the desired size.
-//
+///
 //     <fn> - Change the font, where 'n' is the index in
 //            the parent typeface or font family.
-//
+///
 //     <bn> - If 'n' = 1, bold the following characters
 //            in the GPU, otherwise do not bold them.
-//
+///
 //     <in> - If 'n' = 1, italicize the following characters
 //            in the GPU, otherwise do not italicize them.
-//
+///
 // Note that the '<' character can be escaped with a '\',
 // and that 'n' in each of these commands is encoded as a
 // character.

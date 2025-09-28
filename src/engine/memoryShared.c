@@ -20,7 +20,7 @@ void *memHeapLowLevelAllocate(const size_t bytes){
 }
 #else
 void *memHeapLowLevelAllocate(const size_t bytes){
-	//return sbrk(bytes);
+	///return sbrk(bytes);
 	// We no longer use brk, since it conflicts with the malloc family.
 	int fd = open("/dev/zero", O_RDWR);
 	void *p = mmap(0, size, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
@@ -35,10 +35,10 @@ void *memHeapLowLevelReallocate(void *const __RESTRICT__ block, const size_t byt
 }
 #else
 void *memHeapLowLevelReallocate(void *const __RESTRICT__ block, const size_t bytes_old, const size_t bytes_new){
-	//if(brk((byte_t *)block + bytes) == 0){
-	//	return block;
-	//}
-	//return NULL;
+	///if(brk((byte_t *)block + bytes) == 0){
+	///	return block;
+	///}
+	///return NULL;
 	// We no longer use brk, since it conflicts with the malloc family.
 	return mremap(block, bytes_old, bytes_new, MREMAP_MAYMOVE|MREMAP_FIXED);
 }
@@ -50,7 +50,7 @@ int memHeapLowLevelFree(void *const __RESTRICT__ block){
 }
 #else
 int memHeapLowLevelFree(void *const __RESTRICT__ block, const size_t bytes){
-	//return brk(block);
+	///return brk(block);
 	// We no longer use brk, since it conflicts with the malloc family.
 	return munmap(block, bytes);
 }

@@ -273,7 +273,7 @@ void sklDelete(skeleton *const __RESTRICT__ skl){
 
 void sklaInit(sklAnim *const __RESTRICT__ skla){
 	skla->name = NULL;
-	//skla->additive = 0;
+	///skla->additive = 0;
 	animDataInit(&skla->animData);
 	skla->boneNum = 0;
 	skla->bones = NULL;
@@ -576,10 +576,10 @@ return_t sklaLoad(sklAnim *const __RESTRICT__ skla, const char *const __RESTRICT
 /** TEMPORARY **/
 return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *const __RESTRICT__ filePath, const size_t filePathLength, const int invert){
 	// Temporary function by 8426THMY.
-	//Create and initialize the animation!
+	///Create and initialize the animation!
 	sklaInit(skla);
 
-	//Find the full path for the model!
+	///Find the full path for the model!
 	char *fullPath = memAllocate((filePathLength+1)*sizeof(char));
 	if(fullPath == NULL){
 		/** Memory allocation failure. **/
@@ -588,16 +588,16 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *const __RES
 	memcpy(fullPath, filePath, filePathLength);
 	fullPath[filePathLength] = '\0';
 
-	//Load the textureGroup!
+	///Load the textureGroup!
 	FILE *skeleAnimFile = fopen(fullPath, "r");
 	if(skeleAnimFile != NULL){
 		size_t tempCapacity = 1;
-		//Temporarily stores bones.
+		///Temporarily stores bones.
 		size_t tempBonesSize = 0;
 		sklNode *tempBones = memAllocate(tempCapacity * sizeof(*tempBones));
-		//This indicates what sort of data we're currently supposed to be reading.
+		///This indicates what sort of data we're currently supposed to be reading.
 		unsigned char dataType = 0;
-		//This variable stores data specific to the type we're currently loading.
+		///This variable stores data specific to the type we're currently loading.
 		unsigned int data = 0;
 
 		char lineBuffer[1024];
@@ -612,7 +612,7 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *const __RES
 				}else if(strcmp(line, "skeleton") == 0){
 					dataType = 2;
 
-				//If this isn't the version number and the line isn't empty, it's something we can't handle!
+				///If this isn't the version number and the line isn't empty, it's something we can't handle!
 				}else if(lineLength > 0 && strcmp(line, "version 1") != 0){
 					printf("Error loading skeletal animtion!\n"
 					       "Path: %s\n"
@@ -625,7 +625,7 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *const __RES
 				}
 			}else{
 				if(strcmp(line, "end") == 0){
-					//If we've finished identifying the skeleton's bones, shrink the vector!
+					///If we've finished identifying the skeleton's bones, shrink the vector!
 					if(dataType == 1){
 						tempBones = memReallocate(tempBones, tempBonesSize * sizeof(*tempBones));
 						skla->bones = memAllocate(tempBonesSize * sizeof(*skla->bones));
@@ -640,7 +640,7 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *const __RES
 
 						tempCapacity = 1;
 
-					//If we've finished loading the animation, shrink the vectors!
+					///If we've finished loading the animation, shrink the vectors!
 					}else if(dataType == 2){
 						skla->animData.frameDelays = memReallocate(skla->animData.frameDelays, skla->animData.frameNum * sizeof(*skla->animData.frameDelays));
 						skla->frames = memReallocate(skla->frames, skla->animData.frameNum * sizeof(*skla->frames));
@@ -655,29 +655,29 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *const __RES
 
 						sklNode tempBone;
 
-						//Get this bone's ID.
+						///Get this bone's ID.
 						size_t boneID = strtoul(tokPos, &tokPos, 10);
-						//Make sure a bone with this ID actually exists.
+						///Make sure a bone with this ID actually exists.
 						if(boneID == tempBonesSize){
-							//Get the bone's name.
+							///Get the bone's name.
 							const size_t boneNameLength = getDelimitedString(tokPos, line + lineLength - tokPos, "\" ", &tokPos);
 							tempBone.name = memAllocate(boneNameLength + 1);
 							memcpy(tempBone.name, tokPos, boneNameLength);
 							tempBone.name[boneNameLength] = '\0';
 
-							//Get the ID of this bone's parent.
+							///Get the ID of this bone's parent.
 							tempBone.parent = strtoul(tokPos + boneNameLength + 1, NULL, 10);
 							if(tempBone.parent == 255){
 								tempBone.parent = boneID;
 							}
 
 
-							//If we're out of space, allocate some more!
+							///If we're out of space, allocate some more!
 							if(tempBonesSize >= tempCapacity){
 								tempCapacity = tempBonesSize * 2;
 								tempBones = memReallocate(tempBones, tempCapacity * sizeof(*tempBones));
 							}
-							//Add the bone to our vector!
+							///Add the bone to our vector!
 							tempBones[tempBonesSize] = tempBone;
 							++tempBonesSize;
 						}else{
@@ -692,18 +692,18 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *const __RES
 							return 0;
 						}
 					}else if(dataType == 2){
-						//If the line begins with time, get the frame's timestamp!
+						///If the line begins with time, get the frame's timestamp!
 						if(memcmp(line, "time ", 5) == 0){
 							unsigned int newTime = strtoul(&line[5], NULL, 10);
 							if(newTime >= data){
 								data = newTime;
 
-								//Allocate memory for the new frame if we have to!
+								///Allocate memory for the new frame if we have to!
 								if(skla->animData.frameNum >= tempCapacity){
 									tempCapacity = skla->animData.frameNum * 2;
 									skla->animData.frameDelays = memReallocate(skla->animData.frameDelays, tempCapacity * sizeof(*skla->animData.frameDelays));
 
-									//Resize the frame arrays!
+									///Resize the frame arrays!
 									skla->frames = memReallocate(skla->frames, tempCapacity * sizeof(*skla->frames));
 								}
 
@@ -722,11 +722,11 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *const __RES
 								return 0;
 							}
 
-						//Otherwise, we're setting the bone's state!
+						///Otherwise, we're setting the bone's state!
 						}else{
 							char *tokPos = line;
 
-							//Get this bone's ID.
+							///Get this bone's ID.
 							size_t boneID = strtoul(tokPos, &tokPos, 10);
 							if(boneID < tempBonesSize){
 								transform *currentState = &skla->frames[skla->animData.frameNum - 1][boneID];
@@ -743,7 +743,7 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *const __RES
 								z = strtod(tokPos, NULL);
 								currentState->orientation = quatNewEuler(x, y, z);
 
-								//Set the bone's scale!
+								///Set the bone's scale!
 								#ifdef TRANSFORM_MATRIX_SHEAR
 								currentState->scale = g_mat3Identity;
 								#else
@@ -751,7 +751,7 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *const __RES
 								currentState->shear = g_quatIdentity;
 								#endif
 
-								//The Source Engine uses Z as its up axis, so we need to fix that with the root bone.
+								///The Source Engine uses Z as its up axis, so we need to fix that with the root bone.
 								if(boneID == 0 && invert){
 									float y;
 									const quat rotateUp = {
@@ -784,7 +784,7 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *const __RES
 		}
 
 
-		//We don't delete them properly because we store the bone names elsewhere.
+		///We don't delete them properly because we store the bone names elsewhere.
 		if(tempBones != NULL){
 			memFree(tempBones);
 		}
@@ -810,14 +810,14 @@ return_t sklaLoadSMD(sklAnim *skla, const skeleton *skl, const char *const __RES
 	return 1;
 }
 boneIndex_t sklaFindBone(const sklAnim *const __RESTRICT__ skla, const boneIndex_t id, const char *const __RESTRICT__ name){
-	//skli->animations[i].animFrags[j].animBoneLookup[boneID] != (boneIndex_t)-1;
-	/*boneIndex_t i;
+	///skli->animations[i].animFrags[j].animBoneLookup[boneID] != (boneIndex_t)-1;
+	/**boneIndex_t i;
 	for(i = 0; i < skla->boneNum; ++i){
 		if(strcmp(skla->bones[i], name) == 0){
 			return i;
 		}
 	}
-	return (boneIndex_t)-1;*/
+	return (boneIndex_t)-1;**/
 	boneIndex_t i;
 	char **n;
 	if(id < skla->boneNum){
@@ -941,7 +941,7 @@ return_t skliLoad(sklInstance *const __RESTRICT__ skli, const char *const __REST
 
 	/** stateNum is temporary. **/
 
-	//skliInit(skli, 1);
+	///skliInit(skli, 1);
 
 	/**sklAnim *skla = memAllocate(sizeof(sklAnim));
 	skla->name = memAllocate(5*sizeof(char));
@@ -1004,7 +1004,7 @@ return_t skliLoad(sklInstance *const __RESTRICT__ skli, const char *const __REST
 	sklAnim *skla = moduleSkeletonAnimationAllocate();
 	skla->name = memAllocate(5*sizeof(char));
 	memcpy(skla->name, "test\0", 5);
-	//skla->additive = 1;
+	///skla->additive = 1;
 	skla->animData.desiredLoops = -1;
 	skla->boneNum = 2;
 	skla->bones = memAllocate(skla->boneNum*sizeof(char*));
@@ -1019,8 +1019,8 @@ return_t skliLoad(sklInstance *const __RESTRICT__ skli, const char *const __REST
 	transform tempBoneRoot, tempBoneTop;
 	tempBoneRoot = g_tfIdentity;
 	tempBoneTop = g_tfIdentity;
-	//tempBoneRoot.position.y = -1.f;
-	//tempBoneTop.position.y = -1.f;
+	///tempBoneRoot.position.y = -1.f;
+	///tempBoneTop.position.y = -1.f;
 
 	skla->frames[0] = memAllocate(skla->boneNum*sizeof(transform));
 	skla->frames[0][0] = tempBoneRoot;
@@ -1028,7 +1028,7 @@ return_t skliLoad(sklInstance *const __RESTRICT__ skli, const char *const __REST
 	skla->animData.frameDelays[0] = 1000.f;
 
 	skla->frames[1] = memAllocate(skla->boneNum*sizeof(transform));
-	//tempBoneRoot.orientation = quatNewEuler(-90.f*RADIAN_RATIO, 0.f, 0.f);
+	///tempBoneRoot.orientation = quatNewEuler(-90.f*RADIAN_RATIO, 0.f, 0.f);
 	skla->frames[1][0] = tempBoneRoot;
 	tempBoneTop.position.y += 0.5f;
 	skla->frames[1][1] = tempBoneTop;
@@ -1122,7 +1122,7 @@ transform skliGenerateBoneState(const sklInstance *const __RESTRICT__ skli, cons
 
 }
 void skliAddAnimation(sklInstance *const __RESTRICT__ skli, const sklAnim *const __RESTRICT__ skla, const frameIndex_t frame){
-	//
+	///
 }
 void skliChangeSkeleton(sklInstance *const __RESTRICT__ skli, const skeleton *const __RESTRICT__ skl){
 	/** Re-calculate bone lookups for all animation fragments. **/

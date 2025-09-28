@@ -5,21 +5,21 @@
 #include <stdint.h>
 
 // Object pool allocator.
-//
+///
 // Effectively a free-list allocator
 // but each block has an "active"
 // flag for iterations, stored in a
 // header before the main block data.
-//
+///
 // The flag may have three potential
 // states:
 // MEMORY_POOL_BLOCK_ACTIVE   - Currently in use.
 // MEMORY_POOL_BLOCK_INACTIVE - Currently not in use.
 // MEMORY_POOL_BLOCK_INVALID  - End of the pool.
-//
+///
 // Free-list pointers point to the
 // data, not the beginning of the block.
-//
+///
 // Block format:
 // [ Active flag ][ Data (or free-list pointer) ]
 
@@ -80,7 +80,7 @@ typedef struct {
 #define memPoolAllocationSize(start, bytes, length) \
 	(memPoolBlockSize(bytes) * length + (uintptr_t)memPoolAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 	// The following can save small amounts of memory but can't be predicted as easily:
-	//(memPoolBlockSize(bytes) * (length - 1) + memPoolBlockSizeUnaligned(bytes) + (uintptr_t)memPoolAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
+	///(memPoolBlockSize(bytes) * (length - 1) + memPoolBlockSizeUnaligned(bytes) + (uintptr_t)memPoolAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 
 #define memPoolFirst(region)          ((void *)memPoolAlignStartData((region)->start))
 #define memPoolBlockStatus(block)     memPoolDataGetFlags(block)

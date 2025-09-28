@@ -1,5 +1,6 @@
 #include "camera.h"
 #include "constantsMath.h"
+#include "helpersMath.h"
 #include <math.h>
 
 void camInit(camera *const __RESTRICT__ cam){
@@ -48,7 +49,7 @@ void camUpdateProjectionMatrix(camera *const __RESTRICT__ cam, const float viewp
 		// We also need to take into account GL pixel coordinates
 		// being in the center of the pixel.
 		cam->projectionMatrix = mat4Ortho(-viewportWidth*0.5f + 0.5f, viewportWidth*0.5f - 0.5f, -viewportHeight*0.5f + 0.5f, viewportHeight*0.5f - 0.5f, CAM_Z_THRESHOLD, -CAM_Z_THRESHOLD);
-		//cam->projectionMatrix = mat4Ortho(0.f, viewportWidth, -viewportHeight, 0.f, CAM_Z_THRESHOLD, -CAM_Z_THRESHOLD);
+		///cam->projectionMatrix = mat4Ortho(0.f, viewportWidth, -viewportHeight, 0.f, CAM_Z_THRESHOLD, -CAM_Z_THRESHOLD);
 	}else{
 		cam->projectionMatrix = g_mat4Identity;
 	}
@@ -68,7 +69,7 @@ void camUpdateViewProjectionMatrix(camera *const __RESTRICT__ cam, const unsigne
 		camUpdateProjectionMatrix(cam, viewportWidth, viewportHeight, interpT);
 	}
 	if(viewUpdate || projectionUpdate){
-		//cam->viewProjectionMatrix = mat4MMultM(cam->viewMatrix, cam->projectionMatrix);
+		///cam->viewProjectionMatrix = mat4MMultM(cam->viewMatrix, cam->projectionMatrix);
 		cam->viewProjectionMatrix = mat4MMultM(cam->projectionMatrix, cam->viewMatrix);
 	}
 
@@ -90,7 +91,7 @@ float camSignedDistanceSquared(const camera *const __RESTRICT__ cam, const vec3 
 }
 
 void camDelete(camera *const __RESTRICT__ cam){
-	//
+	///
 }
 
 /**void camMoveX(camera *cam, const float x){

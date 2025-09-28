@@ -5,13 +5,13 @@
 #include <stdint.h>
 
 // Free-list allocator.
-//
+///
 // Also defines list pool functions,
 // which differ only in that they
 // store the free-list pointer at the
 // end of the block, allowing active
 // flags to be stored at the beginning.
-//
+///
 // Block format:
 // [ Data (or free-list pointer) ]
 
@@ -49,7 +49,7 @@ typedef struct {
 #define memListAllocationSize(start, bytes, length) \
 	(memListBlockSize(bytes) * length + (uintptr_t)memListAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 	// The following can save small amounts of memory but can't be predicted as easily:
-	//(memListBlockSize(bytes) * (length - 1) + memListBlockSizeUnaligned(bytes) + (uintptr_t)memListAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
+	///(memListBlockSize(bytes) * (length - 1) + memListBlockSizeUnaligned(bytes) + (uintptr_t)memListAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 
 #define memListFirst(region)          ((void *)memListAlignStartData((region)->start))
 #define memListBlockNext(list, i)     (void *)((byte_t *)i + (list).block)

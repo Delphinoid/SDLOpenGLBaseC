@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 // Regular array allocator.
-//
+///
 // Not much more sophisticated than the stack.
 // Very finnicky, as it has very specific use-cases.
 
@@ -33,7 +33,7 @@ typedef struct {
 #define memArrayAllocationSize(start, bytes, length) \
 	(memArrayBlockSize(bytes) * length + (uintptr_t)memArrayAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 	// The following can save small amounts of memory but can't be predicted as easily:
-	//(memArrayBlockSize(bytes) * (length - 1) + memArrayBlockSizeUnaligned(bytes) + (uintptr_t)memArrayAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
+	///(memArrayBlockSize(bytes) * (length - 1) + memArrayBlockSizeUnaligned(bytes) + (uintptr_t)memArrayAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 
 #define memArrayFirst(region)           ((void *)memArrayAlignStartData((region)->start))
 #define memArrayBlockNext(array, i)     (void *)((byte_t *)i + (array).block)

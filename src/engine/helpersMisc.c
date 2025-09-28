@@ -2,7 +2,7 @@
 #include "memoryManager.h"
 #include <string.h>
 
-/*return_t nextToken(const char *str, const char *delims, size_t *tokenOffset, size_t *tokenLength){
+/**return_t nextToken(const char *str, const char *delims, size_t *tokenOffset, size_t *tokenLength){
 	* Replacement for strtok() because it's a horrible function. *
 	char *tokenStart = NULL;
 	const char *currentChar = str+(*tokenOffset);
@@ -28,7 +28,7 @@
 		return 1;
 	}
 	return 0;
-}*/
+}**/
 
 return_t pushDynamicArray(void **vector, const void *const __RESTRICT__ element, const size_t bytes, size_t *const __RESTRICT__ size, size_t *const __RESTRICT__ capacity){
 	// Push an element into a dynamic array.
@@ -90,7 +90,7 @@ size_t ltostr(long n, char *const __RESTRICT__ s){
 size_t getDelimitedString(char *const __RESTRICT__ line, const size_t lineLength, const char *__RESTRICT__ delims, char **const __RESTRICT__ strStart){
 	// Temporary function by 8426THMY.
 	char *tempStart = NULL;
-	//Find the beginning of the string!
+	///Find the beginning of the string!
 	while(tempStart == NULL && *delims != '\0'){
 		tempStart = strchr(line, *delims);
 		++delims;
@@ -98,22 +98,22 @@ size_t getDelimitedString(char *const __RESTRICT__ line, const size_t lineLength
 	--delims;
 
 	const char *tempEnd = NULL;
-	//If we could find a starting delimiter, try and find a closing one!
+	///If we could find a starting delimiter, try and find a closing one!
 	if(tempStart != NULL){
 		++tempStart;
 		tempEnd = strchr(tempStart, *delims);
 
-		//If we can't find a closing delimiter, just use everything up until the first one.
+		///If we can't find a closing delimiter, just use everything up until the first one.
 		if(tempEnd == NULL){
 			tempEnd = tempStart - 1;
 			tempStart = line;
 		}
 
-		//Get the string between our delimiters!
+		///Get the string between our delimiters!
 		*strStart = tempStart;
 		return tempEnd - tempStart;
 
-		//If we couldn't find any delimiters, use the whole string!
+		///If we couldn't find any delimiters, use the whole string!
 	}else{
 		*strStart = line;
 		return lineLength;

@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 // Reverse free-list allocator.
-//
+///
 // Exactly the same as the regular free-list
 // allocator but with the free block pointer
 // stored at the end of the block.
@@ -45,7 +45,7 @@ typedef struct {
 #define memRListAllocationSize(start, bytes, length) \
 	(memRListBlockSize(bytes) * length + (uintptr_t)memRListAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 	// The following can save small amounts of memory but can't be predicted as easily:
-	//(memRListBlockSize(bytes) * (length - 1) + memRListBlockSizeUnaligned(bytes) + (uintptr_t)memRListAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
+	///(memRListBlockSize(bytes) * (length - 1) + memRListBlockSizeUnaligned(bytes) + (uintptr_t)memRListAlignStartBlock(start) - (uintptr_t)start + sizeof(memoryRegion))
 
 #define memRListFirst(region)          ((void *)memRListAlignStartData((region)->start))
 #define memRListBlockNext(list, i)     (void *)((byte_t *)i + (list).block)

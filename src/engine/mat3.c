@@ -753,7 +753,7 @@ __HINT_INLINE__ void mat3ShearMatrixPR(const quat *const __RESTRICT__ q, const v
 
 	// Convert the quaternion to a rotation matrix.
 	mat3 m;
-	mat3QuaternionPR(&m, q);
+	mat3QuaternionPR(q, &m);
 
 	float cx = s->x*m.m[0][0];
 	float cy = s->y*m.m[1][0];
@@ -896,16 +896,16 @@ void mat3DiagonalizeSymmetric(
 	// Diagonalize a symmetric 3x3 matrix A and return its eigenvalues
 	// and eigenvectors. Because our input matrix is symmetric, we need
 	// only specify the unique values.
-	//
+	///
 	// Rather than using an approximate iterative algorithm, we compute
 	// an exact analytic solution. Benchmarks seem to indicate that this
 	// is significantly faster and more accurate for the 3x3 case.
-	//
+	///
 	// This is used for non-uniform scaling in our affine transformation
 	// structure. Shears are stored as QSQ^T, where Q is a pure rotation
 	// and S is a scale along the x, y and z axes. This function returns
 	// Q as a quaternion and S as a vector.
-	//
+	///
 	// Special thanks to David Eberly for this implementation, which was
 	// given in "A Robust Eigensolver for 3x3 Symmetric Matrices" (2014).
 

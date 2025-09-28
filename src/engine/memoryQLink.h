@@ -5,10 +5,10 @@
 #include <stdint.h>
 
 // Quadruply-linked list allocator.
-//
+///
 // Implements a doubly-linked list that
 // may have two distinct, separate owners.
-//
+///
 // Block format:
 // [ Next block pointer A + active flag ][ Previous block pointer A ][ Next block pointer B ][ Previous block pointer B ][ Data (or free-list pointer) ]
 
@@ -100,7 +100,7 @@ typedef struct {
 #define memQLinkAllocationSize(start, bytes, length) \
 	(memQLinkBlockSize(bytes) * length + (uintptr_t)memQLinkAlignStartBlock(start) - (uintptr_t)start)
 	// The following can save small amounts of memory but can't be predicted as easily:
-	//(memQLinkBlockSize(bytes) * (length - 1) + memQLinkBlockSizeUnaligned(bytes) + (uintptr_t)memQLinkAlignStartBlock(start) - (uintptr_t)start)
+	///(memQLinkBlockSize(bytes) * (length - 1) + memQLinkBlockSizeUnaligned(bytes) + (uintptr_t)memQLinkAlignStartBlock(start) - (uintptr_t)start)
 
 #define memQLinkFirst(region)           ((void *)memQLinkAlignStartData((region)->start))
 #define memQLinkPrevA(i)                memQLinkDataGetPrevA(i)

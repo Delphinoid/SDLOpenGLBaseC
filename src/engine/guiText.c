@@ -4,7 +4,7 @@
 #include "mesh.h"
 
 void guiTextTick(guiElement *const element, const float dt_ms){
-	//
+	///
 }
 
 /**static void guiRenderTextNextLine(){

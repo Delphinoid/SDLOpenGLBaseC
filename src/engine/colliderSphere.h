@@ -5,7 +5,7 @@
 #include "return.h"
 
 typedef struct {
-	//vec3 centroid;
+	///vec3 centroid;
 	float radius;
 } cSphere;
 

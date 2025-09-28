@@ -68,20 +68,20 @@ typedef struct {
 
 	// SubHeaders map the second byte of a 16-bit
 	// code unit to a glyph under cmap format 2.
-	//
+	///
 	// Each SubHeader defines a subrange: a sequence
 	// of adjacent code units all beginning with the
 	// same byte. As such, subranges stay within the
 	// [0, 255] range of the first (low) byte.
-	//
+	///
 	// Single byte code units will always be mapped to
 	// SubHeader 0.
-	//
+	///
 	// The offset of the desired code unit in the
 	// subrange is used as the index of a subarray in
 	// txtCMap2's glyphIndexArray, which is the same
 	// length as the SubHeader's subrange (entryCount).
-	//
+	///
 	// See txtCMap2's comment for an explanation in
 	// code on how the system works.
 
@@ -114,12 +114,12 @@ typedef struct {
 	// This is effectively an implementation of
 	// the standard OpenType format 2 subtable.
 	// Unnecessary header data has been removed.
-	//
+	///
 	// Suppose we have a code unit, with high and
 	// low bytes code.high and code.low respectively,
 	// that we wish to map to a particular glyph. We
 	// may do this using the following code:
-	//
+	///
 	// txtGlyph glyph;
 	// txtCMap2SubHeader subHeader = subHeaders[subHeaderKeys[code.high]];
 	// uint16_t *subarray = (uint16_t *)(((byte_t *)glyphIndexArray) + subHeader.idRangeOffset);
@@ -150,10 +150,10 @@ typedef struct {
 
 	// SubHeaders map the second byte to a glyph.
 	// A second byte is not needed for SubHeader 0.
-	//txtCMap2SubHeader *subHeaders;
+	///txtCMap2SubHeader *subHeaders;
 	// This array sits in the area of memory directly
 	// following that used by all of the SubHeaders.
-	//uint16_t *glyphIndexArray;
+	///uint16_t *glyphIndexArray;
 
 	// First element of subHeaders. The other elements and
 	// glyphIndexArray are stored directly after this in
@@ -167,16 +167,16 @@ typedef struct {
 	// This is effectively an implementation of
 	// the standard OpenType format 4 subtable.
 	// Unnecessary header data has been removed.
-	//
+	///
 	// Format 4 works somewhat similarly to format 2.
 	// Rather than using SubHeaders, however, we have
 	// segments. These segments are sorted in order
 	// of increasing endCode.
-	//
+	///
 	// Suppose we have a code unit that we wish to
 	// map to a particular glyph. We may do this using
 	// the following code:
-	//
+	///
 	// txtGlyph glyph;
 	// uint16_t *start = startCode;
 	// uint16_t *end = endCode;
@@ -212,23 +212,23 @@ typedef struct {
 	uint16_t rangeShift;
 
 	// Array of start code units for each segment.
-	//uint16_t *startCode;
+	///uint16_t *startCode;
 	// Array of end code units for each segment.
 	// Because of how segments are sorted, these will
 	// be in increasing order.
 	// This array also has an extra element at the end
 	// containing 0xFFFF, for loop termination.
-	//uint16_t *endCode;
+	///uint16_t *endCode;
 	// Array of deltas for each segment. These serve
 	// the same purpose as the SubHeader deltas.
-	//int16_t *idDelta;
+	///int16_t *idDelta;
 	// Array of range offsets for each segment. Again,
 	// these serve a similar purpose to the SubHeader
 	// range offsets.
-	//uint16_t *idRangeOffset;
+	///uint16_t *idRangeOffset;
 	// This array sits in the area of memory directly
 	// following that used by the idRangeOffset array.
-	//uint16_t *glyphIdArray;
+	///uint16_t *glyphIdArray;
 
 	// First element of startCode. The other elements and
 	// all of the other arrays are stored directly after

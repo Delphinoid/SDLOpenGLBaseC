@@ -98,7 +98,7 @@ extern skeleton g_sklDefault;
 void sklInit(skeleton *const __RESTRICT__ skl);
 return_t sklLoad(skeleton *const __RESTRICT__ skl, const char *const __RESTRICT__ filePath, const size_t filePathLength);
 /** If we're sticking with fixed bone lookups, change the return value to void. **/
-//return_t sklGenerateLookup(const skeleton *skl1, const skeleton *skl2, uint_least8_t *lookup);
+///return_t sklGenerateLookup(const skeleton *skl1, const skeleton *skl2, uint_least8_t *lookup);
 boneIndex_t sklFindBone(const skeleton *const __RESTRICT__ skl, const boneIndex_t id, const char *const __RESTRICT__ name);
 void sklDelete(skeleton *const __RESTRICT__ skl);
 
@@ -118,7 +118,7 @@ return_t skliLoad(sklInstance *const __RESTRICT__ skli, const char *const __REST
 sklAnimInstance *skliAnimationNew(sklInstance *const __RESTRICT__ skli, sklAnim *const __RESTRICT__ anim, const float intensity, const flags_t flags);
 void skliAnimationDelete(sklInstance *const __RESTRICT__ skli, sklAnimInstance *const __RESTRICT__ anim, sklAnimInstance *const __RESTRICT__ previous);
 void skliTick(sklInstance *const __RESTRICT__ skli, const float dt_ms, const float interpT);
-//void skliGenerateBoneState(sklInstance *skli, bone *boneState, const boneIndex_t boneID);
+///void skliGenerateBoneState(sklInstance *skli, bone *boneState, const boneIndex_t boneID);
 transform skliGenerateBoneState(const sklInstance *const __RESTRICT__ skli, const boneIndex_t id, const char *const __RESTRICT__ name, transform state);
 ///void skliSetAnimationType(sklInstance *skli, const animIndex_t slot, const flags_t additive);
 ///return_t skliChangeAnimation(sklInstance *skli, const animIndex_t slot, sklAnim *anim, const frameIndex_t frame, const float blendTime);

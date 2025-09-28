@@ -324,7 +324,7 @@ return_t tLoad(texture *const __RESTRICT__ tex, const char *const __RESTRICT__ f
 
 			// Copy each row of the MIP into a temporary buffer to feed to OpenGL.
 			for(y = 0; y < miph; ++y){
-				//printf("a %u\n", mipw * bytes);
+				///printf("a %u\n", mipw * bytes);
 				memcpy((void *)(mipmap + y * mipw * bytes), (void *)(pixels + (mipy + y) * image->pitch + mipx * bytes), mipw * bytes);
 			}
 			glTexImage2D(GL_TEXTURE_2D, i, format, mipw, miph, 0, format, GL_UNSIGNED_BYTE, mipmap);

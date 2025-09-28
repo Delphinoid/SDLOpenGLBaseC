@@ -15,7 +15,7 @@
 //                     // variable has been changed to potentially save time with
 //                     // matrix calculations before rendering.
 // } interpType;
-//
+///
 // Generally, clients will only need to store one previous value and one current value. It becomes
 // much more useful for servers, which may need to know what the values of certain variables were
 // many states earlier.
